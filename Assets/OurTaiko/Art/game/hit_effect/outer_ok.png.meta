@@ -1,0 +1,3471 @@
+fileFormatVersion: 2
+guid: 5027e11c42821451da1a5d1f44a5a585
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3635111676169538363
+    second: outer_ok_0
+  - first:
+      213: 5809184479866625412
+    second: outer_ok_1
+  - first:
+      213: -6669888623071131633
+    second: outer_ok_2
+  - first:
+      213: 8869909717036512303
+    second: outer_ok_3
+  - first:
+      213: 4220312925246402888
+    second: outer_ok_4
+  - first:
+      213: -3612491253298362309
+    second: outer_ok_5
+  - first:
+      213: 4208114641181898980
+    second: outer_ok_6
+  - first:
+      213: 1675028820367905255
+    second: outer_ok_7
+  - first:
+      213: 6601128291408870864
+    second: outer_ok_8
+  - first:
+      213: 4711256118691135817
+    second: outer_ok_9
+  - first:
+      213: -4984078672551449298
+    second: outer_ok_10
+  - first:
+      213: -8158016901379269098
+    second: outer_ok_11
+  - first:
+      213: 5294386170407321088
+    second: outer_ok_12
+  - first:
+      213: 7162563993690569333
+    second: outer_ok_13
+  - first:
+      213: 4948439563138483131
+    second: outer_ok_14
+  - first:
+      213: -8397026093873429293
+    second: outer_ok_15
+  - first:
+      213: -6943430515457797262
+    second: outer_ok_16
+  - first:
+      213: 3043319259749784049
+    second: outer_ok_17
+  - first:
+      213: -1047849125422628902
+    second: outer_ok_18
+  - first:
+      213: -1139344870298557729
+    second: outer_ok_19
+  - first:
+      213: 7230141337651091257
+    second: outer_ok_20
+  - first:
+      213: -6442864763039974467
+    second: outer_ok_21
+  - first:
+      213: -9046072677010646971
+    second: outer_ok_22
+  - first:
+      213: -8568364282105700144
+    second: outer_ok_23
+  - first:
+      213: 4259727161780229180
+    second: outer_ok_24
+  - first:
+      213: 7998666897792837135
+    second: outer_ok_25
+  - first:
+      213: 1787170306655074145
+    second: outer_ok_26
+  - first:
+      213: 6806655457335963896
+    second: outer_ok_27
+  - first:
+      213: -5201865161384776599
+    second: outer_ok_28
+  - first:
+      213: 4959399059456581047
+    second: outer_ok_29
+  - first:
+      213: 9041956359904810760
+    second: outer_ok_30
+  - first:
+      213: 4435754330136784887
+    second: outer_ok_31
+  - first:
+      213: 7528217475189067838
+    second: outer_ok_32
+  - first:
+      213: -2676516451230622490
+    second: outer_ok_33
+  - first:
+      213: -3785326923519219733
+    second: outer_ok_34
+  - first:
+      213: -7381224504752225218
+    second: outer_ok_35
+  - first:
+      213: 6411733164731648123
+    second: outer_ok_36
+  - first:
+      213: 7483445429972518150
+    second: outer_ok_37
+  - first:
+      213: 6537208484823301543
+    second: outer_ok_38
+  - first:
+      213: -5861001843768207761
+    second: outer_ok_39
+  - first:
+      213: -9147512458530976068
+    second: outer_ok_40
+  - first:
+      213: 219899087676064103
+    second: outer_ok_41
+  - first:
+      213: 752213867162653147
+    second: outer_ok_42
+  - first:
+      213: 1398018602396788453
+    second: outer_ok_43
+  - first:
+      213: -2653021729559929762
+    second: outer_ok_44
+  - first:
+      213: -2696362407088619759
+    second: outer_ok_45
+  - first:
+      213: -5508642650121003820
+    second: outer_ok_46
+  - first:
+      213: -3334641231049901521
+    second: outer_ok_47
+  - first:
+      213: -224995639816550480
+    second: outer_ok_48
+  - first:
+      213: 6401942171541902352
+    second: outer_ok_49
+  - first:
+      213: -8352763966118589112
+    second: outer_ok_50
+  - first:
+      213: -2252148776421336312
+    second: outer_ok_51
+  - first:
+      213: -7683654185222102048
+    second: outer_ok_52
+  - first:
+      213: -8009707752342643212
+    second: outer_ok_53
+  - first:
+      213: 5024936733802950244
+    second: outer_ok_54
+  - first:
+      213: 6240095908557319760
+    second: outer_ok_55
+  - first:
+      213: -2114924406416242771
+    second: outer_ok_56
+  - first:
+      213: -3197321408850316798
+    second: outer_ok_57
+  - first:
+      213: 9050489735661720467
+    second: outer_ok_58
+  - first:
+      213: -7636526772391893652
+    second: outer_ok_59
+  - first:
+      213: -6217371744112328299
+    second: outer_ok_60
+  - first:
+      213: 6929119931749020175
+    second: outer_ok_61
+  - first:
+      213: -310433150713626153
+    second: outer_ok_62
+  - first:
+      213: -6526672276449040153
+    second: outer_ok_63
+  - first:
+      213: 835172206291718373
+    second: outer_ok_64
+  - first:
+      213: -9094731245198614116
+    second: outer_ok_65
+  - first:
+      213: -8069132055757197911
+    second: outer_ok_66
+  - first:
+      213: 2812524889279056293
+    second: outer_ok_67
+  - first:
+      213: -1708838685226449069
+    second: outer_ok_68
+  - first:
+      213: -540329567084433864
+    second: outer_ok_69
+  - first:
+      213: 2624433603522336115
+    second: outer_ok_70
+  - first:
+      213: 3276030760993501409
+    second: outer_ok_71
+  - first:
+      213: 1130708546932232498
+    second: outer_ok_72
+  - first:
+      213: 2946769229906071841
+    second: outer_ok_73
+  - first:
+      213: -5007641952504488412
+    second: outer_ok_74
+  - first:
+      213: -8645362383657515117
+    second: outer_ok_75
+  - first:
+      213: 5653409747358952425
+    second: outer_ok_76
+  - first:
+      213: -1861658323566667688
+    second: outer_ok_77
+  - first:
+      213: 1890909502242964602
+    second: outer_ok_78
+  - first:
+      213: 6384263634475890090
+    second: outer_ok_79
+  - first:
+      213: 2417559512954945964
+    second: outer_ok_80
+  - first:
+      213: 6149347437934600248
+    second: outer_ok_81
+  - first:
+      213: -4394918765508386382
+    second: outer_ok_82
+  - first:
+      213: 3683442011995480063
+    second: outer_ok_83
+  - first:
+      213: -7474148824021680972
+    second: outer_ok_84
+  - first:
+      213: -7910277284888507584
+    second: outer_ok_85
+  - first:
+      213: -3507695775617835094
+    second: outer_ok_86
+  - first:
+      213: 7030124812111931492
+    second: outer_ok_87
+  - first:
+      213: 383953910097887996
+    second: outer_ok_88
+  - first:
+      213: -3909204673308020825
+    second: outer_ok_89
+  - first:
+      213: -4054673015639820633
+    second: outer_ok_90
+  - first:
+      213: -3902807875241726595
+    second: outer_ok_91
+  - first:
+      213: -4208052154760911851
+    second: outer_ok_92
+  - first:
+      213: -6017819487393117290
+    second: outer_ok_93
+  - first:
+      213: 5894766087874832134
+    second: outer_ok_94
+  - first:
+      213: 5996117853934515535
+    second: outer_ok_95
+  - first:
+      213: -6633430384011830800
+    second: outer_ok_96
+  - first:
+      213: 226371380512607549
+    second: outer_ok_97
+  - first:
+      213: -3227910770550287836
+    second: outer_ok_98
+  - first:
+      213: -6655897371417069616
+    second: outer_ok_99
+  - first:
+      213: -1170613158623940523
+    second: outer_ok_100
+  - first:
+      213: 1817879562553216344
+    second: outer_ok_101
+  - first:
+      213: 7898079230903580430
+    second: outer_ok_102
+  - first:
+      213: 2197777921655209691
+    second: outer_ok_103
+  - first:
+      213: 7540693217007460454
+    second: outer_ok_104
+  - first:
+      213: 5051839750242315180
+    second: outer_ok_105
+  - first:
+      213: -8538928144526605136
+    second: outer_ok_106
+  - first:
+      213: -591891854283690089
+    second: outer_ok_107
+  - first:
+      213: -4838656508013108696
+    second: outer_ok_108
+  - first:
+      213: -578565842410103620
+    second: outer_ok_109
+  - first:
+      213: -2227090528337521301
+    second: outer_ok_110
+  - first:
+      213: -9016168998984359614
+    second: outer_ok_111
+  - first:
+      213: 5914708936381405457
+    second: outer_ok_112
+  - first:
+      213: -8689066599420093000
+    second: outer_ok_113
+  - first:
+      213: -7948439893202211009
+    second: outer_ok_114
+  - first:
+      213: -7395757008478095883
+    second: outer_ok_115
+  - first:
+      213: 6997084651675090093
+    second: outer_ok_116
+  - first:
+      213: 2572810090429558683
+    second: outer_ok_117
+  - first:
+      213: 1907579660068275065
+    second: outer_ok_118
+  - first:
+      213: -6264662322379927376
+    second: outer_ok_119
+  - first:
+      213: -2404627714660853148
+    second: outer_ok_120
+  - first:
+      213: 2172220999911563086
+    second: outer_ok_121
+  - first:
+      213: -8558787406246841662
+    second: outer_ok_122
+  - first:
+      213: -3718232394248872303
+    second: outer_ok_123
+  - first:
+      213: 5630278286645906157
+    second: outer_ok_124
+  - first:
+      213: 3688552728522072742
+    second: outer_ok_125
+  - first:
+      213: 4379660550084354877
+    second: outer_ok_126
+  - first:
+      213: -8284454991966754541
+    second: outer_ok_127
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: outer_ok_0
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c43a0fa03d7d8dc0800000000000000
+      internalID: -3635111676169538363
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_1
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 187
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48d992d818e5e9050800000000000000
+      internalID: 5809184479866625412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_2
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f080d6ac2abcf63a0800000000000000
+      internalID: -6669888623071131633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_3
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f243fb194ef381b70800000000000000
+      internalID: 8869909717036512303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_4
+      rect:
+        serializedVersion: 2
+        x: 330
+        y: 187
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8413d4ece30919a30800000000000000
+      internalID: 4220312925246402888
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_5
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3802fc485addddc0800000000000000
+      internalID: -3612491253298362309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_6
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e874c978f9366a30800000000000000
+      internalID: 4208114641181898980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_7
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 187
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e1129266d5ee3710800000000000000
+      internalID: 1675028820367905255
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_8
+      rect:
+        serializedVersion: 2
+        x: 584
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ddf43ee43beb9b50800000000000000
+      internalID: 6601128291408870864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_9
+      rect:
+        serializedVersion: 2
+        x: 747
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 94188788a7eb16140800000000000000
+      internalID: 4711256118691135817
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_10
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 187
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2d68f5aadef4dab0800000000000000
+      internalID: -4984078672551449298
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_11
+      rect:
+        serializedVersion: 2
+        x: 808
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61ed7a9e9d6e8ce80800000000000000
+      internalID: -8158016901379269098
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_12
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00e7edecb20797940800000000000000
+      internalID: 5294386170407321088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_13
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57afdecd00a866360800000000000000
+      internalID: 7162563993690569333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_14
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb3cb5190936ca440800000000000000
+      internalID: 4948439563138483131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_15
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 149
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d40df8c145c77b80800000000000000
+      internalID: -8397026093873429293
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_16
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 273d78bebbaf3af90800000000000000
+      internalID: -6943430515457797262
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_17
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f99d771eba0c3a20800000000000000
+      internalID: 3043319259749784049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_18
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: adffafca5ca4571f0800000000000000
+      internalID: -1047849125422628902
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_19
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd2e03180eb3030f0800000000000000
+      internalID: -1139344870298557729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_20
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9379f8a5d3f965460800000000000000
+      internalID: 7230141337651091257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_21
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbbfe1f32a85696a0800000000000000
+      internalID: -6442864763039974467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_22
+      rect:
+        serializedVersion: 2
+        x: 330
+        y: 149
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 548d96214d4e57280800000000000000
+      internalID: -9046072677010646971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_23
+      rect:
+        serializedVersion: 2
+        x: 349
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d0e1f2251e071980800000000000000
+      internalID: -8568364282105700144
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_24
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c345efdd8479d1b30800000000000000
+      internalID: 4259727161780229180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_25
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f062e9f2a29f00f60800000000000000
+      internalID: 7998666897792837135
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_26
+      rect:
+        serializedVersion: 2
+        x: 496
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1673d41dced4dc810800000000000000
+      internalID: 1787170306655074145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_27
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f0fbf24319167e50800000000000000
+      internalID: 6806655457335963896
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_28
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96c2e2642334fc7b0800000000000000
+      internalID: -5201865161384776599
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_29
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 149
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bdd0562b2353d440800000000000000
+      internalID: 4959399059456581047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_30
+      rect:
+        serializedVersion: 2
+        x: 573
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 807d5ba276b7b7d70800000000000000
+      internalID: 9041956359904810760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_31
+      rect:
+        serializedVersion: 2
+        x: 585
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ff24b6cf07fe8d30800000000000000
+      internalID: 4435754330136784887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_32
+      rect:
+        serializedVersion: 2
+        x: 611
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e30588058e9997860800000000000000
+      internalID: 7528217475189067838
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_33
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ecd8e8e77a1bdad0800000000000000
+      internalID: -2676516451230622490
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_34
+      rect:
+        serializedVersion: 2
+        x: 730
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be72ae4f731d77bc0800000000000000
+      internalID: -3785326923519219733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_35
+      rect:
+        serializedVersion: 2
+        x: 752
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e34c5da9b6f909990800000000000000
+      internalID: -7381224504752225218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_36
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 149
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b78cb6ea75d0bf850800000000000000
+      internalID: 6411733164731648123
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_37
+      rect:
+        serializedVersion: 2
+        x: 797
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 605488538f98ad760800000000000000
+      internalID: 7483445429972518150
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_38
+      rect:
+        serializedVersion: 2
+        x: 809
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7adff883b74d8ba50800000000000000
+      internalID: 6537208484823301543
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_39
+      rect:
+        serializedVersion: 2
+        x: 835
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f66594240e989aea0800000000000000
+      internalID: -5861001843768207761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_40
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbe0dc272e18d0180800000000000000
+      internalID: -9147512458530976068
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_41
+      rect:
+        serializedVersion: 2
+        x: 43
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7614d5f1e0d3d0300800000000000000
+      internalID: 219899087676064103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_42
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd15a5bd686607a00800000000000000
+      internalID: 752213867162653147
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_43
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e6af390382c66310800000000000000
+      internalID: 1398018602396788453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_44
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5c10341bc29e2bd0800000000000000
+      internalID: -2653021729559929762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_45
+      rect:
+        serializedVersion: 2
+        x: 267
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11ff3cb3da8949ad0800000000000000
+      internalID: -2696362407088619759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_46
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4dc98fc12be5d83b0800000000000000
+      internalID: -5508642650121003820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_47
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2a36e1d779f8b1d0800000000000000
+      internalID: -3334641231049901521
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_48
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b709bc58a7a0ecf0800000000000000
+      internalID: -224995639816550480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_49
+      rect:
+        serializedVersion: 2
+        x: 491
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 014195f6c7448d850800000000000000
+      internalID: 6401942171541902352
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_50
+      rect:
+        serializedVersion: 2
+        x: 594
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84d81da7d65051c80800000000000000
+      internalID: -8352763966118589112
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_51
+      rect:
+        serializedVersion: 2
+        x: 628
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80b5318ce92ceb0e0800000000000000
+      internalID: -2252148776421336312
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_52
+      rect:
+        serializedVersion: 2
+        x: 703
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e3a4e07a3d2e5590800000000000000
+      internalID: -7683654185222102048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_53
+      rect:
+        serializedVersion: 2
+        x: 715
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4fd9cea8c3dc7d090800000000000000
+      internalID: -8009707752342643212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_54
+      rect:
+        serializedVersion: 2
+        x: 818
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46ee22d06592cb540800000000000000
+      internalID: 5024936733802950244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_55
+      rect:
+        serializedVersion: 2
+        x: 852
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05e6de9da26499650800000000000000
+      internalID: 6240095908557319760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_56
+      rect:
+        serializedVersion: 2
+        x: 25
+        y: 106
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da781cc257746a2e0800000000000000
+      internalID: -2114924406416242771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_57
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 106
+        width: 38
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 202b9b86e15d0a3d0800000000000000
+      internalID: -3197321408850316798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_58
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 106
+        width: 38
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3939f69867cc99d70800000000000000
+      internalID: 9050489735661720467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_59
+      rect:
+        serializedVersion: 2
+        x: 186
+        y: 106
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6522dd4c5b950690800000000000000
+      internalID: -7636526772391893652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_60
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 106
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59142abf65577b9a0800000000000000
+      internalID: -6217371744112328299
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_61
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 106
+        width: 38
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f02baf9addd292060800000000000000
+      internalID: 6929119931749020175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_62
+      rect:
+        serializedVersion: 2
+        x: 373
+        y: 106
+        width: 38
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d18535b1be11bbf0800000000000000
+      internalID: -310433150713626153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_63
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 106
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e86dd4f42a9c65a0800000000000000
+      internalID: -6526672276449040153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_64
+      rect:
+        serializedVersion: 2
+        x: 473
+        y: 106
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e01c4a52b0279b00800000000000000
+      internalID: 835172206291718373
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_65
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 106
+        width: 38
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c916a425e1609c180800000000000000
+      internalID: -9094731245198614116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_66
+      rect:
+        serializedVersion: 2
+        x: 597
+        y: 106
+        width: 38
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9adefdab52fa40090800000000000000
+      internalID: -8069132055757197911
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_67
+      rect:
+        serializedVersion: 2
+        x: 634
+        y: 106
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a94c634c78180720800000000000000
+      internalID: 2812524889279056293
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_68
+      rect:
+        serializedVersion: 2
+        x: 697
+        y: 106
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 357c1a4054cf848e0800000000000000
+      internalID: -1708838685226449069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_69
+      rect:
+        serializedVersion: 2
+        x: 709
+        y: 106
+        width: 38
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83eaa4c1f1d5088f0800000000000000
+      internalID: -540329567084433864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_70
+      rect:
+        serializedVersion: 2
+        x: 821
+        y: 106
+        width: 38
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3751c82257cdb6420800000000000000
+      internalID: 2624433603522336115
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_71
+      rect:
+        serializedVersion: 2
+        x: 858
+        y: 106
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e03546be9cc67d20800000000000000
+      internalID: 3276030760993501409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_72
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 231d464ce6511bf00800000000000000
+      internalID: 1130708546932232498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_73
+      rect:
+        serializedVersion: 2
+        x: 43
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1215a9f700705e820800000000000000
+      internalID: 2946769229906071841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_74
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42e50a20d28418ab0800000000000000
+      internalID: -5007641952504488412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_75
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 397c19797b0850880800000000000000
+      internalID: -8645362383657515117
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_76
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ebaf015632f47e40800000000000000
+      internalID: 5653409747358952425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_77
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 858d8a24e9f0a26e0800000000000000
+      internalID: -1861658323566667688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_78
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a744a9f7c2cdd3a10800000000000000
+      internalID: 1890909502242964602
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_79
+      rect:
+        serializedVersion: 2
+        x: 267
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa5316543f5799850800000000000000
+      internalID: 6384263634475890090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_80
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca1cb097195ec8120800000000000000
+      internalID: 2417559512954945964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_81
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 830ec860aeed65550800000000000000
+      internalID: 6149347437934600248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_82
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b1ac250bac1203c0800000000000000
+      internalID: -4394918765508386382
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_83
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fff9db38ef63e1330800000000000000
+      internalID: 3683442011995480063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_84
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4bcb8c98e3d764890800000000000000
+      internalID: -7474148824021680972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_85
+      rect:
+        serializedVersion: 2
+        x: 491
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04b016748bc093290800000000000000
+      internalID: -7910277284888507584
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_86
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aaf1922d649225fc0800000000000000
+      internalID: -3507695775617835094
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_87
+      rect:
+        serializedVersion: 2
+        x: 585
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4686798f445009160800000000000000
+      internalID: 7030124812111931492
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_88
+      rect:
+        serializedVersion: 2
+        x: 594
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf2c1850c04145500800000000000000
+      internalID: 383953910097887996
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_89
+      rect:
+        serializedVersion: 2
+        x: 628
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7afad2dbf07bfb9c0800000000000000
+      internalID: -3909204673308020825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_90
+      rect:
+        serializedVersion: 2
+        x: 703
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a63d66ff58eab7c0800000000000000
+      internalID: -4054673015639820633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_91
+      rect:
+        serializedVersion: 2
+        x: 715
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d7dae995ae076d9c0800000000000000
+      internalID: -3902807875241726595
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_92
+      rect:
+        serializedVersion: 2
+        x: 730
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 514a8274cdef995c0800000000000000
+      internalID: -4208052154760911851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_93
+      rect:
+        serializedVersion: 2
+        x: 809
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69b828b5f096c7ca0800000000000000
+      internalID: -6017819487393117290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_94
+      rect:
+        serializedVersion: 2
+        x: 818
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6076ccd668a6ec150800000000000000
+      internalID: 5894766087874832134
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_95
+      rect:
+        serializedVersion: 2
+        x: 852
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f45f42b5b6d763350800000000000000
+      internalID: 5996117853934515535
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_96
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f911be063251f3a0800000000000000
+      internalID: -6633430384011830800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_97
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3dc4ca329b342300800000000000000
+      internalID: 226371380512607549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_98
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 38
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42251b2a1482433d0800000000000000
+      internalID: -3227910770550287836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_99
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d7ba3bea9081a3a0800000000000000
+      internalID: -6655897371417069616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_100
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55072dec88521cfe0800000000000000
+      internalID: -1170613158623940523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_101
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85d4d62a4d76a3910800000000000000
+      internalID: 1817879562553216344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_102
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e07f5e5f63d9b9d60800000000000000
+      internalID: 7898079230903580430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_103
+      rect:
+        serializedVersion: 2
+        x: 330
+        y: 38
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bde747b1063108e10800000000000000
+      internalID: 2197777921655209691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_104
+      rect:
+        serializedVersion: 2
+        x: 349
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6606def478ce5a860800000000000000
+      internalID: 7540693217007460454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_105
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cab246fac7dbb1640800000000000000
+      internalID: 5051839750242315180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_106
+      rect:
+        serializedVersion: 2
+        x: 496
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b408eef712af7980800000000000000
+      internalID: -8538928144526605136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_107
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79f29f79e7d29c7f0800000000000000
+      internalID: -591891854283690089
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_108
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 38
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8222fb1da83a9dcb0800000000000000
+      internalID: -4838656508013108696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_109
+      rect:
+        serializedVersion: 2
+        x: 573
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbc98f38e6588f7f0800000000000000
+      internalID: -578565842410103620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_110
+      rect:
+        serializedVersion: 2
+        x: 611
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b651ecfc6f8c711e0800000000000000
+      internalID: -2227090528337521301
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_111
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 241e5aca01220e280800000000000000
+      internalID: -9016168998984359614
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_112
+      rect:
+        serializedVersion: 2
+        x: 752
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11997dea074451250800000000000000
+      internalID: 5914708936381405457
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_113
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 38
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8bd9ad7e6fb3a6780800000000000000
+      internalID: -8689066599420093000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_114
+      rect:
+        serializedVersion: 2
+        x: 797
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3f632f970871b190800000000000000
+      internalID: -7948439893202211009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_115
+      rect:
+        serializedVersion: 2
+        x: 835
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f5be886f2efc5990800000000000000
+      internalID: -7395757008478095883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_116
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dac7e662b63aa1160800000000000000
+      internalID: 6997084651675090093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_117
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 25
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9f289a552574b320800000000000000
+      internalID: 2572810090429558683
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_118
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97341231895197a10800000000000000
+      internalID: 1907579660068275065
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_119
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b055c43fc27f09a0800000000000000
+      internalID: -6264662322379927376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_120
+      rect:
+        serializedVersion: 2
+        x: 330
+        y: 25
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46a949275db01aed0800000000000000
+      internalID: -2404627714660853148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_121
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4f5f519d77452e10800000000000000
+      internalID: 2172220999911563086
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_122
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c2f19e4334193980800000000000000
+      internalID: -8558787406246841662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_123
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 25
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19e1274665f266cc0800000000000000
+      internalID: -3718232394248872303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_124
+      rect:
+        serializedVersion: 2
+        x: 584
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: deacf1e6544c22e40800000000000000
+      internalID: 5630278286645906157
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_125
+      rect:
+        serializedVersion: 2
+        x: 747
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a22bdee92f503330800000000000000
+      internalID: 3688552728522072742
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_126
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 25
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d33e19cd01ea7cc30800000000000000
+      internalID: 4379660550084354877
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_ok_127
+      rect:
+        serializedVersion: 2
+        x: 808
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3192c16e314b70d80800000000000000
+      internalID: -8284454991966754541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      outer_ok_0: -3635111676169538363
+      outer_ok_1: 5809184479866625412
+      outer_ok_10: -4984078672551449298
+      outer_ok_100: -1170613158623940523
+      outer_ok_101: 1817879562553216344
+      outer_ok_102: 7898079230903580430
+      outer_ok_103: 2197777921655209691
+      outer_ok_104: 7540693217007460454
+      outer_ok_105: 5051839750242315180
+      outer_ok_106: -8538928144526605136
+      outer_ok_107: -591891854283690089
+      outer_ok_108: -4838656508013108696
+      outer_ok_109: -578565842410103620
+      outer_ok_11: -8158016901379269098
+      outer_ok_110: -2227090528337521301
+      outer_ok_111: -9016168998984359614
+      outer_ok_112: 5914708936381405457
+      outer_ok_113: -8689066599420093000
+      outer_ok_114: -7948439893202211009
+      outer_ok_115: -7395757008478095883
+      outer_ok_116: 6997084651675090093
+      outer_ok_117: 2572810090429558683
+      outer_ok_118: 1907579660068275065
+      outer_ok_119: -6264662322379927376
+      outer_ok_12: 5294386170407321088
+      outer_ok_120: -2404627714660853148
+      outer_ok_121: 2172220999911563086
+      outer_ok_122: -8558787406246841662
+      outer_ok_123: -3718232394248872303
+      outer_ok_124: 5630278286645906157
+      outer_ok_125: 3688552728522072742
+      outer_ok_126: 4379660550084354877
+      outer_ok_127: -8284454991966754541
+      outer_ok_13: 7162563993690569333
+      outer_ok_14: 4948439563138483131
+      outer_ok_15: -8397026093873429293
+      outer_ok_16: -6943430515457797262
+      outer_ok_17: 3043319259749784049
+      outer_ok_18: -1047849125422628902
+      outer_ok_19: -1139344870298557729
+      outer_ok_2: -6669888623071131633
+      outer_ok_20: 7230141337651091257
+      outer_ok_21: -6442864763039974467
+      outer_ok_22: -9046072677010646971
+      outer_ok_23: -8568364282105700144
+      outer_ok_24: 4259727161780229180
+      outer_ok_25: 7998666897792837135
+      outer_ok_26: 1787170306655074145
+      outer_ok_27: 6806655457335963896
+      outer_ok_28: -5201865161384776599
+      outer_ok_29: 4959399059456581047
+      outer_ok_3: 8869909717036512303
+      outer_ok_30: 9041956359904810760
+      outer_ok_31: 4435754330136784887
+      outer_ok_32: 7528217475189067838
+      outer_ok_33: -2676516451230622490
+      outer_ok_34: -3785326923519219733
+      outer_ok_35: -7381224504752225218
+      outer_ok_36: 6411733164731648123
+      outer_ok_37: 7483445429972518150
+      outer_ok_38: 6537208484823301543
+      outer_ok_39: -5861001843768207761
+      outer_ok_4: 4220312925246402888
+      outer_ok_40: -9147512458530976068
+      outer_ok_41: 219899087676064103
+      outer_ok_42: 752213867162653147
+      outer_ok_43: 1398018602396788453
+      outer_ok_44: -2653021729559929762
+      outer_ok_45: -2696362407088619759
+      outer_ok_46: -5508642650121003820
+      outer_ok_47: -3334641231049901521
+      outer_ok_48: -224995639816550480
+      outer_ok_49: 6401942171541902352
+      outer_ok_5: -3612491253298362309
+      outer_ok_50: -8352763966118589112
+      outer_ok_51: -2252148776421336312
+      outer_ok_52: -7683654185222102048
+      outer_ok_53: -8009707752342643212
+      outer_ok_54: 5024936733802950244
+      outer_ok_55: 6240095908557319760
+      outer_ok_56: -2114924406416242771
+      outer_ok_57: -3197321408850316798
+      outer_ok_58: 9050489735661720467
+      outer_ok_59: -7636526772391893652
+      outer_ok_6: 4208114641181898980
+      outer_ok_60: -6217371744112328299
+      outer_ok_61: 6929119931749020175
+      outer_ok_62: -310433150713626153
+      outer_ok_63: -6526672276449040153
+      outer_ok_64: 835172206291718373
+      outer_ok_65: -9094731245198614116
+      outer_ok_66: -8069132055757197911
+      outer_ok_67: 2812524889279056293
+      outer_ok_68: -1708838685226449069
+      outer_ok_69: -540329567084433864
+      outer_ok_7: 1675028820367905255
+      outer_ok_70: 2624433603522336115
+      outer_ok_71: 3276030760993501409
+      outer_ok_72: 1130708546932232498
+      outer_ok_73: 2946769229906071841
+      outer_ok_74: -5007641952504488412
+      outer_ok_75: -8645362383657515117
+      outer_ok_76: 5653409747358952425
+      outer_ok_77: -1861658323566667688
+      outer_ok_78: 1890909502242964602
+      outer_ok_79: 6384263634475890090
+      outer_ok_8: 6601128291408870864
+      outer_ok_80: 2417559512954945964
+      outer_ok_81: 6149347437934600248
+      outer_ok_82: -4394918765508386382
+      outer_ok_83: 3683442011995480063
+      outer_ok_84: -7474148824021680972
+      outer_ok_85: -7910277284888507584
+      outer_ok_86: -3507695775617835094
+      outer_ok_87: 7030124812111931492
+      outer_ok_88: 383953910097887996
+      outer_ok_89: -3909204673308020825
+      outer_ok_9: 4711256118691135817
+      outer_ok_90: -4054673015639820633
+      outer_ok_91: -3902807875241726595
+      outer_ok_92: -4208052154760911851
+      outer_ok_93: -6017819487393117290
+      outer_ok_94: 5894766087874832134
+      outer_ok_95: 5996117853934515535
+      outer_ok_96: -6633430384011830800
+      outer_ok_97: 226371380512607549
+      outer_ok_98: -3227910770550287836
+      outer_ok_99: -6655897371417069616
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

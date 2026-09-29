@@ -1,0 +1,6799 @@
+fileFormatVersion: 2
+guid: f7e3df333a5ff40938ae3d940617d794
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7683569516717228399
+    second: outer_good_0
+  - first:
+      213: -6117709667325403151
+    second: outer_good_1
+  - first:
+      213: -8570349551403470809
+    second: outer_good_2
+  - first:
+      213: -6263278634300898082
+    second: outer_good_3
+  - first:
+      213: 6340101132893940123
+    second: outer_good_4
+  - first:
+      213: -628315122887018172
+    second: outer_good_5
+  - first:
+      213: -1175520725994257095
+    second: outer_good_6
+  - first:
+      213: -534443836511068587
+    second: outer_good_7
+  - first:
+      213: 8281795311702828192
+    second: outer_good_8
+  - first:
+      213: -1018961611805363504
+    second: outer_good_9
+  - first:
+      213: -2473235932124858359
+    second: outer_good_10
+  - first:
+      213: 388048479410630118
+    second: outer_good_11
+  - first:
+      213: 1966101481431320450
+    second: outer_good_12
+  - first:
+      213: -5508659526974179610
+    second: outer_good_13
+  - first:
+      213: -5563201887803058597
+    second: outer_good_14
+  - first:
+      213: 8838004182067391607
+    second: outer_good_15
+  - first:
+      213: 8250622496854556698
+    second: outer_good_16
+  - first:
+      213: -6780983520490117655
+    second: outer_good_17
+  - first:
+      213: 4181159005806460743
+    second: outer_good_18
+  - first:
+      213: 8592853573177277923
+    second: outer_good_19
+  - first:
+      213: 6996465126076707476
+    second: outer_good_20
+  - first:
+      213: -3488065260413715761
+    second: outer_good_21
+  - first:
+      213: -6771667094203253285
+    second: outer_good_22
+  - first:
+      213: 3247519221760987190
+    second: outer_good_23
+  - first:
+      213: -351312507514514890
+    second: outer_good_24
+  - first:
+      213: -4895220631465293671
+    second: outer_good_25
+  - first:
+      213: -339898934323894974
+    second: outer_good_26
+  - first:
+      213: -260539600773484488
+    second: outer_good_27
+  - first:
+      213: -3161418844130392858
+    second: outer_good_28
+  - first:
+      213: 8954439065882860805
+    second: outer_good_29
+  - first:
+      213: 6457225408295986268
+    second: outer_good_30
+  - first:
+      213: -5427710695177941458
+    second: outer_good_31
+  - first:
+      213: 1311860036802767825
+    second: outer_good_32
+  - first:
+      213: 7436724594383390098
+    second: outer_good_33
+  - first:
+      213: -1692835800810570075
+    second: outer_good_34
+  - first:
+      213: -604920107732320435
+    second: outer_good_35
+  - first:
+      213: 548935552674533066
+    second: outer_good_36
+  - first:
+      213: -5404543139413827771
+    second: outer_good_37
+  - first:
+      213: -11802559063067694
+    second: outer_good_38
+  - first:
+      213: 2763301665560114801
+    second: outer_good_39
+  - first:
+      213: -8921275235932752226
+    second: outer_good_40
+  - first:
+      213: 2009978011442465721
+    second: outer_good_41
+  - first:
+      213: -3223467903784566222
+    second: outer_good_42
+  - first:
+      213: -1871155562190379722
+    second: outer_good_43
+  - first:
+      213: 7276379047289111847
+    second: outer_good_44
+  - first:
+      213: 699598107128175052
+    second: outer_good_45
+  - first:
+      213: 3945801906851218673
+    second: outer_good_46
+  - first:
+      213: -6319879916909851667
+    second: outer_good_47
+  - first:
+      213: -3362618784840673916
+    second: outer_good_48
+  - first:
+      213: 8148229555762305884
+    second: outer_good_49
+  - first:
+      213: 4771957872715764475
+    second: outer_good_50
+  - first:
+      213: 93624617969919799
+    second: outer_good_51
+  - first:
+      213: -1246617242442358024
+    second: outer_good_52
+  - first:
+      213: 3062111119932747058
+    second: outer_good_53
+  - first:
+      213: 6588176618835121233
+    second: outer_good_54
+  - first:
+      213: 347238118051605917
+    second: outer_good_55
+  - first:
+      213: 6387662567539425971
+    second: outer_good_56
+  - first:
+      213: -1790654101505873054
+    second: outer_good_57
+  - first:
+      213: 274748089397109229
+    second: outer_good_58
+  - first:
+      213: 3714579559274693245
+    second: outer_good_59
+  - first:
+      213: 3360520344996013653
+    second: outer_good_60
+  - first:
+      213: 8419170135769060801
+    second: outer_good_61
+  - first:
+      213: -2110544813097135926
+    second: outer_good_62
+  - first:
+      213: -260051477796032183
+    second: outer_good_63
+  - first:
+      213: 166922505819811469
+    second: outer_good_64
+  - first:
+      213: 1127695052899821919
+    second: outer_good_65
+  - first:
+      213: -1887504405411922538
+    second: outer_good_66
+  - first:
+      213: -1804012475615431714
+    second: outer_good_67
+  - first:
+      213: 5092548839933549820
+    second: outer_good_68
+  - first:
+      213: -4927876311577521342
+    second: outer_good_69
+  - first:
+      213: 8565042839588211649
+    second: outer_good_70
+  - first:
+      213: 3117761959202291895
+    second: outer_good_71
+  - first:
+      213: 77536157707975451
+    second: outer_good_72
+  - first:
+      213: 4543070259586246842
+    second: outer_good_73
+  - first:
+      213: -4434810558740187892
+    second: outer_good_74
+  - first:
+      213: -8336984396808183287
+    second: outer_good_75
+  - first:
+      213: 4658259255880553652
+    second: outer_good_76
+  - first:
+      213: 209841477013939394
+    second: outer_good_77
+  - first:
+      213: -2035267189023431359
+    second: outer_good_78
+  - first:
+      213: -561273649220620716
+    second: outer_good_79
+  - first:
+      213: 5009114181559041088
+    second: outer_good_80
+  - first:
+      213: -191634260153355359
+    second: outer_good_81
+  - first:
+      213: -3264276483484365306
+    second: outer_good_82
+  - first:
+      213: 6534867174708890629
+    second: outer_good_83
+  - first:
+      213: 3200083687521268119
+    second: outer_good_84
+  - first:
+      213: -8415899763178321102
+    second: outer_good_85
+  - first:
+      213: 7274345140004776929
+    second: outer_good_86
+  - first:
+      213: -7753579334964023564
+    second: outer_good_87
+  - first:
+      213: 798116657205976417
+    second: outer_good_88
+  - first:
+      213: -2339290735302547129
+    second: outer_good_89
+  - first:
+      213: -447619830854695687
+    second: outer_good_90
+  - first:
+      213: -6354655127138891612
+    second: outer_good_91
+  - first:
+      213: 363444114675088109
+    second: outer_good_92
+  - first:
+      213: 1373181052076777557
+    second: outer_good_93
+  - first:
+      213: -5209151093076334604
+    second: outer_good_94
+  - first:
+      213: -1532575362664838744
+    second: outer_good_95
+  - first:
+      213: 8774232149715933402
+    second: outer_good_96
+  - first:
+      213: 6394611298772805687
+    second: outer_good_97
+  - first:
+      213: -3584231264677103350
+    second: outer_good_98
+  - first:
+      213: -4841597539589935942
+    second: outer_good_99
+  - first:
+      213: 8897792656154948109
+    second: outer_good_100
+  - first:
+      213: 7235983884649809804
+    second: outer_good_101
+  - first:
+      213: -2209451061974825520
+    second: outer_good_102
+  - first:
+      213: -3197117845836659542
+    second: outer_good_103
+  - first:
+      213: -3231936107344268549
+    second: outer_good_104
+  - first:
+      213: -1544858299470145161
+    second: outer_good_105
+  - first:
+      213: 3676228119203496586
+    second: outer_good_106
+  - first:
+      213: 8470455458976369270
+    second: outer_good_107
+  - first:
+      213: -4625309536820493903
+    second: outer_good_108
+  - first:
+      213: -5674307812968270411
+    second: outer_good_109
+  - first:
+      213: 7841923438988127966
+    second: outer_good_110
+  - first:
+      213: -6130742357344504333
+    second: outer_good_111
+  - first:
+      213: -7736032726194220166
+    second: outer_good_112
+  - first:
+      213: -2080006730087674540
+    second: outer_good_113
+  - first:
+      213: -5136348022548777025
+    second: outer_good_114
+  - first:
+      213: -6709646151141804659
+    second: outer_good_115
+  - first:
+      213: 4391895628098403860
+    second: outer_good_116
+  - first:
+      213: -8035258016540146665
+    second: outer_good_117
+  - first:
+      213: -6793209891073140641
+    second: outer_good_118
+  - first:
+      213: -2211159553179359423
+    second: outer_good_119
+  - first:
+      213: -7930030966355615544
+    second: outer_good_120
+  - first:
+      213: 615044674230362565
+    second: outer_good_121
+  - first:
+      213: 3463619467784308599
+    second: outer_good_122
+  - first:
+      213: 8799415489895446369
+    second: outer_good_123
+  - first:
+      213: 1091933744783438756
+    second: outer_good_124
+  - first:
+      213: -1281318772724313019
+    second: outer_good_125
+  - first:
+      213: -1165832380488044729
+    second: outer_good_126
+  - first:
+      213: -1353082453254111839
+    second: outer_good_127
+  - first:
+      213: 8928758985398131419
+    second: outer_good_128
+  - first:
+      213: -2616581321549846090
+    second: outer_good_129
+  - first:
+      213: -8406532528801562685
+    second: outer_good_130
+  - first:
+      213: -1894616098772390146
+    second: outer_good_131
+  - first:
+      213: -8236908388815987316
+    second: outer_good_132
+  - first:
+      213: 5536120665398841236
+    second: outer_good_133
+  - first:
+      213: -4599934176760194090
+    second: outer_good_134
+  - first:
+      213: -4999014470637248454
+    second: outer_good_135
+  - first:
+      213: 4045213410681545740
+    second: outer_good_136
+  - first:
+      213: -8224937819563868493
+    second: outer_good_137
+  - first:
+      213: 308572251537486887
+    second: outer_good_138
+  - first:
+      213: 5152785881279454160
+    second: outer_good_139
+  - first:
+      213: -849420519920447251
+    second: outer_good_140
+  - first:
+      213: 7769595344289719871
+    second: outer_good_141
+  - first:
+      213: -8343745987117394478
+    second: outer_good_142
+  - first:
+      213: -6209277058604826984
+    second: outer_good_143
+  - first:
+      213: -7859522966331426144
+    second: outer_good_144
+  - first:
+      213: 2717942898404341687
+    second: outer_good_145
+  - first:
+      213: -58198112166149493
+    second: outer_good_146
+  - first:
+      213: -5806861673745474872
+    second: outer_good_147
+  - first:
+      213: -5558138006180330344
+    second: outer_good_148
+  - first:
+      213: -4610627340404568328
+    second: outer_good_149
+  - first:
+      213: 1430753579281615295
+    second: outer_good_150
+  - first:
+      213: 5819329030298476120
+    second: outer_good_151
+  - first:
+      213: 5310271291972846966
+    second: outer_good_152
+  - first:
+      213: 7217910644026065771
+    second: outer_good_153
+  - first:
+      213: 5005831117856861157
+    second: outer_good_154
+  - first:
+      213: 5775856317026396778
+    second: outer_good_155
+  - first:
+      213: -4870989472369540749
+    second: outer_good_156
+  - first:
+      213: -4297262668388837091
+    second: outer_good_157
+  - first:
+      213: -416974237894003980
+    second: outer_good_158
+  - first:
+      213: -2981664948190579561
+    second: outer_good_159
+  - first:
+      213: 8094114085709319269
+    second: outer_good_160
+  - first:
+      213: -7754121311566810168
+    second: outer_good_161
+  - first:
+      213: 6580227586070124326
+    second: outer_good_162
+  - first:
+      213: -2202472995651647428
+    second: outer_good_163
+  - first:
+      213: 7040597966798415541
+    second: outer_good_164
+  - first:
+      213: 7629265068989762734
+    second: outer_good_165
+  - first:
+      213: -3922664447839246097
+    second: outer_good_166
+  - first:
+      213: 8548286051449515913
+    second: outer_good_167
+  - first:
+      213: 6857803918581783842
+    second: outer_good_168
+  - first:
+      213: 6020522372148215219
+    second: outer_good_169
+  - first:
+      213: -8923087472961003910
+    second: outer_good_170
+  - first:
+      213: -4191021585537702444
+    second: outer_good_171
+  - first:
+      213: -1220216529060715137
+    second: outer_good_172
+  - first:
+      213: -7560412680700834383
+    second: outer_good_173
+  - first:
+      213: 1569614138225291178
+    second: outer_good_174
+  - first:
+      213: -1910063401089945185
+    second: outer_good_175
+  - first:
+      213: -1675295841410231732
+    second: outer_good_176
+  - first:
+      213: 2126971183522902756
+    second: outer_good_177
+  - first:
+      213: 7897469624128453061
+    second: outer_good_178
+  - first:
+      213: -2233120959744381621
+    second: outer_good_179
+  - first:
+      213: 3596708121799254855
+    second: outer_good_180
+  - first:
+      213: -4931413574281540750
+    second: outer_good_181
+  - first:
+      213: 3028236890681812926
+    second: outer_good_182
+  - first:
+      213: 6232705080655096984
+    second: outer_good_183
+  - first:
+      213: -2891331839163683396
+    second: outer_good_184
+  - first:
+      213: -5718156286763825647
+    second: outer_good_185
+  - first:
+      213: -817750394146189933
+    second: outer_good_186
+  - first:
+      213: 7578164205679278297
+    second: outer_good_187
+  - first:
+      213: -4482140310976841688
+    second: outer_good_188
+  - first:
+      213: -8619141293446554953
+    second: outer_good_189
+  - first:
+      213: 1839918459705979689
+    second: outer_good_190
+  - first:
+      213: 5276475769367984447
+    second: outer_good_191
+  - first:
+      213: 5211531956685966676
+    second: outer_good_192
+  - first:
+      213: -3939108213993003409
+    second: outer_good_193
+  - first:
+      213: -2632966946883524176
+    second: outer_good_194
+  - first:
+      213: 7569264067158190623
+    second: outer_good_195
+  - first:
+      213: 6142515230666059095
+    second: outer_good_196
+  - first:
+      213: -349611311441370646
+    second: outer_good_197
+  - first:
+      213: -8495692798108275031
+    second: outer_good_198
+  - first:
+      213: -8320630818858695957
+    second: outer_good_199
+  - first:
+      213: 2441442780891983742
+    second: outer_good_200
+  - first:
+      213: -4445849112646728632
+    second: outer_good_201
+  - first:
+      213: 2231210903062969631
+    second: outer_good_202
+  - first:
+      213: -2837945663229010857
+    second: outer_good_203
+  - first:
+      213: 2833960449314907425
+    second: outer_good_204
+  - first:
+      213: 5358424012638402729
+    second: outer_good_205
+  - first:
+      213: 8517868869837729888
+    second: outer_good_206
+  - first:
+      213: 2668358619130010050
+    second: outer_good_207
+  - first:
+      213: 6030717093678700294
+    second: outer_good_208
+  - first:
+      213: 1346834241680527268
+    second: outer_good_209
+  - first:
+      213: 4516636180135272710
+    second: outer_good_210
+  - first:
+      213: -4401745011005297760
+    second: outer_good_211
+  - first:
+      213: -3826226208204426639
+    second: outer_good_212
+  - first:
+      213: -745792759747240237
+    second: outer_good_213
+  - first:
+      213: 1164226570059705427
+    second: outer_good_214
+  - first:
+      213: -2350181054634355478
+    second: outer_good_215
+  - first:
+      213: -2226456552728919547
+    second: outer_good_216
+  - first:
+      213: -3348154106229674464
+    second: outer_good_217
+  - first:
+      213: -2936187466922819253
+    second: outer_good_218
+  - first:
+      213: 3920303896866749309
+    second: outer_good_219
+  - first:
+      213: -7049440679429342707
+    second: outer_good_220
+  - first:
+      213: 6921307731055188063
+    second: outer_good_221
+  - first:
+      213: 2890130093909380548
+    second: outer_good_222
+  - first:
+      213: -1374338900538707347
+    second: outer_good_223
+  - first:
+      213: -4441111265125393799
+    second: outer_good_224
+  - first:
+      213: -4522769973635728536
+    second: outer_good_225
+  - first:
+      213: 4695959131982995804
+    second: outer_good_226
+  - first:
+      213: 3298965561631063336
+    second: outer_good_227
+  - first:
+      213: 5248902718602439725
+    second: outer_good_228
+  - first:
+      213: -6137023908502258620
+    second: outer_good_229
+  - first:
+      213: 3076780852421810282
+    second: outer_good_230
+  - first:
+      213: -9146352669120075469
+    second: outer_good_231
+  - first:
+      213: -2560883019790487764
+    second: outer_good_232
+  - first:
+      213: -4298528445103767833
+    second: outer_good_233
+  - first:
+      213: -8643386486371654054
+    second: outer_good_234
+  - first:
+      213: -9079592070697506265
+    second: outer_good_235
+  - first:
+      213: 5660530709242108297
+    second: outer_good_236
+  - first:
+      213: 7001233219892209140
+    second: outer_good_237
+  - first:
+      213: -5414895811868716919
+    second: outer_good_238
+  - first:
+      213: -6415621212557622692
+    second: outer_good_239
+  - first:
+      213: -4981154588170005833
+    second: outer_good_240
+  - first:
+      213: 4998654641045300421
+    second: outer_good_241
+  - first:
+      213: 3820202216986947968
+    second: outer_good_242
+  - first:
+      213: 5663351441495390181
+    second: outer_good_243
+  - first:
+      213: -6662085194478252890
+    second: outer_good_244
+  - first:
+      213: -7514048017024216252
+    second: outer_good_245
+  - first:
+      213: -9140500417763191962
+    second: outer_good_246
+  - first:
+      213: 4465162996963597352
+    second: outer_good_247
+  - first:
+      213: -4125180069480162082
+    second: outer_good_248
+  - first:
+      213: 7740285130807034756
+    second: outer_good_249
+  - first:
+      213: -2511628704273157161
+    second: outer_good_250
+  - first:
+      213: -1878340266943691153
+    second: outer_good_251
+  - first:
+      213: 8645801104087259858
+    second: outer_good_252
+  - first:
+      213: 6396417284740719461
+    second: outer_good_253
+  - first:
+      213: 2882756680582554055
+    second: outer_good_254
+  - first:
+      213: -4168360564985370051
+    second: outer_good_255
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: outer_good_0
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f6143f224c581aa60800000000000000
+      internalID: 7683569516717228399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_1
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 185
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ff98187877891ba0800000000000000
+      internalID: -6117709667325403151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_2
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 187
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 720faab9d70001980800000000000000
+      internalID: -8570349551403470809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_3
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 185
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed48331344d5419a0800000000000000
+      internalID: -6263278634300898082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_4
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b99e13a93609cf750800000000000000
+      internalID: 6340101132893940123
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_5
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 449305589b6c747f0800000000000000
+      internalID: -628315122887018172
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_6
+      rect:
+        serializedVersion: 2
+        x: 314
+        y: 185
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 935c00db026bfafe0800000000000000
+      internalID: -1175520725994257095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_7
+      rect:
+        serializedVersion: 2
+        x: 330
+        y: 187
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55e5c5c89264598f0800000000000000
+      internalID: -534443836511068587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_8
+      rect:
+        serializedVersion: 2
+        x: 345
+        y: 185
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a4ea8805f8dee270800000000000000
+      internalID: 8281795311702828192
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_9
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d2f49010dbebd1f0800000000000000
+      internalID: -1018961611805363504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_10
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90837f3060d4dadd0800000000000000
+      internalID: -2473235932124858359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_11
+      rect:
+        serializedVersion: 2
+        x: 538
+        y: 185
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6eda6ea3900a26500800000000000000
+      internalID: 388048479410630118
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_12
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 187
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 287451961eef84b10800000000000000
+      internalID: 1966101481431320450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_13
+      rect:
+        serializedVersion: 2
+        x: 569
+        y: 185
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e6f12aa85f4d83b0800000000000000
+      internalID: -5508659526974179610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_14
+      rect:
+        serializedVersion: 2
+        x: 584
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5657bfab598bc2b0800000000000000
+      internalID: -5563201887803058597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_15
+      rect:
+        serializedVersion: 2
+        x: 747
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77c2b835af5e6aa70800000000000000
+      internalID: 8838004182067391607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_16
+      rect:
+        serializedVersion: 2
+        x: 762
+        y: 185
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a10ccdc7279108270800000000000000
+      internalID: 8250622496854556698
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_17
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 187
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e5a8615a6b15e1a0800000000000000
+      internalID: -6780983520490117655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_18
+      rect:
+        serializedVersion: 2
+        x: 793
+        y: 185
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74ff48a86f5760a30800000000000000
+      internalID: 4181159005806460743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_19
+      rect:
+        serializedVersion: 2
+        x: 808
+        y: 180
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ed7d244cc2ff3770800000000000000
+      internalID: 8592853573177277923
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_20
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 492f53b96ff681160800000000000000
+      internalID: 6996465126076707476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_21
+      rect:
+        serializedVersion: 2
+        x: 60
+        y: 173
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fcaf8af4027e79fc0800000000000000
+      internalID: -3488065260413715761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_22
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 142
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bdd30d8d7a43602a0800000000000000
+      internalID: -6771667094203253285
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_23
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 630115ea681811d20800000000000000
+      internalID: 3247519221760987190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_24
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 148
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6321270c223ef1bf0800000000000000
+      internalID: -351312507514514890
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_25
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 149
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 998095c85cea01cb0800000000000000
+      internalID: -4895220631465293671
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_26
+      rect:
+        serializedVersion: 2
+        x: 118
+        y: 148
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 245271858bf684bf0800000000000000
+      internalID: -339898934323894974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_27
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83079fd0d90626cf0800000000000000
+      internalID: -260539600773484488
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_28
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 142
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e4c169af426024d0800000000000000
+      internalID: -3161418844130392858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_29
+      rect:
+        serializedVersion: 2
+        x: 150
+        y: 173
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50d14d443ee844c70800000000000000
+      internalID: 8954439065882860805
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_30
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c54eb180c4cac9950800000000000000
+      internalID: 6457225408295986268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_31
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2e845641e5eca4b0800000000000000
+      internalID: -5427710695177941458
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_32
+      rect:
+        serializedVersion: 2
+        x: 284
+        y: 173
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1dbe8a0c0c9a43210800000000000000
+      internalID: 1311860036802767825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_33
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 142
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 29502acfd9d843760800000000000000
+      internalID: 7436724594383390098
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_34
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ae3f95eec6d188e0800000000000000
+      internalID: -1692835800810570075
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_35
+      rect:
+        serializedVersion: 2
+        x: 317
+        y: 148
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d4fbf15fd54ea97f0800000000000000
+      internalID: -604920107732320435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_36
+      rect:
+        serializedVersion: 2
+        x: 330
+        y: 149
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ace8fbd0af53e9700800000000000000
+      internalID: 548935552674533066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_37
+      rect:
+        serializedVersion: 2
+        x: 342
+        y: 148
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54fd6f136a43ff4b0800000000000000
+      internalID: -5404543139413827771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_38
+      rect:
+        serializedVersion: 2
+        x: 349
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d3fa9392a116dff0800000000000000
+      internalID: -11802559063067694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_39
+      rect:
+        serializedVersion: 2
+        x: 356
+        y: 142
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 176b4f66938395620800000000000000
+      internalID: 2763301665560114801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_40
+      rect:
+        serializedVersion: 2
+        x: 374
+        y: 173
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e963dba9073413480800000000000000
+      internalID: -8921275235932752226
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_41
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9bbcf522a50e4eb10800000000000000
+      internalID: 2009978011442465721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_42
+      rect:
+        serializedVersion: 2
+        x: 496
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2324c0a2501f343d0800000000000000
+      internalID: -3223467903784566222
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_43
+      rect:
+        serializedVersion: 2
+        x: 508
+        y: 173
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63565241ee15806e0800000000000000
+      internalID: -1871155562190379722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_44
+      rect:
+        serializedVersion: 2
+        x: 516
+        y: 142
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72543cc0134eaf460800000000000000
+      internalID: 7276379047289111847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_45
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc919e495c875b900800000000000000
+      internalID: 699598107128175052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_46
+      rect:
+        serializedVersion: 2
+        x: 541
+        y: 148
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f40de3bded42c630800000000000000
+      internalID: 3945801906851218673
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_47
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 149
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: deb867123b64b48a0800000000000000
+      internalID: -6319879916909851667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_48
+      rect:
+        serializedVersion: 2
+        x: 566
+        y: 148
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4851486f7049551d0800000000000000
+      internalID: -3362618784840673916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_49
+      rect:
+        serializedVersion: 2
+        x: 573
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c5b1d8b1c93541170800000000000000
+      internalID: 8148229555762305884
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_50
+      rect:
+        serializedVersion: 2
+        x: 580
+        y: 142
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf21a5ef666693240800000000000000
+      internalID: 4771957872715764475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_51
+      rect:
+        serializedVersion: 2
+        x: 598
+        y: 173
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7372450181f9c4100800000000000000
+      internalID: 93624617969919799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_52
+      rect:
+        serializedVersion: 2
+        x: 611
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f2a85d093023bee0800000000000000
+      internalID: -1246617242442358024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_53
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23d6d5ef6ddce7a20800000000000000
+      internalID: 3062111119932747058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_54
+      rect:
+        serializedVersion: 2
+        x: 732
+        y: 173
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 154933baab7ed6b50800000000000000
+      internalID: 6588176618835121233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_55
+      rect:
+        serializedVersion: 2
+        x: 740
+        y: 142
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d9de0f68a33a1d400800000000000000
+      internalID: 347238118051605917
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_56
+      rect:
+        serializedVersion: 2
+        x: 752
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b24f3b034985a850800000000000000
+      internalID: 6387662567539425971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_57
+      rect:
+        serializedVersion: 2
+        x: 765
+        y: 148
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26b652cf4915627e0800000000000000
+      internalID: -1790654101505873054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_58
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 149
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de16b3f7ee910d300800000000000000
+      internalID: 274748089397109229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_59
+      rect:
+        serializedVersion: 2
+        x: 790
+        y: 148
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d72ce70bd66dc8330800000000000000
+      internalID: 3714579559274693245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_60
+      rect:
+        serializedVersion: 2
+        x: 797
+        y: 146
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 556e5ffe277f2ae20800000000000000
+      internalID: 3360520344996013653
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_61
+      rect:
+        serializedVersion: 2
+        x: 804
+        y: 142
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c5971eb1a6e6d470800000000000000
+      internalID: 8419170135769060801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_62
+      rect:
+        serializedVersion: 2
+        x: 822
+        y: 173
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ac05dc4bca6d5b2e0800000000000000
+      internalID: -2110544813097135926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_63
+      rect:
+        serializedVersion: 2
+        x: 835
+        y: 163
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 941f6aa0f8c146cf0800000000000000
+      internalID: -260051477796032183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_64
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 151
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8e68687227015200800000000000000
+      internalID: 166922505819811469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_65
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 132
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f592f030da066af00800000000000000
+      internalID: 1127695052899821919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_66
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69dff636ebc3ec5e0800000000000000
+      internalID: -1887504405411922538
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_67
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed3b194263cd6f6e0800000000000000
+      internalID: -1804012475615431714
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_68
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 132
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfc119d303e5ca640800000000000000
+      internalID: 5092548839933549820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_69
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 151
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2431c578a9aac9bb0800000000000000
+      internalID: -4927876311577521342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_70
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 151
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1cb88a345152dd670800000000000000
+      internalID: 8565042839588211649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_71
+      rect:
+        serializedVersion: 2
+        x: 273
+        y: 132
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b08a78bbf3844b20800000000000000
+      internalID: 3117761959202291895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_72
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1bbe6189b6731100800000000000000
+      internalID: 77536157707975451
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_73
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab8a744b45a3c0f30800000000000000
+      internalID: 4543070259586246842
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_74
+      rect:
+        serializedVersion: 2
+        x: 366
+        y: 132
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c05b3202b436472c0800000000000000
+      internalID: -4434810558740187892
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_75
+      rect:
+        serializedVersion: 2
+        x: 397
+        y: 151
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9022642ccd41d4c80800000000000000
+      internalID: -8336984396808183287
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_76
+      rect:
+        serializedVersion: 2
+        x: 486
+        y: 151
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b49f6adc1675a040800000000000000
+      internalID: 4658259255880553652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_77
+      rect:
+        serializedVersion: 2
+        x: 497
+        y: 132
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c42f8826b189e200800000000000000
+      internalID: 209841477013939394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_78
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 145204f564741c3e0800000000000000
+      internalID: -2035267189023431359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_79
+      rect:
+        serializedVersion: 2
+        x: 585
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45eea6cf694f538f0800000000000000
+      internalID: -561273649220620716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_80
+      rect:
+        serializedVersion: 2
+        x: 590
+        y: 132
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04cb2370fc2f38540800000000000000
+      internalID: 5009114181559041088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_81
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 151
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a3b3ccd7ad275df0800000000000000
+      internalID: -191634260153355359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_82
+      rect:
+        serializedVersion: 2
+        x: 710
+        y: 151
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60ec04945d5f2b2d0800000000000000
+      internalID: -3264276483484365306
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_83
+      rect:
+        serializedVersion: 2
+        x: 721
+        y: 132
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50c42ea721380ba50800000000000000
+      internalID: 6534867174708890629
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_84
+      rect:
+        serializedVersion: 2
+        x: 730
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7913a36b82bf86c20800000000000000
+      internalID: 3200083687521268119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_85
+      rect:
+        serializedVersion: 2
+        x: 809
+        y: 137
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23b467631c7b43b80800000000000000
+      internalID: -8415899763178321102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_86
+      rect:
+        serializedVersion: 2
+        x: 814
+        y: 132
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ebe29b1d5aa3f460800000000000000
+      internalID: 7274345140004776929
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_87
+      rect:
+        serializedVersion: 2
+        x: 845
+        y: 151
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4fee8a1dca0c56490800000000000000
+      internalID: -7753579334964023564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_88
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16d95120fda731b00800000000000000
+      internalID: 798116657205976417
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_89
+      rect:
+        serializedVersion: 2
+        x: 43
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 749ede7687b298fd0800000000000000
+      internalID: -2339290735302547129
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_90
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f44c7ba22cb9c9f0800000000000000
+      internalID: -447619830854695687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_91
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a885cc84dabfc7a0800000000000000
+      internalID: -6354655127138891612
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_92
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dea3ae62f763b0500800000000000000
+      internalID: 363444114675088109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_93
+      rect:
+        serializedVersion: 2
+        x: 267
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 550655534e48e0310800000000000000
+      internalID: 1373181052076777557
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_94
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f7e8db1ea065b7b0800000000000000
+      internalID: -5209151093076334604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_95
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a9c8dcd3d23bbae0800000000000000
+      internalID: -1532575362664838744
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_96
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad851acf6a554c970800000000000000
+      internalID: 8774232149715933402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_97
+      rect:
+        serializedVersion: 2
+        x: 491
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7386d0c98193eb850800000000000000
+      internalID: 6394611298772805687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_98
+      rect:
+        serializedVersion: 2
+        x: 594
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a097214a7a0424ec0800000000000000
+      internalID: -3584231264677103350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_99
+      rect:
+        serializedVersion: 2
+        x: 628
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: abc265b80b03fccb0800000000000000
+      internalID: -4841597539589935942
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_100
+      rect:
+        serializedVersion: 2
+        x: 703
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d02f13b374f4b7b70800000000000000
+      internalID: 8897792656154948109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_101
+      rect:
+        serializedVersion: 2
+        x: 715
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c87c00551016b6460800000000000000
+      internalID: 7235983884649809804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_102
+      rect:
+        serializedVersion: 2
+        x: 818
+        y: 125
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d5816e17f37651e0800000000000000
+      internalID: -2209451061974825520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_103
+      rect:
+        serializedVersion: 2
+        x: 852
+        y: 136
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa408dd124e81a3d0800000000000000
+      internalID: -3197117845836659542
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_104
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 121
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf27cf0eb3bd523d0800000000000000
+      internalID: -3231936107344268549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_105
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 118
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77994c7cf8f8f8ae0800000000000000
+      internalID: -1544858299470145161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_106
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 118
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a824d663ff5940330800000000000000
+      internalID: 3676228119203496586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_107
+      rect:
+        serializedVersion: 2
+        x: 185
+        y: 121
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67a0e0e8c5a1d8570800000000000000
+      internalID: 8470455458976369270
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_108
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 121
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b186917b799fcfb0800000000000000
+      internalID: -4625309536820493903
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_109
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 118
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b57dcd9b1fc041b0800000000000000
+      internalID: -5674307812968270411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_110
+      rect:
+        serializedVersion: 2
+        x: 372
+        y: 118
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ede62b8c1db14dc60800000000000000
+      internalID: 7841923438988127966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_111
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 121
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f53a0dde4a3beaa0800000000000000
+      internalID: -6130742357344504333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_112
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 121
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a739568093714a490800000000000000
+      internalID: -7736032726194220166
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_113
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 118
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45dc3ba36e45223e0800000000000000
+      internalID: -2080006730087674540
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_114
+      rect:
+        serializedVersion: 2
+        x: 596
+        y: 118
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb73331efa608b8b0800000000000000
+      internalID: -5136348022548777025
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_115
+      rect:
+        serializedVersion: 2
+        x: 633
+        y: 121
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8530a0ff5c82e2a0800000000000000
+      internalID: -6709646151141804659
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_116
+      rect:
+        serializedVersion: 2
+        x: 698
+        y: 121
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41e7563fdc523fc30800000000000000
+      internalID: 4391895628098403860
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_117
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 118
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 714c38518670d7090800000000000000
+      internalID: -8035258016540146665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_118
+      rect:
+        serializedVersion: 2
+        x: 820
+        y: 118
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f585ae5989ba9b1a0800000000000000
+      internalID: -6793209891073140641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_119
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 121
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14768030a126051e0800000000000000
+      internalID: -2211159553179359423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_120
+      rect:
+        serializedVersion: 2
+        x: 25
+        y: 106
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c0a688e9ded2f190800000000000000
+      internalID: -7930030966355615544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_121
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 106
+        width: 37
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c12f706fd3198800800000000000000
+      internalID: 615044674230362565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_122
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 93
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 777496e0e8f311030800000000000000
+      internalID: 3463619467784308599
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_123
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 93
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 167b94a44cdcd1a70800000000000000
+      internalID: 8799415489895446369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_124
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 106
+        width: 37
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a33410a4f3572f00800000000000000
+      internalID: 1091933744783438756
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_125
+      rect:
+        serializedVersion: 2
+        x: 186
+        y: 106
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5445abb6d57d73ee0800000000000000
+      internalID: -1281318772724313019
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_126
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 106
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74fac5570a122dfe0800000000000000
+      internalID: -1165832380488044729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_127
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 106
+        width: 37
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ad79fd7da2e83de0800000000000000
+      internalID: -1353082453254111839
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_128
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 93
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bda9bb99df259eb70800000000000000
+      internalID: 8928758985398131419
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_129
+      rect:
+        serializedVersion: 2
+        x: 372
+        y: 93
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b9691bb62900bbd0800000000000000
+      internalID: -2616581321549846090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_130
+      rect:
+        serializedVersion: 2
+        x: 373
+        y: 106
+        width: 37
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3cf340c643ff55b80800000000000000
+      internalID: -8406532528801562685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_131
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 106
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efe6fee32b8f4b5e0800000000000000
+      internalID: -1894616098772390146
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_132
+      rect:
+        serializedVersion: 2
+        x: 473
+        y: 106
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8d103d167f90bd80800000000000000
+      internalID: -8236908388815987316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_133
+      rect:
+        serializedVersion: 2
+        x: 486
+        y: 106
+        width: 37
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49f0cced96044dc40800000000000000
+      internalID: 5536120665398841236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_134
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 93
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6db970cdc30c920c0800000000000000
+      internalID: -4599934176760194090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_135
+      rect:
+        serializedVersion: 2
+        x: 596
+        y: 93
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3021aa23deef9ab0800000000000000
+      internalID: -4999014470637248454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_136
+      rect:
+        serializedVersion: 2
+        x: 597
+        y: 106
+        width: 37
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c04e1502a2c732830800000000000000
+      internalID: 4045213410681545740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_137
+      rect:
+        serializedVersion: 2
+        x: 634
+        y: 106
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3be383571a62bdd80800000000000000
+      internalID: -8224937819563868493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_138
+      rect:
+        serializedVersion: 2
+        x: 697
+        y: 106
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7243f60f3d4484400800000000000000
+      internalID: 308572251537486887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_139
+      rect:
+        serializedVersion: 2
+        x: 710
+        y: 106
+        width: 37
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0db5f49557f528740800000000000000
+      internalID: 5152785881279454160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_140
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 93
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de0d63d99804634f0800000000000000
+      internalID: -849420519920447251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_141
+      rect:
+        serializedVersion: 2
+        x: 820
+        y: 93
+        width: 37
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f36eae0fcc523db60800000000000000
+      internalID: 7769595344289719871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_142
+      rect:
+        serializedVersion: 2
+        x: 821
+        y: 106
+        width: 37
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d5d6c55b3f053c80800000000000000
+      internalID: -8343745987117394478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_143
+      rect:
+        serializedVersion: 2
+        x: 858
+        y: 106
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89e70e1d96734d9a0800000000000000
+      internalID: -6209277058604826984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_144
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 90
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0aa7acfe08d5de290800000000000000
+      internalID: -7859522966331426144
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_145
+      rect:
+        serializedVersion: 2
+        x: 43
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b7bf237aa218b520800000000000000
+      internalID: 2717942898404341687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_146
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 68
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b820db5102d313ff0800000000000000
+      internalID: -58198112166149493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_147
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 68
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ca1294e212e96fa0800000000000000
+      internalID: -5806861673745474872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_148
+      rect:
+        serializedVersion: 2
+        x: 146
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89406018ee68dd2b0800000000000000
+      internalID: -5558138006180330344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_149
+      rect:
+        serializedVersion: 2
+        x: 185
+        y: 90
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8fe4b7facd2c300c0800000000000000
+      internalID: -4610627340404568328
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_150
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 90
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb90336ccce0bd310800000000000000
+      internalID: 1430753579281615295
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_151
+      rect:
+        serializedVersion: 2
+        x: 267
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85e1f02cbe862c050800000000000000
+      internalID: 5819329030298476120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_152
+      rect:
+        serializedVersion: 2
+        x: 273
+        y: 68
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6750ff2ea9fd1b940800000000000000
+      internalID: 5310271291972846966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_153
+      rect:
+        serializedVersion: 2
+        x: 366
+        y: 68
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b634fa51d7b2b2460800000000000000
+      internalID: 7217910644026065771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_154
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5eb647131e8487540800000000000000
+      internalID: 5005831117856861157
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_155
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 90
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6aed02f7b6f72050800000000000000
+      internalID: 5775856317026396778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_156
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 90
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3710fbae1e4c66cb0800000000000000
+      internalID: -4870989472369540749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_157
+      rect:
+        serializedVersion: 2
+        x: 491
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d19d228fe5e0d54c0800000000000000
+      internalID: -4297262668388837091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_158
+      rect:
+        serializedVersion: 2
+        x: 497
+        y: 68
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f2b6ddc32c963af0800000000000000
+      internalID: -416974237894003980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_159
+      rect:
+        serializedVersion: 2
+        x: 590
+        y: 68
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 794fdd3f68ffe96d0800000000000000
+      internalID: -2981664948190579561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_160
+      rect:
+        serializedVersion: 2
+        x: 594
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56c803260e1145070800000000000000
+      internalID: 8094114085709319269
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_161
+      rect:
+        serializedVersion: 2
+        x: 633
+        y: 90
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c336ce00c3d36490800000000000000
+      internalID: -7754121311566810168
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_162
+      rect:
+        serializedVersion: 2
+        x: 698
+        y: 90
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6279fe0402aa15b50800000000000000
+      internalID: 6580227586070124326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_163
+      rect:
+        serializedVersion: 2
+        x: 715
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c380bcaca7e3f61e0800000000000000
+      internalID: -2202472995651647428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_164
+      rect:
+        serializedVersion: 2
+        x: 721
+        y: 68
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b66b515c8a35b160800000000000000
+      internalID: 7040597966798415541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_165
+      rect:
+        serializedVersion: 2
+        x: 814
+        y: 68
+        width: 33
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eac4e6e982890e960800000000000000
+      internalID: 7629265068989762734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_166
+      rect:
+        serializedVersion: 2
+        x: 818
+        y: 80
+        width: 35
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe8ec75c775ef89c0800000000000000
+      internalID: -3922664447839246097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_167
+      rect:
+        serializedVersion: 2
+        x: 857
+        y: 90
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98f231f7fdc91a670800000000000000
+      internalID: 8548286051449515913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_168
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22d595a6450db2f50800000000000000
+      internalID: 6857803918581783842
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_169
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3bdbf2a03313d8350800000000000000
+      internalID: 6020522372148215219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_170
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 49
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7edb6a4833da2480800000000000000
+      internalID: -8923087472961003910
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_171
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d5e70ca21086d5c0800000000000000
+      internalID: -4191021585537702444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_172
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 39
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f75a644288be01fe0800000000000000
+      internalID: -1220216529060715137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_173
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 38
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bdc77349b4041790800000000000000
+      internalID: -7560412680700834383
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_174
+      rect:
+        serializedVersion: 2
+        x: 118
+        y: 39
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aaf69571eb368c510800000000000000
+      internalID: 1569614138225291178
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_175
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f913f87e4771e75e0800000000000000
+      internalID: -1910063401089945185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_176
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 49
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c42dd0fee4720c8e0800000000000000
+      internalID: -1675295841410231732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_177
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e2ff51b505848d10800000000000000
+      internalID: 2126971183522902756
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_178
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c93d92d7c2799d60800000000000000
+      internalID: 7897469624128453061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_179
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4de4f5915c5201e0800000000000000
+      internalID: -2233120959744381621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_180
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7436b980bf21ae130800000000000000
+      internalID: 3596708121799254855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_181
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 49
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27bc8606b79109bb0800000000000000
+      internalID: -4931413574281540750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_182
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb7a2d46865760a20800000000000000
+      internalID: 3028236890681812926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_183
+      rect:
+        serializedVersion: 2
+        x: 317
+        y: 39
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89c2832af340f7650800000000000000
+      internalID: 6232705080655096984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_184
+      rect:
+        serializedVersion: 2
+        x: 330
+        y: 38
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbd2fded20defd7d0800000000000000
+      internalID: -2891331839163683396
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_185
+      rect:
+        serializedVersion: 2
+        x: 342
+        y: 39
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 116864d372705a0b0800000000000000
+      internalID: -5718156286763825647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_186
+      rect:
+        serializedVersion: 2
+        x: 349
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39d0bf16954c6a4f0800000000000000
+      internalID: -817750394146189933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_187
+      rect:
+        serializedVersion: 2
+        x: 356
+        y: 49
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d8f719b13c0b2960800000000000000
+      internalID: 7578164205679278297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_188
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82834c2722d3cc1c0800000000000000
+      internalID: -4482140310976841688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_189
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ba9737e8a8a26880800000000000000
+      internalID: -8619141293446554953
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_190
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 923757e3714b88910800000000000000
+      internalID: 1839918459705979689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_191
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f39722b91cec93940800000000000000
+      internalID: 5276475769367984447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_192
+      rect:
+        serializedVersion: 2
+        x: 516
+        y: 49
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45d0dd5e3b4135840800000000000000
+      internalID: 5211531956685966676
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_193
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f66af1d13f97559c0800000000000000
+      internalID: -3939108213993003409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_194
+      rect:
+        serializedVersion: 2
+        x: 541
+        y: 39
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b9a9a90382d57bd0800000000000000
+      internalID: -2632966946883524176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_195
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 38
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1aa71eb09d6b0960800000000000000
+      internalID: 7569264067158190623
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_196
+      rect:
+        serializedVersion: 2
+        x: 566
+        y: 39
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 75de64fce099e3550800000000000000
+      internalID: 6142515230666059095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_197
+      rect:
+        serializedVersion: 2
+        x: 573
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae124145d5ee52bf0800000000000000
+      internalID: -349611311441370646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_198
+      rect:
+        serializedVersion: 2
+        x: 580
+        y: 49
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ae69e7896c391a80800000000000000
+      internalID: -8495692798108275031
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_199
+      rect:
+        serializedVersion: 2
+        x: 585
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be282c6da5e278c80800000000000000
+      internalID: -8320630818858695957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_200
+      rect:
+        serializedVersion: 2
+        x: 628
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7f228e164fb1e120800000000000000
+      internalID: 2441442780891983742
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_201
+      rect:
+        serializedVersion: 2
+        x: 703
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 844c4b389cb2d42c0800000000000000
+      internalID: -4445849112646728632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_202
+      rect:
+        serializedVersion: 2
+        x: 730
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1dfb00be7ad6fe10800000000000000
+      internalID: 2231210903062969631
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_203
+      rect:
+        serializedVersion: 2
+        x: 740
+        y: 49
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 75cdf5394779d98d0800000000000000
+      internalID: -2837945663229010857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_204
+      rect:
+        serializedVersion: 2
+        x: 752
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 125ebe08300445720800000000000000
+      internalID: 2833960449314907425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_205
+      rect:
+        serializedVersion: 2
+        x: 765
+        y: 39
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a83c35df32fc5a40800000000000000
+      internalID: 5358424012638402729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_206
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 38
+        width: 12
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06039068b9c853670800000000000000
+      internalID: 8517868869837729888
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_207
+      rect:
+        serializedVersion: 2
+        x: 790
+        y: 39
+        width: 13
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c9989ac60ae70520800000000000000
+      internalID: 2668358619130010050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_208
+      rect:
+        serializedVersion: 2
+        x: 797
+        y: 43
+        width: 19
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 607589d9e3961b350800000000000000
+      internalID: 6030717093678700294
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_209
+      rect:
+        serializedVersion: 2
+        x: 804
+        y: 49
+        width: 24
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4af43b26b9ae0b210800000000000000
+      internalID: 1346834241680527268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_210
+      rect:
+        serializedVersion: 2
+        x: 809
+        y: 58
+        width: 29
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 601e3a8fca05eae30800000000000000
+      internalID: 4516636180135272710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_211
+      rect:
+        serializedVersion: 2
+        x: 852
+        y: 75
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ab6e23eb3cd9e2c0800000000000000
+      internalID: -4401745011005297760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_212
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 60
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1727fad298386eac0800000000000000
+      internalID: -3826226208204426639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_213
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3de1537bf6966a5f0800000000000000
+      internalID: -745792759747240237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_214
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35cea7aa5e9282010800000000000000
+      internalID: 1164226570059705427
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_215
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 60
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae49aa858ca726fd0800000000000000
+      internalID: -2350181054634355478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_216
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 60
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50280c2cf890a11e0800000000000000
+      internalID: -2226456552728919547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_217
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02e2ae46497f881d0800000000000000
+      internalID: -3348154106229674464
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_218
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b418c103e019047d0800000000000000
+      internalID: -2936187466922819253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_219
+      rect:
+        serializedVersion: 2
+        x: 397
+        y: 60
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d7b7250af97b76630800000000000000
+      internalID: 3920303896866749309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_220
+      rect:
+        serializedVersion: 2
+        x: 486
+        y: 60
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0afc653d0b5b2e90800000000000000
+      internalID: -7049440679429342707
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_221
+      rect:
+        serializedVersion: 2
+        x: 496
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5895b2f5bc6d0060800000000000000
+      internalID: 6921307731055188063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_222
+      rect:
+        serializedVersion: 2
+        x: 611
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4cd8222020ecb1820800000000000000
+      internalID: 2890130093909380548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_223
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 60
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d62b3603d0e5dece0800000000000000
+      internalID: -1374338900538707347
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_224
+      rect:
+        serializedVersion: 2
+        x: 710
+        y: 60
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97a173a95d00e52c0800000000000000
+      internalID: -4441111265125393799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_225
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86bb3a0fba4eb31c0800000000000000
+      internalID: -4522769973635728536
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_226
+      rect:
+        serializedVersion: 2
+        x: 835
+        y: 48
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c51299543f56b2140800000000000000
+      internalID: 4695959131982995804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_227
+      rect:
+        serializedVersion: 2
+        x: 845
+        y: 60
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82d344b13b748cd20800000000000000
+      internalID: 3298965561631063336
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_228
+      rect:
+        serializedVersion: 2
+        x: 60
+        y: 38
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2c61e27639d7d840800000000000000
+      internalID: 5248902718602439725
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_229
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44cb4a34549e4daa0800000000000000
+      internalID: -6137023908502258620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_230
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 26
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a68535042ebe2ba20800000000000000
+      internalID: 3076780852421810282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_231
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 26
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 339e6a6f4b0a11180800000000000000
+      internalID: -9146352669120075469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_232
+      rect:
+        serializedVersion: 2
+        x: 136
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2fee0e267ae57cd0800000000000000
+      internalID: -2560883019790487764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_233
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 38
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ee7dac572f8854c0800000000000000
+      internalID: -4298528445103767833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_234
+      rect:
+        serializedVersion: 2
+        x: 284
+        y: 38
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a56e76709c58c0880800000000000000
+      internalID: -8643386486371654054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_235
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72a2f901e1fcef180800000000000000
+      internalID: -9079592070697506265
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_236
+      rect:
+        serializedVersion: 2
+        x: 314
+        y: 26
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 989d09470be3e8e40800000000000000
+      internalID: 5660530709242108297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_237
+      rect:
+        serializedVersion: 2
+        x: 345
+        y: 26
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f5e655f480692160800000000000000
+      internalID: 7001233219892209140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_238
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98090ddc2fc6ad4b0800000000000000
+      internalID: -5414895811868716919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_239
+      rect:
+        serializedVersion: 2
+        x: 375
+        y: 38
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c52ca04af7227f6a0800000000000000
+      internalID: -6415621212557622692
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_240
+      rect:
+        serializedVersion: 2
+        x: 508
+        y: 38
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b2d1d81b426fdab0800000000000000
+      internalID: -4981154588170005833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_241
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c4ec5a79e9ce5540800000000000000
+      internalID: 4998654641045300421
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_242
+      rect:
+        serializedVersion: 2
+        x: 538
+        y: 26
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 081baa11da5140530800000000000000
+      internalID: 3820202216986947968
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_243
+      rect:
+        serializedVersion: 2
+        x: 569
+        y: 26
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e7778c5124489e40800000000000000
+      internalID: 5663351441495390181
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_244
+      rect:
+        serializedVersion: 2
+        x: 584
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ac0cb710d48b83a0800000000000000
+      internalID: -6662085194478252890
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_245
+      rect:
+        serializedVersion: 2
+        x: 599
+        y: 38
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4431b00c32db8b790800000000000000
+      internalID: -7514048017024216252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_246
+      rect:
+        serializedVersion: 2
+        x: 732
+        y: 38
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6635ae96c4b662180800000000000000
+      internalID: -9140500417763191962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_247
+      rect:
+        serializedVersion: 2
+        x: 747
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82cdb3a961277fd30800000000000000
+      internalID: 4465162996963597352
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_248
+      rect:
+        serializedVersion: 2
+        x: 762
+        y: 26
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: edc1d1c359a60c6c0800000000000000
+      internalID: -4125180069480162082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_249
+      rect:
+        serializedVersion: 2
+        x: 793
+        y: 26
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 483cdf111540b6b60800000000000000
+      internalID: 7740285130807034756
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_250
+      rect:
+        serializedVersion: 2
+        x: 808
+        y: 31
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d3bf1a2007e42dd0800000000000000
+      internalID: -2511628704273157161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_251
+      rect:
+        serializedVersion: 2
+        x: 823
+        y: 38
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f664285aa7bcee5e0800000000000000
+      internalID: -1878340266943691153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_252
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 25
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2da1dc7fb4e0cf770800000000000000
+      internalID: 8645801104087259858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_253
+      rect:
+        serializedVersion: 2
+        x: 330
+        y: 25
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 563a32c71a3a4c850800000000000000
+      internalID: 6396417284740719461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_254
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 25
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c1e1007deb910820800000000000000
+      internalID: 2882756680582554055
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: outer_good_255
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 25
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3aec4ca6220726c0800000000000000
+      internalID: -4168360564985370051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      outer_good_0: 7683569516717228399
+      outer_good_1: -6117709667325403151
+      outer_good_10: -2473235932124858359
+      outer_good_100: 8897792656154948109
+      outer_good_101: 7235983884649809804
+      outer_good_102: -2209451061974825520
+      outer_good_103: -3197117845836659542
+      outer_good_104: -3231936107344268549
+      outer_good_105: -1544858299470145161
+      outer_good_106: 3676228119203496586
+      outer_good_107: 8470455458976369270
+      outer_good_108: -4625309536820493903
+      outer_good_109: -5674307812968270411
+      outer_good_11: 388048479410630118
+      outer_good_110: 7841923438988127966
+      outer_good_111: -6130742357344504333
+      outer_good_112: -7736032726194220166
+      outer_good_113: -2080006730087674540
+      outer_good_114: -5136348022548777025
+      outer_good_115: -6709646151141804659
+      outer_good_116: 4391895628098403860
+      outer_good_117: -8035258016540146665
+      outer_good_118: -6793209891073140641
+      outer_good_119: -2211159553179359423
+      outer_good_12: 1966101481431320450
+      outer_good_120: -7930030966355615544
+      outer_good_121: 615044674230362565
+      outer_good_122: 3463619467784308599
+      outer_good_123: 8799415489895446369
+      outer_good_124: 1091933744783438756
+      outer_good_125: -1281318772724313019
+      outer_good_126: -1165832380488044729
+      outer_good_127: -1353082453254111839
+      outer_good_128: 8928758985398131419
+      outer_good_129: -2616581321549846090
+      outer_good_13: -5508659526974179610
+      outer_good_130: -8406532528801562685
+      outer_good_131: -1894616098772390146
+      outer_good_132: -8236908388815987316
+      outer_good_133: 5536120665398841236
+      outer_good_134: -4599934176760194090
+      outer_good_135: -4999014470637248454
+      outer_good_136: 4045213410681545740
+      outer_good_137: -8224937819563868493
+      outer_good_138: 308572251537486887
+      outer_good_139: 5152785881279454160
+      outer_good_14: -5563201887803058597
+      outer_good_140: -849420519920447251
+      outer_good_141: 7769595344289719871
+      outer_good_142: -8343745987117394478
+      outer_good_143: -6209277058604826984
+      outer_good_144: -7859522966331426144
+      outer_good_145: 2717942898404341687
+      outer_good_146: -58198112166149493
+      outer_good_147: -5806861673745474872
+      outer_good_148: -5558138006180330344
+      outer_good_149: -4610627340404568328
+      outer_good_15: 8838004182067391607
+      outer_good_150: 1430753579281615295
+      outer_good_151: 5819329030298476120
+      outer_good_152: 5310271291972846966
+      outer_good_153: 7217910644026065771
+      outer_good_154: 5005831117856861157
+      outer_good_155: 5775856317026396778
+      outer_good_156: -4870989472369540749
+      outer_good_157: -4297262668388837091
+      outer_good_158: -416974237894003980
+      outer_good_159: -2981664948190579561
+      outer_good_16: 8250622496854556698
+      outer_good_160: 8094114085709319269
+      outer_good_161: -7754121311566810168
+      outer_good_162: 6580227586070124326
+      outer_good_163: -2202472995651647428
+      outer_good_164: 7040597966798415541
+      outer_good_165: 7629265068989762734
+      outer_good_166: -3922664447839246097
+      outer_good_167: 8548286051449515913
+      outer_good_168: 6857803918581783842
+      outer_good_169: 6020522372148215219
+      outer_good_17: -6780983520490117655
+      outer_good_170: -8923087472961003910
+      outer_good_171: -4191021585537702444
+      outer_good_172: -1220216529060715137
+      outer_good_173: -7560412680700834383
+      outer_good_174: 1569614138225291178
+      outer_good_175: -1910063401089945185
+      outer_good_176: -1675295841410231732
+      outer_good_177: 2126971183522902756
+      outer_good_178: 7897469624128453061
+      outer_good_179: -2233120959744381621
+      outer_good_18: 4181159005806460743
+      outer_good_180: 3596708121799254855
+      outer_good_181: -4931413574281540750
+      outer_good_182: 3028236890681812926
+      outer_good_183: 6232705080655096984
+      outer_good_184: -2891331839163683396
+      outer_good_185: -5718156286763825647
+      outer_good_186: -817750394146189933
+      outer_good_187: 7578164205679278297
+      outer_good_188: -4482140310976841688
+      outer_good_189: -8619141293446554953
+      outer_good_19: 8592853573177277923
+      outer_good_190: 1839918459705979689
+      outer_good_191: 5276475769367984447
+      outer_good_192: 5211531956685966676
+      outer_good_193: -3939108213993003409
+      outer_good_194: -2632966946883524176
+      outer_good_195: 7569264067158190623
+      outer_good_196: 6142515230666059095
+      outer_good_197: -349611311441370646
+      outer_good_198: -8495692798108275031
+      outer_good_199: -8320630818858695957
+      outer_good_2: -8570349551403470809
+      outer_good_20: 6996465126076707476
+      outer_good_200: 2441442780891983742
+      outer_good_201: -4445849112646728632
+      outer_good_202: 2231210903062969631
+      outer_good_203: -2837945663229010857
+      outer_good_204: 2833960449314907425
+      outer_good_205: 5358424012638402729
+      outer_good_206: 8517868869837729888
+      outer_good_207: 2668358619130010050
+      outer_good_208: 6030717093678700294
+      outer_good_209: 1346834241680527268
+      outer_good_21: -3488065260413715761
+      outer_good_210: 4516636180135272710
+      outer_good_211: -4401745011005297760
+      outer_good_212: -3826226208204426639
+      outer_good_213: -745792759747240237
+      outer_good_214: 1164226570059705427
+      outer_good_215: -2350181054634355478
+      outer_good_216: -2226456552728919547
+      outer_good_217: -3348154106229674464
+      outer_good_218: -2936187466922819253
+      outer_good_219: 3920303896866749309
+      outer_good_22: -6771667094203253285
+      outer_good_220: -7049440679429342707
+      outer_good_221: 6921307731055188063
+      outer_good_222: 2890130093909380548
+      outer_good_223: -1374338900538707347
+      outer_good_224: -4441111265125393799
+      outer_good_225: -4522769973635728536
+      outer_good_226: 4695959131982995804
+      outer_good_227: 3298965561631063336
+      outer_good_228: 5248902718602439725
+      outer_good_229: -6137023908502258620
+      outer_good_23: 3247519221760987190
+      outer_good_230: 3076780852421810282
+      outer_good_231: -9146352669120075469
+      outer_good_232: -2560883019790487764
+      outer_good_233: -4298528445103767833
+      outer_good_234: -8643386486371654054
+      outer_good_235: -9079592070697506265
+      outer_good_236: 5660530709242108297
+      outer_good_237: 7001233219892209140
+      outer_good_238: -5414895811868716919
+      outer_good_239: -6415621212557622692
+      outer_good_24: -351312507514514890
+      outer_good_240: -4981154588170005833
+      outer_good_241: 4998654641045300421
+      outer_good_242: 3820202216986947968
+      outer_good_243: 5663351441495390181
+      outer_good_244: -6662085194478252890
+      outer_good_245: -7514048017024216252
+      outer_good_246: -9140500417763191962
+      outer_good_247: 4465162996963597352
+      outer_good_248: -4125180069480162082
+      outer_good_249: 7740285130807034756
+      outer_good_25: -4895220631465293671
+      outer_good_250: -2511628704273157161
+      outer_good_251: -1878340266943691153
+      outer_good_252: 8645801104087259858
+      outer_good_253: 6396417284740719461
+      outer_good_254: 2882756680582554055
+      outer_good_255: -4168360564985370051
+      outer_good_26: -339898934323894974
+      outer_good_27: -260539600773484488
+      outer_good_28: -3161418844130392858
+      outer_good_29: 8954439065882860805
+      outer_good_3: -6263278634300898082
+      outer_good_30: 6457225408295986268
+      outer_good_31: -5427710695177941458
+      outer_good_32: 1311860036802767825
+      outer_good_33: 7436724594383390098
+      outer_good_34: -1692835800810570075
+      outer_good_35: -604920107732320435
+      outer_good_36: 548935552674533066
+      outer_good_37: -5404543139413827771
+      outer_good_38: -11802559063067694
+      outer_good_39: 2763301665560114801
+      outer_good_4: 6340101132893940123
+      outer_good_40: -8921275235932752226
+      outer_good_41: 2009978011442465721
+      outer_good_42: -3223467903784566222
+      outer_good_43: -1871155562190379722
+      outer_good_44: 7276379047289111847
+      outer_good_45: 699598107128175052
+      outer_good_46: 3945801906851218673
+      outer_good_47: -6319879916909851667
+      outer_good_48: -3362618784840673916
+      outer_good_49: 8148229555762305884
+      outer_good_5: -628315122887018172
+      outer_good_50: 4771957872715764475
+      outer_good_51: 93624617969919799
+      outer_good_52: -1246617242442358024
+      outer_good_53: 3062111119932747058
+      outer_good_54: 6588176618835121233
+      outer_good_55: 347238118051605917
+      outer_good_56: 6387662567539425971
+      outer_good_57: -1790654101505873054
+      outer_good_58: 274748089397109229
+      outer_good_59: 3714579559274693245
+      outer_good_6: -1175520725994257095
+      outer_good_60: 3360520344996013653
+      outer_good_61: 8419170135769060801
+      outer_good_62: -2110544813097135926
+      outer_good_63: -260051477796032183
+      outer_good_64: 166922505819811469
+      outer_good_65: 1127695052899821919
+      outer_good_66: -1887504405411922538
+      outer_good_67: -1804012475615431714
+      outer_good_68: 5092548839933549820
+      outer_good_69: -4927876311577521342
+      outer_good_7: -534443836511068587
+      outer_good_70: 8565042839588211649
+      outer_good_71: 3117761959202291895
+      outer_good_72: 77536157707975451
+      outer_good_73: 4543070259586246842
+      outer_good_74: -4434810558740187892
+      outer_good_75: -8336984396808183287
+      outer_good_76: 4658259255880553652
+      outer_good_77: 209841477013939394
+      outer_good_78: -2035267189023431359
+      outer_good_79: -561273649220620716
+      outer_good_8: 8281795311702828192
+      outer_good_80: 5009114181559041088
+      outer_good_81: -191634260153355359
+      outer_good_82: -3264276483484365306
+      outer_good_83: 6534867174708890629
+      outer_good_84: 3200083687521268119
+      outer_good_85: -8415899763178321102
+      outer_good_86: 7274345140004776929
+      outer_good_87: -7753579334964023564
+      outer_good_88: 798116657205976417
+      outer_good_89: -2339290735302547129
+      outer_good_9: -1018961611805363504
+      outer_good_90: -447619830854695687
+      outer_good_91: -6354655127138891612
+      outer_good_92: 363444114675088109
+      outer_good_93: 1373181052076777557
+      outer_good_94: -5209151093076334604
+      outer_good_95: -1532575362664838744
+      outer_good_96: 8774232149715933402
+      outer_good_97: 6394611298772805687
+      outer_good_98: -3584231264677103350
+      outer_good_99: -4841597539589935942
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

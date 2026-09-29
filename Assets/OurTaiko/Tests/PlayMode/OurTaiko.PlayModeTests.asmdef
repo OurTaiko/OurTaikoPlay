@@ -1,0 +1,5 @@
+{
+  "name": "OurTaiko.PlayModeTests",
+  "references": ["OurTaiko.Runtime", "Unity.ugui", "Unity.TextMeshPro"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
