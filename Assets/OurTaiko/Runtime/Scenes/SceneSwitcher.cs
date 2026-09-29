@@ -25,6 +25,9 @@ namespace OurTaiko
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this; DontDestroyOnLoad(gameObject);
+            // VSync takes precedence over targetFrameRate on desktop platforms.
+            QualitySettings.vSyncCount = 0;
+            UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
             Application.targetFrameRate = 120;
         }
 

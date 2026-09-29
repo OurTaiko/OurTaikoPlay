@@ -212,6 +212,7 @@ namespace OurTaiko.Editor
             unused.gameObject.SetActive(false); controller.pausePanel.SetActive(false);
             controller.resultPanel = Overlay(root, "ResultPanel", "FINISHED", out controller.resultText, out controller.resultRestart, out controller.resultBack);
             controller.resultPanel.SetActive(false);
+            AddFpsCounter(root);
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/PlayScene.unity");
         }
 
@@ -239,7 +240,17 @@ namespace OurTaiko.Editor
             menu.mode = menu.autoButton.GetComponentInChildren<TMP_Text>();
             Label(root, "Controls", "F / J  DON     D / K  KA     SPACE  PAUSE\nF1  RESTART     ESC  BACK     A  AUTO", 270, 535, 740, 55, 19);
             Label(root, "FooterCredit", "OurTaikoPlayer  /  PyTaikoGreen", 0, 674, 1280, 30, 19);
+            AddFpsCounter(root);
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/SceneSwitcher.unity");
+        }
+
+        public static void AddFpsCounter(Transform root)
+        {
+            if (root.Find("FpsPanel") != null) return;
+            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Taiko SDF.asset");
+            var panel = Panel(root, "FpsPanel", 24, 132, 148, 30, new Color32(28, 29, 32, 225));
+            var label = Label(panel.transform, "FpsCounter", "FPS --", 8, 0, 132, 30, 18, TextAlignmentOptions.Left);
+            label.gameObject.AddComponent<FpsCounter>();
         }
 
         public static void BuildMac()

@@ -83,13 +83,34 @@ namespace OurTaiko.Tests
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
+            QualitySettings.vSyncCount = 1;
+            Application.targetFrameRate = 60;
+            UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 2;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
             var play = Object.FindFirstObjectByType<PlayScene>();
             Assert.That(play.Session, Is.Not.Null);
             Assert.That(SceneSwitcher.Instance, Is.Not.Null);
-            play.TogglePause();
+            Assert.That(Application.targetFrameRate, Is.EqualTo(120));
+            Assert.That(QualitySettings.vSyncCount, Is.Zero);
+            Assert.That(UnityEngine.Rendering.OnDemandRendering.renderFrameInterval, Is.EqualTo(1));
+            var fps = Object.FindFirstObjectByType<FpsCounter>();
+            Assert.That(fps, Is.Not.Null);
+            if (!play.IsPaused) play.TogglePause();
+            float originalTimeScale = Time.timeScale;
+            try
+            {
+                Time.timeScale = 0;
+                yield return new WaitForSecondsRealtime(0.6f);
+                Assert.That(fps.FramesPerSecond, Is.GreaterThan(0));
+                var label = fps.GetComponent<TMPro.TMP_Text>();
+                Assert.That(label.text, Does.StartWith("FPS ").And.Not.Contains("--"));
+                Assert.That(label.raycastTarget, Is.False);
+            }
+            finally { Time.timeScale = originalTimeScale; }
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+            yield return null;
+            Assert.That(Object.FindObjectsByType<FpsCounter>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
         }
 
         static IEnumerator WaitForScene(string scene)
