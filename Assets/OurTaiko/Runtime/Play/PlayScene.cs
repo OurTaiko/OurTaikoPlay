@@ -157,6 +157,8 @@ namespace OurTaiko
         }
         void OnJudged(int index, Judgment result)
         {
+            if (result != Judgment.Roll)
+                soulGauge.SetPoints(Session.GaugePoints, SongTime - song.audioOffsetMs / 1000.0);
             if (autoPlay) Feedback(Session.Chart.Notes[index].IsKa, (index & 1) != 0);
             feedbackTime = Time.unscaledTime;
             if (result != Judgment.Roll) judgment.sprite = judgmentSprites[(int)result - 1];
@@ -176,7 +178,6 @@ namespace OurTaiko
             score.text = Session.Score.ToString("D7");
             combo.text = Session.Combo >= 2 ? $"{Session.Combo}\n<size=30>COMBO</size>" : "";
             counters.text = $"GOOD {Session.Good}     OK {Session.Ok}     BAD {Session.Bad}     ROLL {Session.Rolls}";
-            soulGauge.SetValue(Session.Gauge, SongTime - song.audioOffsetMs / 1000.0);
         }
         void OnBranchSelected(ChartBranch branch, BranchRoute route)
         {
@@ -193,7 +194,7 @@ namespace OurTaiko
         void Finish()
         {
             frozenTime = SongTime; IsFinished = true; music.Stop(); resultPanel.SetActive(true);
-            string clear = Session.Gauge >= Session.ClearThreshold ? "CLEAR!" : "FINISHED";
+            string clear = Session.IsClear ? "CLEAR!" : "FINISHED";
             resultText.text = $"{clear}\n<size=72>{Session.Score:N0}</size>\n<size=36>GOOD {Session.Good}   OK {Session.Ok}   BAD {Session.Bad}\nMAX COMBO {Session.MaxCombo}   DRUMROLL {Session.Rolls}</size>";
         }
         public void Restart() => SceneSwitcher.EnsureInstance().Restart();

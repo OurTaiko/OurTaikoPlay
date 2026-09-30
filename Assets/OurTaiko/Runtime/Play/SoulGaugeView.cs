@@ -21,36 +21,37 @@ namespace OurTaiko
 
         public const int Cells = 50, CellWidth = 21;
         public const double CellFadeSeconds = 0.450, RainbowFrameSeconds = 0.075;
-        public bool IsClear => value >= threshold;
-        public bool IsFull => value >= 1;
-        public int FilledCells => (int)Math.Floor(value * Cells);
-        double value, previousValue, threshold, cellChangedAt = double.NegativeInfinity;
+        public bool IsClear => points >= clearPoints;
+        public bool IsFull => points >= SoulGauge.MaximumPoints;
+        public int FilledCells => (int)Math.Floor(points * Cells / SoulGauge.MaximumPoints);
+        double points, previousPoints, threshold, clearPoints, cellChangedAt = double.NegativeInfinity;
         double rainbowStartedAt = double.NaN;
         Style style;
 
         public void Initialize(double clearThreshold)
         {
             threshold = clearThreshold;
+            clearPoints = clearThreshold * SoulGauge.MaximumPoints;
             style = styles[threshold < 0.7 ? 0 : threshold < 0.8 ? 1 : 2];
             border.sprite = style.border;
             empty.sprite = style.empty;
             grid.sprite = style.grid;
             clearLabel.rectTransform.anchoredPosition = new Vector2(style.clearLabelX, 74);
-            value = previousValue = 0;
+            points = previousPoints = 0;
             cellChangedAt = double.NegativeInfinity;
             rainbowStartedAt = double.NaN;
             ShowTime(0);
         }
 
-        public void SetValue(double next, double time)
+        public void SetValue(double next, double time) => SetPoints(next * SoulGauge.MaximumPoints, time);
+
+        // Called for every normal judgment. Long-note hits do not restart gauge cell animations.
+        public void SetPoints(double next, double time)
         {
-            next = Math.Max(0, Math.Min(1, next));
-            if (next != value)
-            {
-                previousValue = value;
-                cellChangedAt = next > value ? time : double.NegativeInfinity;
-                value = next;
-            }
+            next = Math.Max(0, Math.Min(SoulGauge.MaximumPoints, next));
+            previousPoints = points;
+            cellChangedAt = next > points ? time : double.NegativeInfinity;
+            points = next;
             if (!IsFull) rainbowStartedAt = double.NaN;
             else if (double.IsNaN(rainbowStartedAt)) rainbowStartedAt = time;
             ShowTime(time);
@@ -62,7 +63,7 @@ namespace OurTaiko
             int length = FilledCells;
             int clearCell = (int)Math.Round(threshold * Cells);
             float cellAlpha = Mathf.Clamp01((float)((time - cellChangedAt) / CellFadeSeconds));
-            bool pending = length > (int)Math.Floor(previousValue * Cells) && cellAlpha < 1;
+            bool pending = length > (int)Math.Floor(previousPoints * Cells / SoulGauge.MaximumPoints) && cellAlpha < 1;
             int solid = pending ? length - 1 : length;
 
             // Same 50-cell grid and rounded first gold cell as Gauge::draw().

@@ -16,7 +16,7 @@ namespace OurTaiko.Tests
         [TestCase("Edit", 0.8)]
         public void ClearThresholdMatchesOriginalDifficulty(string course, double threshold)
         {
-            var session = new PlaySession(new TaikoChart { Course = course });
+            var session = new PlaySession(new TaikoChart { Course = course, Level = 1 });
             Assert.That(session.ClearThreshold, Is.EqualTo(threshold));
         }
 
@@ -86,7 +86,7 @@ namespace OurTaiko.Tests
             var session = new PlaySession(TjaParser.Parse("BPM:120\nCOURSE:Oni\nBALLOON:2\n#START\n7008,\n#END"));
             Assert.That(session.Hit(true, 0.2), Is.EqualTo(Judgment.None));
             session.Hit(false, 0.2); session.Hit(false, 0.2); session.Hit(false, 0.2);
-            Assert.That(session.Rolls, Is.EqualTo(2)); Assert.That(session.Score, Is.EqualTo(5600)); Assert.That(session.Resolved[0], Is.True);
+            Assert.That(session.Rolls, Is.EqualTo(2)); Assert.That(session.Score, Is.EqualTo(200)); Assert.That(session.Resolved[0], Is.True);
         }
         [TestCase("TripleHelix", "Oni")]
         [TestCase("Calibration", "Hard")]

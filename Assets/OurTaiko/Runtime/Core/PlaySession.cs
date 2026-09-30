@@ -11,21 +11,26 @@ namespace OurTaiko
         public readonly TaikoChart Chart;
         public readonly bool[] Resolved;
         public readonly int[] LongHits;
-        public int Score { get; private set; }
+        public int Score => scoring.Total;
+        public int BaseScore => scoring.BaseScore;
         public int Combo { get; private set; }
         public int MaxCombo { get; private set; }
         public int Good { get; private set; }
         public int Ok { get; private set; }
         public int Bad { get; private set; }
         public int Rolls { get; private set; }
-        public double Gauge { get; private set; }
-        public double ClearThreshold => Chart.Course == "Easy" ? 0.6 : Chart.Course == "Normal" || Chart.Course == "Hard" ? 0.7 : 0.8;
+        public double Gauge => gauge.Value;
+        public double GaugePoints => gauge.Points;
+        public int GaugePercent => gauge.Percent;
+        public double ClearThreshold => gauge.ClearThreshold;
+        public bool IsClear => gauge.IsClear;
         public BranchRoute CurrentBranch { get; private set; } = BranchRoute.Normal;
         public IReadOnlyList<BranchRoute> BranchHistory => branchHistory;
         public double LastBranchValue { get; private set; }
         public event Action<int, Judgment> Judged;
         public event Action<ChartBranch, BranchRoute> BranchSelected;
-        readonly int total, baseScore;
+        readonly ShinuchiScore scoring;
+        readonly SoulGauge gauge;
         readonly double goodWindow, okWindow, badWindow;
         readonly int[] selectedRoutes;
         readonly List<BranchRoute> branchHistory = new List<BranchRoute>();
@@ -44,9 +49,9 @@ namespace OurTaiko
         public PlaySession(TaikoChart chart)
         {
             Chart = chart; Resolved = new bool[chart.Notes.Count]; LongHits = new int[chart.Notes.Count];
-            // The reference player's base score / gauge denominator uses common + Master notes.
-            total = Math.Max(1, chart.Notes.Count(n => !n.IsLong && (n.BranchId < 0 || n.Route == BranchRoute.Master)));
-            baseScore = (int)Math.Ceiling(1000000.0 / total / 10) * 10;
+            var statistics = new ChartStatistics(chart);
+            scoring = new ShinuchiScore(statistics);
+            gauge = new SoulGauge(statistics.JudgeableNotes, chart.Course, chart.Level);
             bool easy = chart.Course == "Easy" || chart.Course == "Normal";
             goodWindow = easy ? 0.0417083358764648 : GoodWindow;
             okWindow = easy ? 0.108441665649414 : OkWindow;
@@ -151,9 +156,9 @@ namespace OurTaiko
 
         void HitLong(int i)
         {
-            var n = Chart.Notes[i]; LongHits[i]++; Rolls++; Score += n.IsBalloon ? 300 : 100;
+            var n = Chart.Notes[i]; LongHits[i]++; Rolls++; scoring.AddLongHit();
             if (!n.IsBalloon) branchRolls++;
-            if (n.IsBalloon && LongHits[i] >= n.BalloonHits) { Score += 5000; Resolved[i] = true; }
+            if (n.IsBalloon && LongHits[i] == n.BalloonHits) Resolved[i] = true;
             Judged?.Invoke(i, Judgment.Roll);
         }
 
@@ -162,15 +167,15 @@ namespace OurTaiko
             Resolved[i] = true;
             branchNotes++;
             branchPoints += result == Judgment.Good ? 1 : result == Judgment.Ok ? 0.5 : 0;
-            if (result == Judgment.Bad) { Bad++; Combo = 0; Gauge -= 2.4 / total; }
+            if (result == Judgment.Bad) { Bad++; Combo = 0; }
             else
             {
                 if (result == Judgment.Good) Good++; else Ok++;
                 Combo++; MaxCombo = Math.Max(MaxCombo, Combo);
-                Score += result == Judgment.Good ? baseScore : baseScore / 20 * 10;
-                Gauge += (result == Judgment.Good ? 1.2 : 0.6) / total;
             }
-            Gauge = Math.Max(0, Math.Min(1, Gauge)); Judged?.Invoke(i, result);
+            scoring.ApplyJudgment(result);
+            gauge.ApplyJudgment(result);
+            Judged?.Invoke(i, result);
         }
     }
 }

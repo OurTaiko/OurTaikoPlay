@@ -1,6 +1,6 @@
 # 单人游玩模块移植记录
 
-当前版本使用打平的 Nijiiro 素材和 1920×1080 画布；下方早期 Green／1280×720 的记录保留为移植历史，当前规格见文末。
+当前版本使用打平的 Nijiiro 素材和 1920×1080 画布；下方早期 Green／1280×720 和简化计分／魂槽的记录保留为移植历史，当前规格见文末。
 
 ## 原版到 Unity 的对应
 
@@ -26,7 +26,7 @@
 
 ## 当前范围
 
-这是可运行的单人游玩基础模块，不是整个 OurTaikoPlayer 的等价移植。完整双人、段位、账号/联网、成绩上传、3D 咚角色及全部皮肤特效没有接入。真打基分和魂槽使用明确的简化实现；尚无大音符双手时间窗口。已支持 p/r 分支；s 分数分支、LEVELHOLD、BMSCROLL/HBSCROLL、字母扩展音符不支持。未知非时序命令会写警告，不支持的分支条件、滚动模式或音符会报错。
+这是可运行的单人游玩基础模块，不是整个 OurTaikoPlayer 的等价移植。完整双人、段位、账号/联网、成绩上传、3D 咚角色及全部皮肤特效没有接入。Shinuchi 计分和单人魂槽数值已按原源码还原，详见本文末尾；尚无大音符双手时间窗口，自动连打仍为 15 次／秒。已支持 p/r 分支；s 分数分支、LEVELHOLD、BMSCROLL/HBSCROLL、字母扩展音符不支持。未知非时序命令会写警告，不支持的分支条件、滚动模式或音符会报错。
 
 已验证桌面编辑器与原有两份谱面；分支验证使用新增 Branch Training 与边界测试谱。移动端触控布局与真机音频延迟尚未验收。
 
@@ -156,3 +156,25 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 本次 Unity Editor 完整验证：EditMode **57/57**、PlayMode **15/15** 全部通过，报告为 `TestResults/global-switcher-editmode.json`、`TestResults/global-switcher-playmode.json`。已检查测试入口和游玩页渲染图；原入口仅移除旧控件对象，改名后 GUID 保持不变。Nijiiro 字体资源测试后与操作前快照完全一致。未重新打包独立播放器。
 
 另在没有 LaunchMenu、PlayScene、Camera 或 EventSystem 的临时空场景进入 Play mode，确认 `BeforeSceneLoad` 独立自动创建了唯一 SceneSwitcher，位于 `DontDestroyOnLoad`，不依赖具体场景脚本调用。实际全屏遮罩和 LOADING 提示已检查，截图保存在忽略目录 `TestResults/SceneTransition.png`；检查后已退出 Play mode 并重新打开 Test_DefaultScene。
+
+## Shinuchi 计分与魂槽数值（2026-09-30）
+
+先将上一项全局场景切换改造提交为 `a34ee00 refactor(unity): make scene switching a global control`，再实施本次规则还原。来源为相邻 OurTaikoPlayer 的 `src/libs/parsers/tja.cpp::calculate_base_score`、`src/objects/game/player.cpp::reset_chart/check_note/check_drumroll/check_balloon/check_kusudama`、`src/objects/game/gauge.h` 与 `gauge.cpp`。参考仓库仅读取。
+
+模块边界如下：`ChartStatistics` 固定统计公共段和每段达人路线；`ShinuchiScore` 只管理基准分和累计分；`SoulGaugeRules` 只定义难度／星级表；`SoulGauge` 管理数值、百分比及过关状态。`PlaySession` 管理判定与分支，并把判定分发给两个数值模块。`PlayScene` 将结果交给 HUD 和 `SoulGaugeView`，后者仅负责皮肤、格子及动画。
+
+真打基准分为 `ceil((1000000 - 气球预算次数×100 - 连打预算毫秒×16.920079999994086f/1000×100) / 普通音符数 / 10)×10`，保留原 `float` 常量的精度及运算顺序。每个 7／9 号预算次数取 `min(100, 要求次数)`；未写 BALLOON 时按原解析器默认 1。没有普通音符时基准分为 1000000。良得基准分，可按原整数除法得到一半并取 10 分整数倍，不可／漏音为 0；大音符、GOGO、连击不改变分值。5／6／7／9 号每次有效击打均为 100，吹爆不加 GEN3 的 5000 分。累计分不限制为 100 万。
+
+原版连打预算读取头后第一个谱面对象，不一定是尾，跨小节或源文本分段时可能被隐藏小节线截短。初版曾保存 `NextObjectTime` 复现这一行为，后续按用户要求修复：预算直接使用 `(EndTime - Time)×1000`，删除该字段和专用解析标记。现在使用对应头尾的完整时长，隐藏小节线与分行不改变基准分；位移继续使用头部 BPM／SCROLL，头尾同速。
+
+魂槽上限 10000；良为 `1000000 / (max(1, 普通音符数) × soul_percent)`，可／不可乘相应查表倍率。每次判定后限幅到 0–10000，距过关或满槽边界小于 `1e-6` 点时归整；百分比为 `floor((points + 1e-6)/10000×100)`。Easy／Normal+Hard／Oni+Edit 的过关点分别为 6000／7000／8000。LEVEL 缺失或为 0 时按原 `reset_chart` 使用 Oni ★10，其他星级限到查表的 ★1–10；原表未使用行保持零值。Normal／Hard 的部分倍率在原源码中标记为 assumed，本次保留原表，不另作猜测。
+
+长音符击打不增减魂槽，也不重启格子淡入。普通判定逐次更新魂槽显示，结果页直接采用同一数值模块的过关状态。沿用现有 50 格、450 ms 淡入、满槽彩虹与魂火表现。现有自动连打 15 次／秒及大音符单侧输入仍属之前的实现；本次没有扩展为原版自动连打节奏或双手判定。
+
+完整 Unity Editor 验证：EditMode **97/97**、PlayMode **16/16** 通过。新增逻辑测试覆盖基准分／可的 10 分取整、超过 100 万、长音符预算和实际得分、各路线固定分母、独立逗号和空小节、魂槽不同难度／星级、缺失 LEVEL、未使用行、过关／满槽归整、手动不可与漏音一致。新增 `ScoreGaugeFlowTests` 验证保存场景的分数 HUD、魂槽过关与满槽、长音符不重启淡入、结算及重开清零，已有全部场景、音频和表现回归通过。报告为 `TestResults/shinuchi-editmode.json`、`TestResults/shinuchi-playmode.json`。字体资源与本次操作前快照完全一致，未重新打包独立播放器。
+
+## 连打计分预算时长修复（2026-09-30）
+
+按用户要求修复参考实现的 nextobj 缺陷：`ChartStatistics` 直接累加 `(EndTime - Time)×1000`，不再以连打头后的第一个对象估算时长。删除 `ChartNote.NextObjectTime` 和解析器的专用分段标记／记录逻辑。预算现在包含跨小节、源文本分行、空小节及 DELAY 的完整头尾时间差；头部 BPM／SCROLL 控制位移的规则不变，参考仓库未修改。
+
+逻辑测试验证小／大连打、隐藏小节线、分行、中途变速、独立逗号、空小节和 DELAY 的时长；另验证完整 3 秒连打的基准分不受分行影响，以及选中普通路线时仍按公共段＋达人路线完整连打预算计分。Unity Editor EditMode **101/101**、PlayMode **16/16** 全部通过。报告为 `TestResults/shinuchi-tail-editmode.json`、`TestResults/shinuchi-tail-playmode.json`；字体与本次操作前快照一致。

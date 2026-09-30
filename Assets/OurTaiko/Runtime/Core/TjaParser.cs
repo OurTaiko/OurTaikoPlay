@@ -40,7 +40,10 @@ namespace OurTaiko
                 if (reading)
                 {
                     if (line[0] == '#') tokens.Add(line);
-                    else foreach (char c in line.Where(c => !char.IsWhiteSpace(c))) tokens.Add(c.ToString());
+                    else
+                    {
+                        foreach (char c in line.Where(c => !char.IsWhiteSpace(c))) tokens.Add(c.ToString());
+                    }
                     continue;
                 }
                 int colon = line.IndexOf(':');
@@ -252,7 +255,7 @@ namespace OurTaiko
                     {
                         if (longNote != null) throw new FormatException("Overlapping long notes are not supported.");
                         var note = NewNote(); note.Kind = (NoteKind)type;
-                        if (note.IsBalloon) { note.BalloonHits = state.BalloonIndex < balloons.Count ? balloons[state.BalloonIndex] : 5; state.BalloonIndex++; }
+                        if (note.IsBalloon) { note.BalloonHits = state.BalloonIndex < balloons.Count ? balloons[state.BalloonIndex] : 1; state.BalloonIndex++; }
                         chart.Notes.Add(note);
                         if (note.IsLong) longNote = note;
                     }

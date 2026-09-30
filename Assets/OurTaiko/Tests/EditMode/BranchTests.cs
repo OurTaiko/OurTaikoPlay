@@ -9,8 +9,8 @@ namespace OurTaiko.Tests
         static TaikoChart Parse(string body, string metadata = "") => TjaParser.Parse(
             "TITLE:Branch Test\nBPM:120\nCOURSE:Oni\n" + metadata + "\n#START\n" + body + "\n#END");
         const string Routes = "\n#N\n1000,\n#E\n2200,\n#M\n3434,\n#BRANCHEND\n";
-        static TaikoChart Accuracy(string condition = "p,50,80", string lead = "1111,\n0000,\n0000,") =>
-            Parse(lead + "\n#BRANCHSTART " + condition + Routes);
+        static TaikoChart Accuracy(string condition = "p,50,80", string lead = "1111,\n0000,\n0000,", string metadata = "") =>
+            Parse(lead + "\n#BRANCHSTART " + condition + Routes, metadata);
 
         [Test] public void RoutesShareStartAndRestoreTimingAndBalloonCursor()
         {
@@ -92,7 +92,7 @@ namespace OurTaiko.Tests
 
         [Test] public void BalloonHitsDoNotCountAsDrumrollBranchHits()
         {
-            var session = new PlaySession(Accuracy("r,1,3", "7008,\n0000,\n0000,"));
+            var session = new PlaySession(Accuracy("r,1,3", "7008,\n0000,\n0000,", "BALLOON:5"));
             for (int i = 0; i < 5; i++) session.Hit(false, 0.1);
             session.Advance(4, false);
             Assert.That(session.Rolls, Is.EqualTo(5)); Assert.That(session.LastBranchValue, Is.Zero);

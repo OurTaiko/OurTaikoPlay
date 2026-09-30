@@ -25,6 +25,14 @@
 
 如果 Unity 内仍约为 60 FPS，检查 Game 视图的 VSync 选项、系统显示器刷新率及节能设置，并与独立播放器比较；Editor 自身的负载也可能降低帧率。120 FPS 是渲染目标，不会把 60 Hz 显示器变成 120 Hz。
 
+## Shinuchi 计分与魂槽
+
+计分固定使用虹版 **Shinuchi（真打）**，参照 OurTaikoPlayer 的 `tja.cpp::calculate_base_score` 和 `player.cpp`。从 100 万分中扣除气球预计得分（每个最多预算 100 次，每次 100 分）和连打预计得分（源码常量约 16.92008 次／秒，每次 100 分），除以普通音符数，再向上取整到 10 分。良得基准分，可得一半并向下取整到 10 分，不可／漏音不加分。大音符、GOGO、连击不乘倍率；5／6／7／9 号每次有效击打均为 100 分，气球／彩球吹爆不另加 5000 分。取整后总分可以超过 100 万。
+
+计分预算和魂槽分母固定统计公共段＋达人路线，即使实际选择普通／玄人也不重算。连打预算直接使用对应尾部减去头部时间，修复原源码用下一个对象、可能被小节线截短的缺陷；隐藏小节线和源文本分行不再影响预算。画面仍按头尾时间差与头部速度移动。
+
+魂槽使用 0–10000 的双精度进度，按原 `gauge.h` 的难度／星级表计算良、可、不可／漏音的增减；每次判定后限幅，过关和满槽边界按原版容差归整。长音符不增减魂槽。Easy／Normal+Hard／Oni+Edit 过关线为 60%／70%／80%；缺失或为 0 的 LEVEL 按原玩家逻辑采用 Oni ★10 的数值及 80% 过关档。表中未使用的星级行保持原版零值，Normal／Hard 的部分行在原源码中标记为推测值，本项目保留这些来源值。
+
 ## 分支游玩
 
 支持 `#BRANCHSTART p,玄人阈值,达人阈值`（命中率）和 `r`（连打数），以及 `#N`、`#E`、`#M`、`#BRANCHEND`、`#SECTION`。按相邻 OurTaikoPlayer 的规则，在分支首个对象进入画面时确定路线；未选路线不会显示、判定或计分。分支谱面沿用原皮肤的轨道配色：普通为深色、玄人为蓝色、达人为紫色；轨道右侧显示「普通譜面／玄人譜面／達人譜面」图片字样。路线变化时按原版滑动、淡入淡出，并显示升降级提示。没有分支的谱面不显示这些标识。
@@ -39,7 +47,9 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `Resources/SceneSwitcher.prefab`、`Runtime/Scenes/SceneSwitcher.cs`：全局切换控件，在首场景加载前自动创建，通过 `DontDestroyOnLoad` 保留。所有运行时切换统一调用 `SceneSwitcher.Instance.SwitchScene(...)` 或可等待的 `SwitchSceneAsync(...)`；`Play(song, autoPlay)`、`Restart()`、`ReturnToMenu()` 也转交同一流程。
 - `PlayScene.unity`：可在 Hierarchy 中编辑的 Canvas、音符轨道、判定圈、鼓面、魂槽、歌曲信息、舞者、暂停及结果面板。`PlayScene.cs` 连接输入、DSP 时钟、音乐和画面。
 - `Runtime/Core/TjaParser.cs`：纯 C# TJA 读取，支持课程选择、音符 1–9、连打/气球、BPMCHANGE、MEASURE、DELAY、SCROLL（含复数）、GOGO、BARLINE，以及三路线分支与 SECTION。每条路线从分支起点恢复时刻、BPM、SCROLL、拍号等状态。
-- `Runtime/Core/PlaySession.cs`：独立于 Unity 的判定、连击、分数、魂槽、自动演奏和分支选择。分支统计按事件时间处理，基础分和魂槽分母沿用原版的公共段＋达人路线音符数。大音符目前允许单侧击打；计分与魂槽仍是简化实现。
+- `Runtime/Core/PlaySession.cs`：独立于 Unity 的判定、连击、自动演奏和分支选择，向计分与魂槽模块分发判定，再通过事件更新表现层。大音符目前允许单侧击打。
+- `Runtime/Core/ChartStatistics.cs`、`ShinuchiScore.cs`：固定谱面统计与纯 C# 真打计分规则，独立于输入、音符位移、皮肤及动画。
+- `Runtime/Core/SoulGaugeRules.cs`、`SoulGauge.cs`：难度／星级查表、魂槽数值、百分比和过关状态；表现层只使用计算后的进度。
 - `Runtime/Play/BranchLaneView.cs`：分支轨道底色、右侧谱面字样及升降级动画，使用打平的 Nijiiro 素材与原生坐标。
 - `Runtime/Play/BalloonCounterView.cs`：7 号气球的剩余次数、Nijiiro 气泡、数字弹动、膨胀与破裂淡出，跟随游玩时钟及画布缩放。
 - `Runtime/Play/SoulGaugeView.cs`：50 格魂槽、加高的黄色过关区、450 ms 新格淡入、满槽彩虹与魂火。Easy／Normal+Hard／Oni+Edit 过关阈值分别为 60%／70%／80%，与结算一致。每次彩虹帧过渡为 75 ms，8 帧循环 600 ms；失去满槽或过关状态时恢复对应样式。
@@ -47,7 +57,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `Runtime/Core/SongDefinition.cs`：在 Inspector 中指定谱面 TextAsset、音乐 AudioClip、难度和音画偏移。谱面以 `.txt` 导入，内容仍是 TJA；WAVE 字段由显式 AudioClip 引用替代。
 - `Editor/ProjectBuilder.cs`：通过 Editor API 创建初始场景和 sprite 切片。生成后不自动覆盖场景，后续直接编辑现有场景。
 
-此阶段提取的是独立的单人游玩模块。联网/成绩上传、双人、段位、完整选曲界面、3D 咚角色、原皮肤全部 Lua 特效、逐帧回放、大音符双手判定及与原版完全一致的计分/魂槽尚未移植。
+此阶段提取的是独立的单人游玩模块。联网/成绩上传、双人、段位、完整选曲界面、3D 咚角色、原皮肤全部 Lua 特效、逐帧回放及大音符双手判定尚未移植。自动连打仍为 15 次／秒，原版随 BPM 变化的自动连打节奏尚未移植；它与 Shinuchi 基准分使用的预计连打次数是两项独立规则。
 
 全局切换顺序参考 MajdataPlay 的 `Assets/Scripts/Global/SceneSwitcher.cs`：锁定输入并通知当前场景停止游玩／音频，关闭过渡（0.9 秒），等待准备任务，异步加载，等一帧和 50 ms，再打开过渡（0.8 秒）。过渡采用相同的 OutQuint 曲线和实时时钟，本项目使用独立 uGUI 遮罩淡入淡出。`CurrentScene`、`LastScene`、`MainCamera` 和 `OnSceneChanged` 由控件统一更新。准备任务失败或取消会恢复旧场景的可见性；切换期间的重复请求不会再启动加载。
 
@@ -61,7 +71,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 ## 验证
 
-用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速和分支阈值／时序，后者覆盖入口 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 PlayScene、音乐时间同步，以及三路线配色和字样、升降级动画、非分支谱面的隐藏行为和分支自动演奏结算。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
+用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速、分支阈值／时序、Shinuchi 预算／取整和魂槽增减／边界；后者覆盖入口 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 PlayScene、音乐时间同步、分支表现与结算，以及实际场景分数、魂槽、气球与连打。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
 
 ```sh
 unity test . --mode EditMode --output TestResults/editmode.xml
