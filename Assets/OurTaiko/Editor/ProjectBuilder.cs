@@ -248,11 +248,30 @@ namespace OurTaiko.Editor
 
         public static void AddBranchIndicator(Transform root, PlayScene controller)
         {
-            if (root.Find("BranchPanel") != null) return;
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Taiko SDF.asset");
-            var panel = Panel(root, "BranchPanel", 324, 84, 180, 30, new Color32(28, 29, 32, 225));
-            controller.branchInfo = Label(panel.transform, "BranchInfo", "BRANCH NORMAL", 8, 0, 164, 30, 16, TextAlignmentOptions.Left);
-            panel.gameObject.SetActive(false);
+            var lane = root.Find("NoteLane");
+            if (lane == null) throw new InvalidOperationException("NoteLane must exist before adding branch visuals.");
+            var existing = lane.Find("BranchIndicator");
+            if (existing != null) { controller.branchLane = existing.GetComponent<BranchLaneView>(); return; }
+            var branch = Rect("BranchIndicator", lane, 0, 0, 1280, 176);
+            branch.SetSiblingIndex(lane.Find("LaneBackground").GetSiblingIndex() + 1);
+            var view = branch.gameObject.AddComponent<BranchLaneView>();
+            view.normalLabel = Sprite("game/branch/normal");
+            view.expertLabel = Sprite("game/branch/expert");
+            view.masterLabel = Sprite("game/branch/master");
+            view.expertBackground = Sprite("game/branch/expert_bg");
+            view.masterBackground = Sprite("game/branch/master_bg");
+            view.levelUp = Sprite("game/branch/level_up");
+            view.levelDown = Sprite("game/branch/level_down");
+            view.background = Picture(branch, "RouteBackground", "game/branch/expert_bg", 332, 1, 948, 136);
+            view.levelChange = Picture(branch, "LevelChange", "game/branch/level_up", 163, -56);
+            // Match draw_texture(center=true): scaling keeps the unscaled sprite center fixed.
+            view.levelChange.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            view.levelChange.rectTransform.anchoredPosition += new Vector2(88, -28);
+            view.previousLabel = Picture(branch, "PreviousRoute", "game/branch/normal", 1071, 43);
+            view.currentLabel = Picture(branch, "CurrentRoute", "game/branch/normal", 1071, 43);
+            view.background.enabled = view.previousLabel.enabled = view.levelChange.enabled = false;
+            controller.branchLane = view;
+            branch.gameObject.SetActive(false);
         }
 
         public static void AddFpsCounter(Transform root)

@@ -117,7 +117,14 @@
     "Skins/PyTaikoGreen/Graphics/background/dancer/dancer_0/0_loop/2.png",
     "Skins/PyTaikoGreen/Graphics/background/dancer/dancer_0/0_loop/3.png",
     "Skins/PyTaikoGreen/Graphics/background/dancer/dancer_0/0_loop/1.png",
-    "Skins/PyTaikoGreen/Graphics/background/dancer/dancer_0/0_loop/0.png"
+    "Skins/PyTaikoGreen/Graphics/background/dancer/dancer_0/0_loop/0.png",
+    "Skins/PyTaikoGreen/Graphics/game/branch/expert.png",
+    "Skins/PyTaikoGreen/Graphics/game/branch/expert_bg.png",
+    "Skins/PyTaikoGreen/Graphics/game/branch/level_down.png",
+    "Skins/PyTaikoGreen/Graphics/game/branch/level_up.png",
+    "Skins/PyTaikoGreen/Graphics/game/branch/master.png",
+    "Skins/PyTaikoGreen/Graphics/game/branch/master_bg.png",
+    "Skins/PyTaikoGreen/Graphics/game/branch/normal.png"
   ],
   "other": [
     "Skins/PyTaikoGreen/Fonts/font.ttf",

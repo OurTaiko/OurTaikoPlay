@@ -16,7 +16,8 @@ namespace OurTaiko
         public Sprite[] judgmentSprites;
         public UnityEngine.UI.Image judgment, hitFlash, gaugeFill;
         public UnityEngine.UI.Image[] drumFlashes;
-        public TMP_Text title, subtitle, score, combo, counters, state, rollCounter, resultText, branchInfo;
+        public TMP_Text title, subtitle, score, combo, counters, state, rollCounter, resultText;
+        public BranchLaneView branchLane;
         public GameObject pausePanel, resultPanel;
         public UnityEngine.UI.Button pauseButton, restartButton, backButton, resumeButton, resultRestart, resultBack;
         public SpriteFlipbook[] dancers;
@@ -58,11 +59,7 @@ namespace OurTaiko
                 foreach (string warning in Session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
                 Session.Judged += OnJudged;
                 Session.BranchSelected += OnBranchSelected;
-                if (branchInfo != null)
-                {
-                    branchInfo.transform.parent.gameObject.SetActive(Session.Chart.Branches.Count > 0);
-                    ShowBranch(BranchRoute.Normal);
-                }
+                if (branchLane != null) branchLane.Initialize(Session.Chart.Branches.Count > 0);
                 title.text = Session.Chart.Title;
                 subtitle.text = $"{Session.Chart.Subtitle}    {Session.Chart.Course.ToUpperInvariant()}  LV.{Session.Chart.Level}";
                 CreateNotes();
@@ -109,6 +106,7 @@ namespace OurTaiko
             if (Session == null || IsPaused || IsFinished) return;
             double time = SongTime - song.audioOffsetMs / 1000.0;
             Session.Advance(time, autoPlay);
+            if (branchLane != null) branchLane.ShowTime(time);
             if (!autoPlay && keyboard != null)
             {
                 if (keyboard.fKey.wasPressedThisFrame) Hit(false, false);
@@ -154,13 +152,9 @@ namespace OurTaiko
             counters.text = $"GOOD {Session.Good}     OK {Session.Ok}     BAD {Session.Bad}     ROLL {Session.Rolls}";
             gaugeFill.fillAmount = (float)Session.Gauge;
         }
-        void OnBranchSelected(ChartBranch branch, BranchRoute route) => ShowBranch(route);
-        void ShowBranch(BranchRoute route)
+        void OnBranchSelected(ChartBranch branch, BranchRoute route)
         {
-            if (branchInfo == null) return;
-            branchInfo.text = "BRANCH " + route.ToString().ToUpperInvariant();
-            branchInfo.color = route == BranchRoute.Master ? new Color32(255, 170, 255, 255)
-                : route == BranchRoute.Expert ? new Color32(110, 220, 255, 255) : Color.white;
+            if (branchLane != null) branchLane.Select(route, SongTime - song.audioOffsetMs / 1000.0);
         }
         public void TogglePause()
         {

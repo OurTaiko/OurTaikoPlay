@@ -36,10 +36,21 @@ namespace OurTaiko.Tests
                 yield return null;
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
             }
-            yield return new WaitForSecondsRealtime(0.2f);
+            yield return new WaitForSecondsRealtime(0.3f);
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(expected));
-            Assert.That(play.branchInfo.text, Is.EqualTo("BRANCH " + expected.ToString().ToUpperInvariant()));
-            Assert.That(play.branchInfo.gameObject.activeInHierarchy, Is.True);
+            var branch = play.branchLane;
+            Assert.That(branch.gameObject.activeInHierarchy, Is.True);
+            Assert.That(branch.currentLabel.sprite.name, Is.EqualTo(expected.ToString().ToLowerInvariant()));
+            Assert.That(branch.currentLabel.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(1071, -43)));
+            Assert.That(branch.currentLabel.color.a, Is.EqualTo(1));
+            Assert.That(branch.background.enabled, Is.EqualTo(expected != BranchRoute.Normal));
+            if (expected != BranchRoute.Normal)
+            {
+                Assert.That(branch.background.sprite.name, Is.EqualTo(expected.ToString().ToLowerInvariant() + "_bg"));
+                Assert.That(branch.background.color.a, Is.EqualTo(0.5f));
+            }
+            Assert.That(branch.transform.GetSiblingIndex(), Is.LessThan(play.noteLayer.parent.GetSiblingIndex()));
+            Assert.That(branch.transform.parent.parent.Find("BranchPanel"), Is.Null);
             Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId != 0 || n.Route == expected || !play.noteLayer.GetChild(i).gameObject.activeSelf).All(x => x), Is.True);
             Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId == 0 && n.Route == expected && play.noteLayer.GetChild(i).gameObject.activeSelf).Any(x => x), Is.True);
             Assert.That(play.Session.Chart.Bars.Select((n, i) => n.BranchId != 0 || n.Route == expected || !play.barLayer.GetChild(i).gameObject.activeSelf).All(x => x), Is.True);
@@ -66,7 +77,55 @@ namespace OurTaiko.Tests
             var restarted = Object.FindFirstObjectByType<PlayScene>();
             Assert.That(restarted.Session.BranchHistory.Count, Is.Zero);
             Assert.That(restarted.Session.Score, Is.Zero);
+            Assert.That(restarted.branchLane.currentLabel.sprite.name, Is.EqualTo("normal"));
+            Assert.That(restarted.branchLane.background.enabled, Is.False);
             restarted.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+        }
+
+        [UnityTest]
+        public IEnumerator BranchLaneTransitionsMatchOriginalSkin()
+        {
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+            yield return null;
+            var menu = Object.FindFirstObjectByType<LaunchMenu>();
+            SceneSwitcher.Instance.Play(menu.songs.Single(s => s.name == "BranchTraining"), true);
+            yield return WaitForScene(SceneSwitcher.GameScene);
+            var play = Object.FindFirstObjectByType<PlayScene>();
+            if (!play.IsPaused) play.TogglePause();
+            var branch = play.branchLane;
+            branch.Select(BranchRoute.Expert, 0);
+            branch.ShowTime(0.05);
+            Assert.That(branch.previousLabel.sprite.name, Is.EqualTo("normal"));
+            Assert.That(branch.previousLabel.rectTransform.anchoredPosition.y, Is.EqualTo(-58).Within(0.001));
+            Assert.That(branch.currentLabel.color.a, Is.Zero);
+            Assert.That(branch.levelChange.sprite.name, Is.EqualTo("level_up"));
+            branch.ShowTime(0.1665);
+            Assert.That(branch.currentLabel.color.a, Is.EqualTo(0.5f).Within(0.001));
+            Assert.That(branch.currentLabel.rectTransform.anchoredPosition.y, Is.EqualTo(-60.5f).Within(0.001));
+            float frozenAlpha = branch.currentLabel.color.a;
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(branch.currentLabel.color.a, Is.EqualTo(frozenAlpha), "Pause must freeze the branch transition.");
+            branch.ShowTime(1.4);
+            Assert.That(branch.previousLabel.enabled, Is.False);
+            Assert.That(branch.levelChange.enabled, Is.False);
+            branch.Select(BranchRoute.Expert, 2);
+            Assert.That(branch.levelChange.enabled, Is.False, "Selecting the same route must not replay the animation.");
+            branch.Select(BranchRoute.Master, 3);
+            branch.ShowTime(4.4);
+            Assert.That(branch.background.sprite.name, Is.EqualTo("master_bg"));
+            Assert.That(branch.background.color.a, Is.EqualTo(0.5f));
+            branch.Select(BranchRoute.Normal, 5);
+            branch.ShowTime(5.05);
+            Assert.That(branch.levelChange.sprite.name, Is.EqualTo("level_down"));
+            Assert.That(branch.previousLabel.sprite.name, Is.EqualTo("master"));
+            Assert.That(branch.previousLabel.rectTransform.anchoredPosition.y, Is.EqualTo(-28).Within(0.001));
+            Assert.That(branch.currentLabel.rectTransform.anchoredPosition.y, Is.EqualTo(27).Within(0.001));
+            Assert.That(branch.background.enabled, Is.False);
+            branch.ShowTime(6.4);
+            Assert.That(branch.currentLabel.sprite.name, Is.EqualTo("normal"));
+            Assert.That(branch.currentLabel.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(1071, -43)));
+            Assert.That(branch.currentLabel.color.a, Is.EqualTo(1));
+            play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
         }
 
         [UnityTest]
@@ -110,6 +169,7 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindFirstObjectByType<PlayScene>();
             Assert.That(play.Session.Chart.Notes.Count, Is.GreaterThan(50));
+            Assert.That(play.branchLane.gameObject.activeSelf, Is.False, "Non-branch charts must not show route labels or tints.");
             Assert.That(Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
             Assert.That(Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
             if (play.IsPaused) play.TogglePause();

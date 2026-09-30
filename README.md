@@ -27,7 +27,7 @@
 
 ## 分支游玩
 
-支持 `#BRANCHSTART p,玄人阈值,达人阈值`（命中率）和 `r`（连打数），以及 `#N`、`#E`、`#M`、`#BRANCHEND`、`#SECTION`。按相邻 OurTaikoPlayer 的规则，在分支首个对象进入画面时确定路线；未选路线不会显示、判定或计分。左上方显示 `BRANCH NORMAL / EXPERT / MASTER`，对应普通／玄人／达人。
+支持 `#BRANCHSTART p,玄人阈值,达人阈值`（命中率）和 `r`（连打数），以及 `#N`、`#E`、`#M`、`#BRANCHEND`、`#SECTION`。按相邻 OurTaikoPlayer 的规则，在分支首个对象进入画面时确定路线；未选路线不会显示、判定或计分。分支谱面沿用原皮肤的轨道配色：普通为深色、玄人为蓝色、达人为紫色；轨道右侧显示「普通譜面／玄人譜面／達人譜面」图片字样。路线变化时按原版滑动、淡入淡出，并显示升降级提示。没有分支的谱面不显示这些标识。
 
 Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 50% 进入普通，50% 至不足 80% 进入玄人，80% 及以上进入达人；后半段连打不足 5 下进入普通、5–14 下进入玄人、15 下及以上进入达人。可以打开 AUTO PLAY 验证两次达人分支，或手动游玩尝试不同路线。
 
@@ -39,6 +39,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `PlayScene.unity`：可在 Hierarchy 中编辑的 Canvas、音符轨道、判定圈、鼓面、魂槽、歌曲信息、舞者、暂停及结果面板。`PlayScene.cs` 连接输入、DSP 时钟、音乐和画面。
 - `Runtime/Core/TjaParser.cs`：纯 C# TJA 读取，支持课程选择、音符 1–9、连打/气球、BPMCHANGE、MEASURE、DELAY、SCROLL（含复数）、GOGO、BARLINE，以及三路线分支与 SECTION。每条路线从分支起点恢复时刻、BPM、SCROLL、拍号等状态。
 - `Runtime/Core/PlaySession.cs`：独立于 Unity 的判定、连击、分数、魂槽、自动演奏和分支选择。分支统计按事件时间处理，基础分和魂槽分母沿用原版的公共段＋达人路线音符数。大音符目前允许单侧击打；计分与魂槽仍是简化实现。
+- `Runtime/Play/BranchLaneView.cs`：分支轨道底色、右侧谱面字样及升降级动画，使用原 PyTaikoGreen 图片和动画参数。
 - `Runtime/Core/NoteScroll.cs`：按 BPM、SCROLL 和判定点到轨道右边缘的距离计算流速。连打头尾始终使用头部速度整体移动，长度保持恒定。
 - `Runtime/Core/SongDefinition.cs`：在 Inspector 中指定谱面 TextAsset、音乐 AudioClip、难度和音画偏移。谱面以 `.txt` 导入，内容仍是 TJA；WAVE 字段由显式 AudioClip 引用替代。
 - `Editor/ProjectBuilder.cs`：通过 Editor API 创建初始场景和 sprite 切片。生成后不自动覆盖场景，后续直接编辑现有场景。
@@ -47,11 +48,11 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 ## 素材来源
 
-复用了 `OurTaikoPlayer/Skins/PyTaikoGreen` 的部分轨道、音符、魂槽、背景、舞者帧、字体和打击音效，以及原项目自带的两份谱面和 TRIPLE HELIX 音频。具体文件见 `Documentation/ImportedAssets.json`。原仓库未作修改。保留原 `LICENSE`、`NOTICE`；皮肤、字体和音频沿用各自的权利归属。
+复用了 `OurTaikoPlayer/Skins/PyTaikoGreen` 的部分轨道、分支标识、音符、魂槽、背景、舞者帧、字体和打击音效，以及原项目自带的两份谱面和 TRIPLE HELIX 音频。具体文件见 `Documentation/ImportedAssets.json`。原仓库未作修改。保留原 `LICENSE`、`NOTICE`；皮肤、字体和音频沿用各自的权利归属。
 
 ## 验证
 
-用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速和分支阈值／时序，后者覆盖入口 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 PlayScene、音乐时间同步，以及普通／玄人／达人路线和分支自动演奏结算。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
+用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速和分支阈值／时序，后者覆盖入口 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 PlayScene、音乐时间同步，以及三路线配色和字样、升降级动画、非分支谱面的隐藏行为和分支自动演奏结算。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
 
 ```sh
 unity test . --mode EditMode --output TestResults/editmode.xml
