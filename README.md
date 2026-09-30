@@ -40,6 +40,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `Runtime/Core/TjaParser.cs`：纯 C# TJA 读取，支持课程选择、音符 1–9、连打/气球、BPMCHANGE、MEASURE、DELAY、SCROLL（含复数）、GOGO、BARLINE，以及三路线分支与 SECTION。每条路线从分支起点恢复时刻、BPM、SCROLL、拍号等状态。
 - `Runtime/Core/PlaySession.cs`：独立于 Unity 的判定、连击、分数、魂槽、自动演奏和分支选择。分支统计按事件时间处理，基础分和魂槽分母沿用原版的公共段＋达人路线音符数。大音符目前允许单侧击打；计分与魂槽仍是简化实现。
 - `Runtime/Play/BranchLaneView.cs`：分支轨道底色、右侧谱面字样及升降级动画，使用打平的 Nijiiro 素材与原生坐标。
+- `Runtime/Play/BalloonCounterView.cs`：7 号气球的剩余次数、Nijiiro 气泡、数字弹动、膨胀与破裂淡出，跟随游玩时钟及画布缩放。
 - `Runtime/Play/SoulGaugeView.cs`：50 格魂槽、加高的黄色过关区、450 ms 新格淡入、满槽彩虹与魂火。Easy／Normal+Hard／Oni+Edit 过关阈值分别为 60%／70%／80%，与结算一致。每次彩虹帧过渡为 75 ms，8 帧循环 600 ms；失去满槽或过关状态时恢复对应样式。
 - `Runtime/Core/NoteScroll.cs`：按 BPM、SCROLL 和判定点到轨道右边缘的距离计算流速。连打头尾始终使用头部速度整体移动，长度保持恒定。
 - `Runtime/Core/SongDefinition.cs`：在 Inspector 中指定谱面 TextAsset、音乐 AudioClip、难度和音画偏移。谱面以 `.txt` 导入，内容仍是 TJA；WAVE 字段由显式 AudioClip 引用替代。

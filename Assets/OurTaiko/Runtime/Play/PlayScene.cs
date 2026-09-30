@@ -13,6 +13,8 @@ namespace OurTaiko
         public AudioClip don, ka;
         public RectTransform noteLayer, barLayer;
         public Sprite[] noteSprites;
+        public Sprite balloonTailSprite;
+        public BalloonCounterView balloonCounter;
         public Sprite[] judgmentSprites;
         public UnityEngine.UI.Image judgment, hitFlash;
         public SoulGaugeView soulGauge;
@@ -39,6 +41,7 @@ namespace OurTaiko
         sealed class NoteView
         {
             public RectTransform Root, Body;
+            public UnityEngine.UI.Image BalloonTail;
             public GameObject Object;
         }
 
@@ -57,6 +60,7 @@ namespace OurTaiko
             try
             {
                 Session = new PlaySession(song.Parse());
+                balloonCounter.ResetDisplay();
                 soulGauge.Initialize(Session.ClearThreshold);
                 foreach (string warning in Session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
                 Session.Judged += OnJudged;
@@ -116,6 +120,7 @@ namespace OurTaiko
                 if (keyboard.dKey.wasPressedThisFrame) Hit(true, false);
                 if (keyboard.kKey.wasPressedThisFrame) Hit(true, true);
             }
+            balloonCounter.ShowTime(time);
             RenderNotes(time - song.visualOffsetMs / 1000.0);
             soulGauge.ShowTime(time);
             foreach (var dancer in dancers) dancer.ShowTime(time);
@@ -145,6 +150,13 @@ namespace OurTaiko
             if (autoPlay) Feedback(Session.Chart.Notes[index].IsKa, (index & 1) != 0);
             feedbackTime = Time.unscaledTime;
             if (result != Judgment.Roll) judgment.sprite = judgmentSprites[(int)result - 1];
+            else if (Session.Chart.Notes[index].Kind == NoteKind.Balloon)
+            {
+                var note = Session.Chart.Notes[index];
+                balloonCounter.RecordHit(index, note.BalloonHits, Session.LongHits[index], note.EndTime,
+                    SongTime - song.audioOffsetMs / 1000.0);
+                rollCounter.text = "";
+            }
             else { rollCounter.text = "DRUMROLL  " + Session.Rolls; }
             UpdateHud();
         }
@@ -207,6 +219,14 @@ namespace OurTaiko
                 head.anchorMin = new Vector2(-faceOffset, 0);
                 head.anchorMax = new Vector2(1 - faceOffset, 1);
                 Image(head, noteSprites[(int)note.Kind]); notes.Add(view);
+                if (note.Kind == NoteKind.Balloon)
+                {
+                    // notes/10 joins the right edge of notes/7 in draw_balloon.
+                    var tail = Rect("BalloonTail", root, 0, 0);
+                    tail.anchorMin = new Vector2(1 - faceOffset, 0);
+                    tail.anchorMax = new Vector2(2 - faceOffset, 1);
+                    view.BalloonTail = Image(tail, balloonTailSprite);
+                }
                 root.gameObject.SetActive(false);
             }
             foreach (var bar in Session.Chart.Bars)
@@ -240,9 +260,10 @@ namespace OurTaiko
                 if (visible)
                 {
                     view.Root.anchoredPosition = pos;
+                    if (view.BalloonTail != null) view.BalloonTail.enabled = balloonCounter.NoteIndex != i;
                     if (view.Body != null) { view.Body.sizeDelta = new Vector2(Mathf.Abs(length), 42); view.Body.localScale = new Vector3(Mathf.Sign(length), 1, 1); }
                     if (note.Gogo && note.Time - time < 1) gogo = true;
-                    if (note.IsBalloon && time >= note.Time) rollCounter.text = "BALLOON  " + Math.Max(0, note.BalloonHits - Session.LongHits[i]);
+                    if (note.Kind == NoteKind.Kusudama && time >= note.Time) rollCounter.text = "BALLOON  " + Math.Max(0, note.BalloonHits - Session.LongHits[i]);
                 }
             }
             for (int i = 0; i < bars.Count; i++)

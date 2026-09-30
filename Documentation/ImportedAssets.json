@@ -2,6 +2,9 @@
   "source": "../OurTaikoPlayer",
   "skin": "YataiDONNijiiro",
   "graphics": [
+    "Skins/YataiDONNijiiro/Graphics/game/balloon/bubble.png",
+    "Skins/YataiDONNijiiro/Graphics/game/balloon/counter.png",
+    "Skins/YataiDONNijiiro/Graphics/game/balloon/pop.png",
     "Skins/YataiDONNijiiro/Graphics/game/lane/mod_abekobe.png",
     "Skins/YataiDONNijiiro/Graphics/game/lane/ai_lane_background.png",
     "Skins/YataiDONNijiiro/Graphics/game/lane/drum_don_r.png",

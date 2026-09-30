@@ -201,6 +201,102 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
+        public IEnumerator NijiiroBalloonCounterCountsPopsAndResets()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Balloon Counter\nBPM:120\nCOURSE:Oni\nLEVEL:1\nBALLOON:12,3\n#START\n7008,\n7008,\n#END");
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
+                SceneSwitcher.Instance.Play(song);
+                yield return WaitForScene(SceneSwitcher.GameScene);
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                float deadline = Time.realtimeSinceStartup + 20;
+                IEnumerator Reach(double time)
+                {
+                    while (play.RenderedTime < time)
+                    {
+                        if (play.IsPaused) play.TogglePause();
+                        yield return null;
+                        Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                    }
+                }
+                var counter = play.balloonCounter;
+                Assert.That(counter.IsVisible, Is.False);
+                yield return Reach(0.1);
+                play.Hit(true, false);
+                Assert.That(counter.IsVisible, Is.False, "Ka must not start a balloon counter.");
+                play.Hit(false, false); play.Hit(false, true);
+                Assert.That(counter.Remaining, Is.EqualTo(10));
+                Assert.That(counter.IsVisible, Is.True);
+                Assert.That(counter.number.GetChild(0).GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo("BalloonDigit1"));
+                Assert.That(counter.number.GetChild(1).GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo("BalloonDigit0"));
+                Assert.That(play.rollCounter.text, Is.Empty);
+                play.TogglePause(); play.pausePanel.SetActive(false);
+                Capture("BalloonCounter10.png");
+                var frozenSize = ((RectTransform)counter.number.GetChild(0)).sizeDelta;
+                yield return new WaitForSecondsRealtime(0.2f);
+                Assert.That(((RectTransform)counter.number.GetChild(0)).sizeDelta, Is.EqualTo(frozenSize));
+
+                // Deterministic samples of the reference's digit spacing, stretch and pop fade.
+                counter.RecordHit(0, 1000, 1, 20, 10);
+                Assert.That(counter.Remaining, Is.EqualTo(999));
+                Assert.That(counter.number.Cast<Transform>().Count(t => t.gameObject.activeSelf), Is.EqualTo(3));
+                Assert.That(((RectTransform)counter.number.GetChild(0)).anchoredPosition.x, Is.EqualTo(-96));
+                counter.ShowTime(10.0255);
+                Assert.That(((RectTransform)counter.number.GetChild(0)).rect.height, Is.EqualTo(97).Within(0.001));
+                counter.ShowTime(10.2);
+                Assert.That(((RectTransform)counter.number.GetChild(0)).rect.height, Is.EqualTo(90));
+                counter.RecordHit(0, 1000, 1000, 20, 11);
+                counter.ShowTime(11.083);
+                Assert.That(counter.visuals.alpha, Is.EqualTo(0.5f).Within(0.001));
+                yield return new WaitForSecondsRealtime(0.1f);
+                Assert.That(counter.visuals.alpha, Is.EqualTo(0.5f).Within(0.001), "Pause freezes the pop fade.");
+                counter.ShowTime(11.167);
+                Assert.That(counter.IsVisible, Is.False);
+                counter.RecordHit(0, 12, 2, play.Session.Chart.Notes[0].EndTime, play.SongTime);
+                play.TogglePause();
+
+                play.Hit(false, false);
+                Assert.That(counter.Remaining, Is.EqualTo(9));
+                Assert.That(counter.number.Cast<Transform>().Count(t => t.gameObject.activeSelf), Is.EqualTo(1));
+                Assert.That(counter.body.sprite.name, Is.EqualTo("BalloonInflation2"));
+                play.TogglePause(); play.pausePanel.SetActive(false);
+                Capture("BalloonCounter9.png", 1280, 720);
+                play.TogglePause();
+                for (int i = 0; i < 9; i++) play.Hit(false, (i & 1) != 0);
+                Assert.That(play.Session.Resolved[0], Is.True);
+                Assert.That(counter.Remaining, Is.Zero);
+                Assert.That(counter.body.sprite.name, Is.EqualTo("BalloonInflation7"));
+                yield return Reach(1);
+                Assert.That(counter.IsVisible, Is.False);
+                yield return Reach(2.1);
+                play.Hit(false, false);
+                Assert.That(counter.Remaining, Is.EqualTo(2), "Each balloon starts with its own required hits.");
+                yield return Reach(3.51);
+                Assert.That(counter.IsVisible, Is.False, "An unpopped balloon clears at its end time.");
+                play.Restart(); yield return WaitForScene(SceneSwitcher.GameScene);
+                play = Object.FindFirstObjectByType<PlayScene>();
+                Assert.That(play.balloonCounter.IsVisible, Is.False);
+                Assert.That(play.Session.LongHits[0], Is.Zero);
+                SceneSwitcher.Instance.Play(song, true); yield return WaitForScene(SceneSwitcher.GameScene);
+                play = Object.FindFirstObjectByType<PlayScene>();
+                yield return Reach(0.1);
+                Assert.That(play.balloonCounter.Remaining, Is.EqualTo(12 - play.Session.LongHits[0]));
+                Assert.That(play.balloonCounter.IsVisible, Is.True);
+                yield return Reach(1);
+                Assert.That(play.Session.Resolved[0], Is.True);
+                Assert.That(play.balloonCounter.IsVisible, Is.False);
+                play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator BalloonFaceAlignsWithJudgeWhileMovingAndHitting()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();

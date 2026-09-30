@@ -114,6 +114,7 @@ namespace OurTaiko.Editor
             branch.background.rectTransform.anchoredPosition = new Vector2(498, -7);
             branch.background.rectTransform.sizeDelta = new Vector2(1422, 200);
             ConfigureSoulGauge(root, play);
+            ConfigureBalloonCounter(play);
             EditorUtility.SetDirty(play);
         }
 
