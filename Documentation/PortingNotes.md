@@ -126,3 +126,17 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 本次 Unity Editor PlayMode **10/10** 通过，覆盖 10→9 的位数变化、三位数字布局、精确动画时刻、暂停、未打破到期、连续气球、重开与自动演奏，以及已有的多分辨率对齐、分支、魂槽、流速和场景流程。报告保存为 `TestResults/balloon-counter-playmode.json`。没有重建独立播放器。
 
 气球破裂音效使用 Nijiiro 的 `Sounds/game/balloon_pop.ogg`，原样复制到 `Assets/OurTaiko/Audio/balloon_pop.ogg`（约 0.414 秒）。按 `Player::check_balloon`，达到要求击打次数的那次判定通过现有打击音效通道播放一次，手动和自动演奏共用；未打破到期不播放。短音效预加载并在加载时解压，播放独立于气泡淡出。已核对源文件一致、音频数据可读取且非静音；气球专项 PlayMode 回归 1/1 通过（含手动／自动吹爆和预加载引用），报告为 `TestResults/balloon-pop-audio-playmode.json`。
+
+## 大小连打身体与尾部
+
+参考 `Player::draw_drumroll`、`TextureWrapper::draw_texture`／`read_tex_obj_data` 和 Nijiiro 的 `game/notes/texture.json`。原 Unity 版把大小连打都画成固定高度的纯色矩形，缺少尾部；现改用已有 Nijiiro 图集的四张切片，没有增加运行时皮肤依赖：
+
+- 小／大身体分别使用 `(0,1544,72,192)`、`(72,1544,72,192)`，只沿长度方向拉伸，完整保留各自的粗细、边框和透明区域。
+- 小／大尾部分别使用 `(0,2120,80,192)`、`(0,2312,120,192)`，放在连打结束位置，并保持原始宽高比。绘制顺序为身体、尾部、头部，让头部覆盖起点接缝。
+- 原版目标宽度会加上身体贴图本身的宽度，再加 `drumroll_width_offset`。Nijiiro 下是 `长度 + 72 - 70.5`，即重叠 1.5 设计单位；Unity 用音符高度的 `1/128` 表达重叠量，随音符与 Canvas 缩放。反向滚动将身体和尾部沿水平方向翻转，圆端朝外；头部表情保持正向。
+- 图集改为与原版裁剪贴图相同的 Point 采样，避免身体边界混入邻近帧，在小连打接缝处产生竖线和杂色。
+- 长度仍按头部 BPM／SCROLL 计算，身体和尾部与头部整体移动。`NoteScroll.RollLength` 未改动，连打中途的 BPM／SCROLL 命令不会让头尾采用不同速度。
+
+已检查 1080p／720p 渲染图：[小连打](DrumrollSmall.png)、[大连打](DrumrollBig.png)。专项测试还覆盖反向、静止、极短连打、接缝重叠、绘制层级以及中途变速时的恒定长度。
+
+本次 Unity Editor EditMode **57/57**、PlayMode **11/11** 通过，含新增连打渲染测试及已有分支、魂槽、气球与场景流程回归。报告保存为 `TestResults/drumroll-editmode.json`、`TestResults/drumroll-playmode.json`。没有重建独立播放器。

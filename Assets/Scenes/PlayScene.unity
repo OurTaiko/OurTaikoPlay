@@ -7052,6 +7052,12 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 7bc12d8320f834596b0a092ea6fe2e47, type: 2}
   - {fileID: 0}
   - {fileID: 21300000, guid: 268474b3b53004761a7871fcb245e650, type: 2}
+  rollBodySprites:
+  - {fileID: 21300000, guid: 8ed7395ca84c348a99b13052cfacc5d3, type: 2}
+  - {fileID: 21300000, guid: 73f5f182ce95d401ead740f3a4127a38, type: 2}
+  rollTailSprites:
+  - {fileID: 21300000, guid: f13db991a95cc497296834435582c3ec, type: 2}
+  - {fileID: 21300000, guid: 8df5886a5898746429c215f3874bd814, type: 2}
   balloonTailSprite: {fileID: 21300000, guid: 191ae835eba9f4bca8fe109c642f738d, type: 2}
   balloonCounter: {fileID: 608617524}
   judgmentSprites:

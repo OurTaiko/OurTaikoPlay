@@ -13,6 +13,7 @@ namespace OurTaiko
         public AudioClip don, ka, balloonPop;
         public RectTransform noteLayer, barLayer;
         public Sprite[] noteSprites;
+        public Sprite[] rollBodySprites, rollTailSprites;
         public Sprite balloonTailSprite;
         public BalloonCounterView balloonCounter;
         public Sprite[] judgmentSprites;
@@ -40,7 +41,8 @@ namespace OurTaiko
 
         sealed class NoteView
         {
-            public RectTransform Root, Body;
+            public RectTransform Root, Body, Tail;
+            public float TailAspect;
             public UnityEngine.UI.Image BalloonTail;
             public GameObject Object;
         }
@@ -208,10 +210,18 @@ namespace OurTaiko
                 var view = new NoteView { Root = root, Object = root.gameObject };
                 if (note.IsLong && !note.IsBalloon)
                 {
-                    view.Body = Rect("RollBody", root, 1, 42);
-                    view.Body.anchorMin = view.Body.anchorMax = new Vector2(0.5f, 0.5f);
+                    int size = note.Kind == NoteKind.BigRoll ? 1 : 0;
+                    view.Body = Rect("RollBody", root, 0, 0);
+                    view.Body.anchorMin = new Vector2(0.5f, 0);
+                    view.Body.anchorMax = new Vector2(0.5f, 1);
                     view.Body.pivot = new Vector2(0, 0.5f);
-                    Image(view.Body, null).color = new Color(1, 0.72f, 0.05f);
+                    Image(view.Body, rollBodySprites[size]);
+                    view.Tail = Rect("RollTail", root, 0, 0);
+                    view.Tail.anchorMin = view.Body.anchorMin;
+                    view.Tail.anchorMax = view.Body.anchorMax;
+                    view.Tail.pivot = view.Body.pivot;
+                    Image(view.Tail, rollTailSprites[size]);
+                    view.TailAspect = rollTailSprites[size].rect.width / rollTailSprites[size].rect.height;
                 }
                 var head = Rect("Head", root, 0, 0);
                 // Match draw_balloon's balloon_offset as a fraction of the note width.
@@ -262,7 +272,18 @@ namespace OurTaiko
                 {
                     view.Root.anchoredPosition = pos;
                     if (view.BalloonTail != null) view.BalloonTail.enabled = balloonCounter.NoteIndex != i;
-                    if (view.Body != null) { view.Body.sizeDelta = new Vector2(Mathf.Abs(length), 42); view.Body.localScale = new Vector3(Mathf.Sign(length), 1, 1); }
+                    if (view.Body != null)
+                    {
+                        // draw_drumroll adds the strip's native width to length +
+                        // drumroll_width_offset: (48 - 47) / 128 of the note height.
+                        float overlap = view.Root.rect.height / 128f;
+                        float direction = length < 0 ? -1 : 1;
+                        view.Body.sizeDelta = new Vector2(Mathf.Abs(length) + overlap, 0);
+                        view.Body.localScale = new Vector3(direction, 1, 1);
+                        view.Tail.anchoredPosition = new Vector2(length, 0);
+                        view.Tail.sizeDelta = new Vector2(view.Root.rect.height * view.TailAspect, 0);
+                        view.Tail.localScale = view.Body.localScale;
+                    }
                     if (note.Gogo && note.Time - time < 1) gogo = true;
                     if (note.Kind == NoteKind.Kusudama && time >= note.Time) rollCounter.text = "BALLOON  " + Math.Max(0, note.BalloonHits - Session.LongHits[i]);
                 }

@@ -102,6 +102,7 @@ namespace OurTaiko.Editor
             difficulty.sprite = Slice("OniDifficulty", "game/lane/lane_difficulty", 0, 288, 132, 96);
             for (int i = 1; i <= 7; i++) play.noteSprites[i] = Slice("Note" + i, "game/notes/notes_atlas", 0, 200 + (i - 1) * 192, 192, 192);
             play.noteSprites[9] = Slice("Note9", "game/notes/notes_atlas", 0, 1736, 192, 192);
+            ConfigureDrumrollSprites(play);
             PlacePicture(lane, "HitFlash", "game/hit_effect/hit_effect_good", 510, 2);
             PlacePicture(lane, "Judgment", "game/hit_effect/judge_good", 546, -60);
             var frames = Enumerable.Range(0, 19).Select(i => Sprite("background/dancer/dancer_0/0_loop/" + i)).ToArray();
@@ -127,6 +128,39 @@ namespace OurTaiko.Editor
             EditorUtility.SetDirty(play);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
+        }
+
+        [MenuItem("OurTaiko/Apply Nijiiro Drumroll Sprites")]
+        public static void ApplyDrumrollSprites()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing drumroll sprites.");
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/PlayScene.unity");
+            var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
+            ConfigureDrumrollSprites(play);
+            EditorUtility.SetDirty(play);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            AssetDatabase.SaveAssets();
+        }
+
+        static void ConfigureDrumrollSprites(PlayScene play)
+        {
+            // read_tex_obj_data uses point sampling for cropped atlases. Bilinear
+            // sampling here leaks the neighboring big-roll strip into the small one.
+            var importer = (TextureImporter)AssetImporter.GetAtPath(Root + "Art/game/notes/notes_atlas.png");
+            if (importer.filterMode != FilterMode.Point)
+            {
+                importer.filterMode = FilterMode.Point;
+                importer.SaveAndReimport();
+            }
+            play.rollBodySprites = new[] {
+                Slice("RollBodySmall", "game/notes/notes_atlas", 0, 1544, 72, 192),
+                Slice("RollBodyBig", "game/notes/notes_atlas", 72, 1544, 72, 192)
+            };
+            play.rollTailSprites = new[] {
+                Slice("RollTailSmall", "game/notes/notes_atlas", 0, 2120, 80, 192),
+                Slice("RollTailBig", "game/notes/notes_atlas", 0, 2312, 120, 192)
+            };
         }
 
         static void ConfigureSoulGauge(Transform root, PlayScene play)

@@ -201,6 +201,69 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
+        public IEnumerator DrumrollBodiesAndTailsUseNijiiroGeometry()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Drumroll Rendering\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#SCROLL 0.5\n5008,\n6008,\n#SCROLL -0.5\n5008,\n6008,\n#SCROLL 0\n5008,\n#SCROLL 0.01\n6008,\n#SCROLL 1\n50\n#BPMCHANGE 240\n#SCROLL 2\n08,\n#END");
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
+                SceneSwitcher.Instance.Play(song);
+                yield return WaitForScene(SceneSwitcher.GameScene);
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                if (!play.IsPaused) play.TogglePause();
+                play.pausePanel.SetActive(false);
+                var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var captureNames = new[] { "DrumrollSmall", "DrumrollBig", "DrumrollReverseSmall", "DrumrollReverseBig", "DrumrollStopped", "DrumrollShort", "DrumrollTempoChange" };
+                for (int i = 0; i < play.Session.Chart.Notes.Count; i++)
+                {
+                    var note = play.Session.Chart.Notes[i];
+                    var root = (RectTransform)play.noteLayer.GetChild(i);
+                    var head = (RectTransform)root.Find("Head");
+                    var body = (RectTransform)root.Find("RollBody");
+                    var tail = (RectTransform)root.Find("RollTail");
+                    bool big = note.Kind == NoteKind.BigRoll;
+                    Assert.That(body.GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo(big ? "RollBodyBig" : "RollBodySmall"));
+                    Assert.That(body.GetComponent<UnityEngine.UI.Image>().sprite.texture.filterMode, Is.EqualTo(FilterMode.Point), "Atlas sampling must not bleed neighboring body frames into the join.");
+                    Assert.That(tail.GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo(big ? "RollTailBig" : "RollTailSmall"));
+                    Assert.That(body.GetSiblingIndex(), Is.LessThan(tail.GetSiblingIndex()));
+                    Assert.That(tail.GetSiblingIndex(), Is.LessThan(head.GetSiblingIndex()), "The head must cover the body join.");
+                    double time = note.ScrollX < 0 ? note.EndTime - 0.01 : note.Time - 0.25;
+                    render.Invoke(play, new object[] { time });
+                    Canvas.ForceUpdateCanvases();
+                    double speed = note.Bpm / 240 * note.ScrollX * (1920 - 618);
+                    double length = (note.EndTime - note.Time) * speed;
+                    float direction = length < 0 ? -1 : 1;
+                    Vector3 TailPosition() => play.noteLayer.InverseTransformPoint(tail.position);
+                    Assert.That(body.rect.height, Is.EqualTo(head.rect.height));
+                    Assert.That(body.rect.width, Is.EqualTo(System.Math.Abs(length) + 1.5).Within(0.01));
+                    Assert.That(body.localScale.x, Is.EqualTo(direction));
+                    Assert.That(tail.rect.size, Is.EqualTo(new Vector2(big ? 120 : 80, 192)));
+                    Assert.That(tail.localScale.x, Is.EqualTo(direction));
+                    Assert.That(TailPosition().x, Is.EqualTo(120 + (note.EndTime - time) * speed).Within(0.01));
+                    Assert.That(TailPosition().y, Is.EqualTo(root.anchoredPosition.y).Within(0.01));
+                    var bodyEnd = play.noteLayer.InverseTransformPoint(body.TransformPoint(new Vector3(body.rect.xMax, 0)));
+                    Assert.That((bodyEnd.x - TailPosition().x) * direction, Is.EqualTo(1.5).Within(0.01), "Body and cap overlap without a gap.");
+                    for (int n = 0; n < play.noteLayer.childCount; n++) play.noteLayer.GetChild(n).gameObject.SetActive(n == i);
+                    play.barLayer.gameObject.SetActive(false);
+                    Capture(captureNames[i] + ".png");
+                    if (i <= 1) Capture(captureNames[i] + "-720p.png", 1280, 720);
+                    float headBefore = root.anchoredPosition.x, tailBefore = TailPosition().x;
+                    render.Invoke(play, new object[] { time + 0.125 });
+                    Assert.That(headBefore - root.anchoredPosition.x, Is.EqualTo(speed * 0.125).Within(0.01));
+                    Assert.That(tailBefore - TailPosition().x, Is.EqualTo(speed * 0.125).Within(0.01), "Tail must inherit the head's speed.");
+                    Assert.That(tail.anchoredPosition.x, Is.EqualTo(length).Within(0.01));
+                }
+                play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator NijiiroBalloonCounterCountsPopsAndResets()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
