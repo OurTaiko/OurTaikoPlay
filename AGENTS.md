@@ -4,11 +4,11 @@
 
 ## 1. 核心项目目标
 
-将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过 SceneSwitcher 和 PlayScene 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行游玩模块。
+将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件和 PlayScene 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行游玩模块。SceneSwitcher 不是场景；测试入口为 Test_DefaultScene，所有运行时场景切换从全局控件开始，并交由它完成。
 
 ## 2. 当前已知事实/约束条件
 
-- 工作项目：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayerUnity`；参考源码：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayer`。本移植只读取原项目，不修改原项目；相邻 MajdataPlay 不是本次实现目标。
+- 工作项目：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayerUnity`；玩法参考源码：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayer`；全局场景切换架构参照相邻 MajdataPlay 的 `Assets/Scripts/Global/SceneSwitcher.cs`。两个参考项目都只读，不修改。
 - 技术栈：Unity **6000.3.25f1**、Universal 2D／URP **17.3.0**、uGUI、TextMeshPro、Input System。运行逻辑和 Editor 工具全部使用 **C#**，不引入 C++、Lua 或原模拟器的原生插件。
 - 两个场景设计画布与默认窗口均为 **1920×1080**；宽高比变化时保持设计区域比例并居中留边。贴图对齐与局部偏移使用相对锚点或尺寸比例，不能写成固定屏幕像素补丁。
 - 当前只做 **Nijiiro**。素材主要来自 `Skins/YataiDONNijiiro`；缺少的资源已从 Green 直接复制补齐并打平。不实现皮肤继承、运行时回退或 Green 皮肤切换。图片保持原文件，使用 Sprite 切片；来源见 `Documentation/ImportedAssets.json`，保留 LICENSE／NOTICE 与资源权利归属。
@@ -25,8 +25,8 @@
 
 ### 当前完成状态与交接边界
 
-- 最新功能提交：**`48a0fbc` — `fix(unity): match Nijiiro drumroll bodies and tails`**。5／6 号连打身体与尾部修复已完成、验证并提交；此前的分支、魂槽、气球对齐／次数／破裂音效也已完成。当前没有尚未完成的用户功能请求，下一步等待新需求。
-- 本摘要写入前，工作区已有且仅有一项未提交改动：`Assets/OurTaiko/Generated/Nijiiro SDF.asset`。这是已有字体资源改动，**不要覆盖、回退或顺带提交**。上次测试前的精确备份位于本机忽略目录 `TestResults/drumroll-baseline/Nijiiro-SDF.asset`；该文件仅是当时快照，后续恢复前必须确认用户没有继续修改。Unity 动态字体可能因测试／保存产生额外变化，操作前检查状态。
+- 最新已有功能提交：**`48a0fbc` — `fix(unity): match Nijiiro drumroll bodies and tails`**。其后，本次全局 SceneSwitcher 改造已完成并验证，保留在工作区尚未提交；Test_DefaultScene 为测试入口，SceneSwitcher 为全局预制体，所有切换交由它完成。此前的分支、魂槽、气球和连打功能仍通过回归。
+- 本次开始时工作区干净；`Assets/OurTaiko/Generated/Nijiiro SDF.asset` 测试后与本次开始前完全一致。继续保留字体资源，不覆盖、回退或顺带提交无关字体改动。当前快照位于忽略目录 `TestResults/global-switcher-baseline/Nijiiro-SDF.asset`；历史快照 `TestResults/drumroll-baseline/Nijiiro-SDF.asset` 不代表最新内容。Unity 动态字体可能因测试／保存产生额外变化，操作前检查状态，恢复前确认用户没有继续修改。
 - 当前验证针对 Unity Editor。早期曾成功构建 macOS Development Player，但 `Builds/OurTaikoPlayerUnity.app` **没有随最近各次修复重新打包**，不能视作当前版本。移动端、真机音频延迟与独立播放器长期手动游玩尚未验收。
 
 ### 运行入口与代码结构
@@ -35,9 +35,10 @@
 
 | 核心文件／目录 | 当前职责 |
 | --- | --- |
-| `Assets/Scenes/SceneSwitcher.unity` | 入口场景；选择歌曲、自动演奏并进入游玩。 |
+| `Assets/Scenes/Test_DefaultScene.unity` | 测试入口场景；选择歌曲、自动演奏并调用全局控件进入游玩。 |
 | `Assets/Scenes/PlayScene.unity` | 已保存并可编辑的游玩 Canvas、轨道、判定圈、鼓面、魂槽、舞者、暂停与结果界面；可直接运行，默认 TRIPLE HELIX。 |
-| `Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.cs`、`LaunchMenu.cs` | 跨场景唯一实例、异步加载、防止重复切换；`Play(song, autoPlay)`、`Restart()`、`ReturnToMenu()`；统一设置 120 FPS。 |
+| `Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.cs`、`Assets/OurTaiko/Resources/SceneSwitcher.prefab` | 加载首场景前自动创建的全局 uGUI 控件，跨场景保留。统一接管输入锁定、准备任务、关闭／打开过渡、异步加载、当前／上一场景及切换事件；设置 120 FPS。 |
+| `Assets/OurTaiko/Runtime/Scenes/LaunchMenu.cs` | Test_DefaultScene 的测试选曲页面，通过全局 SceneSwitcher 开始游玩。 |
 | `Assets/OurTaiko/Runtime/Core/TaikoChart.cs`、`TjaParser.cs` | 纯 C# 谱面模型与 TJA 解析；课程选择、音符 1–9、长音符、BPM／拍号／延迟／复数 SCROLL／GOGO／小节线与三路线分支。 |
 | `Assets/OurTaiko/Runtime/Core/PlaySession.cs` | 独立于 Unity 的输入判定、连击、分数、魂槽、长音符次数、自动演奏与分支统计／时间线；通过事件通知表现层。 |
 | `Assets/OurTaiko/Runtime/Core/NoteScroll.cs` | 普通位移、对象加载时间与头尾同速的 `RollLength`。 |
@@ -47,7 +48,7 @@
 | `Assets/OurTaiko/Runtime/Play/SoulGaugeView.cs` | 50 格魂槽、过关黄色区、新格淡入、满槽彩虹与魂火。 |
 | `Assets/OurTaiko/Runtime/Play/BalloonCounterView.cs` | 7 号气球剩余次数、数字弹动、膨胀、破裂与淡出。 |
 | `Assets/OurTaiko/Runtime/Play/FpsCounter.cs`、`SpriteFlipbook.cs`、`DrumPad.cs` | 实测帧率、舞者帧动画和可点击打击按钮。 |
-| `Assets/OurTaiko/Editor/ProjectBuilder.cs`、`ProjectBuilder.Nijiiro.cs`、`ProjectBuilder.Balloon.cs` | 初始生成、Nijiiro 布局／魂槽／连打切片及气球资源配置；按需使用专项入口，避免全量重建现有场景。 |
+| `Assets/OurTaiko/Editor/ProjectBuilder.cs`、`ProjectBuilder.Nijiiro.cs`、`ProjectBuilder.Balloon.cs`、`ProjectBuilder.SceneSwitcher.cs` | 初始生成、Nijiiro 布局／魂槽／连打切片、气球资源配置与全局控件专项迁移；按需使用专项入口，避免全量重建现有场景。 |
 | `Assets/OurTaiko/Art`、`Audio`、`Generated` | 打平的皮肤图片／音效、已生成 Sprite 切片与字体；运行时无需原仓库。 |
 | `Assets/OurTaiko/Songs` | TRIPLE HELIX（含音乐）、Input Calibration（无音乐）、Branch Training（无音乐分支练习谱）。 |
 | `README.md`、`Documentation/PortingNotes.md`、`Documentation/ImportedAssets.json` | 运行说明、详细行为依据与历次验证、素材来源记录。 |
@@ -66,9 +67,9 @@
 
 ### 验证结果与继续工作方法
 
-- 最新完整验证：Unity Editor **EditMode 57/57、PlayMode 11/11 全部通过**。报告为 `TestResults/drumroll-editmode.json`、`TestResults/drumroll-playmode.json`；`TestResults/` 不纳入版本控制，本机报告不保证随新克隆存在。
+- 最新完整验证：Unity Editor **EditMode 57/57、PlayMode 15/15 全部通过**。报告为 `TestResults/global-switcher-editmode.json`、`TestResults/global-switcher-playmode.json`；`TestResults/` 不纳入版本控制，本机报告不保证随新克隆存在。
 - EditMode 程序集：`OurTaiko.Tests`，测试位于 `Assets/OurTaiko/Tests/EditMode/`，覆盖解析、判定、分支阈值／时序、滚动与同速约束。
-- PlayMode 程序集：`OurTaiko.PlayModeTests`，测试位于 `Assets/OurTaiko/Tests/PlayMode/SceneFlowTests.cs`，覆盖场景流程、音乐同步、120 FPS 配置、各分支、魂槽、气球与连打。新增 `DrumrollBodiesAndTailsUseNijiiroGeometry` 验证切片、层级、接缝、尾部比例、反向／静止／极短连打、中途变速及头尾同速；已检查 1080p／720p 渲染。
+- PlayMode 程序集：`OurTaiko.PlayModeTests`，`SceneFlowTests.cs` 覆盖场景流程、音乐同步、120 FPS 配置、各分支、魂槽、气球与连打，包含 1080p／720p 渲染。`GlobalSceneSwitcherTests.cs` 另覆盖跨场景预制体、等待准备任务、关闭／加载／打开顺序、timeScale=0、输入阻挡、重复请求、场景事件、手动揭示、泛型结果、失败／取消恢复及销毁取消。
 - 已提交截图在 `Documentation/`：`DrumrollSmall.png`、`DrumrollBig.png`、`BalloonAtJudge.png`、`BalloonCounter.png`、`GaugeClear.png`、`GaugeRainbowA.png`、`GaugeRainbowB.png` 及分支截图。
 - 优先通过 Unity Test Runner 验证实际场景。控制 Editor 前读取可用的 `unity:unity-cli` 技能；本机 CLI 为 `/Users/kirisamevanilla/.unity/bin/unity`，项目安装了 `com.unity.pipeline` **0.8.0-exp.1**。CLI 成功响应还需检查嵌套命令结果，不能只看进程退出码。
 - 以下是已验证的 Editor 命令形式（公共参数在具体命令名前）。先确认正确项目的 Editor 已启动并连接；修改 C# 后刷新并等待编译结束。两组测试依次运行，异步启动后用 `test_status` 确认最终结果，保存报告后再启动下一组：

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -30,10 +31,11 @@ namespace OurTaiko
         public PlaySession Session { get; private set; }
         public bool IsPaused { get; private set; }
         public bool IsFinished { get; private set; }
-        public double SongTime => IsPaused || IsFinished ? frozenTime : AudioSettings.dspTime - startDsp;
+        public double SongTime => !isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioSettings.dspTime - startDsp;
         public double RenderedTime { get; private set; }
         SongDefinition song;
-        bool autoPlay;
+        bool autoPlay, isReady;
+        SceneSwitcher switcher;
         double startDsp, frozenTime;
         float feedbackTime = -10, drumTime = -10;
         readonly List<NoteView> notes = new List<NoteView>();
@@ -47,9 +49,10 @@ namespace OurTaiko
             public GameObject Object;
         }
 
-        void Start()
+        IEnumerator Start()
         {
-            var switcher = SceneSwitcher.EnsureInstance();
+            switcher = SceneSwitcher.EnsureInstance();
+            switcher.SceneChanging += PrepareToLeave;
             song = switcher.SelectedSong != null ? switcher.SelectedSong : defaultSong;
             autoPlay = switcher.AutoPlay;
             pauseButton.onClick.AddListener(TogglePause);
@@ -72,8 +75,6 @@ namespace OurTaiko
                 subtitle.text = $"{Session.Chart.Subtitle}    {Session.Chart.Course.ToUpperInvariant()}  LV.{Session.Chart.Level}";
                 CreateNotes();
                 music.clip = song.music;
-                startDsp = AudioSettings.dspTime + Math.Max(2, Session.Chart.Offset + 2);
-                ScheduleMusic();
                 UpdateHud();
             }
             catch (Exception error)
@@ -82,6 +83,12 @@ namespace OurTaiko
                 IsFinished = true; resultPanel.SetActive(true);
                 resultText.text = "CHART COULD NOT LOAD\n<size=22>" + error.Message + "</size>";
             }
+            if (IsFinished) yield break;
+            while (switcher.IsInputBlocked) yield return null;
+            // Start the full countdown and DSP clock only after the global cover has opened.
+            startDsp = AudioSettings.dspTime + Math.Max(2, Session.Chart.Offset + 2);
+            isReady = true;
+            ScheduleMusic();
         }
 
         void ScheduleMusic()
@@ -104,6 +111,7 @@ namespace OurTaiko
 
         void Update()
         {
+            if (switcher == null || switcher.IsInputBlocked || !isReady) return;
             var keyboard = Keyboard.current;
             if (keyboard != null)
             {
@@ -137,7 +145,7 @@ namespace OurTaiko
 
         public void Hit(bool isKa, bool right)
         {
-            if (Session == null || IsPaused || IsFinished || autoPlay) return;
+            if (Session == null || !isReady || switcher.IsInputBlocked || IsPaused || IsFinished || autoPlay) return;
             Feedback(isKa, right);
             Session.Hit(isKa, SongTime - song.audioOffsetMs / 1000.0);
         }
@@ -176,7 +184,7 @@ namespace OurTaiko
         }
         public void TogglePause()
         {
-            if (IsFinished || Session == null) return;
+            if (IsFinished || Session == null || !isReady || switcher.IsInputBlocked) return;
             if (!IsPaused) { frozenTime = SongTime; IsPaused = true; music.Stop(); }
             else { startDsp = AudioSettings.dspTime - frozenTime; IsPaused = false; ScheduleMusic(); }
             pausePanel.SetActive(IsPaused);
@@ -188,9 +196,18 @@ namespace OurTaiko
             string clear = Session.Gauge >= Session.ClearThreshold ? "CLEAR!" : "FINISHED";
             resultText.text = $"{clear}\n<size=72>{Session.Score:N0}</size>\n<size=36>GOOD {Session.Good}   OK {Session.Ok}   BAD {Session.Bad}\nMAX COMBO {Session.MaxCombo}   DRUMROLL {Session.Rolls}</size>";
         }
-        public void Restart() { music.Stop(); SceneSwitcher.EnsureInstance().Restart(); }
-        public void Back() { music.Stop(); SceneSwitcher.EnsureInstance().ReturnToMenu(); }
-        void OnDestroy() { if (Session != null) { Session.Judged -= OnJudged; Session.BranchSelected -= OnBranchSelected; } }
+        public void Restart() => SceneSwitcher.EnsureInstance().Restart();
+        public void Back() => SceneSwitcher.EnsureInstance().ReturnToMenu();
+        void PrepareToLeave(string scene)
+        {
+            frozenTime = SongTime; IsPaused = true;
+            music.Stop(); hitAudio.Stop();
+        }
+        void OnDestroy()
+        {
+            if (switcher != null) switcher.SceneChanging -= PrepareToLeave;
+            if (Session != null) { Session.Judged -= OnJudged; Session.BranchSelected -= OnBranchSelected; }
+        }
 
         static RectTransform Rect(string name, Transform parent, float width, float height)
         {

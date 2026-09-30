@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
             var play = Object.FindFirstObjectByType<PlayScene>();
             if (!play.IsPaused) play.TogglePause();
             play.pausePanel.SetActive(false);
-            var canvas = Object.FindFirstObjectByType<Canvas>();
+            var canvas = SceneCanvas();
             Assert.That(canvas.GetComponent<UnityEngine.UI.CanvasScaler>().referenceResolution, Is.EqualTo(new Vector2(1920, 1080)));
             Assert.That(canvas.transform.Find("Viewport1920x1080").GetComponent<RectTransform>().sizeDelta, Is.EqualTo(new Vector2(1920, 1080)));
             Assert.That(play.noteSprites[1].rect.size, Is.EqualTo(new Vector2(192, 192)));
@@ -560,9 +560,12 @@ namespace OurTaiko.Tests
             yield return null;
         }
 
+        static Canvas SceneCanvas() => Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None)
+            .Single(canvas => canvas.gameObject.scene == SceneManager.GetActiveScene());
+
         static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null)
         {
-            var canvas = Object.FindFirstObjectByType<Canvas>(); var camera = Camera.main;
+            var canvas = SceneCanvas(); var camera = Camera.main;
             var scaler = canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
             var previous = RenderTexture.active; var previousTarget = camera.targetTexture;
             var previousMode = canvas.renderMode; var previousCamera = canvas.worldCamera; float previousDistance = canvas.planeDistance;

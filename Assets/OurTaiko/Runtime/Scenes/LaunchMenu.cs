@@ -21,15 +21,16 @@ namespace OurTaiko
         }
         void Update()
         {
+            if (SceneSwitcher.Instance == null || SceneSwitcher.Instance.IsInputBlocked) return;
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
             if (keyboard.enterKey.wasPressedThisFrame) Play();
             if (keyboard.tabKey.wasPressedThisFrame) NextSong();
             if (keyboard.aKey.wasPressedThisFrame) ToggleAuto();
         }
-        void Play() => SceneSwitcher.Instance.Play(songs[selected], auto);
-        void NextSong() { selected = (selected + 1) % songs.Length; Refresh(); }
-        void ToggleAuto() { auto = !auto; Refresh(); }
+        void Play() => SceneSwitcher.EnsureInstance().Play(songs[selected], auto);
+        void NextSong() { if (SceneSwitcher.EnsureInstance().IsInputBlocked) return; selected = (selected + 1) % songs.Length; Refresh(); }
+        void ToggleAuto() { if (SceneSwitcher.EnsureInstance().IsInputBlocked) return; auto = !auto; Refresh(); }
         void Refresh()
         {
             var chart = songs[selected].Parse();

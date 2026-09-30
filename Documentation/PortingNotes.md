@@ -140,3 +140,19 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 已检查 1080p／720p 渲染图：[小连打](DrumrollSmall.png)、[大连打](DrumrollBig.png)。专项测试还覆盖反向、静止、极短连打、接缝重叠、绘制层级以及中途变速时的恒定长度。
 
 本次 Unity Editor EditMode **57/57**、PlayMode **11/11** 通过，含新增连打渲染测试及已有分支、魂槽、气球与场景流程回归。报告保存为 `TestResults/drumroll-editmode.json`、`TestResults/drumroll-playmode.json`。没有重建独立播放器。
+
+## 全局 SceneSwitcher 与测试入口（2026-09-30）
+
+场景切换架构按用户指定参照相邻 MajdataPlay 的 `Assets/Scripts/Global/SceneSwitcher.cs`。原 `Assets/Scenes/SceneSwitcher.unity` 通过 `AssetDatabase.MoveAsset` 改名为 `Test_DefaultScene.unity`，保留 GUID 和测试选曲布局，只移除旧场景内的切换脚本对象，并更新 Build Settings 和 Editor 工具路径。
+
+`Assets/OurTaiko/Resources/SceneSwitcher.prefab` 是独立全局 uGUI 控件，由 `BeforeSceneLoad` 自动创建，跨场景保留，启动时完全打开。任何场景的切换从 `SwitchScene`／`SwitchSceneAsync` 发起；现有 `Play`、`Restart`、`ReturnToMenu` 均转交同一流程，运行代码中只有控件内部调用 `SceneManager.LoadSceneAsync`。控件统一维护 `CurrentScene`、`LastScene`、`MainCamera` 和 `OnSceneChanged`。控件没有自己的 EventSystem、Camera 或 AudioListener。
+
+切换流程为：锁定键盘与指针输入、发出 `SceneChanging` 通知游玩冻结并停止音频，0.9 秒关闭遮罩，等待准备 Task，异步加载，等一帧和 50 ms，0.8 秒打开遮罩。采用 MajdataPlay 相同的 OutQuint 曲线和实时时钟，以纯 C# 实现 uGUI 淡入淡出；没有移入 MajdataPlay 的皮肤、灯光硬件、UniTask／LitMotion 依赖或三角网格 Shader。准备任务失败／取消时打开旧场景，销毁控件会取消未完成的切换；重复请求不发起第二次加载。
+
+`SwitchSceneAfterTaskAsync` 支持普通和带结果的 .NET Task。`autoFadeOut: false` 可保持加载后的遮罩，让目标场景完成初始化后调用 `FadeOut`／`FadeOutAsync`。接口命名遵循 MajdataPlay：`FadeIn` 关闭遮罩，`FadeOut` 打开遮罩；`SetLoadingText` 可更新提示及颜色。游玩先在遮罩后初始化，等遮罩打开再开始完整倒计时并安排 DSP 音乐起播。直接打开 PlayScene 仍可运行。
+
+新增 `GlobalSceneSwitcherTests` 覆盖全局预制体、独立生命周期、准备任务等待、切换时遮罩和输入阻挡、timeScale=0、重复请求、当前／上一场景及相机、手动揭示、泛型结果、同场景重开、无效目标／任务失败／取消恢复与销毁取消。既有渲染测试现在明确选择活动场景的 Canvas，避免误选持久化的过渡 Canvas。
+
+本次 Unity Editor 完整验证：EditMode **57/57**、PlayMode **15/15** 全部通过，报告为 `TestResults/global-switcher-editmode.json`、`TestResults/global-switcher-playmode.json`。已检查测试入口和游玩页渲染图；原入口仅移除旧控件对象，改名后 GUID 保持不变。Nijiiro 字体资源测试后与操作前快照完全一致。未重新打包独立播放器。
+
+另在没有 LaunchMenu、PlayScene、Camera 或 EventSystem 的临时空场景进入 Play mode，确认 `BeforeSceneLoad` 独立自动创建了唯一 SceneSwitcher，位于 `DontDestroyOnLoad`，不依赖具体场景脚本调用。实际全屏遮罩和 LOADING 提示已检查，截图保存在忽略目录 `TestResults/SceneTransition.png`；检查后已退出 Play mode 并重新打开 Test_DefaultScene。

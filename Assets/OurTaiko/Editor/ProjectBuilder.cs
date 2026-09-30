@@ -54,9 +54,10 @@ namespace OurTaiko.Editor
             var calibration = Song("Calibration", "Hard", false);
             var branchTraining = Song("BranchTraining", "Oni", false);
             CreatePlay(triple);
+            CreateSceneSwitcherPrefab();
             CreateMenu(new[] { triple, calibration, branchTraining });
             EditorBuildSettings.scenes = new[] {
-                new EditorBuildSettingsScene("Assets/Scenes/SceneSwitcher.unity", true),
+                new EditorBuildSettingsScene("Assets/Scenes/Test_DefaultScene.unity", true),
                 new EditorBuildSettingsScene("Assets/Scenes/PlayScene.unity", true)
             };
             EditorSettings.defaultBehaviorMode = EditorBehaviorMode.Mode2D;
@@ -68,8 +69,8 @@ namespace OurTaiko.Editor
             PlayerSettings.runInBackground = true;
             QualitySettings.vSyncCount = 0;
             AssetDatabase.SaveAssets();
-            EditorSceneManager.OpenScene("Assets/Scenes/SceneSwitcher.unity");
-            Debug.Log("OurTaiko: Created SceneSwitcher and PlayScene, songs, sprite slices and font.");
+            EditorSceneManager.OpenScene("Assets/Scenes/Test_DefaultScene.unity");
+            Debug.Log("OurTaiko: Created Test_DefaultScene, PlayScene, global SceneSwitcher, songs, sprite slices and font.");
         }
 
         static SongDefinition Song(string name, string course, bool audio)
@@ -239,7 +240,6 @@ namespace OurTaiko.Editor
         {
             var root = NewScene(); Background(root);
             var menu = new GameObject("LaunchMenu").AddComponent<LaunchMenu>(); menu.songs = songs;
-            new GameObject("SceneSwitcher").AddComponent<SceneSwitcher>();
             Panel(root, "MenuPanel", 220, 90, 840, 520, new Color32(28, 29, 32, 238));
             Label(root, "Heading", "OURTAIKO", 280, 120, 720, 75, 64);
             Label(root, "Caption", "PLAY SCENE", 280, 195, 720, 34, 24);
@@ -252,7 +252,7 @@ namespace OurTaiko.Editor
             Label(root, "FooterCredit", "OurTaikoPlayer  /  Nijiiro", 0, 674, 1280, 30, 19);
             AddFpsCounter(root);
             ConfigureNijiiroLayout(root, null);
-            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/SceneSwitcher.unity");
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/Test_DefaultScene.unity");
         }
 
         public static void AddBranchIndicator(Transform root, PlayScene controller)

@@ -36,7 +36,7 @@ namespace OurTaiko.Editor
                 foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
                 font.TryAddCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 /:.,!?+-()_★％");
             }
-            foreach (var path in new[] { "Assets/Scenes/SceneSwitcher.unity", "Assets/Scenes/PlayScene.unity" })
+            foreach (var path in new[] { "Assets/Scenes/Test_DefaultScene.unity", "Assets/Scenes/PlayScene.unity" })
             {
                 var scene = EditorSceneManager.OpenScene(path);
                 var canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();

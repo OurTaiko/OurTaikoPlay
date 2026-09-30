@@ -5,7 +5,7 @@
 ## 运行
 
 1. 用 Unity Hub 打开本目录。
-2. 打开 `Assets/Scenes/SceneSwitcher.unity`，点击 Unity 的 Play。
+2. 打开 `Assets/Scenes/Test_DefaultScene.unity`，点击 Unity 的 Play。
 3. 选择 TRIPLE HELIX（含音乐）、Input Calibration（原项目的无音乐校准谱）或 Branch Training（分支练习谱），点击 PLAY / 按 Enter。
 
 也可直接打开 `Assets/Scenes/PlayScene.unity` 运行，默认载入 TRIPLE HELIX。
@@ -35,7 +35,8 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 ## 场景与代码
 
-- `SceneSwitcher.unity`：入口。`SceneSwitcher.cs` 作为跨场景的唯一实例，提供 `Play(song, autoPlay)`、`Restart()`、`ReturnToMenu()`，使用异步场景加载并防止重复切换。
+- `Test_DefaultScene.unity`：测试入口，包含选曲和自动演奏按钮，由 `LaunchMenu` 调用全局控件开始游玩。
+- `Resources/SceneSwitcher.prefab`、`Runtime/Scenes/SceneSwitcher.cs`：全局切换控件，在首场景加载前自动创建，通过 `DontDestroyOnLoad` 保留。所有运行时切换统一调用 `SceneSwitcher.Instance.SwitchScene(...)` 或可等待的 `SwitchSceneAsync(...)`；`Play(song, autoPlay)`、`Restart()`、`ReturnToMenu()` 也转交同一流程。
 - `PlayScene.unity`：可在 Hierarchy 中编辑的 Canvas、音符轨道、判定圈、鼓面、魂槽、歌曲信息、舞者、暂停及结果面板。`PlayScene.cs` 连接输入、DSP 时钟、音乐和画面。
 - `Runtime/Core/TjaParser.cs`：纯 C# TJA 读取，支持课程选择、音符 1–9、连打/气球、BPMCHANGE、MEASURE、DELAY、SCROLL（含复数）、GOGO、BARLINE，以及三路线分支与 SECTION。每条路线从分支起点恢复时刻、BPM、SCROLL、拍号等状态。
 - `Runtime/Core/PlaySession.cs`：独立于 Unity 的判定、连击、分数、魂槽、自动演奏和分支选择。分支统计按事件时间处理，基础分和魂槽分母沿用原版的公共段＋达人路线音符数。大音符目前允许单侧击打；计分与魂槽仍是简化实现。
@@ -47,6 +48,10 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `Editor/ProjectBuilder.cs`：通过 Editor API 创建初始场景和 sprite 切片。生成后不自动覆盖场景，后续直接编辑现有场景。
 
 此阶段提取的是独立的单人游玩模块。联网/成绩上传、双人、段位、完整选曲界面、3D 咚角色、原皮肤全部 Lua 特效、逐帧回放、大音符双手判定及与原版完全一致的计分/魂槽尚未移植。
+
+全局切换顺序参考 MajdataPlay 的 `Assets/Scripts/Global/SceneSwitcher.cs`：锁定输入并通知当前场景停止游玩／音频，关闭过渡（0.9 秒），等待准备任务，异步加载，等一帧和 50 ms，再打开过渡（0.8 秒）。过渡采用相同的 OutQuint 曲线和实时时钟，本项目使用独立 uGUI 遮罩淡入淡出。`CurrentScene`、`LastScene`、`MainCamera` 和 `OnSceneChanged` 由控件统一更新。准备任务失败或取消会恢复旧场景的可见性；切换期间的重复请求不会再启动加载。
+
+需要在加载后继续初始化时，调用 `SwitchSceneAsync(sceneName, autoFadeOut: false)` 保持遮罩，再调用 `FadeOutAsync()` 揭示场景。`FadeIn`／`FadeOut` 的含义与 MajdataPlay 一致，分别关闭／打开遮罩；`SetLoadingText` 更新加载提示，`SwitchSceneAfterTaskAsync` 等待普通或带结果的 .NET Task 后再加载。游玩在遮罩打开后才开始完整倒计时。全局控件不持有额外的 EventSystem、Camera 或 AudioListener，直接运行 PlayScene 也会自动创建它。
 
 ## 素材来源
 
