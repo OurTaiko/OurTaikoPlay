@@ -36,7 +36,7 @@ namespace OurTaiko
                     if (reading) { found = true; chart.Course = Course(course); chart.Level = level; }
                     continue;
                 }
-                if (line == "#END") { if (reading) { ended = true; break; } reading = false; continue; }
+                if (line.Equals("#END", StringComparison.OrdinalIgnoreCase)) { if (reading) { ended = true; break; } reading = false; continue; }
                 if (reading)
                 {
                     if (line[0] == '#') tokens.Add(line);
@@ -54,37 +54,175 @@ namespace OurTaiko
                     case "OFFSET": chart.Offset = Number(value); break;
                     case "COURSE": course = value; balloons.Clear(); level = 0; break;
                     case "LEVEL": level = (int)Number(value); break;
-                    case "BALLOON": balloons = value.Split(',').Where(s => s.Trim().Length > 0).Select(s => (int)Number(s)).ToList(); break;
+                    // Match the reference parser's shared balloon pool and route cursor rewind.
+                    case "BALLOONNOR": case "BALLOONEXP": balloons.AddRange(Balloons(value)); break;
+                    case "BALLOONMAS": case "BALLOON": balloons = Balloons(value); break;
                 }
             }
             if (!found || !ended) throw new FormatException($"No complete {requestedCourse} course (#START / #END).");
             if (!(chart.Bpm > 0) || double.IsInfinity(chart.Bpm)) throw new FormatException("BPM must be positive and finite.");
-            double time = -chart.Offset, bpm = chart.Bpm, measure = 1, sx = 1, sy = 0;
-            bool gogo = false, barline = true;
-            int balloonIndex = 0;
-            ChartNote longNote = null;
-            var pending = new List<string>();
+            new ChartReader(chart, balloons).Read(tokens);
+            return chart;
+        }
+
+        static List<int> Balloons(string value) => value.Replace('.', ',').Split(',')
+            .Where(s => s.Trim().Length > 0).Select(s => (int)Number(s)).ToList();
+
+        sealed class TimingState
+        {
+            public double Time, Bpm, Measure = 1, ScrollX = 1, ScrollY;
+            public bool Gogo, Barline = true;
+            public int BalloonIndex;
+            public TimingState Copy() => (TimingState)MemberwiseClone();
+        }
+
+        sealed class ChartReader
+        {
+            readonly TaikoChart chart;
+            readonly List<int> balloons;
+            readonly List<string> pending = new List<string>();
+            TimingState state, branchStart;
+            ChartBranch branch;
+            readonly bool[] routesSeen = new bool[3];
+            BranchRoute route;
+            bool hasRoute, branchBar, sectionBarPending;
+            double? sectionBarTime;
+            ChartNote longNote;
+
+            public ChartReader(TaikoChart chart, List<int> balloons)
+            {
+                this.chart = chart; this.balloons = balloons;
+                state = new TimingState { Time = -chart.Offset, Bpm = chart.Bpm };
+            }
+
+            public void Read(List<string> tokens)
+            {
+                foreach (string token in tokens)
+                {
+                    string key = token.Split(new[] { ' ', '\t' }, 2)[0].ToUpperInvariant();
+                    if (token == ",") Flush();
+                    else if (key == "#BRANCHSTART" || key == "#BRANCHEND" || key == "#N" || key == "#E" || key == "#M")
+                    {
+                        FlushCommands();
+                        Command(token);
+                    }
+                    else pending.Add(token);
+                }
+                FlushCommands();
+                if (branch != null) EndBranch(); // #BRANCHEND is optional before #END / the next branch.
+                CheckLongNote();
+                chart.Duration = Math.Max(chart.Duration, state.Time);
+                chart.Notes.Sort((a, b) => a.Time.CompareTo(b.Time));
+                chart.Bars.Sort((a, b) => a.Time.CompareTo(b.Time));
+                double previousDecision = double.NegativeInfinity;
+                foreach (var checkpoint in chart.Branches)
+                {
+                    var first = checkpoint.FirstEntries[(int)BranchRoute.Master]
+                        ?? checkpoint.FirstEntries[(int)BranchRoute.Expert] ?? checkpoint.FirstEntries[(int)BranchRoute.Normal];
+                    // The original arms two measures early, then chooses when the first route
+                    // object loads. A consecutive checkpoint cannot precede its predecessor.
+                    checkpoint.DecisionTime = Math.Max(previousDecision,
+                        Math.Max(checkpoint.ArmTime, first == null ? checkpoint.Time : NoteScroll.LoadTime(first)));
+                    previousDecision = checkpoint.DecisionTime;
+                }
+            }
+
+            void FlushCommands()
+            {
+                if (pending.Any(t => t[0] != '#')) throw new FormatException("A measure is missing its comma before a branch boundary or #END.");
+                foreach (string token in pending) Command(token);
+                pending.Clear();
+            }
+
+            void CheckLongNote()
+            {
+                if (longNote != null) throw new FormatException("Long note is missing its 8 tail before a route boundary or #END.");
+            }
+
+            void EndBranch()
+            {
+                CheckLongNote();
+                if (!routesSeen.All(x => x)) throw new FormatException("A branch must define #N, #E and #M exactly once.");
+                branch.EndTime = state.Time;
+                // As in OurTaikoPlayer, common notes continue from the final authored route.
+                branch = null; hasRoute = false; branchBar = false;
+            }
+
+            void StartBranch(string arg)
+            {
+                if (branch != null) EndBranch();
+                CheckLongNote();
+                string[] parts = arg.Split(',');
+                if (parts.Length != 3) throw new FormatException("#BRANCHSTART requires condition, expert threshold, master threshold.");
+                string condition = parts[0].Trim().ToLowerInvariant();
+                if (condition != "p" && condition != "r")
+                    throw new NotSupportedException("Only p (accuracy) and r (drumroll) branches are implemented by the reference player.");
+                double expert = Number(parts[1]), master = Number(parts[2]);
+                if (double.IsNaN(expert) || double.IsInfinity(expert) || double.IsNaN(master) || double.IsInfinity(master))
+                    throw new FormatException("Branch thresholds must be finite.");
+                branchStart = state.Copy();
+                branch = new ChartBranch { Id = chart.Branches.Count, Time = state.Time,
+                    ArmTime = (sectionBarTime ?? state.Time) - 480.0 / state.Bpm,
+                    Condition = condition == "p" ? BranchCondition.Accuracy : BranchCondition.Drumroll,
+                    ExpertThreshold = expert, MasterThreshold = master };
+                chart.Branches.Add(branch);
+                sectionBarTime = null;
+                Array.Clear(routesSeen, 0, routesSeen.Length);
+                hasRoute = false;
+            }
+
+            void SelectRoute(BranchRoute selected)
+            {
+                if (branch == null) throw new FormatException("Route marker without #BRANCHSTART.");
+                CheckLongNote();
+                if (routesSeen[(int)selected]) throw new FormatException("Duplicate branch route: " + selected);
+                routesSeen[(int)selected] = true;
+                state = branchStart.Copy(); route = selected; hasRoute = true; branchBar = true;
+            }
+
+            ChartNote NewNote() => new ChartNote { Time = state.Time, EndTime = state.Time,
+                Bpm = state.Bpm, ScrollX = state.ScrollX, ScrollY = state.ScrollY, Gogo = state.Gogo,
+                BranchId = branch == null ? -1 : branch.Id, Route = route };
+
+            void AddBar()
+            {
+                if (branch != null && !hasRoute) throw new FormatException("Branch notes must follow #N, #E or #M.");
+                var bar = NewNote(); bar.Display = state.Barline; bar.IsBranchStart = branchBar;
+                chart.Bars.Add(bar);
+                if (branch != null && branch.FirstEntries[(int)route] == null) branch.FirstEntries[(int)route] = bar;
+                branchBar = false;
+                if (sectionBarPending) { sectionBarTime = state.Time; sectionBarPending = false; }
+            }
 
             void Command(string command)
             {
-                int space = command.IndexOf(' ');
+                int space = command.IndexOfAny(new[] { ' ', '\t' });
                 string key = (space < 0 ? command : command.Substring(0, space)).ToUpperInvariant();
                 string arg = space < 0 ? "" : command.Substring(space + 1).Trim();
                 switch (key)
                 {
-                    case "#BPMCHANGE": bpm = Number(arg); if (!(bpm > 0) || double.IsInfinity(bpm)) throw new FormatException("Invalid BPMCHANGE."); break;
-                    case "#MEASURE": var parts = arg.Split('/'); measure = Number(parts[0]) / Number(parts[1]); if (!(measure > 0) || double.IsInfinity(measure)) throw new FormatException("Invalid MEASURE."); break;
+                    case "#BPMCHANGE": state.Bpm = Number(arg); if (!(state.Bpm > 0) || double.IsInfinity(state.Bpm)) throw new FormatException("Invalid BPMCHANGE."); break;
+                    case "#MEASURE": var parts = arg.Split('/'); state.Measure = Number(parts[0]) / Number(parts[1]); if (!(state.Measure > 0) || double.IsInfinity(state.Measure)) throw new FormatException("Invalid MEASURE."); break;
                     case "#SCROLL":
                         var match = Regex.Match(arg, @"^([+-]?[\d.]+)([+-][\d.]+)i$");
-                        sx = match.Success ? Number(match.Groups[1].Value) : Number(arg);
-                        sy = match.Success ? Number(match.Groups[2].Value) : 0;
+                        state.ScrollX = match.Success ? Number(match.Groups[1].Value) : Number(arg);
+                        state.ScrollY = match.Success ? Number(match.Groups[2].Value) : 0;
                         break;
-                    case "#DELAY": time += Number(arg); break;
-                    case "#GOGOSTART": gogo = true; break;
-                    case "#GOGOEND": gogo = false; break;
-                    case "#BARLINEOFF": barline = false; break;
-                    case "#BARLINEON": barline = true; break;
-                    case "#BRANCHSTART": case "#N": case "#E": case "#M": case "#BMSCROLL": case "#HBSCROLL":
+                    case "#DELAY": state.Time += Number(arg); break;
+                    case "#GOGOSTART": state.Gogo = true; break;
+                    case "#GOGOEND": state.Gogo = false; break;
+                    case "#BARLINEOFF": state.Barline = false; break;
+                    case "#BARLINEON": state.Barline = true; break;
+                    case "#BRANCHSTART": StartBranch(arg); break;
+                    case "#BRANCHEND": if (branch == null) throw new FormatException("#BRANCHEND without #BRANCHSTART."); EndBranch(); break;
+                    case "#N": SelectRoute(BranchRoute.Normal); break;
+                    case "#E": SelectRoute(BranchRoute.Expert); break;
+                    case "#M": SelectRoute(BranchRoute.Master); break;
+                    case "#SECTION":
+                        chart.Sections.Add(new ChartSection { Time = state.Time, BranchId = branch == null ? -1 : branch.Id, Route = route });
+                        sectionBarPending = true;
+                        break;
+                    case "#LEVELHOLD": case "#BMSCROLL": case "#HBSCROLL":
                         throw new NotSupportedException($"{key} is not supported by the single-lane port yet.");
                     default: if (!chart.Warnings.Contains(key)) chart.Warnings.Add(key); break;
                 }
@@ -99,7 +237,7 @@ namespace OurTaiko
                     if (token[0] == '#') { Command(token); continue; }
                     if (!addedBar)
                     {
-                        if (barline) chart.Bars.Add(new ChartNote { Time = time, Bpm = bpm, ScrollX = sx, ScrollY = sy });
+                        AddBar();
                         addedBar = true;
                     }
                     if (token[0] < '0' || token[0] > '9') throw new NotSupportedException($"Unsupported TJA note: {token}");
@@ -107,29 +245,24 @@ namespace OurTaiko
                     if (type == 8)
                     {
                         if (longNote == null) throw new FormatException("Long-note tail has no head.");
-                        longNote.EndTime = time;
+                        longNote.EndTime = state.Time;
                         longNote = null;
                     }
                     else if (type != 0)
                     {
                         if (longNote != null) throw new FormatException("Overlapping long notes are not supported.");
-                        var note = new ChartNote { Kind = (NoteKind)type, Time = time, EndTime = time, Bpm = bpm, ScrollX = sx, ScrollY = sy, Gogo = gogo };
-                        if (note.IsBalloon) note.BalloonHits = balloonIndex < balloons.Count ? balloons[balloonIndex++] : 5;
+                        var note = NewNote(); note.Kind = (NoteKind)type;
+                        if (note.IsBalloon) { note.BalloonHits = state.BalloonIndex < balloons.Count ? balloons[state.BalloonIndex] : 5; state.BalloonIndex++; }
                         chart.Notes.Add(note);
                         if (note.IsLong) longNote = note;
                     }
-                    time += 240.0 / bpm * measure / Math.Max(1, slots);
+                    state.Time += 240.0 / state.Bpm * state.Measure / Math.Max(1, slots);
                     index++;
                 }
-                if (index == 0) time += 240.0 / bpm * measure;
+                if (index == 0) { AddBar(); state.Time += 240.0 / state.Bpm * state.Measure; }
+                chart.Duration = Math.Max(chart.Duration, state.Time);
                 pending.Clear();
             }
-            foreach (string token in tokens) { if (token == ",") Flush(); else pending.Add(token); }
-            if (pending.Any(t => t[0] != '#')) throw new FormatException("Last measure is missing a comma.");
-            foreach (string command in pending) Command(command);
-            if (longNote != null) throw new FormatException("Long note is missing its 8 tail.");
-            chart.Duration = time;
-            return chart;
         }
     }
 }

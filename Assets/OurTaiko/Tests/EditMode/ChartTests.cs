@@ -41,9 +41,9 @@ namespace OurTaiko.Tests
             var chart = TjaParser.Parse("BPM:120\nCOURSE:Easy\nLEVEL:1\n#START\n1000,\n#END\nCOURSE:3\nLEVEL:9\nBALLOON:3\n#START\n7008,\n#END", "Oni");
             Assert.That(chart.Level, Is.EqualTo(9)); Assert.That(chart.Notes[0].BalloonHits, Is.EqualTo(3));
         }
-        [Test] public void UnsupportedBranchIsExplicit()
+        [Test] public void MalformedBranchAndLongNoteAreExplicit()
         {
-            Assert.Throws<NotSupportedException>(() => Parse("#BRANCHSTART p,50,80\n1000,"));
+            Assert.Throws<FormatException>(() => Parse("#BRANCHSTART p,50,80\n1000,"));
             Assert.Throws<FormatException>(() => Parse("5000,"));
         }
         [Test] public void WrongColorDoesNotConsumeNoteAndMissResetsCombo()

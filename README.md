@@ -6,7 +6,7 @@
 
 1. 用 Unity Hub 打开本目录。
 2. 打开 `Assets/Scenes/SceneSwitcher.unity`，点击 Unity 的 Play。
-3. 选择 TRIPLE HELIX（含音乐）或 Input Calibration（原项目的无音乐校准谱），点击 PLAY / 按 Enter。
+3. 选择 TRIPLE HELIX（含音乐）、Input Calibration（原项目的无音乐校准谱）或 Branch Training（分支练习谱），点击 PLAY / 按 Enter。
 
 也可直接打开 `Assets/Scenes/PlayScene.unity` 运行，默认载入 TRIPLE HELIX。
 
@@ -25,12 +25,20 @@
 
 如果 Unity 内仍约为 60 FPS，检查 Game 视图的 VSync 选项、系统显示器刷新率及节能设置，并与独立播放器比较；Editor 自身的负载也可能降低帧率。120 FPS 是渲染目标，不会把 60 Hz 显示器变成 120 Hz。
 
+## 分支游玩
+
+支持 `#BRANCHSTART p,玄人阈值,达人阈值`（命中率）和 `r`（连打数），以及 `#N`、`#E`、`#M`、`#BRANCHEND`、`#SECTION`。按相邻 OurTaikoPlayer 的规则，在分支首个对象进入画面时确定路线；未选路线不会显示、判定或计分。左上方显示 `BRANCH NORMAL / EXPERT / MASTER`，对应普通／玄人／达人。
+
+Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 50% 进入普通，50% 至不足 80% 进入玄人，80% 及以上进入达人；后半段连打不足 5 下进入普通、5–14 下进入玄人、15 下及以上进入达人。可以打开 AUTO PLAY 验证两次达人分支，或手动游玩尝试不同路线。
+
+当前参考模拟器只实现 `p` 和 `r` 条件。本移植对 `s` 分数条件、`#LEVELHOLD`、BMSCROLL/HBSCROLL 明确报不支持，避免按错误规则游玩。
+
 ## 场景与代码
 
 - `SceneSwitcher.unity`：入口。`SceneSwitcher.cs` 作为跨场景的唯一实例，提供 `Play(song, autoPlay)`、`Restart()`、`ReturnToMenu()`，使用异步场景加载并防止重复切换。
 - `PlayScene.unity`：可在 Hierarchy 中编辑的 Canvas、音符轨道、判定圈、鼓面、魂槽、歌曲信息、舞者、暂停及结果面板。`PlayScene.cs` 连接输入、DSP 时钟、音乐和画面。
-- `Runtime/Core/TjaParser.cs`：纯 C# TJA 读取，支持课程选择、音符 1–9、连打/气球、BPMCHANGE、MEASURE、DELAY、SCROLL（含复数）、GOGO、BARLINE。不支持分歧谱和 BMSCROLL/HBSCROLL 时明确报错。
-- `Runtime/Core/PlaySession.cs`：独立于 Unity 的判定、连击、分数、魂槽和自动演奏。判定窗口取自原项目。大音符目前允许单侧击打；计分采用简化真打基分与连打分，魂槽为简化单人模型。
+- `Runtime/Core/TjaParser.cs`：纯 C# TJA 读取，支持课程选择、音符 1–9、连打/气球、BPMCHANGE、MEASURE、DELAY、SCROLL（含复数）、GOGO、BARLINE，以及三路线分支与 SECTION。每条路线从分支起点恢复时刻、BPM、SCROLL、拍号等状态。
+- `Runtime/Core/PlaySession.cs`：独立于 Unity 的判定、连击、分数、魂槽、自动演奏和分支选择。分支统计按事件时间处理，基础分和魂槽分母沿用原版的公共段＋达人路线音符数。大音符目前允许单侧击打；计分与魂槽仍是简化实现。
 - `Runtime/Core/NoteScroll.cs`：按 BPM、SCROLL 和判定点到轨道右边缘的距离计算流速。连打头尾始终使用头部速度整体移动，长度保持恒定。
 - `Runtime/Core/SongDefinition.cs`：在 Inspector 中指定谱面 TextAsset、音乐 AudioClip、难度和音画偏移。谱面以 `.txt` 导入，内容仍是 TJA；WAVE 字段由显式 AudioClip 引用替代。
 - `Editor/ProjectBuilder.cs`：通过 Editor API 创建初始场景和 sprite 切片。生成后不自动覆盖场景，后续直接编辑现有场景。
@@ -43,7 +51,7 @@
 
 ## 验证
 
-用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面与判定，后者覆盖入口 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 PlayScene 以及音乐时间同步。PlayMode 测试将两张 1280×720 渲染图输出到 `TestResults/`。
+用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速和分支阈值／时序，后者覆盖入口 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 PlayScene、音乐时间同步，以及普通／玄人／达人路线和分支自动演奏结算。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
 
 ```sh
 unity test . --mode EditMode --output TestResults/editmode.xml

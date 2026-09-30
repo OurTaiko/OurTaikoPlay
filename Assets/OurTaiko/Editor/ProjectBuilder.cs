@@ -52,8 +52,9 @@ namespace OurTaiko.Editor
             EditorUtility.SetDirty(font);
             var triple = Song("TripleHelix", "Oni", true);
             var calibration = Song("Calibration", "Hard", false);
+            var branchTraining = Song("BranchTraining", "Oni", false);
             CreatePlay(triple);
-            CreateMenu(new[] { triple, calibration });
+            CreateMenu(new[] { triple, calibration, branchTraining });
             EditorBuildSettings.scenes = new[] {
                 new EditorBuildSettingsScene("Assets/Scenes/SceneSwitcher.unity", true),
                 new EditorBuildSettingsScene("Assets/Scenes/PlayScene.unity", true)
@@ -212,6 +213,7 @@ namespace OurTaiko.Editor
             unused.gameObject.SetActive(false); controller.pausePanel.SetActive(false);
             controller.resultPanel = Overlay(root, "ResultPanel", "FINISHED", out controller.resultText, out controller.resultRestart, out controller.resultBack);
             controller.resultPanel.SetActive(false);
+            AddBranchIndicator(root, controller);
             AddFpsCounter(root);
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/PlayScene.unity");
         }
@@ -242,6 +244,15 @@ namespace OurTaiko.Editor
             Label(root, "FooterCredit", "OurTaikoPlayer  /  PyTaikoGreen", 0, 674, 1280, 30, 19);
             AddFpsCounter(root);
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/SceneSwitcher.unity");
+        }
+
+        public static void AddBranchIndicator(Transform root, PlayScene controller)
+        {
+            if (root.Find("BranchPanel") != null) return;
+            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Taiko SDF.asset");
+            var panel = Panel(root, "BranchPanel", 324, 84, 180, 30, new Color32(28, 29, 32, 225));
+            controller.branchInfo = Label(panel.transform, "BranchInfo", "BRANCH NORMAL", 8, 0, 164, 30, 16, TextAlignmentOptions.Left);
+            panel.gameObject.SetActive(false);
         }
 
         public static void AddFpsCounter(Transform root)

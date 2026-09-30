@@ -16,7 +16,7 @@ namespace OurTaiko
         public Sprite[] judgmentSprites;
         public UnityEngine.UI.Image judgment, hitFlash, gaugeFill;
         public UnityEngine.UI.Image[] drumFlashes;
-        public TMP_Text title, subtitle, score, combo, counters, state, rollCounter, resultText;
+        public TMP_Text title, subtitle, score, combo, counters, state, rollCounter, resultText, branchInfo;
         public GameObject pausePanel, resultPanel;
         public UnityEngine.UI.Button pauseButton, restartButton, backButton, resumeButton, resultRestart, resultBack;
         public SpriteFlipbook[] dancers;
@@ -57,6 +57,12 @@ namespace OurTaiko
                 Session = new PlaySession(song.Parse());
                 foreach (string warning in Session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
                 Session.Judged += OnJudged;
+                Session.BranchSelected += OnBranchSelected;
+                if (branchInfo != null)
+                {
+                    branchInfo.transform.parent.gameObject.SetActive(Session.Chart.Branches.Count > 0);
+                    ShowBranch(BranchRoute.Normal);
+                }
                 title.text = Session.Chart.Title;
                 subtitle.text = $"{Session.Chart.Subtitle}    {Session.Chart.Course.ToUpperInvariant()}  LV.{Session.Chart.Level}";
                 CreateNotes();
@@ -148,6 +154,14 @@ namespace OurTaiko
             counters.text = $"GOOD {Session.Good}     OK {Session.Ok}     BAD {Session.Bad}     ROLL {Session.Rolls}";
             gaugeFill.fillAmount = (float)Session.Gauge;
         }
+        void OnBranchSelected(ChartBranch branch, BranchRoute route) => ShowBranch(route);
+        void ShowBranch(BranchRoute route)
+        {
+            if (branchInfo == null) return;
+            branchInfo.text = "BRANCH " + route.ToString().ToUpperInvariant();
+            branchInfo.color = route == BranchRoute.Master ? new Color32(255, 170, 255, 255)
+                : route == BranchRoute.Expert ? new Color32(110, 220, 255, 255) : Color.white;
+        }
         public void TogglePause()
         {
             if (IsFinished || Session == null) return;
@@ -164,7 +178,7 @@ namespace OurTaiko
         }
         public void Restart() { music.Stop(); SceneSwitcher.EnsureInstance().Restart(); }
         public void Back() { music.Stop(); SceneSwitcher.EnsureInstance().ReturnToMenu(); }
-        void OnDestroy() { if (Session != null) Session.Judged -= OnJudged; }
+        void OnDestroy() { if (Session != null) { Session.Judged -= OnJudged; Session.BranchSelected -= OnBranchSelected; } }
 
         static RectTransform Rect(string name, Transform parent, float width, float height)
         {
@@ -191,10 +205,13 @@ namespace OurTaiko
                 }
                 var head = Rect("Head", root, 128, 128); head.anchorMin = head.anchorMax = new Vector2(0.5f, 0.5f);
                 Image(head, noteSprites[(int)note.Kind]); notes.Add(view);
+                root.gameObject.SetActive(false);
             }
             foreach (var bar in Session.Chart.Bars)
             {
-                var root = Rect("Measure", barLayer, 2, 126); Image(root, null).color = new Color(1, 1, 1, 0.35f); bars.Add(root);
+                var root = Rect("Measure", barLayer, bar.IsBranchStart ? 4 : 2, 126);
+                Image(root, null).color = bar.IsBranchStart ? new Color(1, 0.8f, 0.2f, 0.8f) : new Color(1, 1, 1, 0.35f);
+                bars.Add(root); root.gameObject.SetActive(false);
             }
         }
         // LaneClip begins at x=332; the skin judge is x=414, y=256 (lane y=184).
@@ -216,7 +233,7 @@ namespace OurTaiko
                 var note = Session.Chart.Notes[i]; var view = notes[i]; var pos = Position(note, time);
                 if (note.IsBalloon && time >= note.Time) pos = new Vector2(JudgeLocalX, JudgeLocalY);
                 float length = note.IsLong && !note.IsBalloon ? (float)NoteScroll.RollLength(note, TravelDistance) : 0;
-                bool visible = !Session.Resolved[i] && pos.x + Math.Max(0, length) >= -128 && pos.x + Math.Min(0, length) <= 1100;
+                bool visible = Session.IsActive(note) && !Session.Resolved[i] && pos.x + Math.Max(0, length) >= -128 && pos.x + Math.Min(0, length) <= 1100;
                 view.Object.SetActive(visible);
                 if (visible)
                 {
@@ -229,7 +246,7 @@ namespace OurTaiko
             for (int i = 0; i < bars.Count; i++)
             {
                 var pos = Position(Session.Chart.Bars[i], time); bars[i].anchoredPosition = pos;
-                bars[i].gameObject.SetActive(pos.x >= 0 && pos.x < 1000);
+                bars[i].gameObject.SetActive(Session.Chart.Bars[i].Display && Session.IsActive(Session.Chart.Bars[i]) && pos.x >= 0 && pos.x < 1000);
             }
             gogoTint.alpha = gogo ? 0.18f + Mathf.Sin((float)time * 12) * 0.05f : 0;
         }

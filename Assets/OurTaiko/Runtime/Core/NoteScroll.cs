@@ -2,6 +2,17 @@ namespace OurTaiko
 {
     public static class NoteScroll
     {
+        public const double DefaultTravelDistance = 866, NoteHalfWidth = 64;
+
+        // Same entry boundary as Player::get_load_time, including the sprite radius.
+        public static double LoadTime(ChartNote note)
+        {
+            double scroll = System.Math.Abs(note.ScrollX);
+            if (scroll == 0) scroll = System.Math.Abs(note.ScrollY);
+            double speed = note.Bpm / 240.0 * scroll * DefaultTravelDistance;
+            return speed == 0 ? note.Time : note.Time - (DefaultTravelDistance + NoteHalfWidth) / speed;
+        }
+
         // OurTaikoPlayer Player::get_position_x/y uses BPM / 240000 in milliseconds.
         // Our clock is seconds: at SCROLL 1, four beats span the right edge-to-judge distance.
         public static double DistanceFromJudge(double hitTime, double currentTime, double bpm,

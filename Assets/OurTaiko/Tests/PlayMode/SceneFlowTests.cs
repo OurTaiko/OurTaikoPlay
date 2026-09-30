@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -10,6 +11,64 @@ namespace OurTaiko.Tests
 {
     public sealed class SceneFlowTests
     {
+        [UnityTest] public IEnumerator BranchNormalCanBePlayed() => PlayBranch(BranchRoute.Normal);
+        [UnityTest] public IEnumerator BranchExpertCanBePlayed() => PlayBranch(BranchRoute.Expert);
+        [UnityTest] public IEnumerator BranchMasterAutoPlayCompletes() => PlayBranch(BranchRoute.Master);
+
+        static IEnumerator PlayBranch(BranchRoute expected)
+        {
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+            yield return null;
+            var menu = Object.FindFirstObjectByType<LaunchMenu>();
+            var song = menu.songs.Single(s => s.name == "BranchTraining");
+            SceneSwitcher.Instance.Play(song, expected == BranchRoute.Master);
+            yield return WaitForScene(SceneSwitcher.GameScene);
+            var play = Object.FindFirstObjectByType<PlayScene>();
+            float deadline = Time.realtimeSinceStartup + 40;
+            int hits = 0;
+            while (play.Session.BranchHistory.Count == 0)
+            {
+                if (play.IsPaused) play.TogglePause();
+                if (expected == BranchRoute.Expert && hits < 2 && play.SongTime >= hits * 2)
+                {
+                    play.Hit(false, false); hits++;
+                }
+                yield return null;
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+            }
+            yield return new WaitForSecondsRealtime(0.2f);
+            Assert.That(play.Session.CurrentBranch, Is.EqualTo(expected));
+            Assert.That(play.branchInfo.text, Is.EqualTo("BRANCH " + expected.ToString().ToUpperInvariant()));
+            Assert.That(play.branchInfo.gameObject.activeInHierarchy, Is.True);
+            Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId != 0 || n.Route == expected || !play.noteLayer.GetChild(i).gameObject.activeSelf).All(x => x), Is.True);
+            Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId == 0 && n.Route == expected && play.noteLayer.GetChild(i).gameObject.activeSelf).Any(x => x), Is.True);
+            Assert.That(play.Session.Chart.Bars.Select((n, i) => n.BranchId != 0 || n.Route == expected || !play.barLayer.GetChild(i).gameObject.activeSelf).All(x => x), Is.True);
+            Capture("Branch" + expected + ".png");
+            play.TogglePause(); double pausedAt = play.SongTime;
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(play.SongTime, Is.EqualTo(pausedAt).Within(0.001));
+            Assert.That(play.Session.CurrentBranch, Is.EqualTo(expected));
+            play.TogglePause();
+            if (expected == BranchRoute.Master)
+            {
+                while (!play.IsFinished)
+                {
+                    if (play.IsPaused) play.TogglePause();
+                    yield return null;
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                }
+                Assert.That(play.Session.BranchHistory, Is.EqualTo(new[] { BranchRoute.Master, BranchRoute.Master }));
+                Assert.That(play.Session.Bad, Is.Zero);
+                Assert.That(play.Session.Good, Is.EqualTo(play.Session.Chart.Notes.Count(n => !n.IsLong && play.Session.IsActive(n))));
+                Assert.That(play.resultPanel.activeSelf, Is.True);
+            }
+            play.Restart(); yield return WaitForScene(SceneSwitcher.GameScene);
+            var restarted = Object.FindFirstObjectByType<PlayScene>();
+            Assert.That(restarted.Session.BranchHistory.Count, Is.Zero);
+            Assert.That(restarted.Session.Score, Is.Zero);
+            restarted.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+        }
+
         [UnityTest]
         public IEnumerator RenderedNoteTravelsAtOriginalSkinSpeed()
         {
