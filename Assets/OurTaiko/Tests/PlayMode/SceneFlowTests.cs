@@ -201,6 +201,92 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
+        public IEnumerator BalloonFaceAlignsWithJudgeWhileMovingAndHitting()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Balloon Alignment\nBPM:120\nCOURSE:Oni\nLEVEL:1\nBALLOON:3,3\n#START\n7008,\n9008,\n1000,\n#END");
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                yield return null;
+                SceneSwitcher.Instance.Play(song);
+                yield return WaitForScene(SceneSwitcher.GameScene);
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                var balloon = (RectTransform)play.noteLayer.GetChild(0);
+                var head = (RectTransform)balloon.Find("Head");
+                var circle = (RectTransform)play.noteLayer.parent.parent.Find("JudgeCircle");
+                Vector3 judge = play.noteLayer.InverseTransformPoint(circle.TransformPoint(circle.rect.center));
+                // The face center in Nijiiro's 192px balloon crop is (114, 96),
+                // unlike the centered face in the normal-note and kusudama crops.
+                Vector3 FaceWorldPosition() => head.TransformPoint(new Vector3(head.rect.width * (114f / 192f - 0.5f), 0));
+                Vector3 FacePosition() => play.noteLayer.InverseTransformPoint(FaceWorldPosition());
+                float deadline = Time.realtimeSinceStartup + 8;
+                while (play.RenderedTime < -0.5 || !balloon.gameObject.activeSelf)
+                {
+                    if (play.IsPaused) play.TogglePause();
+                    yield return null;
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                }
+                Assert.That(play.RenderedTime, Is.LessThan(0));
+                play.Hit(false, false);
+                Assert.That(play.Session.LongHits[0], Is.Zero, "The visual offset must not start balloon hits early.");
+                Capture("BalloonApproaching.png");
+                double distance = NoteScroll.DistanceFromJudge(0, play.RenderedTime, 120, 1, 1920 - 618);
+                Assert.That(FacePosition().x, Is.EqualTo(judge.x + distance).Within(0.01));
+                Assert.That(FacePosition().y, Is.EqualTo(judge.y).Within(0.01));
+                foreach (int index in new[] { 1, 2 })
+                {
+                    var otherNote = (RectTransform)play.noteLayer.GetChild(index);
+                    var otherHead = (RectTransform)otherNote.Find("Head");
+                    Assert.That(Vector3.Distance(otherHead.TransformPoint(otherHead.rect.center), otherNote.TransformPoint(otherNote.rect.center)),
+                        Is.LessThan(0.01), "Kusudama and normal notes must keep their centered artwork.");
+                }
+                while (play.RenderedTime < 0.15)
+                {
+                    if (play.IsPaused) play.TogglePause();
+                    yield return null;
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                }
+                play.Hit(false, false);
+                Assert.That(play.Session.LongHits[0], Is.EqualTo(1));
+                Assert.That(Vector3.Distance(FacePosition(), judge), Is.LessThan(0.01), "The face must stay centered on the judge during hits.");
+                play.TogglePause(); play.pausePanel.SetActive(false);
+                foreach (int noteSize in new[] { 96, 288, 192 })
+                {
+                    balloon.sizeDelta = new Vector2(noteSize, noteSize);
+                    Canvas.ForceUpdateCanvases();
+                    Assert.That(head.rect.width, Is.EqualTo(noteSize));
+                    Assert.That(Vector3.Distance(FacePosition(), judge), Is.LessThan(0.01), "Resizing the note must preserve face alignment.");
+                }
+                foreach (var resolution in new[] { new Vector2Int(1280, 720), new Vector2Int(1920, 1080), new Vector2Int(2560, 1440), new Vector2Int(1280, 1024) })
+                {
+                    Capture($"BalloonAtJudge-{resolution.x}x{resolution.y}.png", resolution.x, resolution.y, camera =>
+                    {
+                        var canvas = head.GetComponentInParent<Canvas>();
+                        float expectedScale = Mathf.Min(resolution.x / 1920f, resolution.y / 1080f);
+                        Assert.That(canvas.scaleFactor, Is.EqualTo(expectedScale).Within(0.001));
+                        var faceOnScreen = camera.WorldToScreenPoint(FaceWorldPosition());
+                        var judgeOnScreen = camera.WorldToScreenPoint(circle.TransformPoint(circle.rect.center));
+                        Assert.That(Vector3.Distance(faceOnScreen, judgeOnScreen), Is.LessThan(0.01), $"Face alignment at {resolution}.");
+                    });
+                }
+                play.TogglePause();
+                play.Hit(false, true);
+                play.Hit(false, false);
+                yield return null;
+                Assert.That(play.Session.Resolved[0], Is.True);
+                Assert.That(balloon.gameObject.activeSelf, Is.False);
+                play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart);
+                Object.Destroy(song);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator RenderedNoteTravelsAtOriginalSkinSpeed()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -312,18 +398,30 @@ namespace OurTaiko.Tests
             yield return null;
         }
 
-        static void Capture(string name)
+        static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null)
         {
             var canvas = Object.FindFirstObjectByType<Canvas>(); var camera = Camera.main;
-            var target = new RenderTexture(1920, 1080, 24);
-            camera.targetTexture = target; canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 1;
-            Canvas.ForceUpdateCanvases(); camera.Render();
-            var previous = RenderTexture.active; RenderTexture.active = target;
-            var texture = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
-            texture.ReadPixels(new Rect(0, 0, 1920, 1080), 0, 0); texture.Apply();
-            Directory.CreateDirectory("TestResults"); File.WriteAllBytes("TestResults/" + name, texture.EncodeToPNG());
-            RenderTexture.active = previous; canvas.renderMode = RenderMode.ScreenSpaceOverlay; camera.targetTexture = null;
-            Object.Destroy(texture); Object.Destroy(target);
+            var scaler = canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
+            var previous = RenderTexture.active; var previousTarget = camera.targetTexture;
+            var previousMode = canvas.renderMode; var previousCamera = canvas.worldCamera; float previousDistance = canvas.planeDistance;
+            var target = new RenderTexture(width, height, 24);
+            var texture = new Texture2D(width, height, TextureFormat.RGB24, false);
+            try
+            {
+                camera.targetTexture = target; canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 1;
+                scaler.SendMessage("Handle"); Canvas.ForceUpdateCanvases(); camera.Render();
+                verify?.Invoke(camera);
+                RenderTexture.active = target;
+                texture.ReadPixels(new Rect(0, 0, width, height), 0, 0); texture.Apply();
+                Directory.CreateDirectory("TestResults"); File.WriteAllBytes("TestResults/" + name, texture.EncodeToPNG());
+            }
+            finally
+            {
+                RenderTexture.active = previous; camera.targetTexture = previousTarget;
+                canvas.renderMode = previousMode; canvas.worldCamera = previousCamera; canvas.planeDistance = previousDistance;
+                scaler.SendMessage("Handle"); Canvas.ForceUpdateCanvases();
+                Object.Destroy(texture); Object.Destroy(target);
+            }
         }
     }
 }

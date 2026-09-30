@@ -200,7 +200,12 @@ namespace OurTaiko
                     view.Body.pivot = new Vector2(0, 0.5f);
                     Image(view.Body, null).color = new Color(1, 0.72f, 0.05f);
                 }
-                var head = Rect("Head", root, 192, 192); head.anchorMin = head.anchorMax = new Vector2(0.5f, 0.5f);
+                var head = Rect("Head", root, 0, 0);
+                // Match draw_balloon's balloon_offset as a fraction of the note width.
+                // Stretch anchors keep the face aligned when the note or Canvas scales.
+                float faceOffset = note.Kind == NoteKind.Balloon ? 12f / 128f : 0;
+                head.anchorMin = new Vector2(-faceOffset, 0);
+                head.anchorMax = new Vector2(1 - faceOffset, 1);
                 Image(head, noteSprites[(int)note.Kind]); notes.Add(view);
                 root.gameObject.SetActive(false);
             }
