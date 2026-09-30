@@ -15,6 +15,78 @@ namespace OurTaiko.Tests
         [UnityTest] public IEnumerator BranchExpertCanBePlayed() => PlayBranch(BranchRoute.Expert);
         [UnityTest] public IEnumerator BranchMasterAutoPlayCompletes() => PlayBranch(BranchRoute.Master);
 
+        [UnityTest]
+        public IEnumerator NijiiroGaugeClearsFillsAndAnimates()
+        {
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
+            yield return null;
+            var play = Object.FindFirstObjectByType<PlayScene>();
+            if (!play.IsPaused) play.TogglePause();
+            play.pausePanel.SetActive(false);
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.That(canvas.GetComponent<UnityEngine.UI.CanvasScaler>().referenceResolution, Is.EqualTo(new Vector2(1920, 1080)));
+            Assert.That(canvas.transform.Find("Viewport1920x1080").GetComponent<RectTransform>().sizeDelta, Is.EqualTo(new Vector2(1920, 1080)));
+            Assert.That(play.noteSprites[1].rect.size, Is.EqualTo(new Vector2(192, 192)));
+            Assert.That(play.title.font.name, Is.EqualTo("Nijiiro SDF"));
+            var gauge = play.soulGauge;
+            foreach (double threshold in new[] { 0.6, 0.7, 0.8 })
+            {
+                gauge.Initialize(threshold);
+                gauge.SetValue(threshold - 0.001, 0);
+                gauge.ShowTime(0.5);
+                Assert.That(gauge.IsClear, Is.False);
+                Assert.That(gauge.clearCap.enabled, Is.False);
+                Assert.That(gauge.clearLabel.sprite.name, Is.EqualTo("clear_dark_ja"));
+                gauge.SetValue(threshold, 1);
+                gauge.ShowTime(1.225);
+                Assert.That(gauge.IsClear, Is.True);
+                Assert.That(gauge.cellFade.enabled, Is.True);
+                Assert.That(gauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001));
+                Assert.That(gauge.clearCap.enabled, Is.False);
+                gauge.ShowTime(1.451);
+                Assert.That(gauge.clearCap.enabled, Is.True);
+                Assert.That(gauge.goldTop.enabled, Is.False, "The clear cap must not fill an extra cell.");
+                Assert.That(gauge.clearLabel.sprite.name, Is.EqualTo("clear_ja"));
+                Assert.That(gauge.red.rectTransform.rect.width, Is.EqualTo(((int)(threshold * 50) - 1) * 21));
+            }
+            gauge.SetValue(0.86, 2);
+            gauge.ShowTime(2.5);
+            Assert.That(gauge.goldTop.rectTransform.rect.width, Is.EqualTo(63));
+            Assert.That(gauge.goldTop.rectTransform.rect.height + gauge.goldBottom.rectTransform.rect.height, Is.EqualTo(66));
+            Assert.That(gauge.red.rectTransform.rect.height, Is.EqualTo(33));
+            Assert.That(gauge.cellFade.enabled, Is.False);
+            Capture("GaugeClear.png");
+            gauge.SetValue(1, 3);
+            gauge.ShowTime(3.45);
+            Assert.That(gauge.rainbowA.enabled && gauge.fire.enabled, Is.True);
+            Assert.That(gauge.rainbowA.color.a, Is.EqualTo(1).Within(0.001));
+            Capture("GaugeRainbowA.png");
+            gauge.ShowTime(3.60);
+            Assert.That(gauge.rainbowA.sprite.name, Is.EqualTo("Rainbowhard0"));
+            var first = gauge.rainbowA.sprite;
+            gauge.ShowTime(3.7125);
+            Assert.That(gauge.rainbowA.sprite, Is.Not.SameAs(first));
+            Assert.That(gauge.rainbowB.color.a, Is.EqualTo(0.5f).Within(0.001));
+            Capture("GaugeRainbowB.png");
+            var frozenFrame = gauge.rainbowA.sprite;
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(gauge.rainbowA.sprite, Is.SameAs(frozenFrame), "Pause freezes the gauge animation.");
+            gauge.SetValue(0.9, 4);
+            Assert.That(gauge.rainbowA.enabled || gauge.rainbowB.enabled || gauge.fire.enabled, Is.False);
+            gauge.SetValue(0.4, 5);
+            Assert.That(gauge.clearCap.enabled || gauge.goldTop.enabled || gauge.goldBottom.enabled, Is.False);
+            Assert.That(gauge.soul.sprite.name, Is.EqualTo("tamashii_dark"));
+            gauge.SetValue(1, 6);
+            Assert.That(gauge.rainbowA.color.a, Is.Zero, "Refilling restarts the rainbow fade.");
+            play.Restart(); yield return WaitForScene(SceneSwitcher.GameScene);
+            var restarted = Object.FindFirstObjectByType<PlayScene>();
+            Assert.That(restarted.soulGauge.FilledCells, Is.Zero);
+            Assert.That(restarted.soulGauge.rainbowA.enabled, Is.False);
+            restarted.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+        }
+
         static IEnumerator PlayBranch(BranchRoute expected)
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
@@ -41,7 +113,7 @@ namespace OurTaiko.Tests
             var branch = play.branchLane;
             Assert.That(branch.gameObject.activeInHierarchy, Is.True);
             Assert.That(branch.currentLabel.sprite.name, Is.EqualTo(expected.ToString().ToLowerInvariant()));
-            Assert.That(branch.currentLabel.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(1071, -43)));
+            Assert.That(branch.currentLabel.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(1606.5f, -64.5f)));
             Assert.That(branch.currentLabel.color.a, Is.EqualTo(1));
             Assert.That(branch.background.enabled, Is.EqualTo(expected != BranchRoute.Normal));
             if (expected != BranchRoute.Normal)
@@ -96,12 +168,12 @@ namespace OurTaiko.Tests
             branch.Select(BranchRoute.Expert, 0);
             branch.ShowTime(0.05);
             Assert.That(branch.previousLabel.sprite.name, Is.EqualTo("normal"));
-            Assert.That(branch.previousLabel.rectTransform.anchoredPosition.y, Is.EqualTo(-58).Within(0.001));
+            Assert.That(branch.previousLabel.rectTransform.anchoredPosition.y, Is.EqualTo(-87).Within(0.001));
             Assert.That(branch.currentLabel.color.a, Is.Zero);
             Assert.That(branch.levelChange.sprite.name, Is.EqualTo("level_up"));
             branch.ShowTime(0.1665);
             Assert.That(branch.currentLabel.color.a, Is.EqualTo(0.5f).Within(0.001));
-            Assert.That(branch.currentLabel.rectTransform.anchoredPosition.y, Is.EqualTo(-60.5f).Within(0.001));
+            Assert.That(branch.currentLabel.rectTransform.anchoredPosition.y, Is.EqualTo(-90.75f).Within(0.001));
             float frozenAlpha = branch.currentLabel.color.a;
             yield return new WaitForSecondsRealtime(0.15f);
             Assert.That(branch.currentLabel.color.a, Is.EqualTo(frozenAlpha), "Pause must freeze the branch transition.");
@@ -118,12 +190,12 @@ namespace OurTaiko.Tests
             branch.ShowTime(5.05);
             Assert.That(branch.levelChange.sprite.name, Is.EqualTo("level_down"));
             Assert.That(branch.previousLabel.sprite.name, Is.EqualTo("master"));
-            Assert.That(branch.previousLabel.rectTransform.anchoredPosition.y, Is.EqualTo(-28).Within(0.001));
-            Assert.That(branch.currentLabel.rectTransform.anchoredPosition.y, Is.EqualTo(27).Within(0.001));
+            Assert.That(branch.previousLabel.rectTransform.anchoredPosition.y, Is.EqualTo(-42).Within(0.001));
+            Assert.That(branch.currentLabel.rectTransform.anchoredPosition.y, Is.EqualTo(40.5f).Within(0.001));
             Assert.That(branch.background.enabled, Is.False);
             branch.ShowTime(6.4);
             Assert.That(branch.currentLabel.sprite.name, Is.EqualTo("normal"));
-            Assert.That(branch.currentLabel.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(1071, -43)));
+            Assert.That(branch.currentLabel.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(1606.5f, -64.5f)));
             Assert.That(branch.currentLabel.color.a, Is.EqualTo(1));
             play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
         }
@@ -151,8 +223,8 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.15f);
             double elapsed = play.RenderedTime - timeBefore;
             Assert.That(elapsed, Is.GreaterThan(0));
-            // Original skin: screen width 1280, judge x 414; default song starts at BPM 160 / SCROLL 1.
-            double expectedDistance = elapsed * 160 / 240 * (1280 - 414);
+            // Nijiiro skin: screen width 1920, judge x 618; default song starts at BPM 160 / SCROLL 1.
+            double expectedDistance = elapsed * 160 / 240 * (1920 - 618);
             Assert.That(xBefore - rect.anchoredPosition.x, Is.EqualTo(expectedDistance).Within(0.01));
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
         }
@@ -243,12 +315,12 @@ namespace OurTaiko.Tests
         static void Capture(string name)
         {
             var canvas = Object.FindFirstObjectByType<Canvas>(); var camera = Camera.main;
-            var target = new RenderTexture(1280, 720, 24);
+            var target = new RenderTexture(1920, 1080, 24);
             camera.targetTexture = target; canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 1;
             Canvas.ForceUpdateCanvases(); camera.Render();
             var previous = RenderTexture.active; RenderTexture.active = target;
-            var texture = new Texture2D(1280, 720, TextureFormat.RGB24, false);
-            texture.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0); texture.Apply();
+            var texture = new Texture2D(1920, 1080, TextureFormat.RGB24, false);
+            texture.ReadPixels(new Rect(0, 0, 1920, 1080), 0, 0); texture.Apply();
             Directory.CreateDirectory("TestResults"); File.WriteAllBytes("TestResults/" + name, texture.EncodeToPNG());
             RenderTexture.active = previous; canvas.renderMode = RenderMode.ScreenSpaceOverlay; camera.targetTexture = null;
             Object.Destroy(texture); Object.Destroy(target);

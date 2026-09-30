@@ -36,7 +36,7 @@ namespace OurTaiko.Tests
             var branch = chart.Branches.Single();
             Assert.That(branch.Time, Is.EqualTo(6));
             Assert.That(branch.ArmTime, Is.EqualTo(2));
-            Assert.That(branch.DecisionTime, Is.EqualTo(6 - 930.0 / 866).Within(1e-9));
+            Assert.That(branch.DecisionTime, Is.EqualTo(6 - 1398.0 / 1302).Within(1e-9));
             Assert.That(branch.FirstEntries[2].Display, Is.False);
         }
 
@@ -46,7 +46,8 @@ namespace OurTaiko.Tests
         public void LoadBoundaryHandlesVerticalStationaryAndReverseScroll(double x, double y, double time)
         {
             var note = new ChartNote { Time = time, Bpm = 120, ScrollX = x, ScrollY = y };
-            Assert.That(NoteScroll.LoadTime(note), Is.EqualTo(x == 0 && y == 0 ? 6 : 6 - 930.0 / 433).Within(1e-9));
+            // Nijiiro: (1920 - judge X 618 + note radius 96) / (BPM 120 / 240 * 1302).
+            Assert.That(NoteScroll.LoadTime(note), Is.EqualTo(x == 0 && y == 0 ? 6 : 6 - 1398.0 / 651).Within(1e-9));
         }
 
         [TestCase(4, 0, BranchRoute.Master, 100)]

@@ -2,7 +2,8 @@ namespace OurTaiko
 {
     public static class NoteScroll
     {
-        public const double DefaultTravelDistance = 866, NoteHalfWidth = 64;
+        // Nijiiro's native 1920-wide field: judge X=618 and 192-pixel notes.
+        public const double DefaultTravelDistance = 1302, NoteHalfWidth = 96;
 
         // Same entry boundary as Player::get_load_time, including the sprite radius.
         public static double LoadTime(ChartNote note)

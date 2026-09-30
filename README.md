@@ -19,7 +19,7 @@
 | Esc | 返回入口 |
 | Tab / A（入口） | 切歌 / 自动演奏 |
 
-页面下方有可点击的咚 / 咔按钮。场景采用 1280×720 固定设计区域，宽高比变化时居中留边，保持判定位置和轨道比例。
+页面下方有可点击的咚 / 咔按钮。两个场景采用 Nijiiro 原生 **1920×1080** 画布与固定设计区域，宽高比变化时居中留边，保持判定位置和轨道比例。
 
 默认目标为 **120 FPS**。入口及直接打开游玩场景时都会关闭 VSync 并启用每帧渲染，避免画质档的垂直同步覆盖目标帧率。左上角 FPS 计数器每 0.5 秒显示实际帧率平均值，暂停时仍持续更新。它显示实测值，不是目标 120 的固定文字。
 
@@ -39,7 +39,8 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `PlayScene.unity`：可在 Hierarchy 中编辑的 Canvas、音符轨道、判定圈、鼓面、魂槽、歌曲信息、舞者、暂停及结果面板。`PlayScene.cs` 连接输入、DSP 时钟、音乐和画面。
 - `Runtime/Core/TjaParser.cs`：纯 C# TJA 读取，支持课程选择、音符 1–9、连打/气球、BPMCHANGE、MEASURE、DELAY、SCROLL（含复数）、GOGO、BARLINE，以及三路线分支与 SECTION。每条路线从分支起点恢复时刻、BPM、SCROLL、拍号等状态。
 - `Runtime/Core/PlaySession.cs`：独立于 Unity 的判定、连击、分数、魂槽、自动演奏和分支选择。分支统计按事件时间处理，基础分和魂槽分母沿用原版的公共段＋达人路线音符数。大音符目前允许单侧击打；计分与魂槽仍是简化实现。
-- `Runtime/Play/BranchLaneView.cs`：分支轨道底色、右侧谱面字样及升降级动画，使用原 PyTaikoGreen 图片和动画参数。
+- `Runtime/Play/BranchLaneView.cs`：分支轨道底色、右侧谱面字样及升降级动画，使用打平的 Nijiiro 素材与原生坐标。
+- `Runtime/Play/SoulGaugeView.cs`：50 格魂槽、加高的黄色过关区、450 ms 新格淡入、满槽彩虹与魂火。Easy／Normal+Hard／Oni+Edit 过关阈值分别为 60%／70%／80%，与结算一致。每次彩虹帧过渡为 75 ms，8 帧循环 600 ms；失去满槽或过关状态时恢复对应样式。
 - `Runtime/Core/NoteScroll.cs`：按 BPM、SCROLL 和判定点到轨道右边缘的距离计算流速。连打头尾始终使用头部速度整体移动，长度保持恒定。
 - `Runtime/Core/SongDefinition.cs`：在 Inspector 中指定谱面 TextAsset、音乐 AudioClip、难度和音画偏移。谱面以 `.txt` 导入，内容仍是 TJA；WAVE 字段由显式 AudioClip 引用替代。
 - `Editor/ProjectBuilder.cs`：通过 Editor API 创建初始场景和 sprite 切片。生成后不自动覆盖场景，后续直接编辑现有场景。
@@ -48,7 +49,9 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 ## 素材来源
 
-复用了 `OurTaikoPlayer/Skins/PyTaikoGreen` 的部分轨道、分支标识、音符、魂槽、背景、舞者帧、字体和打击音效，以及原项目自带的两份谱面和 TRIPLE HELIX 音频。具体文件见 `Documentation/ImportedAssets.json`。原仓库未作修改。保留原 `LICENSE`、`NOTICE`；皮肤、字体和音频沿用各自的权利归属。
+当前只有一套 **Nijiiro** 皮肤。轨道、音符、魂槽、背景、19 帧舞者、字体和打击音效直接复制自相邻仓库的 `Skins/YataiDONNijiiro`；其缺少的分支字样等资源已从 Green 直接复制补齐，全部打平到 `Assets/OurTaiko/Art` 和 `Audio`。没有皮肤继承、回退加载或 Green 切换模式。素材来源逐项记录在 `Documentation/ImportedAssets.json`，原仓库未作修改。原项目自带的两份谱面和 TRIPLE HELIX 音频继续使用；保留原 `LICENSE`、`NOTICE` 及各资源的权利归属。
+
+魂槽行为按当前原模拟器的 `gauge.cpp`、Nijiiro `skin_config.json` 和 `game/animation.json` 实现。源码没有“每 0.5 秒整条闪黄”的循环；其新增格子采用 450 ms 淡入，因此这里没有另加未经源码确认的周期闪黄。
 
 ## 验证
 

@@ -10,7 +10,7 @@ using UnityEngine.InputSystem.UI;
 
 namespace OurTaiko.Editor
 {
-    public static class ProjectBuilder
+    public static partial class ProjectBuilder
     {
         const string Root = "Assets/OurTaiko/";
         static TMP_FontAsset font;
@@ -44,8 +44,8 @@ namespace OurTaiko.Editor
                 importer.SaveAndReimport();
             }
             font = TMP_FontAsset.CreateFontAsset(AssetDatabase.LoadAssetAtPath<Font>(Root + "Art/Taiko.ttf"));
-            font.name = "Taiko SDF";
-            AssetDatabase.CreateAsset(font, Root + "Generated/Taiko SDF.asset");
+            font.name = "Nijiiro SDF";
+            AssetDatabase.CreateAsset(font, Root + "Generated/Nijiiro SDF.asset");
             AssetDatabase.AddObjectToAsset(font.material, font);
             foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
             font.TryAddCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 /:.,!?+-()_★");
@@ -63,7 +63,7 @@ namespace OurTaiko.Editor
             EditorSettings.serializationMode = SerializationMode.ForceText;
             PlayerSettings.companyName = "OurTaiko";
             PlayerSettings.productName = "OurTaikoPlayerUnity";
-            PlayerSettings.defaultScreenWidth = 1280; PlayerSettings.defaultScreenHeight = 720;
+            PlayerSettings.defaultScreenWidth = 1920; PlayerSettings.defaultScreenHeight = 1080;
             PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
             PlayerSettings.runInBackground = true;
             QualitySettings.vSyncCount = 0;
@@ -92,7 +92,8 @@ namespace OurTaiko.Editor
             canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
             var scaler = canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
             scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1280, 720); scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.Expand;
+            scaler.referenceResolution = new Vector2(1920, 1080); scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.Expand;
+            // Menu controls are authored on the original grid, then expanded once before saving.
             var viewport = Rect("Viewport1280x720", canvas.transform, 0, 0, 1280, 720);
             viewport.anchorMin = viewport.anchorMax = viewport.pivot = new Vector2(0.5f, 0.5f); viewport.anchoredPosition = Vector2.zero;
             var eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
@@ -137,7 +138,14 @@ namespace OurTaiko.Editor
         {
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(Root + "Art/" + path + ".png");
             var sprite = UnityEngine.Sprite.Create(texture, new Rect(x, texture.height - y - height, width, height), Vector2.one * 0.5f, 100);
-            sprite.name = name; AssetDatabase.CreateAsset(sprite, Root + "Generated/" + name + ".asset"); return sprite;
+            sprite.name = name;
+            var pathName = Root + "Generated/" + name + ".asset";
+            var existing = AssetDatabase.LoadAssetAtPath<Sprite>(pathName);
+            if (existing == null) { AssetDatabase.CreateAsset(sprite, pathName); return sprite; }
+            EditorUtility.CopySerialized(sprite, existing);
+            UnityEngine.Object.DestroyImmediate(sprite);
+            AssetDatabase.SaveAssetIfDirty(existing);
+            return existing;
         }
         static void Background(Transform root)
         {
@@ -162,8 +170,7 @@ namespace OurTaiko.Editor
             var gauge = Rect("SoulGauge", root, 0, 184, 1280, 80);
             Picture(gauge, "Border", "game/gauge/border_hard", 327, -52);
             Picture(gauge, "Empty", "game/gauge/1p_unfilled_hard", 483, -60);
-            controller.gaugeFill = Picture(gauge, "Fill", "game/gauge/1p_bar", 491, -24, 694, 24);
-            controller.gaugeFill.type = UnityEngine.UI.Image.Type.Filled; controller.gaugeFill.fillMethod = UnityEngine.UI.Image.FillMethod.Horizontal; controller.gaugeFill.fillAmount = 0;
+            Picture(gauge, "Fill", "game/gauge/1p_bar", 491, -24, 694, 24);
             Picture(gauge, "Grid", "game/gauge/overlay_hard", 483, -60);
             Picture(gauge, "ClearMarker", "game/gauge/clear_en", 1038, -43);
             Picture(gauge, "Soul", "game/gauge/tamashii", 1187, -54);
@@ -215,6 +222,7 @@ namespace OurTaiko.Editor
             controller.resultPanel.SetActive(false);
             AddBranchIndicator(root, controller);
             AddFpsCounter(root);
+            ConfigureNijiiroLayout(root, controller);
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/PlayScene.unity");
         }
 
@@ -241,8 +249,9 @@ namespace OurTaiko.Editor
             menu.autoButton = Button(root, "AutoButton", "", 650, 468, 320, 48, new Color32(74, 86, 66, 255));
             menu.mode = menu.autoButton.GetComponentInChildren<TMP_Text>();
             Label(root, "Controls", "F / J  DON     D / K  KA     SPACE  PAUSE\nF1  RESTART     ESC  BACK     A  AUTO", 270, 535, 740, 55, 19);
-            Label(root, "FooterCredit", "OurTaikoPlayer  /  PyTaikoGreen", 0, 674, 1280, 30, 19);
+            Label(root, "FooterCredit", "OurTaikoPlayer  /  Nijiiro", 0, 674, 1280, 30, 19);
             AddFpsCounter(root);
+            ConfigureNijiiroLayout(root, null);
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/SceneSwitcher.unity");
         }
 
@@ -277,7 +286,7 @@ namespace OurTaiko.Editor
         public static void AddFpsCounter(Transform root)
         {
             if (root.Find("FpsPanel") != null) return;
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Taiko SDF.asset");
+            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
             var panel = Panel(root, "FpsPanel", 24, 132, 148, 30, new Color32(28, 29, 32, 225));
             var label = Label(panel.transform, "FpsCounter", "FPS --", 8, 0, 132, 30, 18, TextAlignmentOptions.Left);
             label.gameObject.AddComponent<FpsCounter>();

@@ -14,7 +14,8 @@ namespace OurTaiko
         public RectTransform noteLayer, barLayer;
         public Sprite[] noteSprites;
         public Sprite[] judgmentSprites;
-        public UnityEngine.UI.Image judgment, hitFlash, gaugeFill;
+        public UnityEngine.UI.Image judgment, hitFlash;
+        public SoulGaugeView soulGauge;
         public UnityEngine.UI.Image[] drumFlashes;
         public TMP_Text title, subtitle, score, combo, counters, state, rollCounter, resultText;
         public BranchLaneView branchLane;
@@ -56,6 +57,7 @@ namespace OurTaiko
             try
             {
                 Session = new PlaySession(song.Parse());
+                soulGauge.Initialize(Session.ClearThreshold);
                 foreach (string warning in Session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
                 Session.Judged += OnJudged;
                 Session.BranchSelected += OnBranchSelected;
@@ -115,6 +117,7 @@ namespace OurTaiko
                 if (keyboard.kKey.wasPressedThisFrame) Hit(true, true);
             }
             RenderNotes(time - song.visualOffsetMs / 1000.0);
+            soulGauge.ShowTime(time);
             foreach (var dancer in dancers) dancer.ShowTime(time);
             float feedback = Mathf.Clamp01(1 - (Time.unscaledTime - feedbackTime) / 0.25f);
             judgment.color = new Color(1, 1, 1, feedback);
@@ -148,9 +151,9 @@ namespace OurTaiko
         void UpdateHud()
         {
             score.text = Session.Score.ToString("D7");
-            combo.text = Session.Combo >= 2 ? $"{Session.Combo}\n<size=20>COMBO</size>" : "";
+            combo.text = Session.Combo >= 2 ? $"{Session.Combo}\n<size=30>COMBO</size>" : "";
             counters.text = $"GOOD {Session.Good}     OK {Session.Ok}     BAD {Session.Bad}     ROLL {Session.Rolls}";
-            gaugeFill.fillAmount = (float)Session.Gauge;
+            soulGauge.SetValue(Session.Gauge, SongTime - song.audioOffsetMs / 1000.0);
         }
         void OnBranchSelected(ChartBranch branch, BranchRoute route)
         {
@@ -167,8 +170,8 @@ namespace OurTaiko
         void Finish()
         {
             frozenTime = SongTime; IsFinished = true; music.Stop(); resultPanel.SetActive(true);
-            string clear = Session.Gauge >= 0.8 ? "CLEAR!" : "FINISHED";
-            resultText.text = $"{clear}\n<size=48>{Session.Score:N0}</size>\n<size=24>GOOD {Session.Good}   OK {Session.Ok}   BAD {Session.Bad}\nMAX COMBO {Session.MaxCombo}   DRUMROLL {Session.Rolls}</size>";
+            string clear = Session.Gauge >= Session.ClearThreshold ? "CLEAR!" : "FINISHED";
+            resultText.text = $"{clear}\n<size=72>{Session.Score:N0}</size>\n<size=36>GOOD {Session.Good}   OK {Session.Ok}   BAD {Session.Bad}\nMAX COMBO {Session.MaxCombo}   DRUMROLL {Session.Rolls}</size>";
         }
         public void Restart() { music.Stop(); SceneSwitcher.EnsureInstance().Restart(); }
         public void Back() { music.Stop(); SceneSwitcher.EnsureInstance().ReturnToMenu(); }
@@ -188,28 +191,28 @@ namespace OurTaiko
         {
             foreach (var note in Session.Chart.Notes)
             {
-                var root = Rect(note.Kind.ToString(), noteLayer, 128, 128);
+                var root = Rect(note.Kind.ToString(), noteLayer, 192, 192);
                 var view = new NoteView { Root = root, Object = root.gameObject };
                 if (note.IsLong && !note.IsBalloon)
                 {
-                    view.Body = Rect("RollBody", root, 1, 28);
+                    view.Body = Rect("RollBody", root, 1, 42);
                     view.Body.anchorMin = view.Body.anchorMax = new Vector2(0.5f, 0.5f);
                     view.Body.pivot = new Vector2(0, 0.5f);
                     Image(view.Body, null).color = new Color(1, 0.72f, 0.05f);
                 }
-                var head = Rect("Head", root, 128, 128); head.anchorMin = head.anchorMax = new Vector2(0.5f, 0.5f);
+                var head = Rect("Head", root, 192, 192); head.anchorMin = head.anchorMax = new Vector2(0.5f, 0.5f);
                 Image(head, noteSprites[(int)note.Kind]); notes.Add(view);
                 root.gameObject.SetActive(false);
             }
             foreach (var bar in Session.Chart.Bars)
             {
-                var root = Rect("Measure", barLayer, bar.IsBranchStart ? 4 : 2, 126);
+                var root = Rect("Measure", barLayer, bar.IsBranchStart ? 6 : 3, 200);
                 Image(root, null).color = bar.IsBranchStart ? new Color(1, 0.8f, 0.2f, 0.8f) : new Color(1, 1, 1, 0.35f);
                 bars.Add(root); root.gameObject.SetActive(false);
             }
         }
-        // LaneClip begins at x=332; the skin judge is x=414, y=256 (lane y=184).
-        const float JudgeLocalX = 82, JudgeLocalY = -72;
+        // Nijiiro: lane x=498/y=276, judge x=618, note top=14 with 192-pixel sprites.
+        const float JudgeLocalX = 120, JudgeLocalY = -110;
         double TravelDistance => noteLayer.rect.width - JudgeLocalX;
 
         Vector2 Position(ChartNote note, double time)
@@ -227,20 +230,20 @@ namespace OurTaiko
                 var note = Session.Chart.Notes[i]; var view = notes[i]; var pos = Position(note, time);
                 if (note.IsBalloon && time >= note.Time) pos = new Vector2(JudgeLocalX, JudgeLocalY);
                 float length = note.IsLong && !note.IsBalloon ? (float)NoteScroll.RollLength(note, TravelDistance) : 0;
-                bool visible = Session.IsActive(note) && !Session.Resolved[i] && pos.x + Math.Max(0, length) >= -128 && pos.x + Math.Min(0, length) <= 1100;
+                bool visible = Session.IsActive(note) && !Session.Resolved[i] && pos.x + Math.Max(0, length) >= -192 && pos.x + Math.Min(0, length) <= 1650;
                 view.Object.SetActive(visible);
                 if (visible)
                 {
                     view.Root.anchoredPosition = pos;
-                    if (view.Body != null) { view.Body.sizeDelta = new Vector2(Mathf.Abs(length), 28); view.Body.localScale = new Vector3(Mathf.Sign(length), 1, 1); }
+                    if (view.Body != null) { view.Body.sizeDelta = new Vector2(Mathf.Abs(length), 42); view.Body.localScale = new Vector3(Mathf.Sign(length), 1, 1); }
                     if (note.Gogo && note.Time - time < 1) gogo = true;
                     if (note.IsBalloon && time >= note.Time) rollCounter.text = "BALLOON  " + Math.Max(0, note.BalloonHits - Session.LongHits[i]);
                 }
             }
             for (int i = 0; i < bars.Count; i++)
             {
-                var pos = Position(Session.Chart.Bars[i], time); bars[i].anchoredPosition = pos;
-                bars[i].gameObject.SetActive(Session.Chart.Bars[i].Display && Session.IsActive(Session.Chart.Bars[i]) && pos.x >= 0 && pos.x < 1000);
+                var pos = Position(Session.Chart.Bars[i], time); pos.y -= 4; bars[i].anchoredPosition = pos;
+                bars[i].gameObject.SetActive(Session.Chart.Bars[i].Display && Session.IsActive(Session.Chart.Bars[i]) && pos.x >= 0 && pos.x < 1500);
             }
             gogoTint.alpha = gogo ? 0.18f + Mathf.Sin((float)time * 12) * 0.05f : 0;
         }

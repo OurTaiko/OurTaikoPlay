@@ -19,6 +19,7 @@ namespace OurTaiko
         public int Bad { get; private set; }
         public int Rolls { get; private set; }
         public double Gauge { get; private set; }
+        public double ClearThreshold => Chart.Course == "Easy" ? 0.6 : Chart.Course == "Normal" || Chart.Course == "Hard" ? 0.7 : 0.8;
         public BranchRoute CurrentBranch { get; private set; } = BranchRoute.Normal;
         public IReadOnlyList<BranchRoute> BranchHistory => branchHistory;
         public double LastBranchValue { get; private set; }

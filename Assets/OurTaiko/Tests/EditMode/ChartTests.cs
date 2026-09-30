@@ -9,6 +9,17 @@ namespace OurTaiko.Tests
     {
         static TaikoChart Parse(string body, string metadata = "") => TjaParser.Parse("TITLE:Test\nBPM:120\n" + metadata + "\nCOURSE:Oni\n#START\n" + body + "\n#END");
 
+        [TestCase("Easy", 0.6)]
+        [TestCase("Normal", 0.7)]
+        [TestCase("Hard", 0.7)]
+        [TestCase("Oni", 0.8)]
+        [TestCase("Edit", 0.8)]
+        public void ClearThresholdMatchesOriginalDifficulty(string course, double threshold)
+        {
+            var session = new PlaySession(new TaikoChart { Course = course });
+            Assert.That(session.ClearThreshold, Is.EqualTo(threshold));
+        }
+
         [Test] public void OffsetAndEmptyMeasuresKeepAudioTime()
         {
             var chart = Parse("1000,\n,\n2000,", "OFFSET:0.5");

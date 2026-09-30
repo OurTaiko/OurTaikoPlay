@@ -48,13 +48,13 @@ namespace OurTaiko
         {
             if (!animating) return;
             float elapsed = (float)(time - changedAt);
-            // PyTaikoGreen game/animation.json, IDs 41–45: 100 ms nudge,
+            // Nijiiro game/animation.json, IDs 41–45: 100 ms nudge,
             // then 133 ms slide/crossfade; the level badge pulses and fades out.
-            float nudge = EaseOut(Progress(elapsed, 0, 0.100f)) * 20;
+            float nudge = EaseOut(Progress(elapsed, 0, 0.100f)) * 30;
             float fade = Progress(elapsed, 0.100f, 0.133f);
-            float slide = EaseOut(fade) * 70;
+            float slide = EaseOut(fade) * 105;
             previousLabel.rectTransform.anchoredPosition = labelPosition + Vector2.down * ((nudge - slide) * direction);
-            currentLabel.rectTransform.anchoredPosition = labelPosition + Vector2.down * ((70 - slide) * direction);
+            currentLabel.rectTransform.anchoredPosition = labelPosition + Vector2.down * ((105 - slide) * direction);
             previousLabel.color = new Color(1, 1, 1, 1 - fade);
             currentLabel.color = new Color(1, 1, 1, fade);
             background.color = new Color(1, 1, 1, Mathf.Min(fade, 0.5f));
