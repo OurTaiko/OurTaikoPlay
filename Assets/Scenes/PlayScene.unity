@@ -7038,6 +7038,7 @@ MonoBehaviour:
   hitAudio: {fileID: 549007535}
   don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}
   ka: {fileID: 8300000, guid: b5d46904052a14efdbf9361bde1e09ae, type: 3}
+  balloonPop: {fileID: 8300000, guid: 44b1297bb1bd74b4ab8ac5ed9f62c148, type: 3}
   noteLayer: {fileID: 2060243652}
   barLayer: {fileID: 1809151790}
   noteSprites:

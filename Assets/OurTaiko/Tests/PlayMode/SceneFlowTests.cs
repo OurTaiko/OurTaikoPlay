@@ -222,6 +222,9 @@ namespace OurTaiko.Tests
                     }
                 }
                 var counter = play.balloonCounter;
+                Assert.That(play.balloonPop, Is.Not.Null);
+                Assert.That(play.balloonPop.name, Is.EqualTo("balloon_pop"));
+                Assert.That(play.balloonPop.loadState, Is.EqualTo(AudioDataLoadState.Loaded));
                 Assert.That(counter.IsVisible, Is.False);
                 yield return Reach(0.1);
                 play.Hit(true, false);

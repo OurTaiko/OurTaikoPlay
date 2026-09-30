@@ -10,7 +10,7 @@ namespace OurTaiko
     {
         public SongDefinition defaultSong;
         public AudioSource music, hitAudio;
-        public AudioClip don, ka;
+        public AudioClip don, ka, balloonPop;
         public RectTransform noteLayer, barLayer;
         public Sprite[] noteSprites;
         public Sprite balloonTailSprite;
@@ -155,6 +155,7 @@ namespace OurTaiko
                 var note = Session.Chart.Notes[index];
                 balloonCounter.RecordHit(index, note.BalloonHits, Session.LongHits[index], note.EndTime,
                     SongTime - song.audioOffsetMs / 1000.0);
+                if (Session.LongHits[index] == note.BalloonHits) hitAudio.PlayOneShot(balloonPop);
                 rollCounter.text = "";
             }
             else { rollCounter.text = "DRUMROLL  " + Session.Rolls; }

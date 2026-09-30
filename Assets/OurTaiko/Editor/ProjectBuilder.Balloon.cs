@@ -57,6 +57,7 @@ namespace OurTaiko.Editor
             if (view.number == null) view.number = Rect("Number", rig, 723, -180, 0, 0);
             view.ResetDisplay();
             play.balloonCounter = view;
+            play.balloonPop = AssetDatabase.LoadAssetAtPath<AudioClip>(Root + "Audio/balloon_pop.ogg");
             play.balloonTailSprite = Slice("BalloonTail", "game/notes/notes_atlas", 0, 1928, 192, 192);
             EditorUtility.SetDirty(play);
         }
