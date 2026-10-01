@@ -25,8 +25,8 @@
 
 ### 当前完成状态与交接边界
 
-- 最新功能提交：**`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。提交后工作区仅剩用户原有的 `Assets/OurTaiko/Generated/Nijiiro SDF.asset` 未提交改动，**不要提交、覆盖或回退它**。
-- 字体资源为动态 SDF，日文字形会在测试／运行时追加并改动该文件。本轮操作前快照位于忽略目录 `TestResults/songselect-baseline/Nijiiro-SDF.asset`（md5 `32109b89…`），测试后已恢复为该快照。下次操作前先记录当前状态，恢复前确认用户没有继续修改。
+- 最新提交：**`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
+- `Assets/OurTaiko/Generated/Nijiiro SDF.asset` 是动态 SDF 字体，Unity 会在打开项目、运行测试或保存时自动改写它（用户确认属于 Unity 自身行为，并非用户修改）。出现该 diff 时**不要提交**；收尾时用 `git restore "Assets/OurTaiko/Generated/Nijiiro SDF.asset"` 还原为已提交版本（Editor 打开时它可能被再次写入，必要时关闭 Editor 后再还原）。不要用旧的 TestResults 快照覆盖它。
 - Unity Editor 可能仍由上一会话打开（项目已安装 Pipeline 包）；先用 `unity status` 确认连接再操作，修改 C# 后刷新并确认 `EditorUtility.scriptCompilationFailed` 为 false（编译错误会让 CLI 无法连接或静默失败，看 `~/Library/Logs/Unity/Editor.log` 的 `error CS`）。耗时较长的 Editor 方法会让 CLI 报 5 秒超时，但会在 Editor 中继续执行，需轮询结果。
 - 选曲／结算的下一步候选（均未授权，需用户确认）：演奏选项／音色面板、文件夹与类别、成绩等级演出、曲目板飞入、难度决定标记弹出、皇冠光芒加算混合、支持字母扩展音符以游玩 TRIPLE HELIX Edit。
 - 当前验证针对 Unity Editor。早期曾成功构建 macOS Development Player，但 `Builds/OurTaikoPlayerUnity.app` **没有随最近各次修复重新打包**，不能视作当前版本。移动端、真机音频延迟与独立播放器长期手动游玩尚未验收。
