@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace OurTaiko
 {
@@ -115,24 +114,14 @@ namespace OurTaiko
         void Update()
         {
             if (switcher == null || switcher.IsInputBlocked || !isReady) return;
-            var keyboard = Keyboard.current;
-            if (keyboard != null)
-            {
-                if (keyboard.escapeKey.wasPressedThisFrame) { Back(); return; }
-                if (keyboard.f1Key.wasPressedThisFrame) { Restart(); return; }
-                if (keyboard.spaceKey.wasPressedThisFrame) TogglePause();
-            }
+            if (InputManager.GetKeyDown(InputKey.Back)) { Back(); return; }
+            if (InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
+            if (InputManager.GetKeyDown(InputKey.Pause)) TogglePause();
             if (Session == null || IsPaused || IsFinished) return;
             double time = SongTime - song.audioOffsetMs / 1000.0;
             Session.Advance(time, autoPlay);
             if (branchLane != null) branchLane.ShowTime(time);
-            if (!autoPlay && keyboard != null)
-            {
-                if (keyboard.fKey.wasPressedThisFrame) Hit(false, false);
-                if (keyboard.jKey.wasPressedThisFrame) Hit(false, true);
-                if (keyboard.dKey.wasPressedThisFrame) Hit(true, false);
-                if (keyboard.kKey.wasPressedThisFrame) Hit(true, true);
-            }
+            if (!autoPlay) HitFirstDrumPress();
             balloonCounter.ShowTime(time);
             RenderNotes(time - song.visualOffsetMs / 1000.0);
             soulGauge.ShowTime(time);
@@ -146,6 +135,16 @@ namespace OurTaiko
             if (time > Math.Max(Session.Chart.Duration, song.music != null ? song.music.length : 0) + 1) Finish();
         }
 
+        // Input mutex: a frame judges only its earliest drum press; later ones in the same frame are dropped.
+        void HitFirstDrumPress()
+        {
+            foreach (var press in InputManager.PressesThisFrame)
+            {
+                if (!press.Key.IsDrum()) continue;
+                Hit(press.Key.IsKa(), press.Key.IsRight());
+                return;
+            }
+        }
         public void Hit(bool isKa, bool right)
         {
             if (Session == null || !isReady || switcher.IsInputBlocked || IsPaused || IsFinished || autoPlay) return;

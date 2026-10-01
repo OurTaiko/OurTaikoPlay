@@ -214,7 +214,7 @@ namespace OurTaiko.Editor
             {
                 bool isKa = i == 0 || i == 3;
                 var pad = Button(root, "TouchPad" + i, new[] { "D / KA", "F / DON", "J / DON", "K / KA" }[i], 394 + i * 130, 612, 120, 40, isKa ? new Color32(28, 106, 125, 245) : new Color32(185, 50, 35, 245));
-                var input = pad.gameObject.AddComponent<DrumPad>(); input.controller = controller; input.ka = isKa; input.right = i >= 2;
+                var input = pad.gameObject.AddComponent<DrumPad>(); input.ka = isKa; input.right = i >= 2;
             }
             controller.pausePanel = Overlay(root, "PausePanel", "PAUSED", out _, out var resume, out var unused);
             controller.resumeButton = resume; resume.GetComponentInChildren<TMP_Text>().text = "RESUME";

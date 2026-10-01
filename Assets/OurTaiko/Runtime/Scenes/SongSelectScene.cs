@@ -4,7 +4,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace OurTaiko
@@ -164,13 +163,11 @@ namespace OurTaiko
         void HandleInput()
         {
             if (switcher.IsInputBlocked) return;
-            var keyboard = Keyboard.current;
-            if (keyboard == null) return;
-            if (keyboard.escapeKey.wasPressedThisFrame) { switcher.SwitchScene(SceneSwitcher.MenuScene); return; }
-            bool leftKa = keyboard.dKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame;
-            bool rightKa = keyboard.kKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame;
-            bool donHit = keyboard.fKey.wasPressedThisFrame || keyboard.jKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame;
-            if (keyboard.aKey.wasPressedThisFrame && Phase != State.Decided) ToggleAuto();
+            if (InputManager.GetKeyDown(InputKey.Back)) { switcher.SwitchScene(SceneSwitcher.MenuScene); return; }
+            bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft);
+            bool rightKa = InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight);
+            bool donHit = InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
+            if (InputManager.GetKeyDown(InputKey.ToggleAuto) && Phase != State.Decided) ToggleAuto();
             if (leftKa) Left();
             else if (rightKa) Right();
             else if (donHit) Confirm();
