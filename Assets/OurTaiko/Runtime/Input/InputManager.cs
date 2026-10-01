@@ -167,9 +167,9 @@ namespace OurTaiko
             if (!pressed && !button.isPressed) return;
             foreach (var pad in pads)
             {
-                if (!pad.Contains(position)) continue;
-                held[(int)pad.Key] = true;
-                if (pressed) AddPress(pad.Key, time);
+                if (!pad.TryHit(position, out var key)) continue;
+                held[(int)key] = true;
+                if (pressed) { AddPress(key, time); pad.Press(); }
                 return;
             }
         }

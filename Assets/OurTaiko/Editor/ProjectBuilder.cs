@@ -210,12 +210,6 @@ namespace OurTaiko.Editor
             controller.pauseButton = Button(root, "PauseButton", "PAUSE", 26, 370, 110, 34, new Color32(33, 37, 39, 235));
             controller.restartButton = Button(root, "RestartButton", "RESTART", 146, 370, 125, 34, new Color32(33, 37, 39, 235));
             controller.backButton = Button(root, "BackButton", "BACK", 281, 370, 100, 34, new Color32(33, 37, 39, 235));
-            for (int i = 0; i < 4; i++)
-            {
-                bool isKa = i == 0 || i == 3;
-                var pad = Button(root, "TouchPad" + i, new[] { "D / KA", "F / DON", "J / DON", "K / KA" }[i], 394 + i * 130, 612, 120, 40, isKa ? new Color32(28, 106, 125, 245) : new Color32(185, 50, 35, 245));
-                var input = pad.gameObject.AddComponent<DrumPad>(); input.ka = isKa; input.right = i >= 2;
-            }
             controller.pausePanel = Overlay(root, "PausePanel", "PAUSED", out _, out var resume, out var unused);
             controller.resumeButton = resume; resume.GetComponentInChildren<TMP_Text>().text = "RESUME";
             unused.gameObject.SetActive(false); controller.pausePanel.SetActive(false);
@@ -224,6 +218,7 @@ namespace OurTaiko.Editor
             AddBranchIndicator(root, controller);
             AddFpsCounter(root);
             ConfigureNijiiroLayout(root, controller);
+            ConfigureTouchDrum(controller);
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/PlayScene.unity");
         }
 

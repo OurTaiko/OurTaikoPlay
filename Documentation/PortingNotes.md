@@ -188,3 +188,9 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - TMP 的 Mobile SDF 只有在 `OUTLINE_ON` 关键字下绘制描边；新增 `Generated/Nijiiro SDF Outline.mat` 供新场景文字使用，使该着色器变体也会进入播放器构建。
 - 修复：歌曲 AudioClip 为 DecompressOnLoad 且不预载，首次 `PlayScheduled` 会同步解码约 1 秒；现于 PlayScene 初始化时（全局遮罩仍关闭）调用 `LoadAudioData`。
 - 验证：EditMode 108/108、PlayMode 18/18（`TestResults/songselect-editmode.json`、`songselect-playmode.json`）。`SongSelectResultTests` 覆盖选曲、难度光标、裏切换、自动演奏开关、游玩、结算跳过与返回，以及未过关结算；截图在 `TestResults/SongSelect*.png`、`Result*.png`。PlayMode 测试使用临时成绩文件，不写入玩家数据。
+
+## 游玩页触控鼓（2026-10-01）
+
+PlayScene 原先的四个矩形「D / KA」「F / DON」等按钮替换为原版触控鼓外观。原版在 `OurTaiko.cpp` 中于开启 `touch_input` 时把 `global/overlay/touch_drum.png`（Nijiiro 版，1920×1080 半鼓）作为全局叠加层以 `fade=0.5` 绘制；Unity 按要求只放在 PlayScene，位于暂停／结果面板之下。按下时重启全局动画 66（Nijiiro 无全局 `animation.json`，取 PyTaikoGreen：`texture_resize` 70 ms，1.0→0.95，`reverse_delay` 0，二次缓出），以中心缩放再下移 `h/2×(1-scale)`，等价于底边中心为轴；使用真实时间，暂停时也播放。原版在其他手指仍按住时抬起一根也会重启该动画，Unity 只在按下时重启。
+
+判定区照搬 `input.cpp::touch_quadrant_vkey`：上半屏左右为咔；下半屏中以设计区底边中心为圆心、横纵半径为宽度 ×0.262／×0.242 的椭圆内为咚，椭圆外为咔，左右按中线划分。区域按 1920×1080 设计区比例计算，随 Canvas 缩放；与原版一样覆盖整个屏幕（含留边）。为不吞掉 PAUSE／RESTART／BACK 等 uGUI 按钮，落在 `Selectable` 上的点不计为打击。场景通过 `ProjectBuilder.ApplyTouchDrum()` 定向迁移，PlayMode 测试 `TouchDrumMatchesOriginalZonesAndSqueeze` 覆盖外观、各区域边界、按钮避让与缩放动画。

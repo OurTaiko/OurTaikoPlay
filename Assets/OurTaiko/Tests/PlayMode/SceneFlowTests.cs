@@ -157,6 +157,56 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
+        public IEnumerator TouchDrumMatchesOriginalZonesAndSqueeze()
+        {
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
+            yield return null;
+            var play = Object.FindFirstObjectByType<PlayScene>();
+            if (!play.IsPaused) play.TogglePause();
+            play.pausePanel.SetActive(false);
+            var pads = Object.FindObjectsByType<DrumPad>(FindObjectsSortMode.None);
+            Assert.That(pads.Length, Is.EqualTo(1));
+            var pad = pads[0];
+            var zone = (RectTransform)pad.transform;
+            var image = pad.drum.GetComponent<UnityEngine.UI.Image>();
+            Assert.That(image.sprite.rect.size, Is.EqualTo(new Vector2(1920, 1080)));
+            Assert.That(image.color.a, Is.EqualTo(0.5f));
+            Assert.That(image.raycastTarget, Is.False);
+            Assert.That(pad.drum.pivot, Is.EqualTo(new Vector2(0.5f, 0)));
+            // Design-area fractions measured from the bottom-left corner.
+            Vector2 At(float x, float y)
+            {
+                var area = zone.rect;
+                return RectTransformUtility.WorldToScreenPoint(null, zone.TransformPoint(new Vector3(area.xMin + area.width * x, area.yMin + area.height * y)));
+            }
+            InputKey Hit(Vector2 point) { Assert.That(pad.TryHit(point, out var key), Is.True); return key; }
+            Assert.That(Hit(At(0.25f, 0.75f)), Is.EqualTo(InputKey.LeftKa));
+            Assert.That(Hit(At(0.75f, 0.75f)), Is.EqualTo(InputKey.RightKa));
+            Assert.That(Hit(At(0.45f, 0.05f)), Is.EqualTo(InputKey.LeftDon));
+            Assert.That(Hit(At(0.55f, 0.40f)), Is.EqualTo(InputKey.RightDon));
+            // Ellipse radii 0.262 / 0.242 of the width: just outside the rim is ka again.
+            Assert.That(Hit(At(0.5f - 0.27f, 0.01f)), Is.EqualTo(InputKey.LeftKa));
+            Assert.That(Hit(At(0.95f, 0.05f)), Is.EqualTo(InputKey.RightKa));
+            Assert.That(Hit(At(0.5f + 0.01f, 0.242f * 1920 / 1080 - 0.01f)), Is.EqualTo(InputKey.RightDon));
+            Assert.That(Hit(At(0.5f + 0.01f, 0.242f * 1920 / 1080 + 0.01f)), Is.EqualTo(InputKey.RightKa));
+            var pause = (RectTransform)play.pauseButton.transform;
+            Assert.That(pad.TryHit(RectTransformUtility.WorldToScreenPoint(null, pause.TransformPoint(pause.rect.center)), out _), Is.False);
+
+            Assert.That(pad.drum.localScale.x, Is.EqualTo(1f));
+            pad.Press();
+            double start = Time.realtimeSinceStartupAsDouble;
+            while (Time.realtimeSinceStartupAsDouble - start < 0.035) yield return null;
+            yield return null;
+            Assert.That(pad.drum.localScale.x, Is.LessThan(1f).And.GreaterThanOrEqualTo(0.95f));
+            while (Time.realtimeSinceStartupAsDouble - start < 0.2) yield return null;
+            yield return null;
+            Assert.That(pad.drum.localScale.x, Is.EqualTo(1f));
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+        }
+
+        [UnityTest]
         public IEnumerator BranchLaneTransitionsMatchOriginalSkin()
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
