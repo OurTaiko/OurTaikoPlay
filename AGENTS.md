@@ -10,7 +10,7 @@
 
 - 工作项目：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayerUnity`；玩法参考源码：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayer`；全局场景切换架构参照相邻 MajdataPlay 的 `Assets/Scripts/Global/SceneSwitcher.cs`。两个参考项目都只读，不修改。
 - 技术栈：Unity **6000.3.25f1**、Universal 2D／URP **17.3.0**、uGUI、TextMeshPro、Input System。运行逻辑和 Editor 工具全部使用 **C#**，不引入 C++、Lua 或原模拟器的原生插件。
-- 两个场景设计画布与默认窗口均为 **1920×1080**；宽高比变化时保持设计区域比例并居中留边。贴图对齐与局部偏移使用相对锚点或尺寸比例，不能写成固定屏幕像素补丁。
+- 所有场景设计画布与默认窗口均为 **1920×1080**（SongSelect／Result 的 Viewport 带 RectMask2D）；宽高比变化时保持设计区域比例并居中留边。贴图对齐与局部偏移使用相对锚点或尺寸比例，不能写成固定屏幕像素补丁。
 - 当前只做 **Nijiiro**。素材主要来自 `Skins/YataiDONNijiiro`；缺少的资源已从 Green 直接复制补齐并打平。不实现皮肤继承、运行时回退或 Green 皮肤切换。图片保持原文件，使用 Sprite 切片；来源见 `Documentation/ImportedAssets.json`，保留 LICENSE／NOTICE 与资源权利归属。
 - 默认目标 **120 FPS**：关闭 VSync，`renderFrameInterval = 1`，`targetFrameRate = 120`。FPS 计数器每 **0.5 秒**显示实际平均帧率，暂停时仍更新；目标帧率不保证显示器实际达到 120 Hz。
 - 音符位移公式：`(判定时间 - 当前时间，秒) × BPM / 240 × SCROLL × 判定点到右边缘的距离`。当前判定点设计 X=**618**，右边缘 X=**1920**，距离 **1302**；192×192 音符的加载边界半宽为 **96**。音画偏移只改变相位，不改变速度。
@@ -25,8 +25,10 @@
 
 ### 当前完成状态与交接边界
 
-- 上一项功能提交：**`a34ee00` — `refactor(unity): make scene switching a global control`**。Test_DefaultScene 为测试入口，SceneSwitcher 为全局预制体，所有切换交由它完成。其后已完成 Shinuchi 计分及单人魂槽数值还原，连打预算使用对应尾部减去头部时间。本轮计分、魂槽与旧字段残留修复的提交主题为 `fix(unity): restore Shinuchi scoring and soul gauge rules`。
-- 提交上一项改造后工作区干净；`Assets/OurTaiko/Generated/Nijiiro SDF.asset` 本次测试后与操作前完全一致。继续保留字体资源，不覆盖、回退或顺带提交无关字体改动。本次操作前快照位于忽略目录 `TestResults/shinuchi-tail-baseline/Nijiiro-SDF.asset`；历史快照不代表最新内容。Unity 动态字体可能因测试／保存产生额外变化，操作前检查状态，恢复前确认用户没有继续修改。
+- 最新功能提交：**`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。提交后工作区仅剩用户原有的 `Assets/OurTaiko/Generated/Nijiiro SDF.asset` 未提交改动，**不要提交、覆盖或回退它**。
+- 字体资源为动态 SDF，日文字形会在测试／运行时追加并改动该文件。本轮操作前快照位于忽略目录 `TestResults/songselect-baseline/Nijiiro-SDF.asset`（md5 `32109b89…`），测试后已恢复为该快照。下次操作前先记录当前状态，恢复前确认用户没有继续修改。
+- Unity Editor 可能仍由上一会话打开（项目已安装 Pipeline 包）；先用 `unity status` 确认连接再操作，修改 C# 后刷新并确认 `EditorUtility.scriptCompilationFailed` 为 false（编译错误会让 CLI 无法连接或静默失败，看 `~/Library/Logs/Unity/Editor.log` 的 `error CS`）。耗时较长的 Editor 方法会让 CLI 报 5 秒超时，但会在 Editor 中继续执行，需轮询结果。
+- 选曲／结算的下一步候选（均未授权，需用户确认）：演奏选项／音色面板、文件夹与类别、成绩等级演出、曲目板飞入、难度决定标记弹出、皇冠光芒加算混合、支持字母扩展音符以游玩 TRIPLE HELIX Edit。
 - 当前验证针对 Unity Editor。早期曾成功构建 macOS Development Player，但 `Builds/OurTaikoPlayerUnity.app` **没有随最近各次修复重新打包**，不能视作当前版本。移动端、真机音频延迟与独立播放器长期手动游玩尚未验收。
 
 ### 运行入口与代码结构
