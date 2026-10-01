@@ -12,6 +12,7 @@ namespace OurTaiko
     public sealed class SceneSwitcher : MonoBehaviour
     {
         public const string MenuScene = "Test_DefaultScene", GameScene = "PlayScene";
+        public const string SongSelectScene = "SongSelect", ResultScene = "Result";
         public static SceneSwitcher Instance { get; private set; }
         public static Camera MainCamera { get; private set; }
         public static string CurrentScene { get; private set; } = "";
@@ -24,7 +25,15 @@ namespace OurTaiko
         [SerializeField, Min(0.01f)] float openDuration = 0.8f;
 
         public SongDefinition SelectedSong { get; private set; }
+        // TJA COURSE value chosen on the song list; null plays the SongDefinition's own course.
+        public string SelectedCourse { get; private set; }
         public bool AutoPlay { get; private set; }
+        // Scene that started the current song; Back and the result screen return there.
+        public string ReturnScene { get; private set; } = MenuScene;
+        public PlayResult LastResult { get; private set; }
+        // global_data.last_difficulty / songs_played for the single local player.
+        public int LastDifficulty { get; set; } = -1;
+        public int SongsPlayed { get; private set; }
         public bool IsSwitching { get; private set; }
         public bool IsCovered => transition != null && transition.alpha >= 0.999f;
         public bool IsInputBlocked => IsSwitching || IsCovered || (transitionTask != null && !transitionTask.IsCompleted);
@@ -85,14 +94,23 @@ namespace OurTaiko
             OnSceneChanged?.Invoke(this, (CurrentScene, LastScene));
         }
 
-        public void Play(SongDefinition song, bool autoPlay = false)
+        public void Play(SongDefinition song, bool autoPlay = false) => Play(song, null, autoPlay);
+        public void Play(SongDefinition song, string course, bool autoPlay)
         {
             if (IsInputBlocked || song == null) return;
-            SelectedSong = song; AutoPlay = autoPlay;
+            SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
+            if (CurrentScene != GameScene && CurrentScene != ResultScene && !string.IsNullOrEmpty(CurrentScene)) ReturnScene = CurrentScene;
             SwitchScene(GameScene);
         }
         public void Restart() => SwitchScene(GameScene);
-        public void ReturnToMenu() => SwitchScene(MenuScene);
+        public void ReturnToMenu() => SwitchScene(Application.CanStreamedLevelBeLoaded(ReturnScene) ? ReturnScene : MenuScene);
+        public void ShowResult(PlayResult result)
+        {
+            if (result == null || IsSwitching) return;
+            LastResult = result;
+            SongsPlayed++;
+            SwitchScene(ResultScene);
+        }
 
         public async void SwitchScene(string sceneName, bool autoFadeOut = true)
         {

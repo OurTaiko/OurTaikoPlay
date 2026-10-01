@@ -178,3 +178,13 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 按用户要求修复参考实现的 nextobj 缺陷：`ChartStatistics` 直接累加 `(EndTime - Time)×1000`，不再以连打头后的第一个对象估算时长。删除 `ChartNote.NextObjectTime` 和解析器的专用分段标记／记录逻辑。预算现在包含跨小节、源文本分行、空小节及 DELAY 的完整头尾时间差；头部 BPM／SCROLL 控制位移的规则不变，参考仓库未修改。
 
 逻辑测试验证小／大连打、隐藏小节线、分行、中途变速、独立逗号、空小节和 DELAY 的时长；另验证完整 3 秒连打的基准分不受分行影响，以及选中普通路线时仍按公共段＋达人路线完整连打预算计分。Unity Editor EditMode **101/101**、PlayMode **16/16** 全部通过。报告为 `TestResults/shinuchi-tail-editmode.json`、`TestResults/shinuchi-tail-playmode.json`；字体与本次操作前快照一致。
+
+## 选曲与结算场景（2026-10-01）
+
+- 新增 `SongSelect.unity`、`Result.unity`，入口 → 选曲 → 游玩 → 结算 → 选曲全部经由全局 SceneSwitcher；`SceneSwitcher.Play(song, course, auto)` 记录发起场景作为返回目标，`ShowResult` 交付 `PlayResult`。游玩结束时 `PlayScene.Finish` 保存成绩并切到结算，不再显示场景内结果面板（谱面加载失败仍用该面板提示）。
+- 选曲参照 `scenes/song_select.cpp`、`objects/song_select/player.cpp`、`file_navigator/navigator.cpp` 与 Nijiiro `Scripts/song_select/song_select.lua`：纵向画廊（中心 y=540，行距 135，展开间隔 120，斜移 40/行，移动 166 ms 三次缓出）；选中板在导航后等待 61 帧@120fps（508.33 ms）再按 `anim/song_board` 的 select_on 展开，收起 13 帧（216.7 ms）；进入场景与从难度返回时立即展开。难度面板淡入为 400 ms 延迟 + 483 ms；其他曲目板 800 ms 退出并 166 ms 淡出，返回时 500 ms 归位。初始光标遵循 `last_difficulty`（初值 -1 → もどる）。音色面板未移植，因此光标按 option_neiro_row 布局：首个难度 ↔ 扳手 ↔ もどる。
+- 结算参照 `scenes/result.cpp`、`objects/result/player.cpp` 与 Nijiiro `Scripts/result/*.lua`：淡入（100 ms 延迟 + 316.67 ms）→ 等待 100 帧 → 每格 7 帧填充魂槽 → 等待 100 帧 → 各行每 50 帧落定、总分再 100 帧 → 500 帧后皇冠 → 过关时再 150 帧显示评语与金色背景（未过关立即显示）。演出结束后需等待 500+500 帧才可返回，3600 帧后自动返回。ScoreRank 演出未移植，因此不插入其 2 秒状态。
+- 动画曲线全部来自原 `Scripts/anim/*.lua` 导出表（云层、富士山、成功背景、皇冠、皇冠光芒、评语气泡、数字弹出、魂火、彩虹、最高分条、曲目板、光晕、おに／裏交替），原样复制为 `.txt` 后由 `LumenClip` 线性采样并在首末行处截断。
+- TMP 的 Mobile SDF 只有在 `OUTLINE_ON` 关键字下绘制描边；新增 `Generated/Nijiiro SDF Outline.mat` 供新场景文字使用，使该着色器变体也会进入播放器构建。
+- 修复：歌曲 AudioClip 为 DecompressOnLoad 且不预载，首次 `PlayScheduled` 会同步解码约 1 秒；现于 PlayScene 初始化时（全局遮罩仍关闭）调用 `LoadAudioData`。
+- 验证：EditMode 108/108、PlayMode 18/18（`TestResults/songselect-editmode.json`、`songselect-playmode.json`）。`SongSelectResultTests` 覆盖选曲、难度光标、裏切换、自动演奏开关、游玩、结算跳过与返回，以及未过关结算；截图在 `TestResults/SongSelect*.png`、`Result*.png`。PlayMode 测试使用临时成绩文件，不写入玩家数据。

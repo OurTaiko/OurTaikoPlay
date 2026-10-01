@@ -31,6 +31,7 @@ namespace OurTaiko
         public PlaySession Session { get; private set; }
         public bool IsPaused { get; private set; }
         public bool IsFinished { get; private set; }
+        public PlayResult Result { get; private set; }
         public double SongTime => !isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioSettings.dspTime - startDsp;
         public double RenderedTime { get; private set; }
         SongDefinition song;
@@ -64,7 +65,7 @@ namespace OurTaiko
             pausePanel.SetActive(false); resultPanel.SetActive(false);
             try
             {
-                Session = new PlaySession(song.Parse());
+                Session = new PlaySession(song.Parse(switcher.SelectedSong != null ? switcher.SelectedCourse : null));
                 balloonCounter.ResetDisplay();
                 soulGauge.Initialize(Session.ClearThreshold);
                 foreach (string warning in Session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
@@ -84,6 +85,8 @@ namespace OurTaiko
                 resultText.text = "CHART COULD NOT LOAD\n<size=22>" + error.Message + "</size>";
             }
             if (IsFinished) yield break;
+            // The clip decompresses on load; do it behind the global cover, not on the first PlayScheduled.
+            if (music.clip != null && music.clip.loadState != AudioDataLoadState.Loaded) music.clip.LoadAudioData();
             while (switcher.IsInputBlocked) yield return null;
             // Start the full countdown and DSP clock only after the global cover has opened.
             startDsp = AudioSettings.dspTime + Math.Max(2, Session.Chart.Offset + 2);
@@ -191,11 +194,13 @@ namespace OurTaiko
             pausePanel.SetActive(IsPaused);
         }
         void OnApplicationFocus(bool focused) { if (!focused && Session != null && !IsPaused && !IsFinished) TogglePause(); }
+        // GameScreen::end_song: store the record, then hand the result to the Result scene.
         void Finish()
         {
-            frozenTime = SongTime; IsFinished = true; music.Stop(); resultPanel.SetActive(true);
-            string clear = Session.IsClear ? "CLEAR!" : "FINISHED";
-            resultText.text = $"{clear}\n<size=72>{Session.Score:N0}</size>\n<size=36>GOOD {Session.Good}   OK {Session.Ok}   BAD {Session.Bad}\nMAX COMBO {Session.MaxCombo}   DRUMROLL {Session.Rolls}</size>";
+            frozenTime = SongTime; IsFinished = true; music.Stop();
+            Result = PlayResult.From(Session, song.name, autoPlay);
+            ScoreStore.Shared.Save(Result);
+            switcher.ShowResult(Result);
         }
         public void Restart() => SceneSwitcher.EnsureInstance().Restart();
         public void Back() => SceneSwitcher.EnsureInstance().ReturnToMenu();

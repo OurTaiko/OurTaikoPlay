@@ -143,9 +143,11 @@ namespace OurTaiko.Tests
                 Assert.That(play.Session.BranchHistory, Is.EqualTo(new[] { BranchRoute.Master, BranchRoute.Master }));
                 Assert.That(play.Session.Bad, Is.Zero);
                 Assert.That(play.Session.Good, Is.EqualTo(play.Session.Chart.Notes.Count(n => !n.IsLong && play.Session.IsActive(n))));
-                Assert.That(play.resultPanel.activeSelf, Is.True);
+                yield return WaitForScene(SceneSwitcher.ResultScene);
+                Assert.That(SceneSwitcher.Instance.LastResult.AutoPlay && SceneSwitcher.Instance.LastResult.Bad == 0, Is.True);
+                Assert.That(Object.FindFirstObjectByType<ResultScene>().Result, Is.SameAs(SceneSwitcher.Instance.LastResult));
             }
-            play.Restart(); yield return WaitForScene(SceneSwitcher.GameScene);
+            SceneSwitcher.Instance.Restart(); yield return WaitForScene(SceneSwitcher.GameScene);
             var restarted = Object.FindFirstObjectByType<PlayScene>();
             Assert.That(restarted.Session.BranchHistory.Count, Is.Zero);
             Assert.That(restarted.Session.Score, Is.Zero);

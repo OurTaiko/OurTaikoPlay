@@ -10,6 +10,17 @@
 
 也可直接打开 `Assets/Scenes/PlayScene.unity` 运行，默认载入 TRIPLE HELIX。
 
+入口右上角的 **SONG SELECT / S** 进入 Nijiiro 选曲场景 `SongSelect.unity`；游玩结束后进入结算场景 `Result.unity`，再回到开始游玩的场景。三个场景之间的切换全部交给全局 SceneSwitcher。
+
+| 选曲按键 | 功能 |
+| --- | --- |
+| D / K（或 ← / →） | 移动曲目 / 难度光标；在おに上连按右 10 次切换裏 |
+| F / J（或 Enter） | 决定（もどる 返回曲目列表，扳手按钮切换自动演奏） |
+| A | 切换自动演奏 |
+| Esc | 返回入口 |
+
+结算画面按 F / J（或点击）跳过演出；演出结束约 8.3 秒后可再按一次返回，约 34 秒后自动返回。
+
 | 按键 | 功能 |
 | --- | --- |
 | F / J | 左 / 右咚 |
@@ -55,9 +66,16 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `Runtime/Play/SoulGaugeView.cs`：50 格魂槽、加高的黄色过关区、450 ms 新格淡入、满槽彩虹与魂火。Easy／Normal+Hard／Oni+Edit 过关阈值分别为 60%／70%／80%，与结算一致。每次彩虹帧过渡为 75 ms，8 帧循环 600 ms；失去满槽或过关状态时恢复对应样式。
 - `Runtime/Core/NoteScroll.cs`：按 BPM、SCROLL 和判定点到轨道右边缘的距离计算流速。连打头尾始终使用头部速度整体移动，长度保持恒定。
 - `Runtime/Core/SongDefinition.cs`：在 Inspector 中指定谱面 TextAsset、音乐 AudioClip、难度和音画偏移。谱面以 `.txt` 导入，内容仍是 TJA；WAVE 字段由显式 AudioClip 引用替代。
+- `SongSelect.unity`、`Runtime/Scenes/SongSelectScene.cs`：纵向曲目板（按 Navigator 的 135 px 行距、±120 px 展开间隔、每行 40 px 斜移）、选中板的 508 ms 等待与 `anim/song_board` 展开／收起、光标光晕脉动、难度小牌与おに／裏交替、试听（从 DEMOSTART 播放，离开后 330 ms 恢复选曲 BGM），以及难度选择面板（课程卡、星级、皇冠、1P 气泡、裏切换动画）。光标规则在 `Runtime/Core/DifficultyCursor.cs`，谱面信息由 `SongInfo.cs` 读取。
+- `Result.unity`、`Runtime/Scenes/ResultScene.cs`、`ResultBackground.cs`：Nijiiro 结算背景（云层按原导出时间轴漂移、过关后切换金色天空与富士山弹动）、成绩板、魂槽 0.7 倍填充、行数字逐行落定、总分、皇冠、评语气泡与最高分条。时间轴在 `Runtime/Core/ResultSequence.cs`，与原 `result_player.lua` 的帧数一致。
+- `Runtime/Core/LumenClip.cs`：读取 `Assets/OurTaiko/Animations/*.txt`（原 `Scripts/anim/*.lua` 导出表的原样副本）并线性采样，只当作数据，不运行 Lua。
+- `Runtime/Core/PlayResult.cs`、`ScoreStore.cs`：结算数据与本地最佳成绩（`Application.persistentDataPath/scores.json`）。与原 `save_score` 相同，自动演奏不保存；选曲板和难度卡显示保存的皇冠。
+- `Editor/ProjectBuilder.SongSelectResult.cs`：菜单 **OurTaiko/Create Song Select And Result Scenes**，导入新素材、生成切片与描边材质，仅在场景不存在时创建，之后可直接编辑场景。
 - `Editor/ProjectBuilder.cs`：通过 Editor API 创建初始场景和 sprite 切片。生成后不自动覆盖场景，后续直接编辑现有场景。
 
-此阶段提取的是独立的单人游玩模块。联网/成绩上传、双人、段位、完整选曲界面、3D 咚角色、原皮肤全部 Lua 特效、逐帧回放及大音符双手判定尚未移植。自动连打仍为 15 次／秒，原版随 BPM 变化的自动连打节奏尚未移植；它与 Shinuchi 基准分使用的预计连打次数是两项独立规则。
+选曲／结算尚未移植：文件夹与类别、搜索与排序、演奏选项／音色面板（扳手按钮暂作自动演奏开关）、段位、2P、成绩等级（粋／雅／極）演出、3D 咚与名牌、曲目板飞入动画、难度决定后的标记弹出，以及皇冠光芒的加算混合（目前按普通透明度绘制）。TRIPLE HELIX 的 Edit（裏）谱面使用字母扩展音符，可在选曲中选择但会显示“CHART COULD NOT LOAD”。
+
+此阶段提取的是独立的单人游玩模块。联网/成绩上传、双人、段位、3D 咚角色、原皮肤全部 Lua 特效、逐帧回放及大音符双手判定尚未移植。自动连打仍为 15 次／秒，原版随 BPM 变化的自动连打节奏尚未移植；它与 Shinuchi 基准分使用的预计连打次数是两项独立规则。
 
 全局切换顺序参考 MajdataPlay 的 `Assets/Scripts/Global/SceneSwitcher.cs`：锁定输入并通知当前场景停止游玩／音频，关闭过渡（0.9 秒），等待准备任务，异步加载，等一帧和 50 ms，再打开过渡（0.8 秒）。过渡采用相同的 OutQuint 曲线和实时时钟，本项目使用独立 uGUI 遮罩淡入淡出。`CurrentScene`、`LastScene`、`MainCamera` 和 `OnSceneChanged` 由控件统一更新。准备任务失败或取消会恢复旧场景的可见性；切换期间的重复请求不会再启动加载。
 

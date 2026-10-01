@@ -1,0 +1,2483 @@
+fileFormatVersion: 2
+guid: c76c9d8552eeb4fc5900bb79667f0832
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5163939385822470401
+    second: s_crown_dfc_0
+  - first:
+      213: 7450060887909305877
+    second: s_crown_dfc_1
+  - first:
+      213: 1503073931188801714
+    second: s_crown_dfc_2
+  - first:
+      213: -2724306778536512790
+    second: s_crown_dfc_3
+  - first:
+      213: 1486728134504750812
+    second: s_crown_dfc_4
+  - first:
+      213: 8425641068624666023
+    second: s_crown_dfc_5
+  - first:
+      213: -8410208611222385763
+    second: s_crown_dfc_6
+  - first:
+      213: -8656839253702454687
+    second: s_crown_dfc_7
+  - first:
+      213: -5318960171847228999
+    second: s_crown_dfc_8
+  - first:
+      213: 6148057716210503668
+    second: s_crown_dfc_9
+  - first:
+      213: -33468637410517064
+    second: s_crown_dfc_10
+  - first:
+      213: -9105786648009274351
+    second: s_crown_dfc_11
+  - first:
+      213: 5075295579169885332
+    second: s_crown_dfc_12
+  - first:
+      213: -498965412983196778
+    second: s_crown_dfc_13
+  - first:
+      213: -7591821602838707026
+    second: s_crown_dfc_14
+  - first:
+      213: 5308364228897062984
+    second: s_crown_dfc_15
+  - first:
+      213: 6947254352068099132
+    second: s_crown_dfc_16
+  - first:
+      213: 5423494194292802657
+    second: s_crown_dfc_17
+  - first:
+      213: -6801888844052516608
+    second: s_crown_dfc_18
+  - first:
+      213: 8951046858714247801
+    second: s_crown_dfc_19
+  - first:
+      213: -6927625296903991425
+    second: s_crown_dfc_20
+  - first:
+      213: 6078828442229833708
+    second: s_crown_dfc_21
+  - first:
+      213: -5422825150105288278
+    second: s_crown_dfc_22
+  - first:
+      213: 1361226788510698845
+    second: s_crown_dfc_23
+  - first:
+      213: 64053491078696326
+    second: s_crown_dfc_24
+  - first:
+      213: 6346549970821005084
+    second: s_crown_dfc_25
+  - first:
+      213: -1714726154298417815
+    second: s_crown_dfc_26
+  - first:
+      213: 5560529331454537613
+    second: s_crown_dfc_27
+  - first:
+      213: -6051485141963281569
+    second: s_crown_dfc_28
+  - first:
+      213: 6986778429723494322
+    second: s_crown_dfc_29
+  - first:
+      213: -102485174178482300
+    second: s_crown_dfc_30
+  - first:
+      213: 5471845769986752760
+    second: s_crown_dfc_31
+  - first:
+      213: 6675784719921949158
+    second: s_crown_dfc_32
+  - first:
+      213: -4054512753963895845
+    second: s_crown_dfc_33
+  - first:
+      213: 7559042301127071456
+    second: s_crown_dfc_34
+  - first:
+      213: 7674813633927511569
+    second: s_crown_dfc_35
+  - first:
+      213: 1151609314065295369
+    second: s_crown_dfc_36
+  - first:
+      213: -2705536481785028668
+    second: s_crown_dfc_37
+  - first:
+      213: 792564313674643644
+    second: s_crown_dfc_38
+  - first:
+      213: 2689865339999711586
+    second: s_crown_dfc_39
+  - first:
+      213: 442277335456402940
+    second: s_crown_dfc_40
+  - first:
+      213: -3603509361492397969
+    second: s_crown_dfc_41
+  - first:
+      213: -1248478468577826353
+    second: s_crown_dfc_42
+  - first:
+      213: -734676173615356999
+    second: s_crown_dfc_43
+  - first:
+      213: -2944455508644674532
+    second: s_crown_dfc_44
+  - first:
+      213: -7916893712311691296
+    second: s_crown_dfc_45
+  - first:
+      213: -7283771463987810523
+    second: s_crown_dfc_46
+  - first:
+      213: -8719533287872167034
+    second: s_crown_dfc_47
+  - first:
+      213: 2450419856744511885
+    second: s_crown_dfc_48
+  - first:
+      213: 7604389566091410997
+    second: s_crown_dfc_49
+  - first:
+      213: -3029127146627627338
+    second: s_crown_dfc_50
+  - first:
+      213: -3826979239972606211
+    second: s_crown_dfc_51
+  - first:
+      213: -1606990387025289740
+    second: s_crown_dfc_52
+  - first:
+      213: -4502802470043136869
+    second: s_crown_dfc_53
+  - first:
+      213: 510614499333589056
+    second: s_crown_dfc_54
+  - first:
+      213: -7635920096594649762
+    second: s_crown_dfc_55
+  - first:
+      213: -5029749803961800798
+    second: s_crown_dfc_56
+  - first:
+      213: 8163502129540131692
+    second: s_crown_dfc_57
+  - first:
+      213: -4551090390444280449
+    second: s_crown_dfc_58
+  - first:
+      213: -9176652238096583281
+    second: s_crown_dfc_59
+  - first:
+      213: 4586290901574398446
+    second: s_crown_dfc_60
+  - first:
+      213: 2571072895348564962
+    second: s_crown_dfc_61
+  - first:
+      213: -7153739645106235983
+    second: s_crown_dfc_62
+  - first:
+      213: -2949223410407192826
+    second: s_crown_dfc_63
+  - first:
+      213: 1081419563836861394
+    second: s_crown_dfc_64
+  - first:
+      213: -7589375305570241784
+    second: s_crown_dfc_65
+  - first:
+      213: 3531085203119109919
+    second: s_crown_dfc_66
+  - first:
+      213: -1606683678157708334
+    second: s_crown_dfc_67
+  - first:
+      213: 156090522484284215
+    second: s_crown_dfc_68
+  - first:
+      213: 1285926328618508844
+    second: s_crown_dfc_69
+  - first:
+      213: -3881007082799087780
+    second: s_crown_dfc_70
+  - first:
+      213: 1957750716545913264
+    second: s_crown_dfc_71
+  - first:
+      213: -6222872331542075653
+    second: s_crown_dfc_72
+  - first:
+      213: 5978479064256824950
+    second: s_crown_dfc_73
+  - first:
+      213: -7920202959034844081
+    second: s_crown_dfc_74
+  - first:
+      213: 3351520581541523313
+    second: s_crown_dfc_75
+  - first:
+      213: 3895077713967448712
+    second: s_crown_dfc_76
+  - first:
+      213: 3859521043122222964
+    second: s_crown_dfc_77
+  - first:
+      213: 8299719548105781614
+    second: s_crown_dfc_78
+  - first:
+      213: 7000614991003308662
+    second: s_crown_dfc_79
+  - first:
+      213: 3368652250158256305
+    second: s_crown_dfc_80
+  - first:
+      213: -9116330504214194009
+    second: s_crown_dfc_81
+  - first:
+      213: -2123047099657414046
+    second: s_crown_dfc_82
+  - first:
+      213: 5578068494127716779
+    second: s_crown_dfc_83
+  - first:
+      213: 6847054121406970494
+    second: s_crown_dfc_84
+  - first:
+      213: 2292581680192541374
+    second: s_crown_dfc_85
+  - first:
+      213: -9125946262516281429
+    second: s_crown_dfc_86
+  - first:
+      213: -7019936767218168792
+    second: s_crown_dfc_87
+  - first:
+      213: 2429729247517398783
+    second: s_crown_dfc_88
+  - first:
+      213: 2193125997857408408
+    second: s_crown_dfc_89
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: s_crown_dfc_0
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 3212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffe17620d700658b0800000000000000
+      internalID: -5163939385822470401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_1
+      rect:
+        serializedVersion: 2
+        x: 411
+        y: 3212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51e8ddac7eee36760800000000000000
+      internalID: 7450060887909305877
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_2
+      rect:
+        serializedVersion: 2
+        x: 751
+        y: 3212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b098abd6cdfbd410800000000000000
+      internalID: 1503073931188801714
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_3
+      rect:
+        serializedVersion: 2
+        x: 1091
+        y: 3212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae2742e3b61513ad0800000000000000
+      internalID: -2724306778536512790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_4
+      rect:
+        serializedVersion: 2
+        x: 1431
+        y: 3212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cde1cbe7c5be1a410800000000000000
+      internalID: 1486728134504750812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_5
+      rect:
+        serializedVersion: 2
+        x: 1771
+        y: 3212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7add05439e3ede470800000000000000
+      internalID: 8425641068624666023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_6
+      rect:
+        serializedVersion: 2
+        x: 2111
+        y: 3212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d9b8829c3dfe84b80800000000000000
+      internalID: -8410208611222385763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_7
+      rect:
+        serializedVersion: 2
+        x: 2450
+        y: 3212
+        width: 200
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 162586d809abcd780800000000000000
+      internalID: -8656839253702454687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_8
+      rect:
+        serializedVersion: 2
+        x: 2770
+        y: 3212
+        width: 240
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b1689e97e14f26b0800000000000000
+      internalID: -5318960171847228999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_9
+      rect:
+        serializedVersion: 2
+        x: 3098
+        y: 3212
+        width: 264
+        height: 359
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ff83594be9425550800000000000000
+      internalID: 6148057716210503668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_10
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 2812
+        width: 272
+        height: 363
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8bf970c9378198ff0800000000000000
+      internalID: -33468637410517064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_11
+      rect:
+        serializedVersion: 2
+        x: 372
+        y: 2812
+        width: 276
+        height: 366
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11c89e4c94fb1a180800000000000000
+      internalID: -9105786648009274351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_12
+      rect:
+        serializedVersion: 2
+        x: 710
+        y: 2812
+        width: 280
+        height: 368
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49c088e60721f6640800000000000000
+      internalID: 5075295579169885332
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_13
+      rect:
+        serializedVersion: 2
+        x: 1048
+        y: 2812
+        width: 284
+        height: 369
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6933eebb9915319f0800000000000000
+      internalID: -498965412983196778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_14
+      rect:
+        serializedVersion: 2
+        x: 1387
+        y: 2812
+        width: 286
+        height: 371
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea489a4b97e64a690800000000000000
+      internalID: -7591821602838707026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_15
+      rect:
+        serializedVersion: 2
+        x: 1726
+        y: 2812
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 840ccc924291ba940800000000000000
+      internalID: 5308364228897062984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_16
+      rect:
+        serializedVersion: 2
+        x: 2066
+        y: 2812
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3c3e4b660b996060800000000000000
+      internalID: 6947254352068099132
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_17
+      rect:
+        serializedVersion: 2
+        x: 2406
+        y: 2812
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 164473c1c3f144b40800000000000000
+      internalID: 5423494194292802657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_18
+      rect:
+        serializedVersion: 2
+        x: 2746
+        y: 2812
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 001be806226da91a0800000000000000
+      internalID: -6801888844052516608
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_19
+      rect:
+        serializedVersion: 2
+        x: 3086
+        y: 2812
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 972f98d71b1883c70800000000000000
+      internalID: 8951046858714247801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_20
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7f07012f712cdf90800000000000000
+      internalID: -6927625296903991425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_21
+      rect:
+        serializedVersion: 2
+        x: 366
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cef76add2465c5450800000000000000
+      internalID: 6078828442229833708
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_22
+      rect:
+        serializedVersion: 2
+        x: 706
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa18be0e1414eb4b0800000000000000
+      internalID: -5422825150105288278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_23
+      rect:
+        serializedVersion: 2
+        x: 1046
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d5d0de35d8c04e210800000000000000
+      internalID: 1361226788510698845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_24
+      rect:
+        serializedVersion: 2
+        x: 1386
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68d8e5e8f4093e000800000000000000
+      internalID: 64053491078696326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_25
+      rect:
+        serializedVersion: 2
+        x: 1726
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1f3d00b299731850800000000000000
+      internalID: 6346549970821005084
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_26
+      rect:
+        serializedVersion: 2
+        x: 2066
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96d98fdc5a11438e0800000000000000
+      internalID: -1714726154298417815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_27
+      rect:
+        serializedVersion: 2
+        x: 2406
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8fec7c47f7fa2d40800000000000000
+      internalID: 5560529331454537613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_28
+      rect:
+        serializedVersion: 2
+        x: 2746
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5b69b5535ec40ca0800000000000000
+      internalID: -6051485141963281569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_29
+      rect:
+        serializedVersion: 2
+        x: 3086
+        y: 2412
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b7c70cd6f506f060800000000000000
+      internalID: 6986778429723494322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_30
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 487f85ee646e39ef0800000000000000
+      internalID: -102485174178482300
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_31
+      rect:
+        serializedVersion: 2
+        x: 366
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f0c8c99cb6efeb40800000000000000
+      internalID: 5471845769986752760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_32
+      rect:
+        serializedVersion: 2
+        x: 706
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e9adeb35d625ac50800000000000000
+      internalID: 6675784719921949158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_33
+      rect:
+        serializedVersion: 2
+        x: 1046
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd3f0bac12a7bb7c0800000000000000
+      internalID: -4054512753963895845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_34
+      rect:
+        serializedVersion: 2
+        x: 1386
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e694d06cec17e860800000000000000
+      internalID: 7559042301127071456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_35
+      rect:
+        serializedVersion: 2
+        x: 1726
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11ef29f465a628a60800000000000000
+      internalID: 7674813633927511569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_36
+      rect:
+        serializedVersion: 2
+        x: 2066
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 908a4e4d1965bff00800000000000000
+      internalID: 1151609314065295369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_37
+      rect:
+        serializedVersion: 2
+        x: 2406
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4cfd75487e0047ad0800000000000000
+      internalID: -2705536481785028668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_38
+      rect:
+        serializedVersion: 2
+        x: 2746
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb87a3a4b01cffa00800000000000000
+      internalID: 792564313674643644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_39
+      rect:
+        serializedVersion: 2
+        x: 3086
+        y: 2012
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26171547642545520800000000000000
+      internalID: 2689865339999711586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_40
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfdc510b4e8432600800000000000000
+      internalID: 442277335456402940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_41
+      rect:
+        serializedVersion: 2
+        x: 366
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f607373f353cdfdc0800000000000000
+      internalID: -3603509361492397969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_42
+      rect:
+        serializedVersion: 2
+        x: 706
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc9e1b292738caee0800000000000000
+      internalID: -1248478468577826353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_43
+      rect:
+        serializedVersion: 2
+        x: 1046
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b3a6be99e7edc5f0800000000000000
+      internalID: -734676173615356999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_44
+      rect:
+        serializedVersion: 2
+        x: 1386
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c14ca46b0513327d0800000000000000
+      internalID: -2944455508644674532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_45
+      rect:
+        serializedVersion: 2
+        x: 1726
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0e753293d1b812290800000000000000
+      internalID: -7916893712311691296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_46
+      rect:
+        serializedVersion: 2
+        x: 2066
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52f21efc178daea90800000000000000
+      internalID: -7283771463987810523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_47
+      rect:
+        serializedVersion: 2
+        x: 2406
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6838f293caefdf680800000000000000
+      internalID: -8719533287872167034
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_48
+      rect:
+        serializedVersion: 2
+        x: 2746
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d89f1d770e3a10220800000000000000
+      internalID: 2450419856744511885
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_49
+      rect:
+        serializedVersion: 2
+        x: 3086
+        y: 1612
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53eb0944508388960800000000000000
+      internalID: 7604389566091410997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_50
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 1212
+        width: 288
+        height: 372
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b684cdb8e066f5d0800000000000000
+      internalID: -3029127146627627338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_51
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 1212
+        width: 286
+        height: 371
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dfe63ae48a6d3eac0800000000000000
+      internalID: -3826979239972606211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_52
+      rect:
+        serializedVersion: 2
+        x: 707
+        y: 1212
+        width: 286
+        height: 371
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4fdd3e7d1c2d2b9e0800000000000000
+      internalID: -1606990387025289740
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_53
+      rect:
+        serializedVersion: 2
+        x: 1048
+        y: 1212
+        width: 284
+        height: 370
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9cc357a205d281c0800000000000000
+      internalID: -4502802470043136869
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_54
+      rect:
+        serializedVersion: 2
+        x: 1389
+        y: 1212
+        width: 282
+        height: 369
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04841f98e21161700800000000000000
+      internalID: 510614499333589056
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_55
+      rect:
+        serializedVersion: 2
+        x: 1759
+        y: 1212
+        width: 222
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5d95350123c70690800000000000000
+      internalID: -7635920096594649762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_56
+      rect:
+        serializedVersion: 2
+        x: 2111
+        y: 1212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a724c9b33db23ab0800000000000000
+      internalID: -5029749803961800798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_57
+      rect:
+        serializedVersion: 2
+        x: 2451
+        y: 1212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6b626a4fe59a4170800000000000000
+      internalID: 8163502129540131692
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_58
+      rect:
+        serializedVersion: 2
+        x: 2791
+        y: 1212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f75ffd0176747d0c0800000000000000
+      internalID: -4551090390444280449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_59
+      rect:
+        serializedVersion: 2
+        x: 3131
+        y: 1212
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f85b5f0d86bf5a080800000000000000
+      internalID: -9176652238096583281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_60
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 812
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee1b2f89647c5af30800000000000000
+      internalID: 4586290901574398446
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_61
+      rect:
+        serializedVersion: 2
+        x: 411
+        y: 812
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e3e2ea1d294ea320800000000000000
+      internalID: 2571072895348564962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_62
+      rect:
+        serializedVersion: 2
+        x: 748
+        y: 812
+        width: 204
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b550d5e1bfc8bc90800000000000000
+      internalID: -7153739645106235983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_63
+      rect:
+        serializedVersion: 2
+        x: 1087
+        y: 812
+        width: 206
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 607c9631fe04217d0800000000000000
+      internalID: -2949223410407192826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_64
+      rect:
+        serializedVersion: 2
+        x: 1427
+        y: 812
+        width: 206
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2db67ab1d59f10f00800000000000000
+      internalID: 1081419563836861394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_65
+      rect:
+        serializedVersion: 2
+        x: 1766
+        y: 812
+        width: 208
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8033d5cae5f1da690800000000000000
+      internalID: -7589375305570241784
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_66
+      rect:
+        serializedVersion: 2
+        x: 2106
+        y: 812
+        width: 208
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f177d83a84fe00130800000000000000
+      internalID: 3531085203119109919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_67
+      rect:
+        serializedVersion: 2
+        x: 2445
+        y: 812
+        width: 210
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d3edf015b9e3b9e0800000000000000
+      internalID: -1606683678157708334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_68
+      rect:
+        serializedVersion: 2
+        x: 2785
+        y: 812
+        width: 210
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 73b1b71d08b8a2200800000000000000
+      internalID: 156090522484284215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_69
+      rect:
+        serializedVersion: 2
+        x: 3124
+        y: 812
+        width: 212
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c22e0a8ce2788d110800000000000000
+      internalID: 1285926328618508844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_70
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 412
+        width: 212
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c5f3cf2ee94e32ac0800000000000000
+      internalID: -3881007082799087780
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_71
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 412
+        width: 212
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b15c7277e35b2b10800000000000000
+      internalID: 1957750716545913264
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_72
+      rect:
+        serializedVersion: 2
+        x: 743
+        y: 412
+        width: 214
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf6e3dba59ae3a9a0800000000000000
+      internalID: -6222872331542075653
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_73
+      rect:
+        serializedVersion: 2
+        x: 1083
+        y: 412
+        width: 214
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 676432a9803d7f250800000000000000
+      internalID: 5978479064256824950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_74
+      rect:
+        serializedVersion: 2
+        x: 1423
+        y: 412
+        width: 214
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4cfabd2f59c51290800000000000000
+      internalID: -7920202959034844081
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_75
+      rect:
+        serializedVersion: 2
+        x: 1762
+        y: 412
+        width: 216
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17f6138363ef28e20800000000000000
+      internalID: 3351520581541523313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_76
+      rect:
+        serializedVersion: 2
+        x: 2102
+        y: 412
+        width: 216
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 88202993b881e0630800000000000000
+      internalID: 3895077713967448712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_77
+      rect:
+        serializedVersion: 2
+        x: 2442
+        y: 412
+        width: 216
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 477f17aa0f5cf8530800000000000000
+      internalID: 3859521043122222964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_78
+      rect:
+        serializedVersion: 2
+        x: 2782
+        y: 412
+        width: 216
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e61f53884f68e2370800000000000000
+      internalID: 8299719548105781614
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_79
+      rect:
+        serializedVersion: 2
+        x: 3121
+        y: 412
+        width: 218
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 672d6045e3e272160800000000000000
+      internalID: 7000614991003308662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_80
+      rect:
+        serializedVersion: 2
+        x: 61
+        y: 12
+        width: 218
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b0d086af5bdfbe20800000000000000
+      internalID: 3368652250158256305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_81
+      rect:
+        serializedVersion: 2
+        x: 401
+        y: 12
+        width: 218
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a85141f4b94c7180800000000000000
+      internalID: -9116330504214194009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_82
+      rect:
+        serializedVersion: 2
+        x: 741
+        y: 12
+        width: 218
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26a1f7749eb6982e0800000000000000
+      internalID: -2123047099657414046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_83
+      rect:
+        serializedVersion: 2
+        x: 1081
+        y: 12
+        width: 218
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba9d745ddb7496d40800000000000000
+      internalID: 5578068494127716779
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_84
+      rect:
+        serializedVersion: 2
+        x: 1421
+        y: 12
+        width: 218
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7a3658327f950f50800000000000000
+      internalID: 6847054121406970494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_85
+      rect:
+        serializedVersion: 2
+        x: 1762
+        y: 12
+        width: 216
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb2d17a34e2e0df10800000000000000
+      internalID: 2292581680192541374
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_86
+      rect:
+        serializedVersion: 2
+        x: 2103
+        y: 12
+        width: 214
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bafc96fb9302a5180800000000000000
+      internalID: -9125946262516281429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_87
+      rect:
+        serializedVersion: 2
+        x: 2451
+        y: 12
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82cc14414bc249e90800000000000000
+      internalID: -7019936767218168792
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_88
+      rect:
+        serializedVersion: 2
+        x: 2791
+        y: 12
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff6d6aa90e128b120800000000000000
+      internalID: 2429729247517398783
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: s_crown_dfc_89
+      rect:
+        serializedVersion: 2
+        x: 3131
+        y: 12
+        width: 198
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89507f1b97c8f6e10800000000000000
+      internalID: 2193125997857408408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      s_crown_dfc_0: -5163939385822470401
+      s_crown_dfc_1: 7450060887909305877
+      s_crown_dfc_10: -33468637410517064
+      s_crown_dfc_11: -9105786648009274351
+      s_crown_dfc_12: 5075295579169885332
+      s_crown_dfc_13: -498965412983196778
+      s_crown_dfc_14: -7591821602838707026
+      s_crown_dfc_15: 5308364228897062984
+      s_crown_dfc_16: 6947254352068099132
+      s_crown_dfc_17: 5423494194292802657
+      s_crown_dfc_18: -6801888844052516608
+      s_crown_dfc_19: 8951046858714247801
+      s_crown_dfc_2: 1503073931188801714
+      s_crown_dfc_20: -6927625296903991425
+      s_crown_dfc_21: 6078828442229833708
+      s_crown_dfc_22: -5422825150105288278
+      s_crown_dfc_23: 1361226788510698845
+      s_crown_dfc_24: 64053491078696326
+      s_crown_dfc_25: 6346549970821005084
+      s_crown_dfc_26: -1714726154298417815
+      s_crown_dfc_27: 5560529331454537613
+      s_crown_dfc_28: -6051485141963281569
+      s_crown_dfc_29: 6986778429723494322
+      s_crown_dfc_3: -2724306778536512790
+      s_crown_dfc_30: -102485174178482300
+      s_crown_dfc_31: 5471845769986752760
+      s_crown_dfc_32: 6675784719921949158
+      s_crown_dfc_33: -4054512753963895845
+      s_crown_dfc_34: 7559042301127071456
+      s_crown_dfc_35: 7674813633927511569
+      s_crown_dfc_36: 1151609314065295369
+      s_crown_dfc_37: -2705536481785028668
+      s_crown_dfc_38: 792564313674643644
+      s_crown_dfc_39: 2689865339999711586
+      s_crown_dfc_4: 1486728134504750812
+      s_crown_dfc_40: 442277335456402940
+      s_crown_dfc_41: -3603509361492397969
+      s_crown_dfc_42: -1248478468577826353
+      s_crown_dfc_43: -734676173615356999
+      s_crown_dfc_44: -2944455508644674532
+      s_crown_dfc_45: -7916893712311691296
+      s_crown_dfc_46: -7283771463987810523
+      s_crown_dfc_47: -8719533287872167034
+      s_crown_dfc_48: 2450419856744511885
+      s_crown_dfc_49: 7604389566091410997
+      s_crown_dfc_5: 8425641068624666023
+      s_crown_dfc_50: -3029127146627627338
+      s_crown_dfc_51: -3826979239972606211
+      s_crown_dfc_52: -1606990387025289740
+      s_crown_dfc_53: -4502802470043136869
+      s_crown_dfc_54: 510614499333589056
+      s_crown_dfc_55: -7635920096594649762
+      s_crown_dfc_56: -5029749803961800798
+      s_crown_dfc_57: 8163502129540131692
+      s_crown_dfc_58: -4551090390444280449
+      s_crown_dfc_59: -9176652238096583281
+      s_crown_dfc_6: -8410208611222385763
+      s_crown_dfc_60: 4586290901574398446
+      s_crown_dfc_61: 2571072895348564962
+      s_crown_dfc_62: -7153739645106235983
+      s_crown_dfc_63: -2949223410407192826
+      s_crown_dfc_64: 1081419563836861394
+      s_crown_dfc_65: -7589375305570241784
+      s_crown_dfc_66: 3531085203119109919
+      s_crown_dfc_67: -1606683678157708334
+      s_crown_dfc_68: 156090522484284215
+      s_crown_dfc_69: 1285926328618508844
+      s_crown_dfc_7: -8656839253702454687
+      s_crown_dfc_70: -3881007082799087780
+      s_crown_dfc_71: 1957750716545913264
+      s_crown_dfc_72: -6222872331542075653
+      s_crown_dfc_73: 5978479064256824950
+      s_crown_dfc_74: -7920202959034844081
+      s_crown_dfc_75: 3351520581541523313
+      s_crown_dfc_76: 3895077713967448712
+      s_crown_dfc_77: 3859521043122222964
+      s_crown_dfc_78: 8299719548105781614
+      s_crown_dfc_79: 7000614991003308662
+      s_crown_dfc_8: -5318960171847228999
+      s_crown_dfc_80: 3368652250158256305
+      s_crown_dfc_81: -9116330504214194009
+      s_crown_dfc_82: -2123047099657414046
+      s_crown_dfc_83: 5578068494127716779
+      s_crown_dfc_84: 6847054121406970494
+      s_crown_dfc_85: 2292581680192541374
+      s_crown_dfc_86: -9125946262516281429
+      s_crown_dfc_87: -7019936767218168792
+      s_crown_dfc_88: 2429729247517398783
+      s_crown_dfc_89: 2193125997857408408
+      s_crown_dfc_9: 6148057716210503668
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

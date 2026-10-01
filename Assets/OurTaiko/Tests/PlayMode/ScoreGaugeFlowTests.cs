@@ -60,10 +60,17 @@ namespace OurTaiko.Tests
                 Assert.That(play.soulGauge.IsFull, Is.True);
                 Assert.That(play.score.text, Is.EqualTo("0990200"));
                 play.SendMessage("Finish");
-                Assert.That(play.IsFinished && play.resultPanel.activeSelf, Is.True);
-                Assert.That(play.resultText.text, Does.StartWith("CLEAR!").And.Contains("990,200"));
+                Assert.That(play.IsFinished && !play.resultPanel.activeSelf, Is.True);
+                yield return WaitForScene(SceneSwitcher.ResultScene);
+                var result = Object.FindFirstObjectByType<ResultScene>().Result;
+                Assert.That(result, Is.SameAs(SceneSwitcher.Instance.LastResult));
+                Assert.That(result.Score, Is.EqualTo(990200));
+                Assert.That((result.Good, result.Ok, result.Bad), Is.EqualTo((session.Good, session.Ok, 1)));
+                Assert.That(result.GaugeState, Is.EqualTo(GaugeState.Full));
+                Assert.That(result.ResultCrown, Is.EqualTo(Crown.Clear));
+                Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Easy).score, Is.EqualTo(990200));
 
-                play.Restart();
+                SceneSwitcher.Instance.Restart();
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var restarted = Object.FindFirstObjectByType<PlayScene>();
                 Assert.That(restarted.Session.Score, Is.Zero);

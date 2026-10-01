@@ -24,6 +24,7 @@ namespace OurTaiko
         public int GaugePercent => gauge.Percent;
         public double ClearThreshold => gauge.ClearThreshold;
         public bool IsClear => gauge.IsClear;
+        public bool IsGaugeFull => gauge.IsFull;
         public BranchRoute CurrentBranch { get; private set; } = BranchRoute.Normal;
         public IReadOnlyList<BranchRoute> BranchHistory => branchHistory;
         public double LastBranchValue { get; private set; }

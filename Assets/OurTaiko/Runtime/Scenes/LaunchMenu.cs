@@ -8,7 +8,7 @@ namespace OurTaiko
     {
         public SongDefinition[] songs;
         public TMP_Text selection, mode;
-        public UnityEngine.UI.Button playButton, songButton, autoButton;
+        public UnityEngine.UI.Button playButton, songButton, autoButton, songSelectButton;
         int selected;
         bool auto;
         void Awake()
@@ -17,6 +17,7 @@ namespace OurTaiko
             playButton.onClick.AddListener(Play);
             songButton.onClick.AddListener(NextSong);
             autoButton.onClick.AddListener(ToggleAuto);
+            if (songSelectButton != null) songSelectButton.onClick.AddListener(OpenSongSelect);
             Refresh();
         }
         void Update()
@@ -27,7 +28,9 @@ namespace OurTaiko
             if (keyboard.enterKey.wasPressedThisFrame) Play();
             if (keyboard.tabKey.wasPressedThisFrame) NextSong();
             if (keyboard.aKey.wasPressedThisFrame) ToggleAuto();
+            if (keyboard.sKey.wasPressedThisFrame) OpenSongSelect();
         }
+        void OpenSongSelect() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene);
         void Play() => SceneSwitcher.EnsureInstance().Play(songs[selected], auto);
         void NextSong() { if (SceneSwitcher.EnsureInstance().IsInputBlocked) return; selected = (selected + 1) % songs.Length; Refresh(); }
         void ToggleAuto() { if (SceneSwitcher.EnsureInstance().IsInputBlocked) return; auto = !auto; Refresh(); }

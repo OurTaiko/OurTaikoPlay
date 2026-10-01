@@ -1,10 +1,10 @@
 # 标准交接摘要
 
-更新日期：2026-09-30。本文记录当前有效结论；`Documentation/PortingNotes.md` 中的早期 Green／1280×720 和简化计分／魂槽记录仅是历史，不代表当前规格。
+更新日期：2026-10-01。本文记录当前有效结论；`Documentation/PortingNotes.md` 中的早期 Green／1280×720 和简化计分／魂槽记录仅是历史，不代表当前规格。
 
 ## 1. 核心项目目标
 
-将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件和 PlayScene 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行游玩模块。SceneSwitcher 不是场景；测试入口为 Test_DefaultScene，所有运行时场景切换从全局控件开始，并交由它完成。
+将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件、SongSelect、PlayScene 与 Result 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行单人流程。SceneSwitcher 不是场景；测试入口为 Test_DefaultScene，所有运行时场景切换从全局控件开始，并交由它完成。
 
 ## 2. 当前已知事实/约束条件
 
@@ -36,6 +36,9 @@
 | 核心文件／目录 | 当前职责 |
 | --- | --- |
 | `Assets/Scenes/Test_DefaultScene.unity` | 测试入口场景；选择歌曲、自动演奏并调用全局控件进入游玩。 |
+| `Assets/Scenes/SongSelect.unity`、`Runtime/Scenes/SongSelectScene.cs` | Nijiiro 纵向曲目板、展开／收起时间轴、试听与 BGM、难度面板、裏切换；扳手按钮暂作自动演奏开关。光标规则 `Core/DifficultyCursor.cs`，谱面信息 `Core/SongInfo.cs`。 |
+| `Assets/Scenes/Result.unity`、`Runtime/Scenes/ResultScene.cs`、`ResultBackground.cs` | Nijiiro 结算背景、成绩板、魂槽填充、皇冠、评语、最高分条；时间轴 `Core/ResultSequence.cs`，数据 `Core/PlayResult.cs`，本地最佳成绩 `Core/ScoreStore.cs`。 |
+| `Assets/OurTaiko/Animations`、`Runtime/Core/LumenClip.cs` | 原 `Scripts/anim/*.lua` 导出表的原样 `.txt` 副本与纯 C# 线性采样器（只读数据，不运行 Lua）。 |
 | `Assets/Scenes/PlayScene.unity` | 已保存并可编辑的游玩 Canvas、轨道、判定圈、鼓面、魂槽、舞者、暂停与结果界面；可直接运行，默认 TRIPLE HELIX。 |
 | `Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.cs`、`Assets/OurTaiko/Resources/SceneSwitcher.prefab` | 加载首场景前自动创建的全局 uGUI 控件，跨场景保留。统一接管输入锁定、准备任务、关闭／打开过渡、异步加载、当前／上一场景及切换事件；设置 120 FPS。 |
 | `Assets/OurTaiko/Runtime/Scenes/LaunchMenu.cs` | Test_DefaultScene 的测试选曲页面，通过全局 SceneSwitcher 开始游玩。 |
@@ -50,12 +53,15 @@
 | `Assets/OurTaiko/Runtime/Play/SoulGaugeView.cs` | 50 格魂槽、过关黄色区、新格淡入、满槽彩虹与魂火。 |
 | `Assets/OurTaiko/Runtime/Play/BalloonCounterView.cs` | 7 号气球剩余次数、数字弹动、膨胀、破裂与淡出。 |
 | `Assets/OurTaiko/Runtime/Play/FpsCounter.cs`、`SpriteFlipbook.cs`、`DrumPad.cs` | 实测帧率、舞者帧动画和可点击打击按钮。 |
+| `Assets/OurTaiko/Editor/ProjectBuilder.SongSelectResult.cs` | 菜单 OurTaiko/Create Song Select And Result Scenes：导入选曲／结算素材、生成切片与 `Generated/Nijiiro SDF Outline.mat`，仅在场景缺失时创建，并对已有场景只做定向升级。 |
 | `Assets/OurTaiko/Editor/ProjectBuilder.cs`、`ProjectBuilder.Nijiiro.cs`、`ProjectBuilder.Balloon.cs`、`ProjectBuilder.SceneSwitcher.cs` | 初始生成、Nijiiro 布局／魂槽／连打切片、气球资源配置与全局控件专项迁移；按需使用专项入口，避免全量重建现有场景。 |
 | `Assets/OurTaiko/Art`、`Audio`、`Generated` | 打平的皮肤图片／音效、已生成 Sprite 切片与字体；运行时无需原仓库。 |
 | `Assets/OurTaiko/Songs` | TRIPLE HELIX（含音乐）、Input Calibration（无音乐）、Branch Training（无音乐分支练习谱）。 |
 | `README.md`、`Documentation/PortingNotes.md`、`Documentation/ImportedAssets.json` | 运行说明、详细行为依据与历次验证、素材来源记录。 |
 
-操作：F／J 为咚，D／K 为咔，Space 暂停／恢复，F1 重开，Esc 返回；入口 Tab 切歌、A 切换自动演奏、Enter 开始。游玩页也有鼠标／触控打击按钮。
+操作：F／J 为咚，D／K 为咔，Space 暂停／恢复，F1 重开，Esc 返回；入口 Tab 切歌、A 切换自动演奏、Enter 开始、S 进入选曲。选曲 D／K 移动、F／J 决定、A 自动演奏、Esc 回入口；结算 F／J 跳过／返回。游玩页也有鼠标／触控打击按钮，选曲板、难度卡和结算画面也可点击。
+
+**选曲／结算。** 流程：入口 → SongSelect → PlayScene → Result → 发起游玩的场景（`SceneSwitcher.ReturnScene`）。`PlayScene.Finish` 保存成绩（自动演奏不保存）后调用 `SceneSwitcher.ShowResult`，场景内结果面板只用于谱面加载失败。时间与布局均取自原 `song_select.cpp`／`navigator.cpp`／`player.cpp`／`result.cpp` 及 Nijiiro Lua，详见 `Documentation/PortingNotes.md`“选曲与结算场景”。TMP Mobile SDF 描边需 `OUTLINE_ON`，新场景文字使用 Outline 材质。PlayScene 现于遮罩关闭期间预载歌曲音频，避免首次 PlayScheduled 卡顿约 1 秒。
 
 ### 已完成玩法与表现的核心逻辑
 
@@ -71,7 +77,7 @@
 
 ### 验证结果与继续工作方法
 
-- 最新完整验证：Unity Editor **EditMode 101/101、PlayMode 16/16 全部通过**。报告为 `TestResults/shinuchi-tail-editmode.json`、`TestResults/shinuchi-tail-playmode.json`；`TestResults/` 不纳入版本控制，本机报告不保证随新克隆存在。
+- 最新完整验证（2026-10-01）：Unity Editor **EditMode 108/108、PlayMode 18/18 全部通过**。报告为 `TestResults/songselect-editmode.json`、`TestResults/songselect-playmode.json`；PlayMode 通过 `TestScoreStore` 使用临时成绩文件。`TestResults/` 不纳入版本控制，本机报告不保证随新克隆存在。
 - EditMode 程序集：`OurTaiko.Tests`，测试位于 `Assets/OurTaiko/Tests/EditMode/`，覆盖解析、判定、分支阈值／时序、滚动与同速约束，以及 Shinuchi 预算／取整、独立逗号／空小节、魂槽难度星级／增减／过关边界。
 - PlayMode 程序集：`OurTaiko.PlayModeTests`，`SceneFlowTests.cs` 覆盖场景流程、音乐同步、120 FPS 配置、各分支、魂槽、气球与连打，包含 1080p／720p 渲染。`GlobalSceneSwitcherTests.cs` 另覆盖跨场景预制体、等待准备任务、关闭／加载／打开顺序、timeScale=0、输入阻挡、重复请求、场景事件、手动揭示、泛型结果、失败／取消恢复及销毁取消。
 - `ScoreGaugeFlowTests.cs` 覆盖实际游玩场景的 Shinuchi HUD、魂槽过关／满槽／失去过关、气球击打不重启淡入、结算状态及重开清零。
@@ -90,4 +96,4 @@
 
 ### 明确尚未实现的范围
 
-当前不是整个原模拟器的等价移植。联网／成绩上传、双人、段位、完整选曲、3D 咚角色、全部皮肤特效、逐帧回放、大音符双手判定窗口尚未实现。大音符目前允许单侧击打；计分固定使用 Shinuchi，单人魂槽数值已按原源码还原，GEN3 计分及段位魂槽不在当前范围。自动连打仍为 **15 次／秒**，未移植原版随 BPM 变化的自动连打节奏。`s` 分数分支、`#LEVELHOLD`、BMSCROLL／HBSCROLL、字母扩展音符明确不支持；不要静默猜测其行为，也不要将这些范围自动当作用户已授权的新开发任务。
+当前不是整个原模拟器的等价移植。选曲中的文件夹／类别、搜索与排序、演奏选项与音色面板、2P、曲目板飞入、难度决定标记弹出，结算中的成绩等级（粋／雅／極）演出、3D 咚与名牌、皇冠光芒加算混合尚未移植；TRIPLE HELIX 的 Edit 谱面含字母扩展音符，无法游玩。联网／成绩上传、双人、段位、3D 咚角色、全部皮肤特效、逐帧回放、大音符双手判定窗口尚未实现。大音符目前允许单侧击打；计分固定使用 Shinuchi，单人魂槽数值已按原源码还原，GEN3 计分及段位魂槽不在当前范围。自动连打仍为 **15 次／秒**，未移植原版随 BPM 变化的自动连打节奏。`s` 分数分支、`#LEVELHOLD`、BMSCROLL／HBSCROLL、字母扩展音符明确不支持；不要静默猜测其行为，也不要将这些范围自动当作用户已授权的新开发任务。
