@@ -30,8 +30,9 @@ namespace OurTaiko
     }
 
     // Single entry point for game input, after MajdataPlay's IO/InputManager:
-    // raw keyboard events are collected as they arrive, then published once per frame
-    // (before any scene Update) as an ordered list of presses plus per-key flags.
+    // raw keyboard events are collected as they arrive; once per frame (before any scene Update)
+    // they are merged with the touch/mouse presses on registered DrumPad zones and published
+    // as one time-ordered list of presses plus per-key flags.
     public static class InputManager
     {
         static readonly int KeyCount = Enum.GetValues(typeof(InputKey)).Length;
@@ -41,6 +42,7 @@ namespace OurTaiko
         static readonly List<InputPress> frame = new List<InputPress>();
         static readonly bool[] pressedThisFrame = new bool[KeyCount];
         static readonly bool[] held = new bool[KeyCount];
+        static readonly List<DrumPad> pads = new List<DrumPad>();
         static bool installed;
 
         // Presses of this frame in the order they happened.
@@ -81,13 +83,14 @@ namespace OurTaiko
         }
         public static IReadOnlyList<Key> GetBinding(InputKey key) => bindings[(int)key];
 
-        // Non-keyboard sources (on-screen drum pads) feed the same stream; published next frame.
-        public static void Press(InputKey key) => pending.Add(new InputPress(key, InputState.currentTime));
+        // On-screen drum zones, hit-tested against touches and the mouse in OnPreUpdate.
+        internal static void RegisterPad(DrumPad pad) { if (!pads.Contains(pad)) pads.Add(pad); }
+        internal static void UnregisterPad(DrumPad pad) => pads.Remove(pad);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
-            pending.Clear(); frame.Clear();
+            pending.Clear(); frame.Clear(); pads.Clear();
             Array.Clear(pressedThisFrame, 0, KeyCount); Array.Clear(held, 0, KeyCount);
         }
 
@@ -122,25 +125,70 @@ namespace OurTaiko
         {
             frame.Clear(); frame.AddRange(pending); pending.Clear();
             Array.Clear(pressedThisFrame, 0, KeyCount);
+            Array.Clear(held, 0, KeyCount);
             foreach (var press in frame) pressedThisFrame[(int)press.Key] = true;
+            PollKeyboard();
+            PollPads();
+            SortFrame();
+        }
+
+        static void PollKeyboard()
+        {
             var keyboard = Keyboard.current;
+            if (keyboard == null) return;
             for (int i = 0; i < KeyCount; i++)
             {
-                bool down = false, pressed = false;
-                if (keyboard != null)
-                    foreach (var physical in bindings[i])
-                    {
-                        var control = keyboard[physical];
-                        down |= control.isPressed;
-                        pressed |= control.wasPressedThisFrame;
-                    }
-                held[i] = down;
-                // Fallback if an event was missed: keep the press, ordered after the recorded ones.
-                if (pressed && !pressedThisFrame[i])
+                bool pressed = false;
+                foreach (var physical in bindings[i])
                 {
-                    pressedThisFrame[i] = true;
-                    frame.Add(new InputPress((InputKey)i, InputState.currentTime));
+                    var control = keyboard[physical];
+                    held[i] |= control.isPressed;
+                    pressed |= control.wasPressedThisFrame;
                 }
+                // Fallback if an event was missed: keep the press, ordered after the recorded ones.
+                if (pressed && !pressedThisFrame[i]) AddPress((InputKey)i, InputState.currentTime);
+            }
+        }
+
+        static void PollPads()
+        {
+            if (pads.Count == 0) return;
+            var touchscreen = Touchscreen.current;
+            if (touchscreen != null)
+                foreach (var touch in touchscreen.touches)
+                    PollPointer(touch.press, touch.position.ReadValue(), touch.startTime.ReadValue());
+            var mouse = Mouse.current;
+            if (mouse != null) PollPointer(mouse.leftButton, mouse.position.ReadValue(), mouse.lastUpdateTime);
+        }
+
+        static void PollPointer(ButtonControl button, Vector2 position, double time)
+        {
+            bool pressed = button.wasPressedThisFrame;
+            if (!pressed && !button.isPressed) return;
+            foreach (var pad in pads)
+            {
+                if (!pad.Contains(position)) continue;
+                held[(int)pad.Key] = true;
+                if (pressed) AddPress(pad.Key, time);
+                return;
+            }
+        }
+
+        static void AddPress(InputKey key, double time)
+        {
+            pressedThisFrame[(int)key] = true;
+            frame.Add(new InputPress(key, time));
+        }
+
+        // Stable insertion sort: keyboard and pointer presses interleave by the time they happened.
+        static void SortFrame()
+        {
+            for (int i = 1; i < frame.Count; i++)
+            {
+                var press = frame[i];
+                int j = i - 1;
+                for (; j >= 0 && frame[j].Time > press.Time; j--) frame[j + 1] = frame[j];
+                frame[j + 1] = press;
             }
         }
     }
