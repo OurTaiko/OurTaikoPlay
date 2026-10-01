@@ -51,7 +51,7 @@
 | `Assets/OurTaiko/Runtime/Core/NoteScroll.cs` | 普通位移、对象加载时间与头尾同速的 `RollLength`。 |
 | `Assets/OurTaiko/Runtime/Core/SongDefinition.cs` | 谱面 TextAsset、音乐 AudioClip、课程与音画偏移；TJA 以 `.txt` 导入，音频由显式引用绑定。 |
 | `Assets/OurTaiko/Runtime/Play/PlayScene.cs` | 输入、DSP 歌曲时钟、`AudioSource.PlayScheduled`、暂停恢复、判定反馈、气球破裂音效、音符／身体／尾部渲染和结果显示。 |
-| `Assets/OurTaiko/Runtime/Input/InputManager.cs` | 全局输入入口（参照 MajdataPlay `IO/InputManager`）：逻辑键 `InputKey` 与物理键绑定，监听 Input System 事件保留同帧按键先后顺序，由隐藏的 `InputManagerUpdater`（执行顺序 -32000）每帧在所有场景脚本前发布 `PressesThisFrame`／`GetKeyDown`。场景脚本不得直接读 `Keyboard.current`；触控打击按钮 `DrumPad` 通过 `InputManager.Press` 注入（下一帧生效）。 |
+| `Assets/OurTaiko/Runtime/Input/InputManager.cs` | 全局输入入口（参照 MajdataPlay `IO/InputManager`）：逻辑键 `InputKey` 与物理键绑定，监听 Input System 事件保留同帧按键先后顺序，由隐藏的 `InputManagerUpdater`（执行顺序 -32000）每帧在所有场景脚本前发布 `PressesThisFrame`／`GetKeyDown`。场景脚本不得直接读 `Keyboard.current`；触控打击区 `DrumPad`（左咔／左咚／右咚／右咔四块）启用时向 InputManager 注册，由同一次每帧更新对触摸与鼠标做命中检测，与键盘按下按时间顺序合并，当帧生效。 |
 | `Assets/OurTaiko/Runtime/Play/BranchLaneView.cs` | 分支轨道色、右侧字样、升降级和过渡动画。 |
 | `Assets/OurTaiko/Runtime/Play/SoulGaugeView.cs` | 50 格魂槽、过关黄色区、新格淡入、满槽彩虹与魂火。 |
 | `Assets/OurTaiko/Runtime/Play/BalloonCounterView.cs` | 7 号气球剩余次数、数字弹动、膨胀、破裂与淡出。 |
