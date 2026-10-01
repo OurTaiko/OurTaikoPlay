@@ -36,7 +36,7 @@ namespace OurTaiko.Editor
                 foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
                 font.TryAddCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 /:.,!?+-()_★％");
             }
-            foreach (var path in new[] { "Assets/Scenes/Test_DefaultScene.unity", "Assets/Scenes/PlayScene.unity" })
+            foreach (var path in new[] { "Assets/Scenes/Test_DefaultScene.unity", "Assets/Scenes/SinglePlayScene.unity" })
             {
                 var scene = EditorSceneManager.OpenScene(path);
                 var canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
@@ -122,7 +122,7 @@ namespace OurTaiko.Editor
         public static void ApplySoulGauge()
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing the gauge.");
-            var scene = EditorSceneManager.OpenScene("Assets/Scenes/PlayScene.unity");
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
             var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
             ConfigureSoulGauge(play.noteLayer.parent.parent.parent, play);
             EditorUtility.SetDirty(play);
@@ -134,7 +134,7 @@ namespace OurTaiko.Editor
         public static void ApplyDrumrollSprites()
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing drumroll sprites.");
-            var scene = EditorSceneManager.OpenScene("Assets/Scenes/PlayScene.unity");
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
             var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
             ConfigureDrumrollSprites(play);
             EditorUtility.SetDirty(play);

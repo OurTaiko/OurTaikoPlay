@@ -26,7 +26,7 @@ namespace OurTaiko.Editor
         [MenuItem("OurTaiko/Generate Initial Scenes")]
         public static void Generate()
         {
-            if (File.Exists("Assets/Scenes/PlayScene.unity"))
+            if (File.Exists("Assets/Scenes/SinglePlayScene.unity"))
                 throw new InvalidOperationException("Scenes already exist. Edit the existing hierarchy instead of regenerating it.");
             Directory.CreateDirectory(Root + "Generated");
             Directory.CreateDirectory("Assets/Scenes");
@@ -58,7 +58,7 @@ namespace OurTaiko.Editor
             CreateMenu(new[] { triple, calibration, branchTraining });
             EditorBuildSettings.scenes = new[] {
                 new EditorBuildSettingsScene("Assets/Scenes/Test_DefaultScene.unity", true),
-                new EditorBuildSettingsScene("Assets/Scenes/PlayScene.unity", true)
+                new EditorBuildSettingsScene("Assets/Scenes/SinglePlayScene.unity", true)
             };
             EditorSettings.defaultBehaviorMode = EditorBehaviorMode.Mode2D;
             EditorSettings.serializationMode = SerializationMode.ForceText;
@@ -70,7 +70,7 @@ namespace OurTaiko.Editor
             QualitySettings.vSyncCount = 0;
             AssetDatabase.SaveAssets();
             EditorSceneManager.OpenScene("Assets/Scenes/Test_DefaultScene.unity");
-            Debug.Log("OurTaiko: Created Test_DefaultScene, PlayScene, global SceneSwitcher, songs, sprite slices and font.");
+            Debug.Log("OurTaiko: Created Test_DefaultScene, SinglePlayScene, global SceneSwitcher, songs, sprite slices and font.");
         }
 
         static SongDefinition Song(string name, string course, bool audio)
@@ -219,7 +219,7 @@ namespace OurTaiko.Editor
             AddFpsCounter(root);
             ConfigureNijiiroLayout(root, controller);
             ConfigureTouchDrum(controller);
-            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/PlayScene.unity");
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/SinglePlayScene.unity");
         }
 
         static GameObject Overlay(Transform root, string name, string caption, out TMP_Text label, out UnityEngine.UI.Button primary, out UnityEngine.UI.Button secondary)

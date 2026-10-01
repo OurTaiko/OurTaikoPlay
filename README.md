@@ -8,7 +8,7 @@
 2. 打开 `Assets/Scenes/Test_DefaultScene.unity`，点击 Unity 的 Play。
 3. 选择 TRIPLE HELIX（含音乐）、Input Calibration（原项目的无音乐校准谱）或 Branch Training（分支练习谱），点击 PLAY / 按 Enter。
 
-也可直接打开 `Assets/Scenes/PlayScene.unity` 运行，默认载入 TRIPLE HELIX。
+也可直接打开 `Assets/Scenes/SinglePlayScene.unity` 运行，默认载入 TRIPLE HELIX。
 
 入口右上角的 **SONG SELECT / S** 进入 Nijiiro 选曲场景 `SongSelect.unity`；游玩结束后进入结算场景 `Result.unity`，再回到开始游玩的场景。三个场景之间的切换全部交给全局 SceneSwitcher。
 
@@ -56,7 +56,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 - `Test_DefaultScene.unity`：测试入口，包含选曲和自动演奏按钮，由 `LaunchMenu` 调用全局控件开始游玩。
 - `Resources/SceneSwitcher.prefab`、`Runtime/Scenes/SceneSwitcher.cs`：全局切换控件，在首场景加载前自动创建，通过 `DontDestroyOnLoad` 保留。所有运行时切换统一调用 `SceneSwitcher.Instance.SwitchScene(...)` 或可等待的 `SwitchSceneAsync(...)`；`Play(song, autoPlay)`、`Restart()`、`ReturnToMenu()` 也转交同一流程。
-- `PlayScene.unity`：可在 Hierarchy 中编辑的 Canvas、音符轨道、判定圈、鼓面、魂槽、歌曲信息、舞者、暂停及结果面板。`PlayScene.cs` 连接输入、DSP 时钟、音乐和画面。
+- `SinglePlayScene.unity`：可在 Hierarchy 中编辑的 Canvas、音符轨道、判定圈、鼓面、魂槽、歌曲信息、舞者、暂停及结果面板。`PlayScene.cs` 连接输入、DSP 时钟、音乐和画面。
 - `Runtime/Core/TjaParser.cs`：纯 C# TJA 读取，支持课程选择、音符 1–9、连打/气球、BPMCHANGE、MEASURE、DELAY、SCROLL（含复数）、GOGO、BARLINE，以及三路线分支与 SECTION。每条路线从分支起点恢复时刻、BPM、SCROLL、拍号等状态。
 - `Runtime/Core/PlaySession.cs`：独立于 Unity 的判定、连击、自动演奏和分支选择，向计分与魂槽模块分发判定，再通过事件更新表现层。大音符目前允许单侧击打。
 - `Runtime/Core/ChartStatistics.cs`、`ShinuchiScore.cs`：固定谱面统计与纯 C# 真打计分规则，独立于输入、音符位移、皮肤及动画。
@@ -79,7 +79,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 全局切换顺序参考 MajdataPlay 的 `Assets/Scripts/Global/SceneSwitcher.cs`：锁定输入并通知当前场景停止游玩／音频，关闭过渡（0.9 秒），等待准备任务，异步加载，等一帧和 50 ms，再打开过渡（0.8 秒）。过渡采用相同的 OutQuint 曲线和实时时钟，本项目使用独立 uGUI 遮罩淡入淡出。`CurrentScene`、`LastScene`、`MainCamera` 和 `OnSceneChanged` 由控件统一更新。准备任务失败或取消会恢复旧场景的可见性；切换期间的重复请求不会再启动加载。
 
-需要在加载后继续初始化时，调用 `SwitchSceneAsync(sceneName, autoFadeOut: false)` 保持遮罩，再调用 `FadeOutAsync()` 揭示场景。`FadeIn`／`FadeOut` 的含义与 MajdataPlay 一致，分别关闭／打开遮罩；`SetLoadingText` 更新加载提示，`SwitchSceneAfterTaskAsync` 等待普通或带结果的 .NET Task 后再加载。游玩在遮罩打开后才开始完整倒计时。全局控件不持有额外的 EventSystem、Camera 或 AudioListener，直接运行 PlayScene 也会自动创建它。
+需要在加载后继续初始化时，调用 `SwitchSceneAsync(sceneName, autoFadeOut: false)` 保持遮罩，再调用 `FadeOutAsync()` 揭示场景。`FadeIn`／`FadeOut` 的含义与 MajdataPlay 一致，分别关闭／打开遮罩；`SetLoadingText` 更新加载提示，`SwitchSceneAfterTaskAsync` 等待普通或带结果的 .NET Task 后再加载。游玩在遮罩打开后才开始完整倒计时。全局控件不持有额外的 EventSystem、Camera 或 AudioListener，直接运行 SinglePlayScene 也会自动创建它。
 
 ## 素材来源
 
@@ -89,7 +89,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 ## 验证
 
-用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速、分支阈值／时序、Shinuchi 预算／取整和魂槽增减／边界；后者覆盖入口 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 PlayScene、音乐时间同步、分支表现与结算，以及实际场景分数、魂槽、气球与连打。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
+用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速、分支阈值／时序、Shinuchi 预算／取整和魂槽增减／边界；后者覆盖入口 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 SinglePlayScene、音乐时间同步、分支表现与结算，以及实际场景分数、魂槽、气球与连打。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
 
 ```sh
 unity test . --mode EditMode --output TestResults/editmode.xml

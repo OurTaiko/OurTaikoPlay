@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/Scenes/Test_DefaultScene.unity
     guid: 9d52f4758e7e14b33a2df03f4d5266ee
   - enabled: 1
-    path: Assets/Scenes/PlayScene.unity
+    path: Assets/Scenes/SinglePlayScene.unity
     guid: 60ff03de13116480cad53a21e477c828
   - enabled: 1
     path: Assets/Scenes/SongSelect.unity

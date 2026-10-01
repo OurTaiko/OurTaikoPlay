@@ -25,7 +25,7 @@ namespace OurTaiko.Editor
                 importer.maxTextureSize = 4096;
                 importer.SaveAndReimport();
             }
-            var scene = EditorSceneManager.OpenScene("Assets/Scenes/PlayScene.unity");
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
             ConfigureBalloonCounter(UnityEngine.Object.FindFirstObjectByType<PlayScene>());
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

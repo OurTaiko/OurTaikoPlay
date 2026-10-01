@@ -556,7 +556,7 @@ namespace OurTaiko.Tests
             play.TogglePause();
             yield return new WaitForSecondsRealtime(0.4f);
             Assert.That(play.music.time, Is.EqualTo(play.SongTime).Within(0.15));
-            Capture("PlayScene.png");
+            Capture("SinglePlayScene.png");
             play.Restart();
             yield return WaitForScene(SceneSwitcher.GameScene);
             var restarted = Object.FindFirstObjectByType<PlayScene>();
@@ -570,7 +570,7 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator PlaySceneCanBeOpenedDirectly()
+        public IEnumerator SinglePlaySceneCanBeOpenedDirectly()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;

@@ -9,12 +9,12 @@ namespace OurTaiko.Editor
     {
         const string TouchDrumPath = "global/overlay/touch_drum";
 
-        // Replaces PlayScene's four rectangular touch buttons with the original's half-drum overlay.
+        // Replaces SinglePlayScene's four rectangular touch buttons with the original's half-drum overlay.
         [MenuItem("OurTaiko/Apply Touch Drum")]
         public static void ApplyTouchDrum()
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing the touch drum.");
-            var scene = EditorSceneManager.OpenScene("Assets/Scenes/PlayScene.unity");
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
             ConfigureTouchDrum(UnityEngine.Object.FindFirstObjectByType<PlayScene>());
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

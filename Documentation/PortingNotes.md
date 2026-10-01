@@ -49,7 +49,7 @@ PyTaikoGreen 的设计宽度为 1280，判定点 X=414，移动距离为 866。�
 
 ## 默认帧率与 FPS 显示
 
-原代码已经设置 `Application.targetFrameRate = 120`，默认 Ultra 画质的 `vSyncCount` 也为 0，没有固定 60 FPS 的代码限制。部分其他画质档开启了 VSync；桌面端启用 VSync 时会覆盖 `targetFrameRate`，以屏幕刷新率控制渲染。现在 `SceneSwitcher.Awake` 明确关闭 VSync、设置每帧渲染并以 120 FPS 为目标，入口和独立打开 PlayScene 都会应用。
+原代码已经设置 `Application.targetFrameRate = 120`，默认 Ultra 画质的 `vSyncCount` 也为 0，没有固定 60 FPS 的代码限制。部分其他画质档开启了 VSync；桌面端启用 VSync 时会覆盖 `targetFrameRate`，以屏幕刷新率控制渲染。现在 `SceneSwitcher.Awake` 明确关闭 VSync、设置每帧渲染并以 120 FPS 为目标，入口和独立打开 SinglePlayScene 都会应用。
 
 两个场景左上角加入 `FpsCounter`，每 0.5 秒按实际帧数除以真实经过时间更新，不依赖歌曲时钟或 `Time.timeScale`，暂停与结果界面也持续显示。使用现有 uGUI / TMP，面板及文字不拦截点击。
 
@@ -149,7 +149,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 
 切换流程为：锁定键盘与指针输入、发出 `SceneChanging` 通知游玩冻结并停止音频，0.9 秒关闭遮罩，等待准备 Task，异步加载，等一帧和 50 ms，0.8 秒打开遮罩。采用 MajdataPlay 相同的 OutQuint 曲线和实时时钟，以纯 C# 实现 uGUI 淡入淡出；没有移入 MajdataPlay 的皮肤、灯光硬件、UniTask／LitMotion 依赖或三角网格 Shader。准备任务失败／取消时打开旧场景，销毁控件会取消未完成的切换；重复请求不发起第二次加载。
 
-`SwitchSceneAfterTaskAsync` 支持普通和带结果的 .NET Task。`autoFadeOut: false` 可保持加载后的遮罩，让目标场景完成初始化后调用 `FadeOut`／`FadeOutAsync`。接口命名遵循 MajdataPlay：`FadeIn` 关闭遮罩，`FadeOut` 打开遮罩；`SetLoadingText` 可更新提示及颜色。游玩先在遮罩后初始化，等遮罩打开再开始完整倒计时并安排 DSP 音乐起播。直接打开 PlayScene 仍可运行。
+`SwitchSceneAfterTaskAsync` 支持普通和带结果的 .NET Task。`autoFadeOut: false` 可保持加载后的遮罩，让目标场景完成初始化后调用 `FadeOut`／`FadeOutAsync`。接口命名遵循 MajdataPlay：`FadeIn` 关闭遮罩，`FadeOut` 打开遮罩；`SetLoadingText` 可更新提示及颜色。游玩先在遮罩后初始化，等遮罩打开再开始完整倒计时并安排 DSP 音乐起播。直接打开 SinglePlayScene 仍可运行。
 
 新增 `GlobalSceneSwitcherTests` 覆盖全局预制体、独立生命周期、准备任务等待、切换时遮罩和输入阻挡、timeScale=0、重复请求、当前／上一场景及相机、手动揭示、泛型结果、同场景重开、无效目标／任务失败／取消恢复与销毁取消。既有渲染测试现在明确选择活动场景的 Canvas，避免误选持久化的过渡 Canvas。
 
@@ -191,6 +191,10 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 
 ## 游玩页触控鼓（2026-10-01）
 
-PlayScene 原先的四个矩形「D / KA」「F / DON」等按钮替换为原版触控鼓外观。原版在 `OurTaiko.cpp` 中于开启 `touch_input` 时把 `global/overlay/touch_drum.png`（Nijiiro 版，1920×1080 半鼓）作为全局叠加层以 `fade=0.5` 绘制；Unity 按要求只放在 PlayScene，位于暂停／结果面板之下。按下时重启全局动画 66（Nijiiro 无全局 `animation.json`，取 PyTaikoGreen：`texture_resize` 70 ms，1.0→0.95，`reverse_delay` 0，二次缓出），以中心缩放再下移 `h/2×(1-scale)`，等价于底边中心为轴；使用真实时间，暂停时也播放。原版在其他手指仍按住时抬起一根也会重启该动画，Unity 只在按下时重启。
+游玩场景原先的四个矩形「D / KA」「F / DON」等按钮替换为原版触控鼓外观。原版在 `OurTaiko.cpp` 中于开启 `touch_input` 时把 `global/overlay/touch_drum.png`（Nijiiro 版，1920×1080 半鼓）作为全局叠加层以 `fade=0.5` 绘制；Unity 按要求只放在 SinglePlayScene，位于暂停／结果面板之下。按下时重启全局动画 66（Nijiiro 无全局 `animation.json`，取 PyTaikoGreen：`texture_resize` 70 ms，1.0→0.95，`reverse_delay` 0，二次缓出），以中心缩放再下移 `h/2×(1-scale)`，等价于底边中心为轴；使用真实时间，暂停时也播放。原版在其他手指仍按住时抬起一根也会重启该动画，Unity 只在按下时重启。
 
 判定区照搬 `input.cpp::touch_quadrant_vkey`：上半屏左右为咔；下半屏中以设计区底边中心为圆心、横纵半径为宽度 ×0.262／×0.242 的椭圆内为咚，椭圆外为咔，左右按中线划分。区域按 1920×1080 设计区比例计算，随 Canvas 缩放；与原版一样覆盖整个屏幕（含留边）。为不吞掉 PAUSE／RESTART／BACK 等 uGUI 按钮，落在 `Selectable` 上的点不计为打击。场景通过 `ProjectBuilder.ApplyTouchDrum()` 定向迁移，PlayMode 测试 `TouchDrumMatchesOriginalZonesAndSqueeze` 覆盖外观、各区域边界、按钮避让与缩放动画。
+
+## 游玩场景改名（2026-10-01）
+
+`Assets/Scenes/PlayScene.unity` 通过 `AssetDatabase.MoveAsset` 改名为 `SinglePlayScene.unity`，GUID 不变，Build Settings 由 Editor 自动更新。`SceneSwitcher.GameScene` 改为 `"SinglePlayScene"`，ProjectBuilder 各迁移入口使用新路径。场景内控制组件类 `PlayScene`（`Runtime/Play/PlayScene.cs`）未改名。本文更早的记录中的 PlayScene 场景名与 `PlayScene.png` 截图名保留为历史。
