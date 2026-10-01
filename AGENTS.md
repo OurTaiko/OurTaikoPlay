@@ -51,6 +51,7 @@
 | `Assets/OurTaiko/Runtime/Core/NoteScroll.cs` | 普通位移、对象加载时间与头尾同速的 `RollLength`。 |
 | `Assets/OurTaiko/Runtime/Core/SongDefinition.cs` | 谱面 TextAsset、音乐 AudioClip、课程与音画偏移；TJA 以 `.txt` 导入，音频由显式引用绑定。 |
 | `Assets/OurTaiko/Runtime/Play/PlayScene.cs` | 输入、DSP 歌曲时钟、`AudioSource.PlayScheduled`、暂停恢复、判定反馈、气球破裂音效、音符／身体／尾部渲染和结果显示。 |
+| `Assets/OurTaiko/Runtime/Input/InputManager.cs` | 全局输入入口（参照 MajdataPlay `IO/InputManager`）：逻辑键 `InputKey` 与物理键绑定，监听 Input System 事件保留同帧按键先后顺序，由隐藏的 `InputManagerUpdater`（执行顺序 -32000）每帧在所有场景脚本前发布 `PressesThisFrame`／`GetKeyDown`。场景脚本不得直接读 `Keyboard.current`；触控打击按钮 `DrumPad` 通过 `InputManager.Press` 注入（下一帧生效）。 |
 | `Assets/OurTaiko/Runtime/Play/BranchLaneView.cs` | 分支轨道色、右侧字样、升降级和过渡动画。 |
 | `Assets/OurTaiko/Runtime/Play/SoulGaugeView.cs` | 50 格魂槽、过关黄色区、新格淡入、满槽彩虹与魂火。 |
 | `Assets/OurTaiko/Runtime/Play/BalloonCounterView.cs` | 7 号气球剩余次数、数字弹动、膨胀、破裂与淡出。 |
@@ -61,7 +62,7 @@
 | `Assets/OurTaiko/Songs` | TRIPLE HELIX（含音乐）、Input Calibration（无音乐）、Branch Training（无音乐分支练习谱）。 |
 | `README.md`、`Documentation/PortingNotes.md`、`Documentation/ImportedAssets.json` | 运行说明、详细行为依据与历次验证、素材来源记录。 |
 
-操作：F／J 为咚，D／K 为咔，Space 暂停／恢复，F1 重开，Esc 返回；入口 Tab 切歌、A 切换自动演奏、Enter 开始、S 进入选曲。选曲 D／K 移动、F／J 决定、A 自动演奏、Esc 回入口；结算 F／J 跳过／返回。游玩页也有鼠标／触控打击按钮，选曲板、难度卡和结算画面也可点击。
+操作：F／J 为咚，D／K 为咔（游玩时同一帧只判定最早的一次打击，其余同帧打击丢弃——太鼓输入互斥），Space 暂停／恢复，F1 重开，Esc 返回；入口 Tab 切歌、A 切换自动演奏、Enter 开始、S 进入选曲。选曲 D／K 移动、F／J 决定、A 自动演奏、Esc 回入口；结算 F／J 跳过／返回。游玩页也有鼠标／触控打击按钮，选曲板、难度卡和结算画面也可点击。
 
 **选曲／结算。** 流程：入口 → SongSelect → PlayScene → Result → 发起游玩的场景（`SceneSwitcher.ReturnScene`）。`PlayScene.Finish` 保存成绩（自动演奏不保存）后调用 `SceneSwitcher.ShowResult`，场景内结果面板只用于谱面加载失败。时间与布局均取自原 `song_select.cpp`／`navigator.cpp`／`player.cpp`／`result.cpp` 及 Nijiiro Lua，详见 `Documentation/PortingNotes.md`“选曲与结算场景”。TMP Mobile SDF 描边需 `OUTLINE_ON`，新场景文字使用 Outline 材质。PlayScene 现于遮罩关闭期间预载歌曲音频，避免首次 PlayScheduled 卡顿约 1 秒。
 

@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace OurTaiko
 {
@@ -23,12 +22,10 @@ namespace OurTaiko
         void Update()
         {
             if (SceneSwitcher.Instance == null || SceneSwitcher.Instance.IsInputBlocked) return;
-            var keyboard = Keyboard.current;
-            if (keyboard == null) return;
-            if (keyboard.enterKey.wasPressedThisFrame) Play();
-            if (keyboard.tabKey.wasPressedThisFrame) NextSong();
-            if (keyboard.aKey.wasPressedThisFrame) ToggleAuto();
-            if (keyboard.sKey.wasPressedThisFrame) OpenSongSelect();
+            if (InputManager.GetKeyDown(InputKey.Confirm)) Play();
+            if (InputManager.GetKeyDown(InputKey.NextSong)) NextSong();
+            if (InputManager.GetKeyDown(InputKey.ToggleAuto)) ToggleAuto();
+            if (InputManager.GetKeyDown(InputKey.SongSelect)) OpenSongSelect();
         }
         void OpenSongSelect() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene);
         void Play() => SceneSwitcher.EnsureInstance().Play(songs[selected], auto);

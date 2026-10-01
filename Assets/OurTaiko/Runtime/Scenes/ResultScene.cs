@@ -1,7 +1,6 @@
 using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace OurTaiko
@@ -158,8 +157,7 @@ namespace OurTaiko
 
         void HandleInput()
         {
-            var keyboard = Keyboard.current;
-            bool don = keyboard != null && (keyboard.fKey.wasPressedThisFrame || keyboard.jKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame);
+            bool don = InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
             if (don) Don();
         }
 
