@@ -32,7 +32,7 @@ namespace OurTaiko
         public ComboView combo;
         public ComboAnnounceView comboAnnounce;
         public JudgeCounterView judgeCounter;
-        public TMP_Text title, subtitle, rollCounter, resultText;
+        public TMP_Text title, subtitle, resultText;
         public BranchLaneView branchLane;
         public GameObject pausePanel, resultPanel;
         public PauseMenuView pauseMenu;
@@ -246,9 +246,7 @@ namespace OurTaiko
                 balloonCounter.RecordHit(index, note.BalloonHits, Session.LongHits[index], note.EndTime,
                     SongTime - song.audioOffsetMs / 1000.0);
                 if (Session.LongHits[index] == note.BalloonHits) hitAudio.PlayOneShot(balloonPop);
-                rollCounter.text = "";
             }
-            else { rollCounter.text = "DRUMROLL  " + Session.Rolls; }
             UpdateHud();
         }
         // note_correct sends good/ok notes 1-4 and a popped balloon; check_drumroll sends one small
@@ -585,7 +583,6 @@ namespace OurTaiko
                     view.Tail.localScale = view.Body.localScale;
                 }
                 if (note.Gogo && note.Time - time < 1) gogo = true;
-                if (note.Kind == NoteKind.Kusudama && time >= note.Time) rollCounter.text = "BALLOON  " + Math.Max(0, note.BalloonHits - Session.LongHits[i]);
             }
             if (notesEntered) Restack(shownNotes, v => v.Root);
             if (mojiEntered) Restack(shownMoji, v => v.Root);

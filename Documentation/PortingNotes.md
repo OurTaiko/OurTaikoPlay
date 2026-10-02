@@ -375,4 +375,5 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 数字：分数计数器的 `score_number`（`PlayScene.scoreCounter.digits`），高 38、间距为高度 × 30/64（与分数计数器同比例），右边缘 x 300；`JudgeCounterView.Show(good, ok, bad, rolls)` 在每次判定（含连打）后由 `UpdateHud` 调用，只在数值变化时重排。
 - 结构：`JudgeCounter`（面板 Image＋`JudgeCounterView`）/`Good|Ok|Bad|Roll`/`Bar`、`Label`、`Count`（数字容器，编辑态预览 0）。迁移 `ProjectBuilder.ApplyJudgeCounter()`（菜单 OurTaiko/Apply Judge Counter），已有视图时只刷新数字 sprite；连续执行两次场景、两张生成图与 .meta 哈希不变。
 - 原调试文字 `JudgmentCounters`（GOOD/OK/BAD/ROLL）与 `PlayScene.counters` 删除（用户决定）；`NoteMojiFlowTests` 仍通过。
+- 调试文字 `RollCounter`（连打「DRUMROLL n」、9 号彩球「BALLOON n」）与 `PlayScene.rollCounter` 也删除（用户决定）；9 号彩球因此没有剩余次数显示，原版 kusudama 演出仍未移植。`SceneFlowTests` 13/13 通过（删去其中检查该文字为空的断言）。
 - 验证：`JudgeCounterFlowTests` 1/1（10 良、1 可、1 不可、3 连打显示为 10/1/1/3，右对齐与高度）；`SongSelectResultTests` 2/2（结算标签仍为整图）、`ScoreGaugeFlowTests` 1/1；截图 `TestResults/JudgeCounter.png`。

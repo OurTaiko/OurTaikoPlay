@@ -406,7 +406,6 @@ namespace OurTaiko.Tests
                 Assert.That(counter.IsVisible, Is.True);
                 Assert.That(counter.number.GetChild(0).GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo("BalloonDigit1"));
                 Assert.That(counter.number.GetChild(1).GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo("BalloonDigit0"));
-                Assert.That(play.rollCounter.text, Is.Empty);
                 play.TogglePause(); play.pausePanel.SetActive(false);
                 Capture("BalloonCounter10.png");
                 var frozenSize = ((RectTransform)counter.number.GetChild(0)).sizeDelta;

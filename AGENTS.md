@@ -35,7 +35,7 @@
 
 #### 最新完成：判定计数器（2026-10-02）
 
-`JudgeCounter`（`Play/JudgeCounterView.cs`，Viewport 中 `ComboAnnounce` 之后，左上 1P 名牌区上方 (29,50) 352×212）：按用户参考截图（街机 Nijiiro 的精简判定计数）制作，**不是**原 `judge_counter.cpp` 的百分比版（Nijiiro 无该皮肤，PyTaikoGreen 版在轨道下方且带百分比），不要还原。半透明橙色面板与白色半透明行条由 `ProjectBuilder.GenerateJudgeCounterArt()` 生成（alpha 写在 PNG 中，`Art/game/judge_counter/panel.png`、`bar.png`）；良／可／不可／連打数 标签切自结算的 `result/score/max_combo_ja`（该图因此改为 Multiple，Result 的 `judgeLabels` 改用整图切片 `ResultJudgeLabels`）；数字用分数计数器的 `score_number`（用户要求同字体），右对齐、高 38。FPS 读数移到 y 2 以免压住 連打数 行（用户选择左上位置时已知）。层级保存在场景可编辑；迁移 `ProjectBuilder.ApplyJudgeCounter()`（可重复执行，文件哈希不变）。测试 `JudgeCounterFlowTests`（进行中 PlayMode）。标签水平居中于行条。调试文字 `JudgmentCounters`（GOOD/OK/BAD/ROLL）与 `PlayScene.counters` 已删除（用户决定，由本计数器取代）。
+`JudgeCounter`（`Play/JudgeCounterView.cs`，Viewport 中 `ComboAnnounce` 之后，左上 1P 名牌区上方 (29,50) 352×212）：按用户参考截图（街机 Nijiiro 的精简判定计数）制作，**不是**原 `judge_counter.cpp` 的百分比版（Nijiiro 无该皮肤，PyTaikoGreen 版在轨道下方且带百分比），不要还原。半透明橙色面板与白色半透明行条由 `ProjectBuilder.GenerateJudgeCounterArt()` 生成（alpha 写在 PNG 中，`Art/game/judge_counter/panel.png`、`bar.png`）；良／可／不可／連打数 标签切自结算的 `result/score/max_combo_ja`（该图因此改为 Multiple，Result 的 `judgeLabels` 改用整图切片 `ResultJudgeLabels`）；数字用分数计数器的 `score_number`（用户要求同字体），右对齐、高 38。FPS 读数移到 y 2 以免压住 連打数 行（用户选择左上位置时已知）。层级保存在场景可编辑；迁移 `ProjectBuilder.ApplyJudgeCounter()`（可重复执行，文件哈希不变）。测试 `JudgeCounterFlowTests`（进行中 PlayMode）。标签水平居中于行条。调试文字 `JudgmentCounters`（GOOD/OK/BAD/ROLL）与 `PlayScene.counters` 已删除（用户决定，由本计数器取代）；调试文字 `RollCounter`（连打时「DRUMROLL n」、9 号彩球「BALLOON n」）与 `PlayScene.rollCounter` 同样删除，彩球目前没有剩余次数显示（原版 kusudama 演出未移植）。
 
 #### 此前完成：游玩连击数（2026-10-02）
 
