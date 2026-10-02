@@ -1,0 +1,111 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7833460741310287000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8987678621150909791}
+  - component: {fileID: 945802293549979484}
+  - component: {fileID: 8063786966364556106}
+  - component: {fileID: 2767643934799816664}
+  m_Layer: 0
+  m_Name: HitRing
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &8987678621150909791
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7833460741310287000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 336, y: 336}
+  m_Pivot: {x: 0, y: 1}
+--- !u!222 &945802293549979484
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7833460741310287000}
+  m_CullTransparentMesh: 1
+--- !u!114 &8063786966364556106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7833460741310287000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 2100000, guid: 2182d91d8462a49e884639657659999c, type: 2}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 21d9ecc4aacdb411184649a20dbeb98f, type: 2}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2767643934799816664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7833460741310287000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41b4cd6e19f3a470daf49203e2abeb1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.HitRingView
+  image: {fileID: 8063786966364556106}
+  good:
+  - {fileID: 21300000, guid: 21d9ecc4aacdb411184649a20dbeb98f, type: 2}
+  - {fileID: 21300000, guid: 3a86052652af44c148fe99a8e4d8c66a, type: 2}
+  - {fileID: 21300000, guid: f3dcdb5f3853145edb2cff2833b50208, type: 2}
+  - {fileID: 21300000, guid: 1fb1ce1b9719f445fbaae815fd4eb397, type: 2}
+  ok:
+  - {fileID: 21300000, guid: 2b16adc90a992464d928d91c1a954239, type: 2}
+  - {fileID: 21300000, guid: 6c7bc1429c28e403b813e9bfb4d318d3, type: 2}
+  - {fileID: 21300000, guid: 4af4327eb82a9488eb260dcdd26e9ea8, type: 2}
+  - {fileID: 21300000, guid: 6b8af3707443c4c80841f9dbcbc2296a, type: 2}
+  goodBig:
+  - {fileID: 21300000, guid: 9f9e3ecf5adf5408e86e044f8d5fe93a, type: 2}
+  - {fileID: 21300000, guid: dba53f04f5a9242ad94e0852648226c5, type: 2}
+  - {fileID: 21300000, guid: 8cc9b35438324471ab906df838f94645, type: 2}
+  - {fileID: 21300000, guid: cc5b933790a8b412e92e2d420c50ef87, type: 2}
+  okBig:
+  - {fileID: 21300000, guid: 1a5d98b0f9a6940fc9c2a4a0bb0c78e1, type: 2}
+  - {fileID: 21300000, guid: 2a01edabc595246479dd1cd5cccba203, type: 2}
+  - {fileID: 21300000, guid: 7948d5fa4c0a2416b815d3667f3057bc, type: 2}
+  - {fileID: 21300000, guid: fb2d4e333e9084e4aaf2252076ad2eb1, type: 2}

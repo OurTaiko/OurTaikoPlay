@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -8,43 +9,69 @@ namespace OurTaiko.Editor
     public static partial class ProjectBuilder
     {
         const string HitFacePrefabPath = Root + "Generated/HitFace.prefab";
+        const string HitRingPrefabPath = Root + "Generated/HitRing.prefab";
 
-        // Replaces the old HitFlash picture with an instance of the HitFace prefab in place.
-        [MenuItem("OurTaiko/Apply Hit Face Prefab")]
-        public static void ApplyHitFace()
+        // Replaces the old HitFlash picture with the HitFace prefab, adds the HitRing prefab,
+        // and puts both in Player::draw order. Existing instances keep their positions.
+        [MenuItem("OurTaiko/Apply Hit Effects")]
+        public static void ApplyHitEffects()
         {
-            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing the hit face.");
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing the hit effects.");
             var scene = EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
             var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
             var lane = play.judgment.transform.parent;
             var old = lane.Find("HitFlash") as RectTransform;
-            var existing = lane.Find("HitFace") as RectTransform;
-            var source = old != null ? old : existing;
+            var face = lane.Find("HitFace") as RectTransform;
             // Nijiiro hit_effect_* sits at skin x=510, y=2 on the lane.
-            Vector2 position = source != null ? source.anchoredPosition : new Vector2(510, -2);
-            int sibling = source != null ? source.GetSiblingIndex() : play.judgment.transform.GetSiblingIndex();
+            Vector2 facePosition = face != null ? face.anchoredPosition : old != null ? old.anchoredPosition : new Vector2(510, -2);
             if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
-            play.hitFace = PlaceHitFace(lane, position.x, -position.y);
-            play.hitFace.transform.SetSiblingIndex(sibling);
+            play.hitFace = PlaceHitFace(lane, facePosition.x, -facePosition.y);
+            var ring = lane.Find("HitRing") as RectTransform;
+            // outer_* sits at skin x=450, y=-58: the same centre as the face.
+            Vector2 ringPosition = ring != null ? ring.anchoredPosition : new Vector2(450, 58);
+            play.hitRing = PlaceHitRing(lane, ringPosition.x, -ringPosition.y);
+            OrderHitEffects(play);
             EditorUtility.SetDirty(play);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
         }
 
-        // Places (or moves) the HitFace prefab instance at skin coordinates on the lane.
-        static HitFaceView PlaceHitFace(Transform lane, float x, float y)
+        // Player::draw: lane cover, face, draw_notes (notes and their text), ring, judgment
+        // text, then draw_overlays starting with the drum.
+        static void OrderHitEffects(PlayScene play)
         {
-            var rect = lane.Find("HitFace") as RectTransform;
+            PlaceBefore(play.hitFace.transform, play.noteLayer.parent);
+            var lane = play.judgment.transform.parent;
+            PlaceBefore(play.hitRing.transform, lane.Find("Drum") ?? play.judgment.transform);
+        }
+
+        static void PlaceBefore(Transform item, Transform next)
+        {
+            int target = next.GetSiblingIndex();
+            // Moving an earlier sibling shifts the target down by one.
+            item.SetSiblingIndex(item.GetSiblingIndex() < target ? target - 1 : target);
+        }
+
+        // Places (or moves) the HitFace prefab instance at skin coordinates on the lane.
+        static HitFaceView PlaceHitFace(Transform lane, float x, float y) =>
+            PlaceInstance(lane, "HitFace", HitFacePrefab().gameObject, x, y).GetComponent<HitFaceView>();
+
+        static HitRingView PlaceHitRing(Transform lane, float x, float y) =>
+            PlaceInstance(lane, "HitRing", HitRingPrefab().gameObject, x, y).GetComponent<HitRingView>();
+
+        static RectTransform PlaceInstance(Transform lane, string name, GameObject prefab, float x, float y)
+        {
+            var rect = lane.Find(name) as RectTransform;
             if (rect == null)
             {
-                var instance = (GameObject)PrefabUtility.InstantiatePrefab(HitFacePrefab().gameObject, lane);
-                instance.name = "HitFace";
+                var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, lane);
+                instance.name = name;
                 rect = (RectTransform)instance.transform;
             }
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
             rect.anchoredPosition = new Vector2(x, -y);
-            return rect.GetComponent<HitFaceView>();
+            return rect;
         }
 
         static HitFaceView HitFacePrefab()
@@ -52,14 +79,9 @@ namespace OurTaiko.Editor
             var prefab = AssetDatabase.LoadAssetAtPath<HitFaceView>(HitFacePrefabPath);
             if (prefab != null) return prefab;
             var good = Sprite("game/hit_effect/hit_effect_good");
-            var root = new GameObject("HitFace", typeof(RectTransform));
+            var root = EffectRoot("HitFace", good, out var image);
             try
             {
-                var rect = (RectTransform)root.transform;
-                rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
-                rect.sizeDelta = good.rect.size;
-                var image = root.AddComponent<UnityEngine.UI.Image>();
-                image.sprite = good; image.raycastTarget = false;
                 var view = root.AddComponent<HitFaceView>();
                 view.image = image;
                 view.good = good;
@@ -69,6 +91,41 @@ namespace OurTaiko.Editor
                 return PrefabUtility.SaveAsPrefabAsset(root, HitFacePrefabPath).GetComponent<HitFaceView>();
             }
             finally { UnityEngine.Object.DestroyImmediate(root); }
+        }
+
+        static HitRingView HitRingPrefab()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<HitRingView>(HitRingPrefabPath);
+            if (prefab != null) return prefab;
+            // outer_*: four 336x336 frames side by side.
+            Sprite[] Frames(string name) => Enumerable.Range(0, HitRingTiming.Frames)
+                .Select(i => Slice("HitRing_" + name + i, "game/hit_effect/" + name, i * 336, 0, 336, 336)).ToArray();
+            var good = Frames("outer_good");
+            var root = EffectRoot("HitRing", good[0], out var image);
+            try
+            {
+                // draw_outer_effect uses BLEND_ADDITIVE.
+                image.material = AdditiveUiMaterial();
+                var view = root.AddComponent<HitRingView>();
+                view.image = image;
+                view.good = good;
+                view.ok = Frames("outer_ok");
+                view.goodBig = Frames("outer_good_big");
+                view.okBig = Frames("outer_ok_big");
+                return PrefabUtility.SaveAsPrefabAsset(root, HitRingPrefabPath).GetComponent<HitRingView>();
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); }
+        }
+
+        static GameObject EffectRoot(string name, Sprite sprite, out UnityEngine.UI.Image image)
+        {
+            var root = new GameObject(name, typeof(RectTransform));
+            var rect = (RectTransform)root.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
+            rect.sizeDelta = sprite.rect.size;
+            image = root.AddComponent<UnityEngine.UI.Image>();
+            image.sprite = sprite; image.raycastTarget = false;
+            return root;
         }
     }
 }

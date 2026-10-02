@@ -103,8 +103,10 @@ namespace OurTaiko.Editor
             for (int i = 1; i <= 7; i++) play.noteSprites[i] = Slice("Note" + i, "game/notes/notes_atlas", 0, 200 + (i - 1) * 192, 192, 192);
             play.noteSprites[9] = Slice("Note9", "game/notes/notes_atlas", 0, 1736, 192, 192);
             ConfigureDrumrollSprites(play);
-            PlaceHitFace(lane, 510, 2);
+            play.hitFace = PlaceHitFace(lane, 510, 2);
+            play.hitRing = PlaceHitRing(lane, 450, -58);
             PlacePicture(lane, "Judgment", "game/hit_effect/judge_good", 546, -60);
+            OrderHitEffects(play);
             var frames = Enumerable.Range(0, 19).Select(i => Sprite("background/dancer/dancer_0/0_loop/" + i)).ToArray();
             for (int i = 0; i < play.dancers.Length; i++)
             {
