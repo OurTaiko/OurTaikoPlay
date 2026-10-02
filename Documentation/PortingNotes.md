@@ -273,3 +273,12 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 未移植：3D 咚与加入云、2P 加入、其他模式板与きせかえ菜单、ALL.Net 图标；全局元素目前只在 Entry（原版选曲／结算也有部分）。TMP 描边受 Nijiiro SDF padding 9 限制，7 px 与双层粗边为近似。
 - 迁移：SceneSwitcher 新增 `EntryScene`，`MenuScene` 改为 Entry；Build Settings 首个场景为 Entry。原从菜单场景取 `SongSelectScene.songs` 的已完成测试改为先载入 SongSelect（返回目标随之为 SongSelect）。
 - 验证：EditMode `EntryTests`（流程时序、计时器语音／归零、弹动曲线），PlayMode `EntryFlowTests`（信用画面、加入、名牌／指引淡入、行淡出、邀请云、模式板开合、计时器开始、咔无效、决定白闪与淡出、切到 SongSelect），截图 `TestResults/EntryCredit.png`、`EntryModeSelect.png`。进行中 EditMode 11/11、PlayMode 3/3，已完成 PlayMode 27/27 通过。
+
+## SongSelect 与 Result 的全局元素（2026-10-02）
+
+- 来源：`song_select.cpp::draw_overlays`（计时器、ALL.Net、`coin_overlay`、指示器）、`result.cpp::draw_overlay`（fade_in 之后画 `coin_overlay` 与 ALL.Net），`coin_overlay.lua` 的分屏规则：フリープレイ 只在 ENTRY／RESULT 等（不在选曲），QR 芯片只在 ENTRY 与选曲类画面，2P 邀请云只在 ENTRY 与选曲（选曲另需 `songs_played < 2`）。Nijiiro 的 `song_select_indicator` 为 (-2000,1)，操作指引在选曲不显示；`entry_overlay` 状态芯片只在 Entry。
+- SongSelect：`GlobalOverlays` 紧排在 `CoursePanel` 之后（原版在玩家层、演奏オプション 之后画），显示计时器、QR 芯片、2P 邀请云（`SceneSwitcher.SongsPlayed < 2`）。计时器按用户决定只作占位：列表显示 100、进入难度选择显示 60，永不倒数（`ArcadeTimer` 不更新，因此无语音、无红区、不自动决定）。`ArcadeTimerView` 按显示位数动态创建数字（100 为三位）。
+- Result：フリープレイ 画在 `FadeIn` 之后、触控区之前；无 QR 芯片与邀请云。
+- 迁移入口 `ProjectBuilder.ApplyGlobalOverlays()`（菜单 OurTaiko/Apply Global Overlays），与 Entry 共用 `OverlayArt()`。重新切片只会改写 Sprite 资源的 `m_RenderDataKey`，属无意义 diff，提交前还原。
+- 字体事故：Entry 移植期间在 Editor 打开时 `git restore` 了动态字体 `Nijiiro SDF.asset`，导致已打开场景的 TMP 文字引用不存在的第 2 页图集并抛 `IndexOutOfRangeException`。已在 Editor 中重新读取字体并刷新所有场景文字；今后只在 Editor 关闭后还原该文件。
+- 验证：PlayMode `GlobalOverlayFlowTests`（选曲层级、无フリープレイ、QR 与邀请云、100／60 占位不倒数且三位数字、结算只有フリープレイ且在 FadeIn 之上），截图 `TestResults/OverlaySongSelect.png`、`OverlayCourseSelect.png`、`OverlayResult.png`；进行中 PlayMode 5/5 通过。
