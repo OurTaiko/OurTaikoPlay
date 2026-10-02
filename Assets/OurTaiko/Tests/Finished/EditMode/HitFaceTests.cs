@@ -12,19 +12,6 @@ namespace OurTaiko.Tests
         const string RingPrefabPath = "Assets/OurTaiko/Generated/HitRing.prefab";
 
         [Test]
-        public void OpacityFollowsNijiiroAnimation28()
-        {
-            Assert.That(HitFaceTiming.Opacity(0), Is.EqualTo(0.5).Within(1e-9));
-            Assert.That(HitFaceTiming.Opacity(33.35), Is.EqualTo(0.75).Within(1e-9));
-            Assert.That(HitFaceTiming.Opacity(66.7), Is.EqualTo(1).Within(1e-9));
-            Assert.That(HitFaceTiming.Opacity(200), Is.EqualTo(1).Within(1e-9));
-            Assert.That(HitFaceTiming.Opacity(283.3 + 33.35), Is.EqualTo(0.75).Within(1e-9));
-            Assert.That(HitFaceTiming.IsVisible(349.9), Is.True);
-            Assert.That(HitFaceTiming.IsVisible(350), Is.False);
-            Assert.That(HitFaceTiming.IsVisible(-1), Is.False);
-        }
-
-        [Test]
         public void RingFollowsNijiiroAnimations27And30()
         {
             Assert.That(new[] { 0.0, 54.5, 54.6, 72.7, 72.8, 90.9, 91.0, 150, 190 }.Select(HitRingTiming.Frame),

@@ -26,6 +26,7 @@ namespace OurTaiko.Editor
             Vector2 facePosition = face != null ? face.anchoredPosition : old != null ? old.anchoredPosition : new Vector2(510, -2);
             if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
             play.hitFace = PlaceHitFace(lane, facePosition.x, -facePosition.y);
+            AttachHitFaceClip();
             var ring = lane.Find("HitRing") as RectTransform;
             // outer_* sits at skin x=450, y=-58: the same centre as the face.
             Vector2 ringPosition = ring != null ? ring.anchoredPosition : new Vector2(450, 58);
@@ -83,6 +84,7 @@ namespace OurTaiko.Editor
             try
             {
                 var view = root.AddComponent<HitFaceView>();
+                AttachClip(root, HitFaceClip());
                 view.image = image;
                 view.good = good;
                 view.ok = Sprite("game/hit_effect/hit_effect_ok");
@@ -91,6 +93,30 @@ namespace OurTaiko.Editor
                 return PrefabUtility.SaveAsPrefabAsset(root, HitFacePrefabPath).GetComponent<HitFaceView>();
             }
             finally { UnityEngine.Object.DestroyImmediate(root); }
+        }
+
+        // Judgment::draw_effect uses Nijiiro animation 28: fade 0.5 -> 1 over 66.7 ms, hold 216.6 ms,
+        // back to 0.5 over 66.7 ms, then the Judgment is removed (the face switches off at 350 ms).
+        static AnimationClip HitFaceClip() => SaveClip("HitFace", 60, false, clip =>
+        {
+            const float fade = 0.0667f, hold = 0.2166f, end = fade + hold + fade;
+            LinearCurve(clip, "", typeof(UnityEngine.UI.Image), "m_Color.a", (0, 0.5f), (fade, 1), (fade + hold, 1), (end, 0.5f));
+            SteppedCurve(clip, "", typeof(UnityEngine.UI.Image), "m_Enabled", (0, 1), (end, 0));
+        });
+
+        // The HitFace prefab plays HitFace.anim through its own ClipSampler.
+        static void AttachHitFaceClip()
+        {
+            var root = PrefabUtility.LoadPrefabContents(HitFacePrefabPath);
+            try
+            {
+                var sampler = root.GetComponent<ClipSampler>();
+                var clip = HitFaceClip();
+                if (sampler != null && sampler.clip == clip) return;
+                AttachClip(root, clip);
+                PrefabUtility.SaveAsPrefabAsset(root, HitFacePrefabPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
         static HitRingView HitRingPrefab()

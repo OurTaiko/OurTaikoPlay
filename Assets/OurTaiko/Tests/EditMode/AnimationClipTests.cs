@@ -103,5 +103,20 @@ namespace OurTaiko.Tests
             }
             WithPlayScene(play => Assert.That(play.gogoTint.GetComponent<ClipSampler>().clip, Is.SameAs(clip)));
         }
+
+        [Test]
+        public void HitFaceFollowsNijiiroAnimation28()
+        {
+            var clip = Clip("HitFace");
+            Assert.That(clip.length, Is.EqualTo(0.35).Within(1e-3));
+            foreach (var (t, alpha) in new[] { (0.0, 0.5f), (0.03335, 0.75f), (0.0667, 1f), (0.2, 1f), (0.2833 + 0.03335, 0.75f), (0.3499, 0.5f) })
+            {
+                Assert.That(Sampled(clip, t, go => go.GetComponent<UnityEngine.UI.Image>().color.a), Is.EqualTo(alpha).Within(1e-3), $"{t} s");
+                Assert.That(Sampled(clip, t, go => go.GetComponent<UnityEngine.UI.Image>().enabled), Is.True, $"{t} s");
+            }
+            Assert.That(Sampled(clip, 0.35, go => go.GetComponent<UnityEngine.UI.Image>().enabled), Is.False);
+            var prefab = AssetDatabase.LoadAssetAtPath<HitFaceView>("Assets/OurTaiko/Generated/HitFace.prefab");
+            Assert.That(prefab.GetComponent<ClipSampler>().clip, Is.SameAs(clip));
+        }
     }
 }
