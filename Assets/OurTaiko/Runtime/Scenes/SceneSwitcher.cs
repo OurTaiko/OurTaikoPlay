@@ -14,8 +14,10 @@ namespace OurTaiko
     // Global UI control, created before the first scene and retained across every load.
     public sealed class SceneSwitcher : MonoBehaviour
     {
-        public const string MenuScene = "Test_DefaultScene", GameScene = "SinglePlayScene";
+        public const string GameScene = "SinglePlayScene";
         public const string SongSelectScene = "SongSelect", ResultScene = "Result";
+        // The first scene and where Back falls back to; the song list until an Entry scene is ported.
+        public const string MenuScene = SongSelectScene;
         public const string SongLoadingScene = "SongLoadingScene";
         public static SceneSwitcher Instance { get; private set; }
         public static Camera MainCamera { get; private set; }

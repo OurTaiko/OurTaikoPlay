@@ -18,7 +18,7 @@ namespace OurTaiko.Tests
             var curtain = switcher.Curtain;
             Assert.That(curtain, Is.Not.Null, "The SceneSwitcher prefab carries the song loading curtain.");
             Assert.That(curtain.IsVisible, Is.False);
-            var song = Object.FindFirstObjectByType<LaunchMenu>().songs.Single(s => s.name == "TripleHelix");
+            var song = Object.FindFirstObjectByType<SongSelectScene>().songs.Single(s => s.name == "TripleHelix");
             if (song.music.loadState == AudioDataLoadState.Loaded) song.music.UnloadAudioData();
 
             switcher.Play(song);

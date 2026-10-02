@@ -31,11 +31,11 @@ namespace OurTaiko.Editor
             if (!File.Exists(ResultPath)) CreateResultScene();
             var outline = OutlineMaterial();
             UpgradeStage(SongSelectPath, outline); UpgradeStage(ResultPath, outline);
-            var scenes = EditorBuildSettings.scenes.ToList();
-            foreach (var path in new[] { SongSelectPath, ResultPath })
-                if (!scenes.Any(s => s.path == path)) scenes.Add(new EditorBuildSettingsScene(path, true));
+            // SongSelect is the first scene (SceneSwitcher.MenuScene) until an Entry scene is ported.
+            var scenes = EditorBuildSettings.scenes.Where(s => s.path != SongSelectPath).ToList();
+            scenes.Insert(0, new EditorBuildSettingsScene(SongSelectPath, true));
+            if (!scenes.Any(s => s.path == ResultPath)) scenes.Add(new EditorBuildSettingsScene(ResultPath, true));
             EditorBuildSettings.scenes = scenes.ToArray();
-            AddSongSelectEntry();
             AssetDatabase.SaveAssets();
             Debug.Log("OurTaiko: SongSelect and Result scenes are ready and listed in Build Settings.");
         }
@@ -153,7 +153,7 @@ namespace OurTaiko.Editor
             }
             controller.wheel = Rect("Wheel", root, 0, 0, 1920, 1080);
             controller.coursePanel = Rect("CoursePanel", root, 0, 0, 1920, 1080);
-            Label(root, "KeyHelp", "D / K  えらぶ     F / J  けってい     A  オート     ESC  もどる", 0, 1020, 1920, 48, 26);
+            Label(root, "KeyHelp", "D / K  えらぶ     F / J  けってい     A  オート", 0, 1020, 1920, 48, 26);
             AddStageFps(root);
 
             controller.genreBackgrounds = Frames("song_select/box/background", 10);
@@ -272,23 +272,6 @@ namespace OurTaiko.Editor
             controller.messageVoices = new[] { "max_fail_voice_1p", "fail_voice_1p", "clear_voice_1p", "max_clear_voice_1p" }
                 .Select(n => Clip("result/" + n)).ToArray();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), ResultPath);
-        }
-
-        // Test_DefaultScene keeps its quick-play menu and gains an entry into the song list.
-        static void AddSongSelectEntry()
-        {
-            var scene = EditorSceneManager.OpenScene(DefaultScenePath);
-            var menu = UnityEngine.Object.FindFirstObjectByType<LaunchMenu>();
-            if (menu.songSelectButton == null)
-            {
-                var root = UnityEngine.Object.FindFirstObjectByType<Canvas>().transform.Find("Viewport1920x1080");
-                font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
-                menu.songSelectButton = Button(root, "SongSelectButton", "SONG SELECT  /  S", 1500, 40, 380, 72, new Color32(216, 65, 42, 255));
-                menu.songSelectButton.GetComponentInChildren<TMP_Text>().fontSize = 30;
-                EditorUtility.SetDirty(menu);
-                EditorSceneManager.MarkSceneDirty(scene);
-                EditorSceneManager.SaveScene(scene);
-            }
         }
     }
 }

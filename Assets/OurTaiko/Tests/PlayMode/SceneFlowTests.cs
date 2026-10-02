@@ -91,7 +91,7 @@ namespace OurTaiko.Tests
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
-            var menu = Object.FindFirstObjectByType<LaunchMenu>();
+            var menu = Object.FindFirstObjectByType<SongSelectScene>();
             var song = menu.songs.Single(s => s.name == "BranchTraining");
             SceneSwitcher.Instance.Play(song, expected == BranchRoute.Master);
             yield return WaitForScene(SceneSwitcher.GameScene);
@@ -211,7 +211,7 @@ namespace OurTaiko.Tests
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
-            var menu = Object.FindFirstObjectByType<LaunchMenu>();
+            var menu = Object.FindFirstObjectByType<SongSelectScene>();
             SceneSwitcher.Instance.Play(menu.songs.Single(s => s.name == "BranchTraining"), true);
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindFirstObjectByType<PlayScene>();
@@ -585,13 +585,12 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator MenuPlayPauseResumeRestartAndReturn()
+        public IEnumerator SongSelectPlayPauseResumeRestartAndReturn()
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
-            var menu = Object.FindFirstObjectByType<LaunchMenu>();
-            Assert.That(menu, Is.Not.Null);
-            Capture("MenuScene.png");
+            var menu = Object.FindFirstObjectByType<SongSelectScene>();
+            Assert.That(menu, Is.Not.Null, "SongSelect is the menu scene.");
             SceneSwitcher.Instance.Play(menu.songs[0], true);
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindFirstObjectByType<PlayScene>();

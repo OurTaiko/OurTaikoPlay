@@ -55,11 +55,7 @@ namespace OurTaiko.Editor
             var branchTraining = Song("BranchTraining", "Oni", false);
             CreatePlay(triple);
             CreateSceneSwitcherPrefab();
-            CreateMenu(new[] { triple, calibration, branchTraining });
-            EditorBuildSettings.scenes = new[] {
-                new EditorBuildSettingsScene("Assets/Scenes/Test_DefaultScene.unity", true),
-                new EditorBuildSettingsScene("Assets/Scenes/SinglePlayScene.unity", true)
-            };
+            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene("Assets/Scenes/SinglePlayScene.unity", true) };
             EditorSettings.defaultBehaviorMode = EditorBehaviorMode.Mode2D;
             EditorSettings.serializationMode = SerializationMode.ForceText;
             PlayerSettings.companyName = "OurTaiko";
@@ -69,8 +65,8 @@ namespace OurTaiko.Editor
             PlayerSettings.runInBackground = true;
             QualitySettings.vSyncCount = 0;
             AssetDatabase.SaveAssets();
-            EditorSceneManager.OpenScene("Assets/Scenes/Test_DefaultScene.unity");
-            Debug.Log("OurTaiko: Created Test_DefaultScene, SinglePlayScene, global SceneSwitcher, songs, sprite slices and font.");
+            EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
+            Debug.Log("OurTaiko: Created SinglePlayScene, global SceneSwitcher, songs, sprite slices and font.");
         }
 
         static SongDefinition Song(string name, string course, bool audio)
@@ -226,25 +222,6 @@ namespace OurTaiko.Editor
             primary = Button(shade.transform, "Primary", "RESTART", 390, 484, 240, 58, new Color32(216, 65, 42, 255));
             secondary = Button(shade.transform, "Back", "BACK", 650, 484, 240, 58, new Color32(35, 121, 141, 255));
             return shade.gameObject;
-        }
-
-        static void CreateMenu(SongDefinition[] songs)
-        {
-            var root = NewScene(); Background(root);
-            var menu = new GameObject("LaunchMenu").AddComponent<LaunchMenu>(); menu.songs = songs;
-            Panel(root, "MenuPanel", 220, 90, 840, 520, new Color32(28, 29, 32, 238));
-            Label(root, "Heading", "OURTAIKO", 280, 120, 720, 75, 64);
-            Label(root, "Caption", "PLAY SCENE", 280, 195, 720, 34, 24);
-            menu.selection = Label(root, "SelectedSong", "", 280, 262, 720, 94, 36);
-            menu.playButton = Button(root, "PlayButton", "PLAY  /  ENTER", 390, 383, 500, 62, new Color32(216, 65, 42, 255));
-            menu.songButton = Button(root, "SongButton", "CHANGE SONG  /  TAB", 310, 468, 320, 48, new Color32(43, 98, 117, 255));
-            menu.autoButton = Button(root, "AutoButton", "", 650, 468, 320, 48, new Color32(74, 86, 66, 255));
-            menu.mode = menu.autoButton.GetComponentInChildren<TMP_Text>();
-            Label(root, "Controls", "F / J  DON     D / K  KA     SPACE  PAUSE\nF1  RESTART     ESC  BACK     A  AUTO", 270, 535, 740, 55, 19);
-            Label(root, "FooterCredit", "OurTaikoPlayer  /  Nijiiro", 0, 674, 1280, 30, 19);
-            AddFpsCounter(root);
-            ConfigureNijiiroLayout(root, null);
-            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/Test_DefaultScene.unity");
         }
 
         public static void AddBranchIndicator(Transform root, PlayScene controller)

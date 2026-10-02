@@ -9,43 +9,6 @@ namespace OurTaiko.Editor
     public static partial class ProjectBuilder
     {
         const string SwitcherPrefab = Root + "Resources/SceneSwitcher.prefab";
-        const string DefaultScenePath = "Assets/Scenes/Test_DefaultScene.unity";
-        const string LegacyMenuPath = "Assets/Scenes/SceneSwitcher.unity";
-
-        // Targeted migration: keep the authored menu and all gameplay scene objects intact.
-        [MenuItem("OurTaiko/Migrate Global SceneSwitcher")]
-        public static void MigrateGlobalSceneSwitcher()
-        {
-            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before migrating scenes.");
-            for (int i = 0; i < EditorSceneManager.sceneCount; i++)
-                if (EditorSceneManager.GetSceneAt(i).isDirty)
-                    throw new InvalidOperationException("Save the current scene edits before migrating.");
-
-            CreateSceneSwitcherPrefab();
-            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(LegacyMenuPath) != null)
-            {
-                if (AssetDatabase.LoadAssetAtPath<SceneAsset>(DefaultScenePath) != null)
-                    throw new InvalidOperationException("Both the old and new entry scene exist; cannot rename safely.");
-                string error = AssetDatabase.MoveAsset(LegacyMenuPath, DefaultScenePath);
-                if (!string.IsNullOrEmpty(error)) throw new InvalidOperationException(error);
-            }
-            var scene = EditorSceneManager.OpenScene(DefaultScenePath);
-            foreach (var root in scene.GetRootGameObjects())
-            {
-                var legacy = root.GetComponent<SceneSwitcher>();
-                if (legacy == null) continue;
-                if (root.GetComponents<Component>().Length == 2 && root.transform.childCount == 0)
-                    UnityEngine.Object.DestroyImmediate(root);
-                else UnityEngine.Object.DestroyImmediate(legacy);
-            }
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
-            var buildScenes = EditorBuildSettings.scenes;
-            foreach (var entry in buildScenes)
-                if (entry.path == LegacyMenuPath) entry.path = DefaultScenePath;
-            EditorBuildSettings.scenes = buildScenes;
-            Debug.Log("OurTaiko: Test_DefaultScene now uses the global Resources/SceneSwitcher prefab.");
-        }
 
         static void CreateSceneSwitcherPrefab()
         {
