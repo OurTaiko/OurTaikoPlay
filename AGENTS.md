@@ -4,7 +4,7 @@
 
 ## 1. 核心项目目标
 
-将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件、SongSelect、SongLoadingScene、SinglePlayScene 与 Result 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行单人流程。SceneSwitcher 不是场景；入口为 SongSelect（Build Settings 首个场景、`SceneSwitcher.MenuScene`；2026-10-02 用户要求删除 Test_DefaultScene 测试入口及 LaunchMenu），所有运行时场景切换从全局控件开始，并交由它完成。
+将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件、Entry、SongSelect、SongLoadingScene、SinglePlayScene 与 Result 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行单人流程。SceneSwitcher 不是场景；入口为 Entry（Build Settings 首个场景、`SceneSwitcher.MenuScene`；2026-10-02 删除 Test_DefaultScene 测试入口及 LaunchMenu，随后移植 Entry），所有运行时场景切换从全局控件开始，并交由它完成。
 
 ## 2. 当前已知事实/约束条件
 
@@ -30,7 +30,7 @@
 
 ### 当前完成状态与交接边界
 
-- 最新提交：`13f2b80` — `refactor(scenes): remove Test_DefaultScene and start from SongSelect`（2026-10-02，删除测试入口，SongSelect 为首个场景，见 `Documentation/PortingNotes.md`「删除 Test_DefaultScene」）。其前为 `a067014` — `feat(ui): add Nijiiro nameplate, PlayerInfoController and score counter`（2026-10-02，名牌、全局 `PlayerInfoController` 与游玩分数计数器，见下文「名牌与分数计数器」），随后的 docs 提交补全本文。其前为 `222f8f2` — `feat(play): fly hit notes to the soul badge with gauge hit effect`（见下文「音符飞向魂槽与 GaugeHitEffect」），随后的 docs 提交补全本文。再前为 `6a78a04` — `feat(scenes): add Nijiiro song loading curtain and SongLoadingScene`（见下文「选曲加载幕布」）。其前为 `feat(play): port note moji lane`（音符文字，见下文「音符文字（moji）」）。其前为音符显隐／层级修复 `dfd5e56`、`5faadfe`、`d6cd16b`、`0e2cbe5`（见下文「音符显隐与层级」）。更早为 **`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
+- 最新提交：`df58cb5` — `feat(scenes): port the Nijiiro Entry scene with global arcade overlays`（2026-10-02，见下文「Entry」）。其前为 `abd46ba`（测试分为进行中／已完成程序集）与 `13f2b80` — `refactor(scenes): remove Test_DefaultScene and start from SongSelect`（2026-10-02，删除测试入口，SongSelect 为首个场景，见 `Documentation/PortingNotes.md`「删除 Test_DefaultScene」）。其前为 `a067014` — `feat(ui): add Nijiiro nameplate, PlayerInfoController and score counter`（2026-10-02，名牌、全局 `PlayerInfoController` 与游玩分数计数器，见下文「名牌与分数计数器」），随后的 docs 提交补全本文。其前为 `222f8f2` — `feat(play): fly hit notes to the soul badge with gauge hit effect`（见下文「音符飞向魂槽与 GaugeHitEffect」），随后的 docs 提交补全本文。再前为 `6a78a04` — `feat(scenes): add Nijiiro song loading curtain and SongLoadingScene`（见下文「选曲加载幕布」）。其前为 `feat(play): port note moji lane`（音符文字，见下文「音符文字（moji）」）。其前为音符显隐／层级修复 `dfd5e56`、`5faadfe`、`d6cd16b`、`0e2cbe5`（见下文「音符显隐与层级」）。更早为 **`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
 - `Assets/OurTaiko/Generated/Nijiiro SDF.asset` 是动态 SDF 字体，Unity 会在打开项目、运行测试或保存时自动改写它（用户确认属于 Unity 自身行为，并非用户修改）。出现该 diff 时**不要提交**；收尾时用 `git restore "Assets/OurTaiko/Generated/Nijiiro SDF.asset"` 还原为已提交版本（Editor 打开时它可能被再次写入，必要时关闭 Editor 后再还原）。不要用旧的 TestResults 快照覆盖它。
 - Unity Editor 可能仍由上一会话打开（项目已安装 Pipeline 包）；先用 `unity status` 确认连接再操作，修改 C# 后刷新并确认 `EditorUtility.scriptCompilationFailed` 为 false（编译错误会让 CLI 无法连接或静默失败，看 `~/Library/Logs/Unity/Editor.log` 的 `error CS`）。耗时较长的 Editor 方法会让 CLI 报 5 秒超时，但会在 Editor 中继续执行，需轮询结果。
 - 选曲／结算的下一步候选（均未授权，需用户确认）：文件夹与类别、成绩等级演出、曲目板飞入、难度决定标记弹出、皇冠光芒加算混合、支持字母扩展音符以游玩 TRIPLE HELIX Edit。
@@ -43,6 +43,8 @@
 
 | 核心文件／目录 | 当前职责 |
 | --- | --- |
+| `Assets/Scenes/Entry.unity`、`Runtime/Scenes/EntryScene.cs`、`EntryViews.cs`、`Runtime/Core/EntryFlow.cs` | Nijiiro Entry（街机投币模式）：街景背景、「１人プレイ／２人プレイ 太鼓をたたいてスタート！」两行、1P 加入后名牌与操作指引淡入、演奏ゲーム 模式板（`mode_board` 时间轴）、决定后进入 SongSelect。画面在 `Awake` 中由代码构建。迁移入口 `ProjectBuilder.CreateEntryScene()`（菜单 OurTaiko/Create Entry Scene）。 |
+| `Runtime/Scenes/GlobalOverlays.cs`、`Runtime/Core/ArcadeTimer.cs` | 全局街机界面元素：60 秒计时器（30／10／5 秒语音、10 秒内红色与弹动）、左上操作指引（`global/indicator` 决定循环）、フリープレイ／QR 芯片／2P 邀请云（`coin_overlay`）、段位道場／1プレイ4曲／IC Card 状态芯片（`entry_overlay`）。目前只放在 Entry。 |
 | `Assets/Scenes/SongSelect.unity`、`Runtime/Scenes/SongSelectScene.cs` | Nijiiro 纵向曲目板、展开／收起时间轴、试听与 BGM、难度面板、裏切换；扳手按钮打开演奏オプション。光标规则 `Core/DifficultyCursor.cs`，谱面信息 `Core/SongInfo.cs`。 |
 | `Runtime/Core/PlayOptions.cs`、`OptionMenu.cs`、`Runtime/Scenes/OptionPanel.cs` | 演奏オプション：设置与 `options.json` 持久化、速度档位、`ChartModifiers`（あべこべ／ランダム／はやさ／ドロン）；7 行面板逻辑与滑入滑出；Nijiiro 面板绘制和触控区。游玩侧 `Play/HitSoundLibrary.cs`（`Generated/HitSounds.asset`，21 套音色）与 `Play/ModifierBadgeView.cs`（轨道徽章）。迁移入口 `ProjectBuilder.ApplyPlayOptions()`。 |
 | `Assets/Scenes/Result.unity`、`Runtime/Scenes/ResultScene.cs`、`ResultBackground.cs` | Nijiiro 结算背景、成绩板、魂槽填充、皇冠、评语、最高分条；时间轴 `Core/ResultSequence.cs`，数据 `Core/PlayResult.cs`，本地最佳成绩 `Core/ScoreStore.cs`。 |
@@ -72,7 +74,7 @@
 | `Assets/OurTaiko/Songs` | TRIPLE HELIX（含音乐）、Input Calibration（无音乐）、Branch Training（无音乐分支练习谱）。 |
 | `README.md`、`Documentation/PortingNotes.md`、`Documentation/ImportedAssets.json` | 运行说明、详细行为依据与历次验证、素材来源记录。 |
 
-操作：F／J 为咚，D／K 为咔（游玩时同一帧只判定最早的一次打击，其余同帧打击丢弃——太鼓输入互斥），Space 暂停／恢复，F1 重开，Esc 返回选曲。选曲 D／K 移动、F／J 决定、A 自动演奏（演奏オプション中 D／K 改值、F／J 下一行、Esc 关闭）；原版选曲中 Esc 返回 Entry 场景，Entry 未移植，因此面板外 Esc 暂无作用；结算 F／J 跳过／返回。游玩页也可用鼠标／触控敲击原版样式的触控鼓，选曲板、难度卡和结算画面也可点击。
+操作：F／J 为咚，D／K 为咔（游玩时同一帧只判定最早的一次打击，其余同帧打击丢弃——太鼓输入互斥），Space 暂停／恢复，F1 重开，Esc 返回选曲。Entry 中 F／J（或点击）加入／决定，D／K 只有咔声。选曲 D／K 移动、F／J 决定、A 自动演奏、Esc 返回 Entry（演奏オプション中 D／K 改值、F／J 下一行、Esc 关闭）；结算 F／J 跳过／返回。游玩页也可用鼠标／触控敲击原版样式的触控鼓，选曲板、难度卡和结算画面也可点击。
 
 **选曲加载幕布（SongSelect → SinglePlayScene 过渡）。** 照搬 `transition.lua`／`anim/loading_song.lua`：关闭 532 ms（帧 5→55，在旧场景上）→ SongLoadingScene 停在帧 55（标题、副标题、皮肤「ゲームのヒント」原图、咚咔、星、光晕）→ 打开 532 ms（帧 60→109，在游玩场景上），打开结束后才开始倒计时。用户决定：幕布美术放在全局 SceneSwitcher；停留至少 2 秒；提示区用皮肤文字贴图（截图中的街机插画卡不在皮肤内）；所有 `Play()` 入口使用幕布，重开与其他切换仍为淡入淡出。演奏スキップON 徽章因该功能未实现而不显示。预解析谱面经 `SceneSwitcher.TakePreparedChart` 只交给 PlayScene 一次。详见 `Documentation/PortingNotes.md`「选曲加载幕布与 SongLoadingScene」。
 
@@ -82,7 +84,9 @@
 - 原版未移植部分：每首歌目录下的 `Loading.png` 自定义加载图（`add_loading_graphic`）、段位加载画面（`set_dan`）、Fanmade 远程下载进度页与取消、以及演奏スキップON 徽章（只在跳过功能启用时显示）。均未授权。
 - 测试注意：经 `Play()` 进入游玩现在要经过幕布与至少 2 秒停留，原有 `WaitForScene(GameScene)`（条件为非切换中且活动场景为 SinglePlayScene）在 SongLoadingScene 停留期间不会误判完成。截图时幕布在 SceneSwitcher 的 Overlay Canvas 上，`SceneFlowTests.Capture` 只渲染场景 Canvas 拍不到；`SongLoadingCurtainTests.Capture` 会把所有根 Overlay Canvas 临时切到相机模式一起渲染。
 
-**选曲／结算。** 流程：SongSelect（入口）→（幕布＋SongLoadingScene）→ SinglePlayScene → Result → 发起游玩的场景（`SceneSwitcher.ReturnScene`）。`PlayScene.Finish` 保存成绩（自动演奏不保存）后调用 `SceneSwitcher.ShowResult`，场景内结果面板只用于谱面加载失败。时间与布局均取自原 `song_select.cpp`／`navigator.cpp`／`player.cpp`／`result.cpp` 及 Nijiiro Lua，详见 `Documentation/PortingNotes.md`“选曲与结算场景”。TMP Mobile SDF 描边需 `OUTLINE_ON`，新场景文字使用 Outline 材质。歌曲音频现在主要在 SongLoadingScene 中载入；PlayScene 仍于遮罩关闭期间预载（重开／直接运行），避免首次 PlayScheduled 卡顿约 1 秒。
+**Entry。** 照搬 `scenes/entry.cpp`、`objects/entry/*` 与 Nijiiro `Scripts/entry/entry.lua`、`box.lua`、`player.lua`，Nijiiro 开启 `entry_credit_arcade`（街机投币模式）。用户决定：只有「演奏ゲーム」一块模式板（特訓モード／きせかえ／ゲーム設定 留待对应场景移植；段位道場 板在原版 `dan_available` 恒为 false，从不显示）；3D 咚与加入时的云不绘制，但模式选择仍按原版云动画结束时刻（加入后 550+350+333 ms）出现；两行信用行都显示，只有 1P 可以加入（任意咚面）；60 秒计时器、操作指引、フリープレイ＋QR＋2P 邀请云、状态芯片全部移植（ALL.Net 图标未做）。时间轴 `entry_bg`／`credit_row`／`credit_fade`／`credit_side`／`mode_board`／`cursor_glow` 由 `LumenClip` 采样。计时器在信用画面冻结、加入后才走（原版：冻结后第一次更新立即减 1），归零时自动决定。操作指引原图 4576×6900（325 格），只切片决定循环 210–324 格，导入上限 8192、CompressedHQ（未压缩约 126 MB）。`entry/global/player_entry_*` 为全透明 8×8 占位图，不绘制。TMP 描边受 SDF padding 限制，粗边（7 px、模式板标题双层边）为近似。详见 `Documentation/PortingNotes.md`「Entry 场景」。
+
+**选曲／结算。** 流程：Entry（入口）→ SongSelect →（幕布＋SongLoadingScene）→ SinglePlayScene → Result → 发起游玩的场景（`SceneSwitcher.ReturnScene`）。`PlayScene.Finish` 保存成绩（自动演奏不保存）后调用 `SceneSwitcher.ShowResult`，场景内结果面板只用于谱面加载失败。时间与布局均取自原 `song_select.cpp`／`navigator.cpp`／`player.cpp`／`result.cpp` 及 Nijiiro Lua，详见 `Documentation/PortingNotes.md`“选曲与结算场景”。TMP Mobile SDF 描边需 `OUTLINE_ON`，新场景文字使用 Outline 材质。歌曲音频现在主要在 SongLoadingScene 中载入；PlayScene 仍于遮罩关闭期间预载（重开／直接运行），避免首次 PlayScheduled 卡顿约 1 秒。
 
 ### 已完成玩法与表现的核心逻辑
 
@@ -106,12 +110,13 @@
 
 ### 验证结果与继续工作方法
 
-- 最新验证（2026-10-02，名牌与分数计数器）：Unity Editor **EditMode 139/139、PlayMode 29/29 全部通过**，报告 `TestResults/nameplate-editmode.json`、`TestResults/nameplate-playmode.json`；新增 `NameplateTests`、`NameplateFlowTests`，`ScoreGaugeFlowTests` 改为检查 `scoreCounter.Text`（不补零）。截图 `TestResults/NameplatePlay.png`、`NameplatePlayCoin.png`、`NameplateSongSelect.png`、`NameplateResult.png`。PlayMode 的 `TestScoreStore` 让 `PlayerInfoController` 使用不落盘的默认数据。
+- 最新验证（2026-10-02，Entry）：进行中 EditMode 11/11、PlayMode 3/3，已完成 PlayMode 27/27 通过（菜单场景改为 Entry 影响所有从菜单开始的 PlayMode 测试，因此回归了 Finished 程序集）；报告 `TestResults/entry-playmode.json`、`TestResults/entry-finished-playmode.json`，截图 `TestResults/EntryCredit.png`、`EntryModeSelect.png`。
+- 此前验证（2026-10-02，名牌与分数计数器）：Unity Editor **EditMode 139/139、PlayMode 29/29 全部通过**，报告 `TestResults/nameplate-editmode.json`、`TestResults/nameplate-playmode.json`；新增 `NameplateTests`、`NameplateFlowTests`，`ScoreGaugeFlowTests` 改为检查 `scoreCounter.Text`（不补零）。截图 `TestResults/NameplatePlay.png`、`NameplatePlayCoin.png`、`NameplateSongSelect.png`、`NameplateResult.png`。PlayMode 的 `TestScoreStore` 让 `PlayerInfoController` 使用不落盘的默认数据。
 - 此前验证（2026-10-01，音符飞向魂槽与 GaugeHitEffect）：Unity Editor **EditMode 131/131、PlayMode 27/27 全部通过**，报告 `TestResults/arc-editmode.json`、`TestResults/arc-playmode.json`；新增 `NoteArcPathTests`、`GaugeHitEffectTimingTests`、`NoteArcFlowTests`，截图 `TestResults/NoteArc.png`。路径按 Nijiiro 皮肤的圆弧键而非 OurTaikoPlayer 当前的贝塞尔，理由见 `Documentation/PortingNotes.md`「音符飞向魂槽与 GaugeHitEffect」；Nijiiro 的 `hit_effect_circle*` 为透明占位图，不绘制；气球吹爆彩虹拖尾未移植。
 - 此前验证（2026-10-01，选曲加载幕布）：Unity Editor **EditMode 127/127、PlayMode 26/26 全部通过**，报告 `TestResults/curtain-editmode.json`、`TestResults/curtain-playmode.json`；新增 `SongLoadingCurtainTests`，截图 `TestResults/CurtainClosing.png`、`SongLoading.png`、`CurtainOpening.png`。
 - 此前验证（2026-10-01，音符文字）：Unity Editor **EditMode 127/127、PlayMode 24/24 全部通过**，报告 `TestResults/moji-editmode.json`、`TestResults/moji-playmode.json`；`NoteMojiTests` 覆盖帧分配／连续段／小节线／分支独立／换色重算，`NoteMojiFlowTests` 覆盖帧、层级、位置、命中／漏音／ドロン显隐与连打横条，截图 `TestResults/NoteMoji.png`。已知：调试计数文字 `GOOD/OK/BAD/ROLL` 与文字带重叠，未处理。
 - 此前验证（2026-10-01，演奏オプション）：Unity Editor **EditMode 115/115、PlayMode 22/22 全部通过**。报告为 `TestResults/options-editmode.json`、`TestResults/options-playmode.json`；PlayMode 通过 `TestScoreStore` 使用临时成绩文件和不落盘的 `PlayOptions`。`PlayOptionsTests`／`PlayOptionsFlowTests` 覆盖速度档位、面板行走、滑动曲线、谱面修改、随机概率、持久化与游玩场景实际效果；截图 `TestResults/SongSelectOptions.png`、`PlayOptionsBadges.png`。`TestResults/` 不纳入版本控制，本机报告不保证随新克隆存在。
-- 测试分为进行中与已完成两组（2026-10-02 用户要求）。**进行中**：`OurTaiko.Tests`（`Tests/EditMode/`）与 `OurTaiko.PlayModeTests`（`Tests/PlayMode/`），目前只有名牌（`NameplateTests`、`NameplateFlowTests`）。**已完成**功能的测试移到 `Tests/Finished/`：`OurTaiko.FinishedTests`（EditMode）与 `OurTaiko.FinishedPlayModeTests`（PlayMode），类名与命名空间 `OurTaiko.Tests` 不变。共享辅助在 `Tests/Shared/`（`OurTaiko.TestSupport`，仅 `UNITY_INCLUDE_TESTS` 时编译）：`TestCapture.Capture` 截图、`TestData.Use/Restore` 临时成绩／选项／玩家信息，每个 PlayMode 程序集各有一个调用它的 `TestScoreStore` SetUpFixture。功能确认完成后把其测试移入 Finished。**只运行与改动相关的测试类**，不要每次跑全部程序集；需要回归时再跑 Finished 程序集。
+- 测试分为进行中与已完成两组（2026-10-02 用户要求）。**进行中**：`OurTaiko.Tests`（`Tests/EditMode/`）与 `OurTaiko.PlayModeTests`（`Tests/PlayMode/`），目前为名牌（`NameplateTests`、`NameplateFlowTests`）与 Entry（`EntryTests`、`EntryFlowTests`）。**已完成**功能的测试移到 `Tests/Finished/`：`OurTaiko.FinishedTests`（EditMode）与 `OurTaiko.FinishedPlayModeTests`（PlayMode），类名与命名空间 `OurTaiko.Tests` 不变。共享辅助在 `Tests/Shared/`（`OurTaiko.TestSupport`，仅 `UNITY_INCLUDE_TESTS` 时编译）：`TestCapture.Capture` 截图、`TestData.Use/Restore` 临时成绩／选项／玩家信息，每个 PlayMode 程序集各有一个调用它的 `TestScoreStore` SetUpFixture。功能确认完成后把其测试移入 Finished。**只运行与改动相关的测试类**，不要每次跑全部程序集；需要回归时再跑 Finished 程序集。
 - 已完成的 EditMode 测试（原 `Tests/EditMode/`）覆盖解析、判定、分支阈值／时序、滚动与同速约束，以及 Shinuchi 预算／取整、独立逗号／空小节、魂槽难度星级／增减／过关边界。
 - 已完成的 PlayMode 测试中，`SceneFlowTests.cs` 覆盖场景流程、音乐同步、120 FPS 配置、各分支、魂槽、气球与连打，包含 1080p／720p 渲染。`GlobalSceneSwitcherTests.cs` 另覆盖跨场景预制体、等待准备任务、关闭／加载／打开顺序、timeScale=0、输入阻挡、重复请求、场景事件、手动揭示、泛型结果、失败／取消恢复及销毁取消。
 - `SongLoadingCurtainTests.cs` 覆盖幕布帧映射（关闭 5→55、标题 266 ms 延迟淡入；打开 60→109、133 ms 淡出、标题带压扁）、在旧场景上关闭、SongLoadingScene 停在帧 55 的各图层状态、至少 2 秒停留、音频已载入、PlayScene 取走预解析谱面、在游玩场景上打开并解除输入阻挡、重开仍为淡入淡出。
@@ -132,7 +137,7 @@
 
 ### 明确尚未实现的范围
 
-- **Entry 场景待办**（用户决定稍后移植）：参照 OurTaikoPlayer `src/scenes/entry.cpp`、`src/objects/entry/*` 与 Nijiiro 皮肤 `Scripts/entry/*.lua`、`Graphics/entry`。移植后 Entry 成为首个场景与 `SceneSwitcher.MenuScene`，选曲 Esc 返回 Entry（`song_select.cpp`：任意状态按 back 键 → `Screens::ENTRY`）。
-- **名牌待办**：原版 Entry（`entry.cpp`，`nameplate_entry_left/right`）、段位选择（`dan_select.cpp`）与段位结算（`dan_result.cpp`／`dan_result_draw.lua` 的 `nameplate_pos`）场景也显示名牌。将来移植这些场景时须同样复用 `Generated/Nameplate.prefab` 与 `PlayerInfoController`；2P／AI 名牌（`2p.png`／`ai.png`）与名牌编辑界面同样未做。
+- **Entry 未移植部分**：3D 咚与加入云（原版 `player.lua` 的 drum_back／drum_front）、2P 加入、其他模式板（特訓モード／きせかえ／ゲーム設定）与きせかえ菜单（`costume_menu`）、ALL.Net 图标（`allnet_indicator`）。原版 song select 与 result 也显示部分全局元素（选曲：QR 芯片、2P 邀请云、计时器；结算：フリープレイ），本项目目前只在 Entry 放置 `GlobalOverlays`，移植时复用。
+- **名牌待办**：原版段位选择（`dan_select.cpp`）与段位结算（`dan_result.cpp`／`dan_result_draw.lua` 的 `nameplate_pos`）场景也显示名牌。将来移植这些场景时须同样复用 `Generated/Nameplate.prefab` 与 `PlayerInfoController`；2P／AI 名牌（`2p.png`／`ai.png`）与名牌编辑界面同样未做。
 
 当前不是整个原模拟器的等价移植。游玩中气球吹爆的彩虹拖尾、选曲中的文件夹／类别、搜索与排序、独立音色面板、演奏スキップ功能（及加载幕布上的演奏スキップON 徽章）、歌曲自定义 `Loading.png` 加载图、段位加载画面、2P、曲目板飞入、难度决定标记弹出，结算中的成绩等级（粋／雅／極）演出、3D 咚、皇冠光芒加算混合、游玩中的「+分数」飞出动画尚未移植；TRIPLE HELIX 的 Edit 谱面含字母扩展音符，无法游玩。联网／成绩上传、双人、段位、3D 咚角色、全部皮肤特效、逐帧回放尚未实现（大音符单侧击打即可，属有意设计，见上方约束）；计分固定使用 Shinuchi，单人魂槽数值已按原源码还原，GEN3 计分及段位魂槽不在当前范围。自动连打仍为 **15 次／秒**，未移植原版随 BPM 变化的自动连打节奏。`s` 分数分支、`#LEVELHOLD`、BMSCROLL／HBSCROLL、字母扩展音符明确不支持；不要静默猜测其行为，也不要将这些范围自动当作用户已授权的新开发任务。
