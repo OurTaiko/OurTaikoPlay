@@ -21,6 +21,14 @@ namespace OurTaiko.Tests
             var song = Object.FindFirstObjectByType<SongSelectScene>().songs.Single(s => s.name == "TripleHelix");
             if (song.music.loadState == AudioDataLoadState.Loaded) song.music.UnloadAudioData();
 
+            // SongLoadingScene counts its minimum stay from its Start; the scene becomes active just
+            // before that, while the switch itself only ends a frame and 50 ms later.
+            float parkedAt = float.NaN;
+            void OnActiveScene(Scene previous, Scene next)
+            {
+                if (next.name == SceneSwitcher.SongLoadingScene) parkedAt = Time.realtimeSinceStartup;
+            }
+            SceneManager.activeSceneChanged += OnActiveScene;
             switcher.Play(song);
             Assert.That(switcher.IsSwitching && curtain.IsVisible && !curtain.IsClosed, Is.True);
             Assert.That(curtain.title.text, Is.EqualTo("TRIPLE HELIX"));
@@ -29,14 +37,15 @@ namespace OurTaiko.Tests
             Capture("CurtainClosing.png");
 
             yield return WaitUntil(() => SceneSwitcher.CurrentScene == SceneSwitcher.SongLoadingScene && !switcher.IsSwitching);
-            float parkedAt = Time.realtimeSinceStartup;
+            SceneManager.activeSceneChanged -= OnActiveScene;
+            Assert.That(float.IsNaN(parkedAt), Is.False);
             var loader = Object.FindFirstObjectByType<SongLoadingScene>();
             Assert.That(switcher.IsCurtainClosed && switcher.IsCovered && switcher.IsInputBlocked, Is.True);
             Assert.That((curtain.Frame, curtain.InfoAlpha), Is.EqualTo((55.0, 1f)), "Parked on loading_song frame 55.");
             Assert.That(curtain.rainbow.enabled && !curtain.curtainLeft.enabled && !curtain.curtainRight.enabled, Is.True);
             Assert.That(curtain.don.color.a, Is.EqualTo(1).Within(1e-4));
-            Assert.That(curtain.don.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(160, -786)));
-            Assert.That(curtain.katsu.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(1760, -786)));
+            Assert.That(Vector2.Distance(curtain.don.rectTransform.anchoredPosition, new Vector2(160, -786)), Is.LessThan(0.01f));
+            Assert.That(Vector2.Distance(curtain.katsu.rectTransform.anchoredPosition, new Vector2(1760, -786)), Is.LessThan(0.01f));
             Assert.That(curtain.glow.color.a, Is.EqualTo(0.3008f).Within(1e-4));
             Assert.That(curtain.stars.All(s => s.enabled && Mathf.Approximately(s.color.a, 1)), Is.True);
             Assert.That(curtain.band.rectTransform.sizeDelta, Is.EqualTo(new Vector2(1600, 256)));

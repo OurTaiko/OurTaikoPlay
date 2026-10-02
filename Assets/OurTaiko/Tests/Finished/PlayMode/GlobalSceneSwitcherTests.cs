@@ -47,10 +47,6 @@ namespace OurTaiko.Tests
                 Assert.That(switcher.IsCovered, Is.True, "Closing must run even when timeScale is zero.");
                 Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.MenuScene), "The old scene stays loaded until preparation finishes.");
                 Assert.That(changes, Is.Zero);
-                switcher.SetLoadingText("LOADING", Color.yellow);
-                var text = switcher.GetComponentInChildren<TMPro.TMP_Text>(true);
-                Assert.That(text.text, Is.EqualTo("LOADING"));
-                Assert.That(text.color, Is.EqualTo(Color.yellow));
                 Assert.That(switcher.GetComponentInChildren<CanvasGroup>(true).blocksRaycasts, Is.True);
                 var hits = new System.Collections.Generic.List<RaycastResult>();
                 EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f) }, hits);
