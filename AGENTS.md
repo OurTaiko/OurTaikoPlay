@@ -68,6 +68,7 @@
 - `HitRingGood／Ok／GoodBig／OkBig.anim`：判定点外圈，`outer_*` 四帧（动画 30）、透明度（动画 27）与 200 ms 时关闭的 `m_Enabled`；`HitRingView` 按判定与大小切换剪辑（`ClipSampler.clip`）。
 - `GaugeHitEffect.anim`：魂徽章 GaugeHitEffect（动画 2／32／33）：Burst 三帧、尺寸 0.8→1.5、按尺寸阶梯着色黄→橙→红、Burst 与 Note 的 300 ms 后 83 ms 淡出及 383 ms 时关闭；位置仍由代码（`GaugeHitEffectLayout`）。剪辑挂在 `GaugeHitEffect` 层，取代 `GaugeHitEffectTiming` 及其测试；迁移 `ProjectBuilder.ApplyNoteArcs()`。
 - `SoulFire.anim`／`SoulOverlay.anim`：满槽魂火 8 帧×50 ms 循环与 `tamashii_overlay` 在第 0、1、4、5 帧显示，分别挂在 `SoulFire`、`SoulOverlay` 上（两者之间隔着 `Soul`，不重组层级），共用歌曲时钟；未满时由代码隐藏。迁移 `ProjectBuilder.ApplySoulFireClips()`。
+- `SoulRainbowEasy／Normal／Hard.anim`：满槽彩虹，cell k 上叠 cell k+1 在 75 ms 内淡入，整体在 450 ms 内淡入。剪辑 1.2 s＝0.6 s 开场（淡入与交叉淡入的乘积每 5 ms 烘焙一键）＋0.6 s 循环，`SoulGaugeView` 在开场后只重复后半段。RainbowA／B 归入全尺寸的 `Rainbow` 组（位置不变），`SoulGaugeView.rainbowSampler` 按难度样式（`Style.rainbow`）切换剪辑。迁移 `ProjectBuilder.ApplySoulRainbowClips()`。
 - 不转换：Lumen 时间轴（`Animations/*.txt`，原版导出原样副本，Entry／选曲／加载幕布／结算）、场景切换与暂停菜单淡入淡出（从当前不透明度插值，可中断）、由游戏状态驱动的表现（音符滚动与飞行、气球膨胀、魂槽填充）。
 
 ### 游玩暂停菜单（2026-10-02）

@@ -9,17 +9,23 @@ namespace OurTaiko
         public sealed class Style
         {
             public Sprite border, empty, grid;
-            public Sprite[] rainbow;
+            [Tooltip("SoulRainbow<Style>.anim: the full-gauge crossfade on RainbowA/RainbowB.")]
+            public AnimationClip rainbow;
             public float clearLabelX;
         }
 
         public Style[] styles;
         public UnityEngine.UI.Image border, empty, red, clearCap, goldTop, goldBottom;
         public UnityEngine.UI.Image rainbowA, rainbowB, cellFade, grid, clearLabel, soul, fire, soulOverlay;
+        [Tooltip("The Rainbow group holding RainbowA and RainbowB.")]
+        public ClipSampler rainbowSampler;
         public Sprite redFade, capFade, goldFade, clearLit, clearDark, soulLit, soulDark;
 
         public const int Cells = 50, CellWidth = 21;
-        public const double CellFadeSeconds = 0.450, RainbowFrameSeconds = 0.075;
+        public const double CellFadeSeconds = 0.450;
+        // The rainbow clip: a 0.6 s intro (the 450 ms fade-in over the 75 ms crossfades), then a
+        // 0.6 s loop of the eight frames that repeats for as long as the gauge stays full.
+        const double RainbowIntro = 0.6, RainbowLoop = 0.6;
         public bool IsClear => points >= clearPoints;
         public bool IsFull => points >= SoulGauge.MaximumPoints;
         public int FilledCells => (int)Math.Floor(points * Cells / SoulGauge.MaximumPoints);
@@ -35,6 +41,7 @@ namespace OurTaiko
             border.sprite = style.border;
             empty.sprite = style.empty;
             grid.sprite = style.grid;
+            rainbowSampler.clip = style.rainbow;
             clearLabel.rectTransform.anchoredPosition = new Vector2(style.clearLabelX, 74);
             points = previousPoints = 0;
             cellChangedAt = double.NegativeInfinity;
@@ -79,13 +86,7 @@ namespace OurTaiko
             if (IsFull)
             {
                 double elapsed = Math.Max(0, time - rainbowStartedAt);
-                double frame = elapsed / RainbowFrameSeconds % 8;
-                int first = (int)frame;
-                float fade = Mathf.Clamp01((float)(elapsed / 0.450));
-                rainbowA.sprite = style.rainbow[first];
-                rainbowB.sprite = style.rainbow[(first + 1) % 8];
-                Alpha(rainbowA, fade);
-                Alpha(rainbowB, fade * (float)(frame - first));
+                rainbowSampler.Sample(elapsed < RainbowIntro + RainbowLoop ? elapsed : RainbowIntro + (elapsed - RainbowIntro) % RainbowLoop);
             }
 
             // Nijiiro enables gauge_cell_fade_in: only the newly filled cell fades in.

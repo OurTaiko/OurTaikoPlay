@@ -180,8 +180,9 @@ namespace OurTaiko.Editor
             view.clearCap = PlacePicture(gauge, "ClearCap", "game/gauge/bar_clear_transition", 1557, -63);
             view.goldTop = PlacePicture(gauge, "GoldTop", "game/gauge/bar_clear_top", 1578, -60);
             view.goldBottom = PlacePicture(gauge, "GoldBottom", "game/gauge/bar_clear_bottom", 1578, -26);
-            view.rainbowA = PlacePicture(gauge, "RainbowA", "game/gauge/rainbow_hard", 731, -67, 1057, 78);
-            view.rainbowB = PlacePicture(gauge, "RainbowB", "game/gauge/rainbow_hard", 731, -67, 1057, 78);
+            var rainbowParent = gauge.Find("Rainbow") ?? gauge;
+            view.rainbowA = PlacePicture(rainbowParent, "RainbowA", "game/gauge/rainbow_hard", 731, -67, 1057, 78);
+            view.rainbowB = PlacePicture(rainbowParent, "RainbowB", "game/gauge/rainbow_hard", 731, -67, 1057, 78);
             view.cellFade = PlacePicture(gauge, "CellFade", "game/gauge/1p_bar_fade", 738, -27);
             view.grid = PlacePicture(gauge, "Grid", "game/gauge/overlay_hard", 720, -72);
             view.clearLabel = PlacePicture(gauge, "ClearMarker", "game/gauge/clear_ja", 1560, -74);
@@ -191,9 +192,12 @@ namespace OurTaiko.Editor
             view.fire.rectTransform.localScale = Vector3.one * 0.75f;
             view.soul = PlacePicture(gauge, "Soul", "game/gauge/tamashii", 1790, -74);
             view.soulOverlay = PlacePicture(gauge, "SoulOverlay", "game/gauge/tamashii_overlay", 1790, -74);
-            var ordered = new[] { view.border, view.empty, view.red, view.clearCap, view.goldTop, view.goldBottom,
-                view.rainbowA, view.rainbowB, view.cellFade, view.grid, view.clearLabel, view.fire, view.soul, view.soulOverlay };
-            for (int i = 0; i < ordered.Length; i++) ordered[i].transform.SetSiblingIndex(i);
+            var ordered = new UnityEngine.UI.Graphic[] { view.border, view.empty, view.red, view.clearCap, view.goldTop, view.goldBottom,
+                view.rainbowA, view.rainbowB, view.cellFade, view.grid, view.clearLabel, view.fire, view.soul, view.soulOverlay }
+                .Select(g => g.transform.parent == gauge ? g.transform : g.transform.parent).Distinct().ToArray();
+            for (int i = 0; i < ordered.Length; i++) ordered[i].SetSiblingIndex(i);
+            view.rainbowA.transform.SetSiblingIndex(0);
+            view.rainbowB.transform.SetSiblingIndex(1);
             view.redFade = Sprite("game/gauge/1p_bar_fade");
             view.capFade = Sprite("game/gauge/bar_clear_transition_fade");
             view.goldFade = Sprite("game/gauge/bar_clear_fade");
@@ -203,8 +207,8 @@ namespace OurTaiko.Editor
             view.styles = new[] { "easy", "normal", "hard" }.Select((tier, i) => new SoulGaugeView.Style {
                 border = Sprite("game/gauge/border_" + tier), empty = Sprite("game/gauge/1p_unfilled_" + tier),
                 grid = Sprite("game/gauge/overlay_" + tier), clearLabelX = 1350 + i * 105,
-                rainbow = Enumerable.Range(0, 8).Select(frame => Slice("Rainbow" + tier + frame, "game/gauge/rainbow_" + tier, 0, frame * 78, 1057, 78)).ToArray()
             }).ToArray();
+            AttachSoulRainbowClips(view);
             view.Initialize(0.8);
             play.soulGauge = view;
         }

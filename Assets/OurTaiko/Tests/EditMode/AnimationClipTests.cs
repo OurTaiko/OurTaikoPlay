@@ -185,5 +185,40 @@ namespace OurTaiko.Tests
                 Assert.That(play.soulGauge.soulOverlay.GetComponent<ClipSampler>().clip, Is.SameAs(overlay));
             });
         }
+
+        [TestCase("Easy", "easy")]
+        [TestCase("Normal", "normal")]
+        [TestCase("Hard", "hard")]
+        public void SoulRainbowCrossfadesAndFadesIn(string style, string tier)
+        {
+            var clip = Clip("SoulRainbow" + style);
+            Assert.That(clip.length, Is.EqualTo(1.2).Within(1e-4));
+            (string a, float aAlpha, string b, float bAlpha) At(double t) => Sampled(clip, t, go =>
+            {
+                var a = go.transform.Find("RainbowA").GetComponent<UnityEngine.UI.Image>();
+                var b = go.transform.Find("RainbowB").GetComponent<UnityEngine.UI.Image>();
+                return (a.sprite.name, a.color.a, b.sprite.name, b.color.a);
+            }, "RainbowA", "RainbowB");
+            // The former code: frame = t / 75 ms, A = cell floor(frame), B = the next cell,
+            // fade = t / 450 ms, A alpha = fade, B alpha = fade x frac(frame); looping every 0.6 s.
+            foreach (double t in new[] { 0.0, 0.01, 0.0374, 0.1, 0.2, 0.3333, 0.44, 0.46, 0.55, 0.62, 0.7, 0.9, 1.1, 1.19 })
+            {
+                double frame = t / 0.075 % 8; int first = (int)frame;
+                double fade = System.Math.Min(1, t / 0.45);
+                var got = At(t);
+                Assert.That(got.a, Is.EqualTo($"Rainbow{tier}{first}"), $"{t} s");
+                Assert.That(got.b, Is.EqualTo($"Rainbow{tier}{(first + 1) % 8}"), $"{t} s");
+                Assert.That(got.aAlpha, Is.EqualTo(fade).Within(1e-3), $"{t} s");
+                Assert.That(got.bAlpha, Is.EqualTo(fade * (frame - first)).Within(2e-3), $"{t} s");
+            }
+            WithPlayScene(play =>
+            {
+                var gauge = play.soulGauge;
+                Assert.That(gauge.styles.Select(s => s.rainbow.name), Is.EqualTo(new[] { "SoulRainbowEasy", "SoulRainbowNormal", "SoulRainbowHard" }));
+                Assert.That(gauge.rainbowSampler.name, Is.EqualTo("Rainbow"));
+                Assert.That(gauge.rainbowA.transform.parent, Is.SameAs(gauge.rainbowSampler.transform));
+                Assert.That(gauge.rainbowB.transform.parent, Is.SameAs(gauge.rainbowSampler.transform));
+            });
+        }
     }
 }

@@ -1767,7 +1767,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 671817433}
+  m_Father: {fileID: 1456424682}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -3620,8 +3620,7 @@ RectTransform:
   - {fileID: 646032937}
   - {fileID: 1814795781}
   - {fileID: 1249449697}
-  - {fileID: 1790228353}
-  - {fileID: 399222125}
+  - {fileID: 1456424682}
   - {fileID: 1352588615}
   - {fileID: 1154843321}
   - {fileID: 2118836986}
@@ -3651,41 +3650,17 @@ MonoBehaviour:
   - border: {fileID: 21300000, guid: bf91b4537687b40078482f7b79504412, type: 3}
     empty: {fileID: 21300000, guid: 61e4802a53c8f4385b20fc2aaaf999b6, type: 3}
     grid: {fileID: 21300000, guid: c899b91a1651e462f9979ad1e68c0dd7, type: 3}
-    rainbow:
-    - {fileID: 21300000, guid: fc25f64fa74144e658e7eedc0531b21e, type: 2}
-    - {fileID: 21300000, guid: a854d867ee32e4df7a3e30fa5beaba5b, type: 2}
-    - {fileID: 21300000, guid: 47c01504ae59f4bce846276e06f2d302, type: 2}
-    - {fileID: 21300000, guid: a8a35a0cae9bd4f23a66ace54c4ed9af, type: 2}
-    - {fileID: 21300000, guid: b8a3a4c490427497c90783f19be61574, type: 2}
-    - {fileID: 21300000, guid: 09a5646e0e52d49148ef660cc2a9eedc, type: 2}
-    - {fileID: 21300000, guid: c8fb8dfc57bcf418c8191d3ee118fbcf, type: 2}
-    - {fileID: 21300000, guid: 4f20b4e1b6c844f24a39d11385d2b176, type: 2}
+    rainbow: {fileID: 7400000, guid: d8ddb12ae007d430cb0125aa2ee152ee, type: 2}
     clearLabelX: 1350
   - border: {fileID: 21300000, guid: e1b8026eadfe349e5b7d8130a868c5ca, type: 3}
     empty: {fileID: 21300000, guid: 4620b477d7b3245be8b32f5c7c542042, type: 3}
     grid: {fileID: 21300000, guid: f6bf3f4b91bae47f0a7200434d0e9bc2, type: 3}
-    rainbow:
-    - {fileID: 21300000, guid: 83f7de00b3f7c4ecf8935110dbd239d8, type: 2}
-    - {fileID: 21300000, guid: c73dc08c0df8047b49553e93c98ddb0d, type: 2}
-    - {fileID: 21300000, guid: d7234e3b3a32b4b368b13344ca25b1be, type: 2}
-    - {fileID: 21300000, guid: 740202d84efec459ebf508f18cc67eaf, type: 2}
-    - {fileID: 21300000, guid: fc884e6f3fc304bd0bb035c1760efcf9, type: 2}
-    - {fileID: 21300000, guid: a75bd736d1d5644dbb3fdc9ce885f8cb, type: 2}
-    - {fileID: 21300000, guid: 4311c5d05e61c4943ab1263b0150d61a, type: 2}
-    - {fileID: 21300000, guid: cbba712703c494be28eea4c5a74604bf, type: 2}
+    rainbow: {fileID: 7400000, guid: 01cdc0a3090514ea0a2944ded8602249, type: 2}
     clearLabelX: 1455
   - border: {fileID: 21300000, guid: 5702d72a2276941489cd3855d88d009d, type: 3}
     empty: {fileID: 21300000, guid: 6892d639b89604796a08c65c8416336b, type: 3}
     grid: {fileID: 21300000, guid: 8be82f003a3ce4f9badcfc2da8c627c9, type: 3}
-    rainbow:
-    - {fileID: 21300000, guid: ac0574a6cc1154ccaa69597d744c5382, type: 2}
-    - {fileID: 21300000, guid: 1e8d3ae7bb6f74145aeb1054b9a4a68a, type: 2}
-    - {fileID: 21300000, guid: d5e38fc5229e540f4982423f38ea83f2, type: 2}
-    - {fileID: 21300000, guid: 1333a5fce182a4f4493e2243b1014eeb, type: 2}
-    - {fileID: 21300000, guid: ffb71b2adb3054c0d9090339259c606d, type: 2}
-    - {fileID: 21300000, guid: b76c1ae0a30e94acfb4317ea82b6a600, type: 2}
-    - {fileID: 21300000, guid: 25de0ad4b894a4ea68e1fd6d2e8cb355, type: 2}
-    - {fileID: 21300000, guid: 4c11df7036b75444da5d4a08b8cde210, type: 2}
+    rainbow: {fileID: 7400000, guid: 8c11bd2913a1f43b8abaf3aa0e0e6cb2, type: 2}
     clearLabelX: 1560
   border: {fileID: 1076073512}
   empty: {fileID: 1775763153}
@@ -3701,6 +3676,7 @@ MonoBehaviour:
   soul: {fileID: 1476762921}
   fire: {fileID: 866286073}
   soulOverlay: {fileID: 1817324041}
+  rainbowSampler: {fileID: 1456424683}
   redFade: {fileID: 21300000, guid: ae386b0111bf24de0a542f16b87cdc8a, type: 3}
   capFade: {fileID: 21300000, guid: 8f5b29e647f914d73955f4a65e3aace5, type: 3}
   goldFade: {fileID: 21300000, guid: faf26cb2920f54a809708d766602b3ac, type: 3}
@@ -7871,6 +7847,80 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &1456424681
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1456424682}
+  - component: {fileID: 1456424684}
+  - component: {fileID: 1456424683}
+  m_Layer: 0
+  m_Name: Rainbow
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1456424682
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1456424681}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1790228353}
+  - {fileID: 399222125}
+  m_Father: {fileID: 671817433}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1456424683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1456424681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 8c11bd2913a1f43b8abaf3aa0e0e6cb2, type: 2}
+--- !u!95 &1456424684
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1456424681}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1476069239
 GameObject:
   m_ObjectHideFlags: 0
@@ -9282,7 +9332,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 671817433}
+  m_Father: {fileID: 1456424682}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
