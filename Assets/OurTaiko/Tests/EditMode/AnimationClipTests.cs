@@ -118,5 +118,23 @@ namespace OurTaiko.Tests
             var prefab = AssetDatabase.LoadAssetAtPath<HitFaceView>("Assets/OurTaiko/Generated/HitFace.prefab");
             Assert.That(prefab.GetComponent<ClipSampler>().clip, Is.SameAs(clip));
         }
+
+        [TestCase("HitRingGood", "outer_good")]
+        [TestCase("HitRingOk", "outer_ok")]
+        [TestCase("HitRingGoodBig", "outer_good_big")]
+        [TestCase("HitRingOkBig", "outer_ok_big")]
+        public void HitRingFollowsNijiiroAnimations27And30(string name, string strip)
+        {
+            var clip = Clip(name);
+            Assert.That(clip.length, Is.EqualTo(0.2).Within(1e-4));
+            foreach (var (t, frame, alpha) in new[] { (0.0, 0, 1f), (0.0544, 0, 1f), (0.0546, 1, 1f), (0.0728, 2, 1f), (0.091, 3, 1f), (0.1667, 3, 1f), (0.18335, 3, 0.5f) })
+            {
+                var image = Sampled(clip, t, go => (go.GetComponent<UnityEngine.UI.Image>().sprite, go.GetComponent<UnityEngine.UI.Image>().color.a, go.GetComponent<UnityEngine.UI.Image>().enabled));
+                Assert.That(image.Item1.name, Is.EqualTo($"HitRing_{strip}{frame}"), $"{t} s");
+                Assert.That(image.Item2, Is.EqualTo(alpha).Within(1e-3), $"{t} s");
+                Assert.That(image.Item3, Is.True, $"{t} s");
+            }
+            Assert.That(Sampled(clip, 0.2, go => go.GetComponent<UnityEngine.UI.Image>().enabled), Is.False);
+        }
     }
 }

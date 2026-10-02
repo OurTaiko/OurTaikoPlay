@@ -27,6 +27,7 @@ namespace OurTaiko.Editor
             if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
             play.hitFace = PlaceHitFace(lane, facePosition.x, -facePosition.y);
             AttachHitFaceClip();
+            AttachHitRingClips();
             var ring = lane.Find("HitRing") as RectTransform;
             // outer_* sits at skin x=450, y=-58: the same centre as the face.
             Vector2 ringPosition = ring != null ? ring.anchoredPosition : new Vector2(450, 58);
@@ -123,25 +124,54 @@ namespace OurTaiko.Editor
         {
             var prefab = AssetDatabase.LoadAssetAtPath<HitRingView>(HitRingPrefabPath);
             if (prefab != null) return prefab;
-            // outer_*: four 336x336 frames side by side.
-            Sprite[] Frames(string name) => Enumerable.Range(0, HitRingTiming.Frames)
-                .Select(i => Slice("HitRing_" + name + i, "game/hit_effect/" + name, i * 336, 0, 336, 336)).ToArray();
-            var good = Frames("outer_good");
-            var root = EffectRoot("HitRing", good[0], out var image);
+            var root = EffectRoot("HitRing", RingFrames("outer_good")[0], out var image);
             try
             {
                 // draw_outer_effect uses BLEND_ADDITIVE.
                 image.material = AdditiveUiMaterial();
                 var view = root.AddComponent<HitRingView>();
                 view.image = image;
-                view.good = good;
-                view.ok = Frames("outer_ok");
-                view.goodBig = Frames("outer_good_big");
-                view.okBig = Frames("outer_ok_big");
+                SetRingClips(view);
                 return PrefabUtility.SaveAsPrefabAsset(root, HitRingPrefabPath).GetComponent<HitRingView>();
             }
             finally { UnityEngine.Object.DestroyImmediate(root); }
         }
+
+        // The HitRing prefab plays one of four clips through its own ClipSampler.
+        static void AttachHitRingClips()
+        {
+            var root = PrefabUtility.LoadPrefabContents(HitRingPrefabPath);
+            try
+            {
+                var view = root.GetComponent<HitRingView>();
+                SetRingClips(view);
+                PrefabUtility.SaveAsPrefabAsset(root, HitRingPrefabPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        static void SetRingClips(HitRingView view)
+        {
+            view.good = HitRingClip("HitRingGood", "outer_good");
+            view.ok = HitRingClip("HitRingOk", "outer_ok");
+            view.goodBig = HitRingClip("HitRingGoodBig", "outer_good_big");
+            view.okBig = HitRingClip("HitRingOkBig", "outer_ok_big");
+            AttachClip(view.gameObject, view.good);
+        }
+
+        // outer_*: four 336x336 frames side by side.
+        static Sprite[] RingFrames(string name) => Enumerable.Range(0, 4)
+            .Select(i => Slice("HitRing_" + name + i, "game/hit_effect/" + name, i * 336, 0, 336, 336)).ToArray();
+
+        // Judgment::draw_outer_effect: frames from animation 30 (switching after 54.5, 72.7 and
+        // 90.9 ms, then holding the last), opacity from animation 27 (opaque until 166.7 ms, gone
+        // 33.3 ms later), and the ring is not drawn after that.
+        static AnimationClip HitRingClip(string clipName, string strip) => SaveClip(clipName, 60, false, clip =>
+        {
+            SpriteKeys(clip, "", typeof(UnityEngine.UI.Image), RingFrames(strip), new[] { 0, 0.0545f, 0.0727f, 0.0909f });
+            LinearCurve(clip, "", typeof(UnityEngine.UI.Image), "m_Color.a", (0, 1), (0.1667f, 1), (0.2f, 0));
+            SteppedCurve(clip, "", typeof(UnityEngine.UI.Image), "m_Enabled", (0, 1), (0.2f, 0));
+        });
 
         static GameObject EffectRoot(string name, Sprite sprite, out UnityEngine.UI.Image image)
         {

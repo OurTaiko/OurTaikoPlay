@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 945802293549979484}
   - component: {fileID: 8063786966364556106}
   - component: {fileID: 2767643934799816664}
+  - component: {fileID: 6464323301253516695}
+  - component: {fileID: 3595296471106140430}
   m_Layer: 0
   m_Name: HitRing
   m_TagString: Untagged
@@ -89,23 +91,42 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.HitRingView
   image: {fileID: 8063786966364556106}
-  good:
-  - {fileID: 21300000, guid: 21d9ecc4aacdb411184649a20dbeb98f, type: 2}
-  - {fileID: 21300000, guid: 3a86052652af44c148fe99a8e4d8c66a, type: 2}
-  - {fileID: 21300000, guid: f3dcdb5f3853145edb2cff2833b50208, type: 2}
-  - {fileID: 21300000, guid: 1fb1ce1b9719f445fbaae815fd4eb397, type: 2}
-  ok:
-  - {fileID: 21300000, guid: 2b16adc90a992464d928d91c1a954239, type: 2}
-  - {fileID: 21300000, guid: 6c7bc1429c28e403b813e9bfb4d318d3, type: 2}
-  - {fileID: 21300000, guid: 4af4327eb82a9488eb260dcdd26e9ea8, type: 2}
-  - {fileID: 21300000, guid: 6b8af3707443c4c80841f9dbcbc2296a, type: 2}
-  goodBig:
-  - {fileID: 21300000, guid: 9f9e3ecf5adf5408e86e044f8d5fe93a, type: 2}
-  - {fileID: 21300000, guid: dba53f04f5a9242ad94e0852648226c5, type: 2}
-  - {fileID: 21300000, guid: 8cc9b35438324471ab906df838f94645, type: 2}
-  - {fileID: 21300000, guid: cc5b933790a8b412e92e2d420c50ef87, type: 2}
-  okBig:
-  - {fileID: 21300000, guid: 1a5d98b0f9a6940fc9c2a4a0bb0c78e1, type: 2}
-  - {fileID: 21300000, guid: 2a01edabc595246479dd1cd5cccba203, type: 2}
-  - {fileID: 21300000, guid: 7948d5fa4c0a2416b815d3667f3057bc, type: 2}
-  - {fileID: 21300000, guid: fb2d4e333e9084e4aaf2252076ad2eb1, type: 2}
+  good: {fileID: 7400000, guid: 4258c5968f90648e0a29e87e4e169c77, type: 2}
+  ok: {fileID: 7400000, guid: eafb2ec029ce04d21a5fd0e0c8817e62, type: 2}
+  goodBig: {fileID: 7400000, guid: b4016c4f228114bdca9a9e5ade418ad4, type: 2}
+  okBig: {fileID: 7400000, guid: 906d5ea8f448f4d6eb2d72baa33c00a7, type: 2}
+--- !u!95 &6464323301253516695
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7833460741310287000}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3595296471106140430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7833460741310287000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 4258c5968f90648e0a29e87e4e169c77, type: 2}

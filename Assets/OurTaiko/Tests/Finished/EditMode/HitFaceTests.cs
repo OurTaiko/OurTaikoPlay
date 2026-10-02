@@ -12,34 +12,16 @@ namespace OurTaiko.Tests
         const string RingPrefabPath = "Assets/OurTaiko/Generated/HitRing.prefab";
 
         [Test]
-        public void RingFollowsNijiiroAnimations27And30()
-        {
-            Assert.That(new[] { 0.0, 54.5, 54.6, 72.7, 72.8, 90.9, 91.0, 150, 190 }.Select(HitRingTiming.Frame),
-                Is.EqualTo(new[] { 0, 0, 1, 1, 2, 2, 3, 3, 3 }));
-            Assert.That(HitRingTiming.Opacity(166.7), Is.EqualTo(1).Within(1e-9));
-            Assert.That(HitRingTiming.Opacity(166.7 + 16.65), Is.EqualTo(0.5).Within(1e-9));
-            Assert.That(HitRingTiming.IsVisible(199.9), Is.True);
-            Assert.That(HitRingTiming.IsVisible(200), Is.False);
-        }
-
-        [Test]
-        public void RingPrefabHoldsFourFramesPerVariantWithAdditiveBlend()
+        public void RingPrefabHoldsOneClipPerVariantWithAdditiveBlend()
         {
             var view = AssetDatabase.LoadAssetAtPath<HitRingView>(RingPrefabPath);
             Assert.That(view, Is.Not.Null);
             Assert.That(view.image, Is.SameAs(view.GetComponent<UnityEngine.UI.Image>()));
             Assert.That(view.image.material.shader.name, Is.EqualTo("Mobile/Particles/Additive"));
             Assert.That(((RectTransform)view.transform).sizeDelta, Is.EqualTo(new Vector2(336, 336)));
-            var variants = new[] { ("outer_good", view.good), ("outer_ok", view.ok), ("outer_good_big", view.goodBig), ("outer_ok_big", view.okBig) };
-            foreach (var (name, frames) in variants)
-            {
-                Assert.That(frames.Length, Is.EqualTo(4));
-                for (int i = 0; i < 4; i++)
-                {
-                    Assert.That(frames[i].texture.name, Is.EqualTo(name));
-                    Assert.That(frames[i].rect, Is.EqualTo(new Rect(i * 336, 0, 336, 336)));
-                }
-            }
+            Assert.That(view.GetComponent<ClipSampler>(), Is.Not.Null);
+            Assert.That(new[] { view.good, view.ok, view.goodBig, view.okBig }.Select(c => c.name),
+                Is.EqualTo(new[] { "HitRingGood", "HitRingOk", "HitRingGoodBig", "HitRingOkBig" }));
         }
 
         [Test]

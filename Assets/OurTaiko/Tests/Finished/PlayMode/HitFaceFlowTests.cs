@@ -53,7 +53,7 @@ namespace OurTaiko.Tests
                 Assert.That(face.image.color.a, Is.EqualTo(1).Within(0.001));
                 ring.ShowTime(now + 0.1);
                 Assert.That(ring.image.enabled, Is.True);
-                Assert.That(ring.image.sprite, Is.SameAs(ring.goodBig[3]));
+                Assert.That(ring.image.sprite.name, Is.EqualTo("HitRing_outer_good_big3"));
                 Assert.That(ring.image.color.a, Is.EqualTo(1).Within(0.001));
                 ring.ShowTime(now + 0.201);
                 Assert.That(ring.image.enabled, Is.False, "The ring is gone after 200 ms.");
@@ -73,7 +73,7 @@ namespace OurTaiko.Tests
                 Assert.That(face.image.sprite, Is.SameAs(face.ok));
                 ring.ShowTime(now);
                 Assert.That(ring.image.enabled, Is.True);
-                Assert.That(ring.image.sprite, Is.SameAs(ring.ok[0]));
+                Assert.That(ring.image.sprite.name, Is.EqualTo("HitRing_outer_ok0"));
                 play.Back();
                 float leavingDeadline = Time.realtimeSinceStartup + 20;
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene)
