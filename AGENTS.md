@@ -21,7 +21,7 @@
   - **输入互斥（每帧一击）**：游玩时每帧只判定最早的一次咚／咔打击（键盘、触控、鼠标按发生时间合并排序），同帧其余打击直接丢弃，不判定、不播音效、不亮鼓面。OurTaikoPlayer 的 `player.cpp::handle_input` 每帧按固定顺序（左咚、右咚、左咔、右咔）逐个处理全部打击，这是被修正的行为。后果是已知且接受的：连打中同帧双手只计 1 次；同帧先咔后咚时咔占用该帧；同帧双手打大音符不会误吃下一个音符。实现在 `PlayScene.HitFirstDrumPress`，由 `DrumInputMutexTests.cs` 覆盖。
   - **大音符不需要双手同时击打**：大咚／大咔单侧击打即为完整判定，与小音符同样计分。不实现双手判定窗口或双击加分，不要把它列为未移植功能。
   - **演奏オプション**（用户决定）：ドロン只隐藏音符，小节线保留；ランダム按每个咚／咔音符独立概率换色（きまぐれ 30%、でたらめ 50%），不用原 `modifier_random` 的 (对象数/5)×档位 抽取；演奏スキップ灰显不可改（单人没有 2P 鼓）；轨道徽章网格按整数行，不复制原 `slot/3.0` 浮点下移。详见 `Documentation/PortingNotes.md`「演奏オプション」。
-- Git 已初始化，当前分支为 `kirisamevanilla/unity-play-scene`；提交使用 **Conventional Commits**。保留用户已有改动，不把无关资源混入提交。新建分支默认使用 `kirisamevanilla/` 前缀。
+- Git 已初始化，当前直接在 `main` 上提交（线性历史，无合并提交）；提交使用 **Conventional Commits**。保留用户已有改动，不把无关资源混入提交。新建分支默认使用 `kirisamevanilla/` 前缀。
 - 场景、Sprite 资源、导入设置等持久化内容通过 Unity Editor API 修改并保存；避免手工改 Unity YAML／GUID。现有场景可直接编辑，不要随意执行生成初始场景的工具覆盖布局。
 - 后续交流以中文为主；能根据原代码确定的常规实现直接完成并验证，无需重复询问已经确定的约束。
 
@@ -29,7 +29,7 @@
 
 ### 当前完成状态与交接边界
 
-- 最新提交：`feat(play): port note moji lane`（音符文字，见下文「音符文字（moji）」）。更早为 **`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
+- 最新提交：`feat(play): port note moji lane`（音符文字，见下文「音符文字（moji）」）。其前为音符显隐／层级修复 `dfd5e56`、`5faadfe`、`d6cd16b`、`0e2cbe5`（见下文「音符显隐与层级」）。更早为 **`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
 - `Assets/OurTaiko/Generated/Nijiiro SDF.asset` 是动态 SDF 字体，Unity 会在打开项目、运行测试或保存时自动改写它（用户确认属于 Unity 自身行为，并非用户修改）。出现该 diff 时**不要提交**；收尾时用 `git restore "Assets/OurTaiko/Generated/Nijiiro SDF.asset"` 还原为已提交版本（Editor 打开时它可能被再次写入，必要时关闭 Editor 后再还原）。不要用旧的 TestResults 快照覆盖它。
 - Unity Editor 可能仍由上一会话打开（项目已安装 Pipeline 包）；先用 `unity status` 确认连接再操作，修改 C# 后刷新并确认 `EditorUtility.scriptCompilationFailed` 为 false（编译错误会让 CLI 无法连接或静默失败，看 `~/Library/Logs/Unity/Editor.log` 的 `error CS`）。耗时较长的 Editor 方法会让 CLI 报 5 秒超时，但会在 Editor 中继续执行，需轮询结果。
 - 选曲／结算的下一步候选（均未授权，需用户确认）：文件夹与类别、成绩等级演出、曲目板飞入、难度决定标记弹出、皇冠光芒加算混合、支持字母扩展音符以游玩 TRIPLE HELIX Edit。
@@ -83,6 +83,8 @@
 **7 号气球。** 脸的相对对齐量是音符宽度的 **12/128**，通过锚点随音符尺寸与画布缩放，不能改回固定像素补偿。首次有效咚击打后显示 `总次数 - 已击打次数`，使用 Nijiiro 气泡及数字图集，支持跨位数布局；咔不计数。数字 50 ms 拉伸＋116 ms 回弹，身体按进度使用 0、2、3、4、5、6 帧；吹爆后第 7 帧、数字 0，166 ms 淡出；未吹爆到期立即隐藏。移动时显示 `notes/10` 尾部，击打时替换为膨胀素材；9 号彩球不混用这套显示。`Assets/OurTaiko/Audio/balloon_pop.ogg` 原样复制自 Nijiiro，约 0.414 秒、预加载；手动／自动达到要求次数的那次事件只播放一次，到期未爆不播放。参考 `player.cpp::draw_balloon/check_balloon`、`balloon_counter.cpp` 及 Nijiiro 气球配置。
 
 **音符文字（moji）。** 音符下方的「ドン／ド／コ／カッ／カ／ドン(大)／カッ(大)／連打ー／連打(大)ー／ふうせん／ーっ!!／くすだま」取自 `notes/moji` 12 帧（256×48，Point 采样，`Generated/Moji0–11.asset`）。分配在 `Core/NoteMoji.cs`，照搬 `tja.cpp::modifier_moji/find_streams`：解析器按原版 NoteList 保留源顺序的 `TaikoChart.NoteLists`（公共段一条，每个分支每条路线各一条，含小节线与长音符尾），依次按 8／12／16／24／32 分查连续段（±15 ms，长音符头断开，小节线和尾参与），段内除末个外咚→ド、咔→カ，恰 3 个咚时中间为コ；`ChartModifiers.Apply` 末尾重算，文字随あべこべ／ランダム换色。原版一小节分多行书写时会插入额外隐藏小节线并截断连续段，本项目每小节只有一条小节线，不复制该现象。渲染在 `PlayScene.RenderMoji`：独立的 `NoteLane/MojiClip/Moji` 层紧跟 `LaneClip`（全部文字压在全部音符之上，层内早的音符在上），文字中心比音符中心低 123（skin `moji.y`=209 对 `notes.y`=14）；显隐与音符相同（命中消失、漏音继续流动、ドロン一并隐藏），按自身宽度裁切；气球计数显示期间按 `skip_note` 隐藏；连打为 `moji_drumroll_mid`（宽 8＋长度）→头字→尾字ーっ!!，高度不随 Y 滚动。迁移入口 `ProjectBuilder.ApplyMoji()`。
+
+**音符显隐与层级。** 照搬原版 `draw_note_buffer`：只有击打（良／可／不可）会立即移除音符；超时漏音（`PlaySession.Missed`，由 `AdvanceNotes` 超时置位）与到尾判定的 5／6 号连打继续按原速流过判定点，直到完全离开轨道。气球／彩球仍按吹爆或到期隐藏。裁切不用固定像素：`PlayScene.InLane` 以 `LaneClip` 下音符层的实时 rect 判断，`Reach` 按当前贴图尺寸计算水平范围（普通音符半宽；气球含 12/128 脸偏移与 `notes/10` 尾；连打含长度与尾部贴图，正负滚动均可），小节线按自身半宽。层级按原 `draw_notes` 逆序绘制：`CreateNotes` 对每个音符 `SetAsFirstSibling`，早的音符压在晚的音符上（每个连打内部仍为身体→尾部→头部）。因此音符层子物体顺序与谱面顺序相反，测试和代码须用 `PlayScene.NoteRoot(index)` 取音符，不能用 `noteLayer.GetChild(i)`。由 `ChartTests.OnlyTimedOutNotesAreMarkedMissed` 与 `SceneFlowTests.FinishedRollsAndMissedNotesKeepScrollingPastJudge` 覆盖。
 
 **5／6 号连打。** `PlayScene` 分别持有小／大 `rollBodySprites` 和 `rollTailSprites`；身体只横向拉伸，尾部保持原宽高比，顺序为身体→尾部→头部。源图集左上坐标切片：小身体 `(0,1544,72,192)`、大身体 `(72,1544,72,192)`、小尾 `(0,2120,80,192)`、大尾 `(0,2312,120,192)`。身体长度为连打长度绝对值加音符高度的 **1/128**（192 设计高度时为 1.5），对应原版贴图宽度与 `drumroll_width_offset` 的合成，覆盖接缝。尾部起点位于连打结束位置；负滚动翻转身体和尾部，头部表情保持正向。音符图集使用 **Point** 采样，避免双线性采样混入邻近大连打帧形成杂边。生成资源位于 `Assets/OurTaiko/Generated/`：`RollBodySmall.asset`、`RollBodyBig.asset`、`RollTailSmall.asset`、`RollTailBig.asset`；配置入口 `ProjectBuilder.ApplyDrumrollSprites()`。参考 `player.cpp::draw_drumroll`、`src/libs/texture.cpp` 及 Nijiiro 音符 `texture.json`；头尾同速逻辑未改动。
 
