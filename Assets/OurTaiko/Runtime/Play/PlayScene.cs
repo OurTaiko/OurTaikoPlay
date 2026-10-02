@@ -40,29 +40,42 @@ namespace OurTaiko
         public PlayResult Result { get; private set; }
         public double SongTime => !isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioSettings.dspTime - startDsp;
         public double RenderedTime { get; private set; }
-        public RectTransform NoteRoot(int index) => notes[index].Root;
-        public RectTransform MojiRoot(int index) => notes[index].Moji;
+        // Views come from pools while a note is on the lane; null when it is not drawn.
+        public RectTransform NoteRoot(int index) => shownNotes[index]?.Root;
+        public RectTransform MojiRoot(int index) => shownMoji[index]?.Root;
+        public RectTransform BarRoot(int index) => shownBars[index];
         SongDefinition song;
         bool autoPlay, isReady, hitKa;
         SceneSwitcher switcher;
         double startDsp, frozenTime;
         float feedbackTime = -10, drumTime = -10;
-        readonly List<NoteView> notes = new List<NoteView>();
-        readonly List<RectTransform> bars = new List<RectTransform>();
+        NoteView[] shownNotes = new NoteView[0];
+        MojiView[] shownMoji = new MojiView[0];
+        RectTransform[] shownBars = new RectTransform[0];
+        readonly Stack<NoteView>[] notePool = { new Stack<NoteView>(), new Stack<NoteView>(), new Stack<NoteView>() };
+        readonly Stack<MojiView>[] mojiPool = { new Stack<MojiView>(), new Stack<MojiView>() };
+        readonly Stack<RectTransform> barPool = new Stack<RectTransform>();
         readonly List<DrumPad> pausedPads = new List<DrumPad>();
         bool closingPauseMenu;
         bool resuming, resumeLostFocus;
         int resumeFrame = -1;
         int pauseOpenedFrame = -1;
 
+        // Pool keys: the child objects a note or its text needs.
+        const int PlainShape = 0, BalloonShape = 1, RollShape = 2;
         sealed class NoteView
         {
+            public int Shape;
             public RectTransform Root, Body, Tail;
+            public UnityEngine.UI.Image Head, BodyImage, TailImage, BalloonTail;
             public float TailAspect;
-            public UnityEngine.UI.Image BalloonTail;
-            public GameObject Object;
-            public RectTransform Moji, MojiMid, MojiTail;
-            public float MojiMidAspect;
+        }
+        sealed class MojiView
+        {
+            public int Shape;
+            public RectTransform Root, Mid, Tail;
+            public UnityEngine.UI.Image Head;
+            public float MidAspect;
         }
 
         IEnumerator Start()
@@ -340,88 +353,158 @@ namespace OurTaiko
         {
             var image = r.gameObject.AddComponent<UnityEngine.UI.Image>(); image.sprite = sprite; image.raycastTarget = false; return image;
         }
+        static int ShapeOf(ChartNote note) => note.Kind == NoteKind.Balloon ? BalloonShape : note.IsLong && !note.IsBalloon ? RollShape : PlainShape;
+        static int MojiShapeOf(ChartNote note) => ShapeOf(note) == RollShape ? RollShape - 1 : PlainShape;
+
+        // Only the notes on the lane own views; prewarm enough that the first screens do not allocate.
         void CreateNotes()
         {
-            foreach (var note in Session.Chart.Notes)
+            shownNotes = new NoteView[Session.Chart.Notes.Count];
+            shownMoji = new MojiView[Session.Chart.Notes.Count];
+            shownBars = new RectTransform[Session.Chart.Bars.Count];
+            for (int i = 0; i < 32; i++) notePool[PlainShape].Push(NewNote(PlainShape));
+            for (int i = 0; i < 2; i++) notePool[RollShape].Push(NewNote(RollShape));
+            notePool[BalloonShape].Push(NewNote(BalloonShape));
+            if (mojiLayer != null)
             {
-                var root = Rect(note.Kind.ToString(), noteLayer, 192, 192);
-                // draw_notes walks draw_note_buffer in reverse, so earlier notes
-                // paint over later ones; uGUI draws later siblings on top.
-                root.SetAsFirstSibling();
-                var view = new NoteView { Root = root, Object = root.gameObject };
-                if (note.IsLong && !note.IsBalloon)
-                {
-                    int size = note.Kind == NoteKind.BigRoll ? 1 : 0;
-                    view.Body = Rect("RollBody", root, 0, 0);
-                    view.Body.anchorMin = new Vector2(0.5f, 0);
-                    view.Body.anchorMax = new Vector2(0.5f, 1);
-                    view.Body.pivot = new Vector2(0, 0.5f);
-                    Image(view.Body, rollBodySprites[size]);
-                    view.Tail = Rect("RollTail", root, 0, 0);
-                    view.Tail.anchorMin = view.Body.anchorMin;
-                    view.Tail.anchorMax = view.Body.anchorMax;
-                    view.Tail.pivot = view.Body.pivot;
-                    Image(view.Tail, rollTailSprites[size]);
-                    view.TailAspect = rollTailSprites[size].rect.width / rollTailSprites[size].rect.height;
-                }
-                var head = Rect("Head", root, 0, 0);
-                // Match draw_balloon's balloon_offset as a fraction of the note width.
-                // Stretch anchors keep the face aligned when the note or Canvas scales.
-                float faceOffset = note.Kind == NoteKind.Balloon ? 12f / 128f : 0;
-                head.anchorMin = new Vector2(-faceOffset, 0);
-                head.anchorMax = new Vector2(1 - faceOffset, 1);
-                Image(head, noteSprites[(int)note.Kind]); notes.Add(view);
-                if (note.Kind == NoteKind.Balloon)
-                {
-                    // notes/10 joins the right edge of notes/7 in draw_balloon.
-                    var tail = Rect("BalloonTail", root, 0, 0);
-                    tail.anchorMin = new Vector2(1 - faceOffset, 0);
-                    tail.anchorMax = new Vector2(2 - faceOffset, 1);
-                    view.BalloonTail = Image(tail, balloonTailSprite);
-                }
-                root.gameObject.SetActive(false);
-                if (mojiLayer != null) CreateMoji(note, view);
+                for (int i = 0; i < 32; i++) mojiPool[0].Push(NewMoji(0));
+                for (int i = 0; i < 2; i++) mojiPool[1].Push(NewMoji(1));
             }
-            foreach (var bar in Session.Chart.Bars)
+            for (int i = 0; i < 8; i++) barPool.Push(NewBar());
+        }
+        NoteView NewNote(int shape)
+        {
+            var root = Rect("Note", noteLayer, NoteSize, NoteSize);
+            var view = new NoteView { Shape = shape, Root = root };
+            if (shape == RollShape)
             {
-                var root = Rect("Measure", barLayer, bar.IsBranchStart ? 6 : 3, 200);
-                Image(root, null).color = bar.IsBranchStart ? new Color(1, 0.8f, 0.2f, 0.8f) : new Color(1, 1, 1, 0.35f);
-                bars.Add(root); root.gameObject.SetActive(false);
+                view.Body = Rect("RollBody", root, 0, 0);
+                view.Body.anchorMin = new Vector2(0.5f, 0);
+                view.Body.anchorMax = new Vector2(0.5f, 1);
+                view.Body.pivot = new Vector2(0, 0.5f);
+                view.BodyImage = Image(view.Body, null);
+                view.Tail = Rect("RollTail", root, 0, 0);
+                view.Tail.anchorMin = view.Body.anchorMin;
+                view.Tail.anchorMax = view.Body.anchorMax;
+                view.Tail.pivot = view.Body.pivot;
+                view.TailImage = Image(view.Tail, null);
             }
+            var head = Rect("Head", root, 0, 0);
+            // Match draw_balloon's balloon_offset as a fraction of the note width.
+            // Stretch anchors keep the face aligned when the note or Canvas scales.
+            float faceOffset = shape == BalloonShape ? BalloonFace : 0;
+            head.anchorMin = new Vector2(-faceOffset, 0);
+            head.anchorMax = new Vector2(1 - faceOffset, 1);
+            view.Head = Image(head, null);
+            if (shape == BalloonShape)
+            {
+                // notes/10 joins the right edge of notes/7 in draw_balloon.
+                var tail = Rect("BalloonTail", root, 0, 0);
+                tail.anchorMin = new Vector2(1 - faceOffset, 0);
+                tail.anchorMax = new Vector2(2 - faceOffset, 1);
+                view.BalloonTail = Image(tail, balloonTailSprite);
+            }
+            root.gameObject.SetActive(false);
+            return view;
         }
         // draw_notes' second pass draws every text after every note, so the text sits in its
         // own layer above the notes; within it earlier notes again paint over later ones.
-        void CreateMoji(ChartNote note, NoteView view)
+        MojiView NewMoji(int shape)
         {
-            var root = Rect(note.Kind + "Moji", mojiLayer, MojiWidth, MojiHeight);
-            root.SetAsFirstSibling();
-            view.Moji = root;
-            if (note.IsLong && !note.IsBalloon)
+            var root = Rect("Moji", mojiLayer, MojiWidth, MojiHeight);
+            var view = new MojiView { Shape = shape, Root = root };
+            if (shape == 1)
             {
                 // draw_drumroll: moji_drumroll_mid from head to tail, then the head and tail text.
-                view.MojiMid = Rect("Mid", root, 0, 0);
-                view.MojiMid.anchorMin = new Vector2(0.5f, 0);
-                view.MojiMid.anchorMax = new Vector2(0.5f, 1);
-                view.MojiMid.pivot = new Vector2(0, 0.5f);
-                Image(view.MojiMid, mojiRollSprite);
-                view.MojiMidAspect = mojiRollSprite.rect.width / mojiRollSprite.rect.height;
+                view.Mid = Rect("Mid", root, 0, 0);
+                view.Mid.anchorMin = new Vector2(0.5f, 0);
+                view.Mid.anchorMax = new Vector2(0.5f, 1);
+                view.Mid.pivot = new Vector2(0, 0.5f);
+                Image(view.Mid, mojiRollSprite);
+                view.MidAspect = mojiRollSprite.rect.width / mojiRollSprite.rect.height;
             }
             var head = Rect("Head", root, 0, 0);
             head.anchorMin = Vector2.zero; head.anchorMax = Vector2.one;
-            Image(head, mojiSprites[note.Moji]);
-            if (view.MojiMid != null)
+            view.Head = Image(head, null);
+            if (view.Mid != null)
             {
-                view.MojiTail = Rect("Tail", root, 0, 0);
-                view.MojiTail.anchorMin = Vector2.zero; view.MojiTail.anchorMax = Vector2.one;
-                Image(view.MojiTail, mojiSprites[NoteMoji.Tail]);
+                view.Tail = Rect("Tail", root, 0, 0);
+                view.Tail.anchorMin = Vector2.zero; view.Tail.anchorMax = Vector2.one;
+                Image(view.Tail, mojiSprites[NoteMoji.Tail]);
             }
             root.gameObject.SetActive(false);
+            return view;
+        }
+        RectTransform NewBar()
+        {
+            var root = Rect("Measure", barLayer, 3, 200);
+            Image(root, null);
+            root.gameObject.SetActive(false);
+            return root;
+        }
+
+        NoteView AcquireNote(int index, ChartNote note)
+        {
+            int shape = ShapeOf(note);
+            var view = notePool[shape].Count > 0 ? notePool[shape].Pop() : NewNote(shape);
+            view.Root.name = note.Kind.ToString();
+            view.Head.sprite = noteSprites[(int)note.Kind];
+            if (shape == RollShape)
+            {
+                int size = note.Kind == NoteKind.BigRoll ? 1 : 0;
+                view.BodyImage.sprite = rollBodySprites[size];
+                view.TailImage.sprite = rollTailSprites[size];
+                view.TailAspect = RollTailAspect(note);
+            }
+            shownNotes[index] = view;
+            view.Root.gameObject.SetActive(true);
+            return view;
+        }
+        void ReleaseNote(int index)
+        {
+            var view = shownNotes[index];
+            view.Root.gameObject.SetActive(false);
+            notePool[view.Shape].Push(view);
+            shownNotes[index] = null;
+        }
+        MojiView AcquireMoji(int index, ChartNote note)
+        {
+            int shape = MojiShapeOf(note);
+            var view = mojiPool[shape].Count > 0 ? mojiPool[shape].Pop() : NewMoji(shape);
+            view.Root.name = note.Kind + "Moji";
+            view.Head.sprite = mojiSprites[note.Moji];
+            shownMoji[index] = view;
+            view.Root.gameObject.SetActive(true);
+            return view;
+        }
+        void ReleaseMoji(int index)
+        {
+            var view = shownMoji[index];
+            view.Root.gameObject.SetActive(false);
+            mojiPool[view.Shape].Push(view);
+            shownMoji[index] = null;
+        }
+        float RollTailAspect(ChartNote note)
+        {
+            var sprite = rollTailSprites[note.Kind == NoteKind.BigRoll ? 1 : 0];
+            return sprite.rect.width / sprite.rect.height;
+        }
+
+        // draw_notes walks draw_note_buffer in reverse, so earlier notes paint over
+        // later ones; uGUI draws later siblings on top. Pooled views are re-stacked
+        // whenever a note enters, since a reused view keeps its old sibling slot.
+        static void Restack<T>(T[] shown, Func<T, Transform> root) where T : class
+        {
+            for (int i = shown.Length - 1; i >= 0; i--)
+                if (shown[i] != null) root(shown[i]).SetAsLastSibling();
         }
 
         // Nijiiro: lane x=498/y=276, judge x=618, note top=14 with 192-pixel sprites.
         const float JudgeLocalX = 120, JudgeLocalY = -110;
         // notes/moji frames are 256x48; skin moji.y=209 against notes.y=14, centre to centre.
-        const float MojiWidth = 256, MojiHeight = 48, MojiDrop = 209 - 14 + MojiHeight / 2 - 192 / 2;
+        const float MojiWidth = 256, MojiHeight = 48, MojiDrop = 209 - 14 + MojiHeight / 2 - NoteSize / 2;
+        // Nijiiro note frames are 192x192; draw_balloon shifts the face by 12/128 of the width.
+        const float NoteSize = 192, BalloonFace = 12f / 128f;
         double TravelDistance => noteLayer.rect.width - JudgeLocalX;
 
         Vector2 Position(ChartNote note, double time)
@@ -433,10 +516,11 @@ namespace OurTaiko
         void RenderNotes(double time)
         {
             RenderedTime = time;
-            bool gogo = false;
-            for (int i = 0; i < notes.Count; i++)
+            bool gogo = false, notesEntered = false, mojiEntered = false;
+            var chartNotes = Session.Chart.Notes;
+            for (int i = 0; i < chartNotes.Count; i++)
             {
-                var note = Session.Chart.Notes[i]; var view = notes[i]; var pos = Position(note, time);
+                var note = chartNotes[i]; var view = shownNotes[i]; var pos = Position(note, time);
                 if (note.IsBalloon && time >= note.Time) pos = new Vector2(JudgeLocalX, JudgeLocalY);
                 float length = note.IsLong && !note.IsBalloon ? (float)NoteScroll.RollLength(note, TravelDistance) : 0;
                 // ドロン hides the notes; they are still judged. Like draw_note_buffer,
@@ -444,76 +528,107 @@ namespace OurTaiko
                 // missed by timeout keep scrolling until they leave the lane.
                 bool rolling = note.IsLong && !note.IsBalloon;
                 bool alive = note.Display && Session.IsActive(note) && (rolling || Session.Missed[i] || !Session.Resolved[i]);
-                bool visible = alive && InLane(pos.x, Reach(view, length));
-                if (view.Moji != null) RenderMoji(i, view, pos, length, alive);
-                view.Object.SetActive(visible);
-                if (visible)
+                bool visible = alive && InLane(pos.x, Reach(note, view, length));
+                if (mojiLayer != null) mojiEntered |= RenderMoji(i, note, pos, length, alive);
+                if (!visible)
                 {
-                    view.Root.anchoredPosition = pos;
-                    if (view.BalloonTail != null) view.BalloonTail.enabled = balloonCounter.NoteIndex != i;
-                    if (view.Body != null)
-                    {
-                        // draw_drumroll adds the strip's native width to length +
-                        // drumroll_width_offset: (48 - 47) / 128 of the note height.
-                        float overlap = view.Root.rect.height / 128f;
-                        float direction = length < 0 ? -1 : 1;
-                        view.Body.sizeDelta = new Vector2(Mathf.Abs(length) + overlap, 0);
-                        view.Body.localScale = new Vector3(direction, 1, 1);
-                        view.Tail.anchoredPosition = new Vector2(length, 0);
-                        view.Tail.sizeDelta = new Vector2(view.Root.rect.height * view.TailAspect, 0);
-                        view.Tail.localScale = view.Body.localScale;
-                    }
-                    if (note.Gogo && note.Time - time < 1) gogo = true;
-                    if (note.Kind == NoteKind.Kusudama && time >= note.Time) rollCounter.text = "BALLOON  " + Math.Max(0, note.BalloonHits - Session.LongHits[i]);
+                    if (view != null) ReleaseNote(i);
+                    continue;
                 }
+                if (view == null) { view = AcquireNote(i, note); notesEntered = true; }
+                else if (!view.Root.gameObject.activeSelf) view.Root.gameObject.SetActive(true);
+                view.Root.anchoredPosition = pos;
+                if (view.BalloonTail != null) view.BalloonTail.enabled = balloonCounter.NoteIndex != i;
+                if (view.Body != null)
+                {
+                    // draw_drumroll adds the strip's native width to length +
+                    // drumroll_width_offset: (48 - 47) / 128 of the note height.
+                    float overlap = view.Root.rect.height / 128f;
+                    float direction = length < 0 ? -1 : 1;
+                    view.Body.sizeDelta = new Vector2(Mathf.Abs(length) + overlap, 0);
+                    view.Body.localScale = new Vector3(direction, 1, 1);
+                    view.Tail.anchoredPosition = new Vector2(length, 0);
+                    view.Tail.sizeDelta = new Vector2(view.Root.rect.height * view.TailAspect, 0);
+                    view.Tail.localScale = view.Body.localScale;
+                }
+                if (note.Gogo && note.Time - time < 1) gogo = true;
+                if (note.Kind == NoteKind.Kusudama && time >= note.Time) rollCounter.text = "BALLOON  " + Math.Max(0, note.BalloonHits - Session.LongHits[i]);
             }
-            for (int i = 0; i < bars.Count; i++)
+            if (notesEntered) Restack(shownNotes, v => v.Root);
+            if (mojiEntered) Restack(shownMoji, v => v.Root);
+            for (int i = 0; i < shownBars.Length; i++)
             {
-                var pos = Position(Session.Chart.Bars[i], time); pos.y -= 4; bars[i].anchoredPosition = pos;
-                float half = bars[i].rect.width / 2;
-                bars[i].gameObject.SetActive(Session.Chart.Bars[i].Display && Session.IsActive(Session.Chart.Bars[i]) && InLane(pos.x, new Vector2(-half, half)));
+                var bar = Session.Chart.Bars[i];
+                var pos = Position(bar, time); pos.y -= 4;
+                float half = (bar.IsBranchStart ? 6 : 3) / 2f;
+                bool visible = bar.Display && Session.IsActive(bar) && InLane(pos.x, new Vector2(-half, half));
+                var root = shownBars[i];
+                if (!visible)
+                {
+                    if (root != null) { root.gameObject.SetActive(false); barPool.Push(root); shownBars[i] = null; }
+                    continue;
+                }
+                if (root == null)
+                {
+                    root = shownBars[i] = barPool.Count > 0 ? barPool.Pop() : NewBar();
+                    root.sizeDelta = new Vector2(bar.IsBranchStart ? 6 : 3, 200);
+                    root.GetComponent<UnityEngine.UI.Image>().color = bar.IsBranchStart ? new Color(1, 0.8f, 0.2f, 0.8f) : new Color(1, 1, 1, 0.35f);
+                    root.gameObject.SetActive(true);
+                }
+                root.anchoredPosition = pos;
             }
             gogoTint.alpha = gogo ? 0.18f + Mathf.Sin((float)time * 12) * 0.05f : 0;
         }
 
         // The text follows its note's lifetime and is culled by its own extent.
-        void RenderMoji(int index, NoteView view, Vector2 pos, float length, bool alive)
+        // Returns whether a pooled view was taken for it this frame.
+        bool RenderMoji(int index, ChartNote note, Vector2 pos, float length, bool alive)
         {
             // skip_note: a balloon whose counter is up draws neither the note nor its text.
             alive &= balloonCounter.NoteIndex != index;
+            bool roll = MojiShapeOf(note) == 1;
+            var view = shownMoji[index];
             // draw_drumroll places roll text at the lane height, ignoring the head's Y scroll.
-            var at = new Vector2(pos.x, (view.MojiMid != null ? JudgeLocalY : pos.y) - MojiDrop);
-            float half = view.Moji.rect.width / 2;
-            var reach = view.MojiMid == null ? new Vector2(-half, half)
+            var at = new Vector2(pos.x, (roll ? JudgeLocalY : pos.y) - MojiDrop);
+            float half = (view != null ? view.Root.rect.width : MojiWidth) / 2;
+            var reach = !roll ? new Vector2(-half, half)
                 : new Vector2(Math.Min(-half, length - half), Math.Max(half, length + half));
-            bool visible = alive && InLane(at.x, reach);
-            view.Moji.gameObject.SetActive(visible);
-            if (!visible) return;
-            view.Moji.anchoredPosition = at;
-            if (view.MojiMid == null) return;
+            if (!alive || !InLane(at.x, reach))
+            {
+                if (view != null) ReleaseMoji(index);
+                return false;
+            }
+            bool entered = view == null;
+            if (entered) view = AcquireMoji(index, note);
+            else if (!view.Root.gameObject.activeSelf) view.Root.gameObject.SetActive(true);
+            view.Root.anchoredPosition = at;
+            if (!roll) return entered;
             // The strip is drawn native width + length wide from the head, like t_moji_drumroll_mid's x2.
-            float width = view.Moji.rect.height * view.MojiMidAspect + length;
-            view.MojiMid.sizeDelta = new Vector2(Mathf.Abs(width), 0);
-            view.MojiMid.localScale = new Vector3(width < 0 ? -1 : 1, 1, 1);
-            view.MojiTail.anchoredPosition = new Vector2(length, 0);
+            float width = view.Root.rect.height * view.MidAspect + length;
+            view.Mid.sizeDelta = new Vector2(Mathf.Abs(width), 0);
+            view.Mid.localScale = new Vector3(width < 0 ? -1 : 1, 1, 1);
+            view.Tail.anchoredPosition = new Vector2(length, 0);
+            return entered;
         }
 
         // The lane clip mask is the visible area, in Canvas units that follow the
         // window resolution, so cull against its live rect instead of fixed pixels.
         bool InLane(float x, Vector2 reach) => x + reach.y >= 0 && x + reach.x <= noteLayer.rect.width;
 
-        // Horizontal extent of a note's sprites relative to its centre, from their current sizes.
-        static Vector2 Reach(NoteView view, float length)
+        // Horizontal extent of a note's sprites relative to its centre, from the current
+        // size of its view, or the design size while it has none.
+        Vector2 Reach(ChartNote note, NoteView view, float length)
         {
-            float width = view.Root.rect.width, half = width / 2;
-            if (view.BalloonTail != null)
+            Vector2 size = view != null ? view.Root.rect.size : new Vector2(NoteSize, NoteSize);
+            float width = size.x, half = width / 2;
+            if (note.Kind == NoteKind.Balloon)
             {
                 // The face shifts left by 12/128 of the width; notes/10 follows it.
-                float face = width * 12f / 128f;
+                float face = width * BalloonFace;
                 return new Vector2(-half - face, half + width - face);
             }
-            if (view.Body == null) return new Vector2(-half, half);
-            float tail = view.Root.rect.height * view.TailAspect;
+            if (!note.IsLong || note.IsBalloon) return new Vector2(-half, half);
+            float tail = size.y * RollTailAspect(note);
             return length >= 0 ? new Vector2(-half, Math.Max(half, length + tail)) : new Vector2(Math.Min(-half, length - tail), half);
         }
     }

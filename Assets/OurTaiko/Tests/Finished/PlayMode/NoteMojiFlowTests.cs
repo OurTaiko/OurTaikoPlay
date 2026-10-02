@@ -32,8 +32,12 @@ namespace OurTaiko.Tests
                 string Frame(Transform part) => part.GetComponent<UnityEngine.UI.Image>().sprite.name;
 
                 // ドコドン, ドドカッ, then 連打ー … ーっ!! and a lone ドン.
-                Assert.That(Enumerable.Range(0, notes.Count).Select(i => Frame(play.MojiRoot(i).Find("Head"))),
+                // Only notes on the lane own pooled text views; show each one at its judge time.
+                string FrameAt(int i) { Render.Invoke(play, new object[] { notes[i].Time }); return Frame(play.MojiRoot(i).Find("Head")); }
+                Assert.That(Enumerable.Range(0, notes.Count).Select(FrameAt),
                     Is.EqualTo(new[] { "Moji1", "Moji2", "Moji0", "Moji1", "Moji1", "Moji3", "Moji7", "Moji0" }));
+                Render.Invoke(play, new object[] { 0.0 });
+                Canvas.ForceUpdateCanvases();
                 var roll = play.MojiRoot(6);
                 Assert.That(Frame(roll.Find("Tail")), Is.EqualTo("Moji10"));
                 Assert.That(roll.Find("Mid").GetSiblingIndex(), Is.LessThan(roll.Find("Head").GetSiblingIndex()));
@@ -41,11 +45,11 @@ namespace OurTaiko.Tests
 
                 // Second pass of draw_notes: all text above all notes, earlier text over later text.
                 Assert.That(play.mojiLayer.parent.GetSiblingIndex(), Is.EqualTo(play.noteLayer.parent.GetSiblingIndex() + 1));
-                for (int i = 1; i < notes.Count; i++)
+                for (int i = 1; i <= 6; i++)
                     Assert.That(play.MojiRoot(i - 1).GetSiblingIndex(), Is.GreaterThan(play.MojiRoot(i).GetSiblingIndex()));
+                for (int i = 1; i <= 6; i++)
+                    Assert.That(play.NoteRoot(i - 1).GetSiblingIndex(), Is.GreaterThan(play.NoteRoot(i).GetSiblingIndex()));
 
-                Render.Invoke(play, new object[] { 0.0 });
-                Canvas.ForceUpdateCanvases();
                 for (int i = 0; i < 6; i++)
                 {
                     var note = play.NoteRoot(i); var moji = play.MojiRoot(i);
@@ -59,15 +63,16 @@ namespace OurTaiko.Tests
                 // A hit note takes its text with it; a missed one keeps both scrolling.
                 play.Session.Resolved[0] = true;
                 Render.Invoke(play, new object[] { 0.1 });
-                Assert.That(play.NoteRoot(0).gameObject.activeSelf || play.MojiRoot(0).gameObject.activeSelf, Is.False);
+                Assert.That(play.NoteRoot(0) == null && play.MojiRoot(0) == null, Is.True);
                 play.Session.Missed[0] = true;
                 Render.Invoke(play, new object[] { 0.1 });
-                Assert.That(play.NoteRoot(0).gameObject.activeSelf && play.MojiRoot(0).gameObject.activeSelf, Is.True);
+                Assert.That(play.NoteRoot(0) != null && play.MojiRoot(0) != null, Is.True);
 
                 // The roll strip spans head to tail: native 8 px plus the roll length.
                 var rollNote = notes[6];
                 Render.Invoke(play, new object[] { rollNote.Time - 0.2 });
                 Canvas.ForceUpdateCanvases();
+                roll = play.MojiRoot(6);
                 float length = (float)NoteScroll.RollLength(rollNote, play.noteLayer.rect.width - 120);
                 Assert.That(roll.Find("Mid").GetComponent<RectTransform>().rect.width, Is.EqualTo(8 + length).Within(0.01));
                 Assert.That(((RectTransform)roll.Find("Tail")).anchoredPosition.x, Is.EqualTo(length).Within(0.01));
@@ -76,7 +81,7 @@ namespace OurTaiko.Tests
                 // ドロン hides the text with the note.
                 notes[7].Display = false;
                 Render.Invoke(play, new object[] { notes[7].Time - 0.5 });
-                Assert.That(play.MojiRoot(7).gameObject.activeSelf, Is.False);
+                Assert.That(play.MojiRoot(7), Is.Null);
                 play.Back();
                 float leavingDeadline = Time.realtimeSinceStartup + 20;
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene)
