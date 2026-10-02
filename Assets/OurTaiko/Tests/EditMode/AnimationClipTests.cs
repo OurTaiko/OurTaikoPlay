@@ -290,5 +290,23 @@ namespace OurTaiko.Tests
             finally { Object.DestroyImmediate(root); }
             WithPlayScene(play => Assert.That(play.branchLane.GetComponent<ClipSampler>().clip, Is.SameAs(clip)));
         }
+
+        [Test]
+        public void DrumSqueezeEasesTo95PercentAndBack()
+        {
+            var clip = Clip("DrumSqueeze");
+            Assert.That(clip.length, Is.EqualTo(0.14).Within(1e-4));
+            float Ease(double p) => (float)(p * (2 - p));
+            foreach (double ms in new[] { 0.0, 20, 35, 70, 90, 105, 139, 140 })
+            {
+                float expected = ms < 70 ? Mathf.Lerp(1, 0.95f, Ease(ms / 70)) : ms < 140 ? Mathf.Lerp(0.95f, 1, Ease(ms / 70 - 1)) : 1;
+                var scale = Sampled(clip, ms / 1000, go => go.transform.localScale);
+                Assert.That(scale.x, Is.EqualTo(expected).Within(1e-4), $"{ms} ms");
+                Assert.That(scale.y, Is.EqualTo(expected).Within(1e-4), $"{ms} ms");
+                Assert.That(scale.z, Is.EqualTo(1));
+            }
+            WithPlayScene(play => Assert.That(play.pauseButton.transform.parent.GetComponentInChildren<DrumPad>(true)
+                .drum.GetComponent<ClipSampler>().clip, Is.SameAs(clip)));
+        }
     }
 }

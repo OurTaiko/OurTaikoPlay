@@ -72,6 +72,7 @@
 - `CellFade.anim`：魂槽新增格子 450 ms 线性淡入（只写透明度）；哪一格、贴图与位置仍由 `SoulGaugeView` 决定。迁移 `ProjectBuilder.ApplyCellFadeClip()`。
 - `NameplateRainbow.anim`：名牌彩虹称号带（全局动画 12），`Band` 6 帧×50 ms、300 ms 循环，`BandUnder` 从第 1 帧起显示前一帧；真实时间，只在 `rainbow` 称号时采样。`Nameplate.prefab` 根物体带 Animator＋ClipSampler，`NameplateLayout.RainbowFrame` 已删除。迁移 `ProjectBuilder.ApplyNameplateRainbowClip()`。
 - `BranchChange.anim`：分支切换（Nijiiro ID 41–45）：旧标签 100 ms 缓出推移 30 px、再与新标签 133 ms 缓出滑动 105 px 并交叉淡入淡出，背景淡到 0.5，等级徽章 116＋116 ms 放大到 1.2 再回、1276–1392 ms 淡出。剪辑写入 `BranchLaneView` 的 `previousOffset`／`currentOffset`（相对保存位置的偏移，代码按升降方向取正负），因此 Inspector 中调整的标签位置仍有效；缓出段用两键 Hermite 精确表示二次曲线。迁移 `ProjectBuilder.ApplyBranchChangeClip()`。
+- `DrumSqueeze.anim`：触控鼓按下（全局动画 66）70 ms 缓出缩至 0.95、70 ms 缓出回 1，挂在 `TouchDrum/Drum` 上，真实时间、每次按下重新开始；禁用时 `DrumPad` 直接复原比例。迁移 `ProjectBuilder.ApplyDrumSqueezeClip()`。
 - 不转换：Lumen 时间轴（`Animations/*.txt`，原版导出原样副本，Entry／选曲／加载幕布／结算）、场景切换与暂停菜单淡入淡出（从当前不透明度插值，可中断）、由游戏状态驱动的表现（音符滚动与飞行、气球膨胀、魂槽填充）。
 
 ### 游玩暂停菜单（2026-10-02）

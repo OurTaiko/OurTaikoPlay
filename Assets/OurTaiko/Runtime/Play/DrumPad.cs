@@ -14,12 +14,9 @@ namespace OurTaiko
     {
         // Ellipse radii as fractions of the design width, centred on the bottom edge.
         const float RadiusX = 0.262f, RadiusY = 0.242f;
-        // Global animation 66: 70 ms to 0.95 and 70 ms back, quadratic ease-out, restarted per press.
-        const double SqueezeMs = 70;
-        const float SqueezeScale = 0.95f;
-
-        [Tooltip("The drum picture; scaled about its bottom-centre pivot when pressed.")]
+        [Tooltip("The drum picture; DrumSqueeze.anim scales it about its bottom-centre pivot when pressed.")]
         public RectTransform drum;
+        ClipSampler squeeze;
         RectTransform rect;
         Canvas canvas;
         double pressedAt = double.NegativeInfinity;
@@ -49,14 +46,11 @@ namespace OurTaiko
         void Update()
         {
             if (drum == null) return;
-            double elapsed = Time.realtimeSinceStartupAsDouble * 1000 - pressedAt;
-            float scale = 1;
-            if (elapsed < SqueezeMs) scale = Mathf.Lerp(1, SqueezeScale, EaseOut(elapsed / SqueezeMs));
-            else if (elapsed < SqueezeMs * 2) scale = Mathf.Lerp(SqueezeScale, 1, EaseOut(elapsed / SqueezeMs - 1));
-            drum.localScale = new Vector3(scale, scale, 1);
+            if (squeeze == null) squeeze = drum.GetComponent<ClipSampler>();
+            // Global animation 66, restarted per press; the clip ends back at full size.
+            double elapsed = (Time.realtimeSinceStartupAsDouble * 1000 - pressedAt) / 1000;
+            squeeze.Sample(System.Math.Min(elapsed, squeeze.clip.length));
         }
-
-        static float EaseOut(double progress) => (float)(progress * (2 - progress));
 
         // Covers the whole screen like the original; points over a uGUI control are left to that control.
         public bool TryHit(Vector2 screenPoint, out InputKey key)

@@ -62,6 +62,24 @@ namespace OurTaiko.Editor
             image.color = new Color(1, 1, 1, 0.5f);
             image.raycastTarget = false;
             pad.drum = drum;
+            AttachClip(drum.gameObject, DrumSqueezeClip());
         }
+
+        [MenuItem("OurTaiko/Apply Drum Squeeze Clip")]
+        public static void ApplyDrumSqueezeClip() => EditPlayScene(play =>
+        {
+            var pad = play.pauseButton.transform.parent.GetComponentInChildren<DrumPad>(true);
+            AttachClip(pad.drum.gameObject, DrumSqueezeClip());
+        });
+
+        // Global animation 66: 70 ms to 0.95 and 70 ms back, each a quadratic ease-out (exact as
+        // two-key Hermite segments).
+        static AnimationClip DrumSqueezeClip() => SaveClip("DrumSqueeze", 60, false, clip =>
+        {
+            const float half = 0.07f, low = 0.95f;
+            foreach (var axis in new[] { "x", "y" })
+                HermiteCurve(clip, "", typeof(Transform), "m_LocalScale." + axis,
+                    new Keyframe(0, 1, 0, 2 * (low - 1) / half), new Keyframe(half, low, 0, 2 * (1 - low) / half), new Keyframe(2 * half, 1, 0, 0));
+        });
     }
 }
