@@ -65,5 +65,15 @@ namespace OurTaiko.Tests
                 Assert.That(play.dancers.All(d => d.clip == clip && d.GetComponent<Animator>() != null), Is.True);
             });
         }
+
+        [Test]
+        public void DrumFlashStaysLitFor120Ms()
+        {
+            var clip = Clip("DrumFlash");
+            Assert.That(clip.isLooping, Is.False);
+            foreach (var (t, lit) in new[] { (0.0, true), (0.119, true), (0.12, false), (1.0, false) })
+                Assert.That(Sampled(clip, t, go => go.GetComponent<UnityEngine.UI.Image>().enabled), Is.EqualTo(lit), $"{t} s");
+            WithPlayScene(play => Assert.That(play.drumFlashes.All(f => f.GetComponent<ClipSampler>().clip == clip), Is.True));
+        }
     }
 }

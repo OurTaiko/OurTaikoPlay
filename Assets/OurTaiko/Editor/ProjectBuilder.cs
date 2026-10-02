@@ -185,7 +185,7 @@ namespace OurTaiko.Editor
             Picture(lane, "Drum", "game/lane/drum", 211, 22);
             string[] drumNames = { "drum_don_l", "drum_don_r", "drum_kat_l", "drum_kat_r" };
             controller.drumFlashes = drumNames.Select(n => Picture(lane, n, "game/lane/" + n, 211, 22)).ToArray();
-            foreach (var flash in controller.drumFlashes) flash.enabled = false;
+            foreach (var flash in controller.drumFlashes) { flash.enabled = false; AttachClip(flash.gameObject, DrumFlashClip()); }
             controller.combo = Label(lane, "Combo", "", 143, 22, 64, 96, 31);
             controller.hitFace = PlaceHitFace(lane, 342, 0);
             controller.hitRing = PlaceHitRing(lane, 282, -60);

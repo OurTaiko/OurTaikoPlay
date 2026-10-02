@@ -26,6 +26,7 @@ namespace OurTaiko
         public HitRingView hitRing;
         public SoulGaugeView soulGauge;
         public NoteArcView noteArcs;
+        [Tooltip("drum_don_l/r, drum_kat_l/r; each plays DrumFlash.anim from its own hit.")]
         public UnityEngine.UI.Image[] drumFlashes;
         public ScoreCounterView scoreCounter;
         public TMP_Text title, subtitle, combo, counters, rollCounter, resultText;
@@ -51,7 +52,9 @@ namespace OurTaiko
         bool autoPlay, isReady, hitKa;
         SceneSwitcher switcher;
         double startDsp, frozenTime;
-        float feedbackTime = -10, drumTime = -10;
+        float feedbackTime = -10;
+        readonly float[] flashedAt = { -10, -10, -10, -10 };
+        ClipSampler[] flashClips;
         NoteView[] shownNotes = new NoteView[0];
         MojiView[] shownMoji = new MojiView[0];
         RectTransform[] shownBars = new RectTransform[0];
@@ -181,8 +184,7 @@ namespace OurTaiko
             judgment.color = new Color(1, 1, 1, feedback);
             hitFace.ShowTime(time);
             hitRing.ShowTime(time);
-            foreach (var flash in drumFlashes)
-                if (Time.unscaledTime - drumTime > 0.12f) flash.enabled = false;
+            for (int i = 0; i < drumFlashes.Length; i++) ShowFlash(i);
             if (time > Math.Max(Session.Chart.Duration, song.music != null ? song.music.length : 0) + 1) Finish();
         }
 
@@ -207,8 +209,16 @@ namespace OurTaiko
         {
             var clip = isKa ? ka : don;
             if (clip != null) hitAudio.PlayOneShot(clip);
-            drumFlashes[(isKa ? 2 : 0) + (right ? 1 : 0)].enabled = true;
-            drumTime = Time.unscaledTime;
+            int flash = (isKa ? 2 : 0) + (right ? 1 : 0);
+            flashedAt[flash] = Time.unscaledTime;
+            ShowFlash(flash);
+        }
+        // Real time since that drum's last hit; the clip ends switched off.
+        void ShowFlash(int index)
+        {
+            flashClips ??= Array.ConvertAll(drumFlashes, flash => flash.GetComponent<ClipSampler>());
+            var sampler = flashClips[index];
+            sampler.Sample(Math.Min(Time.unscaledTime - flashedAt[index], sampler.clip.length));
         }
         void OnJudged(int index, Judgment result)
         {
