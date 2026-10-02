@@ -353,7 +353,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 场景结构 `NoteLane/Combo`（`ComboView`）：`Caption`、`Digits`（数字行，运行时只换 sprite 与排版，位数多时追加）、`Glimmer/Row0–2/Rise/Gleam0–2`（剪辑只写 `Rise` 的 y 与 CanvasGroup 透明度，Row 位置可在场景中调整）。编辑态保存金色「123」预览，开始游玩时隐藏。迁移入口 `ProjectBuilder.ApplyCombo()`（菜单 OurTaiko/Apply Nijiiro Combo），已有 `ComboView` 时只刷新 sprite 与剪辑、保留布局。
 - 每 100 连击提示（`combo_announce.cpp`＋Nijiiro `Scripts/game/combo_announce.lua`）：已移植，见下文「连击提示与语音」。
 
-验证：EditMode `AnimationClipTests` 21/21（含 `ComboGlimmerRowsRiseAndFadeOnTheirOwnPhase`）；PlayMode `ComboFlowTests` 1/1、`ScoreGaugeFlowTests` 1/1、`NameplateFlowTests` 3/3；截图 `TestResults/Combo10.png`、`Combo50.png`、`Combo101.png`。
+验证：EditMode `AnimationClipTests` 21/21（含 `ComboGlimmerRowsRiseAndFadeOnTheirOwnPhase`）；PlayMode `ComboFlowTests` 1/1、`ScoreGaugeFlowTests` 1/1、`NameplateFlowTests` 3/3；截图 `TestResults/Combo10.png`、`Combo50.png`、`Combo101.png`。2026-10-02 用户确认完成后，`ComboFlowTests` 移入 `OurTaiko.FinishedPlayModeTests`，闪光测试拆成 `ComboGlimmerClipTests` 移入 `OurTaiko.FinishedTests`（`AnimationClipTests` 余 20 个）。
 
 ### 连击提示与语音（2026-10-02）
 
