@@ -5,19 +5,19 @@
 ## 运行
 
 1. 用 Unity Hub 打开本目录。
-2. 打开 `Assets/Scenes/Test_DefaultScene.unity`，点击 Unity 的 Play。
-3. 选择 TRIPLE HELIX（含音乐）、Input Calibration（原项目的无音乐校准谱）或 Branch Training（分支练习谱），点击 PLAY / 按 Enter。
+2. 打开 `Assets/Scenes/SongSelect.unity`（Build Settings 的首个场景），点击 Unity 的 Play。
+3. 在 Nijiiro 选曲中选择 TRIPLE HELIX（含音乐）、Input Calibration（原项目的无音乐校准谱）或 Branch Training（分支练习谱）及难度。
 
 也可直接打开 `Assets/Scenes/SinglePlayScene.unity` 运行，默认载入 TRIPLE HELIX。
 
-入口右上角的 **SONG SELECT / S** 进入 Nijiiro 选曲场景 `SongSelect.unity`；游玩结束后进入结算场景 `Result.unity`，再回到开始游玩的场景。三个场景之间的切换全部交给全局 SceneSwitcher。开始游玩时（选曲决定或入口开始）显示 Nijiiro 彩虹幕布：幕布关闭后进入 `SongLoadingScene.unity` 解析谱面并载入歌曲（至少停留 2 秒），再在游玩场景上打开。
+选曲场景 `SongSelect.unity` 是游戏入口；游玩结束后进入结算场景 `Result.unity`，再回到选曲。场景之间的切换全部交给全局 SceneSwitcher。开始游玩时显示 Nijiiro 彩虹幕布：幕布关闭后进入 `SongLoadingScene.unity` 解析谱面并载入歌曲（至少停留 2 秒），再在游玩场景上打开。
 
 | 选曲按键 | 功能 |
 | --- | --- |
 | D / K（或 ← / →） | 移动曲目 / 难度光标；在おに上连按右 10 次切换裏 |
 | F / J（或 Enter） | 决定（もどる 返回曲目列表，扳手按钮打开演奏オプション） |
 | A | 切换自动演奏 |
-| Esc | 返回入口；演奏オプション打开时关闭面板 |
+| Esc | 演奏オプション打开时关闭面板（原版返回 Entry 场景，尚未移植，目前无其他作用） |
 
 **演奏オプション。** 难度面板中的扳手按钮打开 Nijiiro 选项面板，共 7 行：オート、はやさ（0.1–2.0 每档 0.1，之后 3.0、4.0，首尾循环）、ドロン（隐藏音符，小节线保留，仍正常判定）、あべこべ（咚咔互换）、ランダム（きまぐれ：每个咚／咔音符 30% 概率换色；でたらめ：50%）、演奏スキップ（单人没有 2P 鼓，灰显不可改）、音色（21 套 Nijiiro 打击音色和無音，切换时试听）。D / K 改当前行的值，F / J 进入下一行，最后一行后面板滑出并把设置保存到 `Application.persistentDataPath/options.json`。触控时点行名选中该行（再点一次等于决定），点数值框左／右半边改值，点面板外关闭。游玩时轨道左侧按 3 列网格显示 オート（自动演奏时排第一）／速度／ドロン／あべこべ／ランダム徽章。
 
@@ -31,12 +31,11 @@
 | D / K | 左 / 右咔 |
 | Space | 暂停 / 继续 |
 | F1 | 重开 |
-| Esc | 返回入口 |
-| Tab / A（入口） | 切歌 / 自动演奏 |
+| Esc | 返回选曲 |
 
 页面下方有可点击的咚 / 咔按钮。两个场景采用 Nijiiro 原生 **1920×1080** 画布与固定设计区域，宽高比变化时居中留边，保持判定位置和轨道比例。
 
-默认目标为 **120 FPS**。入口及直接打开游玩场景时都会关闭 VSync 并启用每帧渲染，避免画质档的垂直同步覆盖目标帧率。左上角 FPS 计数器每 0.5 秒显示实际帧率平均值，暂停时仍持续更新。它显示实测值，不是目标 120 的固定文字。
+默认目标为 **120 FPS**。任何场景启动（包括直接打开游玩场景）时都会关闭 VSync 并启用每帧渲染，避免画质档的垂直同步覆盖目标帧率。左上角 FPS 计数器每 0.5 秒显示实际帧率平均值，暂停时仍持续更新。它显示实测值，不是目标 120 的固定文字。
 
 如果 Unity 内仍约为 60 FPS，检查 Game 视图的 VSync 选项、系统显示器刷新率及节能设置，并与独立播放器比较；Editor 自身的负载也可能降低帧率。120 FPS 是渲染目标，不会把 60 Hz 显示器变成 120 Hz。
 
@@ -58,7 +57,6 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 ## 场景与代码
 
-- `Test_DefaultScene.unity`：测试入口，包含选曲和自动演奏按钮，由 `LaunchMenu` 调用全局控件开始游玩。
 - `Resources/SceneSwitcher.prefab`、`Runtime/Scenes/SceneSwitcher.cs`：全局切换控件，在首场景加载前自动创建，通过 `DontDestroyOnLoad` 保留。所有运行时切换统一调用 `SceneSwitcher.Instance.SwitchScene(...)` 或可等待的 `SwitchSceneAsync(...)`；`Play(song, autoPlay)`、`Restart()`、`ReturnToMenu()` 也转交同一流程。
 - `SinglePlayScene.unity`：可在 Hierarchy 中编辑的 Canvas、音符轨道、判定圈、鼓面、魂槽、歌曲信息、舞者、暂停及结果面板。`PlayScene.cs` 连接输入、DSP 时钟、音乐和画面。
 - `Runtime/Core/TjaParser.cs`：纯 C# TJA 读取，支持课程选择、音符 1–9、连打/气球、BPMCHANGE、MEASURE、DELAY、SCROLL（含复数）、GOGO、BARLINE，以及三路线分支与 SECTION。每条路线从分支起点恢复时刻、BPM、SCROLL、拍号等状态。
@@ -94,7 +92,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 ## 验证
 
-用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速、分支阈值／时序、Shinuchi 预算／取整和魂槽增减／边界；后者覆盖入口 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 SinglePlayScene、音乐时间同步、分支表现与结算，以及实际场景分数、魂槽、气球与连打。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
+用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速、分支阈值／时序、Shinuchi 预算／取整和魂槽增减／边界；后者覆盖选曲 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 SinglePlayScene、音乐时间同步、分支表现与结算，以及实际场景分数、魂槽、气球与连打。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
 
 ```sh
 unity test . --mode EditMode --output TestResults/editmode.xml

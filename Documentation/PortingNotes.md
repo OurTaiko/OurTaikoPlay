@@ -6,7 +6,7 @@
 
 | 原版参考 | Unity C# 实现 |
 | --- | --- |
-| `src/libs/screen.*`、`src/scenes/game.*` 场景生命周期 | `SceneSwitcher` + `LaunchMenu` + `PlayScene` |
+| `src/libs/screen.*`、`src/scenes/game.*` 场景生命周期 | `SceneSwitcher` + `SongSelectScene` + `PlayScene` |
 | `src/libs/parsers/tja.*` | `TjaParser` + `TaikoChart` |
 | `src/objects/game/player.*` 的打击时窗、输入处理 | `PlaySession`，分离成可测试的纯 C# |
 | `skin_config.json` / 各 `texture.json` 的位置、裁切 | `ProjectBuilder` 生成 Sprite 切片和可编辑的 RectTransform 层级 |
@@ -255,3 +255,10 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 分数计数器（用户要求一并移植，因原 TMP 占位分数与名牌重叠）：照搬 `score_counter.cpp`。`lane/lane_score_cover` 画在轨道局部 (0,12)；`lane/score_number` 十个 56×64 数字右对齐到 x 255、间距 30（Nijiiro 未覆盖 `score_counter_margin`，继承 Green 的 20×1.5），不补零，顶边 5.5（277.5-272）。分数变化时重启 TextStretch（id 4，与气球数字同一公式，抽成 `Core/TextStretch`）：50 ms 内升到 12 px，再按 16.57 ms 阶梯回落，最后两帧略为负值，数字底边固定、向上伸长。Nijiiro `delay_score_addition` 为 false，分数即时更新。实现 `Play/ScoreCounterView.cs`，作为 `NoteLane` 最后一个子物体（原版最后画分数）；切片 `Generated/ScoreNumber0–9`。未移植：加分时飞出的「+分数」动画（`ScoreCounterAnimation`）。
 - 移除：SinglePlayScene 左上调试文字「OURTAIKO / PLAYER 1」（PlayerName）与「READY n／AUTO PLAY／1 PLAYER」（PlayState），均为用户决定，自动演奏因此只体现在徽章区；以及原 TMP 分数标签 `Score`。
 - 验证：EditMode `NameplateTests`（coin／称号／段位判定、越界回退、名字框、彩虹帧时序、JSON、分数布局、TextStretch），PlayMode `NameplateFlowTests`（三个场景的位置与层级、称号带／段位／金色、信息变更即时更新、长名字压扁到 190、彩虹循环、AUTO 徽章在首位、分数计数器初始 0／伸长／回落／位置、PlayerName／PlayState 已移除），截图 `TestResults/NameplatePlay.png`、`NameplatePlayCoin.png`、`NameplateSongSelect.png`、`NameplateResult.png`。EditMode 139/139、PlayMode 29/29 通过。
+
+## 删除 Test_DefaultScene（2026-10-02）
+
+- 用户要求删除测试入口 `Test_DefaultScene.unity` 及其全部代码：`LaunchMenu.cs`、`InputKey.NextSong`（Tab）／`InputKey.SongSelect`（S）、ProjectBuilder 的 `CreateMenu`、`AddSongSelectEntry` 与旧的 `MigrateGlobalSceneSwitcher`（把旧 `SceneSwitcher.unity` 改名为测试入口的一次性迁移）。本文更早记录中的 Test_DefaultScene／LaunchMenu 为历史。
+- SongSelect 成为 Build Settings 首个场景，`SceneSwitcher.MenuScene` 改为 `SongSelect`（`ReturnScene` 默认值与 `ReturnToMenu` 的回退目标随之改变）；`CreateSongSelectAndResult` 会把 SongSelect 放到 Build Settings 第一位。
+- 原版选曲中任意状态按 back 键都进入 Entry 场景（`song_select.cpp`）。Entry 尚未移植（用户决定稍后参照 OurTaikoPlayer 与 Nijiiro 皮肤移植），因此选曲 Esc 只在演奏オプション打开时关闭面板，否则无作用；选曲底部按键提示去掉「ESC もどる」。
+- 测试：原先从测试入口取歌曲的 PlayMode 测试改从 `SongSelectScene.songs` 取；`MenuPlayPauseResumeRestartAndReturn` 改名为 `SongSelectPlayPauseResumeRestartAndReturn`，不再输出 `MenuScene.png`。EditMode 139/139、PlayMode 29/29 通过。
