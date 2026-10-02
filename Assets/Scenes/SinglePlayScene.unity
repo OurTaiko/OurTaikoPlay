@@ -3708,15 +3708,6 @@ MonoBehaviour:
   clearDark: {fileID: 21300000, guid: efa949947f90d48968c2338fab80c020, type: 3}
   soulLit: {fileID: 21300000, guid: 23a9030b06ec94d308648462ca8fc08d, type: 3}
   soulDark: {fileID: 21300000, guid: 90ac4b03a536a446fb0c042a85249783, type: 3}
-  fireFrames:
-  - {fileID: 21300000, guid: f7ce5d408847643c6b2c8522d0a3bca2, type: 3}
-  - {fileID: 21300000, guid: 77f9a1107708e4128bf38a859bf68c2c, type: 3}
-  - {fileID: 21300000, guid: 8826fb54a35d343e98008c7709611896, type: 3}
-  - {fileID: 21300000, guid: c73066388f7174ca7872e5afabc949a1, type: 3}
-  - {fileID: 21300000, guid: 2b885b40aacd44f3697189aa79f614b1, type: 3}
-  - {fileID: 21300000, guid: 34549f6ea57294940a969a1a7b1cd282, type: 3}
-  - {fileID: 21300000, guid: 93a9adc2766b748e2a0ac839e28ef3bc, type: 3}
-  - {fileID: 21300000, guid: 4532b2853745b42f7a6374fbcab755f2, type: 3}
 --- !u!1 &678307243
 GameObject:
   m_ObjectHideFlags: 0
@@ -4930,6 +4921,8 @@ GameObject:
   - component: {fileID: 866286072}
   - component: {fileID: 866286074}
   - component: {fileID: 866286073}
+  - component: {fileID: 866286076}
+  - component: {fileID: 866286075}
   m_Layer: 0
   m_Name: SoulFire
   m_TagString: Untagged
@@ -4994,6 +4987,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 866286071}
   m_CullTransparentMesh: 1
+--- !u!114 &866286075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866286071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 36e00603daf0d42029d049c1740c6a90, type: 2}
+--- !u!95 &866286076
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 866286071}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &872560862
 GameObject:
   m_ObjectHideFlags: 0
@@ -9420,6 +9448,8 @@ GameObject:
   - component: {fileID: 1817324040}
   - component: {fileID: 1817324042}
   - component: {fileID: 1817324041}
+  - component: {fileID: 1817324044}
+  - component: {fileID: 1817324043}
   m_Layer: 0
   m_Name: SoulOverlay
   m_TagString: Untagged
@@ -9484,6 +9514,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1817324039}
   m_CullTransparentMesh: 1
+--- !u!114 &1817324043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1817324039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 6e33c8f149ffe4f84a6bdceb6f0a7c06, type: 2}
+--- !u!95 &1817324044
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1817324039}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1818211071
 GameObject:
   m_ObjectHideFlags: 0

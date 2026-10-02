@@ -199,7 +199,7 @@ namespace OurTaiko.Editor
             view.goldFade = Sprite("game/gauge/bar_clear_fade");
             view.clearLit = Sprite("game/gauge/clear_ja"); view.clearDark = Sprite("game/gauge/clear_dark_ja");
             view.soulLit = Sprite("game/gauge/tamashii"); view.soulDark = Sprite("game/gauge/tamashii_dark");
-            view.fireFrames = Enumerable.Range(0, 8).Select(i => Sprite("game/gauge/tamashii_fire/" + i)).ToArray();
+            AttachSoulFireClips(view);
             view.styles = new[] { "easy", "normal", "hard" }.Select((tier, i) => new SoulGaugeView.Style {
                 border = Sprite("game/gauge/border_" + tier), empty = Sprite("game/gauge/1p_unfilled_" + tier),
                 grid = Sprite("game/gauge/overlay_" + tier), clearLabelX = 1350 + i * 105,

@@ -17,7 +17,6 @@ namespace OurTaiko
         public UnityEngine.UI.Image border, empty, red, clearCap, goldTop, goldBottom;
         public UnityEngine.UI.Image rainbowA, rainbowB, cellFade, grid, clearLabel, soul, fire, soulOverlay;
         public Sprite redFade, capFade, goldFade, clearLit, clearDark, soulLit, soulDark;
-        public Sprite[] fireFrames;
 
         public const int Cells = 50, CellWidth = 21;
         public const double CellFadeSeconds = 0.450, RainbowFrameSeconds = 0.075;
@@ -102,12 +101,19 @@ namespace OurTaiko
             Alpha(grid, 0.15f);
             clearLabel.sprite = IsClear ? clearLit : clearDark;
             soul.sprite = IsClear ? soulLit : soulDark;
-            int fireFrame = (int)(Math.Max(0, time) / 0.050) % 8;
+            // SoulFire.anim (8 frames, 50 ms each) and SoulOverlay.anim (lit on frames 0, 1, 4, 5)
+            // share the song clock.
             fire.enabled = IsFull;
-            fire.sprite = fireFrames[fireFrame];
-            soulOverlay.enabled = IsFull && (fireFrame == 0 || fireFrame == 1 || fireFrame == 4 || fireFrame == 5);
+            if (IsFull)
+            {
+                Sampler(fire).SampleLoop(time);
+                Sampler(soulOverlay).SampleLoop(time);
+            }
+            else soulOverlay.enabled = false;
             Alpha(soulOverlay, 0.5f);
         }
+
+        static ClipSampler Sampler(UnityEngine.UI.Image image) => image.GetComponent<ClipSampler>();
 
         static void Width(UnityEngine.UI.Image image, int width)
         {

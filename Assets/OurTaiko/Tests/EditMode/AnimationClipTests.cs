@@ -165,5 +165,25 @@ namespace OurTaiko.Tests
             Assert.That(At(0.3829).shown, Is.True);
             Assert.That(At(0.383).shown, Is.False);
         }
+
+        [Test]
+        public void SoulFireCyclesWithTheOverlayFlicker()
+        {
+            var fire = Clip("SoulFire");
+            var overlay = Clip("SoulOverlay");
+            Assert.That(fire.length, Is.EqualTo(0.4).Within(1e-4));
+            Assert.That(overlay.length, Is.EqualTo(0.4).Within(1e-4));
+            for (int frame = 0; frame < 8; frame++)
+            {
+                double t = frame * 0.05 + 0.025;
+                Assert.That(SpriteAt(fire, t).name, Is.EqualTo(frame.ToString()), $"{t} s");
+                Assert.That(Sampled(overlay, t, go => go.GetComponent<UnityEngine.UI.Image>().enabled), Is.EqualTo(frame % 4 < 2), $"{t} s");
+            }
+            WithPlayScene(play =>
+            {
+                Assert.That(play.soulGauge.fire.GetComponent<ClipSampler>().clip, Is.SameAs(fire));
+                Assert.That(play.soulGauge.soulOverlay.GetComponent<ClipSampler>().clip, Is.SameAs(overlay));
+            });
+        }
     }
 }
