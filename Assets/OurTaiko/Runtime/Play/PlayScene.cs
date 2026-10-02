@@ -13,10 +13,12 @@ namespace OurTaiko
         public AudioClip don, ka, balloonPop;
         public HitSoundLibrary hitSounds;
         public ModifierBadgeView modifierBadges;
-        public RectTransform noteLayer, barLayer;
+        public RectTransform noteLayer, barLayer, mojiLayer;
         public Sprite[] noteSprites;
         public Sprite[] rollBodySprites, rollTailSprites;
         public Sprite balloonTailSprite;
+        public Sprite[] mojiSprites;
+        public Sprite mojiRollSprite;
         public BalloonCounterView balloonCounter;
         public Sprite[] judgmentSprites;
         public UnityEngine.UI.Image judgment, hitFlash;
@@ -36,6 +38,7 @@ namespace OurTaiko
         public double SongTime => !isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioSettings.dspTime - startDsp;
         public double RenderedTime { get; private set; }
         public RectTransform NoteRoot(int index) => notes[index].Root;
+        public RectTransform MojiRoot(int index) => notes[index].Moji;
         SongDefinition song;
         bool autoPlay, isReady;
         SceneSwitcher switcher;
@@ -50,6 +53,8 @@ namespace OurTaiko
             public float TailAspect;
             public UnityEngine.UI.Image BalloonTail;
             public GameObject Object;
+            public RectTransform Moji, MojiMid, MojiTail;
+            public float MojiMidAspect;
         }
 
         IEnumerator Start()
@@ -276,6 +281,7 @@ namespace OurTaiko
                     view.BalloonTail = Image(tail, balloonTailSprite);
                 }
                 root.gameObject.SetActive(false);
+                if (mojiLayer != null) CreateMoji(note, view);
             }
             foreach (var bar in Session.Chart.Bars)
             {
@@ -284,8 +290,39 @@ namespace OurTaiko
                 bars.Add(root); root.gameObject.SetActive(false);
             }
         }
+        // draw_notes' second pass draws every text after every note, so the text sits in its
+        // own layer above the notes; within it earlier notes again paint over later ones.
+        void CreateMoji(ChartNote note, NoteView view)
+        {
+            var root = Rect(note.Kind + "Moji", mojiLayer, MojiWidth, MojiHeight);
+            root.SetAsFirstSibling();
+            view.Moji = root;
+            if (note.IsLong && !note.IsBalloon)
+            {
+                // draw_drumroll: moji_drumroll_mid from head to tail, then the head and tail text.
+                view.MojiMid = Rect("Mid", root, 0, 0);
+                view.MojiMid.anchorMin = new Vector2(0.5f, 0);
+                view.MojiMid.anchorMax = new Vector2(0.5f, 1);
+                view.MojiMid.pivot = new Vector2(0, 0.5f);
+                Image(view.MojiMid, mojiRollSprite);
+                view.MojiMidAspect = mojiRollSprite.rect.width / mojiRollSprite.rect.height;
+            }
+            var head = Rect("Head", root, 0, 0);
+            head.anchorMin = Vector2.zero; head.anchorMax = Vector2.one;
+            Image(head, mojiSprites[note.Moji]);
+            if (view.MojiMid != null)
+            {
+                view.MojiTail = Rect("Tail", root, 0, 0);
+                view.MojiTail.anchorMin = Vector2.zero; view.MojiTail.anchorMax = Vector2.one;
+                Image(view.MojiTail, mojiSprites[NoteMoji.Tail]);
+            }
+            root.gameObject.SetActive(false);
+        }
+
         // Nijiiro: lane x=498/y=276, judge x=618, note top=14 with 192-pixel sprites.
         const float JudgeLocalX = 120, JudgeLocalY = -110;
+        // notes/moji frames are 256x48; skin moji.y=209 against notes.y=14, centre to centre.
+        const float MojiWidth = 256, MojiHeight = 48, MojiDrop = 209 - 14 + MojiHeight / 2 - 192 / 2;
         double TravelDistance => noteLayer.rect.width - JudgeLocalX;
 
         Vector2 Position(ChartNote note, double time)
@@ -307,7 +344,9 @@ namespace OurTaiko
                 // only a hit removes a note: a 5/6 roll resolved at its tail and a note
                 // missed by timeout keep scrolling until they leave the lane.
                 bool rolling = note.IsLong && !note.IsBalloon;
-                bool visible = note.Display && Session.IsActive(note) && (rolling || Session.Missed[i] || !Session.Resolved[i]) && InLane(pos.x, Reach(view, length));
+                bool alive = note.Display && Session.IsActive(note) && (rolling || Session.Missed[i] || !Session.Resolved[i]);
+                bool visible = alive && InLane(pos.x, Reach(view, length));
+                if (view.Moji != null) RenderMoji(i, view, pos, length, alive);
                 view.Object.SetActive(visible);
                 if (visible)
                 {
@@ -336,6 +375,28 @@ namespace OurTaiko
                 bars[i].gameObject.SetActive(Session.Chart.Bars[i].Display && Session.IsActive(Session.Chart.Bars[i]) && InLane(pos.x, new Vector2(-half, half)));
             }
             gogoTint.alpha = gogo ? 0.18f + Mathf.Sin((float)time * 12) * 0.05f : 0;
+        }
+
+        // The text follows its note's lifetime and is culled by its own extent.
+        void RenderMoji(int index, NoteView view, Vector2 pos, float length, bool alive)
+        {
+            // skip_note: a balloon whose counter is up draws neither the note nor its text.
+            alive &= balloonCounter.NoteIndex != index;
+            // draw_drumroll places roll text at the lane height, ignoring the head's Y scroll.
+            var at = new Vector2(pos.x, (view.MojiMid != null ? JudgeLocalY : pos.y) - MojiDrop);
+            float half = view.Moji.rect.width / 2;
+            var reach = view.MojiMid == null ? new Vector2(-half, half)
+                : new Vector2(Math.Min(-half, length - half), Math.Max(half, length + half));
+            bool visible = alive && InLane(at.x, reach);
+            view.Moji.gameObject.SetActive(visible);
+            if (!visible) return;
+            view.Moji.anchoredPosition = at;
+            if (view.MojiMid == null) return;
+            // The strip is drawn native width + length wide from the head, like t_moji_drumroll_mid's x2.
+            float width = view.Moji.rect.height * view.MojiMidAspect + length;
+            view.MojiMid.sizeDelta = new Vector2(Mathf.Abs(width), 0);
+            view.MojiMid.localScale = new Vector3(width < 0 ? -1 : 1, 1, 1);
+            view.MojiTail.anchoredPosition = new Vector2(length, 0);
         }
 
         // The lane clip mask is the visible area, in Canvas units that follow the

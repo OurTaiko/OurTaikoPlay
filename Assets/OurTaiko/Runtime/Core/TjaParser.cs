@@ -91,11 +91,15 @@ namespace OurTaiko
             bool hasRoute, branchBar, sectionBarPending;
             double? sectionBarTime;
             ChartNote longNote;
+            readonly List<ChartEntry> common = new List<ChartEntry>();
+            List<ChartEntry>[] routeLists;
+            List<ChartEntry> Entries => branch == null ? common : routeLists[(int)route];
 
             public ChartReader(TaikoChart chart, List<int> balloons)
             {
                 this.chart = chart; this.balloons = balloons;
                 state = new TimingState { Time = -chart.Offset, Bpm = chart.Bpm };
+                chart.NoteLists.Add(common);
             }
 
             public void Read(List<string> tokens)
@@ -128,6 +132,7 @@ namespace OurTaiko
                         Math.Max(checkpoint.ArmTime, first == null ? checkpoint.Time : NoteScroll.LoadTime(first)));
                     previousDecision = checkpoint.DecisionTime;
                 }
+                NoteMoji.Assign(chart);
             }
 
             void FlushCommands()
@@ -169,6 +174,8 @@ namespace OurTaiko
                     Condition = condition == "p" ? BranchCondition.Accuracy : BranchCondition.Drumroll,
                     ExpertThreshold = expert, MasterThreshold = master };
                 chart.Branches.Add(branch);
+                routeLists = new[] { new List<ChartEntry>(), new List<ChartEntry>(), new List<ChartEntry>() };
+                chart.NoteLists.AddRange(routeLists);
                 sectionBarTime = null;
                 Array.Clear(routesSeen, 0, routesSeen.Length);
                 hasRoute = false;
@@ -192,6 +199,7 @@ namespace OurTaiko
                 if (branch != null && !hasRoute) throw new FormatException("Branch notes must follow #N, #E or #M.");
                 var bar = NewNote(); bar.Display = state.Barline; bar.IsBranchStart = branchBar;
                 chart.Bars.Add(bar);
+                Entries.Add(new ChartEntry(bar, false));
                 if (branch != null && branch.FirstEntries[(int)route] == null) branch.FirstEntries[(int)route] = bar;
                 branchBar = false;
                 if (sectionBarPending) { sectionBarTime = state.Time; sectionBarPending = false; }
@@ -249,6 +257,8 @@ namespace OurTaiko
                     {
                         if (longNote == null) throw new FormatException("Long-note tail has no head.");
                         longNote.EndTime = state.Time;
+                        longNote.TailBpm = state.Bpm;
+                        Entries.Add(new ChartEntry(longNote, true));
                         longNote = null;
                     }
                     else if (type != 0)
@@ -257,6 +267,7 @@ namespace OurTaiko
                         var note = NewNote(); note.Kind = (NoteKind)type;
                         if (note.IsBalloon) { note.BalloonHits = state.BalloonIndex < balloons.Count ? balloons[state.BalloonIndex] : 1; state.BalloonIndex++; }
                         chart.Notes.Add(note);
+                        Entries.Add(new ChartEntry(note, false));
                         if (note.IsLong) longNote = note;
                     }
                     state.Time += 240.0 / state.Bpm * state.Measure / Math.Max(1, slots);

@@ -29,7 +29,7 @@
 
 ### 当前完成状态与交接边界
 
-- 最新提交：**`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
+- 最新提交：`feat(play): port note moji lane`（音符文字，见下文「音符文字（moji）」）。更早为 **`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
 - `Assets/OurTaiko/Generated/Nijiiro SDF.asset` 是动态 SDF 字体，Unity 会在打开项目、运行测试或保存时自动改写它（用户确认属于 Unity 自身行为，并非用户修改）。出现该 diff 时**不要提交**；收尾时用 `git restore "Assets/OurTaiko/Generated/Nijiiro SDF.asset"` 还原为已提交版本（Editor 打开时它可能被再次写入，必要时关闭 Editor 后再还原）。不要用旧的 TestResults 快照覆盖它。
 - Unity Editor 可能仍由上一会话打开（项目已安装 Pipeline 包）；先用 `unity status` 确认连接再操作，修改 C# 后刷新并确认 `EditorUtility.scriptCompilationFailed` 为 false（编译错误会让 CLI 无法连接或静默失败，看 `~/Library/Logs/Unity/Editor.log` 的 `error CS`）。耗时较长的 Editor 方法会让 CLI 报 5 秒超时，但会在 Editor 中继续执行，需轮询结果。
 - 选曲／结算的下一步候选（均未授权，需用户确认）：文件夹与类别、成绩等级演出、曲目板飞入、难度决定标记弹出、皇冠光芒加算混合、支持字母扩展音符以游玩 TRIPLE HELIX Edit。
@@ -53,6 +53,7 @@
 | `Assets/OurTaiko/Runtime/Core/PlaySession.cs` | 独立于 Unity 的输入判定、连击、长音符次数、自动演奏与分支统计／时间线；将判定交给计分和魂槽模块，通过事件通知表现层。 |
 | `Assets/OurTaiko/Runtime/Core/ChartStatistics.cs`、`ShinuchiScore.cs` | 公共段＋达人路线的固定统计、气球／连打预算、Shinuchi 基准分和累计分；独立于输入、位移与表现。 |
 | `Assets/OurTaiko/Runtime/Core/SoulGaugeRules.cs`、`SoulGauge.cs` | 原难度／星级表、魂槽双精度点数、百分比、限幅及过关／满槽状态；与显示和结算共用。 |
+| `Assets/OurTaiko/Runtime/Core/NoteMoji.cs` | 音符文字帧分配（原 `modifier_moji`），按 `TaikoChart.NoteLists` 逐条处理。 |
 | `Assets/OurTaiko/Runtime/Core/NoteScroll.cs` | 普通位移、对象加载时间与头尾同速的 `RollLength`。 |
 | `Assets/OurTaiko/Runtime/Core/SongDefinition.cs` | 谱面 TextAsset、音乐 AudioClip、课程与音画偏移；TJA 以 `.txt` 导入，音频由显式引用绑定。 |
 | `Assets/OurTaiko/Runtime/Play/PlayScene.cs` | 输入、DSP 歌曲时钟、`AudioSource.PlayScheduled`、暂停恢复、判定反馈、气球破裂音效、音符／身体／尾部渲染和结果显示。 |
@@ -81,11 +82,14 @@
 
 **7 号气球。** 脸的相对对齐量是音符宽度的 **12/128**，通过锚点随音符尺寸与画布缩放，不能改回固定像素补偿。首次有效咚击打后显示 `总次数 - 已击打次数`，使用 Nijiiro 气泡及数字图集，支持跨位数布局；咔不计数。数字 50 ms 拉伸＋116 ms 回弹，身体按进度使用 0、2、3、4、5、6 帧；吹爆后第 7 帧、数字 0，166 ms 淡出；未吹爆到期立即隐藏。移动时显示 `notes/10` 尾部，击打时替换为膨胀素材；9 号彩球不混用这套显示。`Assets/OurTaiko/Audio/balloon_pop.ogg` 原样复制自 Nijiiro，约 0.414 秒、预加载；手动／自动达到要求次数的那次事件只播放一次，到期未爆不播放。参考 `player.cpp::draw_balloon/check_balloon`、`balloon_counter.cpp` 及 Nijiiro 气球配置。
 
+**音符文字（moji）。** 音符下方的「ドン／ド／コ／カッ／カ／ドン(大)／カッ(大)／連打ー／連打(大)ー／ふうせん／ーっ!!／くすだま」取自 `notes/moji` 12 帧（256×48，Point 采样，`Generated/Moji0–11.asset`）。分配在 `Core/NoteMoji.cs`，照搬 `tja.cpp::modifier_moji/find_streams`：解析器按原版 NoteList 保留源顺序的 `TaikoChart.NoteLists`（公共段一条，每个分支每条路线各一条，含小节线与长音符尾），依次按 8／12／16／24／32 分查连续段（±15 ms，长音符头断开，小节线和尾参与），段内除末个外咚→ド、咔→カ，恰 3 个咚时中间为コ；`ChartModifiers.Apply` 末尾重算，文字随あべこべ／ランダム换色。原版一小节分多行书写时会插入额外隐藏小节线并截断连续段，本项目每小节只有一条小节线，不复制该现象。渲染在 `PlayScene.RenderMoji`：独立的 `NoteLane/MojiClip/Moji` 层紧跟 `LaneClip`（全部文字压在全部音符之上，层内早的音符在上），文字中心比音符中心低 123（skin `moji.y`=209 对 `notes.y`=14）；显隐与音符相同（命中消失、漏音继续流动、ドロン一并隐藏），按自身宽度裁切；气球计数显示期间按 `skip_note` 隐藏；连打为 `moji_drumroll_mid`（宽 8＋长度）→头字→尾字ーっ!!，高度不随 Y 滚动。迁移入口 `ProjectBuilder.ApplyMoji()`。
+
 **5／6 号连打。** `PlayScene` 分别持有小／大 `rollBodySprites` 和 `rollTailSprites`；身体只横向拉伸，尾部保持原宽高比，顺序为身体→尾部→头部。源图集左上坐标切片：小身体 `(0,1544,72,192)`、大身体 `(72,1544,72,192)`、小尾 `(0,2120,80,192)`、大尾 `(0,2312,120,192)`。身体长度为连打长度绝对值加音符高度的 **1/128**（192 设计高度时为 1.5），对应原版贴图宽度与 `drumroll_width_offset` 的合成，覆盖接缝。尾部起点位于连打结束位置；负滚动翻转身体和尾部，头部表情保持正向。音符图集使用 **Point** 采样，避免双线性采样混入邻近大连打帧形成杂边。生成资源位于 `Assets/OurTaiko/Generated/`：`RollBodySmall.asset`、`RollBodyBig.asset`、`RollTailSmall.asset`、`RollTailBig.asset`；配置入口 `ProjectBuilder.ApplyDrumrollSprites()`。参考 `player.cpp::draw_drumroll`、`src/libs/texture.cpp` 及 Nijiiro 音符 `texture.json`；头尾同速逻辑未改动。
 
 ### 验证结果与继续工作方法
 
-- 最新完整验证（2026-10-01，演奏オプション）：Unity Editor **EditMode 115/115、PlayMode 22/22 全部通过**。报告为 `TestResults/options-editmode.json`、`TestResults/options-playmode.json`；PlayMode 通过 `TestScoreStore` 使用临时成绩文件和不落盘的 `PlayOptions`。`PlayOptionsTests`／`PlayOptionsFlowTests` 覆盖速度档位、面板行走、滑动曲线、谱面修改、随机概率、持久化与游玩场景实际效果；截图 `TestResults/SongSelectOptions.png`、`PlayOptionsBadges.png`。`TestResults/` 不纳入版本控制，本机报告不保证随新克隆存在。
+- 最新完整验证（2026-10-01，音符文字）：Unity Editor **EditMode 127/127、PlayMode 24/24 全部通过**，报告 `TestResults/moji-editmode.json`、`TestResults/moji-playmode.json`；`NoteMojiTests` 覆盖帧分配／连续段／小节线／分支独立／换色重算，`NoteMojiFlowTests` 覆盖帧、层级、位置、命中／漏音／ドロン显隐与连打横条，截图 `TestResults/NoteMoji.png`。已知：调试计数文字 `GOOD/OK/BAD/ROLL` 与文字带重叠，未处理。
+- 此前验证（2026-10-01，演奏オプション）：Unity Editor **EditMode 115/115、PlayMode 22/22 全部通过**。报告为 `TestResults/options-editmode.json`、`TestResults/options-playmode.json`；PlayMode 通过 `TestScoreStore` 使用临时成绩文件和不落盘的 `PlayOptions`。`PlayOptionsTests`／`PlayOptionsFlowTests` 覆盖速度档位、面板行走、滑动曲线、谱面修改、随机概率、持久化与游玩场景实际效果；截图 `TestResults/SongSelectOptions.png`、`PlayOptionsBadges.png`。`TestResults/` 不纳入版本控制，本机报告不保证随新克隆存在。
 - EditMode 程序集：`OurTaiko.Tests`，测试位于 `Assets/OurTaiko/Tests/EditMode/`，覆盖解析、判定、分支阈值／时序、滚动与同速约束，以及 Shinuchi 预算／取整、独立逗号／空小节、魂槽难度星级／增减／过关边界。
 - PlayMode 程序集：`OurTaiko.PlayModeTests`，`SceneFlowTests.cs` 覆盖场景流程、音乐同步、120 FPS 配置、各分支、魂槽、气球与连打，包含 1080p／720p 渲染。`GlobalSceneSwitcherTests.cs` 另覆盖跨场景预制体、等待准备任务、关闭／加载／打开顺序、timeScale=0、输入阻挡、重复请求、场景事件、手动揭示、泛型结果、失败／取消恢复及销毁取消。
 - `ScoreGaugeFlowTests.cs` 覆盖实际游玩场景的 Shinuchi HUD、魂槽过关／满槽／失去过关、气球击打不重启淡入、结算状态及重开清零。

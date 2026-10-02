@@ -214,3 +214,11 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
   - 触控扩展：点行名选中该行（已选中时等于咚），点数值框左／右半边等于该行的左／右咔，点面板外或按 Esc 一次确认全部并滑出。原版只有键盘。
 - 迁移入口 `ProjectBuilder.ApplyPlayOptions()`（菜单 OurTaiko/Apply Play Options）：导入素材、生成 `HitSounds.asset`、为 SongSelect 绑定 `optionArt`，为 SinglePlayScene 的 NoteLane 添加 `ModifierBadges` 并绑定音色库。
 - 验证：EditMode 115/115、PlayMode 22/22（`TestResults/options-editmode.json`、`options-playmode.json`）。截图 `TestResults/SongSelectOptions.png`（面板）、`PlayOptionsBadges.png`（x2.0／ドロン／あべこべ 徽章，音符隐藏、小节线保留）。没有重建独立播放器。
+
+## 音符文字（2026-10-01）
+
+- 分配：`Core/NoteMoji.cs` 对应 `tja.cpp::modifier_moji`、`find_streams`、`get_note_interval_type`。基础帧 咚0／咔3／大咚5／大咔6／连打7／大连打8／气球9／尾10／彩球11；8、12、16、24、32 分依次查找连续段（后者覆盖前者），段内除最后一个外咚→1（ド）、咔→4（カ），长度恰为 3 且全为咚时中间→2（コ）。间隔以前一对象的 BPM 判定，容差 15 ms，判定顺序 8／16／12／24／32／4 分。
+- 列表：原版对公共 NoteList 与各分支各路线的 NoteList 分别执行，列表内含小节线与 8 号尾。解析器因此记录 `TaikoChart.NoteLists`（`ChartEntry` 区分头／尾／小节线），不使用按时间排序后的 `Notes`。小节线参与连续段：跨小节的连续 8 分在小节线处结束一段，小节线前的音符为ド。原版把一小节拆成多行时会多插隐藏小节线，此差异不复制。
+- 渲染：`player.cpp::draw_notes` 第二遍绘制全部文字，因此 `MojiClip`（RectMask2D，X 同 `LaneClip`，高为整条轨道 264）紧排在 `LaneClip` 之后；层内与音符一样早的在上。文字中心 = 音符中心下移 123。连打：`moji_drumroll_mid` 从头部起宽 8＋长度，然后头字、尾字；Y 不随 SCROLL 虚部（同原版 `draw_drumroll`）。气球文字跟随气球（到判定点后停住），计数器显示时隐藏（`skip_note`）。
+- 有意的统一：显隐跟随音符（命中即消失、漏音继续流过判定点、ドロン同时隐藏）。原版 ドロン 仍绘制文字，按用户要求与音符行一致而隐藏。
+- 验证：EditMode `NoteMojiTests`，PlayMode `NoteMojiFlowTests`（帧、层级、位置、命中／漏音／ドロン、连打横条），截图 `TestResults/NoteMoji.png`。EditMode 127/127、PlayMode 24/24 通过。

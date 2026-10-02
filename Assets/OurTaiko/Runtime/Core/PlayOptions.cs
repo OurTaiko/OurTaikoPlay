@@ -106,6 +106,8 @@ namespace OurTaiko
                 note.ScrollX *= speed;
             }
             foreach (var bar in chart.Bars) bar.ScrollX *= speed;
+            // apply_modifiers ends with modifier_moji, so the text follows swapped colours.
+            NoteMoji.Assign(chart);
         }
 
         static NoteKind Swap(NoteKind kind) => kind switch
