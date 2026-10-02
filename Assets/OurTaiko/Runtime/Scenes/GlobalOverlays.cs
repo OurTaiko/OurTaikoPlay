@@ -16,8 +16,8 @@ namespace OurTaiko
         public Sprite[] timerDigitsBlack;
 
         [Header("Control guide")]
-        [Tooltip("global/indicator/background cells 210-324: both sticks + 決定 (the decide loop).")]
-        public Sprite[] guideDecideFrames;
+        [Tooltip("ControlGuide.anim: global/indicator/background cells 210-324 (both sticks + 決定, the decide loop) at 30 fps.")]
+        public AnimationClip guideClip;
 
         [Header("Chips and 2P invite")]
         public Sprite qrChip;
@@ -88,28 +88,40 @@ namespace OurTaiko
     }
 
     // Indicator:draw — the top-left control guide, a baked loop at 30 fps (every 2nd arcade frame).
-    // Entry and single-board screens use the decide loop: both sticks and the 決定 pill.
+    // Entry and single-board screens use the decide loop: both sticks and the 決定 pill. The frames
+    // live in one sprite-swap clip; callers own the clock (Entry restarts it when 1P joins).
     public sealed class ControlGuideView
     {
-        const double CellsPerSecond = 60 / 2.0;
-        readonly ArcadeOverlayArt art;
+        readonly AnimationClip clip;
         readonly Image image;
+        readonly ClipSampler sampler;
 
         public int Frame { get; private set; }
+        public int FrameCount { get; }
         public Image Image => image;
 
         public ControlGuideView(Transform parent, ArcadeOverlayArt art)
         {
-            this.art = art;
-            image = SkinUi.Image("ControlGuide", parent, art.guideDecideFrames[0]);
+            clip = art.guideClip;
+            FrameCount = Mathf.RoundToInt(clip.length * clip.frameRate);
+            image = SkinUi.Image("ControlGuide", parent, null);
+            sampler = ClipSampler.Attach(image.gameObject, clip);
+            Sample(0);
+            image.rectTransform.sizeDelta = image.sprite.rect.size;
             image.rectTransform.TopLeft(0, 12);
         }
 
         public void Show(double elapsedMs, float alpha)
         {
-            Frame = (int)Math.Floor(Math.Max(0, elapsedMs) / 1000 * CellsPerSecond) % art.guideDecideFrames.Length;
-            image.sprite = art.guideDecideFrames[Frame];
+            Sample((int)Math.Floor(Math.Max(0, elapsedMs) / 1000 * clip.frameRate) % FrameCount);
             image.Alpha(alpha);
+        }
+
+        // Sample mid-frame so float rounding never lands on the previous key.
+        void Sample(int frame)
+        {
+            Frame = frame;
+            sampler.Sample((frame + 0.5) / clip.frameRate);
         }
     }
 

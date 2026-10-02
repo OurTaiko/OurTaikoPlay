@@ -1,5 +1,5 @@
 {
   "name": "OurTaiko.Editor",
-  "references": ["OurTaiko.Runtime", "Unity.TextMeshPro", "Unity.ugui", "Unity.InputSystem"],
+  "references": ["OurTaiko.Runtime", "Unity.TextMeshPro", "Unity.ugui", "Unity.InputSystem", "Unity.2D.Sprite.Editor"],
   "includePlatforms": ["Editor"]
 }

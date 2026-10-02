@@ -62,7 +62,6 @@ namespace OurTaiko.Editor
                 || guide.textureType != TextureImporterType.Sprite)
             {
                 guide.textureType = TextureImporterType.Sprite;
-                guide.spriteImportMode = SpriteImportMode.Single;
                 guide.spritePixelsPerUnit = 100;
                 guide.mipmapEnabled = false;
                 guide.alphaIsTransparency = true;
@@ -113,8 +112,7 @@ namespace OurTaiko.Editor
         {
             timerBackground = Required("global/timer/bg"),
             timerDigitsBlack = Enumerable.Range(0, 10).Select(i => Slice("TimerDigitBlack" + i, "global/timer/counter_black", i * 64, 0, 64, 96)).ToArray(),
-            guideDecideFrames = Enumerable.Range(GuideFirstDecide, GuideCells - GuideFirstDecide)
-                .Select(c => Slice($"ControlGuide{c:000}", GuideSheet, c % GuideColumns * 352, c / GuideColumns * 276, 352, 276)).ToArray(),
+            guideClip = ControlGuideClip(),
             qrChip = Required("global/overlay/banapass_osaifu_keitai/0"),
             cardChip = Required("global/overlay/banapass_card/0"),
             stageChip = Required("global/overlay/banapass_or/0"),
