@@ -4,7 +4,7 @@
 
 ## 1. 核心项目目标
 
-将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件、SongSelect、SinglePlayScene 与 Result 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行单人流程。SceneSwitcher 不是场景；测试入口为 Test_DefaultScene，所有运行时场景切换从全局控件开始，并交由它完成。
+将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件、SongSelect、SongLoadingScene、SinglePlayScene 与 Result 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行单人流程。SceneSwitcher 不是场景；测试入口为 Test_DefaultScene，所有运行时场景切换从全局控件开始，并交由它完成。
 
 ## 2. 当前已知事实/约束条件
 
@@ -29,10 +29,11 @@
 
 ### 当前完成状态与交接边界
 
-- 最新提交：`feat(scenes): add Nijiiro song loading curtain and SongLoadingScene`（见下文「选曲加载幕布」）。其前为 `feat(play): port note moji lane`（音符文字，见下文「音符文字（moji）」）。其前为音符显隐／层级修复 `dfd5e56`、`5faadfe`、`d6cd16b`、`0e2cbe5`（见下文「音符显隐与层级」）。更早为 **`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
+- 最新提交：`6a78a04` — `feat(scenes): add Nijiiro song loading curtain and SongLoadingScene`（见下文「选曲加载幕布」），随后的 docs 提交补全本文。其前为 `feat(play): port note moji lane`（音符文字，见下文「音符文字（moji）」）。其前为音符显隐／层级修复 `dfd5e56`、`5faadfe`、`d6cd16b`、`0e2cbe5`（见下文「音符显隐与层级」）。更早为 **`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
 - `Assets/OurTaiko/Generated/Nijiiro SDF.asset` 是动态 SDF 字体，Unity 会在打开项目、运行测试或保存时自动改写它（用户确认属于 Unity 自身行为，并非用户修改）。出现该 diff 时**不要提交**；收尾时用 `git restore "Assets/OurTaiko/Generated/Nijiiro SDF.asset"` 还原为已提交版本（Editor 打开时它可能被再次写入，必要时关闭 Editor 后再还原）。不要用旧的 TestResults 快照覆盖它。
 - Unity Editor 可能仍由上一会话打开（项目已安装 Pipeline 包）；先用 `unity status` 确认连接再操作，修改 C# 后刷新并确认 `EditorUtility.scriptCompilationFailed` 为 false（编译错误会让 CLI 无法连接或静默失败，看 `~/Library/Logs/Unity/Editor.log` 的 `error CS`）。耗时较长的 Editor 方法会让 CLI 报 5 秒超时，但会在 Editor 中继续执行，需轮询结果。
 - 选曲／结算的下一步候选（均未授权，需用户确认）：文件夹与类别、成绩等级演出、曲目板飞入、难度决定标记弹出、皇冠光芒加算混合、支持字母扩展音符以游玩 TRIPLE HELIX Edit。
+- **SongSelect 与 Result 的画面在运行时由代码构建**：场景文件只保存相机、EventSystem、Canvas 下空的 1920×1080 `Stage`、FPS 面板和持有素材引用的控制组件，`SongSelectScene`／`ResultScene` 在 `Awake` 中 `Build()` 出全部界面（单独打开 Result 时显示样例失败成绩）。因此 Editor 未运行时这两个场景看起来是空的，这是现状而非故障。SongLoadingScene 同样为空，画面全部是 SceneSwitcher 预制体里的幕布。SinglePlayScene 的轨道、魂槽、鼓面与面板则保存在场景中。用户已问过此事；改为编辑期预览或把层级烘焙进场景均未授权。
 - 当前验证针对 Unity Editor。早期曾成功构建 macOS Development Player，但 `Builds/OurTaikoPlayerUnity.app` **没有随最近各次修复重新打包**，不能视作当前版本。移动端、真机音频延迟与独立播放器长期手动游玩尚未验收。
 
 ### 运行入口与代码结构
@@ -48,7 +49,7 @@
 | `Assets/OurTaiko/Animations`、`Runtime/Core/LumenClip.cs` | 原 `Scripts/anim/*.lua` 导出表的原样 `.txt` 副本与纯 C# 线性采样器（只读数据，不运行 Lua）。 |
 | `Assets/Scenes/SongLoadingScene.unity`、`Runtime/Scenes/SongLoadingScene.cs`、`SongTransition.cs` | 选曲加载：`SceneSwitcher.Play()` 以彩虹幕布（SceneSwitcher 预制体内的 `SongTransition`，`TransitionStyle.Curtain`）关闭并进入此场景；场景在停住的幕布下解析 TJA（含演奏オプション）、载入歌曲音频，至少 2 秒后切到 SinglePlayScene 并在其上打开幕布。迁移入口 `ProjectBuilder.ApplySongLoadingCurtain()`。 |
 | `Assets/Scenes/SinglePlayScene.unity` | 单人游玩场景（`SceneSwitcher.GameScene`；2026-10-01 由 PlayScene 改名，GUID 不变，控制组件类仍为 `PlayScene`）。已保存并可编辑的游玩 Canvas、轨道、判定圈、鼓面、魂槽、舞者、暂停与结果界面；可直接运行，默认 TRIPLE HELIX。 |
-| `Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.cs`、`Assets/OurTaiko/Resources/SceneSwitcher.prefab` | 加载首场景前自动创建的全局 uGUI 控件，跨场景保留。统一接管输入锁定、准备任务、关闭／打开过渡、异步加载、当前／上一场景及切换事件；设置 120 FPS。 |
+| `Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.cs`、`Assets/OurTaiko/Resources/SceneSwitcher.prefab` | 加载首场景前自动创建的全局 uGUI 控件，跨场景保留。统一接管输入锁定、准备任务、关闭／打开过渡、异步加载、当前／上一场景及切换事件；设置 120 FPS。两种过渡样式 `TransitionStyle.Fade`（`Transition` 深色遮罩，MajdataPlay OutQuint）与 `Curtain`（`SongTransition` 彩虹幕布）；`Play()` 用幕布进入 SongLoadingScene，其余切换默认淡入淡出。另持有一次性的预解析谱面（`SetPreparedChart`／`TakePreparedChart`）。 |
 | `Assets/OurTaiko/Runtime/Scenes/LaunchMenu.cs` | Test_DefaultScene 的测试选曲页面，通过全局 SceneSwitcher 开始游玩。 |
 | `Assets/OurTaiko/Runtime/Core/TaikoChart.cs`、`TjaParser.cs` | 纯 C# 谱面模型与 TJA 解析；课程选择、音符 1–9、长音符、BPM／拍号／延迟／复数 SCROLL／GOGO／小节线与三路线分支。 |
 | `Assets/OurTaiko/Runtime/Core/PlaySession.cs` | 独立于 Unity 的输入判定、连击、长音符次数、自动演奏与分支统计／时间线；将判定交给计分和魂槽模块，通过事件通知表现层。 |
@@ -64,16 +65,22 @@
 | `Assets/OurTaiko/Runtime/Play/BalloonCounterView.cs` | 7 号气球剩余次数、数字弹动、膨胀、破裂与淡出。 |
 | `Assets/OurTaiko/Runtime/Play/FpsCounter.cs`、`SpriteFlipbook.cs`、`DrumPad.cs` | 实测帧率、舞者帧动画和触控鼓。触控鼓**只放在 SinglePlayScene**（原版为全局叠加层），复制原版：Nijiiro `global/overlay/touch_drum.png` 全画面 50% 不透明，位于暂停／结果面板之下；每次按下按原全局动画 66 以底边中心缩至 0.95 再回弹（各 70 ms、二次缓出，真实时间）。判定区照搬 `input.cpp::touch_quadrant_vkey`：上半屏为咔，下半屏中以设计区底边中心、半径为宽度 0.262／0.242 的椭圆内为咚、其余为咔，左右按中线分；落在 uGUI 按钮上的点交给按钮。迁移入口 `ProjectBuilder.ApplyTouchDrum()`。 |
 | `Assets/OurTaiko/Editor/ProjectBuilder.SongSelectResult.cs` | 菜单 OurTaiko/Create Song Select And Result Scenes：导入选曲／结算素材、生成切片与 `Generated/Nijiiro SDF Outline.mat`，仅在场景缺失时创建，并对已有场景只做定向升级。 |
-| `Assets/OurTaiko/Editor/ProjectBuilder.cs`、`ProjectBuilder.Nijiiro.cs`、`ProjectBuilder.Balloon.cs`、`ProjectBuilder.SceneSwitcher.cs` | 初始生成、Nijiiro 布局／魂槽／连打切片、气球资源配置与全局控件专项迁移；按需使用专项入口，避免全量重建现有场景。 |
+| `Assets/OurTaiko/Editor/ProjectBuilder.cs`、`ProjectBuilder.Nijiiro.cs`、`ProjectBuilder.Balloon.cs`、`ProjectBuilder.SceneSwitcher.cs`、`ProjectBuilder.SongLoading.cs` | 初始生成、Nijiiro 布局／魂槽／连打切片、气球资源配置、全局控件专项迁移，以及选曲加载幕布（重建预制体内的 `SongTransition` 子物体，SongLoadingScene 仅缺失时创建）；按需使用专项入口，避免全量重建现有场景。 |
 | `Assets/OurTaiko/Art`、`Audio`、`Generated` | 打平的皮肤图片／音效、已生成 Sprite 切片与字体；运行时无需原仓库。 |
 | `Assets/OurTaiko/Songs` | TRIPLE HELIX（含音乐）、Input Calibration（无音乐）、Branch Training（无音乐分支练习谱）。 |
 | `README.md`、`Documentation/PortingNotes.md`、`Documentation/ImportedAssets.json` | 运行说明、详细行为依据与历次验证、素材来源记录。 |
 
 操作：F／J 为咚，D／K 为咔（游玩时同一帧只判定最早的一次打击，其余同帧打击丢弃——太鼓输入互斥），Space 暂停／恢复，F1 重开，Esc 返回；入口 Tab 切歌、A 切换自动演奏、Enter 开始、S 进入选曲。选曲 D／K 移动、F／J 决定、A 自动演奏、Esc 回入口（演奏オプション中 D／K 改值、F／J 下一行、Esc 关闭）；结算 F／J 跳过／返回。游玩页也可用鼠标／触控敲击原版样式的触控鼓，选曲板、难度卡和结算画面也可点击。
 
-**选曲加载幕布。** 照搬 `transition.lua`／`anim/loading_song.lua`：关闭 532 ms（帧 5→55，在旧场景上）→ SongLoadingScene 停在帧 55（标题、副标题、皮肤「ゲームのヒント」原图、咚咔、星、光晕）→ 打开 532 ms（帧 60→109，在游玩场景上），打开结束后才开始倒计时。用户决定：幕布美术放在全局 SceneSwitcher；停留至少 2 秒；提示区用皮肤文字贴图（截图中的街机插画卡不在皮肤内）；所有 `Play()` 入口使用幕布，重开与其他切换仍为淡入淡出。演奏スキップON 徽章因该功能未实现而不显示。预解析谱面经 `SceneSwitcher.TakePreparedChart` 只交给 PlayScene 一次。详见 `Documentation/PortingNotes.md`「选曲加载幕布与 SongLoadingScene」。
+**选曲加载幕布（SongSelect → SinglePlayScene 过渡）。** 照搬 `transition.lua`／`anim/loading_song.lua`：关闭 532 ms（帧 5→55，在旧场景上）→ SongLoadingScene 停在帧 55（标题、副标题、皮肤「ゲームのヒント」原图、咚咔、星、光晕）→ 打开 532 ms（帧 60→109，在游玩场景上），打开结束后才开始倒计时。用户决定：幕布美术放在全局 SceneSwitcher；停留至少 2 秒；提示区用皮肤文字贴图（截图中的街机插画卡不在皮肤内）；所有 `Play()` 入口使用幕布，重开与其他切换仍为淡入淡出。演奏スキップON 徽章因该功能未实现而不显示。预解析谱面经 `SceneSwitcher.TakePreparedChart` 只交给 PlayScene 一次。详见 `Documentation/PortingNotes.md`「选曲加载幕布与 SongLoadingScene」。
 
-**选曲／结算。** 流程：入口 → SongSelect →（幕布＋SongLoadingScene）→ SinglePlayScene → Result → 发起游玩的场景（`SceneSwitcher.ReturnScene`）。`PlayScene.Finish` 保存成绩（自动演奏不保存）后调用 `SceneSwitcher.ShowResult`，场景内结果面板只用于谱面加载失败。时间与布局均取自原 `song_select.cpp`／`navigator.cpp`／`player.cpp`／`result.cpp` 及 Nijiiro Lua，详见 `Documentation/PortingNotes.md`“选曲与结算场景”。TMP Mobile SDF 描边需 `OUTLINE_ON`，新场景文字使用 Outline 材质。PlayScene 现于遮罩关闭期间预载歌曲音频，避免首次 PlayScheduled 卡顿约 1 秒。
+- 切换机制：`Play()` 记录 SelectedSong／Course／AutoPlay 与 ReturnScene（排除 SongLoadingScene），`ShowSongOnCurtain` 写入 TJA 的 TITLE／SUBTITLE，再 `SwitchScene(SongLoadingScene, TransitionStyle.Curtain, autoFadeOut: false)`；关闭结束后加载，幕布保持关闭（`IsCurtainClosed`、`IsCovered` 为真，输入阻挡）。`SongLoadingScene` 等待 `minimumSeconds`（场景内可调，默认 2）与 `IsSwitching` 结束后调用普通 `SwitchScene(GameScene)`：**遮罩在打开前保持自身样式**——幕布已关闭时跳过关闭，加载后由幕布打开；打开时看 `SongTransition.IsVisible` 选择样式。失败／取消同样用当前样式打开旧场景。缺少幕布或 SongLoadingScene 不在 Build Settings 时，`Play()` 退回直接淡入 SinglePlayScene。
+- 加载内容：`PlayScene.PrepareChart`（解析＋`ChartModifiers.Apply`，对应 `Player::reset_chart`）在主线程执行，失败只记日志，由 PlayScene 再解析并显示原错误面板；`song.music.LoadAudioData()` 等到不再 Loading。PlayScene 仍会对 `music.clip`／don／ka 调用 `LoadAudioData`，作为重开与直接运行的兜底。音频由 `SceneSwitcher.SelectedSong` 持有，不会随场景卸载。
+- 表现细节：`SongTransition` 由 `LumenClip` 采样 `Animations/loading_song.txt`；关闭／打开均为真实时间。标题文字在幕布出现（`Appear`）时才写入并 `Squeeze(1920)`，并在运行时实例化描边材质：`outlineWidth` 与 `_FaceDilate` 同值（标题 0.5、副标题 0.7），让 TMP 居中描边全部落在字形外侧，接近 OutlinedText 的 5 px 黑边。底部光晕用 `Generated/UI Additive.mat`（`Mobile/Particles/Additive`）；幕布根物体有透明 raycast Image 阻挡点击，`Viewport1920x1080` 带 RectMask2D，非 16:9 时幕布不会画进留边。
+- 原版未移植部分：每首歌目录下的 `Loading.png` 自定义加载图（`add_loading_graphic`）、段位加载画面（`set_dan`）、Fanmade 远程下载进度页与取消、以及演奏スキップON 徽章（只在跳过功能启用时显示）。均未授权。
+- 测试注意：经 `Play()` 进入游玩现在要经过幕布与至少 2 秒停留，原有 `WaitForScene(GameScene)`（条件为非切换中且活动场景为 SinglePlayScene）在 SongLoadingScene 停留期间不会误判完成。截图时幕布在 SceneSwitcher 的 Overlay Canvas 上，`SceneFlowTests.Capture` 只渲染场景 Canvas 拍不到；`SongLoadingCurtainTests.Capture` 会把所有根 Overlay Canvas 临时切到相机模式一起渲染。
+
+**选曲／结算。** 流程：入口 → SongSelect →（幕布＋SongLoadingScene）→ SinglePlayScene → Result → 发起游玩的场景（`SceneSwitcher.ReturnScene`）。`PlayScene.Finish` 保存成绩（自动演奏不保存）后调用 `SceneSwitcher.ShowResult`，场景内结果面板只用于谱面加载失败。时间与布局均取自原 `song_select.cpp`／`navigator.cpp`／`player.cpp`／`result.cpp` 及 Nijiiro Lua，详见 `Documentation/PortingNotes.md`“选曲与结算场景”。TMP Mobile SDF 描边需 `OUTLINE_ON`，新场景文字使用 Outline 材质。歌曲音频现在主要在 SongLoadingScene 中载入；PlayScene 仍于遮罩关闭期间预载（重开／直接运行），避免首次 PlayScheduled 卡顿约 1 秒。
 
 ### 已完成玩法与表现的核心逻辑
 
@@ -98,6 +105,7 @@
 - 此前验证（2026-10-01，演奏オプション）：Unity Editor **EditMode 115/115、PlayMode 22/22 全部通过**。报告为 `TestResults/options-editmode.json`、`TestResults/options-playmode.json`；PlayMode 通过 `TestScoreStore` 使用临时成绩文件和不落盘的 `PlayOptions`。`PlayOptionsTests`／`PlayOptionsFlowTests` 覆盖速度档位、面板行走、滑动曲线、谱面修改、随机概率、持久化与游玩场景实际效果；截图 `TestResults/SongSelectOptions.png`、`PlayOptionsBadges.png`。`TestResults/` 不纳入版本控制，本机报告不保证随新克隆存在。
 - EditMode 程序集：`OurTaiko.Tests`，测试位于 `Assets/OurTaiko/Tests/EditMode/`，覆盖解析、判定、分支阈值／时序、滚动与同速约束，以及 Shinuchi 预算／取整、独立逗号／空小节、魂槽难度星级／增减／过关边界。
 - PlayMode 程序集：`OurTaiko.PlayModeTests`，`SceneFlowTests.cs` 覆盖场景流程、音乐同步、120 FPS 配置、各分支、魂槽、气球与连打，包含 1080p／720p 渲染。`GlobalSceneSwitcherTests.cs` 另覆盖跨场景预制体、等待准备任务、关闭／加载／打开顺序、timeScale=0、输入阻挡、重复请求、场景事件、手动揭示、泛型结果、失败／取消恢复及销毁取消。
+- `SongLoadingCurtainTests.cs` 覆盖幕布帧映射（关闭 5→55、标题 266 ms 延迟淡入；打开 60→109、133 ms 淡出、标题带压扁）、在旧场景上关闭、SongLoadingScene 停在帧 55 的各图层状态、至少 2 秒停留、音频已载入、PlayScene 取走预解析谱面、在游玩场景上打开并解除输入阻挡、重开仍为淡入淡出。
 - `ScoreGaugeFlowTests.cs` 覆盖实际游玩场景的 Shinuchi HUD、魂槽过关／满槽／失去过关、气球击打不重启淡入、结算状态及重开清零。
 - `DrumInputMutexTests.cs` 用虚拟 Input System 键盘（测试期间临时设 `IgnoreFocus`／`AllDeviceInputAlwaysGoesToGameView`，结束后还原）覆盖输入互斥：同帧多次按下按发生顺序进入 `PressesThisFrame`；连打中同帧按下 D／F／J／K 只计 1 次连打且只亮最先按下的鼓面，分帧按下各自计数。已用变异检查确认去掉 `HitFirstDrumPress` 的 `return` 时测试失败。
 - 已提交截图在 `Documentation/`：`DrumrollSmall.png`、`DrumrollBig.png`、`BalloonAtJudge.png`、`BalloonCounter.png`、`GaugeClear.png`、`GaugeRainbowA.png`、`GaugeRainbowB.png` 及分支截图。
@@ -111,8 +119,8 @@
 /Users/kirisamevanilla/.unity/bin/unity command --caller plugin --skill unity-cli --project-path /Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayerUnity --format json run_tests --mode playmode --filter OurTaiko.PlayModeTests --filter_type assembly --async_tests true
 ```
 
-测试状态原件为 `Temp/pipeline_test_status.json`，每次运行会覆盖。如需新 macOS 播放器，使用 `OurTaiko.Editor.ProjectBuilder.BuildMac()`，另行确认构建成功；不要把旧构建作为最新验证证据。
+只跑单个测试类时用 `--filter OurTaiko.Tests.<类名> --filter_type testName`（`filter_type` 只接受 testName／assembly／category，`class` 会报错且结果为 0 个测试）。测试状态原件为 `Temp/pipeline_test_status.json`，每次运行会覆盖。如需新 macOS 播放器，使用 `OurTaiko.Editor.ProjectBuilder.BuildMac()`，另行确认构建成功；不要把旧构建作为最新验证证据。
 
 ### 明确尚未实现的范围
 
-当前不是整个原模拟器的等价移植。选曲中的文件夹／类别、搜索与排序、独立音色面板、演奏スキップ功能、2P、曲目板飞入、难度决定标记弹出，结算中的成绩等级（粋／雅／極）演出、3D 咚与名牌、皇冠光芒加算混合尚未移植；TRIPLE HELIX 的 Edit 谱面含字母扩展音符，无法游玩。联网／成绩上传、双人、段位、3D 咚角色、全部皮肤特效、逐帧回放尚未实现（大音符单侧击打即可，属有意设计，见上方约束）；计分固定使用 Shinuchi，单人魂槽数值已按原源码还原，GEN3 计分及段位魂槽不在当前范围。自动连打仍为 **15 次／秒**，未移植原版随 BPM 变化的自动连打节奏。`s` 分数分支、`#LEVELHOLD`、BMSCROLL／HBSCROLL、字母扩展音符明确不支持；不要静默猜测其行为，也不要将这些范围自动当作用户已授权的新开发任务。
+当前不是整个原模拟器的等价移植。选曲中的文件夹／类别、搜索与排序、独立音色面板、演奏スキップ功能（及加载幕布上的演奏スキップON 徽章）、歌曲自定义 `Loading.png` 加载图、段位加载画面、2P、曲目板飞入、难度决定标记弹出，结算中的成绩等级（粋／雅／極）演出、3D 咚与名牌、皇冠光芒加算混合尚未移植；TRIPLE HELIX 的 Edit 谱面含字母扩展音符，无法游玩。联网／成绩上传、双人、段位、3D 咚角色、全部皮肤特效、逐帧回放尚未实现（大音符单侧击打即可，属有意设计，见上方约束）；计分固定使用 Shinuchi，单人魂槽数值已按原源码还原，GEN3 计分及段位魂槽不在当前范围。自动连打仍为 **15 次／秒**，未移植原版随 BPM 变化的自动连打节奏。`s` 分数分支、`#LEVELHOLD`、BMSCROLL／HBSCROLL、字母扩展音符明确不支持；不要静默猜测其行为，也不要将这些范围自动当作用户已授权的新开发任务。
