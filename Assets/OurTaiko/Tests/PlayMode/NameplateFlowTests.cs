@@ -143,7 +143,7 @@ namespace OurTaiko.Tests
                 {
                     yield return null;
                     frames.Add(plate.RainbowFrame);
-                    Assert.That(plate.band.sprite, Is.SameAs(plate.rainbowBackgrounds[plate.RainbowFrame]));
+                    Assert.That(plate.band.sprite.name, Is.EqualTo("NameplateRainbow" + plate.RainbowFrame));
                     Assert.That(plate.bandUnder.enabled, Is.EqualTo(plate.RainbowFrame > 0));
                 }
                 Assert.That(frames.Count, Is.GreaterThanOrEqualTo(4));

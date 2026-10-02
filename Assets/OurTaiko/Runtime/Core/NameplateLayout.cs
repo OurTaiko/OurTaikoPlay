@@ -26,19 +26,6 @@ namespace OurTaiko
             if (info.IsCoin) return new TextBox(226, 53, 30);
             return info.HasDan ? new TextBox(261, 67.5f, 24) : new TextBox(226, 67.5f, 24);
         }
-
-        // Global animation 12 (texture_change): frame k for (50k, 50k+50] ms, looping every 300 ms.
-        // nameplate.lua never starts it, so the original stays on frame 0; the plate is meant to cycle.
-        public const double RainbowFrameMs = 50, RainbowLoopMs = 300;
-        public const int RainbowFrames = 6;
-
-        public static int RainbowFrame(double elapsedMs)
-        {
-            if (elapsedMs <= 0) return 0;
-            double t = elapsedMs % RainbowLoopMs;
-            if (t <= 0) t = RainbowLoopMs;
-            return Math.Min(RainbowFrames - 1, (int)Math.Ceiling(t / RainbowFrameMs) - 1);
-        }
     }
 
     // ScoreCounter::draw with Nijiiro's score_counter_pos (255, 277.5), score_number y -272 and the

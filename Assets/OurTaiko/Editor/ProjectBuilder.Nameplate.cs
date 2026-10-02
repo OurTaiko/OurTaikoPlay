@@ -73,11 +73,10 @@ namespace OurTaiko.Editor
                 string art = NameplateArt + "/";
                 // texture.json crops: frame_top 5 x 408x56, frame_top_rainbow 6 x 408x56, dan_emblem 5 x 5 of 72x40.
                 view.titleBackgrounds = Enumerable.Range(0, 5).Select(i => Slice("NameplateTitle" + i, art + "frame_top", 0, i * 56, 408, 56)).ToArray();
-                view.rainbowBackgrounds = Enumerable.Range(0, 6).Select(i => Slice("NameplateRainbow" + i, art + "frame_top_rainbow", 0, i * 56, 408, 56)).ToArray();
                 view.danEmblems = Enumerable.Range(0, PlayerInfo.DanCount).Select(i => Slice($"NameplateDan{i:00}", art + "dan_emblem", i % 5 * 72, i / 5 * 40, 72, 40)).ToArray();
                 view.goldDanEmblems = Enumerable.Range(0, PlayerInfo.DanCount).Select(i => Slice($"NameplateDanGold{i:00}", art + "dan_emblem_gold", i % 5 * 72, i / 5 * 40, 72, 40)).ToArray();
                 view.shadow = PlateImage(root.transform, "Shadow", Sprite(art + "shadow"), 0, 0);
-                view.bandUnder = PlateImage(root.transform, "BandUnder", view.rainbowBackgrounds[0], 0, 0);
+                view.bandUnder = PlateImage(root.transform, "BandUnder", NameplateRainbowFrames()[0], 0, 0);
                 view.band = PlateImage(root.transform, "Band", view.titleBackgrounds[0], 0, 0);
                 view.outline = PlateImage(root.transform, "Outline", Sprite(art + "outline"), 0, 0);
                 view.danBackground = PlateImage(root.transform, "DanBackground", Sprite(art + "dan_emblem_bg"), NameplateLayout.DanBackgroundX, NameplateLayout.DanBackgroundY);
@@ -89,9 +88,39 @@ namespace OurTaiko.Editor
                     Color.black, NameplateLayout.TitleBoxWidth, NameplateLayout.TitleFontSize);
                 view.playerName = PlateText(root.transform, "Name", uiFont,
                     OutlinedUiMaterial("Nameplate Name", uiFont, 24, 3), Color.white, NameplateLayout.NameBoxWidth, 24);
+                AttachClip(root, NameplateRainbowClip());
                 PrefabUtility.SaveAsPrefabAsset(root, NameplatePrefabPath);
             }
             finally { UnityEngine.Object.DestroyImmediate(root); }
+        }
+
+        [MenuItem("OurTaiko/Apply Nameplate Rainbow Clip")]
+        public static void ApplyNameplateRainbowClip()
+        {
+            var root = PrefabUtility.LoadPrefabContents(NameplatePrefabPath);
+            try
+            {
+                AttachClip(root, NameplateRainbowClip());
+                PrefabUtility.SaveAsPrefabAsset(root, NameplatePrefabPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        static Sprite[] NameplateRainbowFrames() => Enumerable.Range(0, 6)
+            .Select(i => Slice("NameplateRainbow" + i, NameplateArt + "/frame_top_rainbow", 0, i * 56, 408, 56)).ToArray();
+
+        // Global animation 12 (texture_change): frame k for 50 ms from 50k ms, looping every 300 ms.
+        // Band shows frame k; BandUnder shows frame k - 1 under it from frame 1 on.
+        static AnimationClip NameplateRainbowClip()
+        {
+            var frames = NameplateRainbowFrames();
+            return SaveClip("NameplateRainbow", 20, true, clip =>
+            {
+                var image = typeof(UnityEngine.UI.Image);
+                SpriteKeys(clip, "Band", image, frames, frames.Select((_, i) => i * 0.05f).ToArray());
+                SpriteKeys(clip, "BandUnder", image, frames.Take(5).ToArray(), Enumerable.Range(1, 5).Select(i => i * 0.05f).ToArray());
+                SteppedCurve(clip, "BandUnder", image, "m_Enabled", (0, 0), (0.05f, 1), (0.3f, 1));
+            });
         }
 
         static UnityEngine.UI.Image PlateImage(Transform parent, string name, Sprite sprite, float x, float y)

@@ -70,6 +70,7 @@
 - `SoulFire.anim`／`SoulOverlay.anim`：满槽魂火 8 帧×50 ms 循环与 `tamashii_overlay` 在第 0、1、4、5 帧显示，分别挂在 `SoulFire`、`SoulOverlay` 上（两者之间隔着 `Soul`，不重组层级），共用歌曲时钟；未满时由代码隐藏。迁移 `ProjectBuilder.ApplySoulFireClips()`。
 - `SoulRainbowEasy／Normal／Hard.anim`：满槽彩虹，cell k 上叠 cell k+1 在 75 ms 内淡入，整体在 450 ms 内淡入。剪辑 1.2 s＝0.6 s 开场（淡入与交叉淡入的乘积每 5 ms 烘焙一键）＋0.6 s 循环，`SoulGaugeView` 在开场后只重复后半段。RainbowA／B 归入全尺寸的 `Rainbow` 组（位置不变），`SoulGaugeView.rainbowSampler` 按难度样式（`Style.rainbow`）切换剪辑。迁移 `ProjectBuilder.ApplySoulRainbowClips()`。
 - `CellFade.anim`：魂槽新增格子 450 ms 线性淡入（只写透明度）；哪一格、贴图与位置仍由 `SoulGaugeView` 决定。迁移 `ProjectBuilder.ApplyCellFadeClip()`。
+- `NameplateRainbow.anim`：名牌彩虹称号带（全局动画 12），`Band` 6 帧×50 ms、300 ms 循环，`BandUnder` 从第 1 帧起显示前一帧；真实时间，只在 `rainbow` 称号时采样。`Nameplate.prefab` 根物体带 Animator＋ClipSampler，`NameplateLayout.RainbowFrame` 已删除。迁移 `ProjectBuilder.ApplyNameplateRainbowClip()`。
 - 不转换：Lumen 时间轴（`Animations/*.txt`，原版导出原样副本，Entry／选曲／加载幕布／结算）、场景切换与暂停菜单淡入淡出（从当前不透明度插值，可中断）、由游戏状态驱动的表现（音符滚动与飞行、气球膨胀、魂槽填充）。
 
 ### 游玩暂停菜单（2026-10-02）

@@ -734,6 +734,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3217039868506801135}
   - component: {fileID: 2523230160004936926}
+  - component: {fileID: 3779687787688517101}
+  - component: {fileID: 8387599588597498100}
   m_Layer: 0
   m_Name: Nameplate
   m_TagString: Untagged
@@ -796,13 +798,6 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 6d0d5b86d24904d1390be3c34a2f5196, type: 2}
   - {fileID: 21300000, guid: c8c1a8f0b760d4fadb9802203006abeb, type: 2}
   - {fileID: 21300000, guid: b6088975d1f3947859fd1390c573c2e0, type: 2}
-  rainbowBackgrounds:
-  - {fileID: 21300000, guid: c012721f14b3a4f6085ee2aef50a797c, type: 2}
-  - {fileID: 21300000, guid: 80a275726cbd847978ff982d0a5af6f4, type: 2}
-  - {fileID: 21300000, guid: 8e48609d3668c410a831944c19301564, type: 2}
-  - {fileID: 21300000, guid: fde2d19ab0e9f4ff5a20daec29e42c62, type: 2}
-  - {fileID: 21300000, guid: 6e84881cba8ce4ab99ec08c75094f342, type: 2}
-  - {fileID: 21300000, guid: a1b56643e70a54863ad2cb5dab00fb22, type: 2}
   danEmblems:
   - {fileID: 21300000, guid: 7cbc45d94330c41c5b3ec74151d328f3, type: 2}
   - {fileID: 21300000, guid: c2aed5365b3a545d7834069957752b1b, type: 2}
@@ -855,6 +850,41 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 805e969c84a164672b16bf4bce8805bd, type: 2}
   - {fileID: 21300000, guid: 1ac9e350aa70147b9ad9fb9c040fa988, type: 2}
   - {fileID: 21300000, guid: b4cfe132b20a14165b8da1745f447fe1, type: 2}
+--- !u!95 &3779687787688517101
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7052526075703801799}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &8387599588597498100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7052526075703801799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: a5c02682a0712487bbe526f12933fe89, type: 2}
 --- !u!1 &7386945920317896954
 GameObject:
   m_ObjectHideFlags: 0

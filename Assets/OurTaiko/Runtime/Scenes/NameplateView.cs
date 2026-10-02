@@ -7,15 +7,13 @@ namespace OurTaiko
     // Nijiiro Scripts/global/nameplate.lua for the local 1P player, on the 408x96 plate canvas. The
     // children are drawn in the original's order: plate, title band, band outline, dan chip, 1P badge,
     // title, name. It follows PlayerInfoController, so an info change updates every plate on screen.
-    [RequireComponent(typeof(RectTransform))]
+    [RequireComponent(typeof(RectTransform), typeof(ClipSampler))]
     public sealed class NameplateView : MonoBehaviour
     {
         public Image shadow, bandUnder, band, outline, danBackground, dan, badge;
         public TMP_Text title, playerName;
         [Tooltip("frame_top: the 5 title backgrounds.")]
         public Sprite[] titleBackgrounds;
-        [Tooltip("frame_top_rainbow: the 6 rainbow band frames.")]
-        public Sprite[] rainbowBackgrounds;
         [Tooltip("dan_emblem / dan_emblem_gold: 初級 .. 達人.")]
         public Sprite[] danEmblems, goldDanEmblems;
 
@@ -56,7 +54,7 @@ namespace OurTaiko
         }
 
         // The rainbow band runs on real time, like the original's current_ms (it keeps cycling in pause).
-        void Update() => ShowRainbow((Time.unscaledTimeAsDouble - rainbowStart) * 1000);
+        void Update() => ShowRainbow(Time.unscaledTimeAsDouble - rainbowStart);
 
         // Top-left of the plate canvas, in its stage-anchored parent's skin pixels.
         public void Place(float x, float y)
@@ -75,7 +73,7 @@ namespace OurTaiko
             bandUnder.enabled = false;
             if (hasBand && !info.rainbow) band.sprite = titleBackgrounds[info.TitleFrame];
             RainbowFrame = 0;
-            ShowRainbow((Time.unscaledTimeAsDouble - rainbowStart) * 1000);
+            ShowRainbow(Time.unscaledTimeAsDouble - rainbowStart);
 
             // *_dani labels only exist in the band family.
             bool hasDan = info.HasDan && hasBand;
@@ -99,16 +97,16 @@ namespace OurTaiko
             SetText(playerName, info.name, box.FontSize, box.X, box.Y, NameplateLayout.NameBoxWidth);
         }
 
-        void ShowRainbow(double elapsedMs)
+        // NameplateRainbow.anim: global animation 12 (texture_change), frame_top_rainbow 0-5 for 50 ms
+        // each, looping every 300 ms; frames after the first are drawn over the previous one.
+        // nameplate.lua never starts it, so the original stays on frame 0; the plate is meant to cycle.
+        void ShowRainbow(double elapsed)
         {
             if (Info == null || !Info.rainbow || Info.IsCoin) return;
-            int frame = NameplateLayout.RainbowFrame(elapsedMs);
-            if (frame == RainbowFrame && band.sprite == rainbowBackgrounds[frame]) return;
-            RainbowFrame = frame;
-            // Frames after the first are drawn over the previous one.
-            bandUnder.enabled = frame > 0;
-            if (frame > 0) bandUnder.sprite = rainbowBackgrounds[frame - 1];
-            band.sprite = rainbowBackgrounds[frame];
+            var sampler = GetComponent<ClipSampler>();
+            double t = System.Math.Max(0, elapsed) % sampler.clip.length;
+            RainbowFrame = System.Math.Min(5, (int)(t / 0.05));
+            sampler.Sample(t);
         }
 
         // draw_in_box: centred in the EditText box and squeezed horizontally, never shrunk, to its width.

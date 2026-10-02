@@ -230,5 +230,28 @@ namespace OurTaiko.Tests
                 Assert.That(Sampled(clip, t, go => go.GetComponent<UnityEngine.UI.Image>().color.a), Is.EqualTo(alpha).Within(1e-4), $"{t} s");
             WithPlayScene(play => Assert.That(play.soulGauge.cellFade.GetComponent<ClipSampler>().clip, Is.SameAs(clip)));
         }
+
+        [Test]
+        public void NameplateRainbowBandCyclesSixFramesEvery300Ms()
+        {
+            var clip = Clip("NameplateRainbow");
+            Assert.That(clip.isLooping, Is.True);
+            Assert.That(clip.length, Is.EqualTo(0.3).Within(1e-4));
+            for (int frame = 0; frame < 6; frame++)
+            {
+                double t = frame * 0.05 + 0.025;
+                var got = Sampled(clip, t, go =>
+                {
+                    var band = go.transform.Find("Band").GetComponent<UnityEngine.UI.Image>();
+                    var under = go.transform.Find("BandUnder").GetComponent<UnityEngine.UI.Image>();
+                    return (band.sprite.name, under.enabled, under.sprite == null ? "" : under.sprite.name);
+                }, "BandUnder", "Band");
+                Assert.That(got.Item1, Is.EqualTo("NameplateRainbow" + frame), $"{t} s");
+                Assert.That(got.Item2, Is.EqualTo(frame > 0), $"{t} s");
+                if (frame > 0) Assert.That(got.Item3, Is.EqualTo("NameplateRainbow" + (frame - 1)), $"{t} s");
+            }
+            var prefab = AssetDatabase.LoadAssetAtPath<NameplateView>("Assets/OurTaiko/Generated/Nameplate.prefab");
+            Assert.That(prefab.GetComponent<ClipSampler>().clip, Is.SameAs(clip));
+        }
     }
 }

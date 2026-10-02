@@ -49,19 +49,6 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void RainbowBandCyclesSixFramesEvery300Ms()
-        {
-            Assert.That(NameplateLayout.RainbowFrame(0), Is.Zero);
-            Assert.That(NameplateLayout.RainbowFrame(1), Is.Zero);
-            Assert.That(NameplateLayout.RainbowFrame(50), Is.Zero);
-            Assert.That(NameplateLayout.RainbowFrame(50.5), Is.EqualTo(1));
-            Assert.That(NameplateLayout.RainbowFrame(299), Is.EqualTo(5));
-            Assert.That(NameplateLayout.RainbowFrame(300), Is.EqualTo(5));
-            Assert.That(NameplateLayout.RainbowFrame(301), Is.Zero);
-            Assert.That(NameplateLayout.RainbowFrame(460), Is.EqualTo(3));
-        }
-
-        [Test]
         public void PlayerInfoJsonRoundTripsAndKeepsDefaults()
         {
             var info = new PlayerInfo { name = "どんちゃん", title = "Taiko Master", titleBackground = 3, dan = 24, gold = true, rainbow = true };
