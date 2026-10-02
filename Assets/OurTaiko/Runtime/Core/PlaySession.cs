@@ -134,19 +134,24 @@ namespace OurTaiko
         public Judgment Hit(bool ka, double time)
         {
             Advance(time, false);
-            for (int i = 0; i < Chart.Notes.Count; i++)
+            // check_note: don and ka are separate lanes, so a press judges the front of
+            // its own colour's lane regardless of a pending note of the other colour.
+            int target = NextInLane(ka, 0);
+            if (target >= 0 && time > Chart.Notes[target].Time + okWindow)
             {
-                var n = Chart.Notes[i];
-                if (Resolved[i] || n.IsLong || !IsActive(n)) continue;
-                double delta = Math.Abs(n.Time - time);
-                if (n.Time - time > badWindow) break;
-                if (delta <= badWindow && n.IsKa == ka)
+                // A front note already past 可 yields to the next note of its lane once that
+                // one is within 可, unless any other pending note lies between them.
+                int next = NextInLane(ka, target + 1);
+                if (next >= 0 && time > Chart.Notes[next].Time - okWindow && !PendingBetween(target, next)) target = next;
+            }
+            if (target >= 0)
+            {
+                double delta = Math.Abs(Chart.Notes[target].Time - time);
+                if (delta <= badWindow)
                 {
                     Judgment result = delta <= goodWindow ? Judgment.Good : delta <= okWindow ? Judgment.Ok : Judgment.Bad;
-                    Resolve(i, result); return result;
+                    Resolve(target, result); return result;
                 }
-                // A later same-color note cannot steal input from the current note.
-                break;
             }
             for (int i = 0; i < Chart.Notes.Count; i++)
             {
@@ -155,6 +160,23 @@ namespace OurTaiko
                 { HitLong(i); return Judgment.Roll; }
             }
             return Judgment.None;
+        }
+
+        bool Pending(int i) => !Resolved[i] && IsActive(Chart.Notes[i]);
+
+        // Earliest pending don (ka = false) or ka note from index start; big notes share the lane.
+        int NextInLane(bool ka, int start)
+        {
+            for (int i = start; i < Chart.Notes.Count; i++)
+                if (Pending(i) && !Chart.Notes[i].IsLong && Chart.Notes[i].IsKa == ka) return i;
+            return -1;
+        }
+
+        bool PendingBetween(int first, int last)
+        {
+            for (int i = first + 1; i < last; i++)
+                if (Pending(i)) return true;
+            return false;
         }
 
         void HitLong(int i)

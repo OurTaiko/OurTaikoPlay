@@ -66,6 +66,26 @@ namespace OurTaiko.Tests
             session.Advance(0.7, false);
             Assert.That(session.Bad, Is.EqualTo(1)); Assert.That(session.Combo, Is.Zero);
         }
+        [Test] public void DonAndKaAreSeparateLanes()
+        {
+            // Don at 0, ka at 62.5 ms: hitting the ka first leaves the don judgeable.
+            var session = new PlaySession(Parse("12" + new string('0', 30) + ","));
+            Assert.That(session.Hit(true, 0.02), Is.EqualTo(Judgment.Ok));
+            Assert.That(session.Resolved, Is.EqualTo(new[] { false, true }));
+            Assert.That(session.Hit(false, 0.024), Is.EqualTo(Judgment.Good));
+            Assert.That(session.Combo, Is.EqualTo(2));
+        }
+        [Test] public void LateFrontNoteYieldsToNextNoteOfItsLaneUnlessBlocked()
+        {
+            // Dons at 0 and 125 ms: 80 ms is past 可 for the first and within 可 for the second.
+            var free = new PlaySession(Parse("11" + new string('0', 14) + ","));
+            Assert.That(free.Hit(false, 0.08), Is.EqualTo(Judgment.Ok));
+            Assert.That(free.Resolved, Is.EqualTo(new[] { false, true }));
+            // A pending ka between them keeps the press on the first don.
+            var blocked = new PlaySession(Parse("10201" + new string('0', 27) + ","));
+            Assert.That(blocked.Hit(false, 0.08), Is.EqualTo(Judgment.Bad));
+            Assert.That(blocked.Resolved, Is.EqualTo(new[] { true, false, false }));
+        }
         [Test] public void TimingWindowsAndDuplicateInput()
         {
             Assert.That(new PlaySession(Parse("1000,")).Hit(false, 0.02), Is.EqualTo(Judgment.Good));
