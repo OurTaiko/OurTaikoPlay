@@ -62,6 +62,7 @@
 - `ControlGuide.anim`：操作指引决定循环，见「Entry」。
 - `Dancer.anim`：游玩舞者 `0_loop` 19 帧、8 fps 循环、歌曲时钟（取代已删除的 `SpriteFlipbook`）；`PlayScene.dancers` 为 `ClipSampler[]`。迁移 `ProjectBuilder.ApplyDancerClip()`。
 - `DrumFlash.anim`：鼓面闪光（`m_Enabled` 亮 0.12 s），四个鼓面各自从自己的击打计时（原为最后一次击打后统一熄灭；原版每次击打也是独立的 `DrumHitEffect`），真实时间。迁移 `ProjectBuilder.ApplyDrumFlashClip()`。
+- `JudgmentFade.anim`：判定文字（良／可／不可）0.25 s 线性淡出（只写 `m_Color.a`，图片 RGB 为白），真实时间，每次判定（含连打击打）重新开始。迁移 `ProjectBuilder.ApplyJudgmentFadeClip()`。
 - 不转换：Lumen 时间轴（`Animations/*.txt`，原版导出原样副本，Entry／选曲／加载幕布／结算）、场景切换与暂停菜单淡入淡出（从当前不透明度插值，可中断）、由游戏状态驱动的表现（音符滚动与飞行、气球膨胀、魂槽填充）。
 
 ### 游玩暂停菜单（2026-10-02）

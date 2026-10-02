@@ -55,6 +55,7 @@ namespace OurTaiko
         float feedbackTime = -10;
         readonly float[] flashedAt = { -10, -10, -10, -10 };
         ClipSampler[] flashClips;
+        ClipSampler judgmentFade;
         NoteView[] shownNotes = new NoteView[0];
         MojiView[] shownMoji = new MojiView[0];
         RectTransform[] shownBars = new RectTransform[0];
@@ -180,8 +181,8 @@ namespace OurTaiko
             soulGauge.ShowTime(time);
             if (noteArcs != null) noteArcs.ShowTime(time);
             foreach (var dancer in dancers) dancer.SampleLoop(time);
-            float feedback = Mathf.Clamp01(1 - (Time.unscaledTime - feedbackTime) / 0.25f);
-            judgment.color = new Color(1, 1, 1, feedback);
+            judgmentFade ??= judgment.GetComponent<ClipSampler>();
+            judgmentFade.Sample(Math.Min(Time.unscaledTime - feedbackTime, judgmentFade.clip.length));
             hitFace.ShowTime(time);
             hitRing.ShowTime(time);
             for (int i = 0; i < drumFlashes.Length; i++) ShowFlash(i);

@@ -75,5 +75,18 @@ namespace OurTaiko.Tests
                 Assert.That(Sampled(clip, t, go => go.GetComponent<UnityEngine.UI.Image>().enabled), Is.EqualTo(lit), $"{t} s");
             WithPlayScene(play => Assert.That(play.drumFlashes.All(f => f.GetComponent<ClipSampler>().clip == clip), Is.True));
         }
+
+        [Test]
+        public void JudgmentTextFadesOutOver250Ms()
+        {
+            var clip = Clip("JudgmentFade");
+            foreach (var (t, alpha) in new[] { (0.0, 1f), (0.125, 0.5f), (0.25, 0f), (1.0, 0f) })
+                Assert.That(Sampled(clip, t, go => go.GetComponent<UnityEngine.UI.Image>().color.a), Is.EqualTo(alpha).Within(1e-4), $"{t} s");
+            WithPlayScene(play =>
+            {
+                Assert.That(play.judgment.GetComponent<ClipSampler>().clip, Is.SameAs(clip));
+                Assert.That((Vector3)(Vector4)play.judgment.color, Is.EqualTo(Vector3.one), "The clip only drives alpha.");
+            });
+        }
     }
 }
