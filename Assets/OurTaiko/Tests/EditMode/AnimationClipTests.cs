@@ -308,5 +308,33 @@ namespace OurTaiko.Tests
             WithPlayScene(play => Assert.That(play.pauseButton.transform.parent.GetComponentInChildren<DrumPad>(true)
                 .drum.GetComponent<ClipSampler>().clip, Is.SameAs(clip)));
         }
+
+        [Test]
+        public void TextStretchRisesThenStepsBack()
+        {
+            var clip = Clip("TextStretch");
+            var root = new GameObject("Digits", typeof(AnimatedFloat));
+            try
+            {
+                var sampler = ClipSampler.Attach(root, clip);
+                float At(double ms) { sampler.Sample(ms / 1000); return root.GetComponent<AnimatedFloat>().value; }
+                Assert.That(At(0), Is.EqualTo(2).Within(1e-4));
+                Assert.That(At(25), Is.EqualTo(7).Within(1e-4));
+                Assert.That(At(25.5), Is.EqualTo(7).Within(1e-4), "Whole milliseconds only.");
+                Assert.That(At(50), Is.EqualTo(12).Within(1e-4));
+                Assert.That(At(51), Is.EqualTo(10));
+                Assert.That(At(70), Is.EqualTo(8));
+                // The stepped return overshoots below zero for its last frames, as the original does.
+                Assert.That(At(165), Is.EqualTo(-2));
+                Assert.That(At(166), Is.EqualTo(-4));
+                Assert.That(At(167), Is.Zero);
+            }
+            finally { Object.DestroyImmediate(root); }
+            WithPlayScene(play =>
+            {
+                Assert.That(play.scoreCounter.GetComponent<ClipSampler>().clip, Is.SameAs(clip));
+                Assert.That(play.balloonCounter.GetComponent<ClipSampler>().clip, Is.SameAs(clip));
+            });
+        }
     }
 }

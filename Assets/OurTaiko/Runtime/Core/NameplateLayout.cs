@@ -38,19 +38,4 @@ namespace OurTaiko
         public static string Text(int score) => Math.Max(score, 0).ToString();
         public static float DigitLeft(int index, int count) => RightX - count * Pitch + index * Pitch;
     }
-
-    // TextStretchAnimation (score counter id 4, balloon counter id 6): a 50 ms rise to 12 px, then a
-    // stepped 116 ms return; digits grow upwards by this many pixels.
-    public static class TextStretch
-    {
-        public const double RiseMs = 50, ReturnMs = 116;
-
-        public static float Pixels(double elapsedMs)
-        {
-            if (elapsedMs < 0) return 0;
-            if (elapsedMs <= RiseMs) return 2 + 5 * ((int)elapsedMs / 25f);
-            if (elapsedMs <= RiseMs + ReturnMs) return 12 - 2 * ((int)((elapsedMs - RiseMs) / 16.57) + 1);
-            return 0;
-        }
-    }
 }

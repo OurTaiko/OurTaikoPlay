@@ -77,6 +77,33 @@ namespace OurTaiko.Editor
                 LinearCurve(clip, "LevelChange", typeof(Transform), "m_LocalScale." + axis, (0, 1), (pulse, 1.2f), (2 * pulse, 1), (end, 1));
         });
 
+        [MenuItem("OurTaiko/Apply Text Stretch Clip")]
+        public static void ApplyTextStretchClip() => EditPlayScene(play =>
+        {
+            AttachTextStretch(play.scoreCounter.gameObject);
+            AttachTextStretch(play.balloonCounter.gameObject);
+        });
+
+        // The digit rows read their stretch from an AnimatedFloat that TextStretch.anim writes.
+        static void AttachTextStretch(GameObject target)
+        {
+            if (target.GetComponent<AnimatedFloat>() == null) target.AddComponent<AnimatedFloat>();
+            AttachClip(target, TextStretchClip());
+        }
+
+        // TextStretchAnimation (score counter id 4, balloon counter id 6), in pixels the digits grow
+        // upwards: 2 + 0.2 per whole millisecond up to 12 at 50 ms, then 10 and 2 less every 16.57 ms
+        // (overshooting to -2 and -4 for its last steps, as the original does) and 0 after 166 ms.
+        static AnimationClip TextStretchClip() => SaveClip("TextStretch", 1000, false, clip =>
+        {
+            const float after = 0.00001f;
+            var keys = Enumerable.Range(0, 51).Select(ms => (ms / 1000f, 2 + 0.2f * ms)).ToList();
+            keys.Add((0.05f + after, 10));
+            for (int k = 1; k <= 7; k++) keys.Add((0.05f + 0.01657f * k, 10 - 2 * k));
+            keys.Add((0.166f + after, 0));
+            SteppedCurve(clip, "", typeof(AnimatedFloat), "value", keys.ToArray());
+        });
+
         static void EditPlayScene(Action<PlayScene> edit)
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing scenes.");

@@ -172,6 +172,7 @@ namespace OurTaiko.Editor
             view.cover.raycastTarget = false;
             // score_number: ten 56x64 digits side by side.
             view.digits = Enumerable.Range(0, 10).Select(i => Slice("ScoreNumber" + i, "game/lane/score_number", i * 56, 0, 56, 64)).ToArray();
+            AttachTextStretch(root.gameObject);
             play.scoreCounter = view;
             EditorUtility.SetDirty(view);
         }

@@ -71,20 +71,5 @@ namespace OurTaiko.Tests
             Assert.That(ScoreCounterLayout.DigitLeft(6, 7), Is.EqualTo(225));
             Assert.That(ScoreCounterLayout.DigitTop, Is.EqualTo(5.5f));
         }
-
-        [Test]
-        public void TextStretchRisesThenStepsBack()
-        {
-            Assert.That(TextStretch.Pixels(-1), Is.Zero);
-            Assert.That(TextStretch.Pixels(0), Is.EqualTo(2));
-            Assert.That(TextStretch.Pixels(25), Is.EqualTo(7));
-            Assert.That(TextStretch.Pixels(50), Is.EqualTo(12));
-            Assert.That(TextStretch.Pixels(51), Is.EqualTo(10));
-            Assert.That(TextStretch.Pixels(70), Is.EqualTo(8));
-            // The stepped return overshoots below zero for its last frames, as the original does.
-            Assert.That(TextStretch.Pixels(165), Is.EqualTo(-2));
-            Assert.That(TextStretch.Pixels(166), Is.EqualTo(-4));
-            Assert.That(TextStretch.Pixels(167), Is.Zero);
-        }
     }
 }

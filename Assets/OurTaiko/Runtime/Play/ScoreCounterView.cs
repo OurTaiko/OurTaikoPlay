@@ -7,7 +7,7 @@ namespace OurTaiko
     // ScoreCounter: lane_score_cover, then score_number digits right-aligned at x 255 in the lane. Each
     // change restarts the text stretch (digits grow upwards). Runs on real time like the original's
     // current_ms; Nijiiro's delay_score_addition is off, so the count follows the score at once.
-    [RequireComponent(typeof(RectTransform))]
+    [RequireComponent(typeof(RectTransform), typeof(ClipSampler), typeof(AnimatedFloat))]
     public sealed class ScoreCounterView : MonoBehaviour
     {
         public Image cover;
@@ -36,14 +36,22 @@ namespace OurTaiko
                 images[i].enabled = shown;
                 if (shown) images[i].sprite = digits[Text[i] - '0'];
             }
-            Layout(TextStretch.Pixels((Time.unscaledTimeAsDouble - changedAt) * 1000));
+            Layout(SampleStretch());
         }
 
         void Update()
         {
             if (score < 0) return;
-            float stretch = TextStretch.Pixels((Time.unscaledTimeAsDouble - changedAt) * 1000);
+            float stretch = SampleStretch();
             if (stretch != Stretch) Layout(stretch);
+        }
+
+        // TextStretch.anim (TextStretchAnimation id 4): how many pixels the digits grow upwards.
+        float SampleStretch()
+        {
+            var sampler = GetComponent<ClipSampler>();
+            sampler.Sample(System.Math.Min(Time.unscaledTimeAsDouble - changedAt, sampler.clip.length));
+            return GetComponent<AnimatedFloat>().value;
         }
 
         void Layout(float stretch)

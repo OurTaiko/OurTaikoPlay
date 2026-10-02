@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace OurTaiko
 {
+    [RequireComponent(typeof(ClipSampler), typeof(AnimatedFloat))]
     public sealed class BalloonCounterView : MonoBehaviour
     {
         public UnityEngine.UI.Image bubble, body;
@@ -78,8 +79,10 @@ namespace OurTaiko
                 return;
             }
             visuals.alpha = IsPopped ? 1 - (float)(elapsed / PopFadeSeconds) : 1;
-            // TextStretchAnimation, id 6: 50ms rise, then 116ms of stepped return.
-            float stretch = TextStretch.Pixels(elapsed * 1000);
+            // TextStretch.anim (TextStretchAnimation id 6): 50 ms rise, then 116 ms of stepped return.
+            var sampler = GetComponent<ClipSampler>();
+            sampler.Sample(Math.Min(elapsed, sampler.clip.length));
+            float stretch = GetComponent<AnimatedFloat>().value;
             for (int i = 0; i < digitCount; i++)
             {
                 var rect = digits[i].rectTransform;

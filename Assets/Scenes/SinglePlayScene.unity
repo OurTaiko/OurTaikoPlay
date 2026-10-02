@@ -3170,6 +3170,9 @@ GameObject:
   - component: {fileID: 608617522}
   - component: {fileID: 608617524}
   - component: {fileID: 608617523}
+  - component: {fileID: 608617527}
+  - component: {fileID: 608617526}
+  - component: {fileID: 608617525}
   m_Layer: 0
   m_Name: BalloonCounter
   m_TagString: Untagged
@@ -3247,6 +3250,54 @@ MonoBehaviour:
   - {fileID: 21300000, guid: e41ffd783db4a4b2a9091b00d511eb17, type: 2}
   - {fileID: 21300000, guid: 124152267f32749a89ed4e7b62ba7df9, type: 2}
   - {fileID: 21300000, guid: d09f9cb231f804acb93163e4df41b4cd, type: 2}
+--- !u!114 &608617525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608617521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51df21d7e19f34c6f9bb634f48247d94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.AnimatedFloat
+  value: 0
+--- !u!114 &608617526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608617521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: f164992daf9af40aa97bf2ce00daee24, type: 2}
+--- !u!95 &608617527
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 608617521}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &611568338
 GameObject:
   m_ObjectHideFlags: 0
@@ -10221,6 +10272,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2020266785}
   - component: {fileID: 2020266786}
+  - component: {fileID: 2020266789}
+  - component: {fileID: 2020266788}
+  - component: {fileID: 2020266787}
   m_Layer: 0
   m_Name: ScoreCounter
   m_TagString: Untagged
@@ -10272,6 +10326,54 @@ MonoBehaviour:
   - {fileID: 21300000, guid: b9cade35a47e247049d3a433bc498a75, type: 2}
   - {fileID: 21300000, guid: 2972961e7a003406583fa56f3c5c21eb, type: 2}
   - {fileID: 21300000, guid: d5bfa9963b82e465caf91986acd7e825, type: 2}
+--- !u!114 &2020266787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020266784}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51df21d7e19f34c6f9bb634f48247d94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.AnimatedFloat
+  value: 0
+--- !u!114 &2020266788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020266784}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: f164992daf9af40aa97bf2ce00daee24, type: 2}
+--- !u!95 &2020266789
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020266784}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &2034227057
 GameObject:
   m_ObjectHideFlags: 0
