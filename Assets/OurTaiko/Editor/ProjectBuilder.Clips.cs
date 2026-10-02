@@ -55,43 +55,50 @@ namespace OurTaiko.Editor
             AssetDatabase.SaveAssets();
         }
 
-        // Cuts an animation's frames out of its sheet in the sheet's own importer (Multiple sprite mode),
-        // so the frames live in the PNG's import settings instead of separate sprite assets. Cells
-        // are (name, x, y from the top, width, height); existing sprite IDs are kept by name, so a
-        // rebuild never breaks the clips that reference them.
+        // Cuts frames out of a sheet in the sheet's own importer (Multiple sprite mode), so they live in
+        // the PNG's import settings instead of separate sprite assets. Cells are (name, x, y from the
+        // top, width, height). Sub-sprites are matched by name: their rect is updated and their sprite
+        // ID kept, so a rebuild never breaks references; other sub-sprites of the sheet are kept. A
+        // sheet entering Multiple mode starts clean, ignoring stale cuts left in its .meta.
         static Sprite[] SliceSheet(string art, IReadOnlyList<(string name, int x, int y, int width, int height)> cells)
         {
             string path = Root + "Art/" + art + ".png";
             var importer = (TextureImporter)AssetImporter.GetAtPath(path);
-            bool changed = importer.spriteImportMode != SpriteImportMode.Multiple;
+            bool wasSheet = importer.spriteImportMode == SpriteImportMode.Multiple;
             importer.spriteImportMode = SpriteImportMode.Multiple;
             var factory = new SpriteDataProviderFactories();
             factory.Init();
             var provider = factory.GetSpriteEditorDataProviderFromObject(importer);
             provider.InitSpriteEditorDataProvider();
-            var existing = provider.GetSpriteRects().GroupBy(r => r.name).ToDictionary(g => g.Key, g => g.First().spriteID);
-            importer.GetSourceTextureWidthAndHeight(out _, out int textureHeight);
-            var rects = cells.Select(cell => new SpriteRect
-            {
-                name = cell.name,
-                rect = new Rect(cell.x, textureHeight - cell.y - cell.height, cell.width, cell.height),
-                alignment = SpriteAlignment.Center,
-                pivot = new Vector2(0.5f, 0.5f),
-                spriteID = existing.TryGetValue(cell.name, out var id) ? id : GUID.Generate(),
-            }).ToArray();
             var current = provider.GetSpriteRects();
-            changed |= current.Length != rects.Length
+            var ids = current.GroupBy(r => r.name).ToDictionary(g => g.Key, g => g.First().spriteID);
+            var rects = wasSheet ? current.ToList() : new List<SpriteRect>();
+            importer.GetSourceTextureWidthAndHeight(out _, out int textureHeight);
+            foreach (var cell in cells)
+            {
+                var rect = new Rect(cell.x, textureHeight - cell.y - cell.height, cell.width, cell.height);
+                int index = rects.FindIndex(r => r.name == cell.name);
+                if (index >= 0 && rects[index].rect == rect) continue;
+                var sprite = new SpriteRect
+                {
+                    name = cell.name, rect = rect,
+                    alignment = SpriteAlignment.Center, pivot = new Vector2(0.5f, 0.5f),
+                    spriteID = ids.TryGetValue(cell.name, out var id) ? id : GUID.Generate(),
+                };
+                if (index >= 0) rects[index] = sprite; else rects.Add(sprite);
+            }
+            bool changed = !wasSheet || current.Length != rects.Count
                 || current.Zip(rects, (a, b) => a.name != b.name || a.rect != b.rect || a.spriteID != b.spriteID).Any(d => d);
             if (changed)
             {
-                provider.SetSpriteRects(rects);
+                provider.SetSpriteRects(rects.ToArray());
                 provider.GetDataProvider<ISpriteNameFileIdDataProvider>()
                     .SetNameFileIdPairs(rects.Select(r => new SpriteNameFileIdPair(r.name, r.spriteID)));
                 provider.Apply();
                 importer.SaveAndReimport();
             }
             var sprites = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().ToDictionary(s => s.name);
-            return rects.Select(r => sprites[r.name]).ToArray();
+            return cells.Select(c => sprites[c.name]).ToArray();
         }
 
         // Sprite swaps: frame i from times[i] until the next key (Unity holds the last key one frame).

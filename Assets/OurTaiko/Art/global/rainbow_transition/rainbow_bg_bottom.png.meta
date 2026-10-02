@@ -52,7 +52,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -132,67 +132,67 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: rainbow_bg_bottom_0
+      name: RainbowBand
       rect:
         serializedVersion: 2
         x: 0
-        y: 703
+        y: 704
         width: 1600
-        height: 257
+        height: 256
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 89b201b663282d2a0800000000000000
-      internalID: -6714160924219921512
+      spriteID: b581f9fc976c74ee89455e23c56ec979
+      internalID: -1341615774
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: rainbow_bg_bottom_1
+      name: RainbowGlow
       rect:
         serializedVersion: 2
         x: 0
-        y: 159
+        y: 160
         width: 1600
-        height: 514
+        height: 512
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: a18accae052f79350800000000000000
-      internalID: 6023549455981914138
+      spriteID: e02299b7905cd4b49a303afa32139fee
+      internalID: 374026993
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: rainbow_bg_bottom_2
+      name: RainbowStar
       rect:
         serializedVersion: 2
-        x: 1
-        y: 1
-        width: 126
-        height: 126
+        x: 0
+        y: 0
+        width: 128
+        height: 128
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 750e5c1d1cf29a560800000000000000
-      internalID: 7325438778389422167
+      spriteID: 9de987312ca6c40b6a775ae60dbfed0c
+      internalID: 1898034633
       vertices: []
       indices: 
       edges: []
@@ -211,9 +211,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      rainbow_bg_bottom_0: -6714160924219921512
-      rainbow_bg_bottom_1: 6023549455981914138
-      rainbow_bg_bottom_2: 7325438778389422167
+      RainbowBand: -1341615774
+      RainbowGlow: 374026993
+      RainbowStar: 1898034633
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

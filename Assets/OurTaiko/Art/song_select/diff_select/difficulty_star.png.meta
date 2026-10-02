@@ -85,7 +85,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -165,309 +165,265 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: difficulty_star_0
+      name: CourseLevel0
       rect:
         serializedVersion: 2
-        x: 1
-        y: 2
-        width: 38
-        height: 36
+        x: 0
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ef758ede0274cea50800000000000000
-      internalID: 6551689764673181694
+      spriteID: cc200180f6af74468a7478c48f5ddfed
+      internalID: 558223819
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_1
+      name: CourseLevel1
       rect:
         serializedVersion: 2
-        x: 68
-        y: 7
-        width: 16
-        height: 28
+        x: 56
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e0227cb4472abbda0800000000000000
-      internalID: -5927965864131878386
+      spriteID: 0e922555aa17a48b7a4afebcccffe8fe
+      internalID: 564339437
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_2
+      name: CourseLevel2
       rect:
         serializedVersion: 2
-        x: 121
-        y: 6
-        width: 22
-        height: 29
+        x: 112
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 1fd3a4451b7af3f20800000000000000
-      internalID: 3404624223380585969
+      spriteID: c3d86cb87ba9e422cad703136e1d808a
+      internalID: 721215825
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_3
+      name: CourseLevel3
       rect:
         serializedVersion: 2
-        x: 178
-        y: 7
-        width: 20
-        height: 28
+        x: 168
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: edeb93a06b9ae7580800000000000000
-      internalID: -8827431620278894882
+      spriteID: 29509b4287c034d84a986bde52731f20
+      internalID: 2093462739
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_4
+      name: CourseLevel4
       rect:
         serializedVersion: 2
-        x: 232
-        y: 7
-        width: 24
-        height: 28
+        x: 224
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 7b889490f52858620800000000000000
-      internalID: 2775768090033096887
+      spriteID: 33d571d476370404a8feea44b1b6dd28
+      internalID: 1899654121
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_5
+      name: CourseLevel5
       rect:
         serializedVersion: 2
-        x: 289
-        y: 7
-        width: 21
-        height: 28
+        x: 280
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: faa3cb9c3c80ce5f0800000000000000
-      internalID: -726195802917291345
+      spriteID: 313083512afb14af0bd5930278ba3596
+      internalID: -2133849238
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_6
+      name: CourseLevel6
       rect:
         serializedVersion: 2
-        x: 346
-        y: 7
-        width: 20
-        height: 28
+        x: 336
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 2220d82a6778d2180800000000000000
-      internalID: -9138499125261827550
+      spriteID: 1a4b093b4fda94cbe8f3d89915834b1b
+      internalID: 1505157342
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_7
+      name: CourseLevel7
       rect:
         serializedVersion: 2
-        x: 401
-        y: 6
-        width: 22
-        height: 29
+        x: 392
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 748a663074ef795e0800000000000000
-      internalID: -1902772736587552697
+      spriteID: 475f845a4f03c4155961a4dbb18f5969
+      internalID: -1845193446
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_8
+      name: CourseLevel8
       rect:
         serializedVersion: 2
-        x: 457
-        y: 7
-        width: 22
-        height: 28
+        x: 448
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 419d405808c99c270800000000000000
-      internalID: 8271314266444060948
+      spriteID: 17cd8d6987e1f4dee9f99a00f07cb6e4
+      internalID: -1069118820
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_9
+      name: CourseLevel9
       rect:
         serializedVersion: 2
-        x: 513
-        y: 7
-        width: 21
-        height: 28
+        x: 504
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 902e8c6b0aa443250800000000000000
-      internalID: 5923441464020886025
+      spriteID: 1310feb8b07814019b5b6d6bcc3c704c
+      internalID: 1545803351
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_10
+      name: CourseLevel10
       rect:
         serializedVersion: 2
-        x: 562
-        y: 7
-        width: 16
-        height: 28
+        x: 560
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 5d7d8cd27a424e6f0800000000000000
-      internalID: -656359345242974251
+      spriteID: 78c87b79b9d3041c9a42ea8654b6889d
+      internalID: -317624176
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_star_11
+      name: CourseLevel11
       rect:
         serializedVersion: 2
-        x: 577
-        y: 7
-        width: 21
-        height: 28
+        x: 616
+        y: 0
+        width: 56
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 38018b6b054970a50800000000000000
-      internalID: 6487316862634299523
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: difficulty_star_12
-      rect:
-        serializedVersion: 2
-        x: 618
-        y: 7
-        width: 16
-        height: 28
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 02af89404a879af60800000000000000
-      internalID: 8046094855121205792
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: difficulty_star_13
-      rect:
-        serializedVersion: 2
-        x: 633
-        y: 7
-        width: 35
-        height: 28
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 2420740183f638d70800000000000000
-      internalID: 9044194763272028738
+      spriteID: a3396297dbbb4453b976a7ece5fca136
+      internalID: -57240474
       vertices: []
       indices: 
       edges: []
@@ -486,20 +442,18 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      difficulty_star_0: 6551689764673181694
-      difficulty_star_1: -5927965864131878386
-      difficulty_star_10: -656359345242974251
-      difficulty_star_11: 6487316862634299523
-      difficulty_star_12: 8046094855121205792
-      difficulty_star_13: 9044194763272028738
-      difficulty_star_2: 3404624223380585969
-      difficulty_star_3: -8827431620278894882
-      difficulty_star_4: 2775768090033096887
-      difficulty_star_5: -726195802917291345
-      difficulty_star_6: -9138499125261827550
-      difficulty_star_7: -1902772736587552697
-      difficulty_star_8: 8271314266444060948
-      difficulty_star_9: 5923441464020886025
+      CourseLevel0: 558223819
+      CourseLevel1: 564339437
+      CourseLevel10: -317624176
+      CourseLevel11: -57240474
+      CourseLevel2: 721215825
+      CourseLevel3: 2093462739
+      CourseLevel4: 1899654121
+      CourseLevel5: -2133849238
+      CourseLevel6: 1505157342
+      CourseLevel7: -1845193446
+      CourseLevel8: -1069118820
+      CourseLevel9: 1545803351
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

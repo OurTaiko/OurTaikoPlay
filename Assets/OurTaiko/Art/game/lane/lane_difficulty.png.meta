@@ -64,7 +64,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -144,155 +144,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: lane_difficulty_0
+      name: OniDifficulty
       rect:
         serializedVersion: 2
-        x: 5
-        y: 124
-        width: 84
-        height: 321
+        x: 0
+        y: 288
+        width: 132
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 703c33a95b6dea5d0800000000000000
-      internalID: -3049263822218738937
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: lane_difficulty_1
-      rect:
-        serializedVersion: 2
-        x: 11
-        y: 383
-        width: 66
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: eaeec934f484653a0800000000000000
-      internalID: -6677069892256207186
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: lane_difficulty_2
-      rect:
-        serializedVersion: 2
-        x: 9
-        y: 319
-        width: 70
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 942e9a7feb0cce080800000000000000
-      internalID: -9156732015919635895
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: lane_difficulty_3
-      rect:
-        serializedVersion: 2
-        x: 14
-        y: 191
-        width: 60
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 563bd99ec5cb57780800000000000000
-      internalID: -8685829199071693979
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: lane_difficulty_4
-      rect:
-        serializedVersion: 2
-        x: 14
-        y: 127
-        width: 60
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 98bbc3e44469000a0800000000000000
-      internalID: -6917363807526536311
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: lane_difficulty_5
-      rect:
-        serializedVersion: 2
-        x: 8
-        y: 2
-        width: 72
-        height: 59
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: a00cffa775d8ba190800000000000000
-      internalID: -7950105310327226358
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: lane_difficulty_6
-      rect:
-        serializedVersion: 2
-        x: 11
-        y: 0
-        width: 78
-        height: 126
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 4ed64df7ff2d45e60800000000000000
-      internalID: 7950211237018889700
+      spriteID: 8c578352e23a847eaa51f9a608b0f00d
+      internalID: 63005204
       vertices: []
       indices: 
       edges: []
@@ -311,13 +179,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      lane_difficulty_0: -3049263822218738937
-      lane_difficulty_1: -6677069892256207186
-      lane_difficulty_2: -9156732015919635895
-      lane_difficulty_3: -8685829199071693979
-      lane_difficulty_4: -6917363807526536311
-      lane_difficulty_5: -7950105310327226358
-      lane_difficulty_6: 7950211237018889700
+      OniDifficulty: 63005204
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

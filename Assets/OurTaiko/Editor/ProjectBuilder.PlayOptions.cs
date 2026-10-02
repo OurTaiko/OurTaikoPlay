@@ -77,7 +77,7 @@ namespace OurTaiko.Editor
             foreach (string path in paths)
             {
                 var importer = (TextureImporter)AssetImporter.GetAtPath(path.Replace('\\', '/'));
-                if (importer.textureType == TextureImporterType.Sprite && importer.spriteImportMode == SpriteImportMode.Single) continue;
+                if (importer.textureType == TextureImporterType.Sprite && importer.spriteImportMode != SpriteImportMode.None) continue;
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
                 importer.spritePixelsPerUnit = 100;

@@ -79,7 +79,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -159,265 +159,177 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pop_0
+      name: BalloonInflation0
       rect:
         serializedVersion: 2
-        x: 3
-        y: 863
-        width: 121
-        height: 74
+        x: 0
+        y: 720
+        width: 384
+        height: 360
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 03fef8efb2c2fad10800000000000000
-      internalID: 2138976915490336560
+      spriteID: d792a5e1fbe954319b64d9b518df74e0
+      internalID: 1138005930
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pop_1
+      name: BalloonInflation1
       rect:
         serializedVersion: 2
-        x: 387
-        y: 842
-        width: 171
-        height: 116
+        x: 384
+        y: 720
+        width: 384
+        height: 360
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 0d49b5da634a4b440800000000000000
-      internalID: 4950762445130667216
+      spriteID: d49d4591d511b411898ee61da318e621
+      internalID: -739845322
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pop_2
+      name: BalloonInflation2
       rect:
         serializedVersion: 2
-        x: 771
-        y: 822
-        width: 219
-        height: 156
+        x: 768
+        y: 720
+        width: 384
+        height: 360
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 957914a31966ae300800000000000000
-      internalID: 282150700597745497
+      spriteID: bc8a09ecb0e6d4092b19dfbfae3b90e3
+      internalID: 342502756
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pop_3
+      name: BalloonInflation3
       rect:
         serializedVersion: 2
-        x: 3
-        y: 446
-        width: 258
-        height: 188
+        x: 0
+        y: 360
+        width: 384
+        height: 360
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 572bf0dfbf17f8440800000000000000
-      internalID: 4940292643345117813
+      spriteID: 88390f7a2dc4f481884ecdec8b25c2ed
+      internalID: -168988278
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pop_4
+      name: BalloonInflation4
       rect:
         serializedVersion: 2
-        x: 387
-        y: 403
-        width: 327
-        height: 274
+        x: 384
+        y: 360
+        width: 384
+        height: 360
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: de32e214e030b5b10800000000000000
-      internalID: 1971172621662692333
+      spriteID: 123da36eec314430a9e6647d82c31144
+      internalID: 2116542033
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pop_5
+      name: BalloonInflation5
       rect:
         serializedVersion: 2
-        x: 771
-        y: 386
-        width: 345
-        height: 308
+        x: 768
+        y: 360
+        width: 384
+        height: 360
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 63ef8fc29791b4190800000000000000
-      internalID: -7977254306720448970
+      spriteID: 0d08818bb52f545038a05073e54427fb
+      internalID: -568143486
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pop_6
+      name: BalloonInflation6
       rect:
         serializedVersion: 2
-        x: 3
-        y: 3
-        width: 378
-        height: 354
+        x: 0
+        y: 0
+        width: 384
+        height: 360
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: c3da926a02d8601e0800000000000000
-      internalID: -2231941393949283012
+      spriteID: a02757025eadd4f84b030199c32820db
+      internalID: 798398335
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pop_7
+      name: BalloonInflation7
       rect:
         serializedVersion: 2
-        x: 387
-        y: 79
-        width: 105
-        height: 244
+        x: 384
+        y: 0
+        width: 384
+        height: 360
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: f8ad101a3f817ec80800000000000000
-      internalID: -8293632754122106225
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: pop_8
-      rect:
-        serializedVersion: 2
-        x: 525
-        y: 297
-        width: 147
-        height: 60
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 7a788309dff10dae0800000000000000
-      internalID: -1526685099771787353
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: pop_9
-      rect:
-        serializedVersion: 2
-        x: 674
-        y: 167
-        width: 91
-        height: 163
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 75c767c44be1e8020800000000000000
-      internalID: 2345846215632387159
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: pop_10
-      rect:
-        serializedVersion: 2
-        x: 706
-        y: 69
-        width: 55
-        height: 83
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 5a042f9a7b1b5add0800000000000000
-      internalID: -2475377017781862235
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: pop_11
-      rect:
-        serializedVersion: 2
-        x: 510
-        y: 3
-        width: 200
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 39c205290af5ccd70800000000000000
-      internalID: 9064725293244099731
+      spriteID: a817d713c385e43caa68ff18f2208ab2
+      internalID: 1608018995
       vertices: []
       indices: 
       edges: []
@@ -436,18 +348,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      pop_0: 2138976915490336560
-      pop_1: 4950762445130667216
-      pop_10: -2475377017781862235
-      pop_11: 9064725293244099731
-      pop_2: 282150700597745497
-      pop_3: 4940292643345117813
-      pop_4: 1971172621662692333
-      pop_5: -7977254306720448970
-      pop_6: -2231941393949283012
-      pop_7: -8293632754122106225
-      pop_8: -1526685099771787353
-      pop_9: 2345846215632387159
+      BalloonInflation0: 1138005930
+      BalloonInflation1: -739845322
+      BalloonInflation2: 342502756
+      BalloonInflation3: -168988278
+      BalloonInflation4: 2116542033
+      BalloonInflation5: -568143486
+      BalloonInflation6: 798398335
+      BalloonInflation7: 1608018995
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

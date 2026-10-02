@@ -73,7 +73,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -153,7 +153,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: high_score_num_0
+      name: ResultHighScoreDigit0
       rect:
         serializedVersion: 2
         x: 0
@@ -161,43 +161,43 @@ TextureImporter:
         width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: bb783d953b4211640800000000000000
-      internalID: 5048857009983817659
+      spriteID: 3f0d5c9c2b1f542b7b24f2ca6db78ea1
+      internalID: 1836856008
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: high_score_num_1
+      name: ResultHighScoreDigit1
       rect:
         serializedVersion: 2
-        x: 17
+        x: 16
         y: 0
-        width: 11
+        width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 466f16977211a0e60800000000000000
-      internalID: 7929168955177039460
+      spriteID: a58871a8d34c74ebdacc6a567c737baa
+      internalID: -1976997199
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: high_score_num_2
+      name: ResultHighScoreDigit2
       rect:
         serializedVersion: 2
         x: 32
@@ -205,87 +205,87 @@ TextureImporter:
         width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: d29430d8ed8090570800000000000000
-      internalID: 8433281529169529133
+      spriteID: 11db148fcf731434a8a15f805691d891
+      internalID: 617192990
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: high_score_num_3
+      name: ResultHighScoreDigit3
       rect:
         serializedVersion: 2
         x: 48
         y: 0
-        width: 15
+        width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e8541d7c8b4e8a560800000000000000
-      internalID: 7325356276195607950
+      spriteID: 02042155dc26f40978a4c41f2763d417
+      internalID: 214173764
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: high_score_num_4
+      name: ResultHighScoreDigit4
       rect:
         serializedVersion: 2
         x: 64
         y: 0
-        width: 17
+        width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 99e14860bc288e030800000000000000
-      internalID: 3524210516916706969
+      spriteID: 411ef658056ef4651a38567267e3d28b
+      internalID: -1822711721
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: high_score_num_5
+      name: ResultHighScoreDigit5
       rect:
         serializedVersion: 2
         x: 80
         y: 0
-        width: 15
+        width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 318869d6f6e774900800000000000000
-      internalID: 668642086732859411
+      spriteID: eb89716a7cca9425db5df0aaab4a5559
+      internalID: 518281002
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: high_score_num_6
+      name: ResultHighScoreDigit6
       rect:
         serializedVersion: 2
         x: 96
@@ -293,21 +293,21 @@ TextureImporter:
         width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: d153d80cc71769f80800000000000000
-      internalID: -8100162099158895331
+      spriteID: 8b193f3765f614c9790e83051a985ebb
+      internalID: 791857292
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: high_score_num_7
+      name: ResultHighScoreDigit7
       rect:
         serializedVersion: 2
         x: 112
@@ -315,21 +315,21 @@ TextureImporter:
         width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: a20f228342ba19970800000000000000
-      internalID: 8759970922261311530
+      spriteID: bf479028c88954a66926ead42ea75408
+      internalID: 1134463855
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: high_score_num_8
+      name: ResultHighScoreDigit8
       rect:
         serializedVersion: 2
         x: 128
@@ -337,37 +337,37 @@ TextureImporter:
         width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 5c4e9835a336e3c50800000000000000
-      internalID: 6646859202206229701
+      spriteID: eb6d5c1cd68714241a06a5394e3b513e
+      internalID: 247393138
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: high_score_num_9
+      name: ResultHighScoreDigit9
       rect:
         serializedVersion: 2
         x: 144
         y: 0
-        width: 15
+        width: 16
         height: 20
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 68f994fe4b7b72300800000000000000
-      internalID: 227352293942075270
+      spriteID: f77ec4912514448c1a2dd92a5b947c9a
+      internalID: 1844982313
       vertices: []
       indices: 
       edges: []
@@ -386,16 +386,16 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      high_score_num_0: 5048857009983817659
-      high_score_num_1: 7929168955177039460
-      high_score_num_2: 8433281529169529133
-      high_score_num_3: 7325356276195607950
-      high_score_num_4: 3524210516916706969
-      high_score_num_5: 668642086732859411
-      high_score_num_6: -8100162099158895331
-      high_score_num_7: 8759970922261311530
-      high_score_num_8: 6646859202206229701
-      high_score_num_9: 227352293942075270
+      ResultHighScoreDigit0: 1836856008
+      ResultHighScoreDigit1: -1976997199
+      ResultHighScoreDigit2: 617192990
+      ResultHighScoreDigit3: 214173764
+      ResultHighScoreDigit4: -1822711721
+      ResultHighScoreDigit5: 518281002
+      ResultHighScoreDigit6: 791857292
+      ResultHighScoreDigit7: 1134463855
+      ResultHighScoreDigit8: 247393138
+      ResultHighScoreDigit9: 1844982313
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

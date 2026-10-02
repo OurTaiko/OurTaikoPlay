@@ -118,7 +118,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -198,551 +198,287 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: notes_atlas_0
+      name: BalloonTail
       rect:
         serializedVersion: 2
-        x: 1
-        y: 1538
-        width: 6
-        height: 132
+        x: 0
+        y: 384
+        width: 192
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 029cc12eb65138d70800000000000000
-      internalID: 9044096029789309216
+      spriteID: 8591ea85ead0040249a1e4a1a36630bc
+      internalID: 1895508472
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_1
+      name: Note1
       rect:
         serializedVersion: 2
-        x: 9
-        y: 1538
-        width: 6
-        height: 132
+        x: 0
+        y: 2112
+        width: 192
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 114f91ab0ceaf6f20800000000000000
-      internalID: 3418142784976712721
+      spriteID: 2c8f5497bb78b460680fd95136d4ce79
+      internalID: -760195060
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_2
+      name: Note2
       rect:
         serializedVersion: 2
-        x: 28
-        y: 1431
-        width: 76
-        height: 77
+        x: 0
+        y: 1920
+        width: 192
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 165f3ab2fd0a254c0800000000000000
-      internalID: -4300197813815085727
+      spriteID: 51040143b49eb4ea6a6408cbc1fd6145
+      internalID: 113572664
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_3
+      name: Note3
       rect:
         serializedVersion: 2
-        x: 156
-        y: 1431
-        width: 76
-        height: 77
+        x: 0
+        y: 1728
+        width: 192
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 46838c94b2ffca970800000000000000
-      internalID: 8767663135970048100
+      spriteID: 79545d4487dc44cdaaf038a37392a416
+      internalID: -571690802
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_4
+      name: Note4
       rect:
         serializedVersion: 2
-        x: 284
-        y: 1431
-        width: 76
-        height: 77
+        x: 0
+        y: 1536
+        width: 192
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 203e20a5a0644be10800000000000000
-      internalID: 2212470327219512066
+      spriteID: 3271fec6884cc4fcb840387f9d379782
+      internalID: -1521732815
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_5
+      name: Note5
       rect:
         serializedVersion: 2
-        x: 28
-        y: 1303
-        width: 76
-        height: 77
+        x: 0
+        y: 1344
+        width: 192
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 3915b5f16a6d21240800000000000000
-      internalID: 4761103765063029139
+      spriteID: aeb3c8ce325714617ab56ba6d76052d0
+      internalID: 514343071
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_6
+      name: Note6
       rect:
         serializedVersion: 2
-        x: 156
-        y: 1303
-        width: 76
-        height: 77
+        x: 0
+        y: 1152
+        width: 192
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: c841411af94992740800000000000000
-      internalID: 5127793064061179020
+      spriteID: cc893e63140e34b33a70285016dce7e8
+      internalID: -343925773
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_7
+      name: Note7
       rect:
         serializedVersion: 2
-        x: 284
-        y: 1303
-        width: 76
-        height: 77
+        x: 0
+        y: 960
+        width: 192
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: b340926576cb62590800000000000000
-      internalID: -7699259360930102213
+      spriteID: 7243a02b371044065a3c34c7bafcbb55
+      internalID: 1023139906
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_8
+      name: Note9
       rect:
         serializedVersion: 2
-        x: 10
-        y: 1157
-        width: 112
-        height: 113
+        x: 0
+        y: 576
+        width: 192
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 9946775624362da20800000000000000
-      internalID: 3085637831523525785
+      spriteID: 82e993ba070ff4fd8849153049988487
+      internalID: -1110431548
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_9
+      name: RollBodyBig
       rect:
         serializedVersion: 2
-        x: 138
-        y: 1157
-        width: 112
-        height: 113
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 200eb64f62ce057b0800000000000000
-      internalID: -5237426714578264062
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_10
-      rect:
-        serializedVersion: 2
-        x: 10
-        y: 1029
-        width: 112
-        height: 113
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 88c300dd9ad1352d0800000000000000
-      internalID: -3291254287283241848
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_11
-      rect:
-        serializedVersion: 2
-        x: 138
-        y: 1029
-        width: 112
-        height: 113
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 436800a3f0ff31130800000000000000
-      internalID: 3536450573278676532
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_12
-      rect:
-        serializedVersion: 2
-        x: 28
-        y: 919
+        x: 72
+        y: 768
         width: 72
-        height: 77
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 007c7f8a44eb0fcd0800000000000000
-      internalID: -2526310188852984064
+      spriteID: d9f5caf65e9bc448cb3c7a51fec0d956
+      internalID: 1456176127
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_13
+      name: RollBodySmall
       rect:
         serializedVersion: 2
-        x: 156
-        y: 919
+        x: 0
+        y: 768
         width: 72
-        height: 77
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 39f93cb0049bca2e0800000000000000
-      internalID: -2113110440417189997
+      spriteID: 342990eeff712461193fb26405581e9b
+      internalID: -391363771
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_14
-      rect:
-        serializedVersion: 2
-        x: 284
-        y: 919
-        width: 72
-        height: 77
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 475b8eb5b24797490800000000000000
-      internalID: -7748033954339834508
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_15
-      rect:
-        serializedVersion: 2
-        x: 10
-        y: 773
-        width: 108
-        height: 113
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 22e48029e60e37770800000000000000
-      internalID: 8607470078336192034
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_16
-      rect:
-        serializedVersion: 2
-        x: 138
-        y: 773
-        width: 108
-        height: 113
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: b41894341731e3f00800000000000000
-      internalID: 1098336736306102603
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_17
-      rect:
-        serializedVersion: 2
-        x: 41
-        y: 663
-        width: 88
-        height: 77
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 9849bef7f98830370800000000000000
-      internalID: 8287617957919167625
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_18
-      rect:
-        serializedVersion: 2
-        x: 169
-        y: 663
-        width: 88
-        height: 77
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 456ec303f5859d500800000000000000
-      internalID: 421465205990286932
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_19
-      rect:
-        serializedVersion: 2
-        x: 297
-        y: 663
-        width: 87
-        height: 77
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: bd911bd5b6cedd900800000000000000
-      internalID: 710984262071949787
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_20
+      name: RollTailBig
       rect:
         serializedVersion: 2
         x: 0
-        y: 517
-        width: 121
-        height: 113
+        y: 0
+        width: 120
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 95626d45ea2656350800000000000000
-      internalID: 6009317778682947161
+      spriteID: 6f3b1504277a24987ab01bfb498f3202
+      internalID: 328625643
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: notes_atlas_21
-      rect:
-        serializedVersion: 2
-        x: 10
-        y: 389
-        width: 112
-        height: 113
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: e329bc2d0a07e5d50800000000000000
-      internalID: 6727938729371734590
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_22
+      name: RollTailSmall
       rect:
         serializedVersion: 2
         x: 0
-        y: 286
-        width: 95
-        height: 63
+        y: 192
+        width: 80
+        height: 192
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e9ba59222125d0b40800000000000000
-      internalID: 5408068965384956830
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_23
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 151
-        width: 49
-        height: 77
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 1cb0a49c0b02a2110800000000000000
-      internalID: 1236836991330028481
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: notes_atlas_24
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 5
-        width: 73
-        height: 113
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: d79a49650612031d0800000000000000
-      internalID: -3373159423247341187
+      spriteID: b4ba1d9d88897443cb061e02f89659fd
+      internalID: 886708980
       vertices: []
       indices: 
       edges: []
@@ -761,31 +497,19 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      notes_atlas_0: 9044096029789309216
-      notes_atlas_1: 3418142784976712721
-      notes_atlas_10: -3291254287283241848
-      notes_atlas_11: 3536450573278676532
-      notes_atlas_12: -2526310188852984064
-      notes_atlas_13: -2113110440417189997
-      notes_atlas_14: -7748033954339834508
-      notes_atlas_15: 8607470078336192034
-      notes_atlas_16: 1098336736306102603
-      notes_atlas_17: 8287617957919167625
-      notes_atlas_18: 421465205990286932
-      notes_atlas_19: 710984262071949787
-      notes_atlas_2: -4300197813815085727
-      notes_atlas_20: 6009317778682947161
-      notes_atlas_21: 6727938729371734590
-      notes_atlas_22: 5408068965384956830
-      notes_atlas_23: 1236836991330028481
-      notes_atlas_24: -3373159423247341187
-      notes_atlas_3: 8767663135970048100
-      notes_atlas_4: 2212470327219512066
-      notes_atlas_5: 4761103765063029139
-      notes_atlas_6: 5127793064061179020
-      notes_atlas_7: -7699259360930102213
-      notes_atlas_8: 3085637831523525785
-      notes_atlas_9: -5237426714578264062
+      BalloonTail: 1895508472
+      Note1: -760195060
+      Note2: 113572664
+      Note3: -571690802
+      Note4: -1521732815
+      Note5: 514343071
+      Note6: -343925773
+      Note7: 1023139906
+      Note9: -1110431548
+      RollBodyBig: 1456176127
+      RollBodySmall: -391363771
+      RollTailBig: 328625643
+      RollTailSmall: 886708980
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

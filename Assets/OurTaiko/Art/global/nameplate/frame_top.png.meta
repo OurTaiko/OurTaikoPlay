@@ -58,7 +58,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -138,111 +138,111 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: frame_top_0
+      name: NameplateTitle0
       rect:
         serializedVersion: 2
-        x: 45
-        y: 231
-        width: 318
-        height: 36
+        x: 0
+        y: 224
+        width: 408
+        height: 56
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 757afa3814e6982a0800000000000000
-      internalID: -6734730540094609577
+      spriteID: d1b729d6e1af44518b5420bcb3c4b5a1
+      internalID: -658844388
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: frame_top_1
+      name: NameplateTitle1
       rect:
         serializedVersion: 2
-        x: 45
-        y: 175
-        width: 318
-        height: 36
+        x: 0
+        y: 168
+        width: 408
+        height: 56
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: d73cab987c55b2ab0800000000000000
-      internalID: -5031833843158826115
+      spriteID: 0b3ffa16b9e6144ea83b2e8c772adc4f
+      internalID: 1007621078
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: frame_top_2
+      name: NameplateTitle2
       rect:
         serializedVersion: 2
-        x: 45
-        y: 119
-        width: 318
-        height: 36
+        x: 0
+        y: 112
+        width: 408
+        height: 56
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 0ed9d708755658a30800000000000000
-      internalID: 4216888052594613728
+      spriteID: 61870333cd99c4ccf92990b1f1550b11
+      internalID: -622818018
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: frame_top_3
+      name: NameplateTitle3
       rect:
         serializedVersion: 2
-        x: 45
-        y: 63
-        width: 318
-        height: 36
+        x: 0
+        y: 56
+        width: 408
+        height: 56
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: a39eee42f4c80b780800000000000000
-      internalID: -8669275011138262726
+      spriteID: 199bc615c1aa644ed9650aa095fd3454
+      internalID: -1401444919
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: frame_top_4
+      name: NameplateTitle4
       rect:
         serializedVersion: 2
-        x: 45
-        y: 7
-        width: 318
-        height: 36
+        x: 0
+        y: 0
+        width: 408
+        height: 56
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 0aa8361f78332fd20800000000000000
-      internalID: 3310765335034170016
+      spriteID: 3b3d71b07b17840cf80b159a9e6c4eda
+      internalID: -1900168182
       vertices: []
       indices: 
       edges: []
@@ -261,11 +261,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      frame_top_0: -6734730540094609577
-      frame_top_1: -5031833843158826115
-      frame_top_2: 4216888052594613728
-      frame_top_3: -8669275011138262726
-      frame_top_4: 3310765335034170016
+      NameplateTitle0: -658844388
+      NameplateTitle1: 1007621078
+      NameplateTitle2: -622818018
+      NameplateTitle3: -1401444919
+      NameplateTitle4: -1900168182
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

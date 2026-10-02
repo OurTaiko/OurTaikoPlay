@@ -1939,16 +1939,16 @@ MonoBehaviour:
   overlay:
     timerBackground: {fileID: 21300000, guid: 7511f098ce59948c48afd753dbedc597, type: 3}
     timerDigitsBlack:
-    - {fileID: 21300000, guid: adb7355e82d6c4e029a5e59a34a25723, type: 2}
-    - {fileID: 21300000, guid: 515d7f7eaa3cc4b55bc056570bb868c4, type: 2}
-    - {fileID: 21300000, guid: f8ecdec8c6319460a8c779ae10fd2c19, type: 2}
-    - {fileID: 21300000, guid: 02e666871a6b249bbbc661e79a5fa7fa, type: 2}
-    - {fileID: 21300000, guid: 7629b45c280894d2b9c0486a521dbcab, type: 2}
-    - {fileID: 21300000, guid: 43271818103d445859b370cdb59a1047, type: 2}
-    - {fileID: 21300000, guid: 97f45c1acf3194fda858363f895ce0b6, type: 2}
-    - {fileID: 21300000, guid: 3ce93f6cf3c664193b2c4d1364ccf898, type: 2}
-    - {fileID: 21300000, guid: 901b112bd81054df588a42e787f2011f, type: 2}
-    - {fileID: 21300000, guid: 5605d0bb7d3bf472888404b3a7d213f7, type: 2}
+    - {fileID: -1313618419, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
+    - {fileID: 1277588367, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
+    - {fileID: 900755237, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
+    - {fileID: 596010267, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
+    - {fileID: 273637691, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
+    - {fileID: 1895103524, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
+    - {fileID: -735651078, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
+    - {fileID: -1285904461, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
+    - {fileID: 569596367, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
+    - {fileID: -2081619177, guid: db5c27e53d0e74f88afe2b282bf77a97, type: 3}
     guideClip: {fileID: 7400000, guid: ca6552cc548fa47ed9247bb9690087c1, type: 2}
     qrChip: {fileID: 21300000, guid: f8c64010ce2ea445b9c89232c829a407, type: 3}
     cardChip: {fileID: 21300000, guid: d69b625d6dcc84d0aacd1f94a10baadd, type: 3}

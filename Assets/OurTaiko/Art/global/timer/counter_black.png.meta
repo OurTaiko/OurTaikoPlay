@@ -73,7 +73,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -153,221 +153,221 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: counter_black_0
+      name: TimerDigitBlack0
       rect:
         serializedVersion: 2
-        x: 8
-        y: 1
-        width: 48
-        height: 94
+        x: 0
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: d27befaa07a859c90800000000000000
-      internalID: -7163667415753115859
+      spriteID: 3bc4ab50b3bde42e0a73efc516cc39c6
+      internalID: -1313618419
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_black_1
+      name: TimerDigitBlack1
       rect:
         serializedVersion: 2
-        x: 80
-        y: 2
-        width: 25
-        height: 92
+        x: 64
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: da7e8a86aa2d08a80800000000000000
-      internalID: -8466535670114359379
+      spriteID: 30c7b0023eb8d47cca488f2c7791ed8e
+      internalID: 1277588367
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_black_2
+      name: TimerDigitBlack2
       rect:
         serializedVersion: 2
-        x: 136
-        y: 4
-        width: 48
-        height: 91
+        x: 128
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 90ba2887553aec610800000000000000
-      internalID: 1643430501526186761
+      spriteID: f69d71c0fe244421aa2a5186b55136b7
+      internalID: 900755237
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_black_3
+      name: TimerDigitBlack3
       rect:
         serializedVersion: 2
-        x: 201
-        y: 1
-        width: 47
-        height: 94
+        x: 192
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: b53c641ed6e66c8e0800000000000000
-      internalID: -1673528793311558821
+      spriteID: 5e0bf291279cf4f0abd374d42325c116
+      internalID: 596010267
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_black_4
+      name: TimerDigitBlack4
       rect:
         serializedVersion: 2
-        x: 263
-        y: 2
-        width: 51
-        height: 92
+        x: 256
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 507e43d0bf89e0d20800000000000000
-      internalID: 3246700585406490373
+      spriteID: 853663edcc9914fa29cb311e50e676a1
+      internalID: 273637691
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_black_5
+      name: TimerDigitBlack5
       rect:
         serializedVersion: 2
-        x: 329
-        y: 1
-        width: 46
-        height: 92
+        x: 320
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ef0157c0a75514370800000000000000
-      internalID: 8305013170531275006
+      spriteID: c0a4d860c507a43c98b5d9fd113ac344
+      internalID: 1895103524
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_black_6
+      name: TimerDigitBlack6
       rect:
         serializedVersion: 2
-        x: 392
-        y: 1
-        width: 47
-        height: 94
+        x: 384
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ef4a8b845b1040730800000000000000
-      internalID: 3964295450113647870
+      spriteID: 890df4d9f3b154cbf8f1c2e2e34c97dc
+      internalID: -735651078
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_black_7
+      name: TimerDigitBlack7
       rect:
         serializedVersion: 2
-        x: 458
-        y: 2
-        width: 45
-        height: 91
+        x: 448
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: cc9b9e0d6ffafd4c0800000000000000
-      internalID: -4260493247867405876
+      spriteID: 744cebc644acb41daa6fbf4f69ca8e22
+      internalID: -1285904461
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_black_8
+      name: TimerDigitBlack8
       rect:
         serializedVersion: 2
-        x: 519
-        y: 1
-        width: 50
-        height: 94
+        x: 512
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ba7b094d222f43680800000000000000
-      internalID: -8776123542429190229
+      spriteID: 39a53c42fd6864407be4c0f5cfe1f87a
+      internalID: 569596367
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_black_9
+      name: TimerDigitBlack9
       rect:
         serializedVersion: 2
-        x: 584
-        y: 1
-        width: 47
-        height: 94
+        x: 576
+        y: 0
+        width: 64
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ff365c1a985d72ae0800000000000000
-      internalID: -1574054757641395201
+      spriteID: 58d222a3204494b73a3385d1361bd0c5
+      internalID: -2081619177
       vertices: []
       indices: 
       edges: []
@@ -386,16 +386,16 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      counter_black_0: -7163667415753115859
-      counter_black_1: -8466535670114359379
-      counter_black_2: 1643430501526186761
-      counter_black_3: -1673528793311558821
-      counter_black_4: 3246700585406490373
-      counter_black_5: 8305013170531275006
-      counter_black_6: 3964295450113647870
-      counter_black_7: -4260493247867405876
-      counter_black_8: -8776123542429190229
-      counter_black_9: -1574054757641395201
+      TimerDigitBlack0: -1313618419
+      TimerDigitBlack1: 1277588367
+      TimerDigitBlack2: 900755237
+      TimerDigitBlack3: 596010267
+      TimerDigitBlack4: 273637691
+      TimerDigitBlack5: 1895103524
+      TimerDigitBlack6: -735651078
+      TimerDigitBlack7: -1285904461
+      TimerDigitBlack8: 569596367
+      TimerDigitBlack9: -2081619177
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

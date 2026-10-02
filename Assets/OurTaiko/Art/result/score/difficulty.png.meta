@@ -58,7 +58,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -138,111 +138,111 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: difficulty_0
+      name: ResultDifficulty0
       rect:
         serializedVersion: 2
-        x: 28
-        y: 7
-        width: 264
-        height: 83
+        x: 0
+        y: 0
+        width: 320
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 8b7fa24b0af82d580800000000000000
-      internalID: -8803816401175644232
+      spriteID: 6de803fa59e9341bf98184dd5e4cc692
+      internalID: -694087307
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_1
+      name: ResultDifficulty1
       rect:
         serializedVersion: 2
-        x: 344
-        y: 7
-        width: 268
-        height: 79
+        x: 320
+        y: 0
+        width: 320
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 9a177a61c89e9da10800000000000000
-      internalID: 1934834302817104297
+      spriteID: 9119f2add62ca44d19664236e134cafa
+      internalID: 2085565147
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_2
+      name: ResultDifficulty2
       rect:
         serializedVersion: 2
-        x: 654
-        y: 7
-        width: 278
-        height: 85
+        x: 640
+        y: 0
+        width: 320
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: f04f42ba5a8349db0800000000000000
-      internalID: -4786138219795909617
+      spriteID: ee77ed37ef6da49e288f626224c61a78
+      internalID: 1285669760
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_3
+      name: ResultDifficulty3
       rect:
         serializedVersion: 2
-        x: 987
-        y: 7
-        width: 265
-        height: 89
+        x: 960
+        y: 0
+        width: 320
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 23fc1f75f26a501e0800000000000000
-      internalID: -2232195318023073998
+      spriteID: 1beeedd0a1c884866a7aa5a3340930f9
+      internalID: 577102010
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: difficulty_4
+      name: ResultDifficulty4
       rect:
         serializedVersion: 2
-        x: 1307
-        y: 7
-        width: 265
-        height: 89
+        x: 1280
+        y: 0
+        width: 320
+        height: 96
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ac5fab9ba19906dc0800000000000000
-      internalID: -3647747358105864758
+      spriteID: 94f75f521e0fc426d8696d8def5b21cf
+      internalID: 1620096715
       vertices: []
       indices: 
       edges: []
@@ -261,11 +261,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      difficulty_0: -8803816401175644232
-      difficulty_1: 1934834302817104297
-      difficulty_2: -4786138219795909617
-      difficulty_3: -2232195318023073998
-      difficulty_4: -3647747358105864758
+      ResultDifficulty0: -694087307
+      ResultDifficulty1: 2085565147
+      ResultDifficulty2: 1285669760
+      ResultDifficulty3: 577102010
+      ResultDifficulty4: 1620096715
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

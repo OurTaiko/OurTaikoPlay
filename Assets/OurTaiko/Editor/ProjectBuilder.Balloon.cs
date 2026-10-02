@@ -17,7 +17,8 @@ namespace OurTaiko.Editor
             {
                 var importer = (TextureImporter)AssetImporter.GetAtPath(path);
                 importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Single;
+                // Sheets cut into frames (Multiple) keep their sub-sprites.
+                if (importer.spriteImportMode != SpriteImportMode.Multiple) importer.spriteImportMode = SpriteImportMode.Single;
                 importer.spritePixelsPerUnit = 100;
                 importer.mipmapEnabled = false;
                 importer.alphaIsTransparency = true;
@@ -39,7 +40,9 @@ namespace OurTaiko.Editor
             if (rig == null) rig = Rect("BalloonCounter", lane, 0, 0, 0, 0);
             rig.anchorMin = Vector2.zero; rig.anchorMax = Vector2.one;
             rig.offsetMin = rig.offsetMax = Vector2.zero;
-            rig.SetAsLastSibling();
+            // Over the notes, under ScoreCounter, which Player::draw paints last.
+            var score = lane.Find("ScoreCounter");
+            if (score != null) PlaceBefore(rig, score); else rig.SetAsLastSibling();
             var view = rig.GetComponent<BalloonCounterView>();
             if (view == null) view = rig.gameObject.AddComponent<BalloonCounterView>();
             view.visuals = rig.GetComponent<CanvasGroup>();

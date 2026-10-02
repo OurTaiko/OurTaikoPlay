@@ -73,7 +73,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -153,221 +153,221 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: judge_num_0
+      name: ResultJudgeDigit0
       rect:
         serializedVersion: 2
         x: 0
-        y: 1
+        y: 0
         width: 36
-        height: 47
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: c7243370b884021d0800000000000000
-      internalID: -3377619958569418116
+      spriteID: 0251d0a98f31f4c1381028baf961172e
+      internalID: 650039200
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: judge_num_1
+      name: ResultJudgeDigit1
       rect:
         serializedVersion: 2
-        x: 40
-        y: 1
-        width: 28
-        height: 47
+        x: 36
+        y: 0
+        width: 36
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 1dd0b00a3ea9c11a0800000000000000
-      internalID: -6837419831821922863
+      spriteID: 4f063b041514f453fbefd77f81434308
+      internalID: -747443410
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: judge_num_2
+      name: ResultJudgeDigit2
       rect:
         serializedVersion: 2
-        x: 71
-        y: 1
-        width: 38
-        height: 47
+        x: 72
+        y: 0
+        width: 36
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 135ee109d5dcc3ad0800000000000000
-      internalID: -2721074273105025743
+      spriteID: 699be2a5ddb624768aaaf9ebbb3c6e81
+      internalID: 2082123320
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: judge_num_3
+      name: ResultJudgeDigit3
       rect:
         serializedVersion: 2
         x: 108
-        y: 1
+        y: 0
         width: 36
-        height: 47
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e109669ad242970d0800000000000000
-      internalID: -3424666263104352226
+      spriteID: 6639672eaf4174e7cb8adf61bf04529f
+      internalID: 1615942627
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: judge_num_4
+      name: ResultJudgeDigit4
       rect:
         serializedVersion: 2
-        x: 143
-        y: 1
-        width: 38
-        height: 47
+        x: 144
+        y: 0
+        width: 36
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: bf874723c83c2b330800000000000000
-      internalID: 3725254848698153211
+      spriteID: 8e19193a2cba54c9f885baa5b51dd319
+      internalID: -1492113550
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: judge_num_5
+      name: ResultJudgeDigit5
       rect:
         serializedVersion: 2
         x: 180
-        y: 1
+        y: 0
         width: 36
-        height: 47
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 5a6d6b9f8577680e0800000000000000
-      internalID: -2267994138304129371
+      spriteID: 34ebf173d2f824b118bfe2bf214a36cc
+      internalID: -1091005835
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: judge_num_6
+      name: ResultJudgeDigit6
       rect:
         serializedVersion: 2
         x: 216
-        y: 1
+        y: 0
         width: 36
-        height: 47
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 3bba3b921ff061420800000000000000
-      internalID: 2600283363314215859
+      spriteID: aae8251bc02604b3987037ec4e815f78
+      internalID: -667330889
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: judge_num_7
+      name: ResultJudgeDigit7
       rect:
         serializedVersion: 2
         x: 252
-        y: 1
+        y: 0
         width: 36
-        height: 47
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 671b711641e81cb40800000000000000
-      internalID: 5458800441529184630
+      spriteID: e4f9e020ba22048a8b4b107b9f2754fc
+      internalID: 1212995572
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: judge_num_8
+      name: ResultJudgeDigit8
       rect:
         serializedVersion: 2
         x: 288
-        y: 1
+        y: 0
         width: 36
-        height: 47
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 66fd44707b0281250800000000000000
-      internalID: 5915514081024204646
+      spriteID: ac217009cfd224b968b1319debf9f231
+      internalID: 113005342
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: judge_num_9
+      name: ResultJudgeDigit9
       rect:
         serializedVersion: 2
         x: 324
-        y: 1
+        y: 0
         width: 36
-        height: 47
+        height: 48
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 1bf75eba23b3cb2f0800000000000000
-      internalID: -955823932091039823
+      spriteID: 58fd990392a884a59a2706f6c8c4d9fc
+      internalID: -1708041631
       vertices: []
       indices: 
       edges: []
@@ -386,16 +386,16 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      judge_num_0: -3377619958569418116
-      judge_num_1: -6837419831821922863
-      judge_num_2: -2721074273105025743
-      judge_num_3: -3424666263104352226
-      judge_num_4: 3725254848698153211
-      judge_num_5: -2267994138304129371
-      judge_num_6: 2600283363314215859
-      judge_num_7: 5458800441529184630
-      judge_num_8: 5915514081024204646
-      judge_num_9: -955823932091039823
+      ResultJudgeDigit0: 650039200
+      ResultJudgeDigit1: -747443410
+      ResultJudgeDigit2: 2082123320
+      ResultJudgeDigit3: 1615942627
+      ResultJudgeDigit4: -1492113550
+      ResultJudgeDigit5: -1091005835
+      ResultJudgeDigit6: -667330889
+      ResultJudgeDigit7: 1212995572
+      ResultJudgeDigit8: 113005342
+      ResultJudgeDigit9: -1708041631
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

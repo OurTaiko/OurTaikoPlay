@@ -73,7 +73,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -153,221 +153,221 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: counter_0
+      name: BalloonDigit0
       rect:
         serializedVersion: 2
-        x: 2
+        x: 0
         y: 0
-        width: 73
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: b346d5de65b619060800000000000000
-      internalID: 6958460920357807163
+      spriteID: 3029b81e2b02c47b79c83fe49467d53d
+      internalID: -880366329
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_1
+      name: BalloonDigit1
       rect:
         serializedVersion: 2
-        x: 88
+        x: 77
         y: 0
-        width: 55
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 2394a0fd686412960800000000000000
-      internalID: 7575413593295440178
+      spriteID: 3fcb4b7f696ef4799915371e9fe64c2b
+      internalID: -277533763
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_2
+      name: BalloonDigit2
       rect:
         serializedVersion: 2
-        x: 155
+        x: 154
         y: 0
-        width: 75
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 786091052bfe6cb60800000000000000
-      internalID: 7766158156574033543
+      spriteID: 925fcc06d55964e9b855f421b3c96f74
+      internalID: -184956164
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_3
+      name: BalloonDigit3
       rect:
         serializedVersion: 2
-        x: 233
+        x: 231
         y: 0
-        width: 73
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 4f7130ff364f78e20800000000000000
-      internalID: 3352917157917956084
+      spriteID: 83f95ca6ddd87496e92ce70730a5884f
+      internalID: -1907735984
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_4
+      name: BalloonDigit4
       rect:
         serializedVersion: 2
-        x: 307
+        x: 308
         y: 0
-        width: 79
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: b9eee1f6880f8ab70800000000000000
-      internalID: 8910636331523042971
+      spriteID: 5fb8e284fd17d49aebe5e8c9371fbe60
+      internalID: -465621317
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_5
+      name: BalloonDigit5
       rect:
         serializedVersion: 2
-        x: 387
+        x: 385
         y: 0
-        width: 73
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: a59c196fe6fa9be00800000000000000
-      internalID: 1061072078340475226
+      spriteID: f0be353d9e3a846e19a135990e942c43
+      internalID: -1457434377
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_6
+      name: BalloonDigit6
       rect:
         serializedVersion: 2
-        x: 465
+        x: 462
         y: 0
-        width: 71
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e5405d674b1093750800000000000000
-      internalID: 6285056629571650654
+      spriteID: 8f335e6272be74e22b1d059197e3ce9c
+      internalID: -972056716
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_7
+      name: BalloonDigit7
       rect:
         serializedVersion: 2
-        x: 540
+        x: 539
         y: 0
-        width: 75
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: cd58e1bc84aff1de0800000000000000
-      internalID: -1360093371890235940
+      spriteID: ff1efe93e85b44984a22e2064015b881
+      internalID: 261320285
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_8
+      name: BalloonDigit8
       rect:
         serializedVersion: 2
-        x: 617
+        x: 616
         y: 0
-        width: 75
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: cee46792f6fb3fbb0800000000000000
-      internalID: -4903365085118443796
+      spriteID: 164133cb881ec45f2977e7410bbfdd26
+      internalID: -696443609
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: counter_9
+      name: BalloonDigit9
       rect:
         serializedVersion: 2
-        x: 695
+        x: 693
         y: 0
-        width: 73
+        width: 77
         height: 90
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 1ea29a0dc431c3200800000000000000
-      internalID: 161024907317684961
+      spriteID: 0e2233471607447e3a3c2e321cac674e
+      internalID: -1952743785
       vertices: []
       indices: 
       edges: []
@@ -386,16 +386,16 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      counter_0: 6958460920357807163
-      counter_1: 7575413593295440178
-      counter_2: 7766158156574033543
-      counter_3: 3352917157917956084
-      counter_4: 8910636331523042971
-      counter_5: 1061072078340475226
-      counter_6: 6285056629571650654
-      counter_7: -1360093371890235940
-      counter_8: -4903365085118443796
-      counter_9: 161024907317684961
+      BalloonDigit0: -880366329
+      BalloonDigit1: -277533763
+      BalloonDigit2: -184956164
+      BalloonDigit3: -1907735984
+      BalloonDigit4: -465621317
+      BalloonDigit5: -1457434377
+      BalloonDigit6: -972056716
+      BalloonDigit7: 261320285
+      BalloonDigit8: -696443609
+      BalloonDigit9: -1952743785
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

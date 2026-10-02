@@ -73,7 +73,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -153,221 +153,221 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: score_number_0
+      name: ScoreNumber0
       rect:
         serializedVersion: 2
-        x: 4
-        y: 2
-        width: 24
-        height: 36
+        x: 0
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: bd53187979fcf13a0800000000000000
-      internalID: -6692402271260428837
+      spriteID: 6a96184d6c8344915957abfa34891e74
+      internalID: -1463167046
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: score_number_1
+      name: ScoreNumber1
       rect:
         serializedVersion: 2
-        x: 38
-        y: 2
-        width: 20
-        height: 36
+        x: 56
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 9d4a89ea24b1ea390800000000000000
-      internalID: -7805271130975460135
+      spriteID: f358d02c664a94781b84e44c6f85eadf
+      internalID: -1014516842
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: score_number_2
+      name: ScoreNumber2
       rect:
         serializedVersion: 2
-        x: 68
-        y: 2
-        width: 24
-        height: 36
+        x: 112
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 5dc9645661df2efb0800000000000000
-      internalID: -4619851995098473259
+      spriteID: 63c303a6349d045d2a7c3b0507be63c2
+      internalID: -459175601
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: score_number_3
+      name: ScoreNumber3
       rect:
         serializedVersion: 2
-        x: 100
-        y: 2
-        width: 24
-        height: 36
+        x: 168
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 8e52c96e1527548f0800000000000000
-      internalID: -556913282823477784
+      spriteID: f9f965efcc6df41fc931cc702f73145a
+      internalID: 173213169
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: score_number_4
+      name: ScoreNumber4
       rect:
         serializedVersion: 2
-        x: 132
-        y: 2
-        width: 24
-        height: 36
+        x: 224
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e123d5b7cfb836fb0800000000000000
-      internalID: -4655723673253236194
+      spriteID: 885891ceee7c246149df05ee94367e60
+      internalID: 28221787
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: score_number_5
+      name: ScoreNumber5
       rect:
         serializedVersion: 2
-        x: 164
-        y: 2
-        width: 24
-        height: 36
+        x: 280
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 2df8eba266af29300800000000000000
-      internalID: 257543445424279506
+      spriteID: d131410cdba5b469d96d634850b081f6
+      internalID: 1663822416
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: score_number_6
+      name: ScoreNumber6
       rect:
         serializedVersion: 2
-        x: 197
-        y: 2
-        width: 22
-        height: 36
+        x: 336
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 01b21fa02db651170800000000000000
-      internalID: 8148537650667662096
+      spriteID: ebe1508e53364423499fe325dfe47bd1
+      internalID: -906435974
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: score_number_7
+      name: ScoreNumber7
       rect:
         serializedVersion: 2
-        x: 228
-        y: 2
-        width: 24
-        height: 36
+        x: 392
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: a0a9ab7ab2aa0a970800000000000000
-      internalID: 8764191979337325066
+      spriteID: 20353040bd97a403aa6739da7c17b159
+      internalID: 25857020
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: score_number_8
+      name: ScoreNumber8
       rect:
         serializedVersion: 2
-        x: 260
-        y: 2
-        width: 24
-        height: 36
+        x: 448
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 488119acd942757d0800000000000000
-      internalID: -2929832772454246268
+      spriteID: d349fbcd9059a481db72a9a5e72e2cf6
+      internalID: -1444988169
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: score_number_9
+      name: ScoreNumber9
       rect:
         serializedVersion: 2
-        x: 293
-        y: 2
-        width: 22
-        height: 36
+        x: 504
+        y: 0
+        width: 56
+        height: 64
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 7144304a218bbf730800000000000000
-      internalID: 4034020281441010711
+      spriteID: 5f570c8b25dec4c30bc727f2d8a8aba3
+      internalID: 1542464262
       vertices: []
       indices: 
       edges: []
@@ -386,16 +386,16 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      score_number_0: -6692402271260428837
-      score_number_1: -7805271130975460135
-      score_number_2: -4619851995098473259
-      score_number_3: -556913282823477784
-      score_number_4: -4655723673253236194
-      score_number_5: 257543445424279506
-      score_number_6: 8148537650667662096
-      score_number_7: 8764191979337325066
-      score_number_8: -2929832772454246268
-      score_number_9: 4034020281441010711
+      ScoreNumber0: -1463167046
+      ScoreNumber1: -1014516842
+      ScoreNumber2: -459175601
+      ScoreNumber3: 173213169
+      ScoreNumber4: 28221787
+      ScoreNumber5: 1663822416
+      ScoreNumber6: -906435974
+      ScoreNumber7: 25857020
+      ScoreNumber8: -1444988169
+      ScoreNumber9: 1542464262
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

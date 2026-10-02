@@ -118,7 +118,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -198,551 +198,551 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: dan_emblem_0
+      name: NameplateDan00
       rect:
         serializedVersion: 2
-        x: 4
-        y: 162
-        width: 65
-        height: 35
+        x: 0
+        y: 160
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 66fa154a409108280800000000000000
-      internalID: -9043200544032575642
+      spriteID: 0f296a45691c747ada827d39a4240766
+      internalID: -1100580819
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_1
+      name: NameplateDan01
       rect:
         serializedVersion: 2
-        x: 76
-        y: 162
-        width: 65
-        height: 35
+        x: 72
+        y: 160
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 686f1d8673a18a750800000000000000
-      internalID: 6316327302671234694
+      spriteID: 59d8380996f404b798c57dc9013ce7eb
+      internalID: -21676339
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_2
+      name: NameplateDan02
       rect:
         serializedVersion: 2
-        x: 148
-        y: 162
-        width: 65
-        height: 35
+        x: 144
+        y: 160
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 865f632407dc675f0800000000000000
-      internalID: -759193605134420632
+      spriteID: 5e5dadb43fdb3490aa98e1f2b10d755e
+      internalID: 1207125787
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_3
+      name: NameplateDan03
       rect:
         serializedVersion: 2
-        x: 220
-        y: 162
-        width: 65
-        height: 35
+        x: 216
+        y: 160
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: d7edbefe16d7de630800000000000000
-      internalID: 3957957507119046269
+      spriteID: 9682d770084334c6abd9352712de393a
+      internalID: -1928182578
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_4
+      name: NameplateDan04
       rect:
         serializedVersion: 2
-        x: 292
-        y: 162
-        width: 65
-        height: 35
+        x: 288
+        y: 160
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 0bf267b4a392df310800000000000000
-      internalID: 1440352786179305392
+      spriteID: 525d9fcc8da9c4398a0b0a2d81ab7be8
+      internalID: 1692764017
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_5
+      name: NameplateDan05
       rect:
         serializedVersion: 2
-        x: 4
-        y: 122
-        width: 65
-        height: 35
+        x: 0
+        y: 120
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 129e07fb8952c2e70800000000000000
-      internalID: 9091683085731293473
+      spriteID: 4ab80cbe3a5e14cf0808c69c7b2838f3
+      internalID: -868323272
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_6
+      name: NameplateDan06
       rect:
         serializedVersion: 2
-        x: 76
-        y: 122
-        width: 65
-        height: 35
+        x: 72
+        y: 120
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 21ec16fea82417010800000000000000
-      internalID: 1184801341464235538
+      spriteID: bc3a4a42589fe4a2eba91f16d61e6512
+      internalID: -1122307807
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_7
+      name: NameplateDan07
       rect:
         serializedVersion: 2
-        x: 148
-        y: 122
-        width: 65
-        height: 35
+        x: 144
+        y: 120
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: af94f30dc53b4cf00800000000000000
-      internalID: 1136230217216379386
+      spriteID: d56fb85aa338b452ba4cf946db5ebf1b
+      internalID: 576061985
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_8
+      name: NameplateDan08
       rect:
         serializedVersion: 2
-        x: 220
-        y: 122
-        width: 65
-        height: 35
+        x: 216
+        y: 120
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 7e1193fc6894c4cf0800000000000000
-      internalID: -266757434570632729
+      spriteID: 8cf78e67c5d964240adf39e628b87dfe
+      internalID: 1143603446
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_9
+      name: NameplateDan09
       rect:
         serializedVersion: 2
-        x: 292
-        y: 122
-        width: 65
-        height: 35
+        x: 288
+        y: 120
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 7e351c9aa53fe27d0800000000000000
-      internalID: -2941145935905729561
+      spriteID: 95ef468ee4bb14ded8b3e0f0a7d82328
+      internalID: 1367984544
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_10
+      name: NameplateDan10
       rect:
         serializedVersion: 2
-        x: 4
-        y: 82
-        width: 65
-        height: 35
+        x: 0
+        y: 80
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: d06beeeb663c57c70800000000000000
-      internalID: 8968289079035606541
+      spriteID: 7654c16f1c88c4e4887e3f895e6f9ff9
+      internalID: -567137129
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_11
+      name: NameplateDan11
       rect:
         serializedVersion: 2
-        x: 76
-        y: 82
-        width: 65
-        height: 35
+        x: 72
+        y: 80
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: a0a5a374654615640800000000000000
-      internalID: 5066941377493490186
+      spriteID: 481a4d2aefb4d4213a01578778638f5d
+      internalID: 15967466
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_12
+      name: NameplateDan12
       rect:
         serializedVersion: 2
-        x: 148
-        y: 82
-        width: 65
-        height: 35
+        x: 144
+        y: 80
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: b433713082ca970c0800000000000000
-      internalID: -4577438258394877109
+      spriteID: 0dfbb5a454a454ad59bc499875be96c9
+      internalID: 1594754723
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_13
+      name: NameplateDan13
       rect:
         serializedVersion: 2
-        x: 220
-        y: 82
-        width: 65
-        height: 35
+        x: 216
+        y: 80
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: eac5b05d71b2bf500800000000000000
-      internalID: 430985570702548142
+      spriteID: 0d86b618f53b54fba87fec5e80351021
+      internalID: 1437868669
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_14
+      name: NameplateDan14
       rect:
         serializedVersion: 2
-        x: 292
-        y: 82
-        width: 65
-        height: 35
+        x: 288
+        y: 80
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: a917136fe05562740800000000000000
-      internalID: 5126878748556226970
+      spriteID: 4c2db6ac4b7b7484fa9b89bdfb716949
+      internalID: 1006019868
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_15
+      name: NameplateDan15
       rect:
         serializedVersion: 2
-        x: 4
-        y: 42
-        width: 65
-        height: 35
+        x: 0
+        y: 40
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 30b7b9ad9da63e660800000000000000
-      internalID: 7413886895490038531
+      spriteID: 674d8d4ed12fe427f9d3c634611c3ba1
+      internalID: -1429824082
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_16
+      name: NameplateDan16
       rect:
         serializedVersion: 2
-        x: 76
-        y: 42
-        width: 65
-        height: 35
+        x: 72
+        y: 40
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 8c8faaef3e1582320800000000000000
-      internalID: 2533364830067947720
+      spriteID: e14a3d0d459834f958c9ef4a94d65e7e
+      internalID: -1750524502
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_17
+      name: NameplateDan17
       rect:
         serializedVersion: 2
-        x: 148
-        y: 42
-        width: 65
-        height: 35
+        x: 144
+        y: 40
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 30500763b88cc41d0800000000000000
-      internalID: -3365094321313282813
+      spriteID: 37a2ee6742d594982ae4ccf228048af8
+      internalID: -1150873485
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_18
+      name: NameplateDan18
       rect:
         serializedVersion: 2
-        x: 220
-        y: 42
-        width: 65
-        height: 35
+        x: 216
+        y: 40
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 324a9c0679be3eb60800000000000000
-      internalID: 7774316417168024611
+      spriteID: e490b7f81b31143109f50d1174671b37
+      internalID: 833229000
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_19
+      name: NameplateDan19
       rect:
         serializedVersion: 2
-        x: 292
-        y: 42
-        width: 65
-        height: 35
+        x: 288
+        y: 40
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: b2ec71bf2d17b1800800000000000000
-      internalID: 584185727644323371
+      spriteID: 4a1bee4874fe9415fbef92883647c982
+      internalID: -569574069
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_20
+      name: NameplateDan20
       rect:
         serializedVersion: 2
-        x: 4
-        y: 2
-        width: 65
-        height: 35
+        x: 0
+        y: 0
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 5da889a370b37ba40800000000000000
-      internalID: 5383836781778602709
+      spriteID: bc9fa9259f1f24714bca8ed821c5d3f6
+      internalID: 1364593808
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_21
+      name: NameplateDan21
       rect:
         serializedVersion: 2
-        x: 76
-        y: 2
-        width: 65
-        height: 35
+        x: 72
+        y: 0
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 598dd2532f0f3c020800000000000000
-      internalID: 2360995552737220757
+      spriteID: 4817a5c1efb8145bdbd0c3c1d23683aa
+      internalID: -346869026
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_22
+      name: NameplateDan22
       rect:
         serializedVersion: 2
-        x: 148
-        y: 2
-        width: 65
-        height: 35
+        x: 144
+        y: 0
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ece52d6efd6f1da70800000000000000
-      internalID: 8850126184270421710
+      spriteID: a835d57cadff3426094fd492ad628732
+      internalID: -717702254
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_23
+      name: NameplateDan23
       rect:
         serializedVersion: 2
-        x: 220
-        y: 2
-        width: 65
-        height: 35
+        x: 216
+        y: 0
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 0a6a04a60676ee180800000000000000
-      internalID: -9084209734562568544
+      spriteID: 25e549439edbb49b39c3f001629b913a
+      internalID: -785410750
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: dan_emblem_24
+      name: NameplateDan24
       rect:
         serializedVersion: 2
-        x: 292
-        y: 2
-        width: 65
-        height: 35
+        x: 288
+        y: 0
+        width: 72
+        height: 40
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 64714ad6a917c89a0800000000000000
-      internalID: -6229479276481865914
+      spriteID: 5c59f1fbf21294924b068f2f973193fe
+      internalID: -1960843133
       vertices: []
       indices: 
       edges: []
@@ -761,31 +761,31 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      dan_emblem_0: -9043200544032575642
-      dan_emblem_1: 6316327302671234694
-      dan_emblem_10: 8968289079035606541
-      dan_emblem_11: 5066941377493490186
-      dan_emblem_12: -4577438258394877109
-      dan_emblem_13: 430985570702548142
-      dan_emblem_14: 5126878748556226970
-      dan_emblem_15: 7413886895490038531
-      dan_emblem_16: 2533364830067947720
-      dan_emblem_17: -3365094321313282813
-      dan_emblem_18: 7774316417168024611
-      dan_emblem_19: 584185727644323371
-      dan_emblem_2: -759193605134420632
-      dan_emblem_20: 5383836781778602709
-      dan_emblem_21: 2360995552737220757
-      dan_emblem_22: 8850126184270421710
-      dan_emblem_23: -9084209734562568544
-      dan_emblem_24: -6229479276481865914
-      dan_emblem_3: 3957957507119046269
-      dan_emblem_4: 1440352786179305392
-      dan_emblem_5: 9091683085731293473
-      dan_emblem_6: 1184801341464235538
-      dan_emblem_7: 1136230217216379386
-      dan_emblem_8: -266757434570632729
-      dan_emblem_9: -2941145935905729561
+      NameplateDan00: -1100580819
+      NameplateDan01: -21676339
+      NameplateDan02: 1207125787
+      NameplateDan03: -1928182578
+      NameplateDan04: 1692764017
+      NameplateDan05: -868323272
+      NameplateDan06: -1122307807
+      NameplateDan07: 576061985
+      NameplateDan08: 1143603446
+      NameplateDan09: 1367984544
+      NameplateDan10: -567137129
+      NameplateDan11: 15967466
+      NameplateDan12: 1594754723
+      NameplateDan13: 1437868669
+      NameplateDan14: 1006019868
+      NameplateDan15: -1429824082
+      NameplateDan16: -1750524502
+      NameplateDan17: -1150873485
+      NameplateDan18: 833229000
+      NameplateDan19: -569574069
+      NameplateDan20: 1364593808
+      NameplateDan21: -346869026
+      NameplateDan22: -717702254
+      NameplateDan23: -785410750
+      NameplateDan24: -1960843133
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

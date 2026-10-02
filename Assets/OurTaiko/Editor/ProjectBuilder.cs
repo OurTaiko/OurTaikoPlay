@@ -35,7 +35,8 @@ namespace OurTaiko.Editor
             {
                 var importer = (TextureImporter)AssetImporter.GetAtPath(path);
                 importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Single;
+                // Sheets cut into frames (Multiple) keep their sub-sprites.
+                if (importer.spriteImportMode != SpriteImportMode.Multiple) importer.spriteImportMode = SpriteImportMode.Single;
                 importer.spritePixelsPerUnit = 100;
                 importer.mipmapEnabled = false;
                 importer.alphaIsTransparency = true;
@@ -131,19 +132,9 @@ namespace OurTaiko.Editor
             var colors = button.colors; colors.highlightedColor = new Color(1, 0.87f, 0.68f); colors.pressedColor = new Color(0.7f, 0.7f, 0.7f); button.colors = colors;
             Label(background.transform, "Label", caption, 0, 0, w, h, 20); return button;
         }
+        // One frame of a sheet, cut in the sheet's own importer (see SliceSheet). y counts from the top.
         static Sprite Slice(string name, string path, int x, int y, int width, int height)
-        {
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(Root + "Art/" + path + ".png");
-            var sprite = UnityEngine.Sprite.Create(texture, new Rect(x, texture.height - y - height, width, height), Vector2.one * 0.5f, 100);
-            sprite.name = name;
-            var pathName = Root + "Generated/" + name + ".asset";
-            var existing = AssetDatabase.LoadAssetAtPath<Sprite>(pathName);
-            if (existing == null) { AssetDatabase.CreateAsset(sprite, pathName); return sprite; }
-            EditorUtility.CopySerialized(sprite, existing);
-            UnityEngine.Object.DestroyImmediate(sprite);
-            AssetDatabase.SaveAssetIfDirty(existing);
-            return existing;
-        }
+            => SliceSheet(path, new[] { (name, x, y, width, height) })[0];
         static void Background(Transform root)
         {
             Panel(root, "Backdrop", 0, 0, 1280, 720, new Color32(165, 44, 36, 255));

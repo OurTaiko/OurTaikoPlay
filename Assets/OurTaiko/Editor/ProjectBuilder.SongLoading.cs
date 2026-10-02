@@ -38,7 +38,8 @@ namespace OurTaiko.Editor
             {
                 var importer = (TextureImporter)AssetImporter.GetAtPath(path.Replace('\\', '/'));
                 importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Single;
+                // Sheets cut into frames (Multiple) keep their sub-sprites.
+                if (importer.spriteImportMode != SpriteImportMode.Multiple) importer.spriteImportMode = SpriteImportMode.Single;
                 importer.spritePixelsPerUnit = 100;
                 importer.mipmapEnabled = false;
                 importer.alphaIsTransparency = true;

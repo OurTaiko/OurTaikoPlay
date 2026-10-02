@@ -67,7 +67,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -147,161 +147,161 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: rainbow_hard_0
+      name: ResultRainbowHard0
       rect:
         serializedVersion: 2
         x: 0
-        y: 545
+        y: 546
         width: 1057
-        height: 79
+        height: 78
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: f06ef675b1fb82970800000000000000
-      internalID: 8730438001809679887
+      spriteID: f5b90c4569add4a00818e7b69e864d22
+      internalID: 1377775972
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: rainbow_hard_1
+      name: ResultRainbowHard1
       rect:
         serializedVersion: 2
         x: 0
-        y: 467
+        y: 468
         width: 1057
-        height: 79
+        height: 78
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: b5b066c2639717540800000000000000
-      internalID: 5003913934565411675
+      spriteID: 95957a36b0ea647d88e288191aa3d88f
+      internalID: 1646061191
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: rainbow_hard_2
+      name: ResultRainbowHard2
       rect:
         serializedVersion: 2
         x: 0
-        y: 389
+        y: 390
         width: 1057
-        height: 79
+        height: 78
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 40773de6466afc010800000000000000
-      internalID: 1211369775072245508
+      spriteID: 08254d9e980e847e9a46f6a9d34ebfe1
+      internalID: -1304651887
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: rainbow_hard_3
+      name: ResultRainbowHard3
       rect:
         serializedVersion: 2
         x: 0
-        y: 311
+        y: 312
         width: 1057
-        height: 79
+        height: 78
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 539bf1909fc023450800000000000000
-      internalID: 6066925911760943413
+      spriteID: 626d0288f992041b79532b8dd94e9774
+      internalID: -602298305
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: rainbow_hard_4
+      name: ResultRainbowHard4
       rect:
         serializedVersion: 2
         x: 0
-        y: 233
+        y: 234
         width: 1057
-        height: 79
+        height: 78
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 630c17fc10ed29980800000000000000
-      internalID: -8533514244556996554
+      spriteID: f535921b9e7f2449e918baba83375e66
+      internalID: -1517373756
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: rainbow_hard_5
+      name: ResultRainbowHard5
       rect:
         serializedVersion: 2
         x: 0
-        y: 155
+        y: 156
         width: 1057
-        height: 79
+        height: 78
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: f4a0f1076634ecdf0800000000000000
-      internalID: -158114829664581041
+      spriteID: b1c79aeef15f24a94983f57c8bee7cd9
+      internalID: -1645366788
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: rainbow_hard_6
+      name: ResultRainbowHard6
       rect:
         serializedVersion: 2
         x: 0
-        y: 77
+        y: 78
         width: 1057
-        height: 79
+        height: 78
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: ad0709496c1e82260800000000000000
-      internalID: 7073151457797632218
+      spriteID: de561e8007b554c7bbd1dbffb9a00abb
+      internalID: -1640277091
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: rainbow_hard_7
+      name: ResultRainbowHard7
       rect:
         serializedVersion: 2
         x: 0
@@ -309,15 +309,15 @@ TextureImporter:
         width: 1057
         height: 78
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e4101e476f3357490800000000000000
-      internalID: -7749230450205195954
+      spriteID: ef76579612e174b3b93f8e152db9da48
+      internalID: -22107438
       vertices: []
       indices: 
       edges: []
@@ -336,14 +336,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      rainbow_hard_0: 8730438001809679887
-      rainbow_hard_1: 5003913934565411675
-      rainbow_hard_2: 1211369775072245508
-      rainbow_hard_3: 6066925911760943413
-      rainbow_hard_4: -8533514244556996554
-      rainbow_hard_5: -158114829664581041
-      rainbow_hard_6: 7073151457797632218
-      rainbow_hard_7: -7749230450205195954
+      ResultRainbowHard0: 1377775972
+      ResultRainbowHard1: 1646061191
+      ResultRainbowHard2: -1304651887
+      ResultRainbowHard3: -602298305
+      ResultRainbowHard4: -1517373756
+      ResultRainbowHard5: -1645366788
+      ResultRainbowHard6: -1640277091
+      ResultRainbowHard7: -22107438
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
