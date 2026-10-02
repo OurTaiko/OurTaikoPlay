@@ -71,6 +71,7 @@
 - `SoulRainbowEasy／Normal／Hard.anim`：满槽彩虹，cell k 上叠 cell k+1 在 75 ms 内淡入，整体在 450 ms 内淡入。剪辑 1.2 s＝0.6 s 开场（淡入与交叉淡入的乘积每 5 ms 烘焙一键）＋0.6 s 循环，`SoulGaugeView` 在开场后只重复后半段。RainbowA／B 归入全尺寸的 `Rainbow` 组（位置不变），`SoulGaugeView.rainbowSampler` 按难度样式（`Style.rainbow`）切换剪辑。迁移 `ProjectBuilder.ApplySoulRainbowClips()`。
 - `CellFade.anim`：魂槽新增格子 450 ms 线性淡入（只写透明度）；哪一格、贴图与位置仍由 `SoulGaugeView` 决定。迁移 `ProjectBuilder.ApplyCellFadeClip()`。
 - `NameplateRainbow.anim`：名牌彩虹称号带（全局动画 12），`Band` 6 帧×50 ms、300 ms 循环，`BandUnder` 从第 1 帧起显示前一帧；真实时间，只在 `rainbow` 称号时采样。`Nameplate.prefab` 根物体带 Animator＋ClipSampler，`NameplateLayout.RainbowFrame` 已删除。迁移 `ProjectBuilder.ApplyNameplateRainbowClip()`。
+- `BranchChange.anim`：分支切换（Nijiiro ID 41–45）：旧标签 100 ms 缓出推移 30 px、再与新标签 133 ms 缓出滑动 105 px 并交叉淡入淡出，背景淡到 0.5，等级徽章 116＋116 ms 放大到 1.2 再回、1276–1392 ms 淡出。剪辑写入 `BranchLaneView` 的 `previousOffset`／`currentOffset`（相对保存位置的偏移，代码按升降方向取正负），因此 Inspector 中调整的标签位置仍有效；缓出段用两键 Hermite 精确表示二次曲线。迁移 `ProjectBuilder.ApplyBranchChangeClip()`。
 - 不转换：Lumen 时间轴（`Animations/*.txt`，原版导出原样副本，Entry／选曲／加载幕布／结算）、场景切换与暂停菜单淡入淡出（从当前不透明度插值，可中断）、由游戏状态驱动的表现（音符滚动与飞行、气球膨胀、魂槽填充）。
 
 ### 游玩暂停菜单（2026-10-02）

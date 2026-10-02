@@ -253,5 +253,42 @@ namespace OurTaiko.Tests
             var prefab = AssetDatabase.LoadAssetAtPath<NameplateView>("Assets/OurTaiko/Generated/Nameplate.prefab");
             Assert.That(prefab.GetComponent<ClipSampler>().clip, Is.SameAs(clip));
         }
+
+        [Test]
+        public void BranchChangeMatchesTheEasedSlideAndBadgePulse()
+        {
+            var clip = Clip("BranchChange");
+            Assert.That(clip.length, Is.EqualTo(1.392).Within(1e-4));
+            float P(float t, float delay, float duration) => Mathf.Clamp01((t - delay) / duration);
+            float Ease(float p) => p * (2 - p);
+            var root = new GameObject("Branch", typeof(RectTransform));
+            try
+            {
+                foreach (var name in new[] { "RouteBackground", "LevelChange", "PreviousRoute", "CurrentRoute" })
+                    new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image)).transform.SetParent(root.transform, false);
+                var view = root.AddComponent<BranchLaneView>();
+                var sampler = root.GetComponent<ClipSampler>();
+                sampler.clip = clip;
+                var offsets = new SerializedObject(view);
+                UnityEngine.UI.Image Image(string name) => root.transform.Find(name).GetComponent<UnityEngine.UI.Image>();
+                // The former code, from Nijiiro IDs 41-45.
+                foreach (float t in new[] { 0f, 0.03f, 0.05f, 0.1f, 0.12f, 0.15f, 0.2f, 0.2335f, 0.5f, 1.3f, 1.39f })
+                {
+                    sampler.Sample(t);
+                    offsets.Update();
+                    float nudge = Ease(P(t, 0, 0.1f)) * 30, fade = P(t, 0.1f, 0.133f), slide = Ease(fade) * 105;
+                    Assert.That(offsets.FindProperty("previousOffset").floatValue, Is.EqualTo(nudge - slide).Within(0.05f), $"{t} s");
+                    Assert.That(offsets.FindProperty("currentOffset").floatValue, Is.EqualTo(105 - slide).Within(0.05f), $"{t} s");
+                    Assert.That(Image("PreviousRoute").color.a, Is.EqualTo(1 - fade).Within(1e-3), $"{t} s");
+                    Assert.That(Image("PreviousRoute").enabled, Is.EqualTo(fade < 1), $"{t} s");
+                    Assert.That(Image("CurrentRoute").color.a, Is.EqualTo(fade).Within(1e-3), $"{t} s");
+                    Assert.That(Image("RouteBackground").color.a, Is.EqualTo(Mathf.Min(fade, 0.5f)).Within(1e-3), $"{t} s");
+                    Assert.That(Image("LevelChange").color.a, Is.EqualTo(P(t, 0, 0.116f) - P(t, 1.276f, 0.116f)).Within(1e-3), $"{t} s");
+                    Assert.That(Image("LevelChange").transform.localScale.x, Is.EqualTo(1 + 0.2f * (P(t, 0, 0.116f) - P(t, 0.116f, 0.116f))).Within(1e-3), $"{t} s");
+                }
+            }
+            finally { Object.DestroyImmediate(root); }
+            WithPlayScene(play => Assert.That(play.branchLane.GetComponent<ClipSampler>().clip, Is.SameAs(clip)));
+        }
     }
 }

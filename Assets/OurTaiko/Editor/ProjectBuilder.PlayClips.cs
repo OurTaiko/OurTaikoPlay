@@ -50,6 +50,33 @@ namespace OurTaiko.Editor
             }).ToArray());
         });
 
+        [MenuItem("OurTaiko/Apply Branch Change Clip")]
+        public static void ApplyBranchChangeClip() => EditPlayScene(play => AttachClip(play.branchLane.gameObject, BranchChangeClip()));
+
+        // Nijiiro game/animation.json IDs 41-45 for a route change: the old label nudges 30 px
+        // (ease-out, 100 ms), then both labels slide 105 px (ease-out, 133 ms) while crossfading,
+        // the route background fades to half, and the level badge grows to 1.2 and back over
+        // 116 + 116 ms, holding until it fades out over 1276-1392 ms. Offsets are in the change's
+        // direction from the labels' saved position (BranchLaneView signs them).
+        static AnimationClip BranchChangeClip() => SaveClip("BranchChange", 60, false, clip =>
+        {
+            const float nudge = 0.1f, slideEnd = 0.1f + 0.133f, pulse = 0.116f, fadeOut = 1.276f, end = 1.392f;
+            float slideSlope = 2 * -105 / (slideEnd - nudge);
+            var view = typeof(BranchLaneView);
+            var image = typeof(UnityEngine.UI.Image);
+            HermiteCurve(clip, "", view, "previousOffset",
+                new Keyframe(0, 0, 0, 2 * 30 / nudge), new Keyframe(nudge, 30, 0, slideSlope), new Keyframe(slideEnd, -75, 0, 0));
+            HermiteCurve(clip, "", view, "currentOffset",
+                new Keyframe(0, 105, 0, 0), new Keyframe(nudge, 105, 0, slideSlope), new Keyframe(slideEnd, 0, 0, 0));
+            LinearCurve(clip, "PreviousRoute", image, "m_Color.a", (0, 1), (nudge, 1), (slideEnd, 0));
+            SteppedCurve(clip, "PreviousRoute", image, "m_Enabled", (0, 1), (slideEnd, 0));
+            LinearCurve(clip, "CurrentRoute", image, "m_Color.a", (0, 0), (nudge, 0), (slideEnd, 1));
+            LinearCurve(clip, "RouteBackground", image, "m_Color.a", (0, 0), (nudge, 0), (nudge + 0.0665f, 0.5f), (end, 0.5f));
+            LinearCurve(clip, "LevelChange", image, "m_Color.a", (0, 0), (pulse, 1), (fadeOut, 1), (end, 0));
+            foreach (var axis in new[] { "x", "y" })
+                LinearCurve(clip, "LevelChange", typeof(Transform), "m_LocalScale." + axis, (0, 1), (pulse, 1.2f), (2 * pulse, 1), (end, 1));
+        });
+
         static void EditPlayScene(Action<PlayScene> edit)
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing scenes.");

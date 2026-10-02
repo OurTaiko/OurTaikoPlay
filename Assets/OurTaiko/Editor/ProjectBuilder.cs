@@ -236,6 +236,7 @@ namespace OurTaiko.Editor
             var branch = Rect("BranchIndicator", lane, 0, 0, 1280, 176);
             branch.SetSiblingIndex(lane.Find("LaneBackground").GetSiblingIndex() + 1);
             var view = branch.gameObject.AddComponent<BranchLaneView>();
+            AttachClip(branch.gameObject, BranchChangeClip());
             view.normalLabel = Sprite("game/branch/normal");
             view.expertLabel = Sprite("game/branch/expert");
             view.masterLabel = Sprite("game/branch/master");

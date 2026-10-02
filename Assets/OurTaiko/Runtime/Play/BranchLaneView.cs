@@ -2,11 +2,16 @@ using UnityEngine;
 
 namespace OurTaiko
 {
+    [RequireComponent(typeof(ClipSampler))]
     public sealed class BranchLaneView : MonoBehaviour
     {
         public UnityEngine.UI.Image background, previousLabel, currentLabel, levelChange;
         public Sprite normalLabel, expertLabel, masterLabel, expertBackground, masterBackground, levelUp, levelDown;
 
+        // Written by BranchChange.anim: each label's distance from its saved position, in pixels.
+        [SerializeField, HideInInspector] float previousOffset, currentOffset;
+
+        ClipSampler sampler;
         BranchRoute route;
         Vector2 labelPosition;
         double changedAt;
@@ -47,30 +52,20 @@ namespace OurTaiko
         public void ShowTime(double time)
         {
             if (!animating) return;
+            sampler ??= GetComponent<ClipSampler>();
             float elapsed = (float)(time - changedAt);
-            // Nijiiro game/animation.json, IDs 41–45: 100 ms nudge,
-            // then 133 ms slide/crossfade; the level badge pulses and fades out.
-            float nudge = EaseOut(Progress(elapsed, 0, 0.100f)) * 30;
-            float fade = Progress(elapsed, 0.100f, 0.133f);
-            float slide = EaseOut(fade) * 105;
-            previousLabel.rectTransform.anchoredPosition = labelPosition + Vector2.down * ((nudge - slide) * direction);
-            currentLabel.rectTransform.anchoredPosition = labelPosition + Vector2.down * ((105 - slide) * direction);
-            previousLabel.color = new Color(1, 1, 1, 1 - fade);
-            currentLabel.color = new Color(1, 1, 1, fade);
-            background.color = new Color(1, 1, 1, Mathf.Min(fade, 0.5f));
-            float levelFade = Progress(elapsed, 0, 0.116f) - Progress(elapsed, 1.276f, 0.116f);
-            float scale = 1 + 0.2f * (Progress(elapsed, 0, 0.116f) - Progress(elapsed, 0.116f, 0.116f));
-            levelChange.color = new Color(1, 1, 1, levelFade);
-            levelChange.rectTransform.localScale = new Vector3(scale, scale, 1);
-            previousLabel.enabled = fade < 1;
-            if (elapsed >= 1.392f)
+            float length = sampler.clip.length;
+            // BranchChange.anim, from Nijiiro game/animation.json IDs 41–45: 100 ms nudge, then
+            // 133 ms slide/crossfade; the level badge pulses and fades out. The clip moves the two
+            // labels by offsets from their saved position, signed here by the change's direction.
+            sampler.Sample(Mathf.Min(elapsed, length));
+            previousLabel.rectTransform.anchoredPosition = labelPosition + Vector2.down * (previousOffset * direction);
+            currentLabel.rectTransform.anchoredPosition = labelPosition + Vector2.down * (currentOffset * direction);
+            if (elapsed >= length)
             {
                 levelChange.enabled = false;
                 animating = false;
             }
         }
-
-        static float Progress(float time, float delay, float duration) => Mathf.Clamp01((time - delay) / duration);
-        static float EaseOut(float progress) => progress * (2 - progress);
     }
 }
