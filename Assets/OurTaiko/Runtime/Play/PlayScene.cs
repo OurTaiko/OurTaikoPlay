@@ -23,6 +23,7 @@ namespace OurTaiko
         public Sprite[] judgmentSprites;
         public UnityEngine.UI.Image judgment, hitFlash;
         public SoulGaugeView soulGauge;
+        public NoteArcView noteArcs;
         public UnityEngine.UI.Image[] drumFlashes;
         public TMP_Text title, subtitle, score, combo, counters, state, rollCounter, resultText;
         public BranchLaneView branchLane;
@@ -40,7 +41,7 @@ namespace OurTaiko
         public RectTransform NoteRoot(int index) => notes[index].Root;
         public RectTransform MojiRoot(int index) => notes[index].Moji;
         SongDefinition song;
-        bool autoPlay, isReady;
+        bool autoPlay, isReady, hitKa;
         SceneSwitcher switcher;
         double startDsp, frozenTime;
         float feedbackTime = -10, drumTime = -10;
@@ -149,6 +150,7 @@ namespace OurTaiko
             balloonCounter.ShowTime(time);
             RenderNotes(time - song.visualOffsetMs / 1000.0);
             soulGauge.ShowTime(time);
+            if (noteArcs != null) noteArcs.ShowTime(time);
             foreach (var dancer in dancers) dancer.ShowTime(time);
             float feedback = Mathf.Clamp01(1 - (Time.unscaledTime - feedbackTime) / 0.25f);
             judgment.color = new Color(1, 1, 1, feedback);
@@ -173,6 +175,7 @@ namespace OurTaiko
         {
             if (Session == null || !isReady || switcher.IsInputBlocked || IsPaused || IsFinished || autoPlay) return;
             Feedback(isKa, right);
+            hitKa = isKa;
             Session.Hit(isKa, SongTime - song.audioOffsetMs / 1000.0);
         }
         void Feedback(bool isKa, bool right)
@@ -187,6 +190,7 @@ namespace OurTaiko
             if (result != Judgment.Roll)
                 soulGauge.SetPoints(Session.GaugePoints, SongTime - song.audioOffsetMs / 1000.0);
             if (autoPlay) Feedback(Session.Chart.Notes[index].IsKa, (index & 1) != 0);
+            SpawnArc(index, result);
             feedbackTime = Time.unscaledTime;
             if (result != Judgment.Roll) judgment.sprite = judgmentSprites[(int)result - 1];
             else if (Session.Chart.Notes[index].Kind == NoteKind.Balloon)
@@ -199,6 +203,25 @@ namespace OurTaiko
             }
             else { rollCounter.text = "DRUMROLL  " + Session.Rolls; }
             UpdateHud();
+        }
+        // note_correct sends good/ok notes 1-4 and a popped balloon; check_drumroll sends one small
+        // note per roll hit, coloured by the drum (autoplay rolls with don). Kusudama never flies.
+        void SpawnArc(int index, Judgment result)
+        {
+            if (noteArcs == null) return;
+            var note = Session.Chart.Notes[index];
+            NoteKind kind;
+            if (result == Judgment.Good || result == Judgment.Ok) kind = note.Kind;
+            else if (result != Judgment.Roll || note.Kind == NoteKind.Kusudama) return;
+            else if (note.Kind == NoteKind.Balloon)
+            {
+                if (Session.LongHits[index] != note.BalloonHits) return;
+                kind = NoteKind.Balloon;
+            }
+            else kind = hitKa && !autoPlay ? NoteKind.Ka : NoteKind.Don;
+            // NoteArc's is_big picks the gauge burst's circle: big don/ka and the balloon.
+            bool big = kind == NoteKind.BigDon || kind == NoteKind.BigKa || kind == NoteKind.Balloon;
+            noteArcs.Spawn(noteSprites[(int)kind], big, SongTime - song.audioOffsetMs / 1000.0);
         }
         void UpdateHud()
         {

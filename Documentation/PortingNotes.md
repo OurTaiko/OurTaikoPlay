@@ -231,3 +231,14 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 图层与数值：帧 35–78 用整张 `rainbow_bg`，其余为 `rainbow_bg_top` 左右半幅（中心 tx、宽 960×sx）；底部光晕 `rainbow_bg_bottom (0,288,1600,512)` 画在 (0,568,1920,512)，加算混合（`Generated/UI Additive.mat`，`Mobile/Particles/Additive`）；11 颗星为固定位置与缩放；咚／咔 560×560 沿轨迹；标题带 (0,0,1600,256) 中心 (960,400)，打开时 sx 0.25→1、关闭时 sx→1.5／sy→0.1；提示区为皮肤 `chara_center.png` 原图（用户决定，截图中的街机插画提示卡不在皮肤内）。标题／副标题中心 y=382／462（skin 1606／1686 减 rainbow_up 816×1.5），64／40 px 白字黑边；TMP 描边以字形边缘为中心，因此同时扩张字面使边框全部在外侧。
 - 演奏スキップON 徽章仅在跳过功能启用时显示；本项目该选项灰显未实现，因此不显示、也未复制素材。
 - 验证：PlayMode `SongLoadingCurtainTests`（帧映射、停住状态、2 秒停留、音频已载入、预解析谱面被取用、在旧／新场景上播放关闭／打开、重开仍为淡入淡出），截图 `TestResults/CurtainClosing.png`、`SongLoading.png`、`CurtainOpening.png`。EditMode 127/127、PlayMode 26/26 通过。迁移入口 `ProjectBuilder.ApplySongLoadingCurtain()`（菜单 OurTaiko/Apply Song Loading Curtain）。
+
+## 音符飞向魂槽与 GaugeHitEffect（2026-10-01）
+
+- 来源：`src/objects/game/note_arc.cpp`、`gauge_hit_effect.cpp`、`player.cpp::note_correct`／`check_drumroll`／`draw_overlays`；Nijiiro `Graphics/skin_config.json` 的 `notes`、`note_arc_start_x_offset`、`gauge_hit_effect_note`、`note_arc_pivot`、`note_arc_duration`。
+- 路径取舍：OurTaikoPlayer 当前代码是二次贝塞尔（22 帧、`note_arc_curve_height` 608）；Nijiiro 皮肤另外声明了街机实测的圆弧（`note_arc_pivot` (1269.22,415.14)、`note_arc_duration` 30 帧），读取它们的实现在 OurTaikoPlayer 提交 `7a08ced` 中、后来合并时被丢弃，但皮肤键保留。本项目只做 Nijiiro，按皮肤键实现：音符中心以等角速度沿圆周从判定圈（轨道局部 618,110）经上方扫到魂徽章（1834,-30），半径取起止两半径的平均（约 719.14），-154.89°→-38.24°；时长 30×16.67 ms。两种路径顶点同为判定中心上方 409，飞出设计区顶边的部分由 `NoteArcs` 的 RectMask2D 裁掉。
+- 触发：良／可的 1–4 号音符飞自身贴图；5／6 号连打每次有效击打飞一个小咚或小咔（按所敲的鼓，自动演奏为咚）；7 号气球只在吹爆时飞一个气球；不可、彩球（9 号）不飞。到达后的那一帧即移除，不在终点绘制。
+- 实现：`Core/NoteArcPath.cs`（纯 C# 路径）、`Play/NoteArcView.cs`（对象池；后生成的画在上面）。`NoteArcs` 层铺满 1920×1080 设计区、紧排在 `SoulGauge` 之后（原版先画魂槽再画 `draw_overlays`），坐标经 `NoteLane` 的变换换算，不写屏幕像素。时间用歌曲时钟，暂停时冻结、重开随场景重载清空。迁移入口 `ProjectBuilder.ApplyNoteArcs()`（菜单 OurTaiko/Apply Nijiiro Note Arcs）。
+- GaugeHitEffect：音符到达时（按到达时刻 `开始+30 帧` 计时）在徽章中心 (1834,-30) 播放；同时只有一个，新到达的清除旧的（`gauge_hit_effect.clear()`）。按 Nijiiro `animation.json`：2 号换帧 `gauge/hit_effect` 三帧 232×232（≤33.33 ms 帧 0、≤66.66 ms 帧 1、之后帧 2）；32 号尺寸 116.67 ms 前为 0.8，随后 266 ms 线性到 1.5，以中心缩放；33 号 300 ms 后 83 ms 淡出，383 ms 时移除。光圈按尺寸着色（raylib 色值）：≤0.80 黄 (253,249,0)、≤0.90 橙 (255,161,0)、其余红 (230,41,55)，即约 155 ms 后转红。音符贴图画在光圈之上、同一中心，与光圈同步淡出。31 号（光圈淡入）只作用于 `hit_effect_circle*`，Nijiiro 中这两张是全透明 8×8 占位图；34 号旋转固定为 0。两者因此不绘制。
+- 实现：`Core/GaugeHitEffectTiming.cs`（时间轴与着色）、`Play/GaugeHitEffectView.cs`；`GaugeHitEffect` 层紧排在 `NoteArcs` 之后（`draw_overlays` 先画 arc 再画 gauge_hit_effect），帧切片 `Generated/GaugeHitEffect0–2.asset`。由 `NoteArcView.ShowTime` 在处理完 arc 后驱动，同属迁移入口 `ProjectBuilder.ApplyNoteArcs()`。
+- 未移植：气球吹爆时的彩虹拖尾（`balloon/rainbow`／`note_arc_balloon_*`）。
+- 验证：EditMode `NoteArcPathTests`（圆心、半径、起止角、等角速度、30 帧）、`GaugeHitEffectTimingTests`（换帧、尺寸、淡出、着色），PlayMode `NoteArcFlowTests`（触发规则、贴图、层级、起点在判定圈、终点与光圈在魂徽章中心、到时移除、光圈帧／尺寸／颜色／淡出），截图 `TestResults/NoteArc.png`。EditMode 131/131、PlayMode 27/27 通过。
