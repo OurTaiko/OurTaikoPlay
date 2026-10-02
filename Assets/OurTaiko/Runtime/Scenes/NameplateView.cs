@@ -18,9 +18,6 @@ namespace OurTaiko
         public Sprite[] rainbowBackgrounds;
         [Tooltip("dan_emblem / dan_emblem_gold: 初級 .. 達人.")]
         public Sprite[] danEmblems, goldDanEmblems;
-        // TMP outline / face-dilate width for the black name border. The original's is 3 px; Nijiiro SDF's
-        // atlas padding (9) tints the whole glyph quad above about 0.6, which draws roughly 2 px at 30 px.
-        [Range(0, 1)] public float nameOutline = 0.6f;
 
         public PlayerInfo Info { get; private set; }
         public int RainbowFrame { get; private set; }
@@ -76,8 +73,9 @@ namespace OurTaiko
                 NameplateLayout.TitleX, NameplateLayout.TitleY, NameplateLayout.TitleBoxWidth);
 
             var box = NameplateLayout.NameBox(info);
-            playerName.outlineColor = new Color32(0, 0, 0, 255);
-            playerName.OutlineOutside(nameOutline);
+            playerName.fontSize = box.FontSize;
+            playerName.OutlineOutsidePixels(3);
+            playerName.fontMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
             SetText(playerName, info.name, box.FontSize, box.X, box.Y, NameplateLayout.NameBoxWidth);
         }
 

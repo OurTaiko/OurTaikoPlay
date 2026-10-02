@@ -112,7 +112,7 @@ namespace OurTaiko
             if (freePlay)
             {
                 // credit: size 40, white with a black border (OutlinedText 3 x 1.5 = 4.5 px)
-                FreePlay = Text(root, "FreePlay", font, outline, "フリープレイ");
+                FreePlay = Text(root, "FreePlay", font, outline, "フリープレイ", 4.5f);
                 FreePlay.rectTransform.Center(960, 1046);
             }
             if (qrChip)
@@ -132,10 +132,10 @@ namespace OurTaiko
             ShowInvite(false, 0);
         }
 
-        static TextMeshProUGUI Text(Transform parent, string name, TMP_FontAsset font, Material outline, string value)
+        static TextMeshProUGUI Text(Transform parent, string name, TMP_FontAsset font, Material outline, string value, float border = 6)
         {
             var text = SkinUi.Text(name, parent, font, outline, 40, new Color32(0, 0, 0, 255), 0);
-            text.OutlineOutside(0.6f);
+            text.OutlineOutsidePixels(border);
             text.characterSpacing = 2 * 100f / 40;
             text.text = value;
             return text;

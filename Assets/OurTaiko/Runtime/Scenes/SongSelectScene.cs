@@ -618,9 +618,11 @@ namespace OurTaiko
             var outline = GenreOutline[Mathf.Clamp(song.genre, 0, GenreOutline.Length - 1)];
             // main_song_board text_song_title: 42 px, white with a 5 px genre-coloured edge.
             board.Title = SkinUi.Text("Title", board.Root, font, outlineMaterial, 42, outline, 0.3f);
+            board.Title.OutlineOutsidePixels(5);
             board.Title.text = board.Info.Title;
             board.Title.Squeeze(860);
             board.Subtitle = SkinUi.Text("Subtitle", board.Root, font, outlineMaterial, 24, outline, 0.3f);
+            board.Subtitle.OutlineOutsidePixels(3.5f);
             board.Subtitle.text = board.Info.Subtitle;
             board.Subtitle.Squeeze(860, 0.75f);
             board.Subtitle.rectTransform.Center(0, -28);
@@ -657,6 +659,8 @@ namespace OurTaiko
             int level = Mathf.Clamp(info.Level, 1, 11);
             SkinUi.Image("Level", root, levels[d * 11 + level - 1], 48, 48).rectTransform.Center(61, 0);
             var label = SkinUi.Text("Course", root, font, outlineMaterial, 18, new Color32(40, 20, 20, 255), 0.25f);
+            label.OutlineOutsidePixels(1.5f);
+            label.characterSpacing = 100f / 18;
             label.text = ChipNames[d];
             label.rectTransform.Center(-42, 30);
             if (info.IsBranching) SkinUi.Image("Branch", root, branch, 40, 40).rectTransform.Center(-69, -23);
@@ -737,15 +741,19 @@ namespace OurTaiko
                 card.Branch = SkinUi.Image("Branch", card.Board.transform, courseBranch, 40, 40);
                 card.Branch.rectTransform.Center(100, 180 + 144);
                 // main_diff_board text_course_title, centred 49 px below the card origin.
-                card.Name = SkinUi.Text("CourseName", card.Board.transform, font, outlineMaterial, 34, new Color32(0, 0, 0, 255), 0.25f);
+                card.Name = SkinUi.Text("CourseName", card.Board.transform, font, outlineMaterial, 34, new Color32(20, 20, 20, 255), 0.25f);
+                card.Name.OutlineOutsidePixels(4.5f);
+                card.Name.characterSpacing = 100f / 34;
                 card.Name.rectTransform.Center(100, 180 + 49);
             }
             uraChange = SkinUi.Image("UraChange", coursePanel, null, 340, 400);
             uraChange.rectTransform.TopLeft(CourseSlotX[3] - 170, CourseBoardY - 210);
             uraChange.enabled = false;
             header = SkinUi.Text("Title", coursePanel, font, outlineMaterial, 48, new Color32(0, 0, 0, 255), 0.25f);
+            header.OutlineOutsidePixels(7);
             header.rectTransform.Center(960, 178);
             headerSub = SkinUi.Text("Subtitle", coursePanel, font, outlineMaterial, 30, new Color32(0, 0, 0, 255), 0.25f);
+            headerSub.OutlineOutsidePixels(4);
             headerSub.rectTransform.Center(960, 242);
             balloon = SkinUi.Image("PlayerBalloon", coursePanel, playerBalloon, 124, 124);
             optionPanel = new OptionPanel(coursePanel, optionArt, font, outlineMaterial);

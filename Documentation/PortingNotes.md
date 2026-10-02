@@ -249,7 +249,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 数据：`Core/PlayerInfo.cs`（name、title、titleBackground、dan、gold、rainbow，默认 Don-chan／Donder Debut!／0／-1，即原 scores.db 种子玩家）。全局对象 `Scenes/PlayerInfoController.cs`（用户决定）：首场景前自动创建、跨场景保留，初始化时读 `Application.persistentDataPath/player.json`（不存在时写入默认值，便于编辑），`Changed` 事件让屏幕上的名牌即时更新；`Reload()` 重读文件，`Set()` 写入并通知，`UseUnsaved()` 供测试使用不落盘的数据。没有游戏内编辑界面。
 - 规则（照搬 nameplate.lua）：「Donder Debut!」或空字串视为无称号；dan 只接受 0–24（初級…達人），超出视为无段位；无称号且无段位时为 coin 牌（只画白牌、1P 徽章与 30 号名字，不画称号带和段位）；否则画称号带（frame_top 第 titleBackground 帧，超出 0–4 归 0）与描边、段位底板与段位字（gold 用金色版）、1P 徽章、黑色 22 号称号（框 215 宽，中心 226.5,34.5）、名字（框 190 宽；有段位中心 261,67.5，否则 226,67.5，24 号）。文字只横向压扁到框宽，不缩字号；字距 2 px。单人始终有 1P 徽章，不移植 2P／AI 牌（未导入 2p.png／ai.png）。
 - 彩虹称号带：原版 `tex.get_animation(12, "global")` 从未 `start()`，因此 OurTaikoPlayer 中彩虹带永远停在第 0 帧。用户决定按设计让它循环：6 帧、每帧 50 ms、300 ms 一循环，第 k>0 帧下面先画第 k-1 帧；用真实时间（原版 current_ms），暂停时也继续。
-- 名字描边：原版白字黑边 3 px（OutlinedText 2×1.5）。Nijiiro SDF 图集 padding 为 9，outline／dilate 超过约 0.6 时整个字形四边形会被染灰，因此取 0.6（30 号约 2 px）。要达到 3 px 需另建更大 padding 的字体资源，未做。
+- 名字描边：原版白字黑边 3 px（OutlinedText 2×1.5）。现使用独立的宽留白 UI 字体恢复 3 px 外描边；早期 padding 9／outline 0.6 的近似已被替换，见「UI 字体外描边修复」。
 - 实现：`Scenes/NameplateView.cs` 挂在预制体 `Generated/Nameplate.prefab`（408×96，子物体按原绘制顺序：Shadow、BandUnder、Band、Outline、DanBackground、Dan、Badge、Title、Name），切片 `Generated/NameplateTitle0–4`、`NameplateRainbow0–5`、`NameplateDan00–24`、`NameplateDanGold00–24`。SinglePlayScene 在 `NoteLane` 下保存预制体实例（drum／连击／判定之后、BalloonCounter 之前，与 `Player::draw` 一致，压在鼓面左缘之上）；SongSelect 在 `Awake` 中实例化到 Wheel 与 CoursePanel 之间（原版在选曲轮之上、选项面板之下）；Result 在 `Build` 中实例化到 SoulSheen 之后、FadeIn 之前。迁移入口 `ProjectBuilder.ApplyNameplate()`（菜单 OurTaiko/Apply Nijiiro Nameplate），会重建预制体并更新三个场景，可重复执行。
 - 自动演奏（用户决定，有意偏离）：原版自动演奏时在名牌位置画 `lane/auto_icon` 取代名牌；本项目名牌始终显示，自动演奏只在演奏オプション徽章区（`ModifierBadgeView`）第一位加入选曲的 `song_select/modifier/mod_auto`（40×40，modifier.cpp 中 auto 排第一），没有其他视觉差别。
 - 分数计数器（用户要求一并移植，因原 TMP 占位分数与名牌重叠）：照搬 `score_counter.cpp`。`lane/lane_score_cover` 画在轨道局部 (0,12)；`lane/score_number` 十个 56×64 数字右对齐到 x 255、间距 30（Nijiiro 未覆盖 `score_counter_margin`，继承 Green 的 20×1.5），不补零，顶边 5.5（277.5-272）。分数变化时重启 TextStretch（id 4，与气球数字同一公式，抽成 `Core/TextStretch`）：50 ms 内升到 12 px，再按 16.57 ms 阶梯回落，最后两帧略为负值，数字底边固定、向上伸长。Nijiiro `delay_score_addition` 为 false，分数即时更新。实现 `Play/ScoreCounterView.cs`，作为 `NoteLane` 最后一个子物体（原版最后画分数）；切片 `Generated/ScoreNumber0–9`。未移植：加分时飞出的「+分数」动画（`ScoreCounterAnimation`）。
@@ -294,3 +294,13 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 用户要求删除不再使用的倒数代码：移除 `Core/ArcadeTimer.cs`（倒数、30／10／5 秒语音提示、归零决定、数字与高光弹动曲线）及其 EditMode 测试。倒数不再发生，10 秒内的红色表盘、白色数字与高光也一并删除：`ArcadeOverlayArt` 去掉 `timerBackgroundRed`、`timerHighlight`、`timerDigitsWhite`，删除生成的 `Generated/TimerDigitWhite0–9.asset`。`ArcadeTimerView.Show(int)` 只显示固定数字（Entry 60，选曲列表 100、难度选择 60）。原版行为仍记录在上文「Entry 场景」。
 - `global/timer/bg_red.png`、`counter_white.png`、`highlight.png` 不再被引用（代码、场景、预制体与资源中均无其 GUID），已删除并从 `ImportedAssets.json` 移除；`Art/global/timer` 只剩 `bg.png` 与 `counter_black.png`。
 - 验证：EditMode `EntryTests`，PlayMode `EntryFlowTests`、`GlobalOverlayFlowTests` 通过。
+
+## UI 字体外描边修复（2026-10-02）
+
+- 字体仍为 Nijiiro 的 `Taiko.ttf`。旧 `Nijiiro SDF` 使用 90 采样字号／9 padding，粗描边使透明字形边缘出现灰色矩形；选曲的居中描边还会侵蚀白色笔画。
+- 新增 `Resources/Nijiiro UI SDF.asset`：64 采样字号／32 padding、SDFAA、1024 动态多图集、构建时清理动态数据。迁移入口 `ProjectBuilder.CreateOutlinedUiFont()`，不重建已有字体、不改动旧动态字体。旧字体的 Editor 自动变更仍应排除提交。
+- `SkinUi.OutlineOutsidePixels` 按设计区域单位指定外描边，字面扩张与描边宽度相等，保留白色字形；Canvas 缩放自然作用于描边。换算为 `pixels × pointSize / (2 × padding × fontSize)`，由 TMP 更新材质比例；换字体时同时更新实例材质、描边颜色与 CanvasRenderer 的图集绑定，避免旧材质缓存导致颜色丢失或字形错乱。
+- 恢复参考配置：列表标题／副标题为类别色 5／3.5 px；难度标题／副标题为黑色 7／4 px；名牌名字黑色 3 px；2P 邀请黑色 6 px；フリープレイ黑色 4.5 px。宽度均指 1920×1080 设计区域，随画面缩放。
+- 旧 `OutlineOutside` 调用兼容原先实际描边厚度；Entry 模式标题的黑色 underlay 单独换算，避免更宽图集放大原来的双层描边。
+- 难度文字同步恢复外描边：列表小芯片 18 号／1.5 px；难度卡片 34 号／4.5 px，字距均为 1 个设计单位。
+- 验证：Unity Editor 编译通过；`GlobalOverlayFlowTests` 2/2、`NameplateFlowTests` 2/2、`EntryFlowTests` 1/1、`SongLoadingCurtainTests` 2/2 通过。核对选曲列表、难度卡、名牌与 Entry 截图；报告为 `TestResults/font-*.json`。独立播放器未重新构建。

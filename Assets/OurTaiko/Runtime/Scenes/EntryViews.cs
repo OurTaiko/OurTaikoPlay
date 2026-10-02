@@ -212,7 +212,14 @@ namespace OurTaiko
             var material = title.fontMaterial;
             material.EnableKeyword(ShaderUtilities.Keyword_Underlay);
             material.SetColor(ShaderUtilities.ID_UnderlayColor, Color.black);
-            material.SetFloat(ShaderUtilities.ID_UnderlayDilate, 0.9f);
+            // Preserve the previous black rim (5.481 design units) when using the wider UI atlas.
+            // Underlay dilation shares half of the face expansion; it has its own TMP scale ratio.
+            ShaderUtilities.UpdateShaderRatios(material);
+            float gradient = material.GetFloat(ShaderUtilities.ID_GradientScale);
+            float face = material.GetFloat(ShaderUtilities.ID_FaceDilate) * material.GetFloat(ShaderUtilities.ID_ScaleRatio_A);
+            float underlay = (5.481f * title.font.faceInfo.pointSize / (gradient * TitleSize) - face)
+                / material.GetFloat(ShaderUtilities.ID_ScaleRatio_C);
+            material.SetFloat(ShaderUtilities.ID_UnderlayDilate, underlay);
             material.SetFloat(ShaderUtilities.ID_UnderlaySoftness, 0);
             title.UpdateMeshPadding();
             title.characterSpacing = 2 * 100f / TitleSize;

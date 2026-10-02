@@ -8,6 +8,8 @@ namespace OurTaiko
     // coordinates, every element is anchored to the stage's top-left corner and the Canvas scales it.
     public static class SkinUi
     {
+        static TMP_FontAsset outlinedFont;
+
         public static RectTransform Rect(string name, Transform parent, float width = 0, float height = 0)
         {
             var rect = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
@@ -53,6 +55,7 @@ namespace OurTaiko
             // Bind the material before the outline: TMP instances it for per-text outline colours.
             var material = new Material(outlineMaterial != null ? outlineMaterial : font.material);
             material.EnableKeyword(ShaderUtilities.Keyword_Outline);
+            material.SetColor(ShaderUtilities.ID_OutlineColor, outline);
             text.fontSharedMaterial = material;
             text.fontSize = size;
             text.alignment = TextAlignmentOptions.Center;
@@ -65,13 +68,41 @@ namespace OurTaiko
             return text;
         }
 
-        // TMP centres its outline on the glyph edge; dilating the face by the same width puts the
-        // whole border outside the ink, as OutlinedText draws it. Gives the text its own material.
+        // Compatibility for the original 90-point / 9-padding material settings. Keep their visible
+        // border thickness, but render on an atlas with enough distance around each glyph.
         public static void OutlineOutside(this TMP_Text text, float width)
         {
+            float ratio = 1 / Mathf.Max(1, 0.75f / 4 + 2 * width);
+            text.OutlineOutsidePixels(2 * 9 * width * ratio * text.fontSize / 90);
+        }
+
+        // Width is in the 1920x1080 stage's units, so the Canvas also scales the border. TMP's SDF
+        // spans 2 * gradientScale atlas pixels. Equal dilate/outline keeps the white glyph intact;
+        // using the old narrow atlas here makes even empty texels visible as grey rectangles.
+        public static void OutlineOutsidePixels(this TMP_Text text, float pixels)
+        {
+            if (outlinedFont == null) outlinedFont = Resources.Load<TMP_FontAsset>("Nijiiro UI SDF");
+            if (outlinedFont == null) throw new System.InvalidOperationException("Missing Nijiiro UI SDF font asset.");
+            if (text.font != outlinedFont)
+            {
+                var color = text.outlineColor;
+                text.font = outlinedFont;
+                text.fontSharedMaterial = outlinedFont.material;
+                // Refresh TMP's cached instance before its outline setters can restore the old one.
+                // Write the material directly: TMP's cached outlineColor already equals this colour,
+                // so its property setter would skip it after switching to the new default material.
+                text.fontMaterial.SetColor(ShaderUtilities.ID_OutlineColor, color);
+                // SetOutlineThickness can bind a texture separately from the material. Updating the
+                // material alone leaves that old atlas on CanvasRenderer, producing scrambled glyphs.
+                text.canvasRenderer.SetTexture(outlinedFont.atlasTexture);
+            }
+            float width = pixels * outlinedFont.faceInfo.pointSize / (2 * outlinedFont.atlasPadding * text.fontSize);
+            var material = text.fontMaterial;
+            material.EnableKeyword(ShaderUtilities.Keyword_Outline);
+            material.SetFloat(ShaderUtilities.ID_FaceDilate, width);
             text.outlineWidth = width;
-            text.fontMaterial.SetFloat(ShaderUtilities.ID_FaceDilate, width);
             text.UpdateMeshPadding();
+            text.SetMaterialDirty();
         }
 
         // Arcade EditText boxes squeeze long text horizontally down to the box width.
