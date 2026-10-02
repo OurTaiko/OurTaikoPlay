@@ -303,7 +303,7 @@ namespace OurTaiko
                 // only a hit removes a note: a 5/6 roll resolved at its tail and a note
                 // missed by timeout keep scrolling until they leave the lane.
                 bool rolling = note.IsLong && !note.IsBalloon;
-                bool visible = note.Display && Session.IsActive(note) && (rolling || Session.Missed[i] || !Session.Resolved[i]) && pos.x + Math.Max(0, length) >= -192 && pos.x + Math.Min(0, length) <= 1650;
+                bool visible = note.Display && Session.IsActive(note) && (rolling || Session.Missed[i] || !Session.Resolved[i]) && InLane(pos.x, Reach(view, length));
                 view.Object.SetActive(visible);
                 if (visible)
                 {
@@ -328,9 +328,29 @@ namespace OurTaiko
             for (int i = 0; i < bars.Count; i++)
             {
                 var pos = Position(Session.Chart.Bars[i], time); pos.y -= 4; bars[i].anchoredPosition = pos;
-                bars[i].gameObject.SetActive(Session.Chart.Bars[i].Display && Session.IsActive(Session.Chart.Bars[i]) && pos.x >= 0 && pos.x < 1500);
+                float half = bars[i].rect.width / 2;
+                bars[i].gameObject.SetActive(Session.Chart.Bars[i].Display && Session.IsActive(Session.Chart.Bars[i]) && InLane(pos.x, new Vector2(-half, half)));
             }
             gogoTint.alpha = gogo ? 0.18f + Mathf.Sin((float)time * 12) * 0.05f : 0;
+        }
+
+        // The lane clip mask is the visible area, in Canvas units that follow the
+        // window resolution, so cull against its live rect instead of fixed pixels.
+        bool InLane(float x, Vector2 reach) => x + reach.y >= 0 && x + reach.x <= noteLayer.rect.width;
+
+        // Horizontal extent of a note's sprites relative to its centre, from their current sizes.
+        static Vector2 Reach(NoteView view, float length)
+        {
+            float width = view.Root.rect.width, half = width / 2;
+            if (view.BalloonTail != null)
+            {
+                // The face shifts left by 12/128 of the width; notes/10 follows it.
+                float face = width * 12f / 128f;
+                return new Vector2(-half - face, half + width - face);
+            }
+            if (view.Body == null) return new Vector2(-half, half);
+            float tail = view.Root.rect.height * view.TailAspect;
+            return length >= 0 ? new Vector2(-half, Math.Max(half, length + tail)) : new Vector2(Math.Min(-half, length - tail), half);
         }
     }
 }

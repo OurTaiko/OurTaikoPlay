@@ -351,6 +351,14 @@ namespace OurTaiko.Tests
                 render.Invoke(play, new object[] { donNote.Time + 0.2 });
                 Assert.That(don.activeSelf, Is.True, "A missed note must flow past the judge.");
                 Assert.That(((RectTransform)don.transform).anchoredPosition.x, Is.EqualTo(120 - 0.2 * speed).Within(0.01));
+                // Culling follows the live lane clip and note size, not fixed pixels:
+                // the note stays until its right edge passes the lane's left edge.
+                float halfWidth = ((RectTransform)don.transform).rect.width / 2;
+                double exit = donNote.Time + (120 + halfWidth) / speed;
+                render.Invoke(play, new object[] { exit - 0.005 });
+                Assert.That(don.activeSelf, Is.True);
+                render.Invoke(play, new object[] { exit + 0.005 });
+                Assert.That(don.activeSelf, Is.False);
                 play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
             }
             finally
