@@ -88,22 +88,7 @@ namespace OurTaiko.Editor
             entry.boardOff = Required("entry/mode_select/box/1");
             entry.boardFlash = Required("entry/mode_select/box/8");
             entry.boardCursor = Required("entry/mode_select/box_highlight_center");
-            entry.overlay = new ArcadeOverlayArt
-            {
-                timerBackground = Required("global/timer/bg"),
-                timerBackgroundRed = Required("global/timer/bg_red"),
-                timerHighlight = Required("global/timer/highlight"),
-                timerDigitsBlack = Enumerable.Range(0, 10).Select(i => Slice("TimerDigitBlack" + i, "global/timer/counter_black", i * 64, 0, 64, 96)).ToArray(),
-                timerDigitsWhite = Enumerable.Range(0, 10).Select(i => Slice("TimerDigitWhite" + i, "global/timer/counter_white", i * 64, 0, 64, 96)).ToArray(),
-                guideDecideFrames = Enumerable.Range(GuideFirstDecide, GuideCells - GuideFirstDecide)
-                    .Select(c => Slice($"ControlGuide{c:000}", GuideSheet, c % GuideColumns * 352, c / GuideColumns * 276, 352, 276)).ToArray(),
-                qrChip = Required("global/overlay/banapass_osaifu_keitai/0"),
-                cardChip = Required("global/overlay/banapass_card/0"),
-                stageChip = Required("global/overlay/banapass_or/0"),
-                danChip = Required("global/overlay/banapass_no"),
-                inviteBubble = Required("global/overlay/camera/0"),
-                creditSideTimeline = RequiredTimeline("credit_side"),
-            };
+            entry.overlay = OverlayArt();
             entry.nameplatePrefab = AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);
             entry.backgroundTimeline = RequiredTimeline("entry_bg");
             entry.creditRowTimeline = RequiredTimeline("credit_row");
@@ -124,6 +109,47 @@ namespace OurTaiko.Editor
                 entry.timerVoice30, entry.timerVoice10, entry.timerVoice5, entry.bgm.clip })
                 if (clip == null) throw new FileNotFoundException("An Entry sound is missing.");
             EditorUtility.SetDirty(entry);
+        }
+
+        // Global chrome art shared by Entry, SongSelect and Result.
+        static ArcadeOverlayArt OverlayArt() => new ArcadeOverlayArt
+        {
+            timerBackground = Required("global/timer/bg"),
+            timerBackgroundRed = Required("global/timer/bg_red"),
+            timerHighlight = Required("global/timer/highlight"),
+            timerDigitsBlack = Enumerable.Range(0, 10).Select(i => Slice("TimerDigitBlack" + i, "global/timer/counter_black", i * 64, 0, 64, 96)).ToArray(),
+            timerDigitsWhite = Enumerable.Range(0, 10).Select(i => Slice("TimerDigitWhite" + i, "global/timer/counter_white", i * 64, 0, 64, 96)).ToArray(),
+            guideDecideFrames = Enumerable.Range(GuideFirstDecide, GuideCells - GuideFirstDecide)
+                .Select(c => Slice($"ControlGuide{c:000}", GuideSheet, c % GuideColumns * 352, c / GuideColumns * 276, 352, 276)).ToArray(),
+            qrChip = Required("global/overlay/banapass_osaifu_keitai/0"),
+            cardChip = Required("global/overlay/banapass_card/0"),
+            stageChip = Required("global/overlay/banapass_or/0"),
+            danChip = Required("global/overlay/banapass_no"),
+            inviteBubble = Required("global/overlay/camera/0"),
+            creditSideTimeline = RequiredTimeline("credit_side"),
+        };
+
+        // Puts the global chrome on SongSelect (timer placeholder, QR chip, 2P invite) and Result (credit line).
+        [MenuItem("OurTaiko/Apply Global Overlays")]
+        public static void ApplyGlobalOverlays()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing scenes.");
+            for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+                if (EditorSceneManager.GetSceneAt(i).isDirty)
+                    throw new InvalidOperationException("Save the current scene edits first.");
+            ImportEntryArt();
+            foreach (var path in new[] { SongSelectPath, ResultPath })
+            {
+                var scene = EditorSceneManager.OpenScene(path);
+                var select = UnityEngine.Object.FindFirstObjectByType<SongSelectScene>();
+                var result = UnityEngine.Object.FindFirstObjectByType<ResultScene>();
+                if (select != null) { select.overlay = OverlayArt(); EditorUtility.SetDirty(select); }
+                if (result != null) { result.overlay = OverlayArt(); EditorUtility.SetDirty(result); }
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("OurTaiko: global overlays applied to SongSelect and Result.");
         }
 
         static Sprite Required(string path) => Sprite(path) ?? throw new FileNotFoundException(path);

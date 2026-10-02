@@ -40,6 +40,9 @@ namespace OurTaiko
         [Header("Player")]
         public NameplateView nameplatePrefab;
 
+        [Header("Global chrome")]
+        public ArcadeOverlayArt overlay;
+
         [Header("Timelines")]
         public TextAsset songBoardTimeline, cursorGlowTimeline, uraLoopTimeline;
 
@@ -67,6 +70,10 @@ namespace OurTaiko
         };
 
         public State Phase { get; private set; } = State.Browsing;
+        public ArcadeTimer ListTimer { get; private set; }
+        public ArcadeTimer CourseTimer { get; private set; }
+        public CoinOverlayView Coins { get; private set; }
+        ArcadeTimerView timerView;
         public int Focused { get; private set; }
         public DifficultyCursor Cursor { get; private set; }
         public bool AutoPlay => PlayOptions.Shared.auto;
@@ -128,6 +135,7 @@ namespace OurTaiko
             currentGenre = previousGenre = FocusedSong.genre;
             BuildCoursePanel();
             BuildNameplate();
+            BuildOverlays();
             // Slice the 90-cell Oni/Ura change sheets up front so the first flip does not hitch.
             UraFrames(ref uraToUraCells, uraChangeToUra);
             UraFrames(ref uraToOniCells, uraChangeToOni);
@@ -135,6 +143,7 @@ namespace OurTaiko
             // SecondLoading: the initially focused board opens at once, without the 508 ms hold.
             OpenFocused(holdMs: 0);
             coursePanel.gameObject.SetActive(false);
+            DrawOverlays(0);
         }
 
         void Start()
@@ -170,6 +179,7 @@ namespace OurTaiko
             if (Phase != State.Browsing) DrawCoursePanel(now);
             // Player::update: the options are saved once the panel has slid out.
             if (optionPanel.Draw(now)) PlayOptions.Shared.Save();
+            DrawOverlays(now);
         }
 
         void HandleInput()
@@ -663,6 +673,28 @@ namespace OurTaiko
             plate.name = "Nameplate";
             plate.transform.SetSiblingIndex(coursePanel.GetSiblingIndex());
             plate.Place(14, 908);
+        }
+
+        // SongSelectScreen::draw_overlays: the timer, the QR chip and the 2P invite cloud, over the course
+        // and option panels. The original counts 100 s on the list and 60 s in course select and then
+        // picks for the player; here both are placeholders that never count down (user decision).
+        void BuildOverlays()
+        {
+            if (overlay == null || overlay.timerBackground == null) return;
+            var root = SkinUi.Rect("GlobalOverlays", coursePanel.parent);
+            root.SetSiblingIndex(coursePanel.GetSiblingIndex() + 1);
+            ListTimer = new ArcadeTimer(100, 0);
+            CourseTimer = new ArcadeTimer(60, 0);
+            timerView = new ArcadeTimerView(root, overlay);
+            Coins = new CoinOverlayView(root, overlay, font, outlineMaterial, freePlay: false);
+        }
+
+        void DrawOverlays(double now)
+        {
+            if (timerView == null) return;
+            timerView.Show(Phase == State.Browsing ? ListTimer : CourseTimer, now);
+            // coin_overlay: the invite shows while a 2P join would still be allowed (songs played < 2).
+            Coins.ShowInvite(switcher.SongsPlayed < 2, now);
         }
 
         void BuildCoursePanel()

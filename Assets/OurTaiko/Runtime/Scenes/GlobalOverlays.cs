@@ -34,17 +34,17 @@ namespace OurTaiko
         const float DigitX = 1781, DigitY = 84, DigitMargin = 48;
         readonly ArcadeOverlayArt art;
         readonly Image background, highlight;
-        readonly Image[] digits = new Image[2];
+        readonly Transform root;
+        readonly System.Collections.Generic.List<Image> digits = new System.Collections.Generic.List<Image>();
 
         public ArcadeTimerView(Transform parent, ArcadeOverlayArt art)
         {
             this.art = art;
-            var root = SkinUi.Rect("Timer", parent);
+            root = SkinUi.Rect("Timer", parent);
             background = SkinUi.Image("Background", root, art.timerBackground);
             background.rectTransform.TopLeft(1669, 12);
             highlight = SkinUi.Image("Highlight", root, art.timerHighlight);
             highlight.rectTransform.TopLeft(1609, -48);
-            for (int i = 0; i < digits.Length; i++) digits[i] = SkinUi.Image("Digit" + i, root, art.timerDigitsBlack[0]);
         }
 
         public void Show(ArcadeTimer timer, double nowMs)
@@ -60,7 +60,9 @@ namespace OurTaiko
             }
             string text = timer.Seconds.ToString();
             float scale = ArcadeTimer.DigitScale(popped);
-            for (int i = 0; i < digits.Length; i++)
+            // song select's list timer starts at 100
+            while (digits.Count < text.Length) digits.Add(SkinUi.Image("Digit" + digits.Count, root, art.timerDigitsBlack[0]));
+            for (int i = 0; i < digits.Count; i++)
             {
                 digits[i].enabled = i < text.Length;
                 if (i >= text.Length) continue;
@@ -98,9 +100,10 @@ namespace OurTaiko
         }
     }
 
-    // CoinOverlay:draw on Entry: 「フリープレイ」 centred at (960,1046), the QR chip (always NG) and,
-    // while only 1P has joined, the 2P invite cloud on the right seat, blinking on anim/credit_side
-    // (2 s shown, 1 s blink, 3 s period) after a 133 ms pop-in.
+    // CoinOverlay:draw: 「フリープレイ」 centred at (960,1046), the QR chip (always NG) and, while only
+    // 1P is in, the 2P invite cloud on the right seat, blinking on anim/credit_side (2 s shown, 1 s
+    // blink, 3 s period) after a 133 ms pop-in. Each screen shows its own subset (coin_overlay.lua):
+    // Entry all three, song select the chip and the cloud, result the credit line only.
     public sealed class CoinOverlayView
     {
         const float BubbleWidth = 416, SeatX = 1700, PlayerY = 749, MessageY = 802;
@@ -110,17 +113,26 @@ namespace OurTaiko
 
         public float BubbleAlpha { get; private set; }
         public TMP_Text FreePlay { get; }
+        public Image QrChip { get; }
+        public bool HasInvite => bubble != null;
 
-        public CoinOverlayView(Transform parent, ArcadeOverlayArt art, TMP_FontAsset font, Material outline)
+        public CoinOverlayView(Transform parent, ArcadeOverlayArt art, TMP_FontAsset font, Material outline,
+            bool freePlay = true, bool qrChip = true, bool invite = true)
         {
             clip = art.creditSideTimeline != null ? LumenClip.Parse(art.creditSideTimeline.text) : LumenClip.Empty;
             var root = SkinUi.Rect("CoinOverlay", parent);
-            // credit: size 40, white with a black border (OutlinedText 3 x 1.5 = 4.5 px)
-            var freePlay = Text(root, "FreePlay", font, outline, "フリープレイ");
-            freePlay.rectTransform.Center(960, 1046);
-            FreePlay = freePlay;
-            var qr = SkinUi.Image("QrChip", root, art.qrChip);
-            qr.rectTransform.TopLeft(1570, 38);
+            if (freePlay)
+            {
+                // credit: size 40, white with a black border (OutlinedText 3 x 1.5 = 4.5 px)
+                FreePlay = Text(root, "FreePlay", font, outline, "フリープレイ");
+                FreePlay.rectTransform.Center(960, 1046);
+            }
+            if (qrChip)
+            {
+                QrChip = SkinUi.Image("QrChip", root, art.qrChip);
+                QrChip.rectTransform.TopLeft(1570, 38);
+            }
+            if (!invite) return;
             bubble = SkinUi.Image("InviteBubble", root, art.inviteBubble);
             bubble.rectTransform.TopLeft(1492, 638);
             player = Text(root, "InvitePlayer", font, outline, "2人プレイ");
@@ -143,6 +155,7 @@ namespace OurTaiko
 
         public void ShowInvite(bool visible, double elapsedMs)
         {
+            if (bubble == null) return;
             double f = elapsedMs * 0.06;
             float pop = (float)Math.Min(1, Math.Max(0, f / 8));
             double length = Math.Max(1, clip.Last - clip.First + 1);

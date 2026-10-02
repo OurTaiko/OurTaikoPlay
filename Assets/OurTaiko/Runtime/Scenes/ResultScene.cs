@@ -13,6 +13,7 @@ namespace OurTaiko
         public Material outlineMaterial;
         public RectTransform stage;
         public NameplateView nameplatePrefab;
+        public ArcadeOverlayArt overlay;
 
         [Header("Background")]
         public Sprite sky;
@@ -66,6 +67,7 @@ namespace OurTaiko
         public PlayResult Result { get; private set; }
         public ResultSequence Sequence { get; private set; }
         public bool IsLeaving { get; private set; }
+        public CoinOverlayView Coins { get; private set; }
 
         SceneSwitcher switcher;
         LumenClip bgClip, successClip, crownClip, crownLoop, messageClip, judgePop, scorePop, fireClip, rainbowClip, highScoreClip;
@@ -477,6 +479,8 @@ namespace OurTaiko
             }
 
             fadeIn = new ResultBackground(stage, "FadeIn", this, bgClip, Clip(fujiTimeline));
+            // ResultScreen::draw_overlay: coin_overlay's credit line (result shows no chip or invite), over the wipe.
+            if (overlay != null) Coins = new CoinOverlayView(stage, overlay, font, outlineMaterial, qrChip: false, invite: false);
             var touch = SkinUi.Image("TouchArea", stage, null, 1920, 1080);
             touch.rectTransform.TopLeft(0, 0);
             touch.color = Color.clear;
