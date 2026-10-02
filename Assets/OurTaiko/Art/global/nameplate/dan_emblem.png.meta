@@ -1,0 +1,793 @@
+fileFormatVersion: 2
+guid: 78cb1768b83e54ecc99fc2003fd29619
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -9043200544032575642
+    second: dan_emblem_0
+  - first:
+      213: 6316327302671234694
+    second: dan_emblem_1
+  - first:
+      213: -759193605134420632
+    second: dan_emblem_2
+  - first:
+      213: 3957957507119046269
+    second: dan_emblem_3
+  - first:
+      213: 1440352786179305392
+    second: dan_emblem_4
+  - first:
+      213: 9091683085731293473
+    second: dan_emblem_5
+  - first:
+      213: 1184801341464235538
+    second: dan_emblem_6
+  - first:
+      213: 1136230217216379386
+    second: dan_emblem_7
+  - first:
+      213: -266757434570632729
+    second: dan_emblem_8
+  - first:
+      213: -2941145935905729561
+    second: dan_emblem_9
+  - first:
+      213: 8968289079035606541
+    second: dan_emblem_10
+  - first:
+      213: 5066941377493490186
+    second: dan_emblem_11
+  - first:
+      213: -4577438258394877109
+    second: dan_emblem_12
+  - first:
+      213: 430985570702548142
+    second: dan_emblem_13
+  - first:
+      213: 5126878748556226970
+    second: dan_emblem_14
+  - first:
+      213: 7413886895490038531
+    second: dan_emblem_15
+  - first:
+      213: 2533364830067947720
+    second: dan_emblem_16
+  - first:
+      213: -3365094321313282813
+    second: dan_emblem_17
+  - first:
+      213: 7774316417168024611
+    second: dan_emblem_18
+  - first:
+      213: 584185727644323371
+    second: dan_emblem_19
+  - first:
+      213: 5383836781778602709
+    second: dan_emblem_20
+  - first:
+      213: 2360995552737220757
+    second: dan_emblem_21
+  - first:
+      213: 8850126184270421710
+    second: dan_emblem_22
+  - first:
+      213: -9084209734562568544
+    second: dan_emblem_23
+  - first:
+      213: -6229479276481865914
+    second: dan_emblem_24
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: dan_emblem_0
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66fa154a409108280800000000000000
+      internalID: -9043200544032575642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_1
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 686f1d8673a18a750800000000000000
+      internalID: 6316327302671234694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_2
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 865f632407dc675f0800000000000000
+      internalID: -759193605134420632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_3
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d7edbefe16d7de630800000000000000
+      internalID: 3957957507119046269
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_4
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0bf267b4a392df310800000000000000
+      internalID: 1440352786179305392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_5
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 129e07fb8952c2e70800000000000000
+      internalID: 9091683085731293473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_6
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21ec16fea82417010800000000000000
+      internalID: 1184801341464235538
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_7
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af94f30dc53b4cf00800000000000000
+      internalID: 1136230217216379386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_8
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e1193fc6894c4cf0800000000000000
+      internalID: -266757434570632729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_9
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e351c9aa53fe27d0800000000000000
+      internalID: -2941145935905729561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_10
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d06beeeb663c57c70800000000000000
+      internalID: 8968289079035606541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_11
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0a5a374654615640800000000000000
+      internalID: 5066941377493490186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_12
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b433713082ca970c0800000000000000
+      internalID: -4577438258394877109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_13
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eac5b05d71b2bf500800000000000000
+      internalID: 430985570702548142
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_14
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a917136fe05562740800000000000000
+      internalID: 5126878748556226970
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_15
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30b7b9ad9da63e660800000000000000
+      internalID: 7413886895490038531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_16
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c8faaef3e1582320800000000000000
+      internalID: 2533364830067947720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_17
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30500763b88cc41d0800000000000000
+      internalID: -3365094321313282813
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_18
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 324a9c0679be3eb60800000000000000
+      internalID: 7774316417168024611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_19
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2ec71bf2d17b1800800000000000000
+      internalID: 584185727644323371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_20
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5da889a370b37ba40800000000000000
+      internalID: 5383836781778602709
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_21
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 598dd2532f0f3c020800000000000000
+      internalID: 2360995552737220757
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_22
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ece52d6efd6f1da70800000000000000
+      internalID: 8850126184270421710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_23
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a6a04a60676ee180800000000000000
+      internalID: -9084209734562568544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_24
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64714ad6a917c89a0800000000000000
+      internalID: -6229479276481865914
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      dan_emblem_0: -9043200544032575642
+      dan_emblem_1: 6316327302671234694
+      dan_emblem_10: 8968289079035606541
+      dan_emblem_11: 5066941377493490186
+      dan_emblem_12: -4577438258394877109
+      dan_emblem_13: 430985570702548142
+      dan_emblem_14: 5126878748556226970
+      dan_emblem_15: 7413886895490038531
+      dan_emblem_16: 2533364830067947720
+      dan_emblem_17: -3365094321313282813
+      dan_emblem_18: 7774316417168024611
+      dan_emblem_19: 584185727644323371
+      dan_emblem_2: -759193605134420632
+      dan_emblem_20: 5383836781778602709
+      dan_emblem_21: 2360995552737220757
+      dan_emblem_22: 8850126184270421710
+      dan_emblem_23: -9084209734562568544
+      dan_emblem_24: -6229479276481865914
+      dan_emblem_3: 3957957507119046269
+      dan_emblem_4: 1440352786179305392
+      dan_emblem_5: 9091683085731293473
+      dan_emblem_6: 1184801341464235538
+      dan_emblem_7: 1136230217216379386
+      dan_emblem_8: -266757434570632729
+      dan_emblem_9: -2941145935905729561
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

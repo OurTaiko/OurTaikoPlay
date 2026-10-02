@@ -1915,6 +1915,7 @@ MonoBehaviour:
   font: {fileID: 11400000, guid: bf8ba7e7b67d649e1a2e8df317e2c790, type: 2}
   outlineMaterial: {fileID: 2100000, guid: d06366539273a4c99895233cd4046f95, type: 2}
   stage: {fileID: 1173993240}
+  nameplatePrefab: {fileID: 2523230160004936926, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
   sky: {fileID: 21300000, guid: e7dd23d36c41c4e99989877f384137a2, type: 3}
   skyClear: {fileID: 21300000, guid: aa905751352574036876c5f47a796272, type: 3}
   fuji: {fileID: 21300000, guid: 248751f83f45b4aad9cc79c9cf4f8ddb, type: 3}

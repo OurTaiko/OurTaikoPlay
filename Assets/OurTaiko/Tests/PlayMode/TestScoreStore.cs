@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace OurTaiko.Tests
 {
-    // Keeps every PlayMode test away from the player's real scores.json and options.json.
+    // Keeps every PlayMode test away from the player's real scores.json, options.json and player.json.
     [SetUpFixture]
     public sealed class TestScoreStore
     {
@@ -17,6 +17,7 @@ namespace OurTaiko.Tests
             if (File.Exists(path)) File.Delete(path);
             ScoreStore.Shared = new ScoreStore(path);
             PlayOptions.Shared = new PlayOptions();
+            PlayerInfoController.EnsureInstance().UseUnsaved(new PlayerInfo());
         }
 
         [OneTimeTearDown]

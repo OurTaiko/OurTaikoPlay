@@ -55,8 +55,8 @@ namespace OurTaiko
             gameObject.SetActive(true);
             // Setting the outline gives each text its own material instance at runtime.
             title.outlineColor = subtitle.outlineColor = new Color32(0, 0, 0, 255);
-            Outline(title, titleOutline);
-            Outline(subtitle, subtitleOutline);
+            title.OutlineOutside(titleOutline);
+            subtitle.OutlineOutside(subtitleOutline);
             title.text = pendingTitle;
             subtitle.text = pendingSubtitle;
             // The arcade EditText boxes span the whole 1920-px stage.
@@ -150,15 +150,6 @@ namespace OurTaiko
             // draw_song_info: title / subtitle over everything, centred at skin y - rainbow_up.
             title.alpha = subtitle.alpha = Visible(info);
             title.enabled = subtitle.enabled = info > 0.002f;
-        }
-
-        // TMP centres its outline on the glyph edge; dilating the face by the same width puts the
-        // whole border outside the ink, as OutlinedText draws it.
-        static void Outline(TMP_Text text, float width)
-        {
-            text.outlineWidth = width;
-            text.fontMaterial.SetFloat(ShaderUtilities.ID_FaceDilate, width);
-            text.UpdateMeshPadding();
         }
 
         static float Visible(double alpha) => alpha > 0.002 ? (float)alpha : 0;

@@ -6,7 +6,8 @@ namespace OurTaiko
 {
     // Player::draw_modifiers with Nijiiro's mod_badge_grid (x 170, y 77, 44 x 44 cells, 3 columns),
     // in cabinet order: speed, doron, abekobe, random. Rows use whole-number slot / 3; the original's
-    // float division slid the second and third badges down.
+    // float division slid the second and third badges down. Autoplay adds the song select's mod_auto
+    // badge first (modifier.cpp lists auto first) instead of replacing the nameplate with auto_icon.
     [RequireComponent(typeof(RectTransform))]
     public sealed class ModifierBadgeView : MonoBehaviour
     {
@@ -15,15 +16,16 @@ namespace OurTaiko
 
         [Tooltip("mod_speed_x1_1 .. mod_speed_x4, in PlayOptions.SpeedBadgeValues order.")]
         public Sprite[] speed;
-        public Sprite doron, abekobe, kimagure, detarame;
+        public Sprite auto, doron, abekobe, kimagure, detarame;
 
         readonly List<Image> badges = new List<Image>();
 
         public int Count { get; private set; }
 
-        public void Show(PlayOptions options)
+        public void Show(PlayOptions options, bool autoPlay)
         {
             var sprites = new List<Sprite>();
+            if (autoPlay) sprites.Add(auto);
             int badge = PlayOptions.SpeedBadge(options.speed);
             if (badge >= 0 && speed != null && badge < speed.Length) sprites.Add(speed[badge]);
             if (options.display) sprites.Add(doron);

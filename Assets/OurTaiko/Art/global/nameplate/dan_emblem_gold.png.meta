@@ -1,0 +1,793 @@
+fileFormatVersion: 2
+guid: 9d6fb56d439634a878e305e17a571b59
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2309869499711464648
+    second: dan_emblem_gold_0
+  - first:
+      213: 245635705881396831
+    second: dan_emblem_gold_1
+  - first:
+      213: 4391536172864920269
+    second: dan_emblem_gold_2
+  - first:
+      213: -1121426057103336256
+    second: dan_emblem_gold_3
+  - first:
+      213: 5682078435441044668
+    second: dan_emblem_gold_4
+  - first:
+      213: 4380185129658138396
+    second: dan_emblem_gold_5
+  - first:
+      213: -7146957620156814182
+    second: dan_emblem_gold_6
+  - first:
+      213: 6196906226732357703
+    second: dan_emblem_gold_7
+  - first:
+      213: -2770863014165280210
+    second: dan_emblem_gold_8
+  - first:
+      213: -9072745677942657303
+    second: dan_emblem_gold_9
+  - first:
+      213: 858287744661899063
+    second: dan_emblem_gold_10
+  - first:
+      213: 7610676715834195748
+    second: dan_emblem_gold_11
+  - first:
+      213: -3953278687199246820
+    second: dan_emblem_gold_12
+  - first:
+      213: 1267603200419982369
+    second: dan_emblem_gold_13
+  - first:
+      213: -7989870681733300292
+    second: dan_emblem_gold_14
+  - first:
+      213: 8221142437087891450
+    second: dan_emblem_gold_15
+  - first:
+      213: -3222855185319721566
+    second: dan_emblem_gold_16
+  - first:
+      213: 4574068527079634702
+    second: dan_emblem_gold_17
+  - first:
+      213: -1546085052863290151
+    second: dan_emblem_gold_18
+  - first:
+      213: 3371655337566965238
+    second: dan_emblem_gold_19
+  - first:
+      213: 2383404266100698194
+    second: dan_emblem_gold_20
+  - first:
+      213: 5088853539070674851
+    second: dan_emblem_gold_21
+  - first:
+      213: -6320091614385114325
+    second: dan_emblem_gold_22
+  - first:
+      213: 3287801200687411440
+    second: dan_emblem_gold_23
+  - first:
+      213: -3420573665203348547
+    second: dan_emblem_gold_24
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: dan_emblem_gold_0
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c4afcf521e4e0020800000000000000
+      internalID: 2309869499711464648
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_1
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5686318f5ca86300800000000000000
+      internalID: 245635705881396831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_2
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dca54e1c1eed1fc30800000000000000
+      internalID: 4391536172864920269
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_3
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0cc1d7051f4ef60f0800000000000000
+      internalID: -1121426057103336256
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_4
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 162
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbcee5a6b3ccade40800000000000000
+      internalID: 5682078435441044668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_5
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1fb8bf0b2b89cc30800000000000000
+      internalID: 4380185129658138396
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_6
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9c28c129e7e0dc90800000000000000
+      internalID: -7146957620156814182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_7
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 748d9ce6165dff550800000000000000
+      internalID: 6196906226732357703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_8
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2a096fe4caeb89d0800000000000000
+      internalID: -2770863014165280210
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_9
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 122
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ee64c810e1271280800000000000000
+      internalID: -9072745677942657303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_10
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 737c4a7082049eb00800000000000000
+      internalID: 858287744661899063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_11
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42f32a3662e8e9960800000000000000
+      internalID: 7610676715834195748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_12
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c16cd57baf12329c0800000000000000
+      internalID: -3953278687199246820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_13
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12c6e2d056e679110800000000000000
+      internalID: 1267603200419982369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_14
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 82
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbf7af572f64e1190800000000000000
+      internalID: -7989870681733300292
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_15
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aff43823d7d571270800000000000000
+      internalID: 8221142437087891450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_16
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a50e7cc84e1643d0800000000000000
+      internalID: -3222855185319721566
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_17
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e0730e6471b5a7f30800000000000000
+      internalID: 4574068527079634702
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_18
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d4ea8ff5d33b8ae0800000000000000
+      internalID: -1546085052863290151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_19
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 42
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6fd8abc6aa68ace20800000000000000
+      internalID: 3371655337566965238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_20
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25c251d5d8d831120800000000000000
+      internalID: 2383404266100698194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_21
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a70c46f45d3f9640800000000000000
+      internalID: 5088853539070674851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_22
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2376a879268a48a0800000000000000
+      internalID: -6320091614385114325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_23
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f07313c5cd90ad20800000000000000
+      internalID: 3287801200687411440
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dan_emblem_gold_24
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 2
+        width: 65
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbb9f7ddf5ea780d0800000000000000
+      internalID: -3420573665203348547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      dan_emblem_gold_0: 2309869499711464648
+      dan_emblem_gold_1: 245635705881396831
+      dan_emblem_gold_10: 858287744661899063
+      dan_emblem_gold_11: 7610676715834195748
+      dan_emblem_gold_12: -3953278687199246820
+      dan_emblem_gold_13: 1267603200419982369
+      dan_emblem_gold_14: -7989870681733300292
+      dan_emblem_gold_15: 8221142437087891450
+      dan_emblem_gold_16: -3222855185319721566
+      dan_emblem_gold_17: 4574068527079634702
+      dan_emblem_gold_18: -1546085052863290151
+      dan_emblem_gold_19: 3371655337566965238
+      dan_emblem_gold_2: 4391536172864920269
+      dan_emblem_gold_20: 2383404266100698194
+      dan_emblem_gold_21: 5088853539070674851
+      dan_emblem_gold_22: -6320091614385114325
+      dan_emblem_gold_23: 3287801200687411440
+      dan_emblem_gold_24: -3420573665203348547
+      dan_emblem_gold_3: -1121426057103336256
+      dan_emblem_gold_4: 5682078435441044668
+      dan_emblem_gold_5: 4380185129658138396
+      dan_emblem_gold_6: -7146957620156814182
+      dan_emblem_gold_7: 6196906226732357703
+      dan_emblem_gold_8: -2770863014165280210
+      dan_emblem_gold_9: -9072745677942657303
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

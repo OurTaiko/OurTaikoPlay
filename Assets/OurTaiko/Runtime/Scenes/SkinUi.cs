@@ -65,6 +65,15 @@ namespace OurTaiko
             return text;
         }
 
+        // TMP centres its outline on the glyph edge; dilating the face by the same width puts the
+        // whole border outside the ink, as OutlinedText draws it. Gives the text its own material.
+        public static void OutlineOutside(this TMP_Text text, float width)
+        {
+            text.outlineWidth = width;
+            text.fontMaterial.SetFloat(ShaderUtilities.ID_FaceDilate, width);
+            text.UpdateMeshPadding();
+        }
+
         // Arcade EditText boxes squeeze long text horizontally down to the box width.
         public static void Squeeze(this TMP_Text text, float maxWidth, float minScale = 0)
         {

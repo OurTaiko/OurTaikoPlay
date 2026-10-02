@@ -2224,6 +2224,7 @@ MonoBehaviour:
     cursorTimeline: {fileID: 4900000, guid: a1deec41bca4f401887f489f3c68491b, type: 3}
     hitSounds: {fileID: 11400000, guid: 5515db8dbe20b4e3796637e25e79846f, type: 2}
     voice: {fileID: 8300000, guid: 24020f35116964aa4906e25c8b2d3e40, type: 3}
+  nameplatePrefab: {fileID: 2523230160004936926, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
   songBoardTimeline: {fileID: 4900000, guid: c2b072dcaa7b74689b9e1e3ffea67725, type: 3}
   cursorGlowTimeline: {fileID: 4900000, guid: ce77919eecadb4e74bcafe5850f3539e, type: 3}
   uraLoopTimeline: {fileID: 4900000, guid: 381c5f6ec81844d40b47d4cb9b206cda, type: 3}

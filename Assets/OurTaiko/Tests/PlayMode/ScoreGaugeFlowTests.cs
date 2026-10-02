@@ -38,14 +38,14 @@ namespace OurTaiko.Tests
                 Assert.That(session.GaugePoints, Is.EqualTo(6000));
                 Assert.That(session.IsClear && play.soulGauge.IsClear, Is.True);
                 Assert.That(play.soulGauge.FilledCells, Is.EqualTo(30));
-                Assert.That(play.score.text, Is.EqualTo("0360000"));
+                Assert.That(play.scoreCounter.Text, Is.EqualTo("360000"));
                 play.soulGauge.ShowTime(play.SongTime + 0.225);
                 Assert.That(play.soulGauge.cellFade.enabled, Is.True);
                 Assert.That(play.soulGauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001));
 
                 session.Hit(false, 18.1); session.Hit(false, 18.1);
                 Assert.That(session.Score, Is.EqualTo(360200));
-                Assert.That(play.score.text, Is.EqualTo("0360200"));
+                Assert.That(play.scoreCounter.Text, Is.EqualTo("360200"));
                 Assert.That(session.GaugePoints, Is.EqualTo(6000));
                 Assert.That(play.soulGauge.cellFade.enabled, Is.True);
                 Assert.That(play.soulGauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001), "A balloon pop must not restart or cancel the cell fade.");
@@ -58,7 +58,7 @@ namespace OurTaiko.Tests
                 Assert.That(session.GaugePoints, Is.EqualTo(10000));
                 Assert.That(play.soulGauge.FilledCells, Is.EqualTo(50));
                 Assert.That(play.soulGauge.IsFull, Is.True);
-                Assert.That(play.score.text, Is.EqualTo("0990200"));
+                Assert.That(play.scoreCounter.Text, Is.EqualTo("990200"));
                 play.SendMessage("Finish");
                 Assert.That(play.IsFinished && !play.resultPanel.activeSelf, Is.True);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
@@ -75,7 +75,7 @@ namespace OurTaiko.Tests
                 var restarted = Object.FindFirstObjectByType<PlayScene>();
                 Assert.That(restarted.Session.Score, Is.Zero);
                 Assert.That(restarted.Session.GaugePoints, Is.Zero);
-                Assert.That(restarted.score.text, Is.EqualTo("0000000"));
+                Assert.That(restarted.scoreCounter.Text, Is.EqualTo("0"));
                 Assert.That(restarted.soulGauge.FilledCells, Is.Zero);
                 Assert.That(restarted.soulGauge.IsClear, Is.False);
                 restarted.Back();

@@ -37,6 +37,9 @@ namespace OurTaiko
         [Header("Play options")]
         public OptionPanelArt optionArt;
 
+        [Header("Player")]
+        public NameplateView nameplatePrefab;
+
         [Header("Timelines")]
         public TextAsset songBoardTimeline, cursorGlowTimeline, uraLoopTimeline;
 
@@ -124,6 +127,7 @@ namespace OurTaiko
             Focused = remembered >= 0 ? remembered : 0;
             currentGenre = previousGenre = FocusedSong.genre;
             BuildCoursePanel();
+            BuildNameplate();
             // Slice the 90-cell Oni/Ura change sheets up front so the first flip does not hitch.
             UraFrames(ref uraToUraCells, uraChangeToUra);
             UraFrames(ref uraToOniCells, uraChangeToOni);
@@ -647,6 +651,17 @@ namespace OurTaiko
             label.rectTransform.Center(-42, 30);
             if (info.IsBranching) SkinUi.Image("Branch", root, branch, 40, 40).rectTransform.Center(-69, -23);
             board.Plates.Add(plate);
+        }
+
+        // SongSelectPlayer::draw paints the nameplate over the wheel and under the option panel. CoursePanel
+        // holds the cards and the option panel, none of which reach y 908, so the plate goes just below it.
+        void BuildNameplate()
+        {
+            if (nameplatePrefab == null) return;
+            var plate = Instantiate(nameplatePrefab, coursePanel.parent);
+            plate.name = "Nameplate";
+            plate.transform.SetSiblingIndex(coursePanel.GetSiblingIndex());
+            plate.Place(14, 908);
         }
 
         void BuildCoursePanel()

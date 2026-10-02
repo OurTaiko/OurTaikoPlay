@@ -25,7 +25,8 @@ namespace OurTaiko
         public SoulGaugeView soulGauge;
         public NoteArcView noteArcs;
         public UnityEngine.UI.Image[] drumFlashes;
-        public TMP_Text title, subtitle, score, combo, counters, state, rollCounter, resultText;
+        public ScoreCounterView scoreCounter;
+        public TMP_Text title, subtitle, combo, counters, rollCounter, resultText;
         public BranchLaneView branchLane;
         public GameObject pausePanel, resultPanel;
         public UnityEngine.UI.Button pauseButton, restartButton, backButton, resumeButton, resultRestart, resultBack;
@@ -78,7 +79,7 @@ namespace OurTaiko
                 var options = PlayOptions.Shared;
                 var chart = switcher.TakePreparedChart(song, course) ?? PrepareChart(song, course);
                 Session = new PlaySession(chart);
-                if (modifierBadges != null) modifierBadges.Show(options);
+                if (modifierBadges != null) modifierBadges.Show(options, autoPlay);
                 // 音色: hit_sounds/<neiro>/don.ogg and ka.ogg; 無音 leaves both empty.
                 if (hitSounds != null) hitSounds.TryGet(options.neiro, out don, out ka);
                 balloonCounter.ResetDisplay();
@@ -157,7 +158,6 @@ namespace OurTaiko
             hitFlash.color = new Color(1, 0.8f, 0.2f, feedback * 0.8f);
             foreach (var flash in drumFlashes)
                 if (Time.unscaledTime - drumTime > 0.12f) flash.enabled = false;
-            state.text = SongTime < 0 ? $"READY  {Math.Ceiling(-SongTime)}" : autoPlay ? "AUTO PLAY" : "1 PLAYER";
             if (time > Math.Max(Session.Chart.Duration, song.music != null ? song.music.length : 0) + 1) Finish();
         }
 
@@ -225,7 +225,7 @@ namespace OurTaiko
         }
         void UpdateHud()
         {
-            score.text = Session.Score.ToString("D7");
+            scoreCounter.Show(Session.Score);
             combo.text = Session.Combo >= 2 ? $"{Session.Combo}\n<size=30>COMBO</size>" : "";
             counters.text = $"GOOD {Session.Good}     OK {Session.Ok}     BAD {Session.Bad}     ROLL {Session.Rolls}";
         }

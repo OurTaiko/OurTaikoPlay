@@ -6,12 +6,13 @@ using UnityEngine.UI;
 namespace OurTaiko
 {
     // Nijiiro single-player result screen (scenes/result.cpp + Scripts/result/*.lua). The 3D Don,
-    // nameplate, score-rank clip and option icons are not ported.
+    // score-rank clip and option icons are not ported.
     public sealed class ResultScene : MonoBehaviour
     {
         public TMP_FontAsset font;
         public Material outlineMaterial;
         public RectTransform stage;
+        public NameplateView nameplatePrefab;
 
         [Header("Background")]
         public Sprite sky;
@@ -466,6 +467,14 @@ namespace OurTaiko
             fireImage.rectTransform.TopLeft(794, 118);
             soulImage = Gauge("Soul", soulDark, 823, 207);
             sheenImage = Gauge("SoulSheen", soulOverlay, 823, 207);
+
+            // ResultPlayer::draw ends with the nameplate at result_player.lua's nameplate_pos (2, 922).
+            if (nameplatePrefab != null)
+            {
+                var plate = Instantiate(nameplatePrefab, stage);
+                plate.name = "Nameplate";
+                plate.Place(2, 922);
+            }
 
             fadeIn = new ResultBackground(stage, "FadeIn", this, bgClip, Clip(fujiTimeline));
             var touch = SkinUi.Image("TouchArea", stage, null, 1920, 1080);

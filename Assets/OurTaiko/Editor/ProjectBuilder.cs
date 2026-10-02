@@ -166,8 +166,6 @@ namespace OurTaiko.Editor
             controller.don = AssetDatabase.LoadAssetAtPath<AudioClip>(Root + "Audio/don.ogg"); controller.ka = AssetDatabase.LoadAssetAtPath<AudioClip>(Root + "Audio/ka.ogg");
             controller.title = Label(root, "SongTitle", "TRIPLE HELIX", 510, 18, 742, 48, 38, TextAlignmentOptions.Right);
             controller.subtitle = Label(root, "SongSubtitle", "Yonokid", 510, 68, 742, 32, 22, TextAlignmentOptions.Right);
-            Label(root, "PlayerName", "OURTAIKO  /  PLAYER 1", 24, 30, 400, 46, 28, TextAlignmentOptions.Left);
-            controller.state = Label(root, "PlayState", "READY", 24, 83, 290, 38, 25, TextAlignmentOptions.Left);
             var gauge = Rect("SoulGauge", root, 0, 184, 1280, 80);
             Picture(gauge, "Border", "game/gauge/border_hard", 327, -52);
             Picture(gauge, "Empty", "game/gauge/1p_unfilled_hard", 483, -60);
@@ -192,7 +190,6 @@ namespace OurTaiko.Editor
             string[] drumNames = { "drum_don_l", "drum_don_r", "drum_kat_l", "drum_kat_r" };
             controller.drumFlashes = drumNames.Select(n => Picture(lane, n, "game/lane/" + n, 211, 22)).ToArray();
             foreach (var flash in controller.drumFlashes) flash.enabled = false;
-            controller.score = Label(lane, "Score", "0000000", 7, 137, 195, 36, 29);
             controller.combo = Label(lane, "Combo", "", 143, 22, 64, 96, 31);
             controller.hitFlash = Picture(lane, "HitFlash", "game/hit_effect/hit_effect_good", 342, 0); controller.hitFlash.color = Color.clear;
             controller.judgmentSprites = new[] { Sprite("game/hit_effect/judge_good"), Sprite("game/hit_effect/judge_ok"), Sprite("game/hit_effect/judge_bad") };

@@ -143,6 +143,7 @@ namespace OurTaiko.Editor
             var controller = new GameObject("SongSelect").AddComponent<SongSelectScene>();
             controller.songs = songs;
             controller.font = font;
+            controller.nameplatePrefab = AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);
             var background = Rect("Background", root, 0, 0, 1920, 1080);
             controller.backgroundTiles = new UnityEngine.UI.Image[4];
             for (int i = 0; i < 4; i++)
@@ -201,6 +202,7 @@ namespace OurTaiko.Editor
             var root = NewStage();
             var controller = new GameObject("Result").AddComponent<ResultScene>();
             controller.font = font;
+            controller.nameplatePrefab = AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);
             var stage = Rect("Stage", root, 0, 0, 1920, 1080);
             controller.stage = stage;
             AddStageFps(root);

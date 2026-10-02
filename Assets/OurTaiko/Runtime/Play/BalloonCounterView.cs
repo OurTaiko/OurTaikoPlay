@@ -79,9 +79,7 @@ namespace OurTaiko
             }
             visuals.alpha = IsPopped ? 1 - (float)(elapsed / PopFadeSeconds) : 1;
             // TextStretchAnimation, id 6: 50ms rise, then 116ms of stepped return.
-            double ms = elapsed * 1000;
-            float stretch = ms <= 50 ? 2 + 5 * ((int)ms / 25f)
-                : ms <= 166 ? 12 - 2 * ((int)((ms - 50) / 16.57) + 1) : 0;
+            float stretch = TextStretch.Pixels(elapsed * 1000);
             for (int i = 0; i < digitCount; i++)
             {
                 var rect = digits[i].rectTransform;
