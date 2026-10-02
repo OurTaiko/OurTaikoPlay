@@ -351,6 +351,16 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 弹动：连击变化时重新开始 TextStretch（id 5，与分数计数器相同的 50 ms），数字向上伸长，真实时间。
 - 闪光：`ComboGlimmer.anim`（500 ms 循环，歌曲时钟），三行 `gleam`，第 j 行提前 (2/3)×500×j ms；每行前 250 ms 每 16.67 ms 上升 1 px（取整），86 ms 后线性淡出至 250 ms，其余时间隐藏。位置取 PyTaikoGreen（Nijiiro 的父皮肤）`combo_glimmer_1–3` ×1.5 加 `gleam` y −276；每行固定 3 个、间隔 52，与位数无关（同原代码）。
 - 场景结构 `NoteLane/Combo`（`ComboView`）：`Caption`、`Digits`（数字行，运行时只换 sprite 与排版，位数多时追加）、`Glimmer/Row0–2/Rise/Gleam0–2`（剪辑只写 `Rise` 的 y 与 CanvasGroup 透明度，Row 位置可在场景中调整）。编辑态保存金色「123」预览，开始游玩时隐藏。迁移入口 `ProjectBuilder.ApplyCombo()`（菜单 OurTaiko/Apply Nijiiro Combo），已有 `ComboView` 时只刷新 sprite 与剪辑、保留布局。
-- 未移植：连击语音与 `combo_announce`（每 100 连击的提示框）。
+- 每 100 连击提示（`combo_announce.cpp`＋Nijiiro `Scripts/game/combo_announce.lua`）：已移植，见下文「连击提示与语音」。
 
 验证：EditMode `AnimationClipTests` 21/21（含 `ComboGlimmerRowsRiseAndFadeOnTheirOwnPhase`）；PlayMode `ComboFlowTests` 1/1、`ScoreGaugeFlowTests` 1/1、`NameplateFlowTests` 3/3；截图 `TestResults/Combo10.png`、`Combo50.png`、`Combo101.png`。
+
+### 连击提示与语音（2026-10-02）
+
+- 触发：连击数变为 100 的正整数倍时（`Player::check_note`，只有普通音符增加连击），新提示取代旧的；重开时随场景重置。
+- 画面：`announce_bg_1p` 卷轴 (362,−264)、`announce_digit_1p`（10 个 104×104 竖排，切片 `ComboAnnounce0–9`）在 y −196、`announce_text`（コンボ!）在 y −137，坐标相对轨道顶边。排版照搬 Nijiiro lua 的 `layout()`：≤3 位间距 64、原宽；4 位缩至 0.85、间距 54；更多位按 4/n 再缩；コンボ! 随之横向压缩并右移。Nijiiro 使用 lua 版绘制，不走引擎的百位／千位 `announce_number`／`announce_add` 合成，这两张图未导入。
+- 层级：原版先画魂槽，再在 `draw_overlays` 中画提示，因此 `ComboAnnounce` 放在 Viewport 中 `GaugeHitEffect` 之后，RectTransform 与 `NoteLane` 相同（子物体使用轨道坐标）。场景结构 `ComboAnnounce`（`ComboAnnounceView`，CanvasGroup）/`Background`、`Number`/`Digit0–n`、`Text`；位置可在场景中调整，数字与コンボ! 的相对排版由代码按位数计算。编辑态保存「300」预览，开始游玩时隐藏。
+- 时间：`ComboAnnounce.anim`（歌曲时钟，暂停冻结）CanvasGroup 透明度 100 ms 淡入（动画 65）、保持到 1666.67 ms、100 ms 淡出，1766.67 ms 后隐藏。
+- 语音：Nijiiro `Sounds/game/combo/<n>_1p.ogg`（100–5000，每 100 一个，共 50 个）复制到 `Assets/OurTaiko/Audio/combo/`，提示出现时由 `hitAudio.PlayOneShot` 播放一次；超过 5000 没有语音（原版 `has_sound` 失败时不播放）。`50_1p.ogg` 原版从不播放（提示只在 100 的倍数出现），未导入；2P 语音未导入。
+- 迁移入口 `ProjectBuilder.ApplyComboAnnounce()`（菜单 OurTaiko/Apply Nijiiro Combo Announce），已有 `ComboAnnounceView` 时只刷新 sprite、语音与剪辑。
+- 验证：`ComboFlowTests` 1/1（9 隐藏、10 白、50 银、100 提示出现且透明度 0.5／1／0.5 并在 1.8 s 后隐藏、200 取代并显示 2/0/0、101 金色、漏音隐藏连击）；`ScoreGaugeFlowTests` 1/1、`NameplateFlowTests` 3/3、`PauseMenuFlowTests` 5/5；截图 `TestResults/ComboAnnounce100.png`。

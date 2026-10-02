@@ -35,7 +35,7 @@
 
 #### 最新完成：游玩连击数（2026-10-02）
 
-`NoteLane/Combo`（`Play/ComboView.cs`）改用 Nijiiro `game/combo` 贴图，居中于鼓面：连击 < 10 隐藏（**用户决定**，即 Nijiiro `combo_min`；OurTaikoPlayer 代码写死 3，不要还原），10–49 白、50–99 银、≥100 金（`combo_100_ja`＋`ComboGlimmer.anim` 闪光）。层级保存在场景中可编辑；迁移 `ProjectBuilder.ApplyCombo()`。测试 `ComboFlowTests`（进行中 PlayMode）与 `AnimationClipTests.ComboGlimmerRowsRiseAndFadeOnTheirOwnPhase`。详见 `PortingNotes.md`「游玩连击数」。未移植 `combo_announce` 与连击语音。
+`NoteLane/Combo`（`Play/ComboView.cs`）改用 Nijiiro `game/combo` 贴图，居中于鼓面：连击 < 10 隐藏（**用户决定**，即 Nijiiro `combo_min`；OurTaikoPlayer 代码写死 3，不要还原），10–49 白、50–99 银、≥100 金（`combo_100_ja`＋`ComboGlimmer.anim` 闪光）。层级保存在场景中可编辑；迁移 `ProjectBuilder.ApplyCombo()`。测试 `ComboFlowTests`（进行中 PlayMode）与 `AnimationClipTests.ComboGlimmerRowsRiseAndFadeOnTheirOwnPhase`。详见 `PortingNotes.md`「游玩连击数」。每 100 连击的卷轴提示（`Play/ComboAnnounceView.cs`，Viewport 中 `GaugeHitEffect` 之后，`ComboAnnounce.anim` 淡入淡出）与 1P 连击语音 100–5000（`Audio/combo`）已移植，迁移 `ProjectBuilder.ApplyComboAnnounce()`，见 `PortingNotes.md`「连击提示与语音」。
 
 #### 此前完成：SongSelect 界面持久化（2026-10-02）
 

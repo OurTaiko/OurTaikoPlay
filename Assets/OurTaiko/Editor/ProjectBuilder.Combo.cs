@@ -90,11 +90,67 @@ namespace OurTaiko.Editor
             EditorUtility.SetDirty(view);
         }
 
+        // Adds ComboAnnounce over the soul gauge: Player::draw paints the gauge first and the announce
+        // in draw_overlays, so it sits on the viewport after GaugeHitEffect, aligned with NoteLane. An
+        // existing view keeps its saved layout; only its sprites, voices and clip are refreshed.
+        [MenuItem("OurTaiko/Apply Nijiiro Combo Announce")]
+        public static void ApplyComboAnnounce() => EditPlayScene(play =>
+        {
+            var lane = (RectTransform)play.combo.transform.parent;
+            var viewport = lane.parent;
+            var existing = viewport.Find("ComboAnnounce");
+            var view = existing != null ? existing.GetComponent<ComboAnnounceView>() : null;
+            if (view == null)
+            {
+                if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
+                view = BuildComboAnnounce(lane);
+            }
+            view.transform.SetSiblingIndex(play.noteArcs.transform.parent.Find("GaugeHitEffect").GetSiblingIndex() + 1);
+            AssignComboAnnounceArt(view);
+            play.comboAnnounce = view;
+        });
+
+        static ComboAnnounceView BuildComboAnnounce(RectTransform lane)
+        {
+            var root = Rect("ComboAnnounce", lane.parent, 0, 0, 0, 0);
+            root.anchorMin = lane.anchorMin; root.anchorMax = lane.anchorMax; root.pivot = lane.pivot;
+            root.anchoredPosition = lane.anchoredPosition; root.sizeDelta = lane.sizeDelta;
+            root.gameObject.AddComponent<CanvasGroup>().blocksRaycasts = false;
+            var view = root.gameObject.AddComponent<ComboAnnounceView>();
+            AssignComboAnnounceArt(view);
+            // texture.json, relative to the lane's top: announce_bg_1p (362, -264), announce_digit_1p
+            // (362, -196), announce_text at the same x 362.
+            SkinUi.Image("Background", root, Sprite(ComboArt + "announce_bg_1p")).rectTransform.TopLeft(362, -264);
+            view.number = Rect("Number", root, 362, -196, 0, 0);
+            view.text = SkinUi.Image("Text", view.number, Sprite(ComboArt + "announce_text"));
+            // A 300 previews the scroll in the editor; play hides it until the 100th combo.
+            view.Layout("300");
+            return view;
+        }
+
+        static void AssignComboAnnounceArt(ComboAnnounceView view)
+        {
+            ImportComboArt();
+            // announce_digit_1p: ten 104x104 digits stacked vertically.
+            view.digits = SliceSheet(ComboArt + "announce_digit_1p",
+                Enumerable.Range(0, 10).Select(i => ("ComboAnnounce" + i, 0, i * 104, 104, 104)).ToArray());
+            view.voices = Enumerable.Range(1, 50)
+                .Select(i => AssetDatabase.LoadAssetAtPath<AudioClip>($"{Root}Audio/combo/{i * 100}_1p.ogg") ?? throw new System.IO.FileNotFoundException($"combo voice {i * 100}"))
+                .ToArray();
+            AttachClip(view.gameObject, ComboAnnounceClip());
+            EditorUtility.SetDirty(view);
+        }
+
+        // ComboAnnounce: fade (animation 65, 100 ms) in, hold until 1666.67 ms, fade out over 100 ms.
+        static AnimationClip ComboAnnounceClip() => SaveClip("ComboAnnounce", 60, false, clip =>
+            LinearCurve(clip, "", typeof(CanvasGroup), "m_Alpha", (0, 0), (0.1f, 1), (1.66667f, 1), (1.76667f, 0)));
+
         // Unity's default import auto-slices new PNGs into trimmed sprites; the combo art starts as whole
         // Single sprites (the counters are then cut by SliceSheet, which keeps its own cuts on reruns).
         static void ImportComboArt()
         {
-            foreach (string name in new[] { "counter", "counter_100", "counter_gold", "combo_ja", "combo_100_ja", "gleam" })
+            foreach (string name in new[] { "counter", "counter_100", "counter_gold", "combo_ja", "combo_100_ja", "gleam",
+                "announce_bg_1p", "announce_digit_1p", "announce_text" })
             {
                 string path = Root + "Art/" + ComboArt + name + ".png";
                 var importer = (TextureImporter)AssetImporter.GetAtPath(path);

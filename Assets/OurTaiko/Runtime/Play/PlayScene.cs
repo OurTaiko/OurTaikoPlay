@@ -30,6 +30,7 @@ namespace OurTaiko
         public UnityEngine.UI.Image[] drumFlashes;
         public ScoreCounterView scoreCounter;
         public ComboView combo;
+        public ComboAnnounceView comboAnnounce;
         public TMP_Text title, subtitle, counters, rollCounter, resultText;
         public BranchLaneView branchLane;
         public GameObject pausePanel, resultPanel;
@@ -67,6 +68,7 @@ namespace OurTaiko
         bool closingPauseMenu;
         bool resuming, resumeLostFocus;
         int resumeFrame = -1;
+        int lastCombo;
         int pauseOpenedFrame = -1;
 
         // Pool keys: the child objects a note or its text needs.
@@ -98,7 +100,7 @@ namespace OurTaiko
             backButton.onClick.AddListener(Back);
             resultRestart.onClick.AddListener(Restart);
             resultBack.onClick.AddListener(Back);
-            pausePanel.SetActive(false); resultPanel.SetActive(false); combo.gameObject.SetActive(false);
+            pausePanel.SetActive(false); resultPanel.SetActive(false); combo.gameObject.SetActive(false); comboAnnounce.Hide();
             try
             {
                 // SongLoadingScene parsed the chart behind the curtain; restarts and direct runs parse here.
@@ -183,6 +185,7 @@ namespace OurTaiko
             if (noteArcs != null) noteArcs.ShowTime(time);
             foreach (var dancer in dancers) dancer.SampleLoop(time);
             combo.ShowTime(time);
+            comboAnnounce.ShowTime(time);
             judgmentFade ??= judgment.GetComponent<ClipSampler>();
             judgmentFade.Sample(Math.Min(Time.unscaledTime - feedbackTime, judgmentFade.clip.length));
             hitFace.ShowTime(time);
@@ -270,6 +273,13 @@ namespace OurTaiko
         {
             scoreCounter.Show(Session.Score);
             combo.Show(Session.Combo);
+            // Player::check_note: each 100th combo starts a ComboAnnounce and its voice.
+            if (Session.Combo != lastCombo && Session.Combo > 0 && Session.Combo % 100 == 0)
+            {
+                var voice = comboAnnounce.Announce(Session.Combo, SongTime - song.audioOffsetMs / 1000.0);
+                if (voice != null) hitAudio.PlayOneShot(voice);
+            }
+            lastCombo = Session.Combo;
             counters.text = $"GOOD {Session.Good}     OK {Session.Ok}     BAD {Session.Bad}     ROLL {Session.Rolls}";
         }
         void OnBranchSelected(ChartBranch branch, BranchRoute route)

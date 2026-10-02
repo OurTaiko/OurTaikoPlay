@@ -10,11 +10,11 @@ namespace OurTaiko.Tests
     public sealed class ComboFlowTests
     {
         [UnityTest]
-        public IEnumerator ComboShowsFromTenWithWhiteSilverAndGoldDigitsOnTheDrum()
+        public IEnumerator ComboShowsFromTenWithWhiteSilverAndGoldDigitsAndAnnouncesEachHundred()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:Combo\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#START\n"
-                + string.Concat(Enumerable.Repeat("1111111111111111,\n", 8)) + "#END");
+                + string.Concat(Enumerable.Repeat("1111111111111111,\n", 14)) + "#END");
             try
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -29,6 +29,11 @@ namespace OurTaiko.Tests
                 var combo = play.combo;
                 var lane = combo.transform.parent;
                 Assert.That(combo.gameObject.activeSelf, Is.False, "The saved preview is hidden at start.");
+                var announce = play.comboAnnounce;
+                Assert.That(announce.IsShowing, Is.False, "The saved announce preview is hidden at start.");
+                // Drawn over the soul gauge (draw_overlays), aligned with the lane.
+                Assert.That(announce.transform.GetSiblingIndex(), Is.GreaterThan(play.soulGauge.transform.GetSiblingIndex()));
+                Assert.That(((RectTransform)announce.transform).anchoredPosition, Is.EqualTo(((RectTransform)lane).anchoredPosition));
 
                 // Centred on the drum: combo_ja at (320, 136) and the digit row's centre at x 401.
                 var drum = (RectTransform)lane.Find("Drum");
@@ -65,6 +70,26 @@ namespace OurTaiko.Tests
                 Assert.That(combo.glimmer.gameObject.activeSelf, Is.False);
                 TestCapture.Capture("Combo50.png");
 
+                HitTo(99);
+                Assert.That(announce.IsShowing, Is.False);
+                HitTo(100);
+                Assert.That(announce.IsShowing, Is.True);
+                Assert.That(announce.Combo, Is.EqualTo(100));
+                Assert.That(announce.voices[0].name, Is.EqualTo("100_1p"));
+                Assert.That(announce.voices[49].name, Is.EqualTo("5000_1p"));
+                // ComboAnnounce: 100 ms fade in, hold to 1666.67 ms, 100 ms fade out.
+                double t0 = play.SongTime;
+                var group = announce.GetComponent<CanvasGroup>();
+                foreach (var (dt, alpha) in new[] { (0.05, 0.5f), (1.0, 1f), (1.71667, 0.5f) })
+                {
+                    announce.ShowTime(t0 + dt);
+                    Assert.That(group.alpha, Is.EqualTo(alpha).Within(0.01f), $"{dt} s");
+                }
+                announce.ShowTime(t0 + 0.5);
+                TestCapture.Capture("ComboAnnounce100.png");
+                announce.ShowTime(t0 + 1.8);
+                Assert.That(announce.IsShowing, Is.False, "Gone after 1766.67 ms.");
+
                 HitTo(101);
                 Assert.That(combo.Text, Is.EqualTo("101"));
                 Assert.That(Enumerable.Range(0, 3).Select(i => combo.Digit(i).sprite),
@@ -73,6 +98,11 @@ namespace OurTaiko.Tests
                 Assert.That(combo.glimmer.gameObject.activeSelf, Is.True);
                 combo.ShowTime(0.05);
                 TestCapture.Capture("Combo101.png");
+
+                HitTo(200);
+                Assert.That(announce.IsShowing && announce.Combo == 200, Is.True);
+                Assert.That(announce.number.GetComponentsInChildren<UnityEngine.UI.Image>().Where(i => i != announce.text)
+                    .Select(i => i.sprite), Is.EqualTo(new[] { announce.digits[2], announce.digits[0], announce.digits[0] }));
 
                 // A missed note breaks the combo and hides it again.
                 session.Advance(session.Chart.Notes[hit].Time + 0.5, false);
