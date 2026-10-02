@@ -282,3 +282,9 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 迁移入口 `ProjectBuilder.ApplyGlobalOverlays()`（菜单 OurTaiko/Apply Global Overlays），与 Entry 共用 `OverlayArt()`。重新切片只会改写 Sprite 资源的 `m_RenderDataKey`，属无意义 diff，提交前还原。
 - 字体事故：Entry 移植期间在 Editor 打开时 `git restore` 了动态字体 `Nijiiro SDF.asset`，导致已打开场景的 TMP 文字引用不存在的第 2 页图集并抛 `IndexOutOfRangeException`。已在 Editor 中重新读取字体并刷新所有场景文字；今后只在 Editor 关闭后还原该文件。
 - 验证：PlayMode `GlobalOverlayFlowTests`（选曲层级、无フリープレイ、QR 与邀请云、100／60 占位不倒数且三位数字、结算只有フリープレイ且在 FadeIn 之上），截图 `TestResults/OverlaySongSelect.png`、`OverlayCourseSelect.png`、`OverlayResult.png`；进行中 PlayMode 5/5 通过。
+
+## Entry 计时器改为占位（2026-10-02）
+
+- 用户决定：模拟器不限制玩家时间，Entry 的 60 秒计时器与选曲一样只显示 60，不倒数、不 blip、无 30／10／5 秒语音、不自动选择模式板。上文「Entry 场景」中关于计时器倒数与语音的描述为原版行为记录。
+- 移除 `EntryScene` 的计时器音效字段与 `TimerVoice` 音源（迁移入口 `CreateEntryScene` 会删除已有场景中的该物体），删除已导入的 `Audio/global/timer_blip.ogg`、`voice_timer_30/10/5.ogg` 及其来源记录。`ArcadeTimer.Update` 保留为原版倒数逻辑的记录，EditMode `EntryTests` 仍覆盖。
+- 验证：PlayMode `EntryFlowTests`（加入并进入模式选择后计时器仍为 60）通过。

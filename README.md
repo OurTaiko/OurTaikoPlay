@@ -10,7 +10,7 @@
 
 也可直接打开 `Assets/Scenes/SinglePlayScene.unity` 运行，默认载入 TRIPLE HELIX。
 
-Entry 场景 `Entry.unity` 是游戏入口（Nijiiro 街机投币画面：1P 加入、演奏ゲーム 模式板、60 秒计时器）；决定后进入选曲场景 `SongSelect.unity`，游玩结束后进入结算场景 `Result.unity`，再回到选曲。场景之间的切换全部交给全局 SceneSwitcher。开始游玩时显示 Nijiiro 彩虹幕布：幕布关闭后进入 `SongLoadingScene.unity` 解析谱面并载入歌曲（至少停留 2 秒），再在游玩场景上打开。
+Entry 场景 `Entry.unity` 是游戏入口（Nijiiro 街机投币画面：1P 加入、演奏ゲーム 模式板；计时器只作占位，不倒数）；决定后进入选曲场景 `SongSelect.unity`，游玩结束后进入结算场景 `Result.unity`，再回到选曲。场景之间的切换全部交给全局 SceneSwitcher。开始游玩时显示 Nijiiro 彩虹幕布：幕布关闭后进入 `SongLoadingScene.unity` 解析谱面并载入歌曲（至少停留 2 秒），再在游玩场景上打开。
 
 | 选曲按键 | 功能 |
 | --- | --- |
@@ -71,7 +71,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `SongSelect.unity`、`Runtime/Scenes/SongSelectScene.cs`：纵向曲目板（按 Navigator 的 135 px 行距、±120 px 展开间隔、每行 40 px 斜移）、选中板的 508 ms 等待与 `anim/song_board` 展开／收起、光标光晕脉动、难度小牌与おに／裏交替、试听（从 DEMOSTART 播放，离开后 330 ms 恢复选曲 BGM），以及难度选择面板（课程卡、星级、皇冠、1P 气泡、裏切换动画）。光标规则在 `Runtime/Core/DifficultyCursor.cs`，谱面信息由 `SongInfo.cs` 读取。
 - `Result.unity`、`Runtime/Scenes/ResultScene.cs`、`ResultBackground.cs`：Nijiiro 结算背景（云层按原导出时间轴漂移、过关后切换金色天空与富士山弹动）、成绩板、魂槽 0.7 倍填充、行数字逐行落定、总分、皇冠、评语气泡与最高分条。时间轴在 `Runtime/Core/ResultSequence.cs`，与原 `result_player.lua` 的帧数一致。
 - `Runtime/Core/LumenClip.cs`：读取 `Assets/OurTaiko/Animations/*.txt`（原 `Scripts/anim/*.lua` 导出表的原样副本）并线性采样，只当作数据，不运行 Lua。
-- `Entry.unity`、`Runtime/Scenes/EntryScene.cs`、`EntryViews.cs`、`GlobalOverlays.cs`：Entry 场景与全局街机元素（计时器、操作指引、フリープレイ、状态芯片）；菜单 **OurTaiko/Create Entry Scene**。选曲也显示 QR 芯片、2P 邀请云和计时器（只作占位，不倒数），结算显示フリープレイ；菜单 **OurTaiko/Apply Global Overlays**。
+- `Entry.unity`、`Runtime/Scenes/EntryScene.cs`、`EntryViews.cs`、`GlobalOverlays.cs`：Entry 场景与全局街机元素（计时器、操作指引、フリープレイ、状态芯片）；菜单 **OurTaiko/Create Entry Scene**。选曲也显示 QR 芯片、2P 邀请云和计时器占位，结算显示フリープレイ；菜单 **OurTaiko/Apply Global Overlays**。
 - `Runtime/Core/PlayerInfo.cs`、`Runtime/Scenes/PlayerInfoController.cs`、`NameplateView.cs`、`Generated/Nameplate.prefab`：玩家名牌数据（`player.json`）、全局持有者与 Nijiiro 名牌显示；迁移入口菜单 **OurTaiko/Apply Nijiiro Nameplate**。`Runtime/Play/ScoreCounterView.cs`：游玩分数计数器。
 - `Runtime/Core/PlayResult.cs`、`ScoreStore.cs`：结算数据与本地最佳成绩（`Application.persistentDataPath/scores.json`）。与原 `save_score` 相同，自动演奏不保存；选曲板和难度卡显示保存的皇冠。
 - `Editor/ProjectBuilder.SongSelectResult.cs`：菜单 **OurTaiko/Create Song Select And Result Scenes**，导入新素材、生成切片与描边材质，仅在场景不存在时创建，之后可直接编辑场景。
