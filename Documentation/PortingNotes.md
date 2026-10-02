@@ -341,3 +341,16 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 这次迁移范围是 SongSelect 及其演奏设置面板；Entry／Result 沿用原构建方式。
 
 验证（最终代码与资产）：EditMode `SongSelectSavedAssetTests` 2/2；名称含 SongSelect 的 PlayMode 测试 8/8（含 `SongSelectSavedLayoutTests`），报告 `TestResults/song-select-saved-asset-final-editmode.json`、`TestResults/song-select-flow-final-playmode.json`。连续执行两次 `ApplySongSelectLayout()`，场景与两个 Prefab 的文件不变；编辑态三种预览已离屏渲染检查（`TestResults/SongSelectEditPreview*.png`）。独立播放器未重新构建。
+
+## 游玩连击数（2026-10-02）
+
+照搬 `objects/game/combo.cpp` 与 Nijiiro `game/combo/texture.json`／`skin_config.json`，取代原 TMP 占位文字。素材 `counter`／`counter_100`／`counter_gold`（10 个 64×80 数字，导入设置中切片 `Combo0–9`／`ComboSilver0–9`／`ComboGold0–9`）、`combo_ja`／`combo_100_ja`、`gleam` 原样复制自 Nijiiro。
+
+- 位置（轨道局部，y 向下）：`combo_ja` (320,136)；数字顶边 y 58，行宽 = 位数×52（`combo_margin`），整行以 x 401 为中心（counter x 395 + 64/2 − 52/2），与鼓面中心 x 400 对齐。
+- 显示与档位（用户决定，与 Nijiiro `combo_min`=10 一致；OurTaikoPlayer 代码写死 3）：连击 < 10 隐藏；10–49 白色数字；50–99 银色（`counter_100`，`combo_color_tiers`）；≥100 金色数字＋`combo_100_ja`＋闪光。
+- 弹动：连击变化时重新开始 TextStretch（id 5，与分数计数器相同的 50 ms），数字向上伸长，真实时间。
+- 闪光：`ComboGlimmer.anim`（500 ms 循环，歌曲时钟），三行 `gleam`，第 j 行提前 (2/3)×500×j ms；每行前 250 ms 每 16.67 ms 上升 1 px（取整），86 ms 后线性淡出至 250 ms，其余时间隐藏。位置取 PyTaikoGreen（Nijiiro 的父皮肤）`combo_glimmer_1–3` ×1.5 加 `gleam` y −276；每行固定 3 个、间隔 52，与位数无关（同原代码）。
+- 场景结构 `NoteLane/Combo`（`ComboView`）：`Caption`、`Digits`（数字行，运行时只换 sprite 与排版，位数多时追加）、`Glimmer/Row0–2/Rise/Gleam0–2`（剪辑只写 `Rise` 的 y 与 CanvasGroup 透明度，Row 位置可在场景中调整）。编辑态保存金色「123」预览，开始游玩时隐藏。迁移入口 `ProjectBuilder.ApplyCombo()`（菜单 OurTaiko/Apply Nijiiro Combo），已有 `ComboView` 时只刷新 sprite 与剪辑、保留布局。
+- 未移植：连击语音与 `combo_announce`（每 100 连击的提示框）。
+
+验证：EditMode `AnimationClipTests` 21/21（含 `ComboGlimmerRowsRiseAndFadeOnTheirOwnPhase`）；PlayMode `ComboFlowTests` 1/1、`ScoreGaugeFlowTests` 1/1、`NameplateFlowTests` 3/3；截图 `TestResults/Combo10.png`、`Combo50.png`、`Combo101.png`。

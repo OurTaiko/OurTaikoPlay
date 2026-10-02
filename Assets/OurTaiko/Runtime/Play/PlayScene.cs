@@ -29,7 +29,8 @@ namespace OurTaiko
         [Tooltip("drum_don_l/r, drum_kat_l/r; each plays DrumFlash.anim from its own hit.")]
         public UnityEngine.UI.Image[] drumFlashes;
         public ScoreCounterView scoreCounter;
-        public TMP_Text title, subtitle, combo, counters, rollCounter, resultText;
+        public ComboView combo;
+        public TMP_Text title, subtitle, counters, rollCounter, resultText;
         public BranchLaneView branchLane;
         public GameObject pausePanel, resultPanel;
         public PauseMenuView pauseMenu;
@@ -97,7 +98,7 @@ namespace OurTaiko
             backButton.onClick.AddListener(Back);
             resultRestart.onClick.AddListener(Restart);
             resultBack.onClick.AddListener(Back);
-            pausePanel.SetActive(false); resultPanel.SetActive(false);
+            pausePanel.SetActive(false); resultPanel.SetActive(false); combo.gameObject.SetActive(false);
             try
             {
                 // SongLoadingScene parsed the chart behind the curtain; restarts and direct runs parse here.
@@ -181,6 +182,7 @@ namespace OurTaiko
             soulGauge.ShowTime(time);
             if (noteArcs != null) noteArcs.ShowTime(time);
             foreach (var dancer in dancers) dancer.SampleLoop(time);
+            combo.ShowTime(time);
             judgmentFade ??= judgment.GetComponent<ClipSampler>();
             judgmentFade.Sample(Math.Min(Time.unscaledTime - feedbackTime, judgmentFade.clip.length));
             hitFace.ShowTime(time);
@@ -267,7 +269,7 @@ namespace OurTaiko
         void UpdateHud()
         {
             scoreCounter.Show(Session.Score);
-            combo.text = Session.Combo >= 2 ? $"{Session.Combo}\n<size=30>COMBO</size>" : "";
+            combo.Show(Session.Combo);
             counters.text = $"GOOD {Session.Good}     OK {Session.Ok}     BAD {Session.Bad}     ROLL {Session.Rolls}";
         }
         void OnBranchSelected(ChartBranch branch, BranchRoute route)

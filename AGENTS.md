@@ -33,7 +33,11 @@
 
 ### 当前完成状态与交接边界
 
-#### 最新完成：SongSelect 界面持久化（2026-10-02）
+#### 最新完成：游玩连击数（2026-10-02）
+
+`NoteLane/Combo`（`Play/ComboView.cs`）改用 Nijiiro `game/combo` 贴图，居中于鼓面：连击 < 10 隐藏（**用户决定**，即 Nijiiro `combo_min`；OurTaikoPlayer 代码写死 3，不要还原），10–49 白、50–99 银、≥100 金（`combo_100_ja`＋`ComboGlimmer.anim` 闪光）。层级保存在场景中可编辑；迁移 `ProjectBuilder.ApplyCombo()`。测试 `ComboFlowTests`（进行中 PlayMode）与 `AnimationClipTests.ComboGlimmerRowsRiseAndFadeOnTheirOwnPhase`。详见 `PortingNotes.md`「游玩连击数」。未移植 `combo_announce` 与连击语音。
+
+#### 此前完成：SongSelect 界面持久化（2026-10-02）
 
 **范围**：SongSelect 与演奏设置菜单保存为场景层级／Prefab，运行时代码只更新内容、输入和动画。Entry／Result 仍在运行时构建，未扩大范围。暂停菜单 `ad16cb9` 与删除 SampleScene `b48f531` 在此之前提交。
 
