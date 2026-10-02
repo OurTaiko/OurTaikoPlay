@@ -10,6 +10,8 @@ namespace OurTaiko
         public const double GoodWindow = 0.0250250015258789, OkWindow = 0.0750750045776367, BadWindow = 0.108441665649414;
         public readonly TaikoChart Chart;
         public readonly bool[] Resolved;
+        // Normal notes judged 不可 because the window passed without a hit.
+        public readonly bool[] Missed;
         public readonly int[] LongHits;
         public int Score => scoring.Total;
         public int BaseScore => scoring.BaseScore;
@@ -49,7 +51,7 @@ namespace OurTaiko
 
         public PlaySession(TaikoChart chart)
         {
-            Chart = chart; Resolved = new bool[chart.Notes.Count]; LongHits = new int[chart.Notes.Count];
+            Chart = chart; Resolved = new bool[chart.Notes.Count]; Missed = new bool[chart.Notes.Count]; LongHits = new int[chart.Notes.Count];
             var statistics = new ChartStatistics(chart);
             scoring = new ShinuchiScore(statistics);
             gauge = new SoulGauge(statistics.JudgeableNotes, chart.Course, chart.Level);
@@ -125,7 +127,7 @@ namespace OurTaiko
                     if (time > note.EndTime) Resolved[i] = true;
                 }
                 else if (auto) Resolve(i, Judgment.Good);
-                else if (time - note.Time > badWindow) Resolve(i, Judgment.Bad);
+                else if (time - note.Time > badWindow) { Missed[i] = true; Resolve(i, Judgment.Bad); }
             }
         }
 

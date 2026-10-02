@@ -316,10 +316,10 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator ResolvedDrumrollKeepsScrollingUntilTailLeavesLane()
+        public IEnumerator FinishedRollsAndMissedNotesKeepScrollingPastJudge()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
-            song.chart = new TextAsset("TITLE:Drumroll Exit\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n5008,\n0,\n0,\n#END");
+            song.chart = new TextAsset("TITLE:Drumroll Exit\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n5008,\n1,\n0,\n#END");
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
@@ -341,6 +341,16 @@ namespace OurTaiko.Tests
                 Assert.That(play.noteLayer.InverseTransformPoint(tail.position).x, Is.EqualTo(120 - 0.1 * speed).Within(0.01));
                 render.Invoke(play, new object[] { note.EndTime + 2 });
                 Assert.That(root.activeSelf, Is.False, "The roll unloads once its tail has left the lane.");
+                // A missed normal note flows on as well; a hit one is removed.
+                var don = play.noteLayer.GetChild(1).gameObject;
+                var donNote = play.Session.Chart.Notes[1];
+                play.Session.Resolved[1] = true;
+                render.Invoke(play, new object[] { donNote.Time + 0.2 });
+                Assert.That(don.activeSelf, Is.False, "A hit note leaves the lane at once.");
+                play.Session.Missed[1] = true;
+                render.Invoke(play, new object[] { donNote.Time + 0.2 });
+                Assert.That(don.activeSelf, Is.True, "A missed note must flow past the judge.");
+                Assert.That(((RectTransform)don.transform).anchoredPosition.x, Is.EqualTo(120 - 0.2 * speed).Within(0.01));
                 play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
             }
             finally

@@ -74,6 +74,16 @@ namespace OurTaiko.Tests
             var session = new PlaySession(Parse("1000,")); session.Hit(false, 0); session.Hit(false, 0);
             Assert.That(session.Good, Is.EqualTo(1));
         }
+        [Test] public void OnlyTimedOutNotesAreMarkedMissed()
+        {
+            // Matches play_note_manager vs check_note: a timed-out note stays in
+            // draw_note_buffer, any hit (even 不可) removes it.
+            var session = new PlaySession(Parse("1100,"));
+            Assert.That(session.Hit(false, 0.1), Is.EqualTo(Judgment.Bad));
+            session.Advance(1, false);
+            Assert.That(session.Resolved, Is.EqualTo(new[] { true, true }));
+            Assert.That(session.Missed, Is.EqualTo(new[] { false, true }));
+        }
         [Test] public void RollInputsInSameFrameAreNotDropped()
         {
             var session = new PlaySession(Parse("5008,"));
