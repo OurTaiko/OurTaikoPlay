@@ -316,6 +316,41 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
+        public IEnumerator ResolvedDrumrollKeepsScrollingUntilTailLeavesLane()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Drumroll Exit\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n5008,\n0,\n0,\n#END");
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
+                SceneSwitcher.Instance.Play(song);
+                yield return WaitForScene(SceneSwitcher.GameScene);
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                if (!play.IsPaused) play.TogglePause();
+                play.pausePanel.SetActive(false);
+                var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var note = play.Session.Chart.Notes[0];
+                var root = play.noteLayer.GetChild(0).gameObject;
+                var tail = (RectTransform)root.transform.Find("RollTail");
+                double speed = note.Bpm / 240 * note.ScrollX * (1920 - 618);
+                // Original keeps the roll in draw_note_buffer until the tail's unload_ms,
+                // regardless of the roll having been judged at its end time.
+                play.Session.Resolved[0] = true;
+                render.Invoke(play, new object[] { note.EndTime + 0.1 });
+                Assert.That(root.activeSelf, Is.True, "A finished roll must flow past the judge instead of vanishing.");
+                Assert.That(play.noteLayer.InverseTransformPoint(tail.position).x, Is.EqualTo(120 - 0.1 * speed).Within(0.01));
+                render.Invoke(play, new object[] { note.EndTime + 2 });
+                Assert.That(root.activeSelf, Is.False, "The roll unloads once its tail has left the lane.");
+                play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator NijiiroBalloonCounterCountsPopsAndResets()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();

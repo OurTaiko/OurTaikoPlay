@@ -299,8 +299,11 @@ namespace OurTaiko
                 var note = Session.Chart.Notes[i]; var view = notes[i]; var pos = Position(note, time);
                 if (note.IsBalloon && time >= note.Time) pos = new Vector2(JudgeLocalX, JudgeLocalY);
                 float length = note.IsLong && !note.IsBalloon ? (float)NoteScroll.RollLength(note, TravelDistance) : 0;
-                // ドロン hides the notes; they are still judged.
-                bool visible = note.Display && Session.IsActive(note) && !Session.Resolved[i] && pos.x + Math.Max(0, length) >= -192 && pos.x + Math.Min(0, length) <= 1650;
+                // ドロン hides the notes; they are still judged. A 5/6 roll is resolved
+                // when its tail reaches the judge, but like draw_note_buffer it keeps
+                // scrolling until the tail leaves the lane.
+                bool rolling = note.IsLong && !note.IsBalloon;
+                bool visible = note.Display && Session.IsActive(note) && (rolling || !Session.Resolved[i]) && pos.x + Math.Max(0, length) >= -192 && pos.x + Math.Min(0, length) <= 1650;
                 view.Object.SetActive(visible);
                 if (visible)
                 {
