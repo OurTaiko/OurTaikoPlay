@@ -187,7 +187,7 @@ namespace OurTaiko.Editor
             controller.drumFlashes = drumNames.Select(n => Picture(lane, n, "game/lane/" + n, 211, 22)).ToArray();
             foreach (var flash in controller.drumFlashes) flash.enabled = false;
             controller.combo = Label(lane, "Combo", "", 143, 22, 64, 96, 31);
-            controller.hitFlash = Picture(lane, "HitFlash", "game/hit_effect/hit_effect_good", 342, 0); controller.hitFlash.color = Color.clear;
+            controller.hitFace = PlaceHitFace(lane, 342, 0);
             controller.judgmentSprites = new[] { Sprite("game/hit_effect/judge_good"), Sprite("game/hit_effect/judge_ok"), Sprite("game/hit_effect/judge_bad") };
             controller.judgment = Picture(lane, "Judgment", "game/hit_effect/judge_good", 370, -40); controller.judgment.color = Color.clear;
             controller.rollCounter = Label(root, "RollCounter", "", 930, 365, 330, 40, 25);

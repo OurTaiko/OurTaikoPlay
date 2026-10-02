@@ -21,7 +21,8 @@ namespace OurTaiko
         public Sprite mojiRollSprite;
         public BalloonCounterView balloonCounter;
         public Sprite[] judgmentSprites;
-        public UnityEngine.UI.Image judgment, hitFlash;
+        public UnityEngine.UI.Image judgment;
+        public HitFaceView hitFace;
         public SoulGaugeView soulGauge;
         public NoteArcView noteArcs;
         public UnityEngine.UI.Image[] drumFlashes;
@@ -176,7 +177,7 @@ namespace OurTaiko
             foreach (var dancer in dancers) dancer.ShowTime(time);
             float feedback = Mathf.Clamp01(1 - (Time.unscaledTime - feedbackTime) / 0.25f);
             judgment.color = new Color(1, 1, 1, feedback);
-            hitFlash.color = new Color(1, 0.8f, 0.2f, feedback * 0.8f);
+            hitFace.ShowTime(time);
             foreach (var flash in drumFlashes)
                 if (Time.unscaledTime - drumTime > 0.12f) flash.enabled = false;
             if (time > Math.Max(Session.Chart.Duration, song.music != null ? song.music.length : 0) + 1) Finish();
@@ -212,6 +213,8 @@ namespace OurTaiko
                 soulGauge.SetPoints(Session.GaugePoints, SongTime - song.audioOffsetMs / 1000.0);
             if (autoPlay) Feedback(Session.Chart.Notes[index].IsKa, (index & 1) != 0);
             SpawnArc(index, result);
+            var judged = Session.Chart.Notes[index];
+            hitFace.Play(result, judged.Kind == NoteKind.BigDon || judged.Kind == NoteKind.BigKa, SongTime - song.audioOffsetMs / 1000.0);
             feedbackTime = Time.unscaledTime;
             if (result != Judgment.Roll) judgment.sprite = judgmentSprites[(int)result - 1];
             else if (Session.Chart.Notes[index].Kind == NoteKind.Balloon)
