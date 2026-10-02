@@ -1225,6 +1225,8 @@ GameObject:
   m_Component:
   - component: {fileID: 234923430}
   - component: {fileID: 234923431}
+  - component: {fileID: 234923433}
+  - component: {fileID: 234923432}
   m_Layer: 0
   m_Name: GaugeHitEffect
   m_TagString: Untagged
@@ -1268,10 +1270,41 @@ MonoBehaviour:
   lane: {fileID: 1010394549}
   burst: {fileID: 1818211073}
   note: {fileID: 405228000}
-  burstFrames:
-  - {fileID: 21300000, guid: 069e9719496eb49c1bb01c6757eec788, type: 2}
-  - {fileID: 21300000, guid: 3d9d1ea72edf649ddb298059313e3502, type: 2}
-  - {fileID: 21300000, guid: e93d892f45d224987b898c0f1e48876e, type: 2}
+--- !u!114 &234923432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 234923429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 908f5c70e3c124331a3f529deaaf649a, type: 2}
+--- !u!95 &234923433
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 234923429}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &245102366
 MonoBehaviour:
   m_ObjectHideFlags: 0

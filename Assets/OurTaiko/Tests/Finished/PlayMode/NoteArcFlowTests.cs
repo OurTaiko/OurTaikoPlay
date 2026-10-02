@@ -83,18 +83,18 @@ namespace OurTaiko.Tests
                 Assert.That(effect.burst.transform.GetSiblingIndex(), Is.LessThan(effect.note.transform.GetSiblingIndex()));
                 Assert.That(Vector2.Distance(Centre(effect.burst.rectTransform), Centre(soul)), Is.LessThan(0.1f));
                 Assert.That(Vector2.Distance(Centre(effect.note.rectTransform), Centre(soul)), Is.LessThan(0.1f));
-                Assert.That(effect.burst.sprite, Is.SameAs(effect.burstFrames[0]));
+                Assert.That(effect.burst.sprite.name, Is.EqualTo("GaugeHitEffect0"));
                 Assert.That(effect.burst.rectTransform.rect.width, Is.EqualTo(232 * 0.8f).Within(0.01f));
                 Assert.That((Color32)effect.burst.color, Is.EqualTo(new Color32(253, 249, 0, 255)));
                 arcs.ShowTime(landed + 0.2);
-                Assert.That(effect.burst.sprite, Is.SameAs(effect.burstFrames[2]));
+                Assert.That(effect.burst.sprite.name, Is.EqualTo("GaugeHitEffect2"));
                 Assert.That(effect.burst.rectTransform.rect.width, Is.EqualTo(232 * (0.8f + 0.7f * 0.08333f / 0.266f)).Within(0.01f));
                 Assert.That((Color32)effect.burst.color, Is.EqualTo(new Color32(230, 41, 55, 255)));
                 Assert.That(effect.note.color.a, Is.EqualTo(1));
                 arcs.ShowTime(landed + 0.34);
                 Assert.That(effect.note.color.a, Is.EqualTo(1 - 0.04f / 0.083f).Within(0.001f));
                 Assert.That(effect.burst.color.a, Is.EqualTo(effect.note.color.a).Within(0.003f));
-                arcs.ShowTime(landed + GaugeHitEffectTiming.Duration);
+                arcs.ShowTime(landed + effect.GetComponent<ClipSampler>().clip.length);
                 Assert.That(effect.IsPlaying || effect.burst.enabled || effect.note.enabled, Is.False);
 
                 // A stream in flight over a burst 200 ms old, for the record.

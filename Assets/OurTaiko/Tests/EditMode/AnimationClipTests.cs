@@ -136,5 +136,34 @@ namespace OurTaiko.Tests
             }
             Assert.That(Sampled(clip, 0.2, go => go.GetComponent<UnityEngine.UI.Image>().enabled), Is.False);
         }
+
+        [Test]
+        public void GaugeHitEffectFollowsNijiiroAnimationTable()
+        {
+            var clip = Clip("GaugeHitEffect");
+            Assert.That(clip.length, Is.EqualTo(0.383).Within(1e-4));
+            (Sprite sprite, float width, Color32 color, float noteAlpha, bool shown) At(double t) => Sampled(clip, t, go =>
+            {
+                var burst = go.transform.Find("Burst").GetComponent<UnityEngine.UI.Image>();
+                var note = go.transform.Find("Note").GetComponent<UnityEngine.UI.Image>();
+                return (burst.sprite, burst.rectTransform.sizeDelta.x, (Color32)burst.color, note.color.a, burst.enabled && note.enabled);
+            }, "Burst", "Note");
+            // 2: frames 0 / 1 / 2 at 33.33 and 66.66 ms.
+            Assert.That(new[] { 0.0, 0.0333, 0.05, 0.07, 0.3 }.Select(t => At(t).sprite.name),
+                Is.EqualTo(new[] { "GaugeHitEffect0", "GaugeHitEffect0", "GaugeHitEffect1", "GaugeHitEffect2", "GaugeHitEffect2" }));
+            // 32: 0.8 until 116.67 ms, then linear to 1.5 over 266 ms.
+            Assert.That(At(0.1).width, Is.EqualTo(232 * 0.8f).Within(0.01f));
+            Assert.That(At(0.11667 + 0.133).width, Is.EqualTo(232 * 1.15f).Within(0.01f));
+            Assert.That(At(0.3828).width, Is.EqualTo(232 * 1.5f).Within(0.01f));
+            // Tint by size: yellow at 0.8, orange up to 0.9 (about 38 ms), then red.
+            Assert.That(At(0.1).color, Is.EqualTo(new Color32(253, 249, 0, 255)));
+            Assert.That(At(0.12).color, Is.EqualTo(new Color32(255, 161, 0, 255)));
+            Assert.That(At(0.16).color, Is.EqualTo(new Color32(230, 41, 55, 255)));
+            // 33: opaque until 300 ms, gone at 383 ms; the note fades with the burst.
+            Assert.That(At(0.3).noteAlpha, Is.EqualTo(1).Within(1e-4));
+            Assert.That(At(0.3415).noteAlpha, Is.EqualTo(0.5f).Within(1e-3));
+            Assert.That(At(0.3829).shown, Is.True);
+            Assert.That(At(0.383).shown, Is.False);
+        }
     }
 }
