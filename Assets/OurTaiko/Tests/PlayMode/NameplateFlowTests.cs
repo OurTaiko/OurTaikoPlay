@@ -16,6 +16,40 @@ namespace OurTaiko.Tests
         public void RestoreDefaultPlayer() => Controller.UseUnsaved(new PlayerInfo());
 
         [UnityTest]
+        public IEnumerator SavedPlayNameplateKeepsItsSdfScaleOnFirstRenderAndResize()
+        {
+            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan" });
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
+                yield return null;
+                yield return null;
+                var plate = Object.FindFirstObjectByType<NameplateView>();
+                var text = plate.playerName;
+                AssertRenderedSdfScale(text);
+
+                // Inspect the live Overlay mesh. TestCapture switches render mode and regenerates
+                // the mesh, which used to hide the bad scale produced by OnEnable/ForceMeshUpdate.
+                var scaler = text.canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
+                scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ConstantPixelSize;
+                foreach (float scale in new[] { 0.5f, 1.25f })
+                {
+                    scaler.scaleFactor = scale;
+                    yield return null;
+                    yield return null;
+                    Assert.That(text.canvas.scaleFactor, Is.EqualTo(scale));
+                    AssertRenderedSdfScale(text);
+                }
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator PlaySceneShowsNameplateScoreCounterAndAutoBadge()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
@@ -56,6 +90,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.playerName.fontSize, Is.EqualTo(24));
                 AssertUiFont(plate.title, 0);
                 AssertUiFont(plate.playerName, 3);
+                AssertRenderedSdfScale(plate.playerName);
 
                 // AUTO is the first option-dock badge; the nameplate stays.
                 var dock = play.modifierBadges;
@@ -167,6 +202,16 @@ namespace OurTaiko.Tests
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             }
+        }
+
+        static void AssertRenderedSdfScale(TMP_Text text)
+        {
+            var character = text.textInfo.characterInfo.First(c => c.isVisible);
+            float expected = character.scale * Mathf.Abs(text.rectTransform.lossyScale.y) / text.canvas.scaleFactor;
+            var uv = new System.Collections.Generic.List<Vector4>();
+            text.canvasRenderer.GetMesh().GetUVs(0, uv);
+            Assert.That(uv[character.vertexIndex].w, Is.EqualTo(expected).Within(0.0001f),
+                "Overlay SDF scale must cancel the Canvas scale instead of multiplying it twice.");
         }
 
         static void AssertUiFont(TMP_Text text, float borderPixels)

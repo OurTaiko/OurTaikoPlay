@@ -25,18 +25,34 @@ namespace OurTaiko
 
         PlayerInfoController controller;
         double rainbowStart;
+        float renderedCanvasScale;
 
         void OnEnable()
         {
             controller = PlayerInfoController.EnsureInstance();
             controller.Changed += Show;
             rainbowStart = Time.unscaledTimeAsDouble;
+            renderedCanvasScale = float.NaN;
+            Canvas.willRenderCanvases += RefreshCanvasScale;
             Show(controller.Info);
         }
 
         void OnDisable()
         {
             if (controller != null) controller.Changed -= Show;
+            Canvas.willRenderCanvases -= RefreshCanvasScale;
+        }
+
+        void RefreshCanvasScale()
+        {
+            var canvas = playerName.canvas;
+            if (canvas == null || Mathf.Approximately(renderedCanvasScale, canvas.scaleFactor)) return;
+            renderedCanvasScale = canvas.scaleFactor;
+            // CanvasScaler runs in preWillRenderCanvases. TMP's incremental scale update only
+            // accounts for lossyScale, missing the cancelling Canvas factor in Overlay mode.
+            // Rebuild on first render / Canvas resize only, after that factor has settled.
+            playerName.ForceMeshUpdate();
+            if (title.isActiveAndEnabled) title.ForceMeshUpdate();
         }
 
         // The rainbow band runs on real time, like the original's current_ms (it keeps cycling in pause).
@@ -102,7 +118,9 @@ namespace OurTaiko
             text.characterSpacing = NameplateLayout.TextSpacing * 100 / fontSize;
             text.text = value ?? "";
             text.rectTransform.Center(x, y);
-            text.ForceMeshUpdate();
+            // preferredWidth measures without rendering. Leave mesh generation until CanvasScaler
+            // has settled: forcing it during a saved scene's OnEnable makes TMP apply the initial
+            // Canvas scale twice to the SDF, washing the black outline out into a grey rectangle.
             text.Squeeze(boxWidth);
         }
     }

@@ -24,6 +24,7 @@
   - **计时器不倒数**（用户决定：模拟器不限制玩家时间）：原版 Entry 60 秒、选曲列表 100 秒、难度选择 60 秒倒数，归零替玩家决定（难度选择停在もどる／选项时还会把无效难度传给游戏）；本项目三处都只显示 60／100／60 作占位，不倒数、无 blip 与语音、不自动决定。计时器音效未导入，倒数与 10 秒内红色弹动的代码已删除（`ArcadeTimerView` 只显示固定数字）；如需恢复，参照原版 `Scripts/global/timer.lua` 与 `PortingNotes.md`「Entry 场景」中的记录。
   - **名牌与自动演奏**（用户决定）：原版自动演奏时在名牌位置画 `lane/auto_icon` 取代名牌；本项目名牌始终显示，自动演奏只在演奏オプション徽章区第一位加入选曲的 `song_select/modifier/mod_auto`，没有其他视觉差别。名牌彩虹称号带按 6 帧／50 ms／300 ms 循环；原版从未 `start()` 该动画（停在第 0 帧），属被修正的缺陷。
 - **选曲列表描边颜色**（用户决定）：歌曲标题与副标题使用 60% 不透明度的黑色描边，由 shader 与文字下方实际背景做 alpha 混合；白色字面保持不透明。不使用类别色表、采样底色或预计算混色，不能恢复参考 `BOARD_OUTLINE` 的硬编码描边表（它给默认黄色板配了 pops 青色）。难度选择标题仍为纯黑边。
+- **名牌网格初始化**：不要在 `NameplateView.SetText`／`OnEnable` 中提前 `ForceMeshUpdate`。静态游玩名牌会因 CanvasScaler 尚未稳定导致 SDF 缩放重复计入，出现浅灰字。仅在 `willRenderCanvases` 中首次或 Canvas 比例变化后刷新；验证应读实时 CanvasRenderer 网格与 Game 截图，旧 `TestCapture` 切换渲染模式会掩盖此错误。详见 `PortingNotes.md`「游玩名牌首次渲染灰字修复」。
 - Git 已初始化，当前直接在 `main` 上提交（线性历史，无合并提交）；提交使用 **Conventional Commits**。保留用户已有改动，不把无关资源混入提交。新建分支默认使用 `kirisamevanilla/` 前缀。
 - 场景、Sprite 资源、导入设置等持久化内容通过 Unity Editor API 修改并保存；避免手工改 Unity YAML／GUID。现有场景可直接编辑，不要随意执行生成初始场景的工具覆盖布局。
 - 后续交流以中文为主；能根据原代码确定的常规实现直接完成并验证，无需重复询问已经确定的约束。

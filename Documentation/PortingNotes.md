@@ -309,3 +309,11 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 验证：Unity Editor 编译通过；`GlobalOverlayFlowTests` 2/2、`NameplateFlowTests` 2/2、`EntryFlowTests` 1/1、`SongLoadingCurtainTests` 2/2 通过。核对选曲列表、难度卡、名牌与 Entry 截图；报告为 `TestResults/font-*.json`。独立播放器未重新构建。
 - 补齐后验证：`SongLoadingCurtainTests` 2/2、`NameplateFlowTests` 2/2 再次通过，新增检查覆盖幕布两种字号的 5 px 外描边、游玩名牌两种字号的 3 px 黑边及新字体引用。核对 `SongLoading.png`、`NameplatePlay.png`；报告为 `TestResults/font-followup-curtain.json`、`font-followup-nameplate.json`。预制体保存的四处字体引用经 Editor API 确认为 `Nijiiro UI SDF`；未重新构建独立播放器。
 - 半透明描边验证：`SongSelectShowsPlaceholderTimersChipAndInvite` 1/1 通过并核对 `OverlaySongSelect.png`；报告为 `TestResults/song-select-outline-alpha.json`。TMP shader 的 `_OutlineColor.a` 参与 `Blend One OneMinusSrcAlpha`，字面使用独立的不透明 `_FaceColor`。
+
+### 游玩名牌首次渲染灰字修复
+
+此前的字体／材质迁移未消除静态游玩名牌的初始化问题：`NameplateView.OnEnable → Show → SetText` 在 CanvasScaler 稳定前调用 `ForceMeshUpdate`，TMP 后续按 lossyScale 修正时又乘了一次 Canvas 缩放，导致 SDF 网格 `UV0.w` 过小。实时复现中字号 30、图集采样字号 64、Canvas 缩放 0.428125，本应为 0.46875 的值变成 0.200684；材质实际仍为不透明黑边，但 shader 因错误的 SDF 缩放画出浅灰字与字形矩形。
+
+删除该处 `ForceMeshUpdate`，`Squeeze` 直接通过 `preferredWidth` 测量。`NameplateView` 在 `Canvas.willRenderCanvases` 中检测画布比例，仅首次渲染或比例变化时重新生成名字／活跃称号的网格；CanvasScaler 已在 `preWillRenderCanvases` 中完成缩放，避免启动及窗口调整时 TMP 的增量缩放出错。不得用每帧重建或调粗／调黑材质掩盖它。验证必须检查实时 Overlay 的 CanvasRenderer 网格：旧 `TestCapture` 会临时切换 Canvas 渲染模式并重建网格，恰好消除错误，因此之前截图不能证明原始 Game 画面正常。
+
+`NameplateFlowTests` 3/3 通过，包含直接打开 SinglePlayScene 的首次实时网格、50%／125% 画布缩放、正常场景切换及名字／称号变化。报告为 `TestResults/nameplate-live-sdf.json`。最终重新直接启动游玩，在未手动刷新文字／切换 Canvas 模式的情况下确认 `UV0.w=0.46875`；`ScreenCapture.CaptureScreenshot` 截取的真实 Game 画面为 `TestResults/LiveNameplateFixed.png`。
