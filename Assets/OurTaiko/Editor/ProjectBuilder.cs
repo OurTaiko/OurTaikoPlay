@@ -171,7 +171,7 @@ namespace OurTaiko.Editor
             Picture(gauge, "Soul", "game/gauge/tamashii", 1187, -54);
             var lane = Rect("NoteLane", root, 0, 184, 1280, 176);
             Picture(lane, "LaneBackground", "game/lane/lane_background", 332, 0, 948, 176);
-            var gogo = Panel(lane, "GogoTint", 332, 8, 948, 128, new Color(1, 0.25f, 0)); controller.gogoTint = gogo.gameObject.AddComponent<CanvasGroup>(); controller.gogoTint.alpha = 0;
+            var gogo = Panel(lane, "GogoTint", 332, 8, 948, 128, new Color(1, 0.25f, 0)); controller.gogoTint = gogo.gameObject.AddComponent<CanvasGroup>(); controller.gogoTint.alpha = 0; AttachClip(gogo.gameObject, GogoPulseClip());
             Picture(lane, "JudgeCircle", "game/lane/lane_hit_circle", 342, 0);
             var clip = Rect("LaneClip", lane, 332, 0, 948, 144); clip.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();
             controller.barLayer = Rect("MeasureLines", clip, 0, 0, 948, 144);

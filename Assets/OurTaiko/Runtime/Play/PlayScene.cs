@@ -55,7 +55,7 @@ namespace OurTaiko
         float feedbackTime = -10;
         readonly float[] flashedAt = { -10, -10, -10, -10 };
         ClipSampler[] flashClips;
-        ClipSampler judgmentFade;
+        ClipSampler judgmentFade, gogoPulse;
         NoteView[] shownNotes = new NoteView[0];
         MojiView[] shownMoji = new MojiView[0];
         RectTransform[] shownBars = new RectTransform[0];
@@ -597,7 +597,14 @@ namespace OurTaiko
                 }
                 root.anchoredPosition = pos;
             }
-            gogoTint.alpha = gogo ? 0.18f + Mathf.Sin((float)time * 12) * 0.05f : 0;
+            // GogoPulse.anim: 0.18 ± 0.05, one period every 2π/12 s of song time.
+            gogoPulse ??= gogoTint.GetComponent<ClipSampler>();
+            if (!gogo) gogoTint.alpha = 0;
+            else
+            {
+                double period = gogoPulse.clip.length;
+                gogoPulse.Sample((time % period + period) % period);
+            }
         }
 
         // The text follows its note's lifetime and is culled by its own extent.

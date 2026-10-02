@@ -1465,6 +1465,8 @@ GameObject:
   - component: {fileID: 270388921}
   - component: {fileID: 270388920}
   - component: {fileID: 270388919}
+  - component: {fileID: 270388924}
+  - component: {fileID: 270388923}
   m_Layer: 0
   m_Name: GogoTint
   m_TagString: Untagged
@@ -1541,6 +1543,41 @@ RectTransform:
   m_AnchoredPosition: {x: 498, y: -12}
   m_SizeDelta: {x: 1422, y: 192}
   m_Pivot: {x: 0, y: 1}
+--- !u!114 &270388923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 270388918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 074d73ba38fbe4288a615247fd02872a, type: 2}
+--- !u!95 &270388924
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 270388918}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &319987699
 MonoBehaviour:
   m_ObjectHideFlags: 0
