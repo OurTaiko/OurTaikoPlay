@@ -69,8 +69,12 @@ namespace OurTaiko
 
             // Np_coin clears the title outright.
             title.gameObject.SetActive(hasBand && info.HasTitle);
-            if (title.gameObject.activeSelf) SetText(title, info.title, NameplateLayout.TitleFontSize,
-                NameplateLayout.TitleX, NameplateLayout.TitleY, NameplateLayout.TitleBoxWidth);
+            if (title.gameObject.activeSelf)
+            {
+                title.OutlineOutsidePixels(0);
+                SetText(title, info.title, NameplateLayout.TitleFontSize,
+                    NameplateLayout.TitleX, NameplateLayout.TitleY, NameplateLayout.TitleBoxWidth);
+            }
 
             var box = NameplateLayout.NameBox(info);
             playerName.fontSize = box.FontSize;

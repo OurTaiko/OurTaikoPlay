@@ -8,13 +8,15 @@ namespace OurTaiko.Editor
 {
     public static partial class ProjectBuilder
     {
+        const string OutlinedUiFontPath = Root + "Resources/Nijiiro UI SDF.asset";
+
         [MenuItem("OurTaiko/Create Outlined UI Font")]
         public static void CreateOutlinedUiFont()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
                 throw new InvalidOperationException("Exit Play mode before creating the outlined UI font.");
 
-            const string assetPath = Root + "Resources/Nijiiro UI SDF.asset";
+            const string assetPath = OutlinedUiFontPath;
             if (AssetDatabase.LoadMainAssetAtPath(assetPath) != null)
             {
                 Debug.Log("OurTaiko: Keeping the existing outlined UI font.");
@@ -66,6 +68,91 @@ namespace OurTaiko.Editor
             EditorUtility.SetDirty(uiFont);
             AssetDatabase.SaveAssetIfDirty(uiFont);
             Debug.Log("OurTaiko: Created outlined UI font with 64-point sampling and 32-pixel SDF padding.");
+        }
+
+        [MenuItem("OurTaiko/Apply Outlined UI Font")]
+        public static void ApplyOutlinedUiFont()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Exit Play mode before applying the outlined UI font.");
+
+            var uiFont = OutlinedUiFont();
+            var nameplate = PrefabUtility.LoadPrefabContents(NameplatePrefabPath);
+            try
+            {
+                var view = nameplate.GetComponent<NameplateView>();
+                SetOutlinedUiText(view.title, uiFont,
+                    OutlinedUiMaterial("Nameplate Title", uiFont, view.title.fontSize, 0), Color.black);
+                SetOutlinedUiText(view.playerName, uiFont,
+                    OutlinedUiMaterial("Nameplate Name", uiFont, view.playerName.fontSize, 3), Color.white);
+                PrefabUtility.SaveAsPrefabAsset(nameplate, NameplatePrefabPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(nameplate); }
+
+            var switcher = PrefabUtility.LoadPrefabContents(SwitcherPrefab);
+            try
+            {
+                var curtain = switcher.GetComponentInChildren<SongTransition>(true);
+                SetOutlinedUiText(curtain.title, uiFont,
+                    OutlinedUiMaterial("Curtain Title", uiFont, curtain.title.fontSize, 5), Color.white);
+                SetOutlinedUiText(curtain.subtitle, uiFont,
+                    OutlinedUiMaterial("Curtain Subtitle", uiFont, curtain.subtitle.fontSize, 5), Color.white);
+                PrefabUtility.SaveAsPrefabAsset(switcher, SwitcherPrefab);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(switcher); }
+            Debug.Log("OurTaiko: applied the outlined UI font to the nameplate and loading curtain prefabs.");
+        }
+
+        static TMP_FontAsset OutlinedUiFont()
+        {
+            var uiFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(OutlinedUiFontPath);
+            if (uiFont == null)
+            {
+                CreateOutlinedUiFont();
+                uiFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(OutlinedUiFontPath);
+            }
+            return uiFont;
+        }
+
+        static Material OutlinedUiMaterial(string purpose, TMP_FontAsset uiFont, float size, float pixels)
+        {
+            string name = "Nijiiro UI " + purpose;
+            string path = Root + "Generated/" + name + ".mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(uiFont.material) { name = name };
+                AssetDatabase.CreateAsset(material, path);
+            }
+            else
+            {
+                material.shader = uiFont.material.shader;
+                material.CopyPropertiesFromMaterial(uiFont.material);
+            }
+            float width = pixels * uiFont.faceInfo.pointSize / (2f * uiFont.atlasPadding * size);
+            material.EnableKeyword("OUTLINE_ON");
+            material.SetFloat(ShaderUtilities.ID_FaceDilate, width);
+            material.SetFloat(ShaderUtilities.ID_OutlineWidth, width);
+            material.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
+            ShaderUtilities.UpdateShaderRatios(material);
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssetIfDirty(material);
+            return material;
+        }
+
+        static void SetOutlinedUiText(TMP_Text text, TMP_FontAsset uiFont, Material material, Color color)
+        {
+            text.font = uiFont;
+            text.fontSharedMaterial = material;
+            text.color = color;
+            // Discard any old per-label material instances and atlas references.
+            var serialized = new SerializedObject(text);
+            serialized.FindProperty("m_fontMaterial").objectReferenceValue = null;
+            serialized.FindProperty("m_fontSharedMaterials").ClearArray();
+            serialized.FindProperty("m_fontMaterials").ClearArray();
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            text.UpdateMeshPadding();
+            EditorUtility.SetDirty(text);
         }
     }
 }

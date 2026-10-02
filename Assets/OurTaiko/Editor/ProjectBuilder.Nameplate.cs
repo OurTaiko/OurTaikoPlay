@@ -23,7 +23,6 @@ namespace OurTaiko.Editor
             for (int i = 0; i < EditorSceneManager.sceneCount; i++)
                 if (EditorSceneManager.GetSceneAt(i).isDirty)
                     throw new InvalidOperationException("Save the current scene edits first.");
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
             ImportSprites(Directory.GetFiles(Root + "Art/" + NameplateArt, "*.png"));
             BuildNameplatePrefab();
 
@@ -65,6 +64,7 @@ namespace OurTaiko.Editor
 
         static void BuildNameplatePrefab()
         {
+            var uiFont = OutlinedUiFont();
             var root = new GameObject("Nameplate", typeof(RectTransform));
             try
             {
@@ -84,8 +84,11 @@ namespace OurTaiko.Editor
                 view.dan = PlateImage(root.transform, "Dan", view.danEmblems[0], NameplateLayout.DanX, NameplateLayout.DanY);
                 view.badge = PlateImage(root.transform, "Badge", Sprite(art + "1p"), NameplateLayout.BadgeX, NameplateLayout.BadgeY);
                 // text_title: black, no border. text_name: white with a black border (outline material).
-                view.title = PlateText(root.transform, "Title", font.material, Color.black, NameplateLayout.TitleBoxWidth, NameplateLayout.TitleFontSize);
-                view.playerName = PlateText(root.transform, "Name", OutlineMaterial(), Color.white, NameplateLayout.NameBoxWidth, 24);
+                view.title = PlateText(root.transform, "Title", uiFont,
+                    OutlinedUiMaterial("Nameplate Title", uiFont, NameplateLayout.TitleFontSize, 0),
+                    Color.black, NameplateLayout.TitleBoxWidth, NameplateLayout.TitleFontSize);
+                view.playerName = PlateText(root.transform, "Name", uiFont,
+                    OutlinedUiMaterial("Nameplate Name", uiFont, 24, 3), Color.white, NameplateLayout.NameBoxWidth, 24);
                 PrefabUtility.SaveAsPrefabAsset(root, NameplatePrefabPath);
             }
             finally { UnityEngine.Object.DestroyImmediate(root); }
@@ -100,15 +103,13 @@ namespace OurTaiko.Editor
             return image;
         }
 
-        static TMP_Text PlateText(Transform parent, string name, Material material, Color color, float width, float size)
+        static TMP_Text PlateText(Transform parent, string name, TMP_FontAsset uiFont, Material material, Color color, float width, float size)
         {
             var rect = Rect(name, parent, 0, 0, width, size * 1.6f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
-            text.font = font;
-            text.fontSharedMaterial = material;
+            SetOutlinedUiText(text, uiFont, material, color);
             text.fontSize = size;
-            text.color = color;
             text.alignment = TextAlignmentOptions.Center;
             text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Overflow;

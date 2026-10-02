@@ -2,6 +2,7 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -32,6 +33,21 @@ namespace OurTaiko.Tests
             switcher.Play(song);
             Assert.That(switcher.IsSwitching && curtain.IsVisible && !curtain.IsClosed, Is.True);
             Assert.That(curtain.title.text, Is.EqualTo("TRIPLE HELIX"));
+            foreach (var text in new[] { curtain.title, curtain.subtitle })
+            {
+                Assert.That(text.font, Is.SameAs(Resources.Load<TMP_FontAsset>("Nijiiro UI SDF")),
+                    "The saved curtain uses the same wide-padding font as song select.");
+                var material = text.fontSharedMaterial;
+                ShaderUtilities.UpdateShaderRatios(material);
+                float width = material.GetFloat(ShaderUtilities.ID_OutlineWidth);
+                float pixels = 2 * material.GetFloat(ShaderUtilities.ID_GradientScale)
+                    * material.GetFloat(ShaderUtilities.ID_ScaleRatio_A) * width
+                    * text.fontSize / text.font.faceInfo.pointSize;
+                Assert.That(pixels, Is.EqualTo(5).Within(0.01f), "Both title sizes retain a 5 px border.");
+                Assert.That(material.GetFloat(ShaderUtilities.ID_FaceDilate), Is.EqualTo(width),
+                    "The border must stay outside the white glyph.");
+                Assert.That(material.GetColor(ShaderUtilities.ID_OutlineColor), Is.EqualTo(Color.black));
+            }
             yield return WaitUntil(() => curtain.Frame >= 30);
             Assert.That(SceneSwitcher.CurrentScene, Is.EqualTo(SceneSwitcher.SongSelectScene), "The close runs over the old scene.");
             Capture("CurtainClosing.png");

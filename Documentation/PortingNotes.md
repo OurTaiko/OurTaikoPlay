@@ -303,4 +303,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 恢复参考配置：列表标题／副标题为类别色 5／3.5 px；难度标题／副标题为黑色 7／4 px；名牌名字黑色 3 px；2P 邀请黑色 6 px；フリープレイ黑色 4.5 px。宽度均指 1920×1080 设计区域，随画面缩放。
 - 旧 `OutlineOutside` 调用兼容原先实际描边厚度；Entry 模式标题的黑色 underlay 单独换算，避免更宽图集放大原来的双层描边。
 - 难度文字同步恢复外描边：列表小芯片 18 号／1.5 px；难度卡片 34 号／4.5 px，字距均为 1 个设计单位。
+- 后续补齐幕布与游玩名牌：SceneSwitcher 预制体旧 `titleOutline=0.25`／`subtitleOutline=0.4` 覆盖代码默认值，兼容换算后只有约 3.2 px；删除这两个旧字段，主副标题直接使用 5 px 外描边。Nameplate 预制体原先仍保存旧字体，运行时只替换名字；现名字与称号都使用新 UI 字体，名字保留 3 px 黑边，称号仍为无描边黑字。
+- `ProjectBuilder.ApplyOutlinedUiFont()` 只更新 Nameplate／SceneSwitcher 预制体的字体与四个持久化材质，不重建场景或布局；未来生成这两个控件的入口也复用同一配置，避免再次写入旧字体引用。
 - 验证：Unity Editor 编译通过；`GlobalOverlayFlowTests` 2/2、`NameplateFlowTests` 2/2、`EntryFlowTests` 1/1、`SongLoadingCurtainTests` 2/2 通过。核对选曲列表、难度卡、名牌与 Entry 截图；报告为 `TestResults/font-*.json`。独立播放器未重新构建。
+- 补齐后验证：`SongLoadingCurtainTests` 2/2、`NameplateFlowTests` 2/2 再次通过，新增检查覆盖幕布两种字号的 5 px 外描边、游玩名牌两种字号的 3 px 黑边及新字体引用。核对 `SongLoading.png`、`NameplatePlay.png`；报告为 `TestResults/font-followup-curtain.json`、`font-followup-nameplate.json`。预制体保存的四处字体引用经 Editor API 确认为 `Nijiiro UI SDF`；未重新构建独立播放器。

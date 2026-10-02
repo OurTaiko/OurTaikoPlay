@@ -30,8 +30,6 @@ namespace OurTaiko
         public Image rainbow, curtainLeft, curtainRight, glow, don, katsu, band, hint;
         public Image[] stars;
         public TMP_Text title, subtitle;
-        // OutlinedText(..., outline 5): the same 5 px black border at 64 and at 40 px.
-        [Range(0, 1)] public float titleOutline = 0.5f, subtitleOutline = 0.7f;
 
         public bool IsClosed { get; private set; }
         public bool IsVisible => gameObject.activeSelf;
@@ -53,10 +51,12 @@ namespace OurTaiko
         {
             if (gameObject.activeSelf) return;
             gameObject.SetActive(true);
-            // Setting the outline gives each text its own material instance at runtime.
-            title.outlineColor = subtitle.outlineColor = new Color32(0, 0, 0, 255);
-            title.OutlineOutside(titleOutline);
-            subtitle.OutlineOutside(subtitleOutline);
+            // OutlinedText(..., outline 5): the same 5 px black outer border at 64 and 40 px.
+            // Do not inherit normalized widths serialized for the old narrow SDF atlas.
+            title.OutlineOutsidePixels(5);
+            subtitle.OutlineOutsidePixels(5);
+            title.fontMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
+            subtitle.fontMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
             title.text = pendingTitle;
             subtitle.text = pendingSubtitle;
             // The arcade EditText boxes span the whole 1920-px stage.

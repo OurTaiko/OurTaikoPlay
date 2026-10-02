@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -53,6 +54,8 @@ namespace OurTaiko.Tests
                 Assert.That(plate.title.color, Is.EqualTo(Color.black));
                 Assert.That(plate.playerName.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(261, -67.5f)));
                 Assert.That(plate.playerName.fontSize, Is.EqualTo(24));
+                AssertUiFont(plate.title, 0);
+                AssertUiFont(plate.playerName, 3);
 
                 // AUTO is the first option-dock badge; the nameplate stays.
                 var dock = play.modifierBadges;
@@ -86,6 +89,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.title.gameObject.activeSelf, Is.False);
                 Assert.That(plate.playerName.text, Is.EqualTo("Katsu-chan"));
                 Assert.That(plate.playerName.fontSize, Is.EqualTo(30));
+                AssertUiFont(plate.playerName, 3);
                 Assert.That(plate.playerName.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(226, -53)));
                 yield return null;
                 TestCapture.Capture("NameplatePlayCoin.png");
@@ -163,6 +167,20 @@ namespace OurTaiko.Tests
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             }
+        }
+
+        static void AssertUiFont(TMP_Text text, float borderPixels)
+        {
+            Assert.That(text.font, Is.SameAs(Resources.Load<TMP_FontAsset>("Nijiiro UI SDF")),
+                "The play scene name and title must use the shared UI font.");
+            var material = text.fontSharedMaterial;
+            ShaderUtilities.UpdateShaderRatios(material);
+            float width = material.GetFloat(ShaderUtilities.ID_OutlineWidth);
+            float pixels = 2 * material.GetFloat(ShaderUtilities.ID_GradientScale)
+                * material.GetFloat(ShaderUtilities.ID_ScaleRatio_A) * width
+                * text.fontSize / text.font.faceInfo.pointSize;
+            Assert.That(pixels, Is.EqualTo(borderPixels).Within(0.01f));
+            Assert.That(material.GetFloat(ShaderUtilities.ID_FaceDilate), Is.EqualTo(width));
         }
 
         static IEnumerator WaitForScene(string scene)

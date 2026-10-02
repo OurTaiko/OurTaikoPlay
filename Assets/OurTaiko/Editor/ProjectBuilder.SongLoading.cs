@@ -22,7 +22,6 @@ namespace OurTaiko.Editor
             for (int i = 0; i < EditorSceneManager.sceneCount; i++)
                 if (EditorSceneManager.GetSceneAt(i).isDirty)
                     throw new InvalidOperationException("Save the current scene edits first.");
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
             ImportRainbowArt();
             BuildCurtain();
             if (!File.Exists(SongLoadingPath)) CreateSongLoadingScene();
@@ -70,7 +69,9 @@ namespace OurTaiko.Editor
             var glowSprite = Slice("RainbowGlow", RainbowArt + "rainbow_bg_bottom", 0, 288, 1600, 512);
             var starSprite = Slice("RainbowStar", RainbowArt + "rainbow_bg_bottom", 0, 832, 128, 128);
             var additive = AdditiveUiMaterial();
-            var outline = OutlineMaterial();
+            var uiFont = OutlinedUiFont();
+            var titleMaterial = OutlinedUiMaterial("Curtain Title", uiFont, 64, 5);
+            var subtitleMaterial = OutlinedUiMaterial("Curtain Subtitle", uiFont, 40, 5);
             var timeline = Timeline("loading_song");
             if (timeline == null) throw new FileNotFoundException("Animations/loading_song.txt is missing.");
 
@@ -114,8 +115,8 @@ namespace OurTaiko.Editor
                 view.hint = SkinUi.Image("Hint", stage, Sprite(RainbowArt + "chara_center"), 1920, 512);
                 view.hint.rectTransform.TopLeft(0, 568);
                 // skin_config transition_title / _subtitle (64 / 40 px) minus rainbow_up 1224 (816 x 1.5).
-                view.title = CurtainText("Title", stage, outline, 64, 382);
-                view.subtitle = CurtainText("Subtitle", stage, outline, 40, 462);
+                view.title = CurtainText("Title", stage, uiFont, titleMaterial, 64, 382);
+                view.subtitle = CurtainText("Subtitle", stage, uiFont, subtitleMaterial, 40, 462);
 
                 var serialized = new SerializedObject(switcher);
                 serialized.FindProperty("songTransition").objectReferenceValue = view;
@@ -126,19 +127,16 @@ namespace OurTaiko.Editor
             finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
-        static TMP_Text CurtainText(string name, Transform parent, Material outline, float size, float centerY)
+        static TMP_Text CurtainText(string name, Transform parent, TMP_FontAsset uiFont, Material outline, float size, float centerY)
         {
             var rect = SkinUi.Rect(name, parent, 1920, size * 1.6f);
             var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
-            // The saved outline material; SongTransition sets the width, which instances it at runtime.
-            text.font = font;
-            text.fontSharedMaterial = outline;
+            SetOutlinedUiText(text, uiFont, outline, Color.white);
             text.fontSize = size;
             text.alignment = TextAlignmentOptions.Center;
             text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Overflow;
             text.raycastTarget = false;
-            text.color = Color.white;
             text.text = "";
             rect.Center(960, centerY);
             return text;
