@@ -31,10 +31,9 @@ namespace OurTaiko.Editor
             if (!File.Exists(ResultPath)) CreateResultScene();
             var outline = OutlineMaterial();
             UpgradeStage(SongSelectPath, outline); UpgradeStage(ResultPath, outline);
-            // SongSelect is the first scene (SceneSwitcher.MenuScene) until an Entry scene is ported.
-            var scenes = EditorBuildSettings.scenes.Where(s => s.path != SongSelectPath).ToList();
-            scenes.Insert(0, new EditorBuildSettingsScene(SongSelectPath, true));
-            if (!scenes.Any(s => s.path == ResultPath)) scenes.Add(new EditorBuildSettingsScene(ResultPath, true));
+            var scenes = EditorBuildSettings.scenes.ToList();
+            foreach (var path in new[] { SongSelectPath, ResultPath })
+                if (!scenes.Any(s => s.path == path)) scenes.Add(new EditorBuildSettingsScene(path, true));
             EditorBuildSettings.scenes = scenes.ToArray();
             AssetDatabase.SaveAssets();
             Debug.Log("OurTaiko: SongSelect and Result scenes are ready and listed in Build Settings.");
@@ -153,7 +152,7 @@ namespace OurTaiko.Editor
             }
             controller.wheel = Rect("Wheel", root, 0, 0, 1920, 1080);
             controller.coursePanel = Rect("CoursePanel", root, 0, 0, 1920, 1080);
-            Label(root, "KeyHelp", "D / K  えらぶ     F / J  けってい     A  オート", 0, 1020, 1920, 48, 26);
+            Label(root, "KeyHelp", "D / K  えらぶ     F / J  けってい     A  オート     ESC  もどる", 0, 1020, 1920, 48, 26);
             AddStageFps(root);
 
             controller.genreBackgrounds = Frames("song_select/box/background", 10);

@@ -88,7 +88,7 @@ namespace OurTaiko.Tests
 
         static IEnumerator PlayBranch(BranchRoute expected)
         {
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
             var menu = Object.FindFirstObjectByType<SongSelectScene>();
             var song = menu.songs.Single(s => s.name == "BranchTraining");
@@ -152,7 +152,7 @@ namespace OurTaiko.Tests
             Assert.That(restarted.Session.Score, Is.Zero);
             Assert.That(restarted.branchLane.currentLabel.sprite.name, Is.EqualTo("normal"));
             Assert.That(restarted.branchLane.background.enabled, Is.False);
-            restarted.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+            restarted.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
         }
 
         [UnityTest]
@@ -208,7 +208,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator BranchLaneTransitionsMatchOriginalSkin()
         {
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
             var menu = Object.FindFirstObjectByType<SongSelectScene>();
             SceneSwitcher.Instance.Play(menu.songs.Single(s => s.name == "BranchTraining"), true);
@@ -248,7 +248,7 @@ namespace OurTaiko.Tests
             Assert.That(branch.currentLabel.sprite.name, Is.EqualTo("normal"));
             Assert.That(branch.currentLabel.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(1606.5f, -64.5f)));
             Assert.That(branch.currentLabel.color.a, Is.EqualTo(1));
-            play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+            play.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
         }
 
         [UnityTest]
@@ -586,7 +586,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator SongSelectPlayPauseResumeRestartAndReturn()
         {
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
             var menu = Object.FindFirstObjectByType<SongSelectScene>();
             Assert.That(menu, Is.Not.Null, "SongSelect is the menu scene.");
@@ -617,7 +617,7 @@ namespace OurTaiko.Tests
             Assert.That(restarted.Session.Score, Is.Zero);
             Assert.That(Object.FindObjectsByType<SceneSwitcher>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
             restarted.Back();
-            yield return WaitForScene(SceneSwitcher.MenuScene);
+            yield return WaitForScene(SceneSwitcher.SongSelectScene);
             Assert.That(Object.FindFirstObjectByType<PlayScene>(), Is.Null);
             Assert.That(Object.FindObjectsByType<SceneSwitcher>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
         }

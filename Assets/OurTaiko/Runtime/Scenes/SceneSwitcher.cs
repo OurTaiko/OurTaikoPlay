@@ -15,9 +15,9 @@ namespace OurTaiko
     public sealed class SceneSwitcher : MonoBehaviour
     {
         public const string GameScene = "SinglePlayScene";
-        public const string SongSelectScene = "SongSelect", ResultScene = "Result";
-        // The first scene and where Back falls back to; the song list until an Entry scene is ported.
-        public const string MenuScene = SongSelectScene;
+        public const string SongSelectScene = "SongSelect", ResultScene = "Result", EntryScene = "Entry";
+        // The first scene and where Back falls back to.
+        public const string MenuScene = EntryScene;
         public const string SongLoadingScene = "SongLoadingScene";
         public static SceneSwitcher Instance { get; private set; }
         public static Camera MainCamera { get; private set; }

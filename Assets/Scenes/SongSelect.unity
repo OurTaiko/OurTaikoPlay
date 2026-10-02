@@ -1906,7 +1906,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "D / K  \u3048\u3089\u3076     F / J  \u3051\u3063\u3066\u3044     A  \u30AA\u30FC\u30C8"
+  m_text: "D / K  \u3048\u3089\u3076     F / J  \u3051\u3063\u3066\u3044     A  \u30AA\u30FC\u30C8    
+    ESC  \u3082\u3069\u308B"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: bf8ba7e7b67d649e1a2e8df317e2c790, type: 2}
   m_sharedMaterial: {fileID: 1866914188}

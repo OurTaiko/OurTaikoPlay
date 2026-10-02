@@ -13,7 +13,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator PlayClosesTheCurtainLoadsBehindItAndOpensOverThePlayScene()
         {
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
             var switcher = SceneSwitcher.Instance;
             var curtain = switcher.Curtain;
             Assert.That(curtain, Is.Not.Null, "The SceneSwitcher prefab carries the song loading curtain.");
@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
             Assert.That(switcher.IsSwitching && curtain.IsVisible && !curtain.IsClosed, Is.True);
             Assert.That(curtain.title.text, Is.EqualTo("TRIPLE HELIX"));
             yield return WaitUntil(() => curtain.Frame >= 30);
-            Assert.That(SceneSwitcher.CurrentScene, Is.EqualTo(SceneSwitcher.MenuScene), "The close runs over the old scene.");
+            Assert.That(SceneSwitcher.CurrentScene, Is.EqualTo(SceneSwitcher.SongSelectScene), "The close runs over the old scene.");
             Capture("CurtainClosing.png");
 
             yield return WaitUntil(() => SceneSwitcher.CurrentScene == SceneSwitcher.SongLoadingScene && !switcher.IsSwitching);
@@ -57,7 +57,7 @@ namespace OurTaiko.Tests
             Capture("CurtainOpening.png");
             yield return WaitUntil(() => !switcher.IsSwitching);
             Assert.That(curtain.IsVisible || switcher.IsInputBlocked, Is.False);
-            Assert.That(switcher.ReturnScene, Is.EqualTo(SceneSwitcher.MenuScene));
+            Assert.That(switcher.ReturnScene, Is.EqualTo(SceneSwitcher.SongSelectScene));
 
             // Restarting from the play scene keeps the ordinary fade.
             play.Restart();

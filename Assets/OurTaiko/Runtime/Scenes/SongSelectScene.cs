@@ -175,10 +175,11 @@ namespace OurTaiko
         void HandleInput()
         {
             if (switcher.IsInputBlocked) return;
-            // The original's back key leaves for the Entry scene, which is not ported yet.
+            // song_select.cpp: the back key leaves for Entry from any state (an open option panel closes first).
             if (InputManager.GetKeyDown(InputKey.Back))
             {
                 if (IsOptionPanelOpen) CloseOptions();
+                else switcher.SwitchScene(SceneSwitcher.EntryScene);
                 return;
             }
             bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft);
