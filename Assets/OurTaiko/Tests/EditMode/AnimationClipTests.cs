@@ -220,5 +220,15 @@ namespace OurTaiko.Tests
                 Assert.That(gauge.rainbowB.transform.parent, Is.SameAs(gauge.rainbowSampler.transform));
             });
         }
+
+        [Test]
+        public void NewGaugeCellFadesInOver450Ms()
+        {
+            var clip = Clip("CellFade");
+            Assert.That(clip.length, Is.EqualTo(0.45).Within(1e-4));
+            foreach (var (t, alpha) in new[] { (0.0, 0f), (0.225, 0.5f), (0.45, 1f) })
+                Assert.That(Sampled(clip, t, go => go.GetComponent<UnityEngine.UI.Image>().color.a), Is.EqualTo(alpha).Within(1e-4), $"{t} s");
+            WithPlayScene(play => Assert.That(play.soulGauge.cellFade.GetComponent<ClipSampler>().clip, Is.SameAs(clip)));
+        }
     }
 }

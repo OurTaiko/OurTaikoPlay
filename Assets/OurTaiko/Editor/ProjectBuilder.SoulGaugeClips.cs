@@ -81,5 +81,17 @@ namespace OurTaiko.Editor
                 LinearCurve(clip, "RainbowB", image, "m_Color.a", keys.ToArray());
             });
         }
+
+        [MenuItem("OurTaiko/Apply Cell Fade Clip")]
+        public static void ApplyCellFadeClip() => EditPlayScene(play => AttachCellFadeClip(play.soulGauge));
+
+        // Nijiiro enables gauge_cell_fade_in: only the newly filled cell fades in, over 450 ms.
+        static void AttachCellFadeClip(SoulGaugeView view)
+        {
+            view.cellFade.color = new Color(1, 1, 1, view.cellFade.color.a);
+            EditorUtility.SetDirty(view.cellFade);
+            AttachClip(view.cellFade.gameObject, SaveClip("CellFade", 60, false, clip =>
+                LinearCurve(clip, "", typeof(UnityEngine.UI.Image), "m_Color.a", (0, 0), (0.45f, 1))));
+        }
     }
 }

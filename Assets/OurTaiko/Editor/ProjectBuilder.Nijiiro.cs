@@ -209,6 +209,7 @@ namespace OurTaiko.Editor
                 grid = Sprite("game/gauge/overlay_" + tier), clearLabelX = 1350 + i * 105,
             }).ToArray();
             AttachSoulRainbowClips(view);
+            AttachCellFadeClip(view);
             view.Initialize(0.8);
             play.soulGauge = view;
         }

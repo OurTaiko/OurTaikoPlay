@@ -22,7 +22,6 @@ namespace OurTaiko
         public Sprite redFade, capFade, goldFade, clearLit, clearDark, soulLit, soulDark;
 
         public const int Cells = 50, CellWidth = 21;
-        public const double CellFadeSeconds = 0.450;
         // The rainbow clip: a 0.6 s intro (the 450 ms fade-in over the 75 ms crossfades), then a
         // 0.6 s loop of the eight frames that repeats for as long as the gauge stays full.
         const double RainbowIntro = 0.6, RainbowLoop = 0.6;
@@ -68,8 +67,10 @@ namespace OurTaiko
             if (style == null) return;
             int length = FilledCells;
             int clearCell = (int)Math.Round(threshold * Cells);
-            float cellAlpha = Mathf.Clamp01((float)((time - cellChangedAt) / CellFadeSeconds));
-            bool pending = length > (int)Math.Floor(previousPoints * Cells / SoulGauge.MaximumPoints) && cellAlpha < 1;
+            // CellFade.anim: the newly filled cell fades in over 450 ms.
+            var cellFadeClip = Sampler(cellFade);
+            double cellElapsed = time - cellChangedAt;
+            bool pending = length > (int)Math.Floor(previousPoints * Cells / SoulGauge.MaximumPoints) && cellElapsed < cellFadeClip.clip.length;
             int solid = pending ? length - 1 : length;
 
             // Same 50-cell grid and rounded first gold cell as Gauge::draw().
@@ -97,7 +98,7 @@ namespace OurTaiko
                 cellFade.sprite = length == clearCell ? capFade : length > clearCell ? goldFade : redFade;
                 cellFade.rectTransform.anchoredPosition = new Vector2(738 + (length - 1) * CellWidth, length >= clearCell ? 60 : 27);
                 cellFade.rectTransform.sizeDelta = cellFade.sprite.rect.size;
-                Alpha(cellFade, cellAlpha);
+                cellFadeClip.Sample(Math.Max(0, cellElapsed));
             }
             Alpha(grid, 0.15f);
             clearLabel.sprite = IsClear ? clearLit : clearDark;
