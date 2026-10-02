@@ -292,5 +292,5 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 ## 删除计时器倒数代码（2026-10-02）
 
 - 用户要求删除不再使用的倒数代码：移除 `Core/ArcadeTimer.cs`（倒数、30／10／5 秒语音提示、归零决定、数字与高光弹动曲线）及其 EditMode 测试。倒数不再发生，10 秒内的红色表盘、白色数字与高光也一并删除：`ArcadeOverlayArt` 去掉 `timerBackgroundRed`、`timerHighlight`、`timerDigitsWhite`，删除生成的 `Generated/TimerDigitWhite0–9.asset`。`ArcadeTimerView.Show(int)` 只显示固定数字（Entry 60，选曲列表 100、难度选择 60）。原版行为仍记录在上文「Entry 场景」。
-- `global/timer/bg_red.png`、`counter_white.png`、`highlight.png` 已不再被引用，仍留在 `Art/global/timer`。
+- `global/timer/bg_red.png`、`counter_white.png`、`highlight.png` 不再被引用（代码、场景、预制体与资源中均无其 GUID），已删除并从 `ImportedAssets.json` 移除；`Art/global/timer` 只剩 `bg.png` 与 `counter_black.png`。
 - 验证：EditMode `EntryTests`，PlayMode `EntryFlowTests`、`GlobalOverlayFlowTests` 通过。
