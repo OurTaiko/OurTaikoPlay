@@ -148,7 +148,7 @@ namespace OurTaiko.Tests
                 }
                 Assert.That(frames.Count, Is.GreaterThanOrEqualTo(4));
                 play.Back();
-                yield return WaitForScene(SceneSwitcher.MenuScene);
+                yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
             finally
             {

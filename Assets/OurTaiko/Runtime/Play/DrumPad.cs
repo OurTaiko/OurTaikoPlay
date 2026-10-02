@@ -33,10 +33,18 @@ namespace OurTaiko
             if (drum != null) drum.localScale = Vector3.one;
             InputManager.RegisterPad(this);
         }
-        void OnDisable() => InputManager.UnregisterPad(this);
+        void OnDisable()
+        {
+            InputManager.UnregisterPad(this);
+            pressedAt = double.NegativeInfinity;
+            if (drum != null) drum.localScale = Vector3.one;
+        }
 
-        // Real time, like the original's get_current_ms: the squeeze also plays while paused.
-        public void Press() => pressedAt = Time.realtimeSinceStartupAsDouble * 1000;
+        // Real time, like the original's get_current_ms; disabled pads cannot animate or emit input.
+        public void Press()
+        {
+            if (isActiveAndEnabled) pressedAt = Time.realtimeSinceStartupAsDouble * 1000;
+        }
 
         void Update()
         {
@@ -54,6 +62,7 @@ namespace OurTaiko
         public bool TryHit(Vector2 screenPoint, out InputKey key)
         {
             key = default;
+            if (!isActiveAndEnabled) return false;
             var root = canvas != null ? canvas.rootCanvas : null;
             var camera = root == null || root.renderMode == RenderMode.ScreenSpaceOverlay ? null : root.worldCamera;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, screenPoint, camera, out var local)) return false;

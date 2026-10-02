@@ -37,7 +37,7 @@ namespace OurTaiko.Editor
         static void ConfigureTouchDrum(PlayScene play)
         {
             ImportTouchDrumArt();
-            var viewport = play.pausePanel.transform.parent;
+            var viewport = play.pauseButton.transform.parent;
             for (int i = 0; i < 4; i++)
             {
                 var old = viewport.Find("TouchPad" + i);
@@ -49,7 +49,7 @@ namespace OurTaiko.Editor
             zone.anchorMin = Vector2.zero; zone.anchorMax = Vector2.one; zone.pivot = new Vector2(0.5f, 0.5f);
             zone.offsetMin = zone.offsetMax = Vector2.zero;
             // Over the gameplay like the original's global overlay, under the pause / result panels.
-            zone.SetSiblingIndex(play.pausePanel.transform.GetSiblingIndex());
+            zone.SetSiblingIndex(play.resultPanel.transform.GetSiblingIndex());
             var pad = zone.GetComponent<DrumPad>();
             if (pad == null) pad = zone.gameObject.AddComponent<DrumPad>();
             var image = PlacePicture(zone, "Drum", TouchDrumPath, 0, 0);

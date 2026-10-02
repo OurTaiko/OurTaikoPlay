@@ -78,7 +78,12 @@ namespace OurTaiko.Tests
                 Render.Invoke(play, new object[] { notes[7].Time - 0.5 });
                 Assert.That(play.MojiRoot(7).gameObject.activeSelf, Is.False);
                 play.Back();
-                yield return new WaitWhile(() => SceneSwitcher.Instance.IsSwitching);
+                float leavingDeadline = Time.realtimeSinceStartup + 20;
+                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene)
+                {
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(leavingDeadline));
+                    yield return null;
+                }
             }
             finally
             {

@@ -79,7 +79,7 @@ namespace OurTaiko.Tests
                 Assert.That(restarted.soulGauge.FilledCells, Is.Zero);
                 Assert.That(restarted.soulGauge.IsClear, Is.False);
                 restarted.Back();
-                yield return WaitForScene(SceneSwitcher.MenuScene);
+                yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
             finally
             {

@@ -79,11 +79,11 @@ namespace OurTaiko.Tests
             Assert.That(gauge.soul.sprite.name, Is.EqualTo("tamashii_dark"));
             gauge.SetValue(1, 6);
             Assert.That(gauge.rainbowA.color.a, Is.Zero, "Refilling restarts the rainbow fade.");
-            play.Restart(); yield return WaitForScene(SceneSwitcher.GameScene);
+            play.Restart(); yield return WaitForRestart(play);
             var restarted = Object.FindFirstObjectByType<PlayScene>();
             Assert.That(restarted.soulGauge.FilledCells, Is.Zero);
             Assert.That(restarted.soulGauge.rainbowA.enabled, Is.False);
-            restarted.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+            restarted.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
         }
 
         static IEnumerator PlayBranch(BranchRoute expected)
@@ -131,6 +131,7 @@ namespace OurTaiko.Tests
             Assert.That(play.SongTime, Is.EqualTo(pausedAt).Within(0.001));
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(expected));
             play.TogglePause();
+            yield return WaitForResume(play);
             if (expected == BranchRoute.Master)
             {
                 while (!play.IsFinished)
@@ -163,8 +164,8 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
             var play = Object.FindFirstObjectByType<PlayScene>();
-            if (!play.IsPaused) play.TogglePause();
-            play.pausePanel.SetActive(false);
+            // DrumPad is disabled while the pause menu is open, so inspect its live gameplay state.
+            if (play.IsPaused) { play.Resume(); yield return WaitForResume(play); }
             var pads = Object.FindObjectsByType<DrumPad>(FindObjectsSortMode.None);
             Assert.That(pads.Length, Is.EqualTo(1));
             var pad = pads[0];
@@ -305,7 +306,7 @@ namespace OurTaiko.Tests
                     Assert.That(tailBefore - TailPosition().x, Is.EqualTo(speed * 0.125).Within(0.01), "Tail must inherit the head's speed.");
                     Assert.That(tail.anchoredPosition.x, Is.EqualTo(length).Within(0.01));
                 }
-                play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+                play.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
             finally
             {
@@ -360,7 +361,7 @@ namespace OurTaiko.Tests
                 Assert.That(don.activeSelf, Is.True);
                 render.Invoke(play, new object[] { exit + 0.005 });
                 Assert.That(don.activeSelf, Is.False);
-                play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+                play.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
             finally
             {
@@ -428,6 +429,7 @@ namespace OurTaiko.Tests
                 Assert.That(counter.IsVisible, Is.False);
                 counter.RecordHit(0, 12, 2, play.Session.Chart.Notes[0].EndTime, play.SongTime);
                 play.TogglePause();
+                yield return WaitForResume(play);
 
                 play.Hit(false, false);
                 Assert.That(counter.Remaining, Is.EqualTo(9));
@@ -436,6 +438,7 @@ namespace OurTaiko.Tests
                 play.TogglePause(); play.pausePanel.SetActive(false);
                 Capture("BalloonCounter9.png", 1280, 720);
                 play.TogglePause();
+                yield return WaitForResume(play);
                 for (int i = 0; i < 9; i++) play.Hit(false, (i & 1) != 0);
                 Assert.That(play.Session.Resolved[0], Is.True);
                 Assert.That(counter.Remaining, Is.Zero);
@@ -447,7 +450,7 @@ namespace OurTaiko.Tests
                 Assert.That(counter.Remaining, Is.EqualTo(2), "Each balloon starts with its own required hits.");
                 yield return Reach(3.51);
                 Assert.That(counter.IsVisible, Is.False, "An unpopped balloon clears at its end time.");
-                play.Restart(); yield return WaitForScene(SceneSwitcher.GameScene);
+                play.Restart(); yield return WaitForRestart(play);
                 play = Object.FindFirstObjectByType<PlayScene>();
                 Assert.That(play.balloonCounter.IsVisible, Is.False);
                 Assert.That(play.Session.LongHits[0], Is.Zero);
@@ -459,7 +462,7 @@ namespace OurTaiko.Tests
                 yield return Reach(1);
                 Assert.That(play.Session.Resolved[0], Is.True);
                 Assert.That(play.balloonCounter.IsVisible, Is.False);
-                play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+                play.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
             finally
             {
@@ -539,12 +542,13 @@ namespace OurTaiko.Tests
                     });
                 }
                 play.TogglePause();
+                yield return WaitForResume(play);
                 play.Hit(false, true);
                 play.Hit(false, false);
                 yield return null;
                 Assert.That(play.Session.Resolved[0], Is.True);
                 Assert.That(balloon.gameObject.activeSelf, Is.False);
-                play.Back(); yield return WaitForScene(SceneSwitcher.MenuScene);
+                play.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
             finally
             {
@@ -597,7 +601,7 @@ namespace OurTaiko.Tests
             Assert.That(play.branchLane.gameObject.activeSelf, Is.False, "Non-branch charts must not show route labels or tints.");
             Assert.That(Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
             Assert.That(Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
-            if (play.IsPaused) play.TogglePause();
+            if (play.IsPaused) { play.Resume(); yield return WaitForResume(play); }
             yield return new WaitForSecondsRealtime(2.4f);
             Assert.That(play.Session.Good, Is.GreaterThan(0));
             Assert.That(play.music.isPlaying, Is.True);
@@ -607,11 +611,12 @@ namespace OurTaiko.Tests
             Assert.That(play.SongTime, Is.EqualTo(pausedAt).Within(0.001));
             Assert.That(play.music.isPlaying, Is.False);
             play.TogglePause();
+            yield return WaitForResume(play);
             yield return new WaitForSecondsRealtime(0.4f);
             Assert.That(play.music.time, Is.EqualTo(play.SongTime).Within(0.15));
             Capture("SinglePlayScene.png");
             play.Restart();
-            yield return WaitForScene(SceneSwitcher.GameScene);
+            yield return WaitForRestart(play);
             var restarted = Object.FindFirstObjectByType<PlayScene>();
             Assert.That(restarted, Is.Not.SameAs(play));
             Assert.That(restarted.Session.Score, Is.Zero);
@@ -663,6 +668,28 @@ namespace OurTaiko.Tests
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
             while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != scene);
             yield return null;
+        }
+
+        static IEnumerator WaitForResume(PlayScene play)
+        {
+            float deadline = Time.realtimeSinceStartup + 3;
+            while (play.IsPaused)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), "The pause menu did not finish fading out.");
+                yield return null;
+            }
+        }
+
+        static IEnumerator WaitForRestart(PlayScene oldPlay)
+        {
+            // A paused restart first fades its menu; the scene name is unchanged during that wait.
+            float deadline = Time.realtimeSinceStartup + 20;
+            while (oldPlay != null)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), "Restart did not replace the play scene.");
+                yield return null;
+            }
+            yield return WaitForScene(SceneSwitcher.GameScene);
         }
 
         static Canvas SceneCanvas() => TestCapture.SceneCanvas();

@@ -38,7 +38,7 @@ namespace OurTaiko.Tests
                 SceneFlowTests.Capture("PlayOptionsBadges.png");
                 Assert.That(play.Session.Hit(true, notes[0].Time), Is.EqualTo(Judgment.Good), "Hidden notes are still judged.");
                 play.Back();
-                yield return WaitForScene(SceneSwitcher.MenuScene);
+                yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
             finally
             {

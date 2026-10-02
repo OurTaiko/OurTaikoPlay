@@ -29,6 +29,7 @@ namespace OurTaiko
         public TMP_Text title, subtitle, combo, counters, rollCounter, resultText;
         public BranchLaneView branchLane;
         public GameObject pausePanel, resultPanel;
+        public PauseMenuView pauseMenu;
         public UnityEngine.UI.Button pauseButton, restartButton, backButton, resumeButton, resultRestart, resultBack;
         public SpriteFlipbook[] dancers;
         public CanvasGroup gogoTint;
@@ -48,6 +49,11 @@ namespace OurTaiko
         float feedbackTime = -10, drumTime = -10;
         readonly List<NoteView> notes = new List<NoteView>();
         readonly List<RectTransform> bars = new List<RectTransform>();
+        readonly List<DrumPad> pausedPads = new List<DrumPad>();
+        bool closingPauseMenu;
+        bool resuming, resumeLostFocus;
+        int resumeFrame = -1;
+        int pauseOpenedFrame = -1;
 
         sealed class NoteView
         {
@@ -66,7 +72,7 @@ namespace OurTaiko
             song = switcher.SelectedSong != null ? switcher.SelectedSong : defaultSong;
             autoPlay = switcher.AutoPlay;
             pauseButton.onClick.AddListener(TogglePause);
-            resumeButton.onClick.AddListener(TogglePause);
+            resumeButton.onClick.AddListener(Resume);
             restartButton.onClick.AddListener(Restart);
             backButton.onClick.AddListener(Back);
             resultRestart.onClick.AddListener(Restart);
@@ -140,10 +146,12 @@ namespace OurTaiko
         void Update()
         {
             if (switcher == null || switcher.IsInputBlocked || !isReady) return;
-            if (InputManager.GetKeyDown(InputKey.Back)) { Back(); return; }
+            if (closingPauseMenu || Time.frameCount == resumeFrame || Time.frameCount == pauseOpenedFrame) return;
+            if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause))
+            { TogglePause(); return; }
             if (InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
-            if (InputManager.GetKeyDown(InputKey.Pause)) TogglePause();
-            if (Session == null || IsPaused || IsFinished) return;
+            if (IsPaused) { pauseMenu.HandleInput(); return; }
+            if (Session == null || IsFinished) return;
             double time = SongTime - song.audioOffsetMs / 1000.0;
             Session.Advance(time, autoPlay);
             if (branchLane != null) branchLane.ShowTime(time);
@@ -235,12 +243,64 @@ namespace OurTaiko
         }
         public void TogglePause()
         {
-            if (IsFinished || Session == null || !isReady || switcher.IsInputBlocked) return;
-            if (!IsPaused) { frozenTime = SongTime; IsPaused = true; music.Stop(); }
-            else { startDsp = AudioSettings.dspTime - frozenTime; IsPaused = false; ScheduleMusic(); }
-            pausePanel.SetActive(IsPaused);
+            if (IsFinished || Session == null || !isReady || switcher.IsInputBlocked || closingPauseMenu) return;
+            if (IsPaused) { Resume(); return; }
+            frozenTime = SongTime;
+            IsPaused = true;
+            pauseOpenedFrame = Time.frameCount;
+            music.Stop(); hitAudio.Stop();
+            DisableDrumPads();
+            pauseButton.interactable = false;
+            pauseMenu.Show();
         }
-        void OnApplicationFocus(bool focused) { if (!focused && Session != null && !IsPaused && !IsFinished) TogglePause(); }
+
+        public void Resume()
+        {
+            if (!IsPaused || closingPauseMenu || switcher.IsInputBlocked || IsFinished) return;
+            resuming = true;
+            resumeLostFocus = false;
+            StartCoroutine(ClosePauseMenu(() =>
+            {
+                resuming = false;
+                if (resumeLostFocus)
+                {
+                    pauseOpenedFrame = Time.frameCount;
+                    pauseMenu.Show();
+                    return;
+                }
+                startDsp = AudioSettings.dspTime - frozenTime;
+                IsPaused = false;
+                resumeFrame = Time.frameCount;
+                ScheduleMusic();
+                foreach (var pad in pausedPads) if (pad != null) pad.enabled = true;
+                pausedPads.Clear();
+                pauseButton.interactable = true;
+            }));
+        }
+
+        IEnumerator ClosePauseMenu(Action completed)
+        {
+            closingPauseMenu = true;
+            yield return pauseMenu.Hide();
+            completed();
+            closingPauseMenu = false;
+        }
+
+        void DisableDrumPads()
+        {
+            foreach (var pad in FindObjectsByType<DrumPad>(FindObjectsSortMode.None))
+            {
+                if (pad.gameObject.scene != gameObject.scene || !pad.enabled) continue;
+                pausedPads.Add(pad);
+                pad.enabled = false;
+            }
+        }
+        void OnApplicationFocus(bool focused)
+        {
+            if (focused) return;
+            if (resuming) resumeLostFocus = true;
+            if (Session != null && !IsPaused && !IsFinished) TogglePause();
+        }
         // GameScreen::end_song: store the record, then hand the result to the Result scene.
         void Finish()
         {
@@ -249,12 +309,20 @@ namespace OurTaiko
             ScoreStore.Shared.Save(Result);
             switcher.ShowResult(Result);
         }
-        public void Restart() => SceneSwitcher.EnsureInstance().Restart();
-        public void Back() => SceneSwitcher.EnsureInstance().ReturnToMenu();
+        public void Restart() => LeavePlay(() => SceneSwitcher.EnsureInstance().Restart());
+        public void Back() => LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene));
+
+        void LeavePlay(Action action)
+        {
+            if (closingPauseMenu || switcher.IsInputBlocked) return;
+            if (IsPaused && !IsFinished) StartCoroutine(ClosePauseMenu(action));
+            else action();
+        }
         void PrepareToLeave(string scene)
         {
             frozenTime = SongTime; IsPaused = true;
             music.Stop(); hitAudio.Stop();
+            DisableDrumPads();
         }
         void OnDestroy()
         {

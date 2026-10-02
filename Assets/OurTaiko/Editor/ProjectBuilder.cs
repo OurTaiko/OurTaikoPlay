@@ -199,7 +199,7 @@ namespace OurTaiko.Editor
                 var dancer = Picture(root, "Dancer" + (i + 1), "background/dancer/dancer_0/0_loop/0", 30 + i * 250, 415);
                 controller.dancers[i] = dancer.gameObject.AddComponent<SpriteFlipbook>(); controller.dancers[i].frames = frames;
             }
-            Label(root, "KeyHelp", "D / K  KA     F / J  DON     SPACE  PAUSE     F1  RESTART     ESC  BACK", 0, 674, 1280, 30, 18);
+            Label(root, "KeyHelp", "D / K  KA     F / J  DON     SPACE / ESC  PAUSE     F1  RESTART", 0, 674, 1280, 30, 18);
             controller.pauseButton = Button(root, "PauseButton", "PAUSE", 26, 370, 110, 34, new Color32(33, 37, 39, 235));
             controller.restartButton = Button(root, "RestartButton", "RESTART", 146, 370, 125, 34, new Color32(33, 37, 39, 235));
             controller.backButton = Button(root, "BackButton", "BACK", 281, 370, 100, 34, new Color32(33, 37, 39, 235));
@@ -212,6 +212,7 @@ namespace OurTaiko.Editor
             AddFpsCounter(root);
             ConfigureNijiiroLayout(root, controller);
             ConfigureTouchDrum(controller);
+            ConfigurePauseMenu(controller);
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), "Assets/Scenes/SinglePlayScene.unity");
         }
 

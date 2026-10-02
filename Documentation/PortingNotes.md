@@ -317,3 +317,14 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 删除该处 `ForceMeshUpdate`，`Squeeze` 直接通过 `preferredWidth` 测量。`NameplateView` 在 `Canvas.willRenderCanvases` 中检测画布比例，仅首次渲染或比例变化时重新生成名字／活跃称号的网格；CanvasScaler 已在 `preWillRenderCanvases` 中完成缩放，避免启动及窗口调整时 TMP 的增量缩放出错。不得用每帧重建或调粗／调黑材质掩盖它。验证必须检查实时 Overlay 的 CanvasRenderer 网格：旧 `TestCapture` 会临时切换 Canvas 渲染模式并重建网格，恰好消除错误，因此之前截图不能证明原始 Game 画面正常。
 
 `NameplateFlowTests` 3/3 通过，包含直接打开 SinglePlayScene 的首次实时网格、50%／125% 画布缩放、正常场景切换及名字／称号变化。报告为 `TestResults/nameplate-live-sdf.json`。最终重新直接启动游玩，在未手动刷新文字／切换 Canvas 模式的情况下确认 `UV0.w=0.46875`；`ScreenCapture.CaptureScreenshot` 截取的真实 Game 画面为 `TestResults/LiveNameplateFixed.png`。
+
+### 游玩暂停菜单（2026-10-02）
+
+按用户要求，游玩界面只保留 Pause 按钮，原 Restart／Back 移入暂停菜单；三项固定为 Resume、Restart、Back to Song Select。Nijiiro 未提供专用暂停菜单，复用 `Graphics/dan_select/confirm_box` 的 `bg.png`、`selection_box.png`、`selection_box_outline.png`、`selection_box_highlight.png`，原图复制不修改，通过 Sprite 九宫格组成蓝色青海波樱花板与金橙按钮。资源来源已写入 `ImportedAssets.json`；定向迁移入口 `ProjectBuilder.ApplyPauseMenu()`，仅更新原暂停面板和这三个按钮，场景在 Editor 中保存。
+
+- 暂停面板移到主 Canvas 最后一个子物体，遮罩覆盖窗口与留边，面板仍在居中的 1920×1080 设计区域中，覆盖轨道、触控鼓与 FPS。全局 SceneSwitcher 的切换遮罩保持其跨场景层级。
+- `PauseMenuView` 使用真实时间各 0.5 秒淡入／淡出。打开时立即冻结谱面时钟、停止歌曲与击打音效，禁用并注销本场景 DrumPad，清除鼓面挤压；淡出期间仍冻结且遮挡点击，结束后才恢复歌曲、判定和鼓面。连续确认只执行一次；Restart／Back 也先等菜单淡出再交给 SceneSwitcher。Back 明确前往 SongSelect，直接运行游玩场景时也一致。
+- Space／Esc 打开和恢复；↑／↓、←／→ 或 D／K 选项，Enter／F／J 确认；按钮同时支持鼠标和触摸。InputManager 统一处理键盘，关闭 uGUI 自带按钮导航避免双重确认。菜单打开当帧与恢复当帧屏蔽残留输入；恢复淡出期间失焦时保持暂停并重新显示菜单，避免后台继续演奏。F1 仍可重开。
+- 新的 `PauseMenuFlowTests` 验证淡变、音频／音符冻结、禁用鼓面、遮罩层级、键盘／鼠标／触摸，以及重开和返回；旧行为测试中恢复后的立即操作改为等待淡出完成。
+
+验证：Unity Editor 编译通过；新增暂停菜单专项 5/5，所在进行中 PlayMode 程序集 10/10；Finished PlayMode 回归 28/28。报告 `TestResults/pause-final-playmode.json`、`TestResults/pause-regression-playmode.json`。实时 Overlay 画面 `TestResults/PauseMenuLive.png`；1920×1080 与 1440×1080 渲染检查通过，后者另验证面板未越界且宽高比保持 1100:780。截图 [PauseMenu.png](PauseMenu.png)。独立播放器未重新构建。

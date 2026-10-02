@@ -11,7 +11,7 @@ namespace OurTaiko
     public enum InputKey
     {
         LeftDon, RightDon, LeftKa, RightKa,
-        Confirm, Back, Pause, Restart, ToggleAuto, MenuLeft, MenuRight,
+        Confirm, Back, Pause, Restart, ToggleAuto, MenuLeft, MenuRight, MenuUp, MenuDown,
     }
 
     public readonly struct InputPress
@@ -65,6 +65,8 @@ namespace OurTaiko
             SetBinding(InputKey.ToggleAuto, Key.A);
             SetBinding(InputKey.MenuLeft, Key.LeftArrow);
             SetBinding(InputKey.MenuRight, Key.RightArrow);
+            SetBinding(InputKey.MenuUp, Key.UpArrow);
+            SetBinding(InputKey.MenuDown, Key.DownArrow);
         }
 
         // A physical key drives at most one logical key; rebinding takes it from the old owner.
