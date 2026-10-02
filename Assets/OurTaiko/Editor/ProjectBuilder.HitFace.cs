@@ -156,12 +156,13 @@ namespace OurTaiko.Editor
             view.ok = HitRingClip("HitRingOk", "outer_ok");
             view.goodBig = HitRingClip("HitRingGoodBig", "outer_good_big");
             view.okBig = HitRingClip("HitRingOkBig", "outer_ok_big");
+            view.image.sprite = RingFrames("outer_good")[0];
             AttachClip(view.gameObject, view.good);
         }
 
         // outer_*: four 336x336 frames side by side.
-        static Sprite[] RingFrames(string name) => Enumerable.Range(0, 4)
-            .Select(i => Slice("HitRing_" + name + i, "game/hit_effect/" + name, i * 336, 0, 336, 336)).ToArray();
+        static Sprite[] RingFrames(string name) => SliceSheet("game/hit_effect/" + name,
+            Enumerable.Range(0, 4).Select(i => ("HitRing_" + name + i, i * 336, 0, 336, 336)).ToArray());
 
         // Judgment::draw_outer_effect: frames from animation 30 (switching after 54.5, 72.7 and
         // 90.9 ms, then holding the last), opacity from animation 27 (opaque until 166.7 ms, gone

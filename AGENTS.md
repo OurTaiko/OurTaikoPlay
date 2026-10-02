@@ -59,6 +59,7 @@
 ### 动画剪辑（Generated/Clips，2026-10-02）
 
 固定时间轴、与游戏状态无关的表现存为 `.anim`，由 `Runtime/Scenes/ClipSampler.cs` 播放：Animator＋手动求值的 Playables 图（`AnimationClip.SampleAnimation` 不会应用 sprite 关键帧），各视图仍持有自己的时钟（歌曲时钟、真实时间、重新开始）并每帧调用 `Sample`／`SampleLoop`／`Play`（切换变体）。剪辑由 Editor 构建（`ProjectBuilder.Clips.cs` 的 `SaveClip` 原地重写，GUID 不变），各项迁移菜单可重复执行。测试 `AnimationClipTests`（进行中）直接采样资产。
+剪辑帧不再是 `Generated` 中的独立 sprite 资产：操作指引、判定外圈（`outer_*`）、魂槽彩虹（`game/gauge/rainbow_*`）、名牌彩虹带（`frame_top_rainbow`）与魂徽章光圈（`game/gauge/hit_effect`）的帧都在各自 PNG 的导入设置中切片（Multiple 模式，`ProjectBuilder.SliceSheet`，按名称保留 spriteID，名称沿用旧资产名）。2026-10-02 由 `ProjectBuilder.ApplyFrameSheets()` 迁移并删除 49 个旧切片资产；原 PNG 必须保留（剪辑只引用 sprite，不含图像数据）。
 - `ControlGuide.anim`：操作指引决定循环，见「Entry」。
 - `Dancer.anim`：游玩舞者 `0_loop` 19 帧、8 fps 循环、歌曲时钟（取代已删除的 `SpriteFlipbook`）；`PlayScene.dancers` 为 `ClipSampler[]`。迁移 `ProjectBuilder.ApplyDancerClip()`。
 - `DrumFlash.anim`：鼓面闪光（`m_Enabled` 亮 0.12 s），四个鼓面各自从自己的击打计时（原为最后一次击打后统一熄灭；原版每次击打也是独立的 `DrumHitEffect`），真实时间。迁移 `ProjectBuilder.ApplyDrumFlashClip()`。

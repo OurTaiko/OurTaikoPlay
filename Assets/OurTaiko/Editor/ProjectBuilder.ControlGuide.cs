@@ -53,47 +53,8 @@ namespace OurTaiko.Editor
                 SpriteKeys(clip, "", typeof(UnityEngine.UI.Image), frames, frames.Select((_, i) => i / GuideFrameRate).ToArray()));
         }
 
-        // Slices the decide-loop cells (210-324) in the guide sheet's importer. Existing sprite IDs
-        // are kept by name, so reapplying never breaks the clip's references.
-        static Sprite[] SliceControlGuide()
-        {
-            string path = Root + "Art/" + GuideSheet + ".png";
-            var importer = (TextureImporter)AssetImporter.GetAtPath(path);
-            bool changed = importer.spriteImportMode != SpriteImportMode.Multiple;
-            importer.spriteImportMode = SpriteImportMode.Multiple;
-            var factory = new SpriteDataProviderFactories();
-            factory.Init();
-            var provider = factory.GetSpriteEditorDataProviderFromObject(importer);
-            provider.InitSpriteEditorDataProvider();
-            var existing = provider.GetSpriteRects().ToDictionary(r => r.name, r => r.spriteID);
-            int height = 0;
-            importer.GetSourceTextureWidthAndHeight(out _, out height);
-            var rects = new List<SpriteRect>();
-            for (int cell = GuideFirstDecide; cell < GuideCells; cell++)
-            {
-                string name = $"ControlGuide{cell:000}";
-                int x = cell % GuideColumns * 352, y = cell / GuideColumns * 276;
-                rects.Add(new SpriteRect
-                {
-                    name = name,
-                    rect = new Rect(x, height - y - 276, 352, 276),
-                    alignment = SpriteAlignment.Center,
-                    pivot = new Vector2(0.5f, 0.5f),
-                    spriteID = existing.TryGetValue(name, out var id) ? id : GUID.Generate(),
-                });
-            }
-            changed |= provider.GetSpriteRects().Length != rects.Count
-                || provider.GetSpriteRects().Zip(rects, (a, b) => a.name != b.name || a.rect != b.rect || a.spriteID != b.spriteID).Any(d => d);
-            if (changed)
-            {
-                provider.SetSpriteRects(rects.ToArray());
-                provider.GetDataProvider<ISpriteNameFileIdDataProvider>()
-                    .SetNameFileIdPairs(rects.Select(r => new SpriteNameFileIdPair(r.name, r.spriteID)));
-                provider.Apply();
-                importer.SaveAndReimport();
-            }
-            var sprites = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().ToDictionary(s => s.name);
-            return rects.Select(r => sprites[r.name]).ToArray();
-        }
+        // The decide-loop cells (210-324), sliced in the guide sheet's own importer.
+        static Sprite[] SliceControlGuide() => SliceSheet(GuideSheet, Enumerable.Range(GuideFirstDecide, GuideCells - GuideFirstDecide)
+            .Select(cell => ($"ControlGuide{cell:000}", cell % GuideColumns * 352, cell / GuideColumns * 276, 352, 276)).ToArray());
     }
 }

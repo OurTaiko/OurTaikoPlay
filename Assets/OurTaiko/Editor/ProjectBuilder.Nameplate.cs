@@ -101,13 +101,14 @@ namespace OurTaiko.Editor
             try
             {
                 AttachClip(root, NameplateRainbowClip());
+                root.GetComponent<NameplateView>().bandUnder.sprite = NameplateRainbowFrames()[0];
                 PrefabUtility.SaveAsPrefabAsset(root, NameplatePrefabPath);
             }
             finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
-        static Sprite[] NameplateRainbowFrames() => Enumerable.Range(0, 6)
-            .Select(i => Slice("NameplateRainbow" + i, NameplateArt + "/frame_top_rainbow", 0, i * 56, 408, 56)).ToArray();
+        static Sprite[] NameplateRainbowFrames() => SliceSheet(NameplateArt + "/frame_top_rainbow",
+            Enumerable.Range(0, 6).Select(i => ("NameplateRainbow" + i, 0, i * 56, 408, 56)).ToArray());
 
         // Global animation 12 (texture_change): frame k for 50 ms from 50k ms, looping every 300 ms.
         // Band shows frame k; BandUnder shows frame k - 1 under it from frame 1 on.

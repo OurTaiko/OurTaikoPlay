@@ -52,7 +52,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -132,67 +132,67 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: hit_effect_0
+      name: GaugeHitEffect0
       rect:
         serializedVersion: 2
-        x: 39
-        y: 39
-        width: 74
-        height: 74
+        x: 0
+        y: 0
+        width: 232
+        height: 232
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 8bf5246925604e4e0800000000000000
-      internalID: -1953429386593935432
+      spriteID: c94de39097c9a4345ae98a593e9a88be
+      internalID: -1982056249
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: hit_effect_1
+      name: GaugeHitEffect1
       rect:
         serializedVersion: 2
-        x: 176
-        y: 25
-        width: 103
-        height: 102
+        x: 232
+        y: 0
+        width: 232
+        height: 232
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 01d8754e6efa6a740800000000000000
-      internalID: 5163007429035134224
+      spriteID: e4e50790814e54eb2bea50954033ef7b
+      internalID: 1493955664
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: hit_effect_2
+      name: GaugeHitEffect2
       rect:
         serializedVersion: 2
-        x: 305
-        y: 1
-        width: 150
-        height: 150
+        x: 464
+        y: 0
+        width: 232
+        height: 232
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: efd4df7b0633ba6d0800000000000000
-      internalID: -2978230238078743042
+      spriteID: 082ca40a8a5144813a45bdbaf02df5d6
+      internalID: 273734176
       vertices: []
       indices: 
       edges: []
@@ -211,9 +211,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      hit_effect_0: -1953429386593935432
-      hit_effect_1: 5163007429035134224
-      hit_effect_2: -2978230238078743042
+      GaugeHitEffect0: -1982056249
+      GaugeHitEffect1: 1493955664
+      GaugeHitEffect2: 273734176
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

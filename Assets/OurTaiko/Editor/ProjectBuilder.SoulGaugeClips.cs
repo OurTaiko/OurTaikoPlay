@@ -44,6 +44,9 @@ namespace OurTaiko.Editor
                 view.rainbowB.transform.SetParent(group, false);
             }
             for (int i = 0; i < GaugeTiers.Length; i++) view.styles[i].rainbow = SoulRainbowClip(GaugeTiers[i]);
+            view.rainbowA.sprite = view.rainbowB.sprite = SoulRainbowCells("hard")[0];
+            EditorUtility.SetDirty(view.rainbowA);
+            EditorUtility.SetDirty(view.rainbowB);
             view.rainbowSampler = AttachClip(group.gameObject, view.styles[2].rainbow);
             EditorUtility.SetDirty(view);
         }
@@ -51,9 +54,13 @@ namespace OurTaiko.Editor
         // Gauge::draw while full: rainbow cell k is drawn with cell k+1 fading in over its 75 ms,
         // and both fade in together over the first 450 ms. 0-0.6 s is that intro, 0.6-1.2 s one
         // plain loop; the B crossfade is baked every 5 ms while the intro fade multiplies it.
+        // rainbow_<tier>: eight 1057x78 cells stacked vertically.
+        static Sprite[] SoulRainbowCells(string tier) => SliceSheet("game/gauge/rainbow_" + tier,
+            Enumerable.Range(0, 8).Select(frame => ("Rainbow" + tier + frame, 0, frame * 78, 1057, 78)).ToArray());
+
         static AnimationClip SoulRainbowClip(string tier)
         {
-            var cells = Enumerable.Range(0, 8).Select(frame => Slice("Rainbow" + tier + frame, "game/gauge/rainbow_" + tier, 0, frame * 78, 1057, 78)).ToArray();
+            var cells = SoulRainbowCells(tier);
             string name = "SoulRainbow" + char.ToUpperInvariant(tier[0]) + tier.Substring(1);
             return SaveClip(name, 60, false, clip =>
             {

@@ -55,7 +55,7 @@ namespace OurTaiko.Editor
             if (view == null) view = layer.gameObject.AddComponent<GaugeHitEffectView>();
             view.lane = lane;
             // gauge/hit_effect: three 232x232 frames side by side.
-            var frames = Enumerable.Range(0, 3).Select(i => Slice("GaugeHitEffect" + i, "game/gauge/hit_effect", i * 232, 0, 232, 232)).ToArray();
+            var frames = SliceSheet("game/gauge/hit_effect", Enumerable.Range(0, 3).Select(i => ("GaugeHitEffect" + i, i * 232, 0, 232, 232)).ToArray());
             // Burst first, then the note over it (GaugeHitEffect::draw).
             view.burst = EffectImage(layer, "Burst", frames[0], 232);
             view.note = EffectImage(layer, "Note", null, 192);
