@@ -1,7 +1,5 @@
 using System;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace OurTaiko
 {
@@ -23,21 +21,15 @@ namespace OurTaiko
     // arrow nudges 5 px outward and the greyed row gets a flat grey plate and a 50 % black scrim.
     public sealed class OptionPanel
     {
-        const float RestTop = 532, BoardX = 5, RowTop = 86, RowPitch = 61, NameX = 44, ValueX = 300;
-        const float RowX = 31, BoxX = 208, IconX = 165, ArrowX = 214, ArrowSpan = 140, Nudge = 5;
+        const float Nudge = 5;
         const double ChangeMs = 250;
-        static readonly string[] Labels = { "オート", "はやさ", "ドロン", "あべこべ", "ランダム", "演奏スキップ", "音色" };
-        static readonly Color Grey = new Color32(166, 168, 171, 255), ChangedBox = new Color32(255, 255, 0, 255), Scrim = new Color32(0, 0, 0, 128);
-
-        sealed class RowView
-        {
-            public Image Row, Highlight, Box, Icon, LeftArrow, RightArrow, Scrim;
-            public TextMeshProUGUI Name, Value;
-        }
+        static readonly Color Grey = new Color32(166, 168, 171, 255), ChangedBox = new Color32(255, 255, 0, 255);
 
         readonly OptionPanelArt art;
         readonly RectTransform root, board;
-        readonly RowView[] rows = new RowView[OptionMenu.Rows.Length];
+        readonly OptionPanelView.RowView[] rows;
+        readonly Vector2 boardRestPosition;
+        readonly Vector2[] leftArrowRestPositions, rightArrowRestPositions;
         readonly LumenClip cursorClip;
         double openedAt, closedAt = -1, changedAt = -1;
         int changeDirection;
@@ -49,74 +41,31 @@ namespace OurTaiko
         public event Action<int, int> RowTapped;
         public event Action OutsideTapped;
 
-        public OptionPanel(RectTransform parent, OptionPanelArt art, TMP_FontAsset font, Material outline)
+        public OptionPanel(OptionPanelView view, OptionPanelArt art)
         {
+            if (view == null) throw new ArgumentNullException(nameof(view));
+            if (view.board == null || view.rows == null || view.rows.Length != OptionMenu.Rows.Length)
+                throw new ArgumentException("The saved option panel must contain its board and seven rows.", nameof(view));
             this.art = art;
             cursorClip = art.cursorTimeline != null ? LumenClip.Parse(art.cursorTimeline.text) : LumenClip.Empty;
-            root = SkinUi.Rect("OptionPanel", parent);
-            // Everything outside the board closes the panel, and keeps the course cards from taking taps.
-            var outside = SkinUi.Image("Outside", root, null, 1920, 1080);
-            outside.rectTransform.TopLeft(0, 0);
-            outside.color = Color.clear;
-            outside.raycastTarget = true;
-            outside.gameObject.AddComponent<PointerRelay>().Clicked = () => OutsideTapped?.Invoke();
-            board = SkinUi.Rect("Board", root);
-            var top = SkinUi.Image("Top", board, art.board);
-            top.rectTransform.TopLeft(BoardX, 0);
-            top.raycastTarget = true;
-            SkinUi.Image("Player", board, art.player).rectTransform.TopLeft(32, 17);
-            // song_select.lua draw_modifier_title: font 32, border 4, centred on the header.
-            var title = SkinUi.Text("Title", board, font, outline, 32, new Color32(0, 0, 0, 255), 0.3f);
-            title.text = "演奏オプション";
-            title.rectTransform.Center(215, 49);
-            for (int i = 0; i < rows.Length; i++) rows[i] = CreateRow(i, font, outline);
-            root.gameObject.SetActive(false);
-        }
-
-        RowView CreateRow(int index, TMP_FontAsset font, Material outline)
-        {
-            float y = RowTop + index * RowPitch;
-            var view = new RowView();
-            view.Row = SkinUi.Image("Row" + index, board, art.row);
-            view.Row.rectTransform.TopLeft(RowX, y);
-            view.Highlight = SkinUi.Image("Highlight", board, art.rowHighlight);
-            view.Highlight.rectTransform.TopLeft(RowX, y);
-            view.Box = SkinUi.Image("Box", board, art.box);
-            view.Box.rectTransform.TopLeft(BoxX, y + 8);
-            // modifier_text: font 26, white with a 3 px black edge.
-            view.Name = SkinUi.Text("Name", board, font, outline, 26, new Color32(0, 0, 0, 255), 0.3f);
-            view.Name.alignment = TextAlignmentOptions.Left;
-            view.Name.rectTransform.pivot = new Vector2(0, 0.5f);
-            view.Name.rectTransform.anchoredPosition = new Vector2(NameX, -(y + 28));
-            view.Name.text = Labels[index];
-            view.Value = SkinUi.Text("Value", board, font, outline, 26, new Color32(0, 0, 0, 255), 0.3f);
-            view.Value.rectTransform.Center(ValueX, y + 28);
-            view.Icon = SkinUi.Image("Icon", board, null, 40, 40);
-            view.Icon.rectTransform.TopLeft(IconX, y + 8);
-            view.LeftArrow = SkinUi.Image("LeftArrow", board, art.arrow);
-            view.RightArrow = SkinUi.Image("RightArrow", board, art.arrow);
-            view.RightArrow.rectTransform.localScale = new Vector3(-1, 1, 1);
-            if (OptionMenu.IsGreyed(OptionMenu.Rows[index]))
+            root = view.Root;
+            board = view.board;
+            rows = view.rows;
+            boardRestPosition = board.anchoredPosition;
+            leftArrowRestPositions = new Vector2[rows.Length];
+            rightArrowRestPositions = new Vector2[rows.Length];
+            view.outsideClick.Clicked = () => OutsideTapped?.Invoke();
+            for (int i = 0; i < rows.Length; i++)
             {
-                view.Scrim = SkinUi.Image("Scrim", board, art.row);
-                view.Scrim.rectTransform.TopLeft(RowX, y);
-                view.Scrim.color = Scrim;
+                int index = i;
+                var row = rows[i];
+                leftArrowRestPositions[i] = row.leftArrow.rectTransform.anchoredPosition;
+                rightArrowRestPositions[i] = row.rightArrow.rectTransform.anchoredPosition;
+                row.select.Clicked = () => RowTapped?.Invoke(index, 0);
+                row.previous.Clicked = () => RowTapped?.Invoke(index, -1);
+                row.next.Clicked = () => RowTapped?.Invoke(index, +1);
             }
-            // Touch: the name selects the row (or advances, like don, when already on it); the value
-            // box halves turn the value like the two ka rims.
-            Zone(index, 0, "Select", RowX, y, BoxX - RowX);
-            Zone(index, -1, "Previous", BoxX, y, ValueX - BoxX);
-            Zone(index, +1, "Next", ValueX, y, RowX + art.row.rect.width - ValueX);
-            return view;
-        }
-
-        void Zone(int row, int direction, string name, float x, float y, float width)
-        {
-            var zone = SkinUi.Image(name + row, board, null, width, RowPitch);
-            zone.rectTransform.TopLeft(x, y);
-            zone.color = Color.clear;
-            zone.raycastTarget = true;
-            zone.gameObject.AddComponent<PointerRelay>().Clicked = () => RowTapped?.Invoke(row, direction);
+            root.gameObject.SetActive(false);
         }
 
         public void Open(PlayOptions options, double now)
@@ -146,10 +95,10 @@ namespace OurTaiko
         {
             if (Menu == null) return false;
             if (Menu.IsConfirmed && closedAt < 0) closedAt = now;
-            double top = closedAt >= 0
-                ? RestTop + OptionMenu.SlideOut(now - closedAt)
-                : 1080 - OptionMenu.SlideIn(now - openedAt);
-            board.anchoredPosition = new Vector2(0, -(float)top);
+            double drop = closedAt >= 0
+                ? OptionMenu.SlideOut(now - closedAt)
+                : OptionMenu.SlideDistance - OptionMenu.SlideIn(now - openedAt);
+            board.anchoredPosition = boardRestPosition + Vector2.down * (float)drop;
             if (closedAt >= 0 && now - closedAt >= OptionMenu.SlideMs)
             {
                 Menu = null;
@@ -170,18 +119,18 @@ namespace OurTaiko
             var row = OptionMenu.Rows[index];
             bool greyed = OptionMenu.IsGreyed(row);
             bool current = !Menu.IsConfirmed && Menu.Index == index;
-            float y = RowTop + index * RowPitch;
-            view.Highlight.enabled = greyed || current;
-            view.Highlight.color = greyed ? Grey : new Color(1, 1, 1, (float)pulse);
-            view.Box.color = Menu.IsChanged(row) ? ChangedBox : Color.white;
-            view.Value.text = Value(row);
+            view.highlight.enabled = greyed || current;
+            view.highlight.color = greyed ? Grey : new Color(1, 1, 1, (float)pulse);
+            view.box.color = Menu.IsChanged(row) ? ChangedBox : Color.white;
+            view.value.text = Value(row);
             var icon = Icon(row);
-            view.Icon.enabled = icon != null;
-            view.Icon.sprite = icon;
-            view.LeftArrow.enabled = view.RightArrow.enabled = current;
-            view.LeftArrow.rectTransform.TopLeft(ArrowX - (changeDirection < 0 ? nudge : 0), y + 12);
-            // Mirrored about its centre: the right arrow's left edge sits at ArrowX + ArrowSpan.
-            view.RightArrow.rectTransform.TopLeft(ArrowX + ArrowSpan + (changeDirection > 0 ? nudge : 0), y + 12);
+            view.icon.enabled = icon != null;
+            view.icon.sprite = icon;
+            view.leftArrow.enabled = view.rightArrow.enabled = current;
+            view.leftArrow.rectTransform.anchoredPosition = leftArrowRestPositions[index]
+                + Vector2.left * (changeDirection < 0 ? nudge : 0);
+            view.rightArrow.rectTransform.anchoredPosition = rightArrowRestPositions[index]
+                + Vector2.right * (changeDirection > 0 ? nudge : 0);
         }
 
         string Value(OptionRow row)

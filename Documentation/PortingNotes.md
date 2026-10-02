@@ -328,3 +328,16 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 新的 `PauseMenuFlowTests` 验证淡变、音频／音符冻结、禁用鼓面、遮罩层级、键盘／鼠标／触摸，以及重开和返回；旧行为测试中恢复后的立即操作改为等待淡出完成。
 
 验证：Unity Editor 编译通过；新增暂停菜单专项 5/5，所在进行中 PlayMode 程序集 10/10；Finished PlayMode 回归 28/28。报告 `TestResults/pause-final-playmode.json`、`TestResults/pause-regression-playmode.json`。实时 Overlay 画面 `TestResults/PauseMenuLive.png`；1920×1080 与 1440×1080 渲染检查通过，后者另验证面板未越界且宽高比保持 1100:780。截图 [PauseMenu.png](PauseMenu.png)。独立播放器未重新构建。
+
+
+## SongSelect 界面持久化（2026-10-02）
+
+按用户要求，将选曲界面从 `Awake` 创建全部对象改为绑定场景／Prefab 的持久化引用。`SongSelectView` 保存曲目板、难度卡、演奏选项、名牌与覆盖层；`SongBoardView` 保存每块曲目板的图文与 5 个难度条目；`OptionPanelView` 保存 7 行菜单和点击区域；`SongSelectOverlayView` 保存计时器 60／100 两套数字、QR 与邀请云。`PointerRelay` 拆成独立同名脚本，供场景与 Prefab 持久化，点击回调仍由运行时绑定。
+
+- `Generated/SongBoard.prefab` 提供新增歌曲的模板，当前 3 首歌直接使用场景中保存的实例；`Generated/PlayOptions.prefab` 保存展开的默认设置菜单，便于单独编辑。课程面板与其余静态对象直接保存在 SongSelect。
+- 原 `CreateBoard`／`BuildCoursePanel` 等构建逻辑移到 Editor 定向迁移 `ApplySongSelectLayout`。再次执行不会覆盖现有布局；材质保存为资产，避免重开 Editor 后临时描边材质丢失。
+- 运行时负责替换内容、播放动画和处理输入。标题移动、板面扩张、皇冠、背景滚动、设置面板滑动及箭头偏移都以保存的位置／尺寸为基线。曲目轮整体间距与中心通过 `SongSelectView` 编辑；单独曲目板的位置微调仍保留。
+- Inspector 提供列表、难度、选项预览，只切换编辑态显示，不播放音频、不创建全局控制器、不读写玩家选项。列表预览使用收起基线；展开动画在 Play 中运行。
+- 这次迁移范围是 SongSelect 及其演奏设置面板；Entry／Result 沿用原构建方式。
+
+验证（最终代码与资产）：EditMode `SongSelectSavedAssetTests` 2/2；名称含 SongSelect 的 PlayMode 测试 8/8（含 `SongSelectSavedLayoutTests`），报告 `TestResults/song-select-saved-asset-final-editmode.json`、`TestResults/song-select-flow-final-playmode.json`。连续执行两次 `ApplySongSelectLayout()`，场景与两个 Prefab 的文件不变；编辑态三种预览已离屏渲染检查（`TestResults/SongSelectEditPreview*.png`）。独立播放器未重新构建。

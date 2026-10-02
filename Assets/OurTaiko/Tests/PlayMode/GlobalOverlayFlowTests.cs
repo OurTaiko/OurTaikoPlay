@@ -26,7 +26,7 @@ namespace OurTaiko.Tests
 
             // Placeholders: 100 on the list, 60 in course select, and neither counts down.
             Assert.That(select.TimerView.Seconds, Is.EqualTo(100));
-            Assert.That(overlays.Find("Timer/Digit2").GetComponent<UnityEngine.UI.Image>().enabled, Is.True, "Three digits.");
+            Assert.That(select.view.overlays.timerThreeDigits[2].enabled, Is.True, "Three digits.");
             yield return new WaitForSecondsRealtime(1.3f);
             Assert.That(select.TimerView.Seconds, Is.EqualTo(100));
             Assert.That(select.Coins.BubbleAlpha, Is.GreaterThan(0), "The 2P invite shows while songs played < 2.");
@@ -34,7 +34,7 @@ namespace OurTaiko.Tests
             select.Confirm();
             yield return WaitUntil(() => select.CourseFade >= 1);
             Assert.That(select.TimerView.Seconds, Is.EqualTo(60));
-            Assert.That(overlays.Find("Timer/Digit2").GetComponent<UnityEngine.UI.Image>().enabled, Is.False);
+            Assert.That(select.view.overlays.timerThreeDigits[2].enabled, Is.False);
             yield return new WaitForSecondsRealtime(1.2f);
             Assert.That(select.TimerView.Seconds, Is.EqualTo(60));
             TestCapture.Capture("OverlayCourseSelect.png");

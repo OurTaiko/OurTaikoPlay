@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace OurTaiko
@@ -22,6 +21,7 @@ namespace OurTaiko
 
         [Header("Stage")]
         public RectTransform wheel, coursePanel;
+        public SongSelectView view;
         public Image[] backgroundTiles; // previous genre x2, current genre x2
 
         [Header("Wheel art")]
@@ -50,16 +50,11 @@ namespace OurTaiko
         public AudioSource bgm, preview, sfx, voice;
         public AudioClip don, ka, uraSwitch, voiceEnter, voiceStartSong;
 
-        // Board geometry (common_song_select_main_song_board): 960x352 = 56 cap / 240 centre / 56 cap.
-        const float CapHeight = 56, ClosedCentre = 52, OpenCentre = 240, GlowOverhang = 24;
-        const float CentreY = 540, RowPitch = 135, ExpandGap = 120, CrossX = 960, RowCurve = 40;
         const double MoveMs = 166, OpenHoldMs = 61 / 120.0 * 1000, OpenGrowMs = 233, CloseMs = 13 / 0.06;
         const double CourseExitMoveMs = 500, CourseEnterMoveMs = 800, BoardFadeMs = 166;
         const double CourseFadeDelayMs = 400, CourseFadeMs = 483, GenreFadeMs = 200, BackgroundLoopMs = 15000;
         const double BgmResumeMs = 330, UraChangeMs = 1500, UraSwapMs = 450;
         const int UraCells = 90;
-        static readonly float[] CourseSlotX = { 745, 960, 1175, 1390 };
-        const float BackX = 440, OptionX = 572, ButtonY = 462, CursorY = 370, CourseBoardY = 583;
         static readonly string[] ChipNames = { "かんたん", "ふつう", "むずかしい", "おに", "おに(裏)" };
 
         public State Phase { get; private set; } = State.Browsing;
@@ -78,6 +73,8 @@ namespace OurTaiko
         sealed class Plate { public Difficulty Difficulty; public CanvasGroup Group; }
         sealed class Board
         {
+            public SongBoardView View;
+            public Vector2 PanelSize, GlowSize, TitlePosition, CrownPosition, CrownSize, RootOffset;
             public SongDefinition Song;
             public SongInfo Info;
             public RectTransform Root;
@@ -109,6 +106,8 @@ namespace OurTaiko
         Image mark, backboard, back, option, auto, frame, glow, balloon, uraChange;
         TextMeshProUGUI header, headerSub;
         OptionPanel optionPanel;
+        Vector2 framePosition, glowPosition, balloonPosition;
+        Vector2[] backgroundPositions;
 
         double Now => Time.realtimeSinceStartupAsDouble * 1000 - startedAt;
         static double Clamp01(double v) => v < 0 ? 0 : v > 1 ? 1 : v;
@@ -121,13 +120,16 @@ namespace OurTaiko
             glowClip = LumenClip.Parse(cursorGlowTimeline.text);
             uraLoop = LumenClip.Parse(uraLoopTimeline.text);
             switcher.SceneChanging += OnSceneChanging;
-            for (int i = 0; i < songs.Length; i++) wheelBoards.Add(CreateBoard(songs[i]));
+            if (view == null) throw new InvalidOperationException("SongSelect requires a saved layout. Run OurTaiko/Apply Song Select Layout in the Editor.");
+            wheel.gameObject.SetActive(true);
+            BindBoards();
+            backgroundPositions = backgroundTiles.Select(tile => tile.rectTransform.anchoredPosition).ToArray();
             int remembered = Array.IndexOf(songs, switcher.SelectedSong);
             Focused = remembered >= 0 ? remembered : 0;
             currentGenre = previousGenre = FocusedSong.genre;
-            BuildCoursePanel();
-            BuildNameplate();
-            BuildOverlays();
+            BindCoursePanel();
+            TimerView = new ArcadeTimerView(view.overlays, overlay);
+            Coins = new CoinOverlayView(view.overlays, overlay);
             // Slice the 90-cell Oni/Ura change sheets up front so the first flip does not hitch.
             UraFrames(ref uraToUraCells, uraChangeToUra);
             UraFrames(ref uraToOniCells, uraChangeToOni);
@@ -332,8 +334,8 @@ namespace OurTaiko
                 double offset = i - Focused;
                 if (offset > count / 2.0) offset -= count;
                 else if (offset < -count / 2.0) offset += count;
-                double position = CentreY + offset * RowPitch + Math.Sign(offset) * ExpandGap;
-                double cross = CrossX + offset * RowCurve;
+                double position = view.wheelCentre.y + offset * view.rowPitch + Math.Sign(offset) * view.expandGap;
+                double cross = view.wheelCentre.x + offset * view.rowCurve;
                 var board = wheelBoards[i];
                 if (snap || Math.Abs(position - board.Position) >= 1080) { board.Position = position; board.Cross = cross; board.MoveStart = -1; }
                 else MoveBoard(board, position, cross, duration);
@@ -370,7 +372,7 @@ namespace OurTaiko
             {
                 var other = wheelBoards[i];
                 if (i == Focused || other.Position < -100 || other.Position > 1180) continue;
-                MoveBoard(other, other.Position < CentreY ? -150 : 1080 + 150, other.Cross, CourseEnterMoveMs);
+                MoveBoard(other, other.Position < view.wheelCentre.y ? -150 : 1080 + 150, other.Cross, CourseEnterMoveMs);
                 FadeBoard(other, 0);
             }
             FillCoursePanel(board);
@@ -430,8 +432,8 @@ namespace OurTaiko
                 backgroundTiles[i].sprite = genreBackgrounds[previousGenre];
                 backgroundTiles[i + 2].sprite = genreBackgrounds[currentGenre];
                 backgroundTiles[i + 2].Alpha(change);
-                backgroundTiles[i].rectTransform.TopLeft(i * 2880 - move, 0);
-                backgroundTiles[i + 2].rectTransform.TopLeft(i * 2880 - move, 0);
+                backgroundTiles[i].rectTransform.anchoredPosition = backgroundPositions[i] + Vector2.left * move;
+                backgroundTiles[i + 2].rectTransform.anchoredPosition = backgroundPositions[i + 2] + Vector2.left * move;
             }
         }
 
@@ -449,7 +451,7 @@ namespace OurTaiko
             board.Group.alpha = hidden ? 0 : fade;
             board.Root.gameObject.SetActive(!hidden && board.Position > -400 && board.Position < 1480);
             if (!board.Root.gameObject.activeSelf) return;
-            board.Root.Center((float)board.Cross, (float)board.Position);
+            board.Root.anchoredPosition = new Vector2((float)board.Cross, -(float)board.Position) + board.RootOffset;
 
             // select_on / select_off of the song board clip (anim/song_board): board centre sy and
             // the song_kanban_info alpha, after the 508 ms pre-growth hold.
@@ -472,12 +474,12 @@ namespace OurTaiko
                 pb = Clamp01((sy - 0.2168) / (1 - 0.2168));
                 ia = Clamp01(songBoard.Get("song_kanban_info", frame, "a", pb >= 1 ? 1 : 0));
             }
-            float centre = (float)(ClosedCentre + (OpenCentre - ClosedCentre) * pb);
-            board.Panel.rectTransform.sizeDelta = new Vector2(960, centre + CapHeight * 2);
-            board.Glow.rectTransform.sizeDelta = new Vector2(1024, centre + CapHeight * 2 + GlowOverhang * 2);
+            var expansion = Vector2.up * (float)(board.View.expansionHeight * pb);
+            board.Panel.rectTransform.sizeDelta = board.PanelSize + expansion;
+            board.Glow.rectTransform.sizeDelta = board.GlowSize + expansion;
             double pulse = glowClip.Get("#12@0", now * 0.06 % Math.Max(1, glowClip.Last - glowClip.First + 1), "a", 1);
             board.Glow.Alpha((float)(pb * pulse));
-            board.Title.rectTransform.Center(0, (float)(-70 * pb));
+            board.Title.rectTransform.anchoredPosition = board.TitlePosition + board.View.titleOpenOffset * (float)pb;
             board.Contents.alpha = (float)ia;
             board.Subtitle.Alpha((float)ia);
             DrawPlates(board, now);
@@ -509,9 +511,8 @@ namespace OurTaiko
             if (best == Crown.None) { board.Crown.enabled = false; return; }
             var set = best == Crown.DonderfulCombo ? crownDonderful : best == Crown.FullCombo ? crownFullCombo : crownClear;
             board.Crown.sprite = set[(int)course];
-            float size = 72 * (0.75f + 0.25f * p);
-            board.Crown.rectTransform.sizeDelta = new Vector2(size, size);
-            board.Crown.rectTransform.Center(-425, -27 + (-114 + 27) * p);
+            board.Crown.rectTransform.sizeDelta = board.CrownSize * (0.75f + 0.25f * p);
+            board.Crown.rectTransform.anchoredPosition = board.CrownPosition + board.View.crownOpenOffset * p;
             board.Crown.Alpha(fade);
         }
 
@@ -541,14 +542,16 @@ namespace OurTaiko
             auto.enabled = AutoPlay;
 
             // draw_selector: the course frame / button glow under the boards, the 1P bubble above.
-            float x = column >= 0 ? CourseSlotX[column] : selected == Difficulty.Modifier ? OptionX : BackX;
+            float x = column >= 0 ? cards[column].Board.rectTransform.anchoredPosition.x
+                : (selected == Difficulty.Modifier ? option : back).rectTransform.anchoredPosition.x;
             bool hideForUra = column == 3 && ura >= 0;
             frame.enabled = column >= 0 && !hideForUra;
             glow.enabled = column < 0;
             balloon.enabled = !hideForUra;
-            frame.rectTransform.Center(x, CourseBoardY);
-            glow.rectTransform.Center(x, ButtonY);
-            balloon.rectTransform.Center(x, CursorY);
+            float cardX = cards[0].Board.rectTransform.anchoredPosition.x;
+            frame.rectTransform.anchoredPosition = framePosition + Vector2.right * (x - cardX);
+            glow.rectTransform.anchoredPosition = glowPosition + Vector2.right * (x - back.rectTransform.anchoredPosition.x);
+            balloon.rectTransform.anchoredPosition = balloonPosition + Vector2.right * (x - cardX);
         }
 
         Sprite[] UraFrames(ref Sprite[] cells, Texture2D sheet)
@@ -590,99 +593,79 @@ namespace OurTaiko
             card.Level.sprite = smallStars[Mathf.Clamp(info.Level, 1, 11)];
         }
 
-        // ---------------------------------------------------------------- construction
+        // ---------------------------------------------------------------- saved view binding
 
-        Board CreateBoard(SongDefinition song)
+        void BindBoards()
         {
-            var board = new Board { Song = song, Info = song.ReadInfo() };
-            board.Root = SkinUi.Rect(song.name, wheel);
-            board.Group = board.Root.gameObject.AddComponent<CanvasGroup>();
-            board.Group.blocksRaycasts = true;
-            board.Glow = SkinUi.Image("CursorGlow", board.Root, cursorGlow, 1024, 0);
-            board.Panel = SkinUi.Image("Board", board.Root, boards[song.genre], 960, 0);
-            board.Panel.raycastTarget = true;
-            board.Panel.gameObject.AddComponent<PointerRelay>().Clicked = () => OnBoardClicked(board);
-            var contents = SkinUi.Rect("Contents", board.Root);
-            board.Contents = contents.gameObject.AddComponent<CanvasGroup>();
-            board.Contents.blocksRaycasts = false;
-            CreatePlates(board, contents);
-            board.Crown = SkinUi.Image("Crown", board.Root, null, 72, 72);
-            board.Crown.enabled = false;
-            // Translucent black blends with the pixels behind each glyph, including gradients
-            // and animation. Keep the white face opaque; do not precompute genre colours.
-            var outline = new Color32(0, 0, 0, 153);
-            // main_song_board text_song_title: 42 px, white with a 5 px outer edge.
-            board.Title = SkinUi.Text("Title", board.Root, font, outlineMaterial, 42, outline, 0.3f);
-            board.Title.OutlineOutsidePixels(5);
-            board.Title.text = board.Info.Title;
-            board.Title.Squeeze(860);
-            board.Subtitle = SkinUi.Text("Subtitle", board.Root, font, outlineMaterial, 24, outline, 0.3f);
-            board.Subtitle.OutlineOutsidePixels(3.5f);
-            board.Subtitle.text = board.Info.Subtitle;
-            board.Subtitle.Squeeze(860, 0.75f);
-            board.Subtitle.rectTransform.Center(0, -28);
-            return board;
+            var saved = view.songBoards ?? Array.Empty<SongBoardView>();
+            for (int i = 0; i < songs.Length; i++)
+            {
+                // The authored song list reuses its scene objects. New songs use the same editable prefab.
+                var item = i < saved.Length ? saved[i] : Instantiate(view.boardPrefab, wheel);
+                item.gameObject.SetActive(true);
+                var board = new Board
+                {
+                    View = item, Song = songs[i], Info = songs[i].ReadInfo(), Root = item.Root,
+                    Group = item.group, Glow = item.glow, Panel = item.panel, Crown = item.crown,
+                    Title = item.title, Subtitle = item.subtitle, Contents = item.contents,
+                    PanelSize = item.panel.rectTransform.sizeDelta, GlowSize = item.glow.rectTransform.sizeDelta,
+                    TitlePosition = item.title.rectTransform.anchoredPosition,
+                    CrownPosition = item.crown.rectTransform.anchoredPosition, CrownSize = item.crown.rectTransform.sizeDelta
+                };
+                if (i < saved.Length)
+                    board.RootOffset = item.Root.anchoredPosition - item.authoredWheelPosition;
+                item.click.Clicked = () => OnBoardClicked(board);
+                board.Panel.sprite = boards[songs[i].genre];
+                board.Title.text = board.Info.Title;
+                board.Title.Squeeze(860);
+                board.Subtitle.text = board.Info.Subtitle;
+                board.Subtitle.Squeeze(860, 0.75f);
+                foreach (var plate in item.plates)
+                {
+                    var info = board.Info.Course(plate.difficulty);
+                    plate.group.gameObject.SetActive(info != null);
+                    if (info == null) continue;
+                    ((RectTransform)plate.group.transform).anchoredPosition += Vector2.right *
+                        (PlatePosition(board.Info, plate.difficulty, item.platePitch) - plate.authoredContentX);
+                    plate.level.sprite = levels[(int)plate.difficulty * 11 + Mathf.Clamp(info.Level, 1, 11) - 1];
+                    plate.branch.enabled = info.IsBranching;
+                    board.Plates.Add(new Plate { Difficulty = plate.difficulty, Group = plate.group });
+                }
+                wheelBoards.Add(board);
+            }
+            for (int i = songs.Length; i < saved.Length; i++) saved[i].gameObject.SetActive(false);
         }
 
-        // Diff plates at board y +75: easy / normal / hard / (oni|ura), pitch 182, centred.
-        void CreatePlates(Board board, RectTransform parent)
+        static float PlatePosition(SongInfo info, Difficulty difficulty, float pitch)
         {
             var columns = new List<Difficulty>();
-            for (var d = Difficulty.Easy; d <= Difficulty.Hard; d++) if (board.Info.Has(d)) columns.Add(d);
-            if (board.Info.Has(Difficulty.Oni) || board.Info.Has(Difficulty.Ura)) columns.Add(Difficulty.Oni);
-            for (int i = 0; i < columns.Count; i++)
+            for (var d = Difficulty.Easy; d <= Difficulty.Hard; d++)
+                if (info.Has(d)) columns.Add(d);
+            if (info.Has(Difficulty.Oni) || info.Has(Difficulty.Ura)) columns.Add(Difficulty.Oni);
+            int index = columns.IndexOf(difficulty == Difficulty.Ura ? Difficulty.Oni : difficulty);
+            return (index - (columns.Count - 1) / 2f) * pitch;
+        }
+
+        void BindCoursePanel()
+        {
+            mark = view.mark; backboard = view.backboard; back = view.back; option = view.option;
+            auto = view.auto; frame = view.frame; glow = view.glow; balloon = view.balloon; uraChange = view.uraChange;
+            header = view.header; headerSub = view.headerSub;
+            framePosition = frame.rectTransform.anchoredPosition;
+            glowPosition = glow.rectTransform.anchoredPosition;
+            balloonPosition = balloon.rectTransform.anchoredPosition;
+            AddClick(back, Difficulty.Back);
+            AddClick(option, Difficulty.Modifier);
+            for (int i = 0; i < cards.Length; i++)
             {
-                float x = (i - (columns.Count - 1) / 2f) * 182;
-                if (columns[i] == Difficulty.Oni)
-                {
-                    if (board.Info.Has(Difficulty.Oni)) CreatePlate(board, parent, Difficulty.Oni, x);
-                    if (board.Info.Has(Difficulty.Ura)) CreatePlate(board, parent, Difficulty.Ura, x);
-                }
-                else CreatePlate(board, parent, columns[i], x);
+                var saved = view.cards[i];
+                cards[i] = new CourseCard { Board = saved.board, Crown = saved.crown, Star = saved.star,
+                    Level = saved.level, Bar = saved.bar, Branch = saved.branch, Dots = saved.dots, Name = saved.name };
+                AddClick(saved.board, (Difficulty)i);
             }
-        }
-
-        void CreatePlate(Board board, RectTransform parent, Difficulty difficulty, float x)
-        {
-            var info = board.Info.Course(difficulty);
-            var root = SkinUi.Rect(difficulty.ToString(), parent);
-            root.Center(x, 75);
-            var plate = new Plate { Difficulty = difficulty, Group = root.gameObject.AddComponent<CanvasGroup>() };
-            int d = (int)difficulty;
-            SkinUi.Image("Plate", root, plates[d], 184, 96);
-            SkinUi.Image("Star", root, stars[d], 40, 40).rectTransform.Center(27, 0);
-            int level = Mathf.Clamp(info.Level, 1, 11);
-            SkinUi.Image("Level", root, levels[d * 11 + level - 1], 48, 48).rectTransform.Center(61, 0);
-            var label = SkinUi.Text("Course", root, font, outlineMaterial, 18, new Color32(40, 20, 20, 255), 0.25f);
-            label.OutlineOutsidePixels(1.5f);
-            label.characterSpacing = 100f / 18;
-            label.text = ChipNames[d];
-            label.rectTransform.Center(-42, 30);
-            if (info.IsBranching) SkinUi.Image("Branch", root, branch, 40, 40).rectTransform.Center(-69, -23);
-            board.Plates.Add(plate);
-        }
-
-        // SongSelectPlayer::draw paints the nameplate over the wheel and under the option panel. CoursePanel
-        // holds the cards and the option panel, none of which reach y 908, so the plate goes just below it.
-        void BuildNameplate()
-        {
-            if (nameplatePrefab == null) return;
-            var plate = Instantiate(nameplatePrefab, coursePanel.parent);
-            plate.name = "Nameplate";
-            plate.transform.SetSiblingIndex(coursePanel.GetSiblingIndex());
-            plate.Place(14, 908);
-        }
-
-        // SongSelectScreen::draw_overlays: the timer, the QR chip and the 2P invite cloud, over the course
-        // and option panels. The original counts 100 s on the list and 60 s in course select and then
-        // picks for the player; here both are placeholders that never count down (user decision).
-        void BuildOverlays()
-        {
-            if (overlay == null || overlay.timerBackground == null) return;
-            var root = SkinUi.Rect("GlobalOverlays", coursePanel.parent);
-            root.SetSiblingIndex(coursePanel.GetSiblingIndex() + 1);
-            TimerView = new ArcadeTimerView(root, overlay);
-            Coins = new CoinOverlayView(root, overlay, font, outlineMaterial, freePlay: false);
+            optionPanel = new OptionPanel(view.options, optionArt);
+            optionPanel.RowTapped += OnOptionRowTapped;
+            optionPanel.OutsideTapped += CloseOptions;
         }
 
         void DrawOverlays(double now)
@@ -693,73 +676,10 @@ namespace OurTaiko
             Coins.ShowInvite(switcher.SongsPlayed < 2, now);
         }
 
-        void BuildCoursePanel()
-        {
-            coursePanel.gameObject.AddComponent<CanvasGroup>().alpha = 0;
-            // main_diff: the course mark sits under the backboard; only the part outside it shows.
-            mark = SkinUi.Image("CourseMark", coursePanel, courseMarks[0], 680, 680);
-            mark.rectTransform.Center(200, 408);
-            backboard = SkinUi.Image("Backboard", coursePanel, backboards[0], 1272, 784);
-            backboard.rectTransform.Center(960, 440);
-            glow = SkinUi.Image("ButtonCursor", coursePanel, buttonGlow, 168, 168);
-            frame = SkinUi.Image("CourseCursor", coursePanel, courseFrame, 248, 408);
-            back = SkinUi.Image("Back", coursePanel, backButton, 128, 128);
-            back.rectTransform.Center(BackX, ButtonY);
-            AddClick(back, Difficulty.Back);
-            option = SkinUi.Image("Option", coursePanel, optionButton, 128, 128);
-            option.rectTransform.Center(OptionX, ButtonY);
-            AddClick(option, Difficulty.Modifier);
-            auto = SkinUi.Image("AutoPlay", coursePanel, autoIcon, 40, 40);
-            auto.rectTransform.Center(OptionX + 44, ButtonY + 44);
-            for (int i = 0; i < 4; i++)
-            {
-                float x = CourseSlotX[i];
-                var card = cards[i] = new CourseCard();
-                card.Board = SkinUi.Image("Course" + i, coursePanel, courseBoards[i], 200, 360);
-                card.Board.rectTransform.Center(x, CourseBoardY);
-                AddClick(card.Board, (Difficulty)i);
-                // Card children are placed from the 200x360 card's top-left (centre = 100,180).
-                card.Crown = SkinUi.Image("Crown", card.Board.transform, smallCrowns[0], 40, 40);
-                card.Crown.rectTransform.Center(100 - 58, 180 - 138);
-                card.Star = SkinUi.Image("Star", card.Board.transform, smallStars[0], 56, 40);
-                card.Star.rectTransform.TopLeft(100 - 40, 180 + 66);
-                card.Level = SkinUi.Image("Level", card.Board.transform, smallStars[1], 56, 40);
-                card.Level.rectTransform.TopLeft(100 - 4, 180 + 68);
-                card.Bar = SkinUi.Image("LevelBar", card.Board.transform, levelBar, 172, 24);
-                card.Bar.rectTransform.Center(100, 180 + 116);
-                card.Dots = new Image[10];
-                for (int k = 0; k < 10; k++)
-                {
-                    card.Dots[k] = SkinUi.Image("Dot" + k, card.Board.transform, levelDot, 24, 24);
-                    card.Dots[k].rectTransform.Center(100 - 67 + k * 15, 180 + 116);
-                }
-                card.Branch = SkinUi.Image("Branch", card.Board.transform, courseBranch, 40, 40);
-                card.Branch.rectTransform.Center(100, 180 + 144);
-                // main_diff_board text_course_title, centred 49 px below the card origin.
-                card.Name = SkinUi.Text("CourseName", card.Board.transform, font, outlineMaterial, 34, new Color32(20, 20, 20, 255), 0.25f);
-                card.Name.OutlineOutsidePixels(4.5f);
-                card.Name.characterSpacing = 100f / 34;
-                card.Name.rectTransform.Center(100, 180 + 49);
-            }
-            uraChange = SkinUi.Image("UraChange", coursePanel, null, 340, 400);
-            uraChange.rectTransform.TopLeft(CourseSlotX[3] - 170, CourseBoardY - 210);
-            uraChange.enabled = false;
-            header = SkinUi.Text("Title", coursePanel, font, outlineMaterial, 48, new Color32(0, 0, 0, 255), 0.25f);
-            header.OutlineOutsidePixels(7);
-            header.rectTransform.Center(960, 178);
-            headerSub = SkinUi.Text("Subtitle", coursePanel, font, outlineMaterial, 30, new Color32(0, 0, 0, 255), 0.25f);
-            headerSub.OutlineOutsidePixels(4);
-            headerSub.rectTransform.Center(960, 242);
-            balloon = SkinUi.Image("PlayerBalloon", coursePanel, playerBalloon, 124, 124);
-            optionPanel = new OptionPanel(coursePanel, optionArt, font, outlineMaterial);
-            optionPanel.RowTapped += OnOptionRowTapped;
-            optionPanel.OutsideTapped += CloseOptions;
-        }
-
         void AddClick(Image image, Difficulty difficulty)
         {
             image.raycastTarget = true;
-            image.gameObject.AddComponent<PointerRelay>().Clicked = () =>
+            image.GetComponent<PointerRelay>().Clicked = () =>
             {
                 if (!AcceptsInput() || Phase != State.CourseSelect) return;
                 var target = difficulty == Difficulty.Oni && Cursor.IsUra ? Difficulty.Ura : difficulty;
@@ -787,9 +707,4 @@ namespace OurTaiko
         }
     }
 
-    public sealed class PointerRelay : MonoBehaviour, IPointerClickHandler
-    {
-        public Action Clicked;
-        public void OnPointerClick(PointerEventData eventData) => Clicked?.Invoke();
-    }
 }

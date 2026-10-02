@@ -34,6 +34,7 @@ namespace OurTaiko
         readonly ArcadeOverlayArt art;
         readonly Transform root;
         readonly System.Collections.Generic.List<Image> digits = new System.Collections.Generic.List<Image>();
+        readonly SongSelectOverlayView savedView;
 
         public int Seconds { get; private set; } = -1;
 
@@ -44,11 +45,25 @@ namespace OurTaiko
             SkinUi.Image("Background", root, art.timerBackground).rectTransform.TopLeft(1669, 12);
         }
 
+        // SongSelect keeps both supported placeholder layouts in the scene. Binding does not
+        // recreate graphics or reset their Inspector-authored positions, dimensions or styling.
+        public ArcadeTimerView(SongSelectOverlayView view, ArcadeOverlayArt art)
+        {
+            savedView = view;
+            this.art = art;
+        }
+
         public void Show(int seconds)
         {
             if (seconds == Seconds) return;
             Seconds = seconds;
             string text = seconds.ToString();
+            if (savedView != null)
+            {
+                ShowSavedDigits(savedView.timerTwoDigits, text);
+                ShowSavedDigits(savedView.timerThreeDigits, text);
+                return;
+            }
             // song select's list timer shows 100
             while (digits.Count < text.Length) digits.Add(SkinUi.Image("Digit" + digits.Count, root, art.timerDigitsBlack[0]));
             for (int i = 0; i < digits.Count; i++)
@@ -58,6 +73,16 @@ namespace OurTaiko
                 digits[i].sprite = art.timerDigitsBlack[text[i] - '0'];
                 digits[i].rectTransform.sizeDelta = digits[i].sprite.rect.size;
                 digits[i].rectTransform.TopLeft(DigitX - text.Length * DigitMargin / 2 + i * DigitMargin, DigitY);
+            }
+        }
+
+        void ShowSavedDigits(Image[] images, string text)
+        {
+            bool visible = images.Length == text.Length;
+            for (int i = 0; i < images.Length; i++)
+            {
+                images[i].enabled = visible;
+                if (visible) images[i].sprite = art.timerDigitsBlack[text[i] - '0'];
             }
         }
     }
@@ -130,6 +155,15 @@ namespace OurTaiko
             message.rectTransform.Center(SeatX, MessageY);
             message.Squeeze(BubbleWidth);
             ShowInvite(false, 0);
+        }
+
+        public CoinOverlayView(SongSelectOverlayView view, ArcadeOverlayArt art)
+        {
+            clip = art.creditSideTimeline != null ? LumenClip.Parse(art.creditSideTimeline.text) : LumenClip.Empty;
+            QrChip = view.qrChip;
+            bubble = view.inviteBubble;
+            player = view.invitePlayer;
+            message = view.inviteMessage;
         }
 
         static TextMeshProUGUI Text(Transform parent, string name, TMP_FontAsset font, Material outline, string value, float border = 6)
