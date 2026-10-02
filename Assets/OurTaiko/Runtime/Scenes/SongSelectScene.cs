@@ -9,8 +9,8 @@ using UnityEngine.UI;
 namespace OurTaiko
 {
     // Nijiiro single-player song select (scenes/song_select.cpp + Scripts/song_select/song_select.lua):
-    // the vertical song-board wheel and the course-select panel. Folders, search, sorting, the option /
-    // neiro panels, dan boards and 2P are not ported; the option button toggles auto play instead.
+    // the vertical song-board wheel, the course-select panel and the 演奏オプション panel behind the option
+    // button. Folders, search, sorting, the standalone neiro panel, dan boards and 2P are not ported.
     public sealed class SongSelectScene : MonoBehaviour
     {
         public enum State { Browsing, CourseSelect, Decided }
@@ -33,6 +33,9 @@ namespace OurTaiko
         public Sprite[] backboards, courseBoards, courseMarks, smallCrowns, smallStars;
         public Sprite courseFrame, playerBalloon, backButton, optionButton, buttonGlow, levelBar, levelDot, courseBranch, autoIcon;
         public Texture2D uraChangeToUra, uraChangeToOni;
+
+        [Header("Play options")]
+        public OptionPanelArt optionArt;
 
         [Header("Timelines")]
         public TextAsset songBoardTimeline, cursorGlowTimeline, uraLoopTimeline;
@@ -63,7 +66,9 @@ namespace OurTaiko
         public State Phase { get; private set; } = State.Browsing;
         public int Focused { get; private set; }
         public DifficultyCursor Cursor { get; private set; }
-        public bool AutoPlay { get; private set; }
+        public bool AutoPlay => PlayOptions.Shared.auto;
+        public bool IsOptionPanelOpen => optionPanel != null && optionPanel.IsOpen;
+        public OptionMenu OptionMenu => optionPanel?.Menu;
         public SongDefinition FocusedSong => songs[Focused];
         public double CourseFade => Phase == State.Browsing ? 0 : Clamp01((Now - courseEnteredAt - CourseFadeDelayMs) / CourseFadeMs);
         public bool IsPreviewPlaying => preview != null && preview.isPlaying;
@@ -101,6 +106,7 @@ namespace OurTaiko
         Sprite[] uraToUraCells, uraToOniCells;
         Image mark, backboard, back, option, auto, frame, glow, balloon, uraChange;
         TextMeshProUGUI header, headerSub;
+        OptionPanel optionPanel;
 
         double Now => Time.realtimeSinceStartupAsDouble * 1000 - startedAt;
         static double Clamp01(double v) => v < 0 ? 0 : v > 1 ? 1 : v;
@@ -113,7 +119,6 @@ namespace OurTaiko
             glowClip = LumenClip.Parse(cursorGlowTimeline.text);
             uraLoop = LumenClip.Parse(uraLoopTimeline.text);
             switcher.SceneChanging += OnSceneChanging;
-            AutoPlay = switcher.AutoPlay;
             for (int i = 0; i < songs.Length; i++) wheelBoards.Add(CreateBoard(songs[i]));
             int remembered = Array.IndexOf(songs, switcher.SelectedSong);
             Focused = remembered >= 0 ? remembered : 0;
@@ -144,6 +149,7 @@ namespace OurTaiko
         void OnSceneChanging(string scene)
         {
             bgm.Stop(); preview.Stop();
+            if (IsOptionPanelOpen) PlayOptions.Shared.Save();
         }
 
         // ---------------------------------------------------------------- input
@@ -158,12 +164,19 @@ namespace OurTaiko
             DrawBackground(now);
             for (int i = 0; i < wheelBoards.Count; i++) DrawBoard(wheelBoards[i], i == Focused, now);
             if (Phase != State.Browsing) DrawCoursePanel(now);
+            // Player::update: the options are saved once the panel has slid out.
+            if (optionPanel.Draw(now)) PlayOptions.Shared.Save();
         }
 
         void HandleInput()
         {
             if (switcher.IsInputBlocked) return;
-            if (InputManager.GetKeyDown(InputKey.Back)) { switcher.SwitchScene(SceneSwitcher.MenuScene); return; }
+            if (InputManager.GetKeyDown(InputKey.Back))
+            {
+                if (IsOptionPanelOpen) CloseOptions();
+                else switcher.SwitchScene(SceneSwitcher.MenuScene);
+                return;
+            }
             bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft);
             bool rightKa = InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight);
             bool donHit = InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
@@ -177,7 +190,8 @@ namespace OurTaiko
         {
             if (!AcceptsInput()) return;
             sfx.PlayOneShot(ka);
-            if (Phase == State.Browsing) Navigate(-1);
+            if (IsOptionPanelOpen) ChangeOption(-1);
+            else if (Phase == State.Browsing) Navigate(-1);
             else Cursor.Left();
         }
 
@@ -185,7 +199,8 @@ namespace OurTaiko
         {
             if (!AcceptsInput()) return;
             sfx.PlayOneShot(ka);
-            if (Phase == State.Browsing) Navigate(+1);
+            if (IsOptionPanelOpen) ChangeOption(+1);
+            else if (Phase == State.Browsing) Navigate(+1);
             else if (Cursor.Right())
             {
                 // toggle_ura_mode: the oni card plays change_ura / change_oni for 90 frames.
@@ -198,11 +213,12 @@ namespace OurTaiko
         {
             if (!AcceptsInput()) return;
             sfx.PlayOneShot(don);
+            if (IsOptionPanelOpen) { optionPanel.Menu.Confirm(); return; }
             if (Phase == State.Browsing) { EnterCourseSelect(); return; }
             switch (Cursor.Selected)
             {
                 case Difficulty.Back: ExitCourseSelect(); break;
-                case Difficulty.Modifier: ToggleAuto(); break;
+                case Difficulty.Modifier: OpenOptions(); break;
                 default:
                     Phase = State.Decided;
                     switcher.LastDifficulty = (int)Cursor.Selected;
@@ -227,13 +243,56 @@ namespace OurTaiko
 
         public void ToggleAuto()
         {
-            AutoPlay = !AutoPlay;
+            var options = PlayOptions.Shared;
+            options.auto = !options.auto;
+            options.Save();
         }
 
         void StartSong()
         {
             var course = wheelBoards[Focused].Info.Course(Cursor.Selected);
             switcher.Play(FocusedSong, course.Course, AutoPlay);
+        }
+
+        // ---------------------------------------------------------------- play options
+
+        // SongSelectPlayer::handle_input_selecting: don on the option button opens ModifierSelector.
+        void OpenOptions()
+        {
+            optionPanel.Open(PlayOptions.Shared, Now);
+            PlayVoice(optionArt.voice);
+        }
+
+        void CloseOptions()
+        {
+            if (!AcceptsInput() || !IsOptionPanelOpen || optionPanel.IsClosing) return;
+            sfx.PlayOneShot(don);
+            optionPanel.Close(Now);
+        }
+
+        void ChangeOption(int direction)
+        {
+            var menu = optionPanel.Menu;
+            if (!(direction < 0 ? menu.Left() : menu.Right())) return;
+            optionPanel.Changed(direction, Now);
+            // step_neiro previews the new set's don; 無音 plays nothing.
+            if (menu.Current == OptionRow.Neiro && optionArt.hitSounds != null
+                && optionArt.hitSounds.TryGet(menu.Options.neiro, out var preview, out _))
+                sfx.PlayOneShot(preview);
+        }
+
+        void OnOptionRowTapped(int row, int direction)
+        {
+            if (!AcceptsInput() || !IsOptionPanelOpen || optionPanel.IsClosing) return;
+            var menu = optionPanel.Menu;
+            if (direction == 0)
+            {
+                if (menu.Index == row) Confirm();
+                else { sfx.PlayOneShot(ka); menu.Select(row); }
+                return;
+            }
+            menu.Select(row);
+            if (direction < 0) Left(); else Right();
         }
 
         // ---------------------------------------------------------------- wheel
@@ -644,6 +703,9 @@ namespace OurTaiko
             headerSub = SkinUi.Text("Subtitle", coursePanel, font, outlineMaterial, 30, new Color32(0, 0, 0, 255), 0.25f);
             headerSub.rectTransform.Center(960, 242);
             balloon = SkinUi.Image("PlayerBalloon", coursePanel, playerBalloon, 124, 124);
+            optionPanel = new OptionPanel(coursePanel, optionArt, font, outlineMaterial);
+            optionPanel.RowTapped += OnOptionRowTapped;
+            optionPanel.OutsideTapped += CloseOptions;
         }
 
         void AddClick(Image image, Difficulty difficulty)

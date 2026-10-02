@@ -2194,6 +2194,36 @@ MonoBehaviour:
   autoIcon: {fileID: 21300000, guid: d22a23b12e5184281a0298d40be15cf6, type: 3}
   uraChangeToUra: {fileID: 2800000, guid: c76c9d8552eeb4fc5900bb79667f0832, type: 3}
   uraChangeToOni: {fileID: 2800000, guid: 10fc94709a23942579838dfc7ad3b6e3, type: 3}
+  optionArt:
+    board: {fileID: 21300000, guid: 8c064205516ad4e56b3b437b56b8bf0c, type: 3}
+    player: {fileID: 21300000, guid: 5065cdf5a5372451ea2441061999bb2a, type: 3}
+    row: {fileID: 21300000, guid: 3f873306b7eb54cfaa5f268ed4f0022a, type: 3}
+    rowHighlight: {fileID: 21300000, guid: 179fd1f55bab24a67ae64e7e26babbf5, type: 3}
+    box: {fileID: 21300000, guid: 980fe948c37be4cb881fc17a044be5f2, type: 3}
+    arrow: {fileID: 21300000, guid: df13505d1447d40e3b05f2249c050453, type: 3}
+    auto: {fileID: 21300000, guid: d22a23b12e5184281a0298d40be15cf6, type: 3}
+    doron: {fileID: 21300000, guid: 014c5f1c01d334527abe79739b442326, type: 3}
+    abekobe: {fileID: 21300000, guid: 9000609bf3aea41c8a258530f9f0d03b, type: 3}
+    kimagure: {fileID: 21300000, guid: bbbdedc370fb84f5da747db031be877d, type: 3}
+    detarame: {fileID: 21300000, guid: cee927e956f604d7d9fad07919c4fee4, type: 3}
+    speed:
+    - {fileID: 21300000, guid: b0d15672fe679434d987b1cb5749c72b, type: 3}
+    - {fileID: 21300000, guid: b6c5881282acc4db1b3e49f82c56a2c0, type: 3}
+    - {fileID: 21300000, guid: 21818040938d147af82a3a3d2d317b2d, type: 3}
+    - {fileID: 21300000, guid: 1cbe80caf964b4ec4b0a6aef01fbc7e1, type: 3}
+    - {fileID: 21300000, guid: 4b50a49c0d9db48cc965012dfd91367d, type: 3}
+    - {fileID: 21300000, guid: fff841b96ff7441a7b85d8e26b973eed, type: 3}
+    - {fileID: 21300000, guid: e41a7a233111343eabda064035663cc7, type: 3}
+    - {fileID: 21300000, guid: b32541893b1144eafa5c40377afc01ae, type: 3}
+    - {fileID: 21300000, guid: 4edd2ef4118ce4e73b8d4a33153b46dc, type: 3}
+    - {fileID: 21300000, guid: 72227abd01d1449a48b57f76e010ef8d, type: 3}
+    - {fileID: 21300000, guid: 5b5e94fd065c74e67b6d15036f7708f8, type: 3}
+    - {fileID: 21300000, guid: f1b8461b741744faf8edc6e54cc31ac1, type: 3}
+    - {fileID: 21300000, guid: f791b2ea1722043aa8ada1aec282f15f, type: 3}
+    - {fileID: 21300000, guid: 742db32656df047e087c83b9d082a8f5, type: 3}
+    cursorTimeline: {fileID: 4900000, guid: a1deec41bca4f401887f489f3c68491b, type: 3}
+    hitSounds: {fileID: 11400000, guid: 5515db8dbe20b4e3796637e25e79846f, type: 2}
+    voice: {fileID: 8300000, guid: 24020f35116964aa4906e25c8b2d3e40, type: 3}
   songBoardTimeline: {fileID: 4900000, guid: c2b072dcaa7b74689b9e1e3ffea67725, type: 3}
   cursorGlowTimeline: {fileID: 4900000, guid: ce77919eecadb4e74bcafe5850f3539e, type: 3}
   uraLoopTimeline: {fileID: 4900000, guid: 381c5f6ec81844d40b47d4cb9b206cda, type: 3}

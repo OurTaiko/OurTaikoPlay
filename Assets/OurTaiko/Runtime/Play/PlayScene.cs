@@ -11,6 +11,8 @@ namespace OurTaiko
         public SongDefinition defaultSong;
         public AudioSource music, hitAudio;
         public AudioClip don, ka, balloonPop;
+        public HitSoundLibrary hitSounds;
+        public ModifierBadgeView modifierBadges;
         public RectTransform noteLayer, barLayer;
         public Sprite[] noteSprites;
         public Sprite[] rollBodySprites, rollTailSprites;
@@ -64,7 +66,14 @@ namespace OurTaiko
             pausePanel.SetActive(false); resultPanel.SetActive(false);
             try
             {
-                Session = new PlaySession(song.Parse(switcher.SelectedSong != null ? switcher.SelectedCourse : null));
+                // Player::reset_chart: the play options change the chart before load times are taken.
+                var options = PlayOptions.Shared;
+                var chart = song.Parse(switcher.SelectedSong != null ? switcher.SelectedCourse : null);
+                ChartModifiers.Apply(chart, options, new System.Random());
+                Session = new PlaySession(chart);
+                if (modifierBadges != null) modifierBadges.Show(options);
+                // 音色: hit_sounds/<neiro>/don.ogg and ka.ogg; 無音 leaves both empty.
+                if (hitSounds != null) hitSounds.TryGet(options.neiro, out don, out ka);
                 balloonCounter.ResetDisplay();
                 soulGauge.Initialize(Session.ClearThreshold);
                 foreach (string warning in Session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
@@ -85,7 +94,8 @@ namespace OurTaiko
             }
             if (IsFinished) yield break;
             // The clip decompresses on load; do it behind the global cover, not on the first PlayScheduled.
-            if (music.clip != null && music.clip.loadState != AudioDataLoadState.Loaded) music.clip.LoadAudioData();
+            foreach (var clip in new[] { music.clip, don, ka })
+                if (clip != null && clip.loadState != AudioDataLoadState.Loaded) clip.LoadAudioData();
             while (switcher.IsInputBlocked) yield return null;
             // Start the full countdown and DSP clock only after the global cover has opened.
             startDsp = AudioSettings.dspTime + Math.Max(2, Session.Chart.Offset + 2);
@@ -153,7 +163,8 @@ namespace OurTaiko
         }
         void Feedback(bool isKa, bool right)
         {
-            hitAudio.PlayOneShot(isKa ? ka : don);
+            var clip = isKa ? ka : don;
+            if (clip != null) hitAudio.PlayOneShot(clip);
             drumFlashes[(isKa ? 2 : 0) + (right ? 1 : 0)].enabled = true;
             drumTime = Time.unscaledTime;
         }
@@ -288,7 +299,8 @@ namespace OurTaiko
                 var note = Session.Chart.Notes[i]; var view = notes[i]; var pos = Position(note, time);
                 if (note.IsBalloon && time >= note.Time) pos = new Vector2(JudgeLocalX, JudgeLocalY);
                 float length = note.IsLong && !note.IsBalloon ? (float)NoteScroll.RollLength(note, TravelDistance) : 0;
-                bool visible = Session.IsActive(note) && !Session.Resolved[i] && pos.x + Math.Max(0, length) >= -192 && pos.x + Math.Min(0, length) <= 1650;
+                // ドロン hides the notes; they are still judged.
+                bool visible = note.Display && Session.IsActive(note) && !Session.Resolved[i] && pos.x + Math.Max(0, length) >= -192 && pos.x + Math.Min(0, length) <= 1650;
                 view.Object.SetActive(visible);
                 if (visible)
                 {

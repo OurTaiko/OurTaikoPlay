@@ -615,7 +615,7 @@ namespace OurTaiko.Tests
         static Canvas SceneCanvas() => Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None)
             .Single(canvas => canvas.gameObject.scene == SceneManager.GetActiveScene());
 
-        static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null)
+        internal static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null)
         {
             var canvas = SceneCanvas(); var camera = Camera.main;
             var scaler = canvas.GetComponent<UnityEngine.UI.CanvasScaler>();

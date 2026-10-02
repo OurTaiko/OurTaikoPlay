@@ -4625,6 +4625,73 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
   m_Asset: {fileID: 414172764}
   m_ActionId: 3c7022bf-7922-4f7c-a998-c437916075ad
+--- !u!1 &961300032
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 961300033}
+  - component: {fileID: 961300034}
+  m_Layer: 0
+  m_Name: ModifierBadges
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &961300033
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 961300032}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1010394549}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 1}
+--- !u!114 &961300034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 961300032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a27c5a6bb97cb476fbd75b7ae225f583, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ModifierBadgeView
+  speed:
+  - {fileID: 21300000, guid: b4c42b9fe9ce24f47819de5c0850efa4, type: 3}
+  - {fileID: 21300000, guid: a47a4d01c34124f2b961def08b8cb0a9, type: 3}
+  - {fileID: 21300000, guid: a459e71fb0c6749b39c57ec7625fc229, type: 3}
+  - {fileID: 21300000, guid: f46ee64108395453194e1a3264f52f6b, type: 3}
+  - {fileID: 21300000, guid: a66a738afdc0149c1b5ec14f6db04e56, type: 3}
+  - {fileID: 21300000, guid: be3c42fcd704942c692bb0de08fda90c, type: 3}
+  - {fileID: 21300000, guid: 4cd21f12a57764583a4d4b73f331c403, type: 3}
+  - {fileID: 21300000, guid: d3233f8a66ee140b8bdd4acdfd31491f, type: 3}
+  - {fileID: 21300000, guid: 3d15e81d030f941c89423145ac8e2ca0, type: 3}
+  - {fileID: 21300000, guid: 5e73f6a2cee314f13a7acb750e940f4b, type: 3}
+  - {fileID: 21300000, guid: dc13a333daea840b6b5441d45ec805f8, type: 3}
+  - {fileID: 21300000, guid: af3ed331a009246e99b64ebbaceb1e8d, type: 3}
+  - {fileID: 21300000, guid: dcefa9972335349beabdec8ac4b70d8f, type: 3}
+  - {fileID: 21300000, guid: 4df0867dcd3ea48eea0f774a6f0d2daf, type: 3}
+  doron: {fileID: 21300000, guid: 97afee998cc3940b8a513e2453e09ca0, type: 3}
+  abekobe: {fileID: 21300000, guid: 0735834a446124e9e87ffe6378ff935e, type: 3}
+  kimagure: {fileID: 21300000, guid: 31f6e337fb1ee4547bd1c9bb553df598, type: 3}
+  detarame: {fileID: 21300000, guid: 5f1ba10da3f9a45cb8c4f227c06a1e4b, type: 3}
 --- !u!1 &976959715
 GameObject:
   m_ObjectHideFlags: 0
@@ -4866,6 +4933,7 @@ RectTransform:
   - {fileID: 121540093}
   - {fileID: 1506459316}
   - {fileID: 114656369}
+  - {fileID: 961300033}
   - {fileID: 907745265}
   - {fileID: 398013029}
   - {fileID: 1683452660}
@@ -6476,6 +6544,8 @@ MonoBehaviour:
   don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}
   ka: {fileID: 8300000, guid: b5d46904052a14efdbf9361bde1e09ae, type: 3}
   balloonPop: {fileID: 8300000, guid: 44b1297bb1bd74b4ab8ac5ed9f62c148, type: 3}
+  hitSounds: {fileID: 11400000, guid: 5515db8dbe20b4e3796637e25e79846f, type: 2}
+  modifierBadges: {fileID: 961300034}
   noteLayer: {fileID: 2060243652}
   barLayer: {fileID: 1809151790}
   noteSprites:

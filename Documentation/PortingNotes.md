@@ -198,3 +198,19 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 ## 游玩场景改名（2026-10-01）
 
 `Assets/Scenes/PlayScene.unity` 通过 `AssetDatabase.MoveAsset` 改名为 `SinglePlayScene.unity`，GUID 不变，Build Settings 由 Editor 自动更新。`SceneSwitcher.GameScene` 改为 `"SinglePlayScene"`，ProjectBuilder 各迁移入口使用新路径。场景内控制组件类 `PlayScene`（`Runtime/Play/PlayScene.cs`）未改名。本文更早的记录中的 PlayScene 场景名与 `PlayScene.png` 截图名保留为历史。
+
+## 演奏オプション（2026-10-01）
+
+- 面板逻辑照 `objects/song_select/modifier.cpp`（`ModifierSelector`），绘制照 Nijiiro `song_select.lua::draw_option_board`（Nijiiro 用它取代 C++ 绘制）。Nijiiro 开启 `option_skip_row`、`option_neiro_row`，所以 7 行：オート、はやさ、ドロン、あべこべ、ランダム、演奏スキップ、音色。咔改值并播放咔音，咚进入下一行，最后一行后确认；音色变化时预听新音色的咚（無音不播）。打开时播放 `voice_options_1p`。纯逻辑在 `Runtime/Core/OptionMenu.cs`，绘制在 `Runtime/Scenes/OptionPanel.cs`。
+- 布局（设计像素）：`modifier/top` 静止于 (5,532)，1P 标 (32,549)，标题「演奏オプション」字号 32 居中于 (215,581)；第 i 行 `mod_bg` 在 (31, 618+61i)，数值框 (208, 626+61i)，图标 (165, 626+61i)，箭头 (214, 630+61i) 与镜像 (354, …)，行名 x=44，数值居中 x=300，字号 26。非默认值数值框染黄 (255,255,0)；光标行高亮按 `anim/option_cursor`（复制为 `Animations/option_cursor.txt`，60 帧循环）脉动；按下的箭头外移 5 px，250 ms 二次缓出回位；灰显行为 (166,168,171) 底板加 50% 黑色遮罩。Nijiiro 的 Lua 绘制没有 C++ 版的数值横向滑动，因此不移植。
+- 滑入／滑出取 `song_select/animation.json` 的 28／39：333.33 ms 移动 548 px，经 75 px 过冲，分段线性（入：73.68% 时到 623；出：21.05% 时到 −75）。滑出结束后保存设置，对应 `Player::update` 中的 `save_player_data`。滑入／滑出期间输入都交给面板（与原版一样，确认后的咔／咚被忽略）。
+- 设置为 `Runtime/Core/PlayOptions.cs`（`options.json`），对应 `PlayerData` 的 `modifier_*` 与 `neiro_index`（無音 = −1）。オート即原自动演奏开关，A 键与面板共用并立即保存。
+- 游玩：`ChartModifiers.Apply` 在 `PlaySession` 之前修改谱面（同 `Player::reset_chart` 在计算出现时间前调用 `apply_modifiers`），顺序为あべこべ → ランダム → はやさ；はやさ只乘 `ScrollX`（含小节线），因此出现时间和分支选线时机也随之变化。音色按 `game.cpp` 读取 `hit_sounds/<neiro>/don.ogg`、`ka.ogg`（21 套原样复制到 `Audio/hit_sounds/`，名称来自 `neiro_list.txt`，汇总为 `Generated/HitSounds.asset`）；無音时不播放打击音。
+- 有意偏离（用户决定，不要按原版还原）：
+  - **ドロン只隐藏音符**（含连打身体与气球），小节线保留；原 `modifier_display` 对小节线也设 `display=false`。
+  - **ランダム按每个咚／咔音符独立概率换色**：きまぐれ 30%、でたらめ 50%。原 `modifier_random` 从全部对象（含小节线、连打、气球）中抽 (总数/5)×档位 个再只换咚咔，实际比例偏低且随谱面变化。
+  - **演奏スキップ灰显**：原版需要空闲的 2P 轨道接收咔；单人场景没有 2P 鼓，按原「grayout」样式显示且不可改，跳过功能未实现。
+  - **轨道徽章用整数行**：`Player::draw_modifiers` 按 Nijiiro `mod_badge_grid`（x 170、y 77、44×44、3 列）排列，原代码行号用浮点 `slot/3.0` 导致第 2、3 个徽章下移约 15、29 px，此处按整数行。徽章素材为 Nijiiro `game/lane/mod_speed_x*` 与 `mod_doron` 等；`mod_shinuchi` 未添加。
+  - 触控扩展：点行名选中该行（已选中时等于咚），点数值框左／右半边等于该行的左／右咔，点面板外或按 Esc 一次确认全部并滑出。原版只有键盘。
+- 迁移入口 `ProjectBuilder.ApplyPlayOptions()`（菜单 OurTaiko/Apply Play Options）：导入素材、生成 `HitSounds.asset`、为 SongSelect 绑定 `optionArt`，为 SinglePlayScene 的 NoteLane 添加 `ModifierBadges` 并绑定音色库。
+- 验证：EditMode 115/115、PlayMode 22/22（`TestResults/options-editmode.json`、`options-playmode.json`）。截图 `TestResults/SongSelectOptions.png`（面板）、`PlayOptionsBadges.png`（x2.0／ドロン／あべこべ 徽章，音符隐藏、小节线保留）。没有重建独立播放器。
