@@ -70,10 +70,9 @@ namespace OurTaiko
         };
 
         public State Phase { get; private set; } = State.Browsing;
-        public ArcadeTimer ListTimer { get; private set; }
-        public ArcadeTimer CourseTimer { get; private set; }
+        public const int ListTimerSeconds = 100, CourseTimerSeconds = 60;
+        public ArcadeTimerView TimerView { get; private set; }
         public CoinOverlayView Coins { get; private set; }
-        ArcadeTimerView timerView;
         public int Focused { get; private set; }
         public DifficultyCursor Cursor { get; private set; }
         public bool AutoPlay => PlayOptions.Shared.auto;
@@ -683,16 +682,14 @@ namespace OurTaiko
             if (overlay == null || overlay.timerBackground == null) return;
             var root = SkinUi.Rect("GlobalOverlays", coursePanel.parent);
             root.SetSiblingIndex(coursePanel.GetSiblingIndex() + 1);
-            ListTimer = new ArcadeTimer(100, 0);
-            CourseTimer = new ArcadeTimer(60, 0);
-            timerView = new ArcadeTimerView(root, overlay);
+            TimerView = new ArcadeTimerView(root, overlay);
             Coins = new CoinOverlayView(root, overlay, font, outlineMaterial, freePlay: false);
         }
 
         void DrawOverlays(double now)
         {
-            if (timerView == null) return;
-            timerView.Show(Phase == State.Browsing ? ListTimer : CourseTimer, now);
+            if (TimerView == null) return;
+            TimerView.Show(Phase == State.Browsing ? ListTimerSeconds : CourseTimerSeconds);
             // coin_overlay: the invite shows while a 2P join would still be allowed (songs played < 2).
             Coins.ShowInvite(switcher.SongsPlayed < 2, now);
         }

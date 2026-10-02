@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
             Assert.That(entry.Flow.State, Is.EqualTo(EntryFlow.Phase.SelectSide));
             Assert.That(entry.Credit.Alpha, Is.EqualTo(1).Within(1e-3));
             Assert.That(entry.Board.Root.gameObject.activeSelf, Is.False);
-            Assert.That(entry.Timer.Seconds, Is.EqualTo(60));
+            Assert.That(entry.TimerView.Seconds, Is.EqualTo(60));
             Assert.That(entry.Nameplate.GetComponent<CanvasGroup>().alpha, Is.Zero);
             Assert.That(entry.Coins.BubbleAlpha, Is.Zero, "No 2P invite while the credit rows are up.");
             Assert.That(entry.Coins.FreePlay.text, Is.EqualTo("フリープレイ"));
@@ -51,7 +51,7 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(1f);
             Assert.That(entry.Board.Openness, Is.EqualTo(1).Within(1e-3));
             Assert.That(entry.Board.Fade, Is.EqualTo(1).Within(1e-3));
-            Assert.That(entry.Timer.Seconds, Is.EqualTo(60), "The timer is a placeholder and never counts down.");
+            Assert.That(entry.TimerView.Seconds, Is.EqualTo(60), "The timer is a placeholder and never counts down.");
             TestCapture.Capture("EntryModeSelect.png");
 
             // Rim hits change nothing; a face hit plays `choose`, fades the board and opens SongSelect.

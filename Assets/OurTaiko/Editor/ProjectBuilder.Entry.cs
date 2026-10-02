@@ -112,10 +112,7 @@ namespace OurTaiko.Editor
         static ArcadeOverlayArt OverlayArt() => new ArcadeOverlayArt
         {
             timerBackground = Required("global/timer/bg"),
-            timerBackgroundRed = Required("global/timer/bg_red"),
-            timerHighlight = Required("global/timer/highlight"),
             timerDigitsBlack = Enumerable.Range(0, 10).Select(i => Slice("TimerDigitBlack" + i, "global/timer/counter_black", i * 64, 0, 64, 96)).ToArray(),
-            timerDigitsWhite = Enumerable.Range(0, 10).Select(i => Slice("TimerDigitWhite" + i, "global/timer/counter_white", i * 64, 0, 64, 96)).ToArray(),
             guideDecideFrames = Enumerable.Range(GuideFirstDecide, GuideCells - GuideFirstDecide)
                 .Select(c => Slice($"ControlGuide{c:000}", GuideSheet, c % GuideColumns * 352, c / GuideColumns * 276, 352, 276)).ToArray(),
             qrChip = Required("global/overlay/banapass_osaifu_keitai/0"),

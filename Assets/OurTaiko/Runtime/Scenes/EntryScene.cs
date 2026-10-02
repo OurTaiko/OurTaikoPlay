@@ -43,7 +43,7 @@ namespace OurTaiko
         public AudioClip don, ka, cloud, entryStart, selectMode;
 
         public EntryFlow Flow { get; private set; }
-        public ArcadeTimer Timer { get; private set; }
+        public ArcadeTimerView TimerView { get; private set; }
         public EntryCredit Credit { get; private set; }
         public EntryModeBoard Board { get; private set; }
         public ControlGuideView Guide { get; private set; }
@@ -53,7 +53,6 @@ namespace OurTaiko
 
         SceneSwitcher switcher;
         EntryBackground backdrop;
-        ArcadeTimerView timerView;
         CanvasGroup nameplateGroup;
         bool announced, creditGone;
         double modeShownAt = double.NaN;
@@ -67,7 +66,6 @@ namespace OurTaiko
             switcher = SceneSwitcher.EnsureInstance();
             double now = Now;
             Flow = new EntryFlow(now);
-            Timer = new ArcadeTimer(TimerSeconds, now);
             Build();
             switcher.SceneChanging += OnSceneChanging;
             Show(now);
@@ -105,7 +103,8 @@ namespace OurTaiko
                 nameplateGroup = Nameplate.gameObject.AddComponent<CanvasGroup>();
                 nameplateGroup.alpha = 0;
             }
-            timerView = new ArcadeTimerView(stage, overlay);
+            TimerView = new ArcadeTimerView(stage, overlay);
+            TimerView.Show(TimerSeconds);
             StatusChips.Build(stage, overlay);
             Coins = new CoinOverlayView(stage, overlay, font, outlineMaterial);
             var touch = SkinUi.Image("TouchArea", stage, null, 1920, 1080);
@@ -191,8 +190,6 @@ namespace OurTaiko
             if (Flow.JoinedAt.HasValue) Guide.Show(now - Flow.JoinedAt.Value, plate);
             else Guide.Show(now - Flow.StartedAt, 1);
             if (nameplateGroup != null) nameplateGroup.alpha = plate;
-
-            timerView.Show(Timer, now);
             // coin_overlay: the 2P invite appears once the credit rows are gone and only 1P is in.
             Coins.ShowInvite(Flow.JoinedAt.HasValue && creditGone, now - Flow.StartedAt);
         }

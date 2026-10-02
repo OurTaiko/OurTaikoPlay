@@ -12,9 +12,8 @@ namespace OurTaiko
     {
         [Header("Timer")]
         public Sprite timerBackground;
-        public Sprite timerBackgroundRed, timerHighlight;
-        [Tooltip("counter_black / counter_white frames 0-9.")]
-        public Sprite[] timerDigitsBlack, timerDigitsWhite;
+        [Tooltip("counter_black frames 0-9.")]
+        public Sprite[] timerDigitsBlack;
 
         [Header("Control guide")]
         [Tooltip("global/indicator/background cells 210-324: both sticks + 決定 (the decide loop).")]
@@ -26,50 +25,39 @@ namespace OurTaiko
         public TextAsset creditSideTimeline;
     }
 
-    // Timer:draw — the 240x240 clock at (1669,12); below 10 s the red clock, white digits and a
-    // highlight that grows and fades on every tick. Digits are centred 48 px apart, each scaled
-    // about its own centre.
+    // Timer:draw — the 240x240 clock at (1669,12) with its digits centred 48 px apart. The arcade
+    // counts down (red clock, voices and an automatic pick at 0); here the timer is a placeholder
+    // that only shows its starting value (user decision: the simulator does not limit the player's time).
     public sealed class ArcadeTimerView
     {
         const float DigitX = 1781, DigitY = 84, DigitMargin = 48;
         readonly ArcadeOverlayArt art;
-        readonly Image background, highlight;
         readonly Transform root;
         readonly System.Collections.Generic.List<Image> digits = new System.Collections.Generic.List<Image>();
+
+        public int Seconds { get; private set; } = -1;
 
         public ArcadeTimerView(Transform parent, ArcadeOverlayArt art)
         {
             this.art = art;
             root = SkinUi.Rect("Timer", parent);
-            background = SkinUi.Image("Background", root, art.timerBackground);
-            background.rectTransform.TopLeft(1669, 12);
-            highlight = SkinUi.Image("Highlight", root, art.timerHighlight);
-            highlight.rectTransform.TopLeft(1609, -48);
+            SkinUi.Image("Background", root, art.timerBackground).rectTransform.TopLeft(1669, 12);
         }
 
-        public void Show(ArcadeTimer timer, double nowMs)
+        public void Show(int seconds)
         {
-            bool red = timer.IsRed;
-            double popped = nowMs - timer.PoppedAtMs;
-            background.sprite = red ? art.timerBackgroundRed : art.timerBackground;
-            highlight.enabled = red;
-            if (red)
-            {
-                highlight.rectTransform.localScale = Vector3.one * ArcadeTimer.HighlightScale(popped);
-                highlight.color = new Color(1, 1, 1, ArcadeTimer.HighlightAlpha(popped));
-            }
-            string text = timer.Seconds.ToString();
-            float scale = ArcadeTimer.DigitScale(popped);
-            // song select's list timer starts at 100
+            if (seconds == Seconds) return;
+            Seconds = seconds;
+            string text = seconds.ToString();
+            // song select's list timer shows 100
             while (digits.Count < text.Length) digits.Add(SkinUi.Image("Digit" + digits.Count, root, art.timerDigitsBlack[0]));
             for (int i = 0; i < digits.Count; i++)
             {
                 digits[i].enabled = i < text.Length;
                 if (i >= text.Length) continue;
-                digits[i].sprite = (red ? art.timerDigitsWhite : art.timerDigitsBlack)[text[i] - '0'];
+                digits[i].sprite = art.timerDigitsBlack[text[i] - '0'];
                 digits[i].rectTransform.sizeDelta = digits[i].sprite.rect.size;
                 digits[i].rectTransform.TopLeft(DigitX - text.Length * DigitMargin / 2 + i * DigitMargin, DigitY);
-                digits[i].rectTransform.localScale = Vector3.one * scale;
             }
         }
     }

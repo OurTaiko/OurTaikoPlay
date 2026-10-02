@@ -1918,8 +1918,6 @@ MonoBehaviour:
   nameplatePrefab: {fileID: 2523230160004936926, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
   overlay:
     timerBackground: {fileID: 21300000, guid: 7511f098ce59948c48afd753dbedc597, type: 3}
-    timerBackgroundRed: {fileID: 21300000, guid: c0d5c2e09d421481aad96f529c8a7b37, type: 3}
-    timerHighlight: {fileID: 21300000, guid: 2a92eaa83338d4db7a00dd80a365b5f2, type: 3}
     timerDigitsBlack:
     - {fileID: 21300000, guid: adb7355e82d6c4e029a5e59a34a25723, type: 2}
     - {fileID: 21300000, guid: 515d7f7eaa3cc4b55bc056570bb868c4, type: 2}
@@ -1931,17 +1929,6 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 3ce93f6cf3c664193b2c4d1364ccf898, type: 2}
     - {fileID: 21300000, guid: 901b112bd81054df588a42e787f2011f, type: 2}
     - {fileID: 21300000, guid: 5605d0bb7d3bf472888404b3a7d213f7, type: 2}
-    timerDigitsWhite:
-    - {fileID: 21300000, guid: 85a45e137328946f284879626764099c, type: 2}
-    - {fileID: 21300000, guid: a114cd32078014b7191b354bf400041e, type: 2}
-    - {fileID: 21300000, guid: ce363d3004a8a4d179cfaa6944e8e335, type: 2}
-    - {fileID: 21300000, guid: b82eb1a73ffaa40078ff152b8cfddb15, type: 2}
-    - {fileID: 21300000, guid: 5a070e14e5a144733b0e82d14e5ad779, type: 2}
-    - {fileID: 21300000, guid: 618e085f528f14e8b9c437e92fb64637, type: 2}
-    - {fileID: 21300000, guid: d823271b2d5284d0aa643e325fb9f842, type: 2}
-    - {fileID: 21300000, guid: 7396800f6649a41bc903752c0be4c105, type: 2}
-    - {fileID: 21300000, guid: 05b3cc379f3a549fc9ad315979a441f6, type: 2}
-    - {fileID: 21300000, guid: 8065a77137708447b8465e6f083027f6, type: 2}
     guideDecideFrames:
     - {fileID: 21300000, guid: a440cb5e6e7b74459a4f4f799ff807d3, type: 2}
     - {fileID: 21300000, guid: 17c378d6bd2444672aebfc8b78693b6d, type: 2}
