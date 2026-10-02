@@ -148,6 +148,12 @@
     "Skins/YataiDONNijiiro/Graphics/game/notes/moji_drumroll_mid_big.png",
     "Skins/YataiDONNijiiro/Graphics/game/notes/notes_atlas.png",
     "Skins/YataiDONNijiiro/Graphics/global/overlay/touch_drum.png",
+    "Skins/YataiDONNijiiro/Graphics/global/rainbow_transition/chara_center.png",
+    "Skins/YataiDONNijiiro/Graphics/global/rainbow_transition/chara_left.png",
+    "Skins/YataiDONNijiiro/Graphics/global/rainbow_transition/chara_right.png",
+    "Skins/YataiDONNijiiro/Graphics/global/rainbow_transition/rainbow_bg.png",
+    "Skins/YataiDONNijiiro/Graphics/global/rainbow_transition/rainbow_bg_bottom.png",
+    "Skins/YataiDONNijiiro/Graphics/global/rainbow_transition/rainbow_bg_top.png",
     "Skins/YataiDONNijiiro/Graphics/result/background/background_1p.png",
     "Skins/YataiDONNijiiro/Graphics/result/background/bg_cloud_0.png",
     "Skins/YataiDONNijiiro/Graphics/result/background/bg_cloud_1.png",
@@ -393,6 +399,7 @@
     "Skins/YataiDONNijiiro/Scripts/anim/cursor_glow.lua",
     "Skins/YataiDONNijiiro/Scripts/anim/fever_fire.lua",
     "Skins/YataiDONNijiiro/Scripts/anim/gauge_rainbow.lua",
+    "Skins/YataiDONNijiiro/Scripts/anim/loading_song.lua",
     "Skins/YataiDONNijiiro/Scripts/anim/option_cursor.lua",
     "Skins/YataiDONNijiiro/Scripts/anim/result_bg.lua",
     "Skins/YataiDONNijiiro/Scripts/anim/result_bg_fuji.lua",
@@ -469,5 +476,5 @@
     "Songs/TRIPLE HELIX/TRIPLE HELIX.tja"
   ],
   "layout": "1920x1080",
-  "notes": "Single flattened asset set. All listed graphics are copied into Assets/OurTaiko/Art; no runtime skin lookup or fallback. Song select / result: Nijiiro graphics and sounds copied unchanged; clear/fail/full-combo result voices are missing from Nijiiro and copied from PyTaikoGreen. Scripts/anim/*.lua exported timelines are kept verbatim as Assets/OurTaiko/Animations/*.txt and read by LumenClip (data only, no Lua runtime). Play options: the 21 Nijiiro hit-sound sets are copied as Assets/OurTaiko/Audio/hit_sounds/<index>/don.ogg and ka.ogg; their names from neiro_list.txt are stored in Generated/HitSounds.asset."
+  "notes": "Single flattened asset set. All listed graphics are copied into Assets/OurTaiko/Art; no runtime skin lookup or fallback. Song select / result: Nijiiro graphics and sounds copied unchanged; clear/fail/full-combo result voices are missing from Nijiiro and copied from PyTaikoGreen. Scripts/anim/*.lua exported timelines are kept verbatim as Assets/OurTaiko/Animations/*.txt and read by LumenClip (data only, no Lua runtime). Play options: the 21 Nijiiro hit-sound sets are copied as Assets/OurTaiko/Audio/hit_sounds/<index>/don.ogg and ka.ogg; their names from neiro_list.txt are stored in Generated/HitSounds.asset. Song loading curtain: global/rainbow_transition graphics and anim/loading_song.lua copied unchanged from Nijiiro."
 }

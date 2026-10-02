@@ -8,11 +8,15 @@ using UnityEngine.SceneManagement;
 
 namespace OurTaiko
 {
+    // How a switch covers the screen: the default dark fade, or the Nijiiro song-loading curtain.
+    public enum TransitionStyle { Fade, Curtain }
+
     // Global UI control, created before the first scene and retained across every load.
     public sealed class SceneSwitcher : MonoBehaviour
     {
         public const string MenuScene = "Test_DefaultScene", GameScene = "SinglePlayScene";
         public const string SongSelectScene = "SongSelect", ResultScene = "Result";
+        public const string SongLoadingScene = "SongLoadingScene";
         public static SceneSwitcher Instance { get; private set; }
         public static Camera MainCamera { get; private set; }
         public static string CurrentScene { get; private set; } = "";
@@ -21,6 +25,7 @@ namespace OurTaiko
 
         [SerializeField] CanvasGroup transition;
         [SerializeField] TMP_Text loadingText;
+        [SerializeField] SongTransition songTransition;
         [SerializeField, Min(0.01f)] float closeDuration = 0.9f;
         [SerializeField, Min(0.01f)] float openDuration = 0.8f;
 
@@ -35,12 +40,18 @@ namespace OurTaiko
         public int LastDifficulty { get; set; } = -1;
         public int SongsPlayed { get; private set; }
         public bool IsSwitching { get; private set; }
-        public bool IsCovered => transition != null && transition.alpha >= 0.999f;
+        public bool IsCovered => IsCurtainClosed || (transition != null && transition.alpha >= 0.999f);
+        public bool IsCurtainClosed => songTransition != null && songTransition.IsClosed;
+        public SongTransition Curtain => songTransition;
         public bool IsInputBlocked => IsSwitching || IsCovered || (transitionTask != null && !transitionTask.IsCompleted);
         public event Action<string> SceneChanging;
 
         Task switchTask, transitionTask;
         CancellationTokenSource transitionCancellation;
+        // Chart parsed by SongLoadingScene for the next SinglePlayScene, taken once.
+        TaikoChart preparedChart;
+        SongDefinition preparedSong;
+        string preparedCourse;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
@@ -80,6 +91,7 @@ namespace OurTaiko
             CurrentScene = SceneManager.GetActiveScene().name;
             MainCamera = Camera.main;
             SetTransitionState(false);
+            if (songTransition != null) songTransition.Hide();
             QualitySettings.vSyncCount = 0;
             UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
             Application.targetFrameRate = 120;
@@ -99,8 +111,44 @@ namespace OurTaiko
         {
             if (IsInputBlocked || song == null) return;
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
-            if (CurrentScene != GameScene && CurrentScene != ResultScene && !string.IsNullOrEmpty(CurrentScene)) ReturnScene = CurrentScene;
-            SwitchScene(GameScene);
+            preparedChart = null;
+            if (CurrentScene != GameScene && CurrentScene != ResultScene && CurrentScene != SongLoadingScene && !string.IsNullOrEmpty(CurrentScene))
+                ReturnScene = CurrentScene;
+            // song_select.cpp select_song: the rainbow curtain closes, SongLoadingScene loads under it.
+            if (songTransition == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(GameScene); return; }
+            ShowSongOnCurtain(song);
+            SwitchScene(SongLoadingScene, TransitionStyle.Curtain, false);
+        }
+
+        public void ShowSongOnCurtain(SongDefinition song)
+        {
+            if (songTransition == null || song == null) return;
+            // The play scene reports an unreadable chart; the curtain just falls back to the asset name.
+            try
+            {
+                var info = SongInfo.Read(song.chart.text);
+                songTransition.SetSong(info.Title, info.Subtitle);
+            }
+            catch (Exception) { songTransition.SetSong(song.name, ""); }
+        }
+
+        // Shows the curtain parked on its title frame without the close (SongLoadingScene run directly).
+        public void ParkCurtain()
+        {
+            if (songTransition == null || IsCovered) return;
+            songTransition.Park();
+        }
+
+        public void SetPreparedChart(SongDefinition song, string course, TaikoChart chart)
+        {
+            preparedSong = song; preparedCourse = course; preparedChart = chart;
+        }
+
+        public TaikoChart TakePreparedChart(SongDefinition song, string course)
+        {
+            var chart = preparedSong == song && preparedCourse == course ? preparedChart : null;
+            preparedChart = null; preparedSong = null; preparedCourse = null;
+            return chart;
         }
         public void Restart() => SwitchScene(GameScene);
         public void ReturnToMenu() => SwitchScene(Application.CanStreamedLevelBeLoaded(ReturnScene) ? ReturnScene : MenuScene);
@@ -112,27 +160,28 @@ namespace OurTaiko
             SwitchScene(ResultScene);
         }
 
-        public async void SwitchScene(string sceneName, bool autoFadeOut = true)
+        public void SwitchScene(string sceneName, bool autoFadeOut = true) => SwitchScene(sceneName, TransitionStyle.Fade, autoFadeOut);
+        public async void SwitchScene(string sceneName, TransitionStyle style, bool autoFadeOut = true)
         {
-            try { await SwitchSceneAsync(sceneName, autoFadeOut); }
+            try { await BeginSwitch(sceneName, Task.CompletedTask, autoFadeOut, style); }
             catch (OperationCanceledException) { }
             catch (Exception error) { Debug.LogException(error, this); }
         }
 
         public Task SwitchSceneAsync(string sceneName, bool autoFadeOut = true)
-            => BeginSwitch(sceneName, Task.CompletedTask, autoFadeOut);
+            => BeginSwitch(sceneName, Task.CompletedTask, autoFadeOut, TransitionStyle.Fade);
 
         public Task SwitchSceneAfterTaskAsync(string sceneName, Task taskToRun, bool autoFadeOut = true)
-            => BeginSwitch(sceneName, taskToRun, autoFadeOut);
+            => BeginSwitch(sceneName, taskToRun, autoFadeOut, TransitionStyle.Fade);
 
         public async Task<T> SwitchSceneAfterTaskAsync<T>(string sceneName, Task<T> taskToRun, bool autoFadeOut = true)
         {
             if (IsSwitching) throw new InvalidOperationException("A scene switch is already in progress.");
-            await BeginSwitch(sceneName, taskToRun, autoFadeOut);
+            await BeginSwitch(sceneName, taskToRun, autoFadeOut, TransitionStyle.Fade);
             return await taskToRun;
         }
 
-        Task BeginSwitch(string sceneName, Task preparation, bool autoFadeOut)
+        Task BeginSwitch(string sceneName, Task preparation, bool autoFadeOut, TransitionStyle style)
         {
             if (IsSwitching) return switchTask;
             if (preparation == null) return Task.FromException(new ArgumentNullException(nameof(preparation)));
@@ -141,18 +190,18 @@ namespace OurTaiko
             IsSwitching = true;
             var completion = new TaskCompletionSource<bool>();
             switchTask = completion.Task;
-            _ = CompleteSwitchAsync(completion, sceneName, preparation, autoFadeOut);
+            _ = CompleteSwitchAsync(completion, sceneName, preparation, autoFadeOut, style);
             return switchTask;
         }
 
-        async Task CompleteSwitchAsync(TaskCompletionSource<bool> completion, string sceneName, Task preparation, bool autoFadeOut)
+        async Task CompleteSwitchAsync(TaskCompletionSource<bool> completion, string sceneName, Task preparation, bool autoFadeOut, TransitionStyle style)
         {
-            try { await SwitchSceneInternalAsync(sceneName, preparation, autoFadeOut); completion.TrySetResult(true); }
+            try { await SwitchSceneInternalAsync(sceneName, preparation, autoFadeOut, style); completion.TrySetResult(true); }
             catch (OperationCanceledException) { completion.TrySetCanceled(); }
             catch (Exception error) { completion.TrySetException(error); }
         }
 
-        async Task SwitchSceneInternalAsync(string sceneName, Task preparation, bool autoFadeOut)
+        async Task SwitchSceneInternalAsync(string sceneName, Task preparation, bool autoFadeOut, TransitionStyle style)
         {
             var lifetime = destroyCancellationToken;
             try
@@ -160,7 +209,7 @@ namespace OurTaiko
                 EventSystem.current?.SetSelectedGameObject(null);
                 SceneChanging?.Invoke(sceneName);
                 SetLoadingText("");
-                await StartTransitionAsync(true);
+                await StartTransitionAsync(true, style);
                 while (!preparation.IsCompleted) await Awaitable.NextFrameAsync(lifetime);
                 await preparation;
                 lifetime.ThrowIfCancellationRequested();
@@ -189,7 +238,7 @@ namespace OurTaiko
         {
             if (IsSwitching) await switchTask;
             SetLoadingText("");
-            await StartTransitionAsync(true);
+            await StartTransitionAsync(true, TransitionStyle.Fade);
         }
         public async Task FadeOutAsync()
         {
@@ -210,12 +259,18 @@ namespace OurTaiko
             loadingText.color = color;
         }
 
-        Task StartTransitionAsync(bool closing)
+        // A cover keeps its style until it opens: a parked curtain stays closed for the next
+        // switch and is the one that opens over the new scene.
+        Task StartTransitionAsync(bool closing, TransitionStyle style = TransitionStyle.Fade)
         {
+            if (closing && IsCurtainClosed) return transitionTask = Task.CompletedTask;
             transitionCancellation?.Cancel();
             transitionCancellation?.Dispose();
             transitionCancellation = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
-            return transitionTask = AnimateTransitionAsync(closing, transitionCancellation.Token);
+            bool curtain = songTransition != null && (closing ? style == TransitionStyle.Curtain : songTransition.IsVisible);
+            // The curtain's own full-screen raycast target blocks clicks while it is shown.
+            return transitionTask = curtain ? songTransition.PlayAsync(closing, transitionCancellation.Token)
+                : AnimateTransitionAsync(closing, transitionCancellation.Token);
         }
 
         async Task AnimateTransitionAsync(bool closing, CancellationToken cancellation)

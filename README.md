@@ -10,7 +10,7 @@
 
 也可直接打开 `Assets/Scenes/SinglePlayScene.unity` 运行，默认载入 TRIPLE HELIX。
 
-入口右上角的 **SONG SELECT / S** 进入 Nijiiro 选曲场景 `SongSelect.unity`；游玩结束后进入结算场景 `Result.unity`，再回到开始游玩的场景。三个场景之间的切换全部交给全局 SceneSwitcher。
+入口右上角的 **SONG SELECT / S** 进入 Nijiiro 选曲场景 `SongSelect.unity`；游玩结束后进入结算场景 `Result.unity`，再回到开始游玩的场景。三个场景之间的切换全部交给全局 SceneSwitcher。开始游玩时（选曲决定或入口开始）显示 Nijiiro 彩虹幕布：幕布关闭后进入 `SongLoadingScene.unity` 解析谱面并载入歌曲（至少停留 2 秒），再在游玩场景上打开。
 
 | 选曲按键 | 功能 |
 | --- | --- |

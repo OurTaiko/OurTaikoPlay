@@ -72,10 +72,10 @@ namespace OurTaiko
             pausePanel.SetActive(false); resultPanel.SetActive(false);
             try
             {
-                // Player::reset_chart: the play options change the chart before load times are taken.
+                // SongLoadingScene parsed the chart behind the curtain; restarts and direct runs parse here.
+                string course = switcher.SelectedSong != null ? switcher.SelectedCourse : null;
                 var options = PlayOptions.Shared;
-                var chart = song.Parse(switcher.SelectedSong != null ? switcher.SelectedCourse : null);
-                ChartModifiers.Apply(chart, options, new System.Random());
+                var chart = switcher.TakePreparedChart(song, course) ?? PrepareChart(song, course);
                 Session = new PlaySession(chart);
                 if (modifierBadges != null) modifierBadges.Show(options);
                 // 音色: hit_sounds/<neiro>/don.ogg and ka.ogg; 無音 leaves both empty.
@@ -107,6 +107,14 @@ namespace OurTaiko
             startDsp = AudioSettings.dspTime + Math.Max(2, Session.Chart.Offset + 2);
             isReady = true;
             ScheduleMusic();
+        }
+
+        // Player::reset_chart: the play options change the chart before load times are taken.
+        public static TaikoChart PrepareChart(SongDefinition song, string course)
+        {
+            var chart = song.Parse(course);
+            ChartModifiers.Apply(chart, PlayOptions.Shared, new System.Random());
+            return chart;
         }
 
         void ScheduleMusic()

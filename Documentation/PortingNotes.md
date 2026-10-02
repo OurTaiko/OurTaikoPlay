@@ -222,3 +222,12 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 渲染：`player.cpp::draw_notes` 第二遍绘制全部文字，因此 `MojiClip`（RectMask2D，X 同 `LaneClip`，高为整条轨道 264）紧排在 `LaneClip` 之后；层内与音符一样早的在上。文字中心 = 音符中心下移 123。连打：`moji_drumroll_mid` 从头部起宽 8＋长度，然后头字、尾字；Y 不随 SCROLL 虚部（同原版 `draw_drumroll`）。气球文字跟随气球（到判定点后停住），计数器显示时隐藏（`skip_note`）。
 - 有意的统一：显隐跟随音符（命中即消失、漏音继续流过判定点、ドロン同时隐藏）。原版 ドロン 仍绘制文字，按用户要求与音符行一致而隐藏。
 - 验证：EditMode `NoteMojiTests`，PlayMode `NoteMojiFlowTests`（帧、层级、位置、命中／漏音／ドロン、连打横条），截图 `TestResults/NoteMoji.png`。EditMode 127/127、PlayMode 24/24 通过。
+
+## 选曲加载幕布与 SongLoadingScene（2026-10-01）
+
+- 来源：`Scripts/global/transition.lua`（`SongTransition:update/draw_bg`）、`anim/loading_song.lua`（街机 `loading/loading_song.nulm`，60 fps）、`src/objects/game/transition.cpp::draw_song_info`、`song_select.cpp::select_song`、`game.cpp`；素材 `global/rainbow_transition` 原样复制，时间轴为 `Animations/loading_song.txt`，由 `LumenClip` 采样。
+- 流程：`SceneSwitcher.Play()`（SongSelect 决定与 Test_DefaultScene 开始）→ 幕布关闭（532 ms 映射帧 5→55，标题在 song_info_fade 的 266 ms 延迟后 266 ms 淡入）→ 加载 `SongLoadingScene`，幕布停在帧 55 → 解析 TJA 并应用演奏オプション、`LoadAudioData` 载入歌曲，至少停留 2 秒（用户决定；原模拟器无停留、街机停到加载完成）→ 加载 SinglePlayScene，幕布在游玩场景上打开（532 ms 映射帧 60→109，标题 133 ms 淡出）→ 打开结束后才开始倒计时。重开（F1／暂停／结算）与其他切换保持原淡入淡出。
+- 架构：幕布是 `Resources/SceneSwitcher.prefab` 内的 `SongTransition`（`Runtime/Scenes/SongTransition.cs`），作为第二种过渡样式（`TransitionStyle.Curtain`）。遮罩在打开前保持自身样式：幕布停住时，下一次切换跳过关闭，并以幕布打开新场景。`SongLoadingScene` 场景只有黑底相机与 `SongLoadingScene` 组件，画面全部来自全局幕布；直接运行该场景会立即停住幕布。解析结果通过 `SceneSwitcher.SetPreparedChart`／`TakePreparedChart` 交给 `PlayScene`（只取一次，重开重新解析与重抽ランダム）。
+- 图层与数值：帧 35–78 用整张 `rainbow_bg`，其余为 `rainbow_bg_top` 左右半幅（中心 tx、宽 960×sx）；底部光晕 `rainbow_bg_bottom (0,288,1600,512)` 画在 (0,568,1920,512)，加算混合（`Generated/UI Additive.mat`，`Mobile/Particles/Additive`）；11 颗星为固定位置与缩放；咚／咔 560×560 沿轨迹；标题带 (0,0,1600,256) 中心 (960,400)，打开时 sx 0.25→1、关闭时 sx→1.5／sy→0.1；提示区为皮肤 `chara_center.png` 原图（用户决定，截图中的街机插画提示卡不在皮肤内）。标题／副标题中心 y=382／462（skin 1606／1686 减 rainbow_up 816×1.5），64／40 px 白字黑边；TMP 描边以字形边缘为中心，因此同时扩张字面使边框全部在外侧。
+- 演奏スキップON 徽章仅在跳过功能启用时显示；本项目该选项灰显未实现，因此不显示、也未复制素材。
+- 验证：PlayMode `SongLoadingCurtainTests`（帧映射、停住状态、2 秒停留、音频已载入、预解析谱面被取用、在旧／新场景上播放关闭／打开、重开仍为淡入淡出），截图 `TestResults/CurtainClosing.png`、`SongLoading.png`、`CurtainOpening.png`。EditMode 127/127、PlayMode 26/26 通过。迁移入口 `ProjectBuilder.ApplySongLoadingCurtain()`（菜单 OurTaiko/Apply Song Loading Curtain）。
