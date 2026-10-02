@@ -78,7 +78,7 @@ namespace OurTaiko.Tests
                 yield return new WaitForSecondsRealtime(0.25f);
                 Assert.That(counter.Stretch, Is.Zero);
                 Assert.That(last.sizeDelta.y, Is.EqualTo(64));
-                SceneFlowTests.Capture("NameplatePlay.png");
+                TestCapture.Capture("NameplatePlay.png");
 
                 // An info change reaches the plate already on screen: back to the coin plate.
                 Controller.UseUnsaved(new PlayerInfo { name = "Katsu-chan" });
@@ -88,7 +88,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.playerName.fontSize, Is.EqualTo(30));
                 Assert.That(plate.playerName.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(226, -53)));
                 yield return null;
-                SceneFlowTests.Capture("NameplatePlayCoin.png");
+                TestCapture.Capture("NameplatePlayCoin.png");
 
                 // A long name is squeezed into the 190-px box, not shrunk.
                 Controller.UseUnsaved(new PlayerInfo { name = "OurTaikoPlayerUnityLongName" });
@@ -140,7 +140,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.transform.GetSiblingIndex(), Is.EqualTo(select.coursePanel.GetSiblingIndex() - 1));
                 Assert.That(plate.dan.sprite, Is.SameAs(plate.danEmblems[10]));
                 yield return new WaitForSecondsRealtime(0.5f);
-                SceneFlowTests.Capture("NameplateSongSelect.png");
+                TestCapture.Capture("NameplateSongSelect.png");
 
                 var run = new PlayResult
                 {
@@ -157,7 +157,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.transform.GetSiblingIndex(), Is.GreaterThan(result.stage.Find("SoulSheen").GetSiblingIndex()));
                 Assert.That(plate.transform.GetSiblingIndex(), Is.LessThan(result.stage.Find("FadeIn").GetSiblingIndex()));
                 yield return new WaitForSecondsRealtime(1.5f);
-                SceneFlowTests.Capture("NameplateResult.png");
+                TestCapture.Capture("NameplateResult.png");
             }
             finally
             {

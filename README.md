@@ -92,7 +92,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 ## 验证
 
-用 Unity Test Runner 运行 `OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）。前者覆盖谱面、判定、流速、分支阈值／时序、Shinuchi 预算／取整和魂槽增减／边界；后者覆盖选曲 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 SinglePlayScene、音乐时间同步、分支表现与结算，以及实际场景分数、魂槽、气球与连打。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
+用 Unity Test Runner 运行测试。`OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）是进行中功能的测试；已完成功能的测试在 `Tests/Finished/` 的 `OurTaiko.FinishedTests` 和 `OurTaiko.FinishedPlayModeTests`，共享辅助在 `Tests/Shared/`（`OurTaiko.TestSupport`）。已完成的 EditMode 测试覆盖谱面、判定、流速、分支阈值／时序、Shinuchi 预算／取整和魂槽增减／边界；已完成的 PlayMode 测试覆盖选曲 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 SinglePlayScene、音乐时间同步、分支表现与结算，以及实际场景分数、魂槽、气球与连打。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。
 
 ```sh
 unity test . --mode EditMode --output TestResults/editmode.xml

@@ -1,0 +1,6 @@
+{
+  "name": "OurTaiko.FinishedTests",
+  "references": ["OurTaiko.Runtime"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
