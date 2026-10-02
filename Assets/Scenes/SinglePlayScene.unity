@@ -9583,6 +9583,7 @@ MonoBehaviour:
   combo: {fileID: 1270598235}
   comboAnnounce: {fileID: 1983080210}
   judgeCounter: {fileID: 393679049}
+  drumPad: {fileID: 615905268}
   title: {fileID: 1640940736}
   subtitle: {fileID: 849856370}
   resultText: {fileID: 901035398}

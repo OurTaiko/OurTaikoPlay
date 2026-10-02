@@ -1936,6 +1936,8 @@ MonoBehaviour:
   boardOff: {fileID: 21300000, guid: 5e32d59bd2401446293bd16ac5551691, type: 3}
   boardFlash: {fileID: 21300000, guid: c495ef4ac21f84958b3d5459ab0532bd, type: 3}
   boardCursor: {fileID: 21300000, guid: 5f9adee8cc04746859e26ffe04b4d595, type: 3}
+  settingsBoardOn: {fileID: 21300000, guid: f4cdabfe792ac4529909747238b557c4, type: 3}
+  settingsBoardOff: {fileID: 21300000, guid: 99ded70a211b5406fafb89dd28861647, type: 3}
   overlay:
     timerBackground: {fileID: 21300000, guid: 7511f098ce59948c48afd753dbedc597, type: 3}
     timerDigitsBlack:
@@ -1962,6 +1964,7 @@ MonoBehaviour:
   creditFadeTimeline: {fileID: 4900000, guid: 49dfb5892cb034b5daa97d7bc7e7efe4, type: 3}
   modeBoardTimeline: {fileID: 4900000, guid: c8e04e6892891460ca7bcf08bbaeaa85, type: 3}
   cursorGlowTimeline: {fileID: 4900000, guid: ce77919eecadb4e74bcafe5850f3539e, type: 3}
+  modeListTimeline: {fileID: 4900000, guid: 6f2b78cdd85724ce5aa4fee1bef70214, type: 3}
   bgm: {fileID: 853526944}
   sfx: {fileID: 1684939413}
   voice: {fileID: 327365507}

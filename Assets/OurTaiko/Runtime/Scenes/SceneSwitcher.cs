@@ -19,6 +19,7 @@ namespace OurTaiko
         // The first scene and where Back falls back to.
         public const string MenuScene = EntryScene;
         public const string SongLoadingScene = "SongLoadingScene";
+        public const string SettingScene = "GlobalSettingScene";
         public static SceneSwitcher Instance { get; private set; }
         public static Camera MainCamera { get; private set; }
         public static string CurrentScene { get; private set; } = "";

@@ -1,0 +1,130 @@
+using NUnit.Framework;
+
+namespace OurTaiko.Tests
+{
+    public sealed class SettingsMenuTests
+    {
+        static SettingsMenu Menu(bool drumPad = true) =>
+            new SettingsMenu(SettingsMenu.Catalog(), new GameSettings { play = new PlaySettings { singlePlayerDrumPad = drumPad } });
+
+        [Test]
+        public void DrumKeysWalkTypesItemsAndChoicesWithReturnEntries()
+        {
+            var menu = Menu();
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types), "The focus starts on the types.");
+            Assert.That(menu.Types[0].Label, Is.EqualTo("Play"));
+            Assert.That(menu.TypeCount, Is.EqualTo(2), "Play and Return.");
+
+            // ka wraps through Play and Return; the item focus does not move with it.
+            Assert.That(menu.Ka(1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.IsTypeReturn, Is.True);
+            menu.Ka(1);
+            Assert.That(menu.TypeIndex, Is.Zero);
+            menu.Ka(-1);
+            Assert.That(menu.IsTypeReturn, Is.True);
+            menu.Ka(-1);
+
+            // don on Play focuses its items: the drum pad setting, then Return.
+            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Entered));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+            Assert.That(menu.ItemCount, Is.EqualTo(2));
+            Assert.That(menu.CurrentItem.Label, Is.EqualTo("Enable Drumpad for Single Player Mode"));
+
+            // don on the item opens its choices on the current value; ka moves, don applies and
+            // hands the focus back to the items.
+            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Entered));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Choice));
+            Assert.That(menu.CurrentItem.Choices, Is.EqualTo(new[] { "Enabled", "Disabled" }));
+            Assert.That(menu.ChoiceIndex, Is.Zero, "Enabled is the default.");
+            menu.Ka(1);
+            Assert.That(menu.Settings.play.singlePlayerDrumPad, Is.True, "Moving does not apply.");
+            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Changed));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+            Assert.That(menu.Settings.play.singlePlayerDrumPad, Is.False);
+
+            // The items' Return goes back to the types; the types' Return leaves.
+            menu.Ka(1);
+            Assert.That(menu.IsItemReturn, Is.True);
+            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Returned));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
+            Assert.That(menu.TypeIndex, Is.Zero, "The type stays where it was.");
+            menu.Ka(1);
+            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Exit));
+        }
+
+        [Test]
+        public void ChoicesOpenOnTheCurrentValueAndBackChangesNothing()
+        {
+            var menu = Menu(drumPad: false);
+            menu.Don(); menu.Don();
+            Assert.That(menu.ChoiceIndex, Is.EqualTo(1), "Disabled is current.");
+            menu.Ka(-1);
+            Assert.That(menu.Back(), Is.EqualTo(SettingsMenu.Result.Returned));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+            Assert.That(menu.Settings.play.singlePlayerDrumPad, Is.False);
+            Assert.That(menu.Back(), Is.EqualTo(SettingsMenu.Result.Returned));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
+            Assert.That(menu.Back(), Is.EqualTo(SettingsMenu.Result.Exit));
+        }
+
+        [Test]
+        public void TapsAndSwipesFollowSongSelectRules()
+        {
+            var menu = Menu();
+            // Tapping another type selects it; tapping the focused one confirms it.
+            Assert.That(menu.TapType(1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.IsTypeReturn, Is.True);
+            Assert.That(menu.TapType(0), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.TapType(0), Is.EqualTo(SettingsMenu.Result.Entered));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+
+            // An item tap from the types moves the focus to the items; a second tap opens the choices.
+            menu.TapType(0);
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
+            Assert.That(menu.TapItem(0), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+            Assert.That(menu.TapItem(0), Is.EqualTo(SettingsMenu.Result.Entered));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Choice));
+
+            // A tap on a choice applies it at once.
+            Assert.That(menu.TapChoice(1), Is.EqualTo(SettingsMenu.Result.Changed));
+            Assert.That(menu.Settings.play.singlePlayerDrumPad, Is.False);
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+
+            // Swipes move the focus into the swiped list, then through it (wrapping).
+            Assert.That(menu.SwipeTypes(1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
+            Assert.That(menu.IsTypeReturn, Is.True);
+            Assert.That(menu.SwipeItems(1), Is.EqualTo(SettingsMenu.Result.None), "Return has no items.");
+            menu.SwipeTypes(1);
+            Assert.That(menu.SwipeItems(1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+            Assert.That(menu.IsItemReturn, Is.True);
+        }
+
+        [Test]
+        public void SettingsJsonKeepsDefaultsForMissingFields()
+        {
+            Assert.That(new GameSettings().play.singlePlayerDrumPad, Is.True);
+            Assert.That(GameSettings.FromJson("{}").play.singlePlayerDrumPad, Is.True);
+            Assert.That(GameSettings.FromJson("").play.singlePlayerDrumPad, Is.True);
+            var off = new GameSettings { play = new PlaySettings { singlePlayerDrumPad = false } };
+            Assert.That(GameSettings.FromJson(off.ToJson()).play.singlePlayerDrumPad, Is.False);
+        }
+
+        [Test]
+        public void EntryModeListClampsAtBothEnds()
+        {
+            var flow = new EntryFlow(0, 2);
+            Assert.That(flow.MoveMode(1, 10), Is.False, "No moves before the list is up.");
+            flow.Join(EntryFlow.SideInputLockMs);
+            double ready = EntryFlow.SideInputLockMs + EntryFlow.CloudGateMs + 1;
+            Assert.That(flow.MoveMode(-1, ready), Is.False);
+            Assert.That(flow.MoveMode(1, ready), Is.True);
+            Assert.That(flow.SelectedMode, Is.EqualTo(1));
+            Assert.That(flow.MoveMode(1, ready), Is.False);
+            flow.Select(ready);
+            Assert.That(flow.MoveMode(-1, ready), Is.False, "No moves after the decide.");
+        }
+    }
+}

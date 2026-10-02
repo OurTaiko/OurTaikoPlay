@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -160,54 +161,185 @@ namespace OurTaiko
         }
     }
 
-    // EntryBox:draw (Nijiiro box.lua) for the single 演奏ゲーム board: the `in` timeline opens it
-    // (board fade, crossfade from the closed to the open plate, contents, cursor glow), the cursor
-    // glow pulses on anim/cursor_glow, and the decide plays `choose`'s white flash while the
-    // board fades out (entry animation 9).
-    public sealed class EntryModeBoard
+    // One mode board of the Entry list: its open and closed plates, title and comment lines.
+    public sealed class EntryMode
     {
-        const float CenterX = 960, CenterY = 535, InfoY = 59.5f, InfoLineHeight = 53;
-        const float TitleYOn = -97, TitleYOff = 4, TitleSize = 72, InfoSize = 34;
-        const double ClosedSy = 0.1857;
-        static readonly Color32 ModeColor = new Color32(251, 1, 29, 255);   // 演奏ゲーム title rim
+        public string Title, Scene;
+        public string[] Info;
+        public Color32 Rim;          // the title's mode-colour rim (box.lua MODES[*].outline)
+        public Sprite On, Off;
+    }
 
-        readonly LumenClip board, glow;
-        readonly double inLabel, chooseLabel, inLimit, chooseLimit, glowFrames;
-        readonly Image cursor, closed, open, flash;
-        readonly TextMeshProUGUI title;
-        readonly TextMeshProUGUI[] info = new TextMeshProUGUI[2];
+    // EntryBox:draw (Nijiiro box.lua): the arcade mode list. The selected board sits open at the
+    // centre and the others closed one slot above/below (mode_list `wait`: kanban_2 / kanban_3,
+    // boards further than one slot fade out). A ka slides every board to its next slot linearly
+    // over 9 frames, and the newly selected board only opens (select_on) after the slide while the
+    // old one closes (select_off). The first appearance plays `in`: the selected board fades up and
+    // opens, the closed boards fly in from three slots out. The cursor glow pulses on cursor_glow,
+    // and the decide plays `choose`'s white flash while the list fades out (entry animation 9).
+    public sealed class EntryModeList
+    {
+        const double FrameMs = 1000.0 / 60, SlideFrames = 9, ListInDelay = 10, ListInFrames = 12;
 
-        public float Openness { get; private set; }
-        public float Fade { get; private set; }
-        public float ChooseFlash { get; private set; }
+        readonly LumenClip board, glow, list;
+        readonly double selectOn, selectOff, inLabel, chooseLabel, onLimit, offLimit, inLimit, chooseLimit, glowFrames, waitLabel;
+        readonly Vector2 listIn;
+        readonly EntryModeBoard[] boards;
+        int selected;
+
         public RectTransform Root { get; }
+        public IReadOnlyList<EntryModeBoard> Boards => boards;
+        public EntryModeBoard Selected => boards[selected];
+        // The selected board's state, as the single-board version reported it.
+        public float Openness => Selected.Openness;
+        public float Fade => Selected.Fade;
+        public float ChooseFlash => Selected.ChooseFlash;
 
-        public EntryModeBoard(Transform parent, Sprite boardOn, Sprite boardOff, Sprite boardFlash, Sprite cursorGlow,
-            TMP_FontAsset font, Material outline, LumenClip board, LumenClip glow)
+        public EntryModeList(Transform parent, IReadOnlyList<EntryMode> modes, Sprite boardFlash, Sprite cursorGlow,
+            TMP_FontAsset font, Material outline, LumenClip board, LumenClip glow, LumenClip list)
         {
-            this.board = board; this.glow = glow;
+            this.board = board; this.glow = glow; this.list = list;
+            selectOn = board.Label("select_on") ?? 27;
+            selectOff = board.Label("select_off") ?? 52;
             inLabel = board.Label("in") ?? 67;
             chooseLabel = board.Label("choose") ?? 117;
+            onLimit = selectOff - selectOn - 1;
+            offLimit = inLabel - selectOff - 1;
             inLimit = chooseLabel - inLabel - 1;
             chooseLimit = board.Last - chooseLabel;
             glowFrames = Math.Max(1, glow.Last - glow.First + 1);
-            Root = SkinUi.Rect("ModeBoard", parent);
+            waitLabel = list.Label("wait") ?? 13;
+            double listInLabel = list.Label("in") ?? 87;
+            listIn = new Vector2((float)list.Get("kanban_3", listInLabel, "tx", 170), (float)list.Get("kanban_3", listInLabel, "ty", 878));
+            Root = SkinUi.Rect("ModeBoards", parent);
+            boards = new EntryModeBoard[modes.Count];
+            for (int i = 0; i < modes.Count; i++)
+                boards[i] = new EntryModeBoard(Root, modes[i], boardFlash, cursorGlow, font, outline);
+        }
+
+        // kanban_1 is the selected slot; the slots above/below are kanban_2/3, 4/5, 6/7.
+        Vector2 Slot(int rel)
+        {
+            if (rel == 0) return Vector2.zero;
+            int n = Math.Abs(rel);
+            string kanban = "kanban_" + (2 * n + (rel < 0 ? 0 : 1));
+            double? tx = list.Get(kanban, waitLabel, "tx"), ty = list.Get(kanban, waitLabel, "ty");
+            if (tx.HasValue && ty.HasValue) return new Vector2((float)tx.Value, (float)ty.Value);
+            int sign = rel < 0 ? -1 : 1;    // more slots than the arcade list carries
+            return new Vector2(sign * (50 + (n - 1) * 40), sign * (305 + (n - 1) * 191));
+        }
+
+        double Open(double frame)
+        {
+            double sy = board.Get("board_bg_center_instance", frame, "sy", EntryModeBoard.ClosedSy);
+            return Math.Max(0, Math.Min(1, (sy - EntryModeBoard.ClosedSy) / (1 - EntryModeBoard.ClosedSy)));
+        }
+
+        static double Segment(double label, double u, double limit) => label + Math.Max(0, Math.Min(limit, u));
+        static double Clamp01(double v) => v < 0 ? 0 : v > 1 ? 1 : v;
+        static double EaseOut(double t) { t = Clamp01(t); return 1 - (1 - t) * (1 - t); }
+
+        // nowMs: real clock; msSinceIn: since the list first appeared; selectedIndex: the flow's
+        // selection; fade: entry animation 9 (1 until decided); msSinceChoose: negative before it.
+        public void Show(double nowMs, double msSinceIn, int selectedIndex, float fade, double msSinceChoose)
+        {
+            selected = Math.Max(0, Math.Min(boards.Length - 1, selectedIndex));
+            double tIn = msSinceIn / FrameMs;
+            bool inRunning = tIn <= inLimit;
+            double pulse = glow.Get("#12@0", nowMs / FrameMs % glowFrames, "a", 1);
+            for (int i = 0; i < boards.Length; i++)
+            {
+                var b = boards[i];
+                bool isSelected = i == selected;
+                // The arcade opens the new board only after the 9-frame slide (mode_select.lua MenuMove).
+                if (isSelected != b.WasSelected)
+                {
+                    b.WasSelected = isSelected;
+                    b.OpenStartedAt = nowMs + (isSelected ? SlideFrames * FrameMs : 0);
+                    b.Opening = isSelected;
+                }
+                int rel = i - selected;
+                var slot = Slot(rel);
+                b.Retarget(nowMs, slot, Math.Abs(rel) <= 1 ? 1 : 0, SlideFrames * FrameMs);
+                var position = b.Position;
+                if (inRunning && rel != 0)
+                {
+                    double q = EaseOut((tIn - ListInDelay) / ListInFrames);
+                    float sign = rel < 0 ? -1 : 1;
+                    position += (float)(1 - q) * (new Vector2(sign * listIn.x, sign * listIn.y) - slot);
+                }
+
+                double o, info, cursor;
+                float boardFade = fade;
+                if (inRunning)
+                {
+                    double f = Segment(inLabel, tIn, inLimit);
+                    o = isSelected ? Open(f) : 0;
+                    info = isSelected ? board.Get("text_info_instance", f, "a", 0) : 0;
+                    cursor = isSelected ? board.Get("cursor_center", f, "a", 0) : 0;
+                    boardFade *= (float)board.Get("board_bg_center_instance", f, "a", 0);
+                }
+                else
+                {
+                    double u = double.IsNaN(b.OpenStartedAt) ? 999 : (nowMs - b.OpenStartedAt) / FrameMs;
+                    double frame = b.Opening ? Segment(selectOn, u, onLimit) : Segment(selectOff, u, offLimit);
+                    o = Open(frame);
+                    info = board.Get("text_info_instance", frame, "a", 0);
+                    cursor = o;
+                }
+                float title = inRunning && isSelected ? boardFade * (float)info : boardFade;
+                double c = msSinceChoose / FrameMs;
+                float flash = isSelected && msSinceChoose >= 0 && c <= chooseLimit ? (float)board.Get("#22@6", chooseLabel + c, "a", 0) : 0;
+                b.Draw(position, (float)o, boardFade * b.Visibility, (float)info, (float)(cursor * pulse), title * b.Visibility, flash);
+            }
+        }
+    }
+
+    // One board's plates and texts, drawn at a list offset (y down, from the open-board slot).
+    public sealed class EntryModeBoard
+    {
+        public const double ClosedSy = 0.1857;
+        const float CenterX = 960, CenterY = 535, InfoY = 59.5f, InfoLineHeight = 53;
+        const float TitleYOn = -97, TitleYOff = 4, TitleSize = 72, InfoSize = 34;
+
+        readonly Image cursor, closed, open, flash;
+        readonly TextMeshProUGUI title;
+        readonly TextMeshProUGUI[] info;
+        Vector2 from, target;
+        float fromVisibility, targetVisibility;
+        double slideStartedAt = double.NaN;
+
+        public EntryMode Mode { get; }
+        public RectTransform Root { get; }
+        public float Openness { get; private set; }
+        public float Fade { get; private set; }
+        public float ChooseFlash { get; private set; }
+        public Vector2 Position { get; private set; }
+        public float Visibility { get; private set; }
+        internal bool WasSelected;
+        internal bool Opening;
+        internal double OpenStartedAt = double.NaN;
+
+        public EntryModeBoard(Transform parent, EntryMode mode, Sprite boardFlash, Sprite cursorGlow, TMP_FontAsset font, Material outline)
+        {
+            Mode = mode;
+            Root = SkinUi.Rect(mode.Title, parent);
             // the cursor glow sits under the board (mode_select.nulm depth order)
             cursor = Plate("Cursor", cursorGlow);
-            closed = Plate("Closed", boardOff);
-            open = Plate("Open", boardOn);
-            string[] lines = { "すきな曲や、むずかしさを", "えらんであそべるよ！" };
+            closed = Plate("Closed", mode.Off);
+            open = Plate("Open", mode.On);
+            info = new TextMeshProUGUI[mode.Info.Length];
             for (int i = 0; i < info.Length; i++)
             {
                 // text_info: 34, white, black border 5
                 info[i] = SkinUi.Text("Info" + i, Root, font, outline, InfoSize, new Color32(0, 0, 0, 255), 0);
                 info[i].OutlineOutside(0.6f);
                 info[i].characterSpacing = 100f / InfoSize;
-                info[i].text = lines[i];
-                info[i].rectTransform.Center(CenterX, CenterY + InfoY + (i - 0.5f) * InfoLineHeight);
+                info[i].text = mode.Info[i];
+                info[i].rectTransform.Center(CenterX, CenterY + InfoY + (i - (info.Length - 1) / 2f) * InfoLineHeight);
             }
             // two stacked titles in the arcade: a mode-colour rim under a wider black one
-            title = SkinUi.Text("Title", Root, font, outline, TitleSize, ModeColor, 0);
+            title = SkinUi.Text("Title", Root, font, outline, TitleSize, mode.Rim, 0);
             title.OutlineOutside(0.3f);
             var material = title.fontMaterial;
             material.EnableKeyword(ShaderUtilities.Keyword_Underlay);
@@ -223,7 +355,7 @@ namespace OurTaiko
             material.SetFloat(ShaderUtilities.ID_UnderlaySoftness, 0);
             title.UpdateMeshPadding();
             title.characterSpacing = 2 * 100f / TitleSize;
-            title.text = "演奏ゲーム";
+            title.text = mode.Title;
             flash = Plate("Flash", boardFlash);
         }
 
@@ -234,52 +366,48 @@ namespace OurTaiko
             return image;
         }
 
-        double Open(double frame)
+        // list_anim_up / list_anim_down: every board moves to its next slot linearly; the
+        // more-than-one-slot fade rides the same ramp. The first call places the board.
+        public void Retarget(double nowMs, Vector2 slot, float visibility, double slideMs)
         {
-            double sy = board.Get("board_bg_center_instance", frame, "sy", ClosedSy);
-            return Math.Max(0, Math.Min(1, (sy - ClosedSy) / (1 - ClosedSy)));
+            if (double.IsNaN(slideStartedAt))
+            {
+                from = target = Position = slot;
+                fromVisibility = targetVisibility = Visibility = visibility;
+                slideStartedAt = nowMs - slideMs;
+            }
+            if (slot != target || visibility != targetVisibility)
+            {
+                from = Position; fromVisibility = Visibility;
+                target = slot; targetVisibility = visibility;
+                slideStartedAt = nowMs;
+            }
+            float p = (float)Math.Max(0, Math.Min(1, (nowMs - slideStartedAt) / slideMs));
+            Position = Vector2.Lerp(from, target, p);
+            Visibility = Mathf.Lerp(fromVisibility, targetVisibility, p);
         }
 
-        double InFrame(double t) => inLabel + Math.Max(0, Math.Min(inLimit, t));
-
-        // msSinceIn: since the board first appeared; fade: entry animation 9 (1 until decided);
-        // msSinceChoose: since the decide, or negative before it.
-        public void Show(double nowMs, double msSinceIn, float fade, double msSinceChoose)
+        public void Draw(Vector2 offset, float openness, float fade, float infoAlpha, float cursorAlpha, float titleAlpha, float chooseFlash)
         {
-            double t = msSinceIn * 0.06;
-            double o, contents, cursorAlpha;
-            float boardFade = fade;
-            if (t <= inLimit)
-            {
-                double f = InFrame(t);
-                o = Open(f);
-                contents = board.Get("text_info_instance", f, "a", 0);
-                cursorAlpha = board.Get("cursor_center", f, "a", 0);
-                boardFade *= (float)board.Get("board_bg_center_instance", f, "a", 0);
-            }
-            else
-            {
-                // select_on has long finished by now: the open board at rest
-                o = 1; contents = 1; cursorAlpha = 1;
-            }
-            Openness = (float)o;
-            Fade = boardFade;
-            double pulse = glow.Get("#12@0", nowMs * 0.06 % glowFrames, "a", 1);
-            cursor.Alpha((float)(boardFade * cursorAlpha * pulse));
-            closed.Alpha(o < 0.999 ? boardFade * (float)(1 - o) : 0);
-            open.Alpha(o > 0.001 ? boardFade * (float)o : 0);
+            Root.anchoredPosition = new Vector2(offset.x, -offset.y);
+            Openness = openness;
+            Fade = fade;
+            ChooseFlash = chooseFlash;
+            bool visible = fade > 0.001f;
+            Root.gameObject.SetActive(visible);
+            if (!visible) return;
+            cursor.Alpha(fade * cursorAlpha);
+            closed.Alpha(openness < 0.999f ? fade * (1 - openness) : 0);
+            open.Alpha(openness > 0.001f ? fade * openness : 0);
             foreach (var line in info)
             {
-                line.alpha = (float)(boardFade * contents);
+                line.alpha = fade * infoAlpha;
                 line.enabled = line.alpha > 0.001f;
             }
-            float titleAlpha = t <= inLimit ? boardFade * (float)contents : boardFade;
             title.alpha = titleAlpha;
             title.enabled = titleAlpha > 0.001f;
-            title.rectTransform.Center(CenterX, CenterY + TitleYOff + (TitleYOn - TitleYOff) * (float)o);
-            double c = msSinceChoose * 0.06;
-            ChooseFlash = msSinceChoose >= 0 && c <= chooseLimit ? (float)board.Get("#22@6", chooseLabel + c, "a", 0) : 0;
-            flash.Alpha(ChooseFlash);
+            title.rectTransform.Center(CenterX, CenterY + TitleYOff + (TitleYOn - TitleYOff) * openness);
+            flash.Alpha(chooseFlash);
         }
     }
 }

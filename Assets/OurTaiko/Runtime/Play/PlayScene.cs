@@ -32,6 +32,8 @@ namespace OurTaiko
         public ComboView combo;
         public ComboAnnounceView comboAnnounce;
         public JudgeCounterView judgeCounter;
+        [Tooltip("The touch drum; Settings > Play > Enable Drumpad for Single Player Mode turns it on or off.")]
+        public DrumPad drumPad;
         public TMP_Text title, subtitle, resultText;
         public BranchLaneView branchLane;
         public GameObject pausePanel, resultPanel;
@@ -102,6 +104,9 @@ namespace OurTaiko
             resultRestart.onClick.AddListener(Restart);
             resultBack.onClick.AddListener(Back);
             pausePanel.SetActive(false); resultPanel.SetActive(false); combo.gameObject.SetActive(false); comboAnnounce.Hide();
+            // Disabled and hidden together: an inactive pad neither draws nor registers with InputManager,
+            // and pause/resume only re-enables the pads it disabled itself.
+            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad);
             try
             {
                 // SongLoadingScene parsed the chart behind the curtain; restarts and direct runs parse here.

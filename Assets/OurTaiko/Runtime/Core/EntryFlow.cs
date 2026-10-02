@@ -22,7 +22,26 @@ namespace OurTaiko
         public double? JoinedAt { get; private set; }
         public double? SelectedAt { get; private set; }
 
-        public EntryFlow(double nowMs) { StartedAt = nowMs; }
+        // The mode list (BoxManager): left ka selects the board above, right ka the one below,
+        // clamped at both ends; the selection only moves while the list waits for a decide.
+        public int ModeCount { get; }
+        public int SelectedMode { get; private set; }
+
+        public EntryFlow(double nowMs, int modeCount = 1)
+        {
+            StartedAt = nowMs;
+            ModeCount = Math.Max(1, modeCount);
+        }
+
+        // BoxManager::move_left / move_right. Returns whether the selection changed.
+        public bool MoveMode(int delta, double nowMs)
+        {
+            if (!IsModeReady(nowMs) || SelectedAt.HasValue) return false;
+            int next = Math.Max(0, Math.Min(ModeCount - 1, SelectedMode + delta));
+            if (next == SelectedMode) return false;
+            SelectedMode = next;
+            return true;
+        }
 
         public bool CanJoin(double nowMs) => State == Phase.SelectSide && nowMs - StartedAt >= SideInputLockMs;
 

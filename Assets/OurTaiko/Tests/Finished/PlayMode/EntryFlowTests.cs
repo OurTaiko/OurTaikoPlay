@@ -54,8 +54,10 @@ namespace OurTaiko.Tests
             Assert.That(entry.TimerView.Seconds, Is.EqualTo(60), "The timer is a placeholder and never counts down.");
             TestCapture.Capture("EntryModeSelect.png");
 
-            // Rim hits change nothing; a face hit plays `choose`, fades the board and opens SongSelect.
-            entry.Ka();
+            // A left ka at the top of the list changes nothing; a face hit plays `choose`, fades the
+            // board and opens SongSelect.
+            entry.Ka(-1);
+            Assert.That(entry.Flow.SelectedMode, Is.Zero);
             Assert.That(entry.Flow.IsSelected, Is.False);
             entry.Don();
             Assert.That(entry.Flow.IsSelected, Is.True);

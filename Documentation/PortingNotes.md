@@ -377,3 +377,17 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 原调试文字 `JudgmentCounters`（GOOD/OK/BAD/ROLL）与 `PlayScene.counters` 删除（用户决定）；`NoteMojiFlowTests` 仍通过。
 - 调试文字 `RollCounter`（连打「DRUMROLL n」、9 号彩球「BALLOON n」）与 `PlayScene.rollCounter` 也删除（用户决定）；9 号彩球因此没有剩余次数显示，原版 kusudama 演出仍未移植。`SceneFlowTests` 13/13 通过（删去其中检查该文字为空的断言）。
 - 验证：`JudgeCounterFlowTests` 1/1（10 良、1 可、1 不可、3 连打显示为 10/1/1/3，右对齐与高度）；`SongSelectResultTests` 2/2（结算标签仍为整图）、`ScoreGaugeFlowTests` 1/1；截图 `TestResults/JudgeCounter.png`。
+
+## GlobalSettingScene 与 SettingManager（2026-10-02）
+
+用户要求：新增全局设置场景与 SettingManager，从 Entry 进入，本地 json 存储；第一个类型「Play」，第一个设置「Enable Drumpad for Single Player Mode」，默认 true，控制 SinglePlayScene 触控鼓的启用与显示；只用咚咔或只用触控都能完成设置。
+
+- **Entry 模式列表**：照搬 Nijiiro `Scripts/entry/box.lua`（街机 mode_select 列表）与原 `box_manager.cpp` 的板顺序：演奏ゲーム 在前、ゲーム設定 在后（中间的特訓モード／きせかえ 未移植）。ゲーム設定 板用 `mode_select/box` 9（开）／10（关）帧（box.lua `MODES.settings`，烘焙自 `aprilfool`），标题边色 (0,132,212)，说明「ゲームのせっていを／かえられるよ！」。选中板居中打开，其余按 `Animations/mode_list.txt`（`entry.nulm mode_select_list_instance`，原样复制）`wait` 标签的 kanban 槽位关闭排列（上一格 −50,−305，下一格 +50,+305），超过一格淡出。左咔上移、右咔下移并在两端夹住（`BoxManager::move_left/right`），咔音在两端也会响；移动时所有板 9 帧线性滑到新槽位，新选中板在滑动结束（150 ms）后才播 select_on，旧板立即 select_off（box.lua ROUND 49 的顺序）。首次出现用 `in`：选中板淡入打开，关闭的板从 3 格外（`kanban_3` 在 `in` 标签的位置）停 10 帧后 12 帧二次缓出到位。决定时选中板播 `choose` 白闪，列表淡出后切到该板的场景。
+- **存储**：`GameSettings`（`[Serializable]`，`play.singlePlayerDrumPad`）以 `JsonUtility.ToJson(…, true)` 写入 `Application.persistentDataPath/settings.json`，读取用 `FromJsonOverwrite`，缺失字段保留默认，以后加设置不破坏旧文件。`SettingManager` 与 `PlayerInfoController` 同构：`BeforeSceneLoad` 自动创建、`DontDestroyOnLoad`、文件不存在时写入默认、`Set` 先写临时文件再替换、`Changed` 事件、`UseUnsaved` 供测试。
+- **菜单**：`SettingsMenu` 三级焦点。进入时焦点在左侧类型；咔（左＝上、右＝下）在当前列表循环移动，咚确认：类型 → 该类型的项目；项目 → 该项目的选项（初始为当前值）；选项 → 应用并保存，焦点回到项目。两个列表末尾都有 Return：类型的 Return 返回 Entry，项目的 Return 回到类型。Esc 逐级后退（选项不应用）。原版 settings 场景是横向盒子列表＋左右咔，这里按用户要求改为左右两列与三级焦点。
+- **触控**：与 SongSelect 曲目板一致——点其他行移动到该行，点已聚焦的行确认；点项目行会把焦点从类型移到项目；点选项按钮直接应用。两列表另有纵向滑动（`SwipeRelay`，每拖动约 0.8 行距移动一行，上拖为下一行）：滑动会先把焦点移入被滑的列表。说明：SongSelect 实际只有点击，没有滑动。
+- **画面**：PyTaikoGreen `Graphics/settings`（Nijiiro 皮肤没有自有设置美术，原版运行时继承 Green）1.5 倍：`background` 铺满、`box`／`box_highlight` 为类型行（567×138）、`title`／`title_highlight` 九宫格为项目行（1170×130，标签 40 号自动缩到 26 号以免压到右侧当前值）、`overlay` 九宫格为详情面板（名称、说明，内容内缩 90 以避开图片透明边）、`button_off`／`button_on` 1.2 倍为选项按钮（亮的是焦点选项，未进入选项时为当前值）、`blue_arrow` 指向焦点（行或按钮右侧）、`footer` 置底。标题「ゲーム設定」左上。选项标签沿用 settings_template 的 Enabled／Disabled，并显示原模板风格的说明文字。BGM 为 Green `Sounds/settings/bgm.ogg`，移动用咔音，确认／返回用咚音。
+- **游玩**：`PlayScene.drumPad` 引用 `TouchDrum`；`Start` 中 `SetActive(settings.play.singlePlayerDrumPad)`，关闭时不绘制、不注册 InputManager；`DisableDrumPads` 只收集启用中的鼓，因此暂停／恢复不会打开它。
+- **导入陷阱**：Unity 6 2D 项目对新复制的 PNG 默认 Multiple 自动切片（9.png 被切成 966×387 的修剪 sprite）；`ImportEntryArt` 现把 `mode_select/box/*.png` 强制为 Single，`ImportSettingArt` 同样处理并设九宫格边。
+- **验证**：`SettingsMenuTests` 5/5、`GlobalSettingFlowTests` 3/3；全部程序集 35/35、136/136、15/15、30/30（`TestResults/settings-*.json`）；截图 `TestResults/EntrySettingsBoard.png`、`SettingsTypes.png`、`SettingsChoice.png`、`SinglePlayNoDrumPad.png`。`CreateGlobalSettingScene()`／`CreateEntryScene()` 连续执行，场景与 Build Settings 文件哈希不变。
+- 未做：全局覆盖层（计时器、フリープレイ、操作指引）未放入设置场景；项目超过约 2 行时列表与详情面板会重叠，届时需加滚动；多语言未做（标签为英文，标题与 Entry 文字为日文）。

@@ -1,0 +1,161 @@
+using System.Collections;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+
+namespace OurTaiko.Tests
+{
+    public sealed class GlobalSettingFlowTests
+    {
+        static SettingManager Settings => SettingManager.EnsureInstance();
+
+        [TearDown]
+        public void RestoreDefaults() => Settings.UseUnsaved(new GameSettings());
+
+        [UnityTest]
+        public IEnumerator EntrySettingsBoardOpensTheSettingsAndDrumKeysChangeTheDrumPad()
+        {
+            Settings.UseUnsaved(new GameSettings());
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
+                yield return null;
+                var entry = Object.FindFirstObjectByType<EntryScene>();
+                Assert.That(entry.Modes.Length, Is.EqualTo(2));
+                Assert.That(entry.Modes[1].Title, Is.EqualTo("ゲーム設定"));
+                yield return new WaitForSecondsRealtime(0.2f);
+                entry.Don();
+                yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 3);
+                yield return new WaitForSecondsRealtime(1f);
+
+                // 演奏ゲーム open at the centre, ゲーム設定 closed one slot below (kanban_3: +50, +305).
+                var boards = entry.Board.Boards;
+                Assert.That(boards[0].Openness, Is.EqualTo(1).Within(1e-3));
+                Assert.That(boards[1].Openness, Is.EqualTo(0).Within(1e-3));
+                Assert.That(boards[1].Position, Is.EqualTo(new Vector2(50, 305)));
+                Assert.That(boards[1].Root.gameObject.activeSelf, Is.True);
+
+                // Right ka slides the list up; the settings board opens after the slide.
+                entry.Ka(1);
+                Assert.That(entry.Flow.SelectedMode, Is.EqualTo(1));
+                yield return new WaitForSecondsRealtime(0.08f);
+                Assert.That(boards[1].Position.y, Is.InRange(1f, 304f), "Mid-slide.");
+                Assert.That(boards[1].Openness, Is.EqualTo(0).Within(1e-3), "Opens only after the slide.");
+                yield return new WaitForSecondsRealtime(0.6f);
+                Assert.That(boards[1].Position, Is.EqualTo(Vector2.zero));
+                Assert.That(boards[0].Position, Is.EqualTo(new Vector2(-50, -305)));
+                Assert.That(boards[1].Openness, Is.EqualTo(1).Within(1e-3));
+                Assert.That(boards[0].Openness, Is.EqualTo(0).Within(1e-3));
+                TestCapture.Capture("EntrySettingsBoard.png");
+                entry.Ka(1);
+                Assert.That(entry.Flow.SelectedMode, Is.EqualTo(1), "Clamped at the bottom.");
+
+                entry.Don();
+                yield return WaitForScene(SceneSwitcher.SettingScene);
+                var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+                var menu = scene.Menu;
+                var view = scene.view;
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
+                Assert.That(view.typeRows[0].label.text, Is.EqualTo("Play"));
+                Assert.That(view.typeRows[1].label.text, Is.EqualTo("Return"));
+                Assert.That(view.itemRows[0].label.text, Is.EqualTo("Enable Drumpad for Single Player Mode"));
+                Assert.That(view.itemRows[0].value.text, Is.EqualTo("Enabled"));
+                Assert.That(view.typeRows[0].box.sprite, Is.SameAs(view.typeBoxSelected));
+                TestCapture.Capture("SettingsTypes.png");
+
+                // Drum keys: ka wraps over Return, don enters Play, don opens the choices.
+                scene.Ka(1);
+                Assert.That(menu.IsTypeReturn, Is.True);
+                Assert.That(view.itemRows[0].root.gameObject.activeSelf, Is.False, "Return has no items.");
+                scene.Ka(1);
+                scene.Don();
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+                Assert.That(view.itemRows[0].box.sprite, Is.SameAs(view.itemBoxSelected));
+                scene.Don();
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Choice));
+                Assert.That(view.choiceRows[0].label.text, Is.EqualTo("Enabled"));
+                Assert.That(view.choiceRows[1].label.text, Is.EqualTo("Disabled"));
+                scene.Ka(1);
+                Assert.That(view.choiceRows[1].box.sprite, Is.SameAs(view.choiceOn));
+                TestCapture.Capture("SettingsChoice.png");
+                scene.Don();
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+                Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.False, "Applied and saved through SettingManager.");
+                Assert.That(view.itemRows[0].value.text, Is.EqualTo("Disabled"));
+
+                // Touch: a choice tap applies at once; swipes move through the lists.
+                view.choiceRows[0].click.Clicked();
+                Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.True);
+                view.itemSwipe.Swiped(1);
+                Assert.That(menu.IsItemReturn, Is.True);
+                view.typeSwipe.Swiped(1);
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
+                Assert.That(menu.IsTypeReturn, Is.True);
+                view.typeRows[0].click.Clicked();
+                view.typeRows[0].click.Clicked();
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items), "Tapping the focused type confirms it.");
+                view.itemRows[0].click.Clicked();
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Choice), "The focused item opens on one tap.");
+                view.choiceRows[1].click.Clicked();
+                Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.False);
+
+                // Items' Return goes back to the types; the types' Return leaves for Entry.
+                scene.Ka(1);
+                scene.Don();
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
+                scene.Ka(1);
+                scene.Don();
+                Assert.That(scene.HasLeft, Is.True);
+                yield return WaitForScene(SceneSwitcher.EntryScene);
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator DrumPadSettingEnablesOrHidesTheTouchDrum([Values(true, false)] bool enabled)
+        {
+            Settings.UseUnsaved(new GameSettings { play = new PlaySettings { singlePlayerDrumPad = enabled } });
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
+                yield return null;
+                yield return null;
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                Assert.That(play.drumPad, Is.Not.Null);
+                Assert.That(play.drumPad.gameObject.activeSelf, Is.EqualTo(enabled));
+                Assert.That(play.drumPad.isActiveAndEnabled, Is.EqualTo(enabled));
+                if (!enabled) TestCapture.Capture("SinglePlayNoDrumPad.png");
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            }
+        }
+
+        static IEnumerator WaitUntil(System.Func<bool> condition, float seconds)
+        {
+            float deadline = Time.realtimeSinceStartup + seconds;
+            while (!condition())
+            {
+                yield return null;
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+            }
+        }
+
+        static IEnumerator WaitForScene(string scene)
+        {
+            float deadline = Time.realtimeSinceStartup + 20;
+            do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
+            while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != scene);
+            yield return null;
+        }
+    }
+}

@@ -7,10 +7,11 @@ namespace OurTaiko
 {
     // Nijiiro single-player Entry (scenes/entry.cpp + Scripts/entry/*.lua, entry_credit_arcade):
     // the credit screen waits for a drum face hit, 1P joins (nameplate and control guide fade in),
-    // and once the join animation would have finished the 演奏ゲーム board opens; a face hit picks it and
-    // the scene moves to SongSelect. The arcade's 60 s timer is shown as a placeholder that never
+    // and once the join animation would have finished the mode list opens with 演奏ゲーム selected and
+    // ゲーム設定 below it; ka moves between the boards and a face hit picks one: 演奏ゲーム goes to
+    // SongSelect, ゲーム設定 to GlobalSettingScene. The arcade's 60 s timer is shown as a placeholder that never
     // counts down (user decision: the simulator does not limit the player's time). Not ported: the 3D Don and its join
-    // cloud, 2P joining, the other boards (特訓モード / きせかえ / ゲーム設定), the costume menu and the
+    // cloud, 2P joining, the other boards (特訓モード / きせかえ), the costume menu and the
     // ALL.Net indicator. The screen is built in Awake.
     public sealed class EntryScene : MonoBehaviour
     {
@@ -28,6 +29,8 @@ namespace OurTaiko
         [Header("Credit and mode select")]
         public Sprite creditPill;
         public Sprite creditFlash, boardOn, boardOff, boardFlash, boardCursor;
+        [Tooltip("ゲーム設定 board: mode_select/box frames 9 (open) and 10 (closed).")]
+        public Sprite settingsBoardOn, settingsBoardOff;
 
         [Header("Global chrome")]
         public ArcadeOverlayArt overlay;
@@ -35,7 +38,7 @@ namespace OurTaiko
 
         [Header("Timelines")]
         public TextAsset backgroundTimeline;
-        public TextAsset creditRowTimeline, creditFadeTimeline, modeBoardTimeline, cursorGlowTimeline;
+        public TextAsset creditRowTimeline, creditFadeTimeline, modeBoardTimeline, cursorGlowTimeline, modeListTimeline;
 
         [Header("Audio")]
         public AudioSource bgm;
@@ -45,7 +48,8 @@ namespace OurTaiko
         public EntryFlow Flow { get; private set; }
         public ArcadeTimerView TimerView { get; private set; }
         public EntryCredit Credit { get; private set; }
-        public EntryModeBoard Board { get; private set; }
+        public EntryModeList Board { get; private set; }
+        public EntryMode[] Modes { get; private set; }
         public ControlGuideView Guide { get; private set; }
         public CoinOverlayView Coins { get; private set; }
         public NameplateView Nameplate { get; private set; }
@@ -65,7 +69,8 @@ namespace OurTaiko
         {
             switcher = SceneSwitcher.EnsureInstance();
             double now = Now;
-            Flow = new EntryFlow(now);
+            Modes = BuildModes();
+            Flow = new EntryFlow(now, Modes.Length);
             Build();
             switcher.SceneChanging += OnSceneChanging;
             Show(now);
@@ -87,11 +92,27 @@ namespace OurTaiko
             bgm.Stop(); voice.Stop();
         }
 
+        // box_manager.cpp's board order with the boards this port has: 演奏ゲーム first, ゲーム設定 last.
+        // Texts are Nijiiro's skin_config entry_* (ja); rims are box.lua's MODES colours.
+        EntryMode[] BuildModes() => new[]
+        {
+            new EntryMode
+            {
+                Title = "演奏ゲーム", Info = new[] { "すきな曲や、むずかしさを", "えらんであそべるよ！" },
+                Rim = new Color32(251, 1, 29, 255), On = boardOn, Off = boardOff, Scene = SceneSwitcher.SongSelectScene,
+            },
+            new EntryMode
+            {
+                Title = "ゲーム設定", Info = new[] { "ゲームのせっていを", "かえられるよ！" },
+                Rim = new Color32(0, 132, 212, 255), On = settingsBoardOn, Off = settingsBoardOff, Scene = SceneSwitcher.SettingScene,
+            },
+        };
+
         void Build()
         {
             backdrop = new EntryBackground(stage, background, streetLit, glow, twinkle, Clip(backgroundTimeline));
-            Board = new EntryModeBoard(stage, boardOn, boardOff, boardFlash, boardCursor, font, outlineMaterial,
-                Clip(modeBoardTimeline), Clip(cursorGlowTimeline));
+            Board = new EntryModeList(stage, Modes, boardFlash, boardCursor, font, outlineMaterial,
+                Clip(modeBoardTimeline), Clip(cursorGlowTimeline), Clip(modeListTimeline));
             Credit = new EntryCredit(stage, creditPill, creditFlash, font, outlineMaterial, Clip(creditRowTimeline), Clip(creditFadeTimeline));
             Guide = new ControlGuideView(stage, overlay);
             if (nameplatePrefab != null)
@@ -120,8 +141,8 @@ namespace OurTaiko
             if (!switcher.IsInputBlocked && !HasLeft)
             {
                 if (InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Don();
-                else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.RightKa)
-                    || InputManager.GetKeyDown(InputKey.MenuLeft) || InputManager.GetKeyDown(InputKey.MenuRight)) Ka();
+                else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft) || InputManager.GetKeyDown(InputKey.MenuUp)) Ka(-1);
+                else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight) || InputManager.GetKeyDown(InputKey.MenuDown)) Ka(1);
             }
             if (!announced && Flow.IsModeReady(now) && !voice.isPlaying)
             {
@@ -131,7 +152,7 @@ namespace OurTaiko
             if (Flow.IsFinished(now) && !HasLeft)
             {
                 HasLeft = true;
-                switcher.SwitchScene(SceneSwitcher.SongSelectScene);
+                switcher.SwitchScene(Modes[Flow.SelectedMode].Scene);
             }
             Show(now);
         }
@@ -154,13 +175,15 @@ namespace OurTaiko
             Flow.Select(now);
         }
 
-        // A rim hit: the single-board list has nowhere to move, but the board still answers.
-        public void Ka()
+        // A rim hit on the mode list: left ka selects the board above, right ka the one below. The
+        // ka answers even at either end of the list, as the original's does.
+        public void Ka(int delta)
         {
             if (switcher.IsInputBlocked || HasLeft) return;
             double now = Now;
             if (Flow.State != EntryFlow.Phase.SelectMode || !Flow.IsModeReady(now) || Flow.IsSelected) return;
             Play(sfx, ka, oneShot: true);
+            Flow.MoveMode(delta, now);
         }
 
         static void Play(AudioSource source, AudioClip clip, bool oneShot = false)
@@ -179,7 +202,7 @@ namespace OurTaiko
             if (modeReady && double.IsNaN(modeShownAt)) modeShownAt = now;
             Board.Root.gameObject.SetActive(modeReady);
             if (modeReady)
-                Board.Show(now, now - modeShownAt, Flow.BoardFade(now), Flow.SelectedAt.HasValue ? now - Flow.SelectedAt.Value : -1);
+                Board.Show(now, now - modeShownAt, Flow.SelectedMode, Flow.BoardFade(now), Flow.SelectedAt.HasValue ? now - Flow.SelectedAt.Value : -1);
 
             if (Flow.State == EntryFlow.Phase.SelectSide) Credit.ShowWaiting(now - Flow.StartedAt, now - Flow.StartedAt);
             else if (!creditGone) creditGone = !Credit.ShowDecided(now - Flow.JoinedAt.Value, 0);

@@ -56,6 +56,15 @@ namespace OurTaiko.Editor
                     .SelectMany(folder => Directory.GetFiles(Root + "Art/" + folder, "*.png")))
                 .Append(Root + "Art/global/overlay/banapass_no.png").ToArray();
             ImportSprites(paths);
+            // Board frames copied later (9 / 10, ゲーム設定) arrive auto-sliced into trimmed sprites by
+            // Unity's default import; each frame is one whole 1160x460 plate.
+            foreach (string frame in Directory.GetFiles(Root + "Art/entry/mode_select/box", "*.png"))
+            {
+                var importer = (TextureImporter)AssetImporter.GetAtPath(frame.Replace('\\', '/'));
+                if (importer.spriteImportMode == SpriteImportMode.Single) continue;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.SaveAndReimport();
+            }
             // The guide sheet is 4576x6900: above the usual 4096 cap, and ~126 MB uncompressed.
             var guide = (TextureImporter)AssetImporter.GetAtPath(Root + "Art/" + GuideSheet + ".png");
             if (guide.maxTextureSize != 8192 || guide.textureCompression != TextureImporterCompression.CompressedHQ
@@ -85,6 +94,9 @@ namespace OurTaiko.Editor
             entry.boardOn = Required("entry/mode_select/box/0");
             entry.boardOff = Required("entry/mode_select/box/1");
             entry.boardFlash = Required("entry/mode_select/box/8");
+            // 9 / 10 = ゲーム設定 open / closed (box.lua MODES.settings, the baked `aprilfool` board)
+            entry.settingsBoardOn = Required("entry/mode_select/box/9");
+            entry.settingsBoardOff = Required("entry/mode_select/box/10");
             entry.boardCursor = Required("entry/mode_select/box_highlight_center");
             entry.overlay = OverlayArt();
             entry.nameplatePrefab = AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);
@@ -93,6 +105,7 @@ namespace OurTaiko.Editor
             entry.creditFadeTimeline = RequiredTimeline("credit_fade");
             entry.modeBoardTimeline = RequiredTimeline("mode_board");
             entry.cursorGlowTimeline = RequiredTimeline("cursor_glow");
+            entry.modeListTimeline = RequiredTimeline("mode_list");
             entry.don = AssetDatabase.LoadAssetAtPath<AudioClip>(Root + "Audio/don.ogg");
             entry.ka = AssetDatabase.LoadAssetAtPath<AudioClip>(Root + "Audio/ka.ogg");
             entry.cloud = Clip("entry/cloud");
