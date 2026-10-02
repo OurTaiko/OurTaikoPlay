@@ -299,11 +299,16 @@ namespace OurTaiko
     public sealed class EntryModeBoard
     {
         public const double ClosedSy = 0.1857;
+        // The visible plate inside the 1160x460 frames (box.lua: "off" 964x157, "on" 1050x436): the
+        // tap area follows the openness between the two so a closed board's empty margin never
+        // covers the open board.
+        public static readonly Vector2 ClosedPlate = new Vector2(964, 157), OpenPlate = new Vector2(1050, 436);
         const float CenterX = 960, CenterY = 535, InfoY = 59.5f, InfoLineHeight = 53;
         const float TitleYOn = -97, TitleYOff = 4, TitleSize = 72, InfoSize = 34;
 
         readonly Image cursor, closed, open, flash;
         readonly TextMeshProUGUI title;
+        public Image Hit { get; }
         readonly TextMeshProUGUI[] info;
         Vector2 from, target;
         float fromVisibility, targetVisibility;
@@ -357,6 +362,11 @@ namespace OurTaiko
             title.characterSpacing = 2 * 100f / TitleSize;
             title.text = mode.Title;
             flash = Plate("Flash", boardFlash);
+            Hit = SkinUi.Image("Hit", Root, null, ClosedPlate.x, ClosedPlate.y);
+            Hit.color = Color.clear;
+            Hit.raycastTarget = true;
+            Hit.rectTransform.Center(CenterX, CenterY);
+            Hit.gameObject.AddComponent<PointerRelay>();
         }
 
         Image Plate(string name, Sprite sprite)
@@ -408,6 +418,7 @@ namespace OurTaiko
             title.enabled = titleAlpha > 0.001f;
             title.rectTransform.Center(CenterX, CenterY + TitleYOff + (TitleYOn - TitleYOff) * openness);
             flash.Alpha(chooseFlash);
+            Hit.rectTransform.sizeDelta = Vector2.Lerp(ClosedPlate, OpenPlate, openness);
         }
     }
 }

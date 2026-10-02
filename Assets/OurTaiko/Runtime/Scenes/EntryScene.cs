@@ -128,11 +128,49 @@ namespace OurTaiko
             TimerView.Show(TimerSeconds);
             StatusChips.Build(stage, overlay);
             Coins = new CoinOverlayView(stage, overlay, font, outlineMaterial);
+            // Touch: on the credit screen a tap anywhere joins (the drum's face). On the mode list taps
+            // work like SongSelect's boards: tap another board to move to it, tap the open board to
+            // pick it; elsewhere a tap does nothing. Vertical swipes move through the boards. The
+            // full-stage area sits under the boards so their own tap areas win.
             var touch = SkinUi.Image("TouchArea", stage, null, 1920, 1080);
             touch.rectTransform.TopLeft(0, 0);
             touch.color = Color.clear;
             touch.raycastTarget = true;
-            touch.gameObject.AddComponent<PointerRelay>().Clicked = Don;
+            touch.transform.SetSiblingIndex(Board.Root.GetSiblingIndex());
+            touch.gameObject.AddComponent<PointerRelay>().Clicked = TapBackground;
+            TouchArea = touch;
+            foreach (var swipe in new[] { touch.gameObject.AddComponent<SwipeRelay>(), Board.Root.gameObject.AddComponent<SwipeRelay>() })
+            {
+                swipe.step = 200;
+                swipe.Swiped = SwipeBoards;
+            }
+            for (int i = 0; i < Board.Boards.Count; i++)
+            {
+                int index = i;
+                Board.Boards[i].Hit.GetComponent<PointerRelay>().Clicked = () => TapBoard(index);
+            }
+        }
+
+        public Image TouchArea { get; private set; }
+
+        // A tap outside the boards: joins on the credit screen, nothing on the mode list.
+        public void TapBackground()
+        {
+            if (Flow.State == EntryFlow.Phase.SelectSide) Don();
+        }
+
+        // A tap on a board: the open (selected) one is picked, another one is moved to.
+        public void TapBoard(int index)
+        {
+            if (Flow.State != EntryFlow.Phase.SelectMode) { Don(); return; }
+            if (index == Flow.SelectedMode) Don();
+            else Ka(index - Flow.SelectedMode);
+        }
+
+        // Swiping the list up brings the board below to the centre, like a right ka.
+        public void SwipeBoards(int delta)
+        {
+            if (Flow.State == EntryFlow.Phase.SelectMode) Ka(delta);
         }
 
         void Update()
