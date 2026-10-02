@@ -288,3 +288,9 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 用户决定：模拟器不限制玩家时间，Entry 的 60 秒计时器与选曲一样只显示 60，不倒数、不 blip、无 30／10／5 秒语音、不自动选择模式板。上文「Entry 场景」中关于计时器倒数与语音的描述为原版行为记录。
 - 移除 `EntryScene` 的计时器音效字段与 `TimerVoice` 音源（迁移入口 `CreateEntryScene` 会删除已有场景中的该物体），删除已导入的 `Audio/global/timer_blip.ogg`、`voice_timer_30/10/5.ogg` 及其来源记录。`ArcadeTimer.Update` 保留为原版倒数逻辑的记录，EditMode `EntryTests` 仍覆盖。
 - 验证：PlayMode `EntryFlowTests`（加入并进入模式选择后计时器仍为 60）通过。
+
+## 删除计时器倒数代码（2026-10-02）
+
+- 用户要求删除不再使用的倒数代码：移除 `Core/ArcadeTimer.cs`（倒数、30／10／5 秒语音提示、归零决定、数字与高光弹动曲线）及其 EditMode 测试。倒数不再发生，10 秒内的红色表盘、白色数字与高光也一并删除：`ArcadeOverlayArt` 去掉 `timerBackgroundRed`、`timerHighlight`、`timerDigitsWhite`，删除生成的 `Generated/TimerDigitWhite0–9.asset`。`ArcadeTimerView.Show(int)` 只显示固定数字（Entry 60，选曲列表 100、难度选择 60）。原版行为仍记录在上文「Entry 场景」。
+- `global/timer/bg_red.png`、`counter_white.png`、`highlight.png` 已不再被引用，仍留在 `Art/global/timer`。
+- 验证：EditMode `EntryTests`，PlayMode `EntryFlowTests`、`GlobalOverlayFlowTests` 通过。
