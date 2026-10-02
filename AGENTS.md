@@ -1,6 +1,6 @@
 # 标准交接摘要
 
-更新日期：2026-10-01。本文记录当前有效结论；`Documentation/PortingNotes.md` 中的早期 Green／1280×720 和简化计分／魂槽记录仅是历史，不代表当前规格。
+更新日期：2026-10-02。本文记录当前有效结论；`Documentation/PortingNotes.md` 中的早期 Green／1280×720 和简化计分／魂槽记录仅是历史，不代表当前规格。
 
 ## 1. 核心项目目标
 
@@ -21,6 +21,7 @@
   - **输入互斥（每帧一击）**：游玩时每帧只判定最早的一次咚／咔打击（键盘、触控、鼠标按发生时间合并排序），同帧其余打击直接丢弃，不判定、不播音效、不亮鼓面。OurTaikoPlayer 的 `player.cpp::handle_input` 每帧按固定顺序（左咚、右咚、左咔、右咔）逐个处理全部打击，这是被修正的行为。后果是已知且接受的：连打中同帧双手只计 1 次；同帧先咔后咚时咔占用该帧；同帧双手打大音符不会误吃下一个音符。实现在 `PlayScene.HitFirstDrumPress`，由 `DrumInputMutexTests.cs` 覆盖。
   - **大音符不需要双手同时击打**：大咚／大咔单侧击打即为完整判定，与小音符同样计分。不实现双手判定窗口或双击加分，不要把它列为未移植功能。
   - **演奏オプション**（用户决定）：ドロン只隐藏音符，小节线保留；ランダム按每个咚／咔音符独立概率换色（きまぐれ 30%、でたらめ 50%），不用原 `modifier_random` 的 (对象数/5)×档位 抽取；演奏スキップ灰显不可改（单人没有 2P 鼓）；轨道徽章网格按整数行，不复制原 `slot/3.0` 浮点下移。详见 `Documentation/PortingNotes.md`「演奏オプション」。
+  - **名牌与自动演奏**（用户决定）：原版自动演奏时在名牌位置画 `lane/auto_icon` 取代名牌；本项目名牌始终显示，自动演奏只在演奏オプション徽章区第一位加入选曲的 `song_select/modifier/mod_auto`，没有其他视觉差别。名牌彩虹称号带按 6 帧／50 ms／300 ms 循环；原版从未 `start()` 该动画（停在第 0 帧），属被修正的缺陷。
 - Git 已初始化，当前直接在 `main` 上提交（线性历史，无合并提交）；提交使用 **Conventional Commits**。保留用户已有改动，不把无关资源混入提交。新建分支默认使用 `kirisamevanilla/` 前缀。
 - 场景、Sprite 资源、导入设置等持久化内容通过 Unity Editor API 修改并保存；避免手工改 Unity YAML／GUID。现有场景可直接编辑，不要随意执行生成初始场景的工具覆盖布局。
 - 后续交流以中文为主；能根据原代码确定的常规实现直接完成并验证，无需重复询问已经确定的约束。
@@ -29,7 +30,7 @@
 
 ### 当前完成状态与交接边界
 
-- 最新提交：`222f8f2` — `feat(play): fly hit notes to the soul badge with gauge hit effect`（见下文「音符飞向魂槽与 GaugeHitEffect」），随后的 docs 提交补全本文。其前为 `6a78a04` — `feat(scenes): add Nijiiro song loading curtain and SongLoadingScene`（见下文「选曲加载幕布」）。其前为 `feat(play): port note moji lane`（音符文字，见下文「音符文字（moji）」）。其前为音符显隐／层级修复 `dfd5e56`、`5faadfe`、`d6cd16b`、`0e2cbe5`（见下文「音符显隐与层级」）。更早为 **`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
+- 最新提交：`a067014` — `feat(ui): add Nijiiro nameplate, PlayerInfoController and score counter`（2026-10-02，名牌、全局 `PlayerInfoController` 与游玩分数计数器，见下文「名牌与分数计数器」），随后的 docs 提交补全本文。其前为 `222f8f2` — `feat(play): fly hit notes to the soul badge with gauge hit effect`（见下文「音符飞向魂槽与 GaugeHitEffect」），随后的 docs 提交补全本文。再前为 `6a78a04` — `feat(scenes): add Nijiiro song loading curtain and SongLoadingScene`（见下文「选曲加载幕布」）。其前为 `feat(play): port note moji lane`（音符文字，见下文「音符文字（moji）」）。其前为音符显隐／层级修复 `dfd5e56`、`5faadfe`、`d6cd16b`、`0e2cbe5`（见下文「音符显隐与层级」）。更早为 **`b445ac3` — `feat(unity): add Nijiiro song select and result scenes`**，随后 `docs: update handoff for song select and result scenes` 更新本文（之前依次为 Shinuchi 计分／魂槽修复与 `a34ee00` 全局 SceneSwitcher）。交接时工作区干净。
 - `Assets/OurTaiko/Generated/Nijiiro SDF.asset` 是动态 SDF 字体，Unity 会在打开项目、运行测试或保存时自动改写它（用户确认属于 Unity 自身行为，并非用户修改）。出现该 diff 时**不要提交**；收尾时用 `git restore "Assets/OurTaiko/Generated/Nijiiro SDF.asset"` 还原为已提交版本（Editor 打开时它可能被再次写入，必要时关闭 Editor 后再还原）。不要用旧的 TestResults 快照覆盖它。
 - Unity Editor 可能仍由上一会话打开（项目已安装 Pipeline 包）；先用 `unity status` 确认连接再操作，修改 C# 后刷新并确认 `EditorUtility.scriptCompilationFailed` 为 false（编译错误会让 CLI 无法连接或静默失败，看 `~/Library/Logs/Unity/Editor.log` 的 `error CS`）。耗时较长的 Editor 方法会让 CLI 报 5 秒超时，但会在 Editor 中继续执行，需轮询结果。
 - 选曲／结算的下一步候选（均未授权，需用户确认）：文件夹与类别、成绩等级演出、曲目板飞入、难度决定标记弹出、皇冠光芒加算混合、支持字母扩展音符以游玩 TRIPLE HELIX Edit。
@@ -63,6 +64,8 @@
 | `Assets/OurTaiko/Runtime/Play/BranchLaneView.cs` | 分支轨道色、右侧字样、升降级和过渡动画。 |
 | `Assets/OurTaiko/Runtime/Play/SoulGaugeView.cs` | 50 格魂槽、过关黄色区、新格淡入、满槽彩虹与魂火。 |
 | `Assets/OurTaiko/Runtime/Core/NoteArcPath.cs`、`GaugeHitEffectTiming.cs`、`Runtime/Play/NoteArcView.cs`、`GaugeHitEffectView.cs` | 命中音符飞向魂徽章：Nijiiro `note_arc_pivot` 圆弧、30 帧；到达后在徽章播放 GaugeHitEffect（光圈换帧、0.8→1.5 放大、黄→橙→红、383 ms 淡出，音符同步淡出）。`NoteArcs`、`GaugeHitEffect` 层依次在 `SoulGauge` 之后。迁移入口 `ProjectBuilder.ApplyNoteArcs()`。 |
+| `Runtime/Core/PlayerInfo.cs`、`NameplateLayout.cs`、`Runtime/Scenes/PlayerInfoController.cs`、`NameplateView.cs`、`Generated/Nameplate.prefab` | 玩家名牌：数据与规则（coin／称号／段位、名字框、彩虹帧）、全局持有者（读 `player.json`，`Changed` 事件更新名牌）、Nijiiro 名牌预制体。SinglePlayScene 保存实例；SongSelect／Result 由 `nameplatePrefab` 运行时实例化。迁移入口 `ProjectBuilder.ApplyNameplate()`。 |
+| `Runtime/Play/ScoreCounterView.cs` | 游玩分数计数器（`lane_score_cover`＋`score_number` 数字、TextStretch 弹动），布局在 `Core/NameplateLayout.cs` 的 `ScoreCounterLayout`，弹动公式 `TextStretch` 与气球数字共用。 |
 | `Assets/OurTaiko/Runtime/Play/BalloonCounterView.cs` | 7 号气球剩余次数、数字弹动、膨胀、破裂与淡出。 |
 | `Assets/OurTaiko/Runtime/Play/FpsCounter.cs`、`SpriteFlipbook.cs`、`DrumPad.cs` | 实测帧率、舞者帧动画和触控鼓。触控鼓**只放在 SinglePlayScene**（原版为全局叠加层），复制原版：Nijiiro `global/overlay/touch_drum.png` 全画面 50% 不透明，位于暂停／结果面板之下；每次按下按原全局动画 66 以底边中心缩至 0.95 再回弹（各 70 ms、二次缓出，真实时间）。判定区照搬 `input.cpp::touch_quadrant_vkey`：上半屏为咔，下半屏中以设计区底边中心、半径为宽度 0.262／0.242 的椭圆内为咚、其余为咔，左右按中线分；落在 uGUI 按钮上的点交给按钮。迁移入口 `ProjectBuilder.ApplyTouchDrum()`。 |
 | `Assets/OurTaiko/Editor/ProjectBuilder.SongSelectResult.cs` | 菜单 OurTaiko/Create Song Select And Result Scenes：导入选曲／结算素材、生成切片与 `Generated/Nijiiro SDF Outline.mat`，仅在场景缺失时创建，并对已有场景只做定向升级。 |
@@ -95,6 +98,8 @@
 
 **音符飞向魂槽与 GaugeHitEffect。** 照搬 `note_arc.cpp`／`gauge_hit_effect.cpp`，数值取 Nijiiro 皮肤。良／可的 1–4 号音符、5／6 号连打每次击打（按所敲的鼓飞小咚／小咔，自动演奏为咚）、吹爆的 7 号气球各飞一个；不可与 9 号彩球不飞。路径为 Nijiiro `note_arc_pivot` 圆弧（圆心 (1269.22,415.14)、半径约 719.14、-154.89°→-38.24° 等角速度、`note_arc_duration` 30 帧×16.67 ms），**不是** OurTaikoPlayer 当前代码的贝塞尔（22 帧、curve height 608）——此取舍已告知用户，用户未要求改回；读取圆弧键的原实现在 OurTaikoPlayer `7a08ced`，合并时被丢弃但皮肤键保留。起点判定圈中心（轨道局部 618,110），终点魂徽章中心 (1834,-30)；顶点飞出设计区顶边，由 `NoteArcs` 的 RectMask2D 裁掉。到达时由 `NoteArcView` 交给 `GaugeHitEffectView`（同时只有一个，新到达清除旧的，按到达时刻 `开始+30 帧` 计时）：`gauge/hit_effect` 三帧 232×232（33.33／66.66 ms 换帧），116.67 ms 后 266 ms 内从 0.8 线性放大到 1.5，按尺寸着色黄 (253,249,0)→橙 (255,161,0)→红 (230,41,55)，300 ms 后 83 ms 淡出；音符画在光环之上同步淡出。Nijiiro 的 `hit_effect_circle*` 是全透明 8×8 占位图、旋转固定为 0，因此不绘制，不要当作遗漏。层级：`SoulGauge` → `NoteArcs` → `GaugeHitEffect`（原版先画魂槽再画 `draw_overlays`）；坐标经 `NoteLane` 变换换算，使用歌曲时钟，暂停冻结。迁移入口 `ProjectBuilder.ApplyNoteArcs()`（菜单 OurTaiko/Apply Nijiiro Note Arcs），帧切片 `Generated/GaugeHitEffect0–2.asset`。未移植：气球吹爆彩虹拖尾（`balloon/rainbow`／`note_arc_balloon_*`）。详见 `Documentation/PortingNotes.md`「音符飞向魂槽与 GaugeHitEffect」。
 
+**名牌与分数计数器。** 照搬 Nijiiro `Scripts/global/nameplate.lua` 与 `score_counter.cpp`，素材为 Nijiiro `global/nameplate`（未导入 2P／AI 牌）。数据由全局 `PlayerInfoController`（首场景前自动创建、跨场景保留，用户决定）在初始化时读取 `Application.persistentDataPath/player.json`（缺失时写入默认 Don-chan／Donder Debut!），`Changed` 事件让所有 `NameplateView` 即时更新；无游戏内编辑界面。「Donder Debut!」或空为无称号，dan 只接受 0–24；无称号无段位为 coin 牌（30 号名字，无称号带／段位），否则画称号带（titleBackground 0–4，越界归 0）、段位（gold 金色）、黑色称号与 24 号名字；文字只横向压扁到框宽（名字 190、称号 215）。位置：游玩 `NoteLane` 局部 (-44,161)（鼓面之后、BalloonCounter 之前），选曲 (14,908)（Wheel 与 CoursePanel 之间），结算 (2,922)（SoulSheen 之后、FadeIn 之前）。名字黑边受 Nijiiro SDF 图集 padding 9 限制取 0.6（约 2 px，原版 3 px）。分数计数器替换了原 TMP 占位分数：灰条在轨道局部 (0,12)，数字右对齐 x 255、间距 30、不补零、顶边 5.5，变化时 TextStretch 向上伸长，作为 `NoteLane` 最后一个子物体。SinglePlayScene 的调试文字 PlayerName 与 PlayState（READY 倒计时／AUTO PLAY／1 PLAYER）已删除（用户决定）。未移植：「+分数」飞出动画（`ScoreCounterAnimation`）。详见 `Documentation/PortingNotes.md`「名牌、PlayerInfoController 与分数计数器」。
+
 **音符文字（moji）。** 音符下方的「ドン／ド／コ／カッ／カ／ドン(大)／カッ(大)／連打ー／連打(大)ー／ふうせん／ーっ!!／くすだま」取自 `notes/moji` 12 帧（256×48，Point 采样，`Generated/Moji0–11.asset`）。分配在 `Core/NoteMoji.cs`，照搬 `tja.cpp::modifier_moji/find_streams`：解析器按原版 NoteList 保留源顺序的 `TaikoChart.NoteLists`（公共段一条，每个分支每条路线各一条，含小节线与长音符尾），依次按 8／12／16／24／32 分查连续段（±15 ms，长音符头断开，小节线和尾参与），段内除末个外咚→ド、咔→カ，恰 3 个咚时中间为コ；`ChartModifiers.Apply` 末尾重算，文字随あべこべ／ランダム换色。原版一小节分多行书写时会插入额外隐藏小节线并截断连续段，本项目每小节只有一条小节线，不复制该现象。渲染在 `PlayScene.RenderMoji`：独立的 `NoteLane/MojiClip/Moji` 层紧跟 `LaneClip`（全部文字压在全部音符之上，层内早的音符在上），文字中心比音符中心低 123（skin `moji.y`=209 对 `notes.y`=14）；显隐与音符相同（命中消失、漏音继续流动、ドロン一并隐藏），按自身宽度裁切；气球计数显示期间按 `skip_note` 隐藏；连打为 `moji_drumroll_mid`（宽 8＋长度）→头字→尾字ーっ!!，高度不随 Y 滚动。迁移入口 `ProjectBuilder.ApplyMoji()`。
 
 **音符显隐与层级。** 照搬原版 `draw_note_buffer`：只有击打（良／可／不可）会立即移除音符；超时漏音（`PlaySession.Missed`，由 `AdvanceNotes` 超时置位）与到尾判定的 5／6 号连打继续按原速流过判定点，直到完全离开轨道。气球／彩球仍按吹爆或到期隐藏。裁切不用固定像素：`PlayScene.InLane` 以 `LaneClip` 下音符层的实时 rect 判断，`Reach` 按当前贴图尺寸计算水平范围（普通音符半宽；气球含 12/128 脸偏移与 `notes/10` 尾；连打含长度与尾部贴图，正负滚动均可），小节线按自身半宽。层级按原 `draw_notes` 逆序绘制：`CreateNotes` 对每个音符 `SetAsFirstSibling`，早的音符压在晚的音符上（每个连打内部仍为身体→尾部→头部）。因此音符层子物体顺序与谱面顺序相反，测试和代码须用 `PlayScene.NoteRoot(index)` 取音符，不能用 `noteLayer.GetChild(i)`。由 `ChartTests.OnlyTimedOutNotesAreMarkedMissed` 与 `SceneFlowTests.FinishedRollsAndMissedNotesKeepScrollingPastJudge` 覆盖。
@@ -103,7 +108,8 @@
 
 ### 验证结果与继续工作方法
 
-- 最新验证（2026-10-01，音符飞向魂槽与 GaugeHitEffect）：Unity Editor **EditMode 131/131、PlayMode 27/27 全部通过**，报告 `TestResults/arc-editmode.json`、`TestResults/arc-playmode.json`；新增 `NoteArcPathTests`、`GaugeHitEffectTimingTests`、`NoteArcFlowTests`，截图 `TestResults/NoteArc.png`。路径按 Nijiiro 皮肤的圆弧键而非 OurTaikoPlayer 当前的贝塞尔，理由见 `Documentation/PortingNotes.md`「音符飞向魂槽与 GaugeHitEffect」；Nijiiro 的 `hit_effect_circle*` 为透明占位图，不绘制；气球吹爆彩虹拖尾未移植。
+- 最新验证（2026-10-02，名牌与分数计数器）：Unity Editor **EditMode 139/139、PlayMode 29/29 全部通过**，报告 `TestResults/nameplate-editmode.json`、`TestResults/nameplate-playmode.json`；新增 `NameplateTests`、`NameplateFlowTests`，`ScoreGaugeFlowTests` 改为检查 `scoreCounter.Text`（不补零）。截图 `TestResults/NameplatePlay.png`、`NameplatePlayCoin.png`、`NameplateSongSelect.png`、`NameplateResult.png`。PlayMode 的 `TestScoreStore` 让 `PlayerInfoController` 使用不落盘的默认数据。
+- 此前验证（2026-10-01，音符飞向魂槽与 GaugeHitEffect）：Unity Editor **EditMode 131/131、PlayMode 27/27 全部通过**，报告 `TestResults/arc-editmode.json`、`TestResults/arc-playmode.json`；新增 `NoteArcPathTests`、`GaugeHitEffectTimingTests`、`NoteArcFlowTests`，截图 `TestResults/NoteArc.png`。路径按 Nijiiro 皮肤的圆弧键而非 OurTaikoPlayer 当前的贝塞尔，理由见 `Documentation/PortingNotes.md`「音符飞向魂槽与 GaugeHitEffect」；Nijiiro 的 `hit_effect_circle*` 为透明占位图，不绘制；气球吹爆彩虹拖尾未移植。
 - 此前验证（2026-10-01，选曲加载幕布）：Unity Editor **EditMode 127/127、PlayMode 26/26 全部通过**，报告 `TestResults/curtain-editmode.json`、`TestResults/curtain-playmode.json`；新增 `SongLoadingCurtainTests`，截图 `TestResults/CurtainClosing.png`、`SongLoading.png`、`CurtainOpening.png`。
 - 此前验证（2026-10-01，音符文字）：Unity Editor **EditMode 127/127、PlayMode 24/24 全部通过**，报告 `TestResults/moji-editmode.json`、`TestResults/moji-playmode.json`；`NoteMojiTests` 覆盖帧分配／连续段／小节线／分支独立／换色重算，`NoteMojiFlowTests` 覆盖帧、层级、位置、命中／漏音／ドロン显隐与连打横条，截图 `TestResults/NoteMoji.png`。已知：调试计数文字 `GOOD/OK/BAD/ROLL` 与文字带重叠，未处理。
 - 此前验证（2026-10-01，演奏オプション）：Unity Editor **EditMode 115/115、PlayMode 22/22 全部通过**。报告为 `TestResults/options-editmode.json`、`TestResults/options-playmode.json`；PlayMode 通过 `TestScoreStore` 使用临时成绩文件和不落盘的 `PlayOptions`。`PlayOptionsTests`／`PlayOptionsFlowTests` 覆盖速度档位、面板行走、滑动曲线、谱面修改、随机概率、持久化与游玩场景实际效果；截图 `TestResults/SongSelectOptions.png`、`PlayOptionsBadges.png`。`TestResults/` 不纳入版本控制，本机报告不保证随新克隆存在。
@@ -127,4 +133,6 @@
 
 ### 明确尚未实现的范围
 
-当前不是整个原模拟器的等价移植。游玩中气球吹爆的彩虹拖尾、选曲中的文件夹／类别、搜索与排序、独立音色面板、演奏スキップ功能（及加载幕布上的演奏スキップON 徽章）、歌曲自定义 `Loading.png` 加载图、段位加载画面、2P、曲目板飞入、难度决定标记弹出，结算中的成绩等级（粋／雅／極）演出、3D 咚与名牌、皇冠光芒加算混合尚未移植；TRIPLE HELIX 的 Edit 谱面含字母扩展音符，无法游玩。联网／成绩上传、双人、段位、3D 咚角色、全部皮肤特效、逐帧回放尚未实现（大音符单侧击打即可，属有意设计，见上方约束）；计分固定使用 Shinuchi，单人魂槽数值已按原源码还原，GEN3 计分及段位魂槽不在当前范围。自动连打仍为 **15 次／秒**，未移植原版随 BPM 变化的自动连打节奏。`s` 分数分支、`#LEVELHOLD`、BMSCROLL／HBSCROLL、字母扩展音符明确不支持；不要静默猜测其行为，也不要将这些范围自动当作用户已授权的新开发任务。
+- **名牌待办**：原版 Entry（`entry.cpp`，`nameplate_entry_left/right`）、段位选择（`dan_select.cpp`）与段位结算（`dan_result.cpp`／`dan_result_draw.lua` 的 `nameplate_pos`）场景也显示名牌。将来移植这些场景时须同样复用 `Generated/Nameplate.prefab` 与 `PlayerInfoController`；2P／AI 名牌（`2p.png`／`ai.png`）与名牌编辑界面同样未做。
+
+当前不是整个原模拟器的等价移植。游玩中气球吹爆的彩虹拖尾、选曲中的文件夹／类别、搜索与排序、独立音色面板、演奏スキップ功能（及加载幕布上的演奏スキップON 徽章）、歌曲自定义 `Loading.png` 加载图、段位加载画面、2P、曲目板飞入、难度决定标记弹出，结算中的成绩等级（粋／雅／極）演出、3D 咚、皇冠光芒加算混合、游玩中的「+分数」飞出动画尚未移植；TRIPLE HELIX 的 Edit 谱面含字母扩展音符，无法游玩。联网／成绩上传、双人、段位、3D 咚角色、全部皮肤特效、逐帧回放尚未实现（大音符单侧击打即可，属有意设计，见上方约束）；计分固定使用 Shinuchi，单人魂槽数值已按原源码还原，GEN3 计分及段位魂槽不在当前范围。自动连打仍为 **15 次／秒**，未移植原版随 BPM 变化的自动连打节奏。`s` 分数分支、`#LEVELHOLD`、BMSCROLL／HBSCROLL、字母扩展音符明确不支持；不要静默猜测其行为，也不要将这些范围自动当作用户已授权的新开发任务。

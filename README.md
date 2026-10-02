@@ -19,7 +19,9 @@
 | A | 切换自动演奏 |
 | Esc | 返回入口；演奏オプション打开时关闭面板 |
 
-**演奏オプション。** 难度面板中的扳手按钮打开 Nijiiro 选项面板，共 7 行：オート、はやさ（0.1–2.0 每档 0.1，之后 3.0、4.0，首尾循环）、ドロン（隐藏音符，小节线保留，仍正常判定）、あべこべ（咚咔互换）、ランダム（きまぐれ：每个咚／咔音符 30% 概率换色；でたらめ：50%）、演奏スキップ（单人没有 2P 鼓，灰显不可改）、音色（21 套 Nijiiro 打击音色和無音，切换时试听）。D / K 改当前行的值，F / J 进入下一行，最后一行后面板滑出并把设置保存到 `Application.persistentDataPath/options.json`。触控时点行名选中该行（再点一次等于决定），点数值框左／右半边改值，点面板外关闭。游玩时轨道左侧按 3 列网格显示速度／ドロン／あべこべ／ランダム徽章。
+**演奏オプション。** 难度面板中的扳手按钮打开 Nijiiro 选项面板，共 7 行：オート、はやさ（0.1–2.0 每档 0.1，之后 3.0、4.0，首尾循环）、ドロン（隐藏音符，小节线保留，仍正常判定）、あべこべ（咚咔互换）、ランダム（きまぐれ：每个咚／咔音符 30% 概率换色；でたらめ：50%）、演奏スキップ（单人没有 2P 鼓，灰显不可改）、音色（21 套 Nijiiro 打击音色和無音，切换时试听）。D / K 改当前行的值，F / J 进入下一行，最后一行后面板滑出并把设置保存到 `Application.persistentDataPath/options.json`。触控时点行名选中该行（再点一次等于决定），点数值框左／右半边改值，点面板外关闭。游玩时轨道左侧按 3 列网格显示 オート（自动演奏时排第一）／速度／ドロン／あべこべ／ランダム徽章。
+
+**名牌。** 选曲、游玩和结算画面显示 Nijiiro 1P 名牌，数据来自 `Application.persistentDataPath/player.json`（首次运行自动写入默认值）：`name`、`title`（「Donder Debut!」或空为无称号）、`titleBackground`（0–4）、`dan`（0=初級 … 24=達人，-1 为无段位）、`gold`（金色段位）、`rainbow`（彩虹称号带）。无称号且无段位时显示只有名字的白牌。全局 `PlayerInfoController` 在启动时读取该文件，并让屏幕上的名牌随数据变化更新；目前没有游戏内编辑界面。游玩画面左上灰条显示分数（Nijiiro 数字图，变化时弹动）。
 
 结算画面按 F / J（或点击）跳过演出；演出结束约 8.3 秒后可再按一次返回，约 34 秒后自动返回。
 
@@ -71,11 +73,12 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `SongSelect.unity`、`Runtime/Scenes/SongSelectScene.cs`：纵向曲目板（按 Navigator 的 135 px 行距、±120 px 展开间隔、每行 40 px 斜移）、选中板的 508 ms 等待与 `anim/song_board` 展开／收起、光标光晕脉动、难度小牌与おに／裏交替、试听（从 DEMOSTART 播放，离开后 330 ms 恢复选曲 BGM），以及难度选择面板（课程卡、星级、皇冠、1P 气泡、裏切换动画）。光标规则在 `Runtime/Core/DifficultyCursor.cs`，谱面信息由 `SongInfo.cs` 读取。
 - `Result.unity`、`Runtime/Scenes/ResultScene.cs`、`ResultBackground.cs`：Nijiiro 结算背景（云层按原导出时间轴漂移、过关后切换金色天空与富士山弹动）、成绩板、魂槽 0.7 倍填充、行数字逐行落定、总分、皇冠、评语气泡与最高分条。时间轴在 `Runtime/Core/ResultSequence.cs`，与原 `result_player.lua` 的帧数一致。
 - `Runtime/Core/LumenClip.cs`：读取 `Assets/OurTaiko/Animations/*.txt`（原 `Scripts/anim/*.lua` 导出表的原样副本）并线性采样，只当作数据，不运行 Lua。
+- `Runtime/Core/PlayerInfo.cs`、`Runtime/Scenes/PlayerInfoController.cs`、`NameplateView.cs`、`Generated/Nameplate.prefab`：玩家名牌数据（`player.json`）、全局持有者与 Nijiiro 名牌显示；迁移入口菜单 **OurTaiko/Apply Nijiiro Nameplate**。`Runtime/Play/ScoreCounterView.cs`：游玩分数计数器。
 - `Runtime/Core/PlayResult.cs`、`ScoreStore.cs`：结算数据与本地最佳成绩（`Application.persistentDataPath/scores.json`）。与原 `save_score` 相同，自动演奏不保存；选曲板和难度卡显示保存的皇冠。
 - `Editor/ProjectBuilder.SongSelectResult.cs`：菜单 **OurTaiko/Create Song Select And Result Scenes**，导入新素材、生成切片与描边材质，仅在场景不存在时创建，之后可直接编辑场景。
 - `Editor/ProjectBuilder.cs`：通过 Editor API 创建初始场景和 sprite 切片。生成后不自动覆盖场景，后续直接编辑现有场景。
 
-选曲／结算尚未移植：文件夹与类别、搜索与排序、独立音色面板、演奏スキップ、段位、2P、成绩等级（粋／雅／極）演出、3D 咚与名牌、曲目板飞入动画、难度决定后的标记弹出，以及皇冠光芒的加算混合（目前按普通透明度绘制）。TRIPLE HELIX 的 Edit（裏）谱面使用字母扩展音符，可在选曲中选择但会显示“CHART COULD NOT LOAD”。
+选曲／结算尚未移植：文件夹与类别、搜索与排序、独立音色面板、演奏スキップ、段位、2P、成绩等级（粋／雅／極）演出、3D 咚、曲目板飞入动画、难度决定后的标记弹出，以及皇冠光芒的加算混合（目前按普通透明度绘制）。TRIPLE HELIX 的 Edit（裏）谱面使用字母扩展音符，可在选曲中选择但会显示“CHART COULD NOT LOAD”。
 
 此阶段提取的是独立的单人游玩模块。联网/成绩上传、双人、段位、3D 咚角色、原皮肤全部 Lua 特效、逐帧回放尚未移植。大音符不需要双手同时击打，这是有意设计而非缺失功能。自动连打仍为 15 次／秒，原版随 BPM 变化的自动连打节奏尚未移植；它与 Shinuchi 基准分使用的预计连打次数是两项独立规则。
 
