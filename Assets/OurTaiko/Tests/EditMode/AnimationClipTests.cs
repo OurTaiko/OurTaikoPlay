@@ -336,5 +336,32 @@ namespace OurTaiko.Tests
                 Assert.That(play.balloonCounter.GetComponent<ClipSampler>().clip, Is.SameAs(clip));
             });
         }
+
+        [Test]
+        public void BalloonPopStretchesAndFadesOut()
+        {
+            var clip = Clip("BalloonPop");
+            var stretch = Clip("TextStretch");
+            var root = new GameObject("Balloon", typeof(AnimatedFloat), typeof(CanvasGroup));
+            var reference = new GameObject("Reference", typeof(AnimatedFloat));
+            try
+            {
+                var sampler = ClipSampler.Attach(root, clip);
+                var expected = ClipSampler.Attach(reference, stretch);
+                foreach (double ms in new[] { 0.0, 25, 60, 83, 120, 165 })
+                {
+                    sampler.Sample(ms / 1000);
+                    expected.Sample(ms / 1000);
+                    Assert.That(root.GetComponent<AnimatedFloat>().value, Is.EqualTo(reference.GetComponent<AnimatedFloat>().value), $"{ms} ms");
+                    Assert.That(root.GetComponent<CanvasGroup>().alpha, Is.EqualTo(1 - (float)(ms / 166)).Within(1e-3), $"{ms} ms");
+                }
+            }
+            finally { Object.DestroyImmediate(root); Object.DestroyImmediate(reference); }
+            WithPlayScene(play =>
+            {
+                Assert.That(play.balloonCounter.popClip, Is.SameAs(clip));
+                Assert.That(play.balloonCounter.stretchClip, Is.SameAs(stretch));
+            });
+        }
     }
 }

@@ -12,6 +12,8 @@ namespace OurTaiko
         public RectTransform number;
         public CanvasGroup visuals;
         public Sprite[] digitSprites, bodyFrames;
+        [Tooltip("TextStretch.anim while inflating; BalloonPop.anim (the same stretch plus the 166 ms fade) once popped.")]
+        public AnimationClip stretchClip, popClip;
 
         public const double PopFadeSeconds = 0.166;
         public int NoteIndex { get; private set; } = -1;
@@ -78,9 +80,11 @@ namespace OurTaiko
                 ResetDisplay();
                 return;
             }
-            visuals.alpha = IsPopped ? 1 - (float)(elapsed / PopFadeSeconds) : 1;
-            // TextStretch.anim (TextStretchAnimation id 6): 50 ms rise, then 116 ms of stepped return.
+            // TextStretchAnimation id 6: 50 ms rise, then 116 ms of stepped return; a popped balloon
+            // also fades out over 166 ms.
+            if (!IsPopped) visuals.alpha = 1;
             var sampler = GetComponent<ClipSampler>();
+            sampler.clip = IsPopped ? popClip : stretchClip;
             sampler.Sample(Math.Min(elapsed, sampler.clip.length));
             float stretch = GetComponent<AnimatedFloat>().value;
             for (int i = 0; i < digitCount; i++)

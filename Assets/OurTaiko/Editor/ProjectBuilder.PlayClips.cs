@@ -81,8 +81,19 @@ namespace OurTaiko.Editor
         public static void ApplyTextStretchClip() => EditPlayScene(play =>
         {
             AttachTextStretch(play.scoreCounter.gameObject);
-            AttachTextStretch(play.balloonCounter.gameObject);
+            AttachBalloonClips(play.balloonCounter);
         });
+
+        [MenuItem("OurTaiko/Apply Balloon Pop Clip")]
+        public static void ApplyBalloonPopClip() => EditPlayScene(play => AttachBalloonClips(play.balloonCounter));
+
+        static void AttachBalloonClips(BalloonCounterView view)
+        {
+            AttachTextStretch(view.gameObject);
+            view.stretchClip = TextStretchClip();
+            view.popClip = BalloonPopClip();
+            EditorUtility.SetDirty(view);
+        }
 
         // The digit rows read their stretch from an AnimatedFloat that TextStretch.anim writes.
         static void AttachTextStretch(GameObject target)
@@ -94,7 +105,9 @@ namespace OurTaiko.Editor
         // TextStretchAnimation (score counter id 4, balloon counter id 6), in pixels the digits grow
         // upwards: 2 + 0.2 per whole millisecond up to 12 at 50 ms, then 10 and 2 less every 16.57 ms
         // (overshooting to -2 and -4 for its last steps, as the original does) and 0 after 166 ms.
-        static AnimationClip TextStretchClip() => SaveClip("TextStretch", 1000, false, clip =>
+        static AnimationClip TextStretchClip() => SaveClip("TextStretch", 1000, false, TextStretchKeys);
+
+        static void TextStretchKeys(AnimationClip clip)
         {
             const float after = 0.00001f;
             var keys = Enumerable.Range(0, 51).Select(ms => (ms / 1000f, 2 + 0.2f * ms)).ToList();
@@ -102,6 +115,14 @@ namespace OurTaiko.Editor
             for (int k = 1; k <= 7; k++) keys.Add((0.05f + 0.01657f * k, 10 - 2 * k));
             keys.Add((0.166f + after, 0));
             SteppedCurve(clip, "", typeof(AnimatedFloat), "value", keys.ToArray());
+        }
+
+        // BalloonCounter after the popping hit: the digits' stretch, and the whole counter fading
+        // out over 166 ms (it is then removed).
+        static AnimationClip BalloonPopClip() => SaveClip("BalloonPop", 1000, false, clip =>
+        {
+            TextStretchKeys(clip);
+            LinearCurve(clip, "", typeof(CanvasGroup), "m_Alpha", (0, 1), (0.166f, 0));
         });
 
         static void EditPlayScene(Action<PlayScene> edit)

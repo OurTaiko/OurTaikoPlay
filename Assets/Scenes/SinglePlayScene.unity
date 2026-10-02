@@ -3250,6 +3250,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: e41ffd783db4a4b2a9091b00d511eb17, type: 2}
   - {fileID: 21300000, guid: 124152267f32749a89ed4e7b62ba7df9, type: 2}
   - {fileID: 21300000, guid: d09f9cb231f804acb93163e4df41b4cd, type: 2}
+  stretchClip: {fileID: 7400000, guid: f164992daf9af40aa97bf2ce00daee24, type: 2}
+  popClip: {fileID: 7400000, guid: 041b18efdc6d54927ab97b4f80e1187b, type: 2}
 --- !u!114 &608617525
 MonoBehaviour:
   m_ObjectHideFlags: 0

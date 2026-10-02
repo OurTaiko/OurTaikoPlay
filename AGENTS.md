@@ -74,6 +74,7 @@
 - `BranchChange.anim`：分支切换（Nijiiro ID 41–45）：旧标签 100 ms 缓出推移 30 px、再与新标签 133 ms 缓出滑动 105 px 并交叉淡入淡出，背景淡到 0.5，等级徽章 116＋116 ms 放大到 1.2 再回、1276–1392 ms 淡出。剪辑写入 `BranchLaneView` 的 `previousOffset`／`currentOffset`（相对保存位置的偏移，代码按升降方向取正负），因此 Inspector 中调整的标签位置仍有效；缓出段用两键 Hermite 精确表示二次曲线。迁移 `ProjectBuilder.ApplyBranchChangeClip()`。
 - `DrumSqueeze.anim`：触控鼓按下（全局动画 66）70 ms 缓出缩至 0.95、70 ms 缓出回 1，挂在 `TouchDrum/Drum` 上，真实时间、每次按下重新开始；禁用时 `DrumPad` 直接复原比例。迁移 `ProjectBuilder.ApplyDrumSqueezeClip()`。
 - `TextStretch.anim`：分数计数器与气球计数数字的 TextStretch（id 4／6）：每整毫秒 +0.2 px 升到 50 ms 的 12，再每 16.57 ms 减 2（末两步按原式到 -2、-4），166 ms 后为 0。剪辑写入同物体的 `AnimatedFloat.value`，`ScoreCounterView`／`BalloonCounterView` 读取后排列数字；`TextStretch` 静态类已删除。迁移 `ProjectBuilder.ApplyTextStretchClip()`。
+- `BalloonPop.anim`：气球吹爆后的数字伸长加整个计数器 166 ms 淡出（`CanvasGroup.m_Alpha`）；`BalloonCounterView` 未爆时用 `stretchClip`（TextStretch）、吹爆后切换到 `popClip`，166 ms 后仍由代码移除。迁移 `ProjectBuilder.ApplyBalloonPopClip()`。
 - 不转换：Lumen 时间轴（`Animations/*.txt`，原版导出原样副本，Entry／选曲／加载幕布／结算）、场景切换与暂停菜单淡入淡出（从当前不透明度插值，可中断）、由游戏状态驱动的表现（音符滚动与飞行、气球膨胀、魂槽填充）。
 
 ### 游玩暂停菜单（2026-10-02）

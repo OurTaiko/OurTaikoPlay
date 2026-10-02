@@ -55,7 +55,7 @@ namespace OurTaiko.Editor
             view.bubble = PlacePicture(rig, "Bubble", "game/balloon/bubble", 589, -253);
             view.number = rig.Find("Number") as RectTransform;
             if (view.number == null) view.number = Rect("Number", rig, 723, -180, 0, 0);
-            AttachTextStretch(rig.gameObject);
+            AttachBalloonClips(view);
             view.ResetDisplay();
             play.balloonCounter = view;
             play.balloonPop = AssetDatabase.LoadAssetAtPath<AudioClip>(Root + "Audio/balloon_pop.ogg");
