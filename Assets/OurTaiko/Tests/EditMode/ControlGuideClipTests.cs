@@ -7,7 +7,7 @@ namespace OurTaiko.Tests
 {
     public sealed class ControlGuideClipTests
     {
-        const string ClipPath = "Assets/OurTaiko/Generated/ControlGuide.anim";
+        const string ClipPath = "Assets/OurTaiko/Generated/Clips/ControlGuide.anim";
 
         [Test]
         public void ClipSwapsTheDecideLoopCellsAt30Fps()

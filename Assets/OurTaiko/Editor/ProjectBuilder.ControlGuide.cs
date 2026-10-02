@@ -10,7 +10,6 @@ namespace OurTaiko.Editor
 {
     public static partial class ProjectBuilder
     {
-        const string ControlGuideClipPath = Root + "Generated/ControlGuide.anim";
         const float GuideFrameRate = 30;
 
         // Moves the control guide from 115 separate sprite assets to one clip: the frames are
@@ -50,21 +49,8 @@ namespace OurTaiko.Editor
         static AnimationClip ControlGuideClip()
         {
             var frames = SliceControlGuide();
-            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(ControlGuideClipPath);
-            if (clip == null)
-            {
-                clip = new AnimationClip { name = "ControlGuide" };
-                AssetDatabase.CreateAsset(clip, ControlGuideClipPath);
-            }
-            clip.frameRate = GuideFrameRate;
-            var keys = frames.Select((sprite, i) => new ObjectReferenceKeyframe { time = i / GuideFrameRate, value = sprite }).ToArray();
-            AnimationUtility.SetObjectReferenceCurve(clip, EditorCurveBinding.PPtrCurve("", typeof(UnityEngine.UI.Image), "m_Sprite"), keys);
-            var settings = AnimationUtility.GetAnimationClipSettings(clip);
-            settings.loopTime = true;
-            AnimationUtility.SetAnimationClipSettings(clip, settings);
-            EditorUtility.SetDirty(clip);
-            AssetDatabase.SaveAssetIfDirty(clip);
-            return clip;
+            return SaveClip("ControlGuide", GuideFrameRate, true, clip =>
+                SpriteKeys(clip, "", typeof(UnityEngine.UI.Image), frames, frames.Select((_, i) => i / GuideFrameRate).ToArray()));
         }
 
         // Slices the decide-loop cells (210-324) in the guide sheet's importer. Existing sprite IDs
