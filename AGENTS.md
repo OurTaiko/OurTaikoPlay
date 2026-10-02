@@ -56,6 +56,13 @@
 - **SongSelect 已保存为可编辑层级**：`SinglePlayScene` 与 `SongSelect` 的界面均持久化；选曲场景保存曲目板、4 张难度卡、演奏选项、名牌与全局覆盖层，`SongSelectScene.Awake` 只绑定引用，内容与动画在运行时更新。`Generated/SongBoard.prefab` 为新增歌曲模板，`Generated/PlayOptions.prefab` 可独立打开编辑；选择场景控制器时可用 Inspector 的列表／难度／选项预览。动画以保存的 RectTransform 为基线，曲目轮布局参数位于 `SongSelectView`。迁移入口 `ProjectBuilder.ApplySongSelectLayout()`，已有布局不会被重建。Entry／Result 仍在运行时构建，SongLoadingScene 的画面仍来自 SceneSwitcher 幕布。
 - 当前验证针对 Unity Editor。早期曾成功构建 macOS Development Player，但 `Builds/OurTaikoPlayerUnity.app` **没有随最近各次修复重新打包**，不能视作当前版本。移动端、真机音频延迟与独立播放器长期手动游玩尚未验收。
 
+### 动画剪辑（Generated/Clips，2026-10-02）
+
+固定时间轴、与游戏状态无关的表现存为 `.anim`，由 `Runtime/Scenes/ClipSampler.cs` 播放：Animator＋手动求值的 Playables 图（`AnimationClip.SampleAnimation` 不会应用 sprite 关键帧），各视图仍持有自己的时钟（歌曲时钟、真实时间、重新开始）并每帧调用 `Sample`／`SampleLoop`／`Play`（切换变体）。剪辑由 Editor 构建（`ProjectBuilder.Clips.cs` 的 `SaveClip` 原地重写，GUID 不变），各项迁移菜单可重复执行。测试 `AnimationClipTests`（进行中）直接采样资产。
+- `ControlGuide.anim`：操作指引决定循环，见「Entry」。
+- `Dancer.anim`：游玩舞者 `0_loop` 19 帧、8 fps 循环、歌曲时钟（取代已删除的 `SpriteFlipbook`）；`PlayScene.dancers` 为 `ClipSampler[]`。迁移 `ProjectBuilder.ApplyDancerClip()`。
+- 不转换：Lumen 时间轴（`Animations/*.txt`，原版导出原样副本，Entry／选曲／加载幕布／结算）、场景切换与暂停菜单淡入淡出（从当前不透明度插值，可中断）、由游戏状态驱动的表现（音符滚动与飞行、气球膨胀、魂槽填充）。
+
 ### 游玩暂停菜单（2026-10-02）
 
 - `Play/PauseMenuView.cs` 与 `PlayScene` 管理三项菜单、真实时间各 0.5 秒淡入／淡出；外部 Restart／Back 已移入菜单。菜单位于主 Canvas 最后层，关闭结束才恢复歌曲、判定和 DrumPad；Restart／Back 同样先淡出，Back 固定到 SongSelect。
@@ -94,7 +101,7 @@
 | `Runtime/Play/HitFaceView.cs`、`HitRingView.cs`、`Runtime/Core/HitFaceTiming.cs`、`HitRingTiming.cs`、`Generated/HitFace.prefab`、`HitRing.prefab` | 判定点笑脸与外圈（原 `Judgment::draw_effect`／`draw_outer_effect`）：只在良／可时显示，不可、超时漏音与连打击打不显示；良／可与大音符分别用 `hit_effect_good/ok(_big)` 与 `outer_good/ok(_big)`（4 帧 336×336，`HitRing_*` 切片，`UI Additive` 加算混合）。笑脸透明度按 Nijiiro 动画 28（66.7 ms 0.5→1、保持 216.6 ms、66.7 ms 回 0.5 后移除，共 350 ms）；外圈帧按动画 30（54.5／72.7／90.9 ms 换帧，之后停在第 3 帧），透明度按动画 27（166.7 ms 后 33.3 ms 淡出，共 200 ms）。用歌曲时钟、暂停冻结；同时只有一个（新判定替换旧的，原版最多叠 7 个）。层级照搬 `Player::draw`：笑脸在 `LaneClip`（音符）之前，外圈在音符／文字与 PlayerCover 之后、`Drum` 之前。SinglePlayScene 中均为预制体实例（取代旧 `HitFlash`）。迁移入口 `ProjectBuilder.ApplyHitEffects()`（菜单 OurTaiko/Apply Hit Effects，可重复执行）；测试 `HitFaceTests`、`HitFaceFlowTests`（已完成，2026-10-02 用户确认后移入 Finished）。判定文字动画未改。 |
 | `Runtime/Play/ScoreCounterView.cs` | 游玩分数计数器（`lane_score_cover`＋`score_number` 数字、TextStretch 弹动），布局在 `Core/NameplateLayout.cs` 的 `ScoreCounterLayout`，弹动公式 `TextStretch` 与气球数字共用。 |
 | `Assets/OurTaiko/Runtime/Play/BalloonCounterView.cs` | 7 号气球剩余次数、数字弹动、膨胀、破裂与淡出。 |
-| `Assets/OurTaiko/Runtime/Play/FpsCounter.cs`、`SpriteFlipbook.cs`、`DrumPad.cs` | 实测帧率、舞者帧动画和触控鼓。触控鼓**只放在 SinglePlayScene**（原版为全局叠加层），复制原版：Nijiiro `global/overlay/touch_drum.png` 全画面 50% 不透明，位于暂停／结果面板之下；每次按下按原全局动画 66 以底边中心缩至 0.95 再回弹（各 70 ms、二次缓出，真实时间）。判定区照搬 `input.cpp::touch_quadrant_vkey`：上半屏为咔，下半屏中以设计区底边中心、半径为宽度 0.262／0.242 的椭圆内为咚、其余为咔，左右按中线分；落在 uGUI 按钮上的点交给按钮。迁移入口 `ProjectBuilder.ApplyTouchDrum()`。 |
+| `Assets/OurTaiko/Runtime/Play/FpsCounter.cs`、`DrumPad.cs` | 实测帧率和触控鼓（舞者帧动画见「动画剪辑」）。触控鼓**只放在 SinglePlayScene**（原版为全局叠加层），复制原版：Nijiiro `global/overlay/touch_drum.png` 全画面 50% 不透明，位于暂停／结果面板之下；每次按下按原全局动画 66 以底边中心缩至 0.95 再回弹（各 70 ms、二次缓出，真实时间）。判定区照搬 `input.cpp::touch_quadrant_vkey`：上半屏为咔，下半屏中以设计区底边中心、半径为宽度 0.262／0.242 的椭圆内为咚、其余为咔，左右按中线分；落在 uGUI 按钮上的点交给按钮。迁移入口 `ProjectBuilder.ApplyTouchDrum()`。 |
 | `Assets/OurTaiko/Editor/ProjectBuilder.SongSelectResult.cs` | 菜单 OurTaiko/Create Song Select And Result Scenes：导入选曲／结算素材、生成切片与 `Generated/Nijiiro SDF Outline.mat`，仅在场景缺失时创建，并对已有场景只做定向升级。 |
 | `Assets/OurTaiko/Editor/ProjectBuilder.cs`、`ProjectBuilder.Nijiiro.cs`、`ProjectBuilder.Balloon.cs`、`ProjectBuilder.SceneSwitcher.cs`、`ProjectBuilder.SongLoading.cs` | 初始生成、Nijiiro 布局／魂槽／连打切片、气球资源配置、全局控件专项迁移，以及选曲加载幕布（重建预制体内的 `SongTransition` 子物体，SongLoadingScene 仅缺失时创建）；按需使用专项入口，避免全量重建现有场景。 |
 | `Assets/OurTaiko/Art`、`Audio`、`Generated` | 打平的皮肤图片／音效、已生成 Sprite 切片与字体；运行时无需原仓库。 |

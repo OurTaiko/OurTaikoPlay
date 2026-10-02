@@ -33,7 +33,8 @@ namespace OurTaiko
         public GameObject pausePanel, resultPanel;
         public PauseMenuView pauseMenu;
         public UnityEngine.UI.Button pauseButton, restartButton, backButton, resumeButton, resultRestart, resultBack;
-        public SpriteFlipbook[] dancers;
+        [Tooltip("Dancer.anim on each dancer: the 0_loop frames at 8 fps on the song clock.")]
+        public ClipSampler[] dancers;
         public CanvasGroup gogoTint;
 
         public PlaySession Session { get; private set; }
@@ -175,7 +176,7 @@ namespace OurTaiko
             RenderNotes(time - song.visualOffsetMs / 1000.0);
             soulGauge.ShowTime(time);
             if (noteArcs != null) noteArcs.ShowTime(time);
-            foreach (var dancer in dancers) dancer.ShowTime(time);
+            foreach (var dancer in dancers) dancer.SampleLoop(time);
             float feedback = Mathf.Clamp01(1 - (Time.unscaledTime - feedbackTime) / 0.25f);
             judgment.color = new Color(1, 1, 1, feedback);
             hitFace.ShowTime(time);

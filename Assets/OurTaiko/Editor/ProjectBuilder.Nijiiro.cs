@@ -107,11 +107,11 @@ namespace OurTaiko.Editor
             play.hitRing = PlaceHitRing(lane, 450, -58);
             PlacePicture(lane, "Judgment", "game/hit_effect/judge_good", 546, -60);
             OrderHitEffects(play);
-            var frames = Enumerable.Range(0, 19).Select(i => Sprite("background/dancer/dancer_0/0_loop/" + i)).ToArray();
+            var dancerClip = DancerClip(Enumerable.Range(0, 19).Select(i => Sprite("background/dancer/dancer_0/0_loop/" + i)).ToArray());
             for (int i = 0; i < play.dancers.Length; i++)
             {
                 var dancer = PlacePicture(root, "Dancer" + (i + 1), "background/dancer/dancer_0/0_loop/0", 45 + i * 375, 622.5f);
-                dancer.GetComponent<SpriteFlipbook>().frames = frames;
+                play.dancers[i] = AttachClip(dancer.gameObject, dancerClip);
             }
             var branch = play.branchLane;
             branch.background.rectTransform.anchoredPosition = new Vector2(498, -7);

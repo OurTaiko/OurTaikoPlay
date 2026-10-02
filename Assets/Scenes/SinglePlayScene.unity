@@ -206,6 +206,7 @@ GameObject:
   - component: {fileID: 7216810}
   - component: {fileID: 7216809}
   - component: {fileID: 7216811}
+  - component: {fileID: 7216812}
   m_Layer: 0
   m_Name: Dancer2
   m_TagString: Untagged
@@ -270,7 +271,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7216807}
   m_CullTransparentMesh: 1
---- !u!114 &7216811
+--- !u!95 &7216811
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7216807}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &7216812
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -279,30 +302,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 7216807}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1e2e3dcc1ac84dc48806503b5942ca8, type: 3}
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.SpriteFlipbook
-  frames:
-  - {fileID: 21300000, guid: 5abd3c0b44bc2477caf7cab843832a80, type: 3}
-  - {fileID: 21300000, guid: 7c76a27a37a454a5b88b57fa04b51e1a, type: 3}
-  - {fileID: 21300000, guid: 5aaeb01eb3b2442589dca8b7c6e341c5, type: 3}
-  - {fileID: 21300000, guid: 4e175d0a279594df388b8a780fc0a6df, type: 3}
-  - {fileID: 21300000, guid: 984fd4d5e75ee499081a420bb7e3fc2e, type: 3}
-  - {fileID: 21300000, guid: ec0baeca1d7004cd3bc5ce160c680841, type: 3}
-  - {fileID: 21300000, guid: b6d79c998c6044342a32c1cbba3563ca, type: 3}
-  - {fileID: 21300000, guid: 96da0f150f55141b5bed677e8e180cdd, type: 3}
-  - {fileID: 21300000, guid: 0e13dcc60be1f40db820f8f7c8be81bb, type: 3}
-  - {fileID: 21300000, guid: a5dfee8507c4e49049cd331c64b616db, type: 3}
-  - {fileID: 21300000, guid: 61eee5241e87b46d1b4543d715ba4853, type: 3}
-  - {fileID: 21300000, guid: 7c153f950ab2f4d51a00c06774ad384b, type: 3}
-  - {fileID: 21300000, guid: d6b71792c5ab84b04bbf888a7080c7ae, type: 3}
-  - {fileID: 21300000, guid: b3cb801d248ae4406a347d8b5649838c, type: 3}
-  - {fileID: 21300000, guid: 0be016c4c195d425c92439adb966e849, type: 3}
-  - {fileID: 21300000, guid: c27e8df2bd32e44f482bd62f341a89b3, type: 3}
-  - {fileID: 21300000, guid: 6e4a0ba6a7bc74883ba8d14b05505989, type: 3}
-  - {fileID: 21300000, guid: 61ee08453878f4c349b3cc691fafafac, type: 3}
-  - {fileID: 21300000, guid: 9f5ce314659524f4e8065a81ae532019, type: 3}
-  framesPerSecond: 8
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 05354c884f17f4a5686918f1171b2fd9, type: 2}
 --- !u!1 &8491533
 GameObject:
   m_ObjectHideFlags: 0
@@ -315,6 +318,7 @@ GameObject:
   - component: {fileID: 8491536}
   - component: {fileID: 8491535}
   - component: {fileID: 8491537}
+  - component: {fileID: 8491538}
   m_Layer: 0
   m_Name: Dancer3
   m_TagString: Untagged
@@ -379,7 +383,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8491533}
   m_CullTransparentMesh: 1
---- !u!114 &8491537
+--- !u!95 &8491537
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8491533}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &8491538
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -388,30 +414,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 8491533}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1e2e3dcc1ac84dc48806503b5942ca8, type: 3}
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.SpriteFlipbook
-  frames:
-  - {fileID: 21300000, guid: 5abd3c0b44bc2477caf7cab843832a80, type: 3}
-  - {fileID: 21300000, guid: 7c76a27a37a454a5b88b57fa04b51e1a, type: 3}
-  - {fileID: 21300000, guid: 5aaeb01eb3b2442589dca8b7c6e341c5, type: 3}
-  - {fileID: 21300000, guid: 4e175d0a279594df388b8a780fc0a6df, type: 3}
-  - {fileID: 21300000, guid: 984fd4d5e75ee499081a420bb7e3fc2e, type: 3}
-  - {fileID: 21300000, guid: ec0baeca1d7004cd3bc5ce160c680841, type: 3}
-  - {fileID: 21300000, guid: b6d79c998c6044342a32c1cbba3563ca, type: 3}
-  - {fileID: 21300000, guid: 96da0f150f55141b5bed677e8e180cdd, type: 3}
-  - {fileID: 21300000, guid: 0e13dcc60be1f40db820f8f7c8be81bb, type: 3}
-  - {fileID: 21300000, guid: a5dfee8507c4e49049cd331c64b616db, type: 3}
-  - {fileID: 21300000, guid: 61eee5241e87b46d1b4543d715ba4853, type: 3}
-  - {fileID: 21300000, guid: 7c153f950ab2f4d51a00c06774ad384b, type: 3}
-  - {fileID: 21300000, guid: d6b71792c5ab84b04bbf888a7080c7ae, type: 3}
-  - {fileID: 21300000, guid: b3cb801d248ae4406a347d8b5649838c, type: 3}
-  - {fileID: 21300000, guid: 0be016c4c195d425c92439adb966e849, type: 3}
-  - {fileID: 21300000, guid: c27e8df2bd32e44f482bd62f341a89b3, type: 3}
-  - {fileID: 21300000, guid: 6e4a0ba6a7bc74883ba8d14b05505989, type: 3}
-  - {fileID: 21300000, guid: 61ee08453878f4c349b3cc691fafafac, type: 3}
-  - {fileID: 21300000, guid: 9f5ce314659524f4e8065a81ae532019, type: 3}
-  framesPerSecond: 8
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 05354c884f17f4a5686918f1171b2fd9, type: 2}
 --- !u!1 &76178595
 GameObject:
   m_ObjectHideFlags: 0
@@ -2457,6 +2463,7 @@ GameObject:
   - component: {fileID: 449287638}
   - component: {fileID: 449287637}
   - component: {fileID: 449287639}
+  - component: {fileID: 449287640}
   m_Layer: 0
   m_Name: Dancer1
   m_TagString: Untagged
@@ -2521,7 +2528,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 449287635}
   m_CullTransparentMesh: 1
---- !u!114 &449287639
+--- !u!95 &449287639
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 449287635}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &449287640
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2530,30 +2559,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 449287635}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1e2e3dcc1ac84dc48806503b5942ca8, type: 3}
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.SpriteFlipbook
-  frames:
-  - {fileID: 21300000, guid: 5abd3c0b44bc2477caf7cab843832a80, type: 3}
-  - {fileID: 21300000, guid: 7c76a27a37a454a5b88b57fa04b51e1a, type: 3}
-  - {fileID: 21300000, guid: 5aaeb01eb3b2442589dca8b7c6e341c5, type: 3}
-  - {fileID: 21300000, guid: 4e175d0a279594df388b8a780fc0a6df, type: 3}
-  - {fileID: 21300000, guid: 984fd4d5e75ee499081a420bb7e3fc2e, type: 3}
-  - {fileID: 21300000, guid: ec0baeca1d7004cd3bc5ce160c680841, type: 3}
-  - {fileID: 21300000, guid: b6d79c998c6044342a32c1cbba3563ca, type: 3}
-  - {fileID: 21300000, guid: 96da0f150f55141b5bed677e8e180cdd, type: 3}
-  - {fileID: 21300000, guid: 0e13dcc60be1f40db820f8f7c8be81bb, type: 3}
-  - {fileID: 21300000, guid: a5dfee8507c4e49049cd331c64b616db, type: 3}
-  - {fileID: 21300000, guid: 61eee5241e87b46d1b4543d715ba4853, type: 3}
-  - {fileID: 21300000, guid: 7c153f950ab2f4d51a00c06774ad384b, type: 3}
-  - {fileID: 21300000, guid: d6b71792c5ab84b04bbf888a7080c7ae, type: 3}
-  - {fileID: 21300000, guid: b3cb801d248ae4406a347d8b5649838c, type: 3}
-  - {fileID: 21300000, guid: 0be016c4c195d425c92439adb966e849, type: 3}
-  - {fileID: 21300000, guid: c27e8df2bd32e44f482bd62f341a89b3, type: 3}
-  - {fileID: 21300000, guid: 6e4a0ba6a7bc74883ba8d14b05505989, type: 3}
-  - {fileID: 21300000, guid: 61ee08453878f4c349b3cc691fafafac, type: 3}
-  - {fileID: 21300000, guid: 9f5ce314659524f4e8065a81ae532019, type: 3}
-  framesPerSecond: 8
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 05354c884f17f4a5686918f1171b2fd9, type: 2}
 --- !u!1 &493316312
 GameObject:
   m_ObjectHideFlags: 0
@@ -4566,6 +4575,7 @@ GameObject:
   - component: {fileID: 859119828}
   - component: {fileID: 859119827}
   - component: {fileID: 859119829}
+  - component: {fileID: 859119830}
   m_Layer: 0
   m_Name: Dancer5
   m_TagString: Untagged
@@ -4630,7 +4640,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 859119825}
   m_CullTransparentMesh: 1
---- !u!114 &859119829
+--- !u!95 &859119829
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859119825}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &859119830
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4639,30 +4671,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 859119825}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1e2e3dcc1ac84dc48806503b5942ca8, type: 3}
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.SpriteFlipbook
-  frames:
-  - {fileID: 21300000, guid: 5abd3c0b44bc2477caf7cab843832a80, type: 3}
-  - {fileID: 21300000, guid: 7c76a27a37a454a5b88b57fa04b51e1a, type: 3}
-  - {fileID: 21300000, guid: 5aaeb01eb3b2442589dca8b7c6e341c5, type: 3}
-  - {fileID: 21300000, guid: 4e175d0a279594df388b8a780fc0a6df, type: 3}
-  - {fileID: 21300000, guid: 984fd4d5e75ee499081a420bb7e3fc2e, type: 3}
-  - {fileID: 21300000, guid: ec0baeca1d7004cd3bc5ce160c680841, type: 3}
-  - {fileID: 21300000, guid: b6d79c998c6044342a32c1cbba3563ca, type: 3}
-  - {fileID: 21300000, guid: 96da0f150f55141b5bed677e8e180cdd, type: 3}
-  - {fileID: 21300000, guid: 0e13dcc60be1f40db820f8f7c8be81bb, type: 3}
-  - {fileID: 21300000, guid: a5dfee8507c4e49049cd331c64b616db, type: 3}
-  - {fileID: 21300000, guid: 61eee5241e87b46d1b4543d715ba4853, type: 3}
-  - {fileID: 21300000, guid: 7c153f950ab2f4d51a00c06774ad384b, type: 3}
-  - {fileID: 21300000, guid: d6b71792c5ab84b04bbf888a7080c7ae, type: 3}
-  - {fileID: 21300000, guid: b3cb801d248ae4406a347d8b5649838c, type: 3}
-  - {fileID: 21300000, guid: 0be016c4c195d425c92439adb966e849, type: 3}
-  - {fileID: 21300000, guid: c27e8df2bd32e44f482bd62f341a89b3, type: 3}
-  - {fileID: 21300000, guid: 6e4a0ba6a7bc74883ba8d14b05505989, type: 3}
-  - {fileID: 21300000, guid: 61ee08453878f4c349b3cc691fafafac, type: 3}
-  - {fileID: 21300000, guid: 9f5ce314659524f4e8065a81ae532019, type: 3}
-  framesPerSecond: 8
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 05354c884f17f4a5686918f1171b2fd9, type: 2}
 --- !u!1 &861875408
 GameObject:
   m_ObjectHideFlags: 0
@@ -6656,6 +6668,7 @@ GameObject:
   - component: {fileID: 1274982034}
   - component: {fileID: 1274982033}
   - component: {fileID: 1274982035}
+  - component: {fileID: 1274982036}
   m_Layer: 0
   m_Name: Dancer4
   m_TagString: Untagged
@@ -6720,7 +6733,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1274982031}
   m_CullTransparentMesh: 1
---- !u!114 &1274982035
+--- !u!95 &1274982035
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1274982031}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1274982036
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -6729,30 +6764,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1274982031}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1e2e3dcc1ac84dc48806503b5942ca8, type: 3}
+  m_Script: {fileID: 11500000, guid: aadef8060bb1d4a81ad353be9c19a990, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.SpriteFlipbook
-  frames:
-  - {fileID: 21300000, guid: 5abd3c0b44bc2477caf7cab843832a80, type: 3}
-  - {fileID: 21300000, guid: 7c76a27a37a454a5b88b57fa04b51e1a, type: 3}
-  - {fileID: 21300000, guid: 5aaeb01eb3b2442589dca8b7c6e341c5, type: 3}
-  - {fileID: 21300000, guid: 4e175d0a279594df388b8a780fc0a6df, type: 3}
-  - {fileID: 21300000, guid: 984fd4d5e75ee499081a420bb7e3fc2e, type: 3}
-  - {fileID: 21300000, guid: ec0baeca1d7004cd3bc5ce160c680841, type: 3}
-  - {fileID: 21300000, guid: b6d79c998c6044342a32c1cbba3563ca, type: 3}
-  - {fileID: 21300000, guid: 96da0f150f55141b5bed677e8e180cdd, type: 3}
-  - {fileID: 21300000, guid: 0e13dcc60be1f40db820f8f7c8be81bb, type: 3}
-  - {fileID: 21300000, guid: a5dfee8507c4e49049cd331c64b616db, type: 3}
-  - {fileID: 21300000, guid: 61eee5241e87b46d1b4543d715ba4853, type: 3}
-  - {fileID: 21300000, guid: 7c153f950ab2f4d51a00c06774ad384b, type: 3}
-  - {fileID: 21300000, guid: d6b71792c5ab84b04bbf888a7080c7ae, type: 3}
-  - {fileID: 21300000, guid: b3cb801d248ae4406a347d8b5649838c, type: 3}
-  - {fileID: 21300000, guid: 0be016c4c195d425c92439adb966e849, type: 3}
-  - {fileID: 21300000, guid: c27e8df2bd32e44f482bd62f341a89b3, type: 3}
-  - {fileID: 21300000, guid: 6e4a0ba6a7bc74883ba8d14b05505989, type: 3}
-  - {fileID: 21300000, guid: 61ee08453878f4c349b3cc691fafafac, type: 3}
-  - {fileID: 21300000, guid: 9f5ce314659524f4e8065a81ae532019, type: 3}
-  framesPerSecond: 8
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.ClipSampler
+  clip: {fileID: 7400000, guid: 05354c884f17f4a5686918f1171b2fd9, type: 2}
 --- !u!1 &1276633764
 GameObject:
   m_ObjectHideFlags: 0
@@ -7343,11 +7358,11 @@ MonoBehaviour:
   resultRestart: {fileID: 2145013472}
   resultBack: {fileID: 1428418808}
   dancers:
-  - {fileID: 449287639}
-  - {fileID: 7216811}
-  - {fileID: 8491537}
-  - {fileID: 1274982035}
-  - {fileID: 859119829}
+  - {fileID: 449287640}
+  - {fileID: 7216812}
+  - {fileID: 8491538}
+  - {fileID: 1274982036}
+  - {fileID: 859119830}
   gogoTint: {fileID: 270388919}
 --- !u!4 &1415223208
 Transform:

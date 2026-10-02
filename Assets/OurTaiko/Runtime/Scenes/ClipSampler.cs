@@ -46,6 +46,14 @@ namespace OurTaiko
             graph.Evaluate();
         }
 
+        // A looping clip on a clock that may start below zero (held on its first frame until then).
+        public void SampleLoop(double seconds)
+        {
+            if (clip == null) return;
+            double length = clip.length;
+            Sample(length > 0 ? System.Math.Max(0, seconds) % length : 0);
+        }
+
         // Switches to another clip (a variant) and samples it.
         public void Play(AnimationClip next, double seconds)
         {

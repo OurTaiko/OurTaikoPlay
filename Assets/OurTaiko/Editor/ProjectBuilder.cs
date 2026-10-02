@@ -194,11 +194,11 @@ namespace OurTaiko.Editor
             controller.rollCounter = Label(root, "RollCounter", "", 930, 365, 330, 40, 25);
             controller.counters = Label(root, "JudgmentCounters", "GOOD 0   OK 0   BAD 0", 340, 336, 912, 26, 18);
             var frames = Enumerable.Range(0, 14).Select(i => Sprite("background/dancer/dancer_0/0_loop/" + i)).ToArray();
-            controller.dancers = new SpriteFlipbook[5];
+            controller.dancers = new ClipSampler[5];
             for (int i = 0; i < 5; i++)
             {
                 var dancer = Picture(root, "Dancer" + (i + 1), "background/dancer/dancer_0/0_loop/0", 30 + i * 250, 415);
-                controller.dancers[i] = dancer.gameObject.AddComponent<SpriteFlipbook>(); controller.dancers[i].frames = frames;
+                controller.dancers[i] = AttachClip(dancer.gameObject, DancerClip(frames));
             }
             Label(root, "KeyHelp", "D / K  KA     F / J  DON     SPACE / ESC  PAUSE     F1  RESTART", 0, 674, 1280, 30, 18);
             controller.pauseButton = Button(root, "PauseButton", "PAUSE", 26, 370, 110, 34, new Color32(33, 37, 39, 235));
