@@ -7,9 +7,11 @@ using UnityEngine.UI;
 namespace OurTaiko
 {
     // The saved hierarchy of GlobalSettingScene (PyTaikoGreen settings art at 1.5x): the type list
-    // on the left, the current type's item list on the right and, under it, the detail panel with
-    // the focused item's description and its choice buttons. Row 0 of each list is the authored
-    // base; row i sits `pitch` below row i - 1, and missing rows are copied from row 0 at runtime.
+    // on the left and the current type's item list on the right. Confirming an item opens the
+    // choice popup (the item's name, description and choice buttons) over a dimming shade; the
+    // popup is hidden while types and items are being chosen, and a tap on the shade closes it.
+    // Row 0 of each list is the authored base; row i sits `pitch` below row i - 1, and missing
+    // rows are copied from row 0 at runtime.
     public sealed class GlobalSettingView : MonoBehaviour
     {
         [Serializable]
@@ -32,8 +34,12 @@ namespace OurTaiko
         [Tooltip("blue_arrow: points at the focused row or choice from its right.")]
         public RectTransform cursor;
         public float cursorGap = 12;
+        [Tooltip("The choice popup, shown only while a setting's choices are open.")]
         public CanvasGroup detail;
         public TMP_Text detailTitle, description;
+        [Tooltip("Dims the lists behind the popup and closes it when tapped.")]
+        public Image shade;
+        public PointerRelay shadeClick;
 
         Vector2 typeBase, itemBase, choiceBase;
         bool bound;
@@ -67,9 +73,10 @@ namespace OurTaiko
         }
 
         // Hooks the rows' taps; extra rows created later are hooked as they appear.
-        public void Bind(Action<int> tapType, Action<int> tapItem, Action<int> tapChoice, Action<int> swipeTypes, Action<int> swipeItems)
+        public void Bind(Action<int> tapType, Action<int> tapItem, Action<int> tapChoice, Action<int> swipeTypes, Action<int> swipeItems, Action tapShade)
         {
             Bind();
+            shadeClick.Clicked = tapShade;
             tapTypeHandler = tapType; tapItemHandler = tapItem; tapChoiceHandler = tapChoice;
             typeSwipe.Swiped = swipeTypes;
             itemSwipe.Swiped = swipeItems;
@@ -124,16 +131,17 @@ namespace OurTaiko
                 row.box.sprite = inItems && i == menu.ItemIndex ? itemBoxSelected : itemBox;
             }
 
-            // The detail panel follows the focused item; on the types it previews the type's first item.
-            var shownItem = inItems ? item : menu.CurrentType?.Items.Count > 0 ? menu.CurrentType.Items[0] : null;
-            detail.alpha = shownItem != null ? 1 : 0;
-            detail.blocksRaycasts = shownItem != null;
-            if (shownItem != null)
+            // The popup belongs to the choice focus only.
+            bool open = menu.Focus == SettingsFocus.Choice && item != null;
+            var shownItem = open ? item : null;
+            detail.alpha = open ? 1 : 0;
+            detail.blocksRaycasts = open;
+            shade.gameObject.SetActive(open);
+            if (open)
             {
                 detailTitle.text = shownItem.Label;
                 description.text = shownItem.Description;
-                int current = shownItem.Get(menu.Settings);
-                int lit = menu.Focus == SettingsFocus.Choice ? menu.ChoiceIndex : current;
+                int lit = menu.ChoiceIndex;
                 int count = shownItem.Choices.Count;
                 for (int i = 0; i < choiceRows.Count; i++)
                 {

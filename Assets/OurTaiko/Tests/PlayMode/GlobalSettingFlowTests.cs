@@ -64,6 +64,7 @@ namespace OurTaiko.Tests
                 Assert.That(view.itemRows[0].label.text, Is.EqualTo("Enable Drumpad for Single Player Mode"));
                 Assert.That(view.itemRows[0].value.text, Is.EqualTo("Enabled"));
                 Assert.That(view.typeRows[0].box.sprite, Is.SameAs(view.typeBoxSelected));
+                AssertPopup(view, false);
                 TestCapture.Capture("SettingsTypes.png");
 
                 // Drum keys: ka wraps over Return, don enters Play, don opens the choices.
@@ -74,8 +75,11 @@ namespace OurTaiko.Tests
                 scene.Don();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
                 Assert.That(view.itemRows[0].box.sprite, Is.SameAs(view.itemBoxSelected));
+                AssertPopup(view, false);
                 scene.Don();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Choice));
+                AssertPopup(view, true);
+                Assert.That(view.detailTitle.text, Is.EqualTo("Enable Drumpad for Single Player Mode"));
                 Assert.That(view.choiceRows[0].label.text, Is.EqualTo("Enabled"));
                 Assert.That(view.choiceRows[1].label.text, Is.EqualTo("Disabled"));
                 scene.Ka(1);
@@ -85,10 +89,19 @@ namespace OurTaiko.Tests
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.False, "Applied and saved through SettingManager.");
                 Assert.That(view.itemRows[0].value.text, Is.EqualTo("Disabled"));
+                AssertPopup(view, false);
 
-                // Touch: a choice tap applies at once; swipes move through the lists.
+                // Touch: a tap on the shade closes the popup unchanged; a choice tap applies at once.
+                scene.Don();
+                AssertPopup(view, true);
+                view.shadeClick.Clicked();
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+                AssertPopup(view, false);
+                Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.False);
+                scene.Don();
                 view.choiceRows[0].click.Clicked();
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.True);
+                AssertPopup(view, false);
                 view.itemSwipe.Swiped(1);
                 Assert.That(menu.IsItemReturn, Is.True);
                 view.typeSwipe.Swiped(1);
@@ -138,6 +151,14 @@ namespace OurTaiko.Tests
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             }
+        }
+
+        // The choice popup and its shade show only while a setting's choices are open.
+        static void AssertPopup(GlobalSettingView view, bool open)
+        {
+            Assert.That(view.detail.alpha, Is.EqualTo(open ? 1 : 0));
+            Assert.That(view.detail.blocksRaycasts, Is.EqualTo(open));
+            Assert.That(view.shade.gameObject.activeSelf, Is.EqualTo(open));
         }
 
         static IEnumerator WaitUntil(System.Func<bool> condition, float seconds)

@@ -5,7 +5,8 @@ namespace OurTaiko
     // GlobalSettingScene, reached from Entry's ゲーム設定 board. Drum keys drive SettingsMenu: ka
     // (left = up, right = down) moves within the focused list, don confirms; Esc steps back one
     // level. Taps work like SongSelect's boards (tap another row to move to it, tap the focused row
-    // to confirm; a tap on a choice applies it) and both lists also take vertical swipes. Each
+    // to confirm); the choice popup takes a tap on a choice to apply it and a tap outside it to
+    // close it, and both lists also take vertical swipes. Each
     // applied choice is saved at once through SettingManager; leaving returns to Entry.
     public sealed class GlobalSettingScene : MonoBehaviour
     {
@@ -23,7 +24,8 @@ namespace OurTaiko
             switcher = SceneSwitcher.EnsureInstance();
             Menu = new SettingsMenu(SettingsMenu.Catalog(), SettingManager.EnsureInstance().Settings);
             view.Bind(i => Handle(Menu.TapType(i)), i => Handle(Menu.TapItem(i)), i => Handle(Menu.TapChoice(i)),
-                d => Handle(Menu.SwipeTypes(d)), d => Handle(Menu.SwipeItems(d)));
+                d => Handle(Menu.SwipeTypes(d)), d => Handle(Menu.SwipeItems(d)),
+                () => { if (Menu.Focus == SettingsFocus.Choice) Handle(Menu.Back()); });
             view.Show(Menu);
             switcher.SceneChanging += OnSceneChanging;
         }
