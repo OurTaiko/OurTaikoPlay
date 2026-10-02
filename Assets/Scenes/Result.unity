@@ -1962,7 +1962,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 9eff1136bb5ef4a80a3637ce6d844f13, type: 3}
   board: {fileID: 21300000, guid: 1846f23595e1842428f7ef31f4a4808c, type: 3}
   donBack: {fileID: 21300000, guid: 3eb308c406bca4992b4ad53428a9cdb2, type: 3}
-  judgeLabels: {fileID: 21300000, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  judgeLabels: {fileID: -475820453, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
   scoreLabel: {fileID: 21300000, guid: 1f2b183dc83d1479fb82ddd454b3e178, type: 3}
   difficulties:
   - {fileID: -694087307, guid: 39f2a695a948642f89c3a057457f6aa6, type: 3}

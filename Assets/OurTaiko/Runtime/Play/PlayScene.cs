@@ -31,7 +31,8 @@ namespace OurTaiko
         public ScoreCounterView scoreCounter;
         public ComboView combo;
         public ComboAnnounceView comboAnnounce;
-        public TMP_Text title, subtitle, counters, rollCounter, resultText;
+        public JudgeCounterView judgeCounter;
+        public TMP_Text title, subtitle, rollCounter, resultText;
         public BranchLaneView branchLane;
         public GameObject pausePanel, resultPanel;
         public PauseMenuView pauseMenu;
@@ -272,6 +273,7 @@ namespace OurTaiko
         void UpdateHud()
         {
             scoreCounter.Show(Session.Score);
+            judgeCounter.Show(Session.Good, Session.Ok, Session.Bad, Session.Rolls);
             combo.Show(Session.Combo);
             // Player::check_note: each 100th combo starts a ComboAnnounce and its voice.
             if (Session.Combo != lastCombo && Session.Combo > 0 && Session.Combo % 100 == 0)
@@ -280,7 +282,6 @@ namespace OurTaiko
                 if (voice != null) hitAudio.PlayOneShot(voice);
             }
             lastCombo = Session.Combo;
-            counters.text = $"GOOD {Session.Good}     OK {Session.Ok}     BAD {Session.Bad}     ROLL {Session.Rolls}";
         }
         void OnBranchSelected(ChartBranch branch, BranchRoute route)
         {

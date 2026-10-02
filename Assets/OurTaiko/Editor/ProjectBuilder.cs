@@ -184,7 +184,6 @@ namespace OurTaiko.Editor
             controller.judgment = Picture(lane, "Judgment", "game/hit_effect/judge_good", 370, -40); controller.judgment.color = new Color(1, 1, 1, 0);
             AttachClip(controller.judgment.gameObject, JudgmentFadeClip());
             controller.rollCounter = Label(root, "RollCounter", "", 930, 365, 330, 40, 25);
-            controller.counters = Label(root, "JudgmentCounters", "GOOD 0   OK 0   BAD 0", 340, 336, 912, 26, 18);
             var frames = Enumerable.Range(0, 14).Select(i => Sprite("background/dancer/dancer_0/0_loop/" + i)).ToArray();
             controller.dancers = new ClipSampler[5];
             for (int i = 0; i < 5; i++)

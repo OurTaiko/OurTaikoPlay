@@ -217,7 +217,8 @@ namespace OurTaiko.Editor
             controller.cloudsClear = Enumerable.Range(0, 8).Select(i => Sprite(bg + "bg_cloud_clear_" + i)).ToArray();
             controller.board = Sprite("result/score/overlay/0");
             controller.donBack = Sprite("result/bottom/chara_0/0");
-            controller.judgeLabels = Sprite("result/score/max_combo_ja");
+            // max_combo_ja is a sheet: the judge counter cuts its rows (ApplyJudgeCounter).
+            controller.judgeLabels = SliceSheet(JudgeLabelSheet, JudgeLabelCells)[0];
             controller.scoreLabel = Sprite("result/score/score_shinuchi_ja");
             controller.difficulties = Cells("ResultDifficulty", "result/score/difficulty", 5, 320, 96);
             controller.judgeDigits = Cells("ResultJudgeDigit", "result/score/judge_num", 10, 36, 48);

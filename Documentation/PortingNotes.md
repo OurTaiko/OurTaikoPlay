@@ -364,3 +364,15 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 语音：Nijiiro `Sounds/game/combo/<n>_1p.ogg`（100–5000，每 100 一个，共 50 个）复制到 `Assets/OurTaiko/Audio/combo/`，提示出现时由 `hitAudio.PlayOneShot` 播放一次；超过 5000 没有语音（原版 `has_sound` 失败时不播放）。`50_1p.ogg` 原版从不播放（提示只在 100 的倍数出现），未导入；2P 语音未导入。
 - 迁移入口 `ProjectBuilder.ApplyComboAnnounce()`（菜单 OurTaiko/Apply Nijiiro Combo Announce），已有 `ComboAnnounceView` 时只刷新 sprite、语音与剪辑。
 - 验证：`ComboFlowTests` 1/1（9 隐藏、10 白、50 银、100 提示出现且透明度 0.5／1／0.5 并在 1.8 s 后隐藏、200 取代并显示 2/0/0、101 金色、漏音隐藏连击）；`ScoreGaugeFlowTests` 1/1、`NameplateFlowTests` 3/3、`PauseMenuFlowTests` 5/5；截图 `TestResults/ComboAnnounce100.png`。
+
+## 判定计数器（2026-10-02）
+
+按用户提供的街机截图（良／可／不可／連打数 四行计数）制作，取代原版 `judge_counter.cpp` 的百分比设计：Nijiiro 不带 judge_counter 皮肤，PyTaikoGreen 版位于轨道下方并显示百分比，与参考不同。
+
+- 位置（用户选择，参照截图）：Viewport 左上 (29,50)，352×212，位于 `ComboAnnounce` 之后（原版 `draw_overlays` 中 judge_counter 也在 combo_announce 之后）。原 FPS 读数 (36,198) 会压住 連打数 行，迁移时移到 y 2。
+- 面板：圆角 20、5 px 浅橙边 (255,162,50)、填充 (240,88,40,α225)；行条：白色 α128 圆角条 174×34，行距 45、首行 y 18。两张图由 `GenerateJudgeCounterArt()` 用有符号距离抗锯齿绘制并九宫格切片，每次迁移重写相同字节（GUID 不变）。颜色取自参考截图采样（面板约 (250,102,54)，行条约白色 50%）。
+- 标签：从 `result/score/max_combo_ja.png` 切出 良／可／不可／連打数（字形外 2 px），缩放 0.68，水平居中于行条（用户要求；各切片字形左右各留 2 px，切片居中即字形居中）。该图改为 Multiple 后保留整图切片 `ResultJudgeLabels`，Result 场景的 `judgeLabels` 改指向它，`CreateSongSelectAndResult` 的构建代码同步更新。
+- 数字：分数计数器的 `score_number`（`PlayScene.scoreCounter.digits`），高 38、间距为高度 × 30/64（与分数计数器同比例），右边缘 x 300；`JudgeCounterView.Show(good, ok, bad, rolls)` 在每次判定（含连打）后由 `UpdateHud` 调用，只在数值变化时重排。
+- 结构：`JudgeCounter`（面板 Image＋`JudgeCounterView`）/`Good|Ok|Bad|Roll`/`Bar`、`Label`、`Count`（数字容器，编辑态预览 0）。迁移 `ProjectBuilder.ApplyJudgeCounter()`（菜单 OurTaiko/Apply Judge Counter），已有视图时只刷新数字 sprite；连续执行两次场景、两张生成图与 .meta 哈希不变。
+- 原调试文字 `JudgmentCounters`（GOOD/OK/BAD/ROLL）与 `PlayScene.counters` 删除（用户决定）；`NoteMojiFlowTests` 仍通过。
+- 验证：`JudgeCounterFlowTests` 1/1（10 良、1 可、1 不可、3 连打显示为 10/1/1/3，右对齐与高度）；`SongSelectResultTests` 2/2（结算标签仍为整图）、`ScoreGaugeFlowTests` 1/1；截图 `TestResults/JudgeCounter.png`。
