@@ -4,7 +4,9 @@ namespace OurTaiko
 {
     // Nijiiro Scripts/global/timer.lua: a whole-second countdown that only ticks while it is updated.
     // Below 10 every tick blips and pops the digits; voices at 30 / 10 / 5 s (each pre-empting the
-    // earlier ones); reaching 0 stops any voice and confirms once, with nothing spoken.
+    // earlier ones); reaching 0 stops any voice and confirms once, with nothing spoken. Entry and
+    // song select show it as a placeholder that is never updated (user decision), so Update is kept
+    // only as the record of the original countdown.
     public sealed class ArcadeTimer
     {
         [Flags]

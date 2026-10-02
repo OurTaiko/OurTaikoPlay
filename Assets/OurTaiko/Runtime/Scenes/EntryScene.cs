@@ -7,8 +7,9 @@ namespace OurTaiko
 {
     // Nijiiro single-player Entry (scenes/entry.cpp + Scripts/entry/*.lua, entry_credit_arcade):
     // the credit screen waits for a drum face hit, 1P joins (nameplate and control guide fade in),
-    // and once the join animation would have finished the 演奏ゲーム board opens; a face hit (or the
-    // 60 s timer) picks it and the scene moves to SongSelect. Not ported: the 3D Don and its join
+    // and once the join animation would have finished the 演奏ゲーム board opens; a face hit picks it and
+    // the scene moves to SongSelect. The arcade's 60 s timer is shown as a placeholder that never
+    // counts down (user decision: the simulator does not limit the player's time). Not ported: the 3D Don and its join
     // cloud, 2P joining, the other boards (特訓モード / きせかえ / ゲーム設定), the costume menu and the
     // ALL.Net indicator. The screen is built in Awake.
     public sealed class EntryScene : MonoBehaviour
@@ -38,8 +39,8 @@ namespace OurTaiko
 
         [Header("Audio")]
         public AudioSource bgm;
-        public AudioSource sfx, voice, timerVoice;
-        public AudioClip don, ka, cloud, entryStart, selectMode, timerBlip, timerVoice30, timerVoice10, timerVoice5;
+        public AudioSource sfx, voice;
+        public AudioClip don, ka, cloud, entryStart, selectMode;
 
         public EntryFlow Flow { get; private set; }
         public ArcadeTimer Timer { get; private set; }
@@ -85,7 +86,7 @@ namespace OurTaiko
 
         void OnSceneChanging(string scene)
         {
-            bgm.Stop(); voice.Stop(); timerVoice.Stop();
+            bgm.Stop(); voice.Stop();
         }
 
         void Build()
@@ -123,8 +124,6 @@ namespace OurTaiko
                 else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.RightKa)
                     || InputManager.GetKeyDown(InputKey.MenuLeft) || InputManager.GetKeyDown(InputKey.MenuRight)) Ka();
             }
-            // The arcade timer stands still on the credit screen and stops once a board is picked.
-            if (Flow.State == EntryFlow.Phase.SelectMode && !Flow.IsFinished(now)) TickTimer(now);
             if (!announced && Flow.IsModeReady(now) && !voice.isPlaying)
             {
                 announced = true;
@@ -163,21 +162,6 @@ namespace OurTaiko
             double now = Now;
             if (Flow.State != EntryFlow.Phase.SelectMode || !Flow.IsModeReady(now) || Flow.IsSelected) return;
             Play(sfx, ka, oneShot: true);
-        }
-
-        void TickTimer(double now)
-        {
-            var cue = Timer.Update(now);
-            if ((cue & ArcadeTimer.Cue.Blip) != 0) Play(sfx, timerBlip, oneShot: true);
-            if ((cue & ArcadeTimer.Cue.Voice30) != 0) Play(timerVoice, timerVoice30);
-            if ((cue & ArcadeTimer.Cue.Voice10) != 0) Play(timerVoice, timerVoice10);
-            if ((cue & ArcadeTimer.Cue.Voice5) != 0) Play(timerVoice, timerVoice5);
-            if ((cue & ArcadeTimer.Cue.Finished) != 0)
-            {
-                // Timer.lua: at 0 every voice stops and the current board is picked.
-                timerVoice.Stop();
-                Flow.Select(now);
-            }
         }
 
         static void Play(AudioSource source, AudioClip clip, bool oneShot = false)

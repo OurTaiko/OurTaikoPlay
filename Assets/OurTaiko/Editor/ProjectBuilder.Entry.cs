@@ -35,7 +35,6 @@ namespace OurTaiko.Editor
                 controller.bgm = Source(controller.transform, "Bgm", 0.8f);
                 controller.sfx = Source(controller.transform, "Sounds");
                 controller.voice = Source(controller.transform, "Voice");
-                controller.timerVoice = Source(controller.transform, "TimerVoice");
                 EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), EntryPath);
             }
             var scene = EditorSceneManager.OpenScene(EntryPath);
@@ -100,14 +99,12 @@ namespace OurTaiko.Editor
             entry.cloud = Clip("entry/cloud");
             entry.entryStart = Clip("entry/entry_start_1p");
             entry.selectMode = Clip("entry/select_mode");
-            entry.timerBlip = Clip("global/timer_blip");
-            entry.timerVoice30 = Clip("global/voice_timer_30");
-            entry.timerVoice10 = Clip("global/voice_timer_10");
-            entry.timerVoice5 = Clip("global/voice_timer_5");
             entry.bgm.clip = Clip("entry/bgm");
-            foreach (var clip in new[] { entry.don, entry.ka, entry.cloud, entry.entryStart, entry.selectMode, entry.timerBlip,
-                entry.timerVoice30, entry.timerVoice10, entry.timerVoice5, entry.bgm.clip })
+            foreach (var clip in new[] { entry.don, entry.ka, entry.cloud, entry.entryStart, entry.selectMode, entry.bgm.clip })
                 if (clip == null) throw new FileNotFoundException("An Entry sound is missing.");
+            // The timer is a placeholder (no countdown), so its voice source is gone.
+            var timerVoice = entry.transform.Find("TimerVoice");
+            if (timerVoice != null) UnityEngine.Object.DestroyImmediate(timerVoice.gameObject);
             EditorUtility.SetDirty(entry);
         }
 

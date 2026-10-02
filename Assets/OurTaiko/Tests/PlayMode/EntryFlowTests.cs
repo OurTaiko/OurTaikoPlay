@@ -51,7 +51,7 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(1f);
             Assert.That(entry.Board.Openness, Is.EqualTo(1).Within(1e-3));
             Assert.That(entry.Board.Fade, Is.EqualTo(1).Within(1e-3));
-            Assert.That(entry.Timer.Seconds, Is.LessThan(60), "The timer runs once a player is in.");
+            Assert.That(entry.Timer.Seconds, Is.EqualTo(60), "The timer is a placeholder and never counts down.");
             TestCapture.Capture("EntryModeSelect.png");
 
             // Rim hits change nothing; a face hit plays `choose`, fades the board and opens SongSelect.

@@ -450,10 +450,6 @@
     "Skins/YataiDONNijiiro/Sounds/entry/entry_start_1p.ogg",
     "Skins/YataiDONNijiiro/Sounds/entry/select_mode.ogg",
     "Skins/YataiDONNijiiro/Sounds/game/balloon_pop.ogg",
-    "Skins/YataiDONNijiiro/Sounds/global/timer_blip.ogg",
-    "Skins/YataiDONNijiiro/Sounds/global/voice_timer_10.ogg",
-    "Skins/YataiDONNijiiro/Sounds/global/voice_timer_30.ogg",
-    "Skins/YataiDONNijiiro/Sounds/global/voice_timer_5.ogg",
     "Skins/YataiDONNijiiro/Sounds/hit_sounds/0/don.ogg",
     "Skins/YataiDONNijiiro/Sounds/hit_sounds/0/ka.ogg",
     "Skins/YataiDONNijiiro/Sounds/hit_sounds/1/don.ogg",
@@ -520,5 +516,5 @@
     "Songs/TRIPLE HELIX/TRIPLE HELIX.tja"
   ],
   "layout": "1920x1080",
-  "notes": "Single flattened asset set. All listed graphics are copied into Assets/OurTaiko/Art; no runtime skin lookup or fallback. Song select / result: Nijiiro graphics and sounds copied unchanged; clear/fail/full-combo result voices are missing from Nijiiro and copied from PyTaikoGreen. Scripts/anim/*.lua exported timelines are kept verbatim as Assets/OurTaiko/Animations/*.txt and read by LumenClip (data only, no Lua runtime). Play options: the 21 Nijiiro hit-sound sets are copied as Assets/OurTaiko/Audio/hit_sounds/<index>/don.ogg and ka.ogg; their names from neiro_list.txt are stored in Generated/HitSounds.asset. Song loading curtain: global/rainbow_transition graphics and anim/loading_song.lua copied unchanged from Nijiiro. Nameplate: global/nameplate graphics (1P badge, plate, band, dan chips) copied unchanged from Nijiiro; the 2P and AI plates are not imported. Entry: Nijiiro entry background / credit / mode-board art and global timer, control-guide (indicator) and overlay chips copied unchanged (only the frames drawn: offline chip frame 0, the 演奏ゲーム board on/off/flash frames); entry and timer sounds and the entry anim exports (entry_bg, credit_row, credit_fade, credit_side, mode_board) copied as .txt. entry/global/player_entry_* are fully transparent 8x8 placeholders and are not imported."
+  "notes": "Single flattened asset set. All listed graphics are copied into Assets/OurTaiko/Art; no runtime skin lookup or fallback. Song select / result: Nijiiro graphics and sounds copied unchanged; clear/fail/full-combo result voices are missing from Nijiiro and copied from PyTaikoGreen. Scripts/anim/*.lua exported timelines are kept verbatim as Assets/OurTaiko/Animations/*.txt and read by LumenClip (data only, no Lua runtime). Play options: the 21 Nijiiro hit-sound sets are copied as Assets/OurTaiko/Audio/hit_sounds/<index>/don.ogg and ka.ogg; their names from neiro_list.txt are stored in Generated/HitSounds.asset. Song loading curtain: global/rainbow_transition graphics and anim/loading_song.lua copied unchanged from Nijiiro. Nameplate: global/nameplate graphics (1P badge, plate, band, dan chips) copied unchanged from Nijiiro; the 2P and AI plates are not imported. Entry: Nijiiro entry background / credit / mode-board art and global timer, control-guide (indicator) and overlay chips copied unchanged (only the frames drawn: offline chip frame 0, the 演奏ゲーム board on/off/flash frames); entry sounds and the entry anim exports (entry_bg, credit_row, credit_fade, credit_side, mode_board) copied as .txt. entry/global/player_entry_* are fully transparent 8x8 placeholders and are not imported."
 }
