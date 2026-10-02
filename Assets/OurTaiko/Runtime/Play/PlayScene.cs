@@ -35,6 +35,7 @@ namespace OurTaiko
         public PlayResult Result { get; private set; }
         public double SongTime => !isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioSettings.dspTime - startDsp;
         public double RenderedTime { get; private set; }
+        public RectTransform NoteRoot(int index) => notes[index].Root;
         SongDefinition song;
         bool autoPlay, isReady;
         SceneSwitcher switcher;
@@ -240,6 +241,9 @@ namespace OurTaiko
             foreach (var note in Session.Chart.Notes)
             {
                 var root = Rect(note.Kind.ToString(), noteLayer, 192, 192);
+                // draw_notes walks draw_note_buffer in reverse, so earlier notes
+                // paint over later ones; uGUI draws later siblings on top.
+                root.SetAsFirstSibling();
                 var view = new NoteView { Root = root, Object = root.gameObject };
                 if (note.IsLong && !note.IsBalloon)
                 {

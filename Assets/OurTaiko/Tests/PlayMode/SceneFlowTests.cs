@@ -123,8 +123,8 @@ namespace OurTaiko.Tests
             }
             Assert.That(branch.transform.GetSiblingIndex(), Is.LessThan(play.noteLayer.parent.GetSiblingIndex()));
             Assert.That(branch.transform.parent.parent.Find("BranchPanel"), Is.Null);
-            Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId != 0 || n.Route == expected || !play.noteLayer.GetChild(i).gameObject.activeSelf).All(x => x), Is.True);
-            Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId == 0 && n.Route == expected && play.noteLayer.GetChild(i).gameObject.activeSelf).Any(x => x), Is.True);
+            Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId != 0 || n.Route == expected || !play.NoteRoot(i).gameObject.activeSelf).All(x => x), Is.True);
+            Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId == 0 && n.Route == expected && play.NoteRoot(i).gameObject.activeSelf).Any(x => x), Is.True);
             Assert.That(play.Session.Chart.Bars.Select((n, i) => n.BranchId != 0 || n.Route == expected || !play.barLayer.GetChild(i).gameObject.activeSelf).All(x => x), Is.True);
             Capture("Branch" + expected + ".png");
             play.TogglePause(); double pausedAt = play.SongTime;
@@ -270,7 +270,7 @@ namespace OurTaiko.Tests
                 for (int i = 0; i < play.Session.Chart.Notes.Count; i++)
                 {
                     var note = play.Session.Chart.Notes[i];
-                    var root = (RectTransform)play.noteLayer.GetChild(i);
+                    var root = play.NoteRoot(i);
                     var head = (RectTransform)root.Find("Head");
                     var body = (RectTransform)root.Find("RollBody");
                     var tail = (RectTransform)root.Find("RollTail");
@@ -296,7 +296,7 @@ namespace OurTaiko.Tests
                     Assert.That(TailPosition().y, Is.EqualTo(root.anchoredPosition.y).Within(0.01));
                     var bodyEnd = play.noteLayer.InverseTransformPoint(body.TransformPoint(new Vector3(body.rect.xMax, 0)));
                     Assert.That((bodyEnd.x - TailPosition().x) * direction, Is.EqualTo(1.5).Within(0.01), "Body and cap overlap without a gap.");
-                    for (int n = 0; n < play.noteLayer.childCount; n++) play.noteLayer.GetChild(n).gameObject.SetActive(n == i);
+                    for (int n = 0; n < play.noteLayer.childCount; n++) play.NoteRoot(n).gameObject.SetActive(n == i);
                     play.barLayer.gameObject.SetActive(false);
                     Capture(captureNames[i] + ".png");
                     if (i <= 1) Capture(captureNames[i] + "-720p.png", 1280, 720);
@@ -330,7 +330,9 @@ namespace OurTaiko.Tests
                 play.pausePanel.SetActive(false);
                 var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 var note = play.Session.Chart.Notes[0];
-                var root = play.noteLayer.GetChild(0).gameObject;
+                var root = play.NoteRoot(0).gameObject;
+                // draw_notes iterates in reverse: the earlier roll paints over the later don.
+                Assert.That(play.NoteRoot(0).GetSiblingIndex(), Is.GreaterThan(play.NoteRoot(1).GetSiblingIndex()));
                 var tail = (RectTransform)root.transform.Find("RollTail");
                 double speed = note.Bpm / 240 * note.ScrollX * (1920 - 618);
                 // Original keeps the roll in draw_note_buffer until the tail's unload_ms,
@@ -342,7 +344,7 @@ namespace OurTaiko.Tests
                 render.Invoke(play, new object[] { note.EndTime + 2 });
                 Assert.That(root.activeSelf, Is.False, "The roll unloads once its tail has left the lane.");
                 // A missed normal note flows on as well; a hit one is removed.
-                var don = play.noteLayer.GetChild(1).gameObject;
+                var don = play.NoteRoot(1).gameObject;
                 var donNote = play.Session.Chart.Notes[1];
                 play.Session.Resolved[1] = true;
                 render.Invoke(play, new object[] { donNote.Time + 0.2 });
@@ -479,7 +481,7 @@ namespace OurTaiko.Tests
                 SceneSwitcher.Instance.Play(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindFirstObjectByType<PlayScene>();
-                var balloon = (RectTransform)play.noteLayer.GetChild(0);
+                var balloon = play.NoteRoot(0);
                 var head = (RectTransform)balloon.Find("Head");
                 var circle = (RectTransform)play.noteLayer.parent.parent.Find("JudgeCircle");
                 Vector3 judge = play.noteLayer.InverseTransformPoint(circle.TransformPoint(circle.rect.center));
@@ -503,7 +505,7 @@ namespace OurTaiko.Tests
                 Assert.That(FacePosition().y, Is.EqualTo(judge.y).Within(0.01));
                 foreach (int index in new[] { 1, 2 })
                 {
-                    var otherNote = (RectTransform)play.noteLayer.GetChild(index);
+                    var otherNote = play.NoteRoot(index);
                     var otherHead = (RectTransform)otherNote.Find("Head");
                     Assert.That(Vector3.Distance(otherHead.TransformPoint(otherHead.rect.center), otherNote.TransformPoint(otherNote.rect.center)),
                         Is.LessThan(0.01), "Kusudama and normal notes must keep their centered artwork.");
@@ -561,7 +563,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
             var play = Object.FindFirstObjectByType<PlayScene>();
-            var rect = (RectTransform)play.noteLayer.GetChild(0);
+            var rect = play.NoteRoot(0);
             float deadline = Time.realtimeSinceStartup + 5;
             do
             {
