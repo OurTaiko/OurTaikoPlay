@@ -61,14 +61,6 @@ namespace OurTaiko
         static readonly float[] CourseSlotX = { 745, 960, 1175, 1390 };
         const float BackX = 440, OptionX = 572, ButtonY = 462, CursorY = 370, CourseBoardY = 583;
         static readonly string[] ChipNames = { "かんたん", "ふつう", "むずかしい", "おに", "おに(裏)" };
-        // Base fills from Nijiiro box/bar_genre/0..9.png. The reference's BOARD_OUTLINE table
-        // incorrectly gives the yellow default board a cyan edge; tint black with the actual fill.
-        static readonly Color32[] GenreBoardFill = {
-            new Color32(254, 230, 0, 255), new Color32(66, 192, 210, 255), new Color32(255, 144, 211, 255),
-            new Color32(204, 138, 234, 255), new Color32(255, 112, 39, 255), new Color32(201, 192, 0, 255),
-            new Color32(29, 200, 59, 255), new Color32(254, 192, 0, 255), new Color32(205, 207, 223, 255),
-            new Color32(93, 209, 187, 255),
-        };
 
         public State Phase { get; private set; } = State.Browsing;
         public const int ListTimerSeconds = 100, CourseTimerSeconds = 60;
@@ -616,9 +608,10 @@ namespace OurTaiko
             CreatePlates(board, contents);
             board.Crown = SkinUi.Image("Crown", board.Root, null, 72, 72);
             board.Crown.enabled = false;
-            var fill = GenreBoardFill[Mathf.Clamp(song.genre, 0, GenreBoardFill.Length - 1)];
-            Color32 outline = Color.Lerp(Color.black, fill, 0.4f);
-            // main_song_board text_song_title: 42 px, white with a 5 px genre-coloured edge.
+            // Translucent black blends with the pixels behind each glyph, including gradients
+            // and animation. Keep the white face opaque; do not precompute genre colours.
+            var outline = new Color32(0, 0, 0, 153);
+            // main_song_board text_song_title: 42 px, white with a 5 px outer edge.
             board.Title = SkinUi.Text("Title", board.Root, font, outlineMaterial, 42, outline, 0.3f);
             board.Title.OutlineOutsidePixels(5);
             board.Title.text = board.Info.Title;
