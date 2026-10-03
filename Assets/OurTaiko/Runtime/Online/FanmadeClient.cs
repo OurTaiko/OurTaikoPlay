@@ -16,7 +16,7 @@ namespace OurTaiko.Online
     //
     // Cache layout under the root, as in OurTaikoPlayer:
     //   objects/<endpoint>/<chart>/<version>/  original.tja, audio.ogg|mp3, play.tja
-    //   pending/<endpoint>/<idempotency key>.json  queued scores; .rejected when refused for good
+    // Pending uploads live in the separate PendingScoreUploads SQLite table.
     public sealed class FanmadeClient : IDisposable
     {
         public static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(30);
@@ -39,7 +39,13 @@ namespace OurTaiko.Online
         Task uploads;
         DateTime retryAt = DateTime.MinValue;
 
-        public FanmadeClient(string cacheRoot) => CacheRoot = Path.GetFullPath(cacheRoot);
+        public PendingScoreQueue UploadQueue { get; }
+        public FanmadeClient(string cacheRoot, string databasePath = null)
+        {
+            CacheRoot = Path.GetFullPath(cacheRoot);
+            UploadQueue = new PendingScoreQueue(databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3"),
+                Path.Combine(CacheRoot, "pending"));
+        }
 
         public IReadOnlyList<FanmadeEndpoint> Endpoints { get { lock (sync) return endpoints.ToArray(); } }
 
@@ -278,8 +284,7 @@ namespace OurTaiko.Online
             if (e.ScoreReplayV1) body["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull();
             try
             {
-                WriteAtomic(Path.Combine(CacheRoot, "pending", e.Id, RandomKey() + ".json"),
-                    new UTF8Encoding(false).GetBytes(body.ToString(Newtonsoft.Json.Formatting.None)));
+                UploadQueue.Enqueue(e.Id, RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None));
                 lock (sync) retryAt = DateTime.MinValue;
                 Update();
                 return true;
@@ -315,16 +320,14 @@ namespace OurTaiko.Online
             foreach (var e in Endpoints)
             {
                 if (!e.IsConnected || !e.IsAuthenticated) continue;
-                string folder = Path.Combine(CacheRoot, "pending", e.Id);
-                if (!Directory.Exists(folder)) continue;
-                foreach (string file in Directory.GetFiles(folder, "*.json").OrderBy(f => f, StringComparer.Ordinal))
+                foreach (var queued in UploadQueue.Pending(e.Id))
                 {
                     try
                     {
-                        string body = File.ReadAllText(file);
+                        string body = queued.Body;
                         FanmadeScore score;
                         await e.Transport.WaitAsync();
-                        try { score = FanmadeScore.From(Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", body, Path.GetFileNameWithoutExtension(file)))); }
+                        try { score = FanmadeScore.From(Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", body, queued.Key))); }
                         finally { e.Transport.Release(); }
                         lock (sync)
                         {
@@ -333,7 +336,7 @@ namespace OurTaiko.Online
                             status = e.Config.DisplayName + ": score uploaded";
                         }
                         Interlocked.Increment(ref revision);
-                        File.Delete(file);
+                        UploadQueue.Remove(queued.Key);
                     }
                     catch (HttpStatusException error)
                     {
@@ -341,9 +344,7 @@ namespace OurTaiko.Online
                         // 409 (the chart changed version mid-play) and other permanent refusals are kept aside.
                         if (error.Status >= 400 && error.Status < 500 && error.Status != 401 && error.Status != 408 && error.Status != 429)
                         {
-                            string rejected = Path.ChangeExtension(file, ".rejected");
-                            if (File.Exists(rejected)) File.Delete(rejected);
-                            File.Move(file, rejected);
+                            UploadQueue.Reject(queued.Key);
                             SetStatus(e.Config.DisplayName + ": score rejected (" + error.Message + "), saved locally");
                         }
                         else break;
@@ -353,11 +354,7 @@ namespace OurTaiko.Online
             }
         }
 
-        public int PendingCount(FanmadeEndpoint e)
-        {
-            string folder = Path.Combine(CacheRoot, "pending", e.Id);
-            return Directory.Exists(folder) ? Directory.GetFiles(folder, "*.json").Length : 0;
-        }
+        public int PendingCount(FanmadeEndpoint e) => UploadQueue.Pending(e.Id).Length;
 
         static string RandomKey()
         {

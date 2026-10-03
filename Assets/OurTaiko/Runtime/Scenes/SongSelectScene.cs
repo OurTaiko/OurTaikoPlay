@@ -247,6 +247,9 @@ namespace OurTaiko
             // Player::update: the options are saved once the panel has slid out.
             if (optionPanel.Draw(now)) PlayOptions.Shared.Save();
             DrawOverlays(now);
+            if (view.bestScore != null)
+                view.bestScore.Show(FocusedSong, FocusedKind == BoardKind.Song ? wheelBoards[Focused].Info : null,
+                    1, GameTimeline.FrameTime);
         }
 
         void HandleInput()
@@ -756,7 +759,7 @@ namespace OurTaiko
             Crown best = Crown.None; Difficulty course = Difficulty.Easy;
             foreach (var info in board.Info.Courses)
             {
-                var record = ScoreStore.Shared.Get(board.Song.name, info.Difficulty);
+                var record = SongScores.Get(board.Song, info.Difficulty);
                 if (record != null && record.crown != Crown.None) { best = record.crown; course = info.Difficulty; }
             }
             if (best == Crown.None) { board.Crown.enabled = false; return; }
@@ -839,7 +842,7 @@ namespace OurTaiko
             card.Branch.enabled = details && info.IsBranching;
             for (int k = 0; k < card.Dots.Length; k++) card.Dots[k].enabled = details && k < Math.Min(10, info.Level);
             if (!details) return;
-            var record = ScoreStore.Shared.Get(board.Song.name, difficulty);
+            var record = SongScores.Get(board.Song, difficulty);
             card.Crown.sprite = smallCrowns[(int)(record?.crown ?? Crown.None)];
             card.Level.sprite = smallStars[Mathf.Clamp(info.Level, 1, 11)];
         }

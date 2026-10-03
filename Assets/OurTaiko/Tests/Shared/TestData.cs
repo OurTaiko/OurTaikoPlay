@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace OurTaiko.Tests
 {
-    // Keeps PlayMode tests away from the player's real scores.json, options.json, player.json, settings.json,
+    // Keeps PlayMode tests away from the player's real scores.sqlite3, options.json, player.json, settings.json,
     // servers.json and online cache; tests start with no online server (ServerLogin passes straight through).
     // Each test assembly calls this from its own [SetUpFixture].
     public static class TestData
     {
-        static string ScorePath => Path.Combine(Application.temporaryCachePath, "playmode-scores.json");
+        static string ScorePath => Path.Combine(Application.temporaryCachePath, "playmode-scores.sqlite3");
         public static string OnlineCache => Path.Combine(Application.temporaryCachePath, "playmode-fanmade");
 
         public static void Use()
@@ -24,8 +24,10 @@ namespace OurTaiko.Tests
         // Unsaved servers over a fresh temporary cache.
         public static void UseServers(Online.ServerList servers)
         {
-            Online.OnlineManager.EnsureInstance().UseUnsaved(servers, OnlineCache);
+            var manager = Online.OnlineManager.EnsureInstance();
+            manager.Disconnect();
             if (Directory.Exists(OnlineCache)) Directory.Delete(OnlineCache, true);
+            manager.UseUnsaved(servers, OnlineCache);
         }
 
         public static void Restore()

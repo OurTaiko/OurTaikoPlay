@@ -173,7 +173,7 @@ namespace OurTaiko.Tests
             Assert.That(client.Submit(chart, (int)Difficulty.Oni, new FanmadeScore { Good = 3, Score = 3000, MaxCombo = 3 }, record), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(client.PendingCount(endpoint), Is.EqualTo(1), "A temporary failure keeps the queued request.");
-            string queued = File.ReadAllText(Directory.GetFiles(Path.Combine(cache, "pending", endpoint.Id))[0]);
+            string queued = client.UploadQueue.Pending(endpoint.Id)[0].Body;
 
             client.RetryNow();
             Run(() => client.WaitForUploadsAsync());
@@ -196,9 +196,8 @@ namespace OurTaiko.Tests
             fixture.ScoreFailures.Enqueue(409);
             client.Submit(client.Charts[0], (int)Difficulty.Oni, new FanmadeScore { Score = 1 });
             Run(() => client.WaitForUploadsAsync());
-            string folder = Path.Combine(cache, "pending", endpoint.Id);
-            Assert.That(Directory.GetFiles(folder, "*.json"), Is.Empty);
-            Assert.That(Directory.GetFiles(folder, "*.rejected").Length, Is.EqualTo(1));
+            Assert.That(client.PendingCount(endpoint), Is.Zero);
+            Assert.That(client.UploadQueue.RejectedCount(endpoint.Id), Is.EqualTo(1));
         }
 
         [Test]

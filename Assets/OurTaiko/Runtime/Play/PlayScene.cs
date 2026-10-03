@@ -360,7 +360,7 @@ namespace OurTaiko
             Result = PlayResult.From(Session, song.name, autoPlay);
             Result.Title = displayInfo.Title;
             Result.Subtitle = displayInfo.Subtitle;
-            ScoreStore.Shared.Save(Result);
+            if (!SongScores.IsOnline(song)) ScoreStore.Shared.Save(Result);
             SubmitOnline();
             switcher.ShowResult(Result);
         }

@@ -47,6 +47,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator LoginListsOnlineChartsThenDownloadsPlaysAndUploads()
         {
+            fixture.AddAccountScore("don", chart, "Oni", 1002540);
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             TestData.UseServers(new ServerList { servers = { fixture.Server("don", "wrong") } });
@@ -119,6 +120,10 @@ namespace OurTaiko.Tests
             select.Confirm();
             yield return WaitUntil(() => select.CourseFade >= 1, 5);
             Assert.That(select.Cursor.Selected, Is.EqualTo(Difficulty.Oni));
+            yield return null;
+            Assert.That(select.view.bestScore.DisplayedScore, Is.EqualTo(1002540), "Best score comes from login bootstrap.");
+            Assert.That(select.view.bestScore.group.alpha, Is.EqualTo(1));
+            Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
             select.Confirm();
             yield return WaitForScene(SceneSwitcher.GameScene, 30);
 
@@ -143,6 +148,7 @@ namespace OurTaiko.Tests
             var inputs = (JArray)body["replay_data"]["inputs"];
             Assert.That(inputs.Select(i => (int)i[1]), Is.EqualTo(new[] { 1, 3 }), "Left don, then right ka.");
             Assert.That(online.Client.PendingCount(online.Client.Endpoints[0]), Is.Zero);
+            Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null, "Online plays never enter local best scores.");
 
             // Back from the result: the folder is open again on the song just played.
             yield return WaitUntil(() => !SceneSwitcher.Instance.IsInputBlocked, 10);
