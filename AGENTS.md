@@ -145,7 +145,7 @@
 | `Assets/OurTaiko/Songs` | TRIPLE HELIX（含音乐）、Input Calibration（无音乐）、Branch Training（无音乐分支练习谱）。 |
 | `README.md`、`Documentation/PortingNotes.md`、`Documentation/ImportedAssets.json` | 运行说明、详细行为依据与历次验证、素材来源记录。 |
 
-操作：F／J 为咚，D／K 为咔（游玩时同一帧只判定最早的一次打击，其余同帧打击丢弃——太鼓输入互斥），Space／Esc 打开暂停菜单／恢复，F1 重开；暂停菜单依次为 Resume、Restart、Back to Song Select，↑／↓（或 D／K、←／→）选择，Enter／F／J 确认，也可点击／触摸。菜单淡入和淡出各 0.5 秒，全程禁用 DrumPad，淡出后才继续演奏。Entry 中 F／J（或点击）加入／决定，D／K 只有咔声。选曲 D／K 移动、F／J 决定、A 自动演奏、Esc 返回 Entry（演奏オプション中 D／K 改值、F／J 下一行、Esc 关闭）；结算 F／J 跳过／返回。游玩页也可用鼠标／触控敲击原版样式的触控鼓，选曲板、难度卡和结算画面也可点击。
+操作：F／J 为咚，D／K 为咔（游玩时同一帧只判定最早的一次打击，其余同帧打击丢弃——太鼓输入互斥），Space／Esc 打开暂停菜单／恢复，F1 重开；暂停菜单依次为 Resume、Restart、Back to Song Select，↑／↓（或 D／K、←／→）选择，Enter／F／J 确认，也可点击／触摸。菜单淡入和淡出各 0.5 秒，全程禁用 DrumPad，淡出后才继续演奏。Entry 中 F／J（或点击）加入／决定，D／K 只有咔声。选曲 D／K 移动、F／J 决定（自动演奏只在演奏オプション的オート行切换，A 键快捷与各场景 KeyHelp 按键提示已删除）、Esc 返回 Entry（演奏オプション中 D／K 改值、F／J 下一行、Esc 关闭）；结算 F／J 跳过／返回。游玩页也可用鼠标／触控敲击原版样式的触控鼓，选曲板、难度卡和结算画面也可点击。
 
 **选曲加载幕布（SongSelect → SinglePlayScene 过渡）。** 照搬 `transition.lua`／`anim/loading_song.lua`：关闭 532 ms（帧 5→55，在旧场景上）→ SongLoadingScene 停在帧 55（标题、副标题、皮肤「ゲームのヒント」原图、咚咔、星、光晕）→ 打开 532 ms（帧 60→109，在游玩场景上），打开结束后才开始倒计时。用户决定：幕布美术放在全局 SceneSwitcher；停留至少 2 秒；提示区用皮肤文字贴图（截图中的街机插画卡不在皮肤内）；所有 `Play()` 入口使用幕布，重开与其他切换仍为淡入淡出。演奏スキップON 徽章因该功能未实现而不显示。预解析谱面经 `SceneSwitcher.TakePreparedChart` 只交给 PlayScene 一次。详见 `Documentation/PortingNotes.md`「选曲加载幕布与 SongLoadingScene」。
 

@@ -11,7 +11,7 @@ namespace OurTaiko
     public enum InputKey
     {
         LeftDon, RightDon, LeftKa, RightKa,
-        Confirm, Back, Pause, Restart, ToggleAuto, MenuLeft, MenuRight, MenuUp, MenuDown,
+        Confirm, Back, Pause, Restart, MenuLeft, MenuRight, MenuUp, MenuDown,
     }
 
     public readonly struct InputPress
@@ -62,7 +62,6 @@ namespace OurTaiko
             SetBinding(InputKey.Back, Key.Escape);
             SetBinding(InputKey.Pause, Key.Space);
             SetBinding(InputKey.Restart, Key.F1);
-            SetBinding(InputKey.ToggleAuto, Key.A);
             SetBinding(InputKey.MenuLeft, Key.LeftArrow);
             SetBinding(InputKey.MenuRight, Key.RightArrow);
             SetBinding(InputKey.MenuUp, Key.UpArrow);

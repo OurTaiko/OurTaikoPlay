@@ -153,7 +153,6 @@ namespace OurTaiko.Editor
             }
             controller.wheel = Rect("Wheel", root, 0, 0, 1920, 1080);
             controller.coursePanel = Rect("CoursePanel", root, 0, 0, 1920, 1080);
-            Label(root, "KeyHelp", "D / K  えらぶ     F / J  けってい     A  オート     ESC  もどる", 0, 1020, 1920, 48, 26);
             AddStageFps(root);
 
             controller.genreBackgrounds = Frames("song_select/box/background", 10);

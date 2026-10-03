@@ -189,7 +189,6 @@ namespace OurTaiko
             bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft);
             bool rightKa = InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight);
             bool donHit = InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
-            if (InputManager.GetKeyDown(InputKey.ToggleAuto) && Phase != State.Decided) ToggleAuto();
             if (leftKa) Left();
             else if (rightKa) Right();
             else if (donHit) Confirm();
@@ -248,13 +247,6 @@ namespace OurTaiko
             if (switcher.IsInputBlocked || Phase == State.Decided) return false;
             // The course panel ignores input while it is still fading in.
             return Phase != State.CourseSelect || CourseFade >= 1;
-        }
-
-        public void ToggleAuto()
-        {
-            var options = PlayOptions.Shared;
-            options.auto = !options.auto;
-            options.Save();
         }
 
         void StartSong()

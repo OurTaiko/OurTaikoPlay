@@ -101,8 +101,6 @@ namespace OurTaiko.Editor
             play.pauseMenu = view;
             if (play.pauseButton != null)
                 play.pauseButton.navigation = new UnityEngine.UI.Navigation { mode = UnityEngine.UI.Navigation.Mode.None };
-            var keyHelp = play.pauseButton.transform.parent.Find("KeyHelp")?.GetComponent<TMP_Text>();
-            if (keyHelp != null) keyHelp.text = "D / K  KA     F / J  DON     SPACE / ESC  PAUSE     F1  RESTART";
             root.gameObject.SetActive(false);
             EditorUtility.SetDirty(view);
             EditorUtility.SetDirty(play);
