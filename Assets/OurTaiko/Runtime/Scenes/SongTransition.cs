@@ -30,6 +30,8 @@ namespace OurTaiko
         public Image rainbow, curtainLeft, curtainRight, glow, don, katsu, band, hint;
         public Image[] stars;
         public TMP_Text title, subtitle;
+        [Tooltip("Online download progress and errors under the title; empty for local songs.")]
+        public TMP_Text status;
 
         public bool IsClosed { get; private set; }
         public bool IsVisible => gameObject.activeSelf;
@@ -44,6 +46,15 @@ namespace OurTaiko
         {
             pendingTitle = songTitle ?? "";
             pendingSubtitle = songSubtitle ?? "";
+            SetStatus("");
+        }
+
+        public void SetStatus(string text) => SetStatus(text, Color.white);
+        public void SetStatus(string text, Color color)
+        {
+            if (status == null) return;
+            status.text = text ?? "";
+            status.color = color;
         }
 
         // Text layout needs an active object, so the song is applied as the curtain appears.
@@ -69,6 +80,7 @@ namespace OurTaiko
         public void Hide()
         {
             IsClosed = false;
+            SetStatus("");
             gameObject.SetActive(false);
         }
 

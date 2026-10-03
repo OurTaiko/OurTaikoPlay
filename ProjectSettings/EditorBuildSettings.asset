@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/GlobalSettingScene.unity
     guid: d418b8c6404fb4f698afa004d78d103b
   - enabled: 1
+    path: Assets/Scenes/ServerLogin.unity
+    guid: 48479fba19c034e3e831c3857575565e
+  - enabled: 1
     path: Assets/Scenes/SongSelect.unity
     guid: 208d40d7cf48e405a976d3e32ef1d5e9
   - enabled: 1

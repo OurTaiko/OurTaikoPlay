@@ -18,6 +18,8 @@ namespace OurTaiko
 
         public SongBoardView boardPrefab;
         public SongBoardView[] songBoards;
+        [Tooltip("Pooled for the online category folders and their もどる boards.")]
+        public FolderBoardView folderPrefab;
         public CanvasGroup courseGroup;
         public Image mark, backboard, back, option, auto, frame, glow, balloon, uraChange;
         public TextMeshProUGUI header, headerSub;

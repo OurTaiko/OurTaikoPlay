@@ -1,5 +1,7 @@
 {
   "name": "OurTaiko.PlayModeTests",
   "references": ["OurTaiko.Runtime", "OurTaiko.TestSupport", "Unity.ugui", "Unity.TextMeshPro", "Unity.InputSystem"],
+  "overrideReferences": true,
+  "precompiledReferences": ["nunit.framework.dll", "Newtonsoft.Json.dll"],
   "optionalUnityReferences": ["TestAssemblies"]
 }

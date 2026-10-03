@@ -1,6 +1,8 @@
 {
   "name": "OurTaiko.Tests",
-  "references": ["OurTaiko.Runtime"],
+  "references": ["OurTaiko.Runtime", "OurTaiko.TestSupport"],
   "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["nunit.framework.dll", "Newtonsoft.Json.dll"],
   "optionalUnityReferences": ["TestAssemblies"]
 }
