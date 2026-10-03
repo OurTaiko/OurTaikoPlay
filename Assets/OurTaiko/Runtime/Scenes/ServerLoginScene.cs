@@ -39,7 +39,7 @@ namespace OurTaiko
         readonly List<Outcome> outcomes = new List<Outcome>();
         Task request;
         CancellationTokenSource cancel;
-        float advanceAt = -1;
+        double advanceAt = -1;
         // TMP_InputField handles Enter/Esc itself; the frame it does so ignores the same key here.
         int fieldKeyFrame = -1;
 
@@ -103,7 +103,7 @@ namespace OurTaiko
             if (servers.Count == 0) { if (!switcher.IsSwitching) Leave(SceneSwitcher.SongSelectScene); return; }
             if (advanceAt >= 0)
             {
-                if (Time.realtimeSinceStartup >= advanceAt) { advanceAt = -1; Next(); }
+                if (GameTimeline.FrameTime >= advanceAt) { advanceAt = -1; Next(); }
                 return;
             }
             if (switcher.IsInputBlocked) return;
@@ -222,7 +222,7 @@ namespace OurTaiko
                 outcomes[ServerIndex] = guest ? Outcome.Guest : Outcome.LoggedIn;
                 string who = guest ? "ゲスト" : endpoint.Nickname;
                 view.ShowMessage($"{who}として接続しました（{endpoint.ChartCount} 曲）", success: true);
-                advanceAt = Time.realtimeSinceStartup + successSeconds;
+                advanceAt = GameTimeline.FrameTime + successSeconds;
             }
             catch (Exception error)
             {

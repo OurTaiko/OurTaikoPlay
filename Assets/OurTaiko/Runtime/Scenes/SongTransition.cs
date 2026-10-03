@@ -88,10 +88,10 @@ namespace OurTaiko
         {
             Appear();
             IsClosed = false;
-            float started = Time.realtimeSinceStartup;
+            double started = GameTimeline.FrameTime;
             while (true)
             {
-                float t = Mathf.Min(SceneSeconds, Time.realtimeSinceStartup - started);
+                float t = Mathf.Min(SceneSeconds, (float)(GameTimeline.FrameTime - started));
                 ShowTime(t, closing);
                 if (t >= SceneSeconds) break;
                 await Awaitable.NextFrameAsync(cancellation);

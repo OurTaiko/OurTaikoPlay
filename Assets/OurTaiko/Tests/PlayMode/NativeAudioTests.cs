@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
 #if UNITY_EDITOR_OSX || UNITY_EDITOR_WIN || UNITY_EDITOR_LINUX
             Assert.That(AudioEngine.Instance.Native, Is.True, AudioEngine.Instance.Diagnostics);
 #endif
-            source.PlayAudioScheduled(AudioEngine.Clock + 0.3);
+            source.PlayAudioScheduled(GameTimeline.AudioNow + 0.3);
             yield return new WaitForSecondsRealtime(0.1f);
             Assert.That(source.AudioPosition(), Is.LessThan(0.04), "The countdown must not consume PCM.");
             yield return new WaitForSecondsRealtime(0.5f);
@@ -52,11 +52,11 @@ namespace OurTaiko.Tests
             Assert.That(source.IsAudioPlaying(), Is.False);
             Assert.That(source.AudioPosition(), Is.Zero);
             source.SeekAudio(1);
-            source.PlayAudioScheduled(AudioEngine.Clock + 0.05);
+            source.PlayAudioScheduled(GameTimeline.AudioNow + 0.05);
             yield return new WaitForSecondsRealtime(0.25f);
             Assert.That(source.AudioPosition(), Is.InRange(1.08, 1.4));
             source.StopAudio();
-            source.PlayAudioScheduled(AudioEngine.Clock + 0.15);
+            source.PlayAudioScheduled(GameTimeline.AudioNow + 0.15);
             source.StopAudio();
             yield return new WaitForSecondsRealtime(0.3f);
             Assert.That(source.IsAudioPlaying(), Is.False, "Stopping a pending start must cancel it.");

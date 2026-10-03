@@ -49,21 +49,18 @@ namespace OurTaiko
         public PlayResult Result { get; private set; }
         // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
         public Online.PlayRecord Record { get; private set; }
-        // BASS uses a continuously advancing clock. Judgment callbacks and drawing within an
-        // Update must share one timestamp, or a just-started effect can appear to be in the future.
-        double? frameSongTime;
-        public double SongTime => frameSongTime ?? (!isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioEngine.Clock - startDsp);
+        readonly SongClock songClock = new SongClock();
+        public double SongTime => songClock.Time;
         public double RenderedTime { get; private set; }
         // Views come from pools while a note is on the lane; null when it is not drawn.
         public RectTransform NoteRoot(int index) => shownNotes[index]?.Root;
         public RectTransform MojiRoot(int index) => shownMoji[index]?.Root;
         public RectTransform BarRoot(int index) => shownBars[index];
         SongDefinition song;
-        bool autoPlay, isReady, hitKa;
+        bool autoPlay, hitKa;
         SceneSwitcher switcher;
-        double startDsp, frozenTime, audioSyncUntil;
-        float feedbackTime = -10;
-        readonly float[] flashedAt = { -10, -10, -10, -10 };
+        double feedbackTime = -10;
+        readonly double[] flashedAt = { -10, -10, -10, -10 };
         ClipSampler[] flashClips;
         ClipSampler judgmentFade, gogoPulse;
         NoteView[] shownNotes = new NoteView[0];
@@ -148,9 +145,8 @@ namespace OurTaiko
             }
             if (IsFinished) yield break;
             while (switcher.IsInputBlocked) yield return null;
-            // Start the full countdown and DSP clock only after the global cover has opened.
-            startDsp = AudioEngine.Clock + Math.Max(2, Session.Chart.Offset + 2);
-            isReady = true;
+            // The full countdown starts only after the global cover has opened.
+            songClock.Start(GameTimeline.AudioNow, Math.Max(2, Session.Chart.Offset + 2));
             ScheduleMusic();
         }
 
@@ -165,61 +161,42 @@ namespace OurTaiko
         void ScheduleMusic()
         {
             music.StopAudio();
-            audioSyncUntil = Math.Max(AudioEngine.Clock, startDsp) + 2;
-            if (music.AudioLength() <= 0) return;
-            double time = AudioEngine.Clock - startDsp;
-            if (time >= music.AudioLength()) return;
-            if (time < 0) { music.SeekAudio(0); music.PlayAudioScheduled(startDsp); }
-            else
-            {
-                // Schedule both the clip position and chart origin against the same DSP clock.
-                const double lead = 0.05;
-                double resumeAt = time + lead;
-                if (resumeAt >= music.AudioLength()) return;
-                music.SeekAudio(Math.Min(music.AudioLength() - 1.0 / 48000, resumeAt));
-                music.PlayAudioScheduled(AudioEngine.Clock + lead);
-            }
+            var schedule = songClock.Schedule(GameTimeline.AudioNow, music.AudioLength());
+            if (!schedule.HasValue) return;
+            music.SeekAudio(schedule.Value.Position);
+            music.PlayAudioScheduled(schedule.Value.At);
         }
 
         void Update()
         {
-            if (switcher == null || switcher.IsInputBlocked || !isReady) return;
+            if (switcher == null || switcher.IsInputBlocked || !songClock.Started) return;
+            // Keep the intentional frame-based judgment; input event timestamps only sort hits.
+            double? playback = AudioEngine.EnsureInstance().Backend == AudioBackend.Bass && music.IsAudioPlaying()
+                ? music.AudioPosition() : null;
+            songClock.Update(GameTimeline.AudioFrameTime, playback);
             if (closingPauseMenu || Time.frameCount == resumeFrame || Time.frameCount == pauseOpenedFrame) return;
             if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause))
             { TogglePause(); return; }
             if (InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
             if (IsPaused) { pauseMenu.HandleInput(); return; }
             if (Session == null || IsFinished) return;
-            // Like MajdataPlay, use the monotonic clock between frames and align BASS's
-            // device playback position during the first two seconds after start/resume.
-            if (AudioEngine.EnsureInstance().Backend == AudioBackend.Bass && SongTime > 0
-                && AudioEngine.Clock < audioSyncUntil && music.IsAudioPlaying())
-            {
-                double position = music.AudioPosition();
-                if (position > 0) startDsp += (SongTime - position) * 0.8;
-            }
-            frameSongTime = SongTime;
-            try
-            {
-                double time = SongTime - song.audioOffsetMs / 1000.0;
-                Session.Advance(time, autoPlay);
-                if (branchLane != null) branchLane.ShowTime(time);
-                if (!autoPlay) HitFirstDrumPress();
-                balloonCounter.ShowTime(time);
-                RenderNotes(time - song.visualOffsetMs / 1000.0);
-                soulGauge.ShowTime(time);
-                if (noteArcs != null) noteArcs.ShowTime(time);
-                foreach (var dancer in dancers) dancer.SampleLoop(time);
-                combo.ShowTime(time);
-                comboAnnounce.ShowTime(time);
-                judgmentFade ??= judgment.GetComponent<ClipSampler>();
-                judgmentFade.Sample(Math.Min(Time.unscaledTime - feedbackTime, judgmentFade.clip.length));
-                hitFace.ShowTime(time);
-                hitRing.ShowTime(time);
-                for (int i = 0; i < drumFlashes.Length; i++) ShowFlash(i);
-                if (time > Math.Max(Session.Chart.Duration, music.AudioLength()) + 1) Finish();
-            }
-            finally { frameSongTime = null; }
+            double time = SongTime - song.audioOffsetMs / 1000.0;
+            Session.Advance(time, autoPlay);
+            if (branchLane != null) branchLane.ShowTime(time);
+            if (!autoPlay) HitFirstDrumPress();
+            balloonCounter.ShowTime(time);
+            RenderNotes(time - song.visualOffsetMs / 1000.0);
+            soulGauge.ShowTime(time);
+            if (noteArcs != null) noteArcs.ShowTime(time);
+            foreach (var dancer in dancers) dancer.SampleLoop(time);
+            combo.ShowTime(time);
+            comboAnnounce.ShowTime(time);
+            judgmentFade ??= judgment.GetComponent<ClipSampler>();
+            judgmentFade.Sample(Math.Min(GameTimeline.FrameTime - feedbackTime, judgmentFade.clip.length));
+            hitFace.ShowTime(time);
+            hitRing.ShowTime(time);
+            for (int i = 0; i < drumFlashes.Length; i++) ShowFlash(i);
+            if (time > Math.Max(Session.Chart.Duration, music.AudioLength()) + 1) Finish();
         }
 
         // Input mutex: a frame judges only its earliest drum press; later ones in the same frame are dropped.
@@ -234,7 +211,7 @@ namespace OurTaiko
         }
         public void Hit(bool isKa, bool right)
         {
-            if (Session == null || !isReady || switcher.IsInputBlocked || IsPaused || IsFinished || autoPlay) return;
+            if (Session == null || !songClock.Started || switcher.IsInputBlocked || IsPaused || IsFinished || autoPlay) return;
             Feedback(isKa, right);
             hitKa = isKa;
             double time = SongTime - song.audioOffsetMs / 1000.0;
@@ -246,7 +223,7 @@ namespace OurTaiko
             var clip = isKa ? ka : don;
             if (clip != null) hitAudio.PlayAudioOneShot(clip, AudioGroup.Drum);
             int flash = (isKa ? 2 : 0) + (right ? 1 : 0);
-            flashedAt[flash] = Time.unscaledTime;
+            flashedAt[flash] = GameTimeline.FrameTime;
             ShowFlash(flash);
         }
         // Real time since that drum's last hit; the clip ends switched off.
@@ -254,7 +231,7 @@ namespace OurTaiko
         {
             flashClips ??= Array.ConvertAll(drumFlashes, flash => flash.GetComponent<ClipSampler>());
             var sampler = flashClips[index];
-            sampler.Sample(Math.Min(Time.unscaledTime - flashedAt[index], sampler.clip.length));
+            sampler.Sample(Math.Min(GameTimeline.FrameTime - flashedAt[index], sampler.clip.length));
         }
         void OnJudged(int index, Judgment result)
         {
@@ -267,7 +244,7 @@ namespace OurTaiko
             double judgedAt = SongTime - song.audioOffsetMs / 1000.0;
             hitFace.Play(result, big, judgedAt);
             hitRing.Play(result, big, judgedAt);
-            feedbackTime = Time.unscaledTime;
+            feedbackTime = GameTimeline.FrameTime;
             if (result != Judgment.Roll) judgment.sprite = judgmentSprites[(int)result - 1];
             else if (Session.Chart.Notes[index].Kind == NoteKind.Balloon)
             {
@@ -316,9 +293,9 @@ namespace OurTaiko
         }
         public void TogglePause()
         {
-            if (IsFinished || Session == null || !isReady || switcher.IsInputBlocked || closingPauseMenu) return;
+            if (IsFinished || Session == null || !songClock.Started || switcher.IsInputBlocked || closingPauseMenu) return;
             if (IsPaused) { Resume(); return; }
-            frozenTime = SongTime;
+            songClock.Pause();
             IsPaused = true;
             pauseOpenedFrame = Time.frameCount;
             music.StopAudio(); hitAudio.StopAudio();
@@ -341,7 +318,7 @@ namespace OurTaiko
                     pauseMenu.Show();
                     return;
                 }
-                startDsp = AudioEngine.Clock - frozenTime;
+                songClock.Resume(GameTimeline.AudioNow);
                 IsPaused = false;
                 resumeFrame = Time.frameCount;
                 ScheduleMusic();
@@ -377,7 +354,7 @@ namespace OurTaiko
         // GameScreen::end_song: store the record, then hand the result to the Result scene.
         void Finish()
         {
-            frozenTime = SongTime; IsFinished = true; music.StopAudio();
+            songClock.Pause(); IsFinished = true; music.StopAudio();
             Result = PlayResult.From(Session, song.name, autoPlay);
             ScoreStore.Shared.Save(Result);
             SubmitOnline();
@@ -409,7 +386,7 @@ namespace OurTaiko
         }
         void PrepareToLeave(string scene)
         {
-            frozenTime = SongTime; IsPaused = true;
+            songClock.Pause(); IsPaused = true;
             music.StopAudio(); hitAudio.StopAudio();
             DisableDrumPads();
         }

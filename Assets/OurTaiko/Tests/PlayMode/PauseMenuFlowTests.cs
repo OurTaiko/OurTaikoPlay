@@ -362,7 +362,7 @@ namespace OurTaiko.Tests
             }
         }
     }
-    // Runs between InputManagerUpdater (-32000) and the default-order PlayScene, reproducing
+    // Runs between GameLoop (-32000) and the default-order PlayScene, reproducing
     // a pointer callback that opens Pause in the same frame as a previously published keyboard shortcut.
     [DefaultExecutionOrder(-31000)]
     public sealed class PauseClickBeforePlayUpdate : MonoBehaviour

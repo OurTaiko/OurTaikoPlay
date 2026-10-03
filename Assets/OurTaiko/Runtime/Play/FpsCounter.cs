@@ -17,7 +17,7 @@ namespace OurTaiko
 
         void OnEnable()
         {
-            sampleStarted = Time.realtimeSinceStartupAsDouble;
+            sampleStarted = GameTimeline.Realtime;
             frames = 0;
             FramesPerSecond = 0;
             label.SetText("FPS --");
@@ -26,7 +26,7 @@ namespace OurTaiko
         void Update()
         {
             frames++;
-            double now = Time.realtimeSinceStartupAsDouble;
+            double now = GameTimeline.Realtime;
             double elapsed = now - sampleStarted;
             if (elapsed < SampleSeconds) return;
             // Measure real frames over wall time, independently of song time or pause.

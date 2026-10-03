@@ -93,14 +93,9 @@ namespace OurTaiko
             Array.Clear(pressedThisFrame, 0, KeyCount); Array.Clear(held, 0, KeyCount);
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void Install()
+        internal static void Initialize()
         {
             if (!installed) { InputSystem.onEvent += OnInputEvent; installed = true; }
-            if (UnityEngine.Object.FindFirstObjectByType<InputManagerUpdater>() != null) return;
-            var updater = new GameObject(nameof(InputManagerUpdater)) { hideFlags = HideFlags.HideInHierarchy };
-            UnityEngine.Object.DontDestroyOnLoad(updater);
-            updater.AddComponent<InputManagerUpdater>();
         }
 
         // Runs while the Input System processes events, before the key state is written,
@@ -119,7 +114,7 @@ namespace OurTaiko
             }
         }
 
-        // Called once per frame by InputManagerUpdater, ahead of every scene script.
+        // Called once per frame by GameLoop, ahead of every scene script.
         internal static void OnPreUpdate()
         {
             frame.Clear(); frame.AddRange(pending); pending.Clear();
@@ -192,9 +187,4 @@ namespace OurTaiko
         }
     }
 
-    [DefaultExecutionOrder(-32000)]
-    sealed class InputManagerUpdater : MonoBehaviour
-    {
-        void Update() => InputManager.OnPreUpdate();
-    }
 }

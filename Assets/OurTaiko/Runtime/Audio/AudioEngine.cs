@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -26,7 +25,6 @@ namespace OurTaiko
         public bool Native => Backend != AudioBackend.Unity;
         public int Mixer { get; private set; }
         public float[,] MixingMatrix { get; private set; }
-        public static double Clock => EnsureInstance().Native ? Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency : AudioSettings.dspTime;
         AudioOptions appliedOptions;
         public bool HasPendingDeviceChanges => appliedOptions != null && !appliedOptions.SameDeviceSettings(SettingManager.EnsureInstance().Settings.audio);
         internal static readonly object DeviceLock = new object();

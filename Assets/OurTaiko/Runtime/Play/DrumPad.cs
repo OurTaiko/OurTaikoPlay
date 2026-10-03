@@ -40,7 +40,7 @@ namespace OurTaiko
         // Real time, like the original's get_current_ms; disabled pads cannot animate or emit input.
         public void Press()
         {
-            if (isActiveAndEnabled) pressedAt = Time.realtimeSinceStartupAsDouble * 1000;
+            if (isActiveAndEnabled) pressedAt = GameTimeline.FrameTime;
         }
 
         void Update()
@@ -48,7 +48,7 @@ namespace OurTaiko
             if (drum == null) return;
             if (squeeze == null) squeeze = drum.GetComponent<ClipSampler>();
             // Global animation 66, restarted per press; the clip ends back at full size.
-            double elapsed = (Time.realtimeSinceStartupAsDouble * 1000 - pressedAt) / 1000;
+            double elapsed = GameTimeline.FrameTime - pressedAt;
             squeeze.Sample(System.Math.Min(elapsed, squeeze.clip.length));
         }
 

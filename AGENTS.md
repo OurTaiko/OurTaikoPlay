@@ -20,7 +20,7 @@
 - 动画时长、裁切、布局和判定行为先查原模拟器源码与 Nijiiro 配置。用户对魂槽“约每 0.5 秒闪黄”的描述是观察猜测；实际原代码是新增格子 **450 ms 淡入**，没有整条周期闪黄，不应另加猜测效果。
 - 分支谱面通过轨道颜色及轨道右侧「普通譜面／玄人譜面／達人譜面」贴图识别，不使用独立分支文本框。
 - **OurTaikoPlayer 也是模拟器，不是原版游戏。** 它是行为参考，但其中有错误；用户在移植中修正这些错误。下列是**有意的偏离**，不要按 OurTaikoPlayer 源码「还原」，也不要当作待办：
-  - **输入互斥（每帧一击）**：游玩时每帧只判定最早的一次咚／咔打击（键盘、触控、鼠标按发生时间合并排序），同帧其余打击直接丢弃，不判定、不播音效、不亮鼓面。OurTaikoPlayer 的 `player.cpp::handle_input` 每帧按固定顺序（左咚、右咚、左咔、右咔）逐个处理全部打击，这是被修正的行为。后果是已知且接受的：连打中同帧双手只计 1 次；同帧先咔后咚时咔占用该帧；同帧双手打大音符不会误吃下一个音符。实现在 `PlayScene.HitFirstDrumPress`，由 `DrumInputMutexTests.cs` 覆盖。
+  - **输入互斥（每帧一击）**：游玩时每帧只判定最早的一次咚／咔打击（键盘、触控、鼠标按发生时间合并排序），同帧其余打击直接丢弃，不判定、不播音效、不亮鼓面。OurTaikoPlayer 的 `player.cpp::handle_input` 每帧按固定顺序（左咚、右咚、左咔、右咔）逐个处理全部打击，这是被修正的行为。后果是已知且接受的：连打中同帧双手只计 1 次；同帧先咔后咚时咔占用该帧；同帧双手打大音符不会误吃下一个音符。**判定时间也有意按帧统一**：使用处理该帧时的歌曲时间（含音画偏移），输入事件时间只用于排序，不回推到按键发生时刻；不要改为逐事件时间判定。实现在 `PlayScene.HitFirstDrumPress`，由 `DrumInputMutexTests.cs` 覆盖。
   - **大音符不需要双手同时击打**：大咚／大咔单侧击打即为完整判定，与小音符同样计分。不实现双手判定窗口或双击加分，不要把它列为未移植功能。
   - **演奏オプション**（用户决定）：ドロン只隐藏音符，小节线保留；ランダム按每个咚／咔音符独立概率换色（きまぐれ 30%、でたらめ 50%），不用原 `modifier_random` 的 (对象数/5)×档位 抽取；演奏スキップ灰显不可改（单人没有 2P 鼓）；轨道徽章网格按整数行，不复制原 `slot/3.0` 浮点下移。详见 `Documentation/PortingNotes.md`「演奏オプション」。
   - **计时器不倒数**（用户决定：模拟器不限制玩家时间）：原版 Entry 60 秒、选曲列表 100 秒、难度选择 60 秒倒数，归零替玩家决定（难度选择停在もどる／选项时还会把无效难度传给游戏）；本项目三处都只显示 60／100／60 作占位，不倒数、无 blip 与语音、不自动决定。计时器音效未导入，倒数与 10 秒内红色弹动的代码已删除（`ArcadeTimerView` 只显示固定数字）；如需恢复，参照原版 `Scripts/global/timer.lua` 与 `PortingNotes.md`「Entry 场景」中的记录。
@@ -41,7 +41,8 @@
 - 用户最新决定：GlobalSettingScene 的 Sound 显示 **Master／BGM／Track／Drum／Effects／Voice 音量组＋Output Backend**（及 Return）；音量范围 0–200%、5% 一档，确认后即时保存并生效，鼓音／语音确认时试听。设备、采样率与缓冲等高级参数仅保留在 `settings.json` 的 `audio` 中，不放回菜单。后端按平台显示 Automatic／BASS／Unity，Windows 另有 WASAPI／ASIO，WebGL 仅 Unity。
 - 确认后端后保存，退出设置时通过 SceneSwitcher 淡黑后热切换，进入 Entry 前完成。未改设备参数不重建输出；切换失败恢复之前配置并留在设置显示原因。原生加载与释放共用生命周期锁，旧异步任务按 generation 失效，未领取样本统一释放。切换后端保留配置文件中的其他音频参数。
 - Sound 共 8 行（含 Return），每页 4 行，支持分页／滑动／滚轮；选项弹窗仍最多显示 3 项并支持左右切换，供 Windows 的 5 种后端使用。场景控件通过 `ProjectBuilder.ApplySoundSettings()` 保存。实现 `SoundSettings.cs`、`AudioBus` 音量分组；详情与验证报告见 `PortingNotes.md`「Sound 设置」。
-- **HitFace／HitRing 原生时钟修复**：BASS 的 Stopwatch 时钟在同一帧内仍递增；原 Update 先取时间，再在 OnJudged 取较晚时间，ShowTime 用旧时间导致 elapsed<0，刚生成的效果立即被取消。PlayScene 现在在音频同步修正后捕获一次歌曲时间，整个 Update 及其判定／分支回调共享该时间，结束时释放快照；保留帧间时钟、暂停及动画长度。真实自动演奏帧回归 `HitFeedbackClockTests` 修复前失败；旧的暂停后手动采样测试未覆盖此路径。
+- **统一时钟（2026-10-03）**：`Core/GameTimeline.cs` 集中提供每帧稳定的 `FrameTime`／`AudioFrameTime` 与音频调度用 `AudioNow`；原生后端用 Stopwatch／Frequency，Unity 后端歌曲时间保留 DSP 时钟。`GameLoop` 在输入及场景更新前采样；UI、幕布、暂停菜单统一用 FrameTime，暂停演奏不会停止 UI。`Core/SongClock.cs` 管理歌曲倒计时、暂停恢复、播放调度和 BASS 启动后 2 秒同步校正，`PlayScene` 只使用发布的 SongTime。FPS 测量用实时 Realtime；网络重试的 UTC 时间仍归网络模块。
+- **HitFace／HitRing 原生时钟修复**：BASS 的 Stopwatch 时钟在同一帧内仍递增；原 Update 先取时间，再在 OnJudged 取较晚时间，ShowTime 用旧时间导致 elapsed<0，刚生成的效果立即被取消。当前由 `SongClock` 每帧发布一次歌曲时间，判定、分支回调与动画共用，直到下次更新；暂停时冻结。已删除 PlayScene 原来的临时快照和重复计时字段。真实自动演奏帧回归 `HitFeedbackClockTests` 修复前失败；旧的暂停后手动采样测试未覆盖此路径。
 
 #### 最新完成：在线服务器与 ServerLogin（2026-10-03）
 
@@ -162,8 +163,8 @@
 | `Assets/OurTaiko/Runtime/Core/NoteMoji.cs` | 音符文字帧分配（原 `modifier_moji`），按 `TaikoChart.NoteLists` 逐条处理。 |
 | `Assets/OurTaiko/Runtime/Core/NoteScroll.cs` | 普通位移、对象加载时间与头尾同速的 `RollLength`。 |
 | `Assets/OurTaiko/Runtime/Core/SongDefinition.cs` | 谱面 TextAsset、音乐 AudioClip、课程与音画偏移；TJA 以 `.txt` 导入，音频由显式引用绑定。 |
-| `Assets/OurTaiko/Runtime/Play/PlayScene.cs` | 输入、DSP 歌曲时钟、`AudioSource.PlayScheduled`、暂停恢复、判定反馈、气球破裂音效、音符／身体／尾部渲染和结果显示。 |
-| `Assets/OurTaiko/Runtime/Input/InputManager.cs` | 全局输入入口（参照 MajdataPlay `IO/InputManager`）：逻辑键 `InputKey` 与物理键绑定，监听 Input System 事件保留同帧按键先后顺序，由隐藏的 `InputManagerUpdater`（执行顺序 -32000）每帧在所有场景脚本前发布 `PressesThisFrame`／`GetKeyDown`。场景脚本不得直接读 `Keyboard.current`；触控鼓 `DrumPad` 启用时向 InputManager 注册，由同一次每帧更新对触摸与鼠标做命中检测，与键盘按下按时间顺序合并，当帧生效。 |
+| `Assets/OurTaiko/Runtime/Play/PlayScene.cs` | 输入与玩法驱动；由 SongClock 提供歌曲时间、AudioPlayback 调度音乐；暂停恢复、判定反馈、气球破裂音效、音符／身体／尾部渲染和结果显示。 |
+| `Assets/OurTaiko/Runtime/Input/InputManager.cs` | 全局输入入口（参照 MajdataPlay `IO/InputManager`）：逻辑键 `InputKey` 与物理键绑定，监听 Input System 事件保留同帧按键先后顺序，由隐藏的 `GameLoop`（执行顺序 -32000，先更新时间快照，再发布输入）每帧在所有场景脚本前发布 `PressesThisFrame`／`GetKeyDown`。场景脚本不得直接读 `Keyboard.current`；触控鼓 `DrumPad` 启用时向 InputManager 注册，由同一次每帧更新对触摸与鼠标做命中检测，与键盘按下按时间顺序合并，当帧生效。 |
 | `Assets/OurTaiko/Runtime/Play/BranchLaneView.cs` | 分支轨道色、右侧字样、升降级和过渡动画。 |
 | `Assets/OurTaiko/Runtime/Play/SoulGaugeView.cs` | 50 格魂槽、过关黄色区、新格淡入、满槽彩虹与魂火。 |
 | `Assets/OurTaiko/Runtime/Core/NoteArcPath.cs`、`GaugeHitEffectLayout.cs`、`Generated/Clips/GaugeHitEffect.anim`、`Runtime/Play/NoteArcView.cs`、`GaugeHitEffectView.cs` | 命中音符飞向魂徽章：Nijiiro `note_arc_pivot` 圆弧、30 帧；到达后在徽章播放 GaugeHitEffect（光圈换帧、0.8→1.5 放大、黄→橙→红、383 ms 淡出，音符同步淡出）。`NoteArcs`、`GaugeHitEffect` 层依次在 `SoulGauge` 之后。迁移入口 `ProjectBuilder.ApplyNoteArcs()`。 |

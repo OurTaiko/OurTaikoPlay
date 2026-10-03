@@ -162,13 +162,13 @@ namespace OurTaiko
         Vector2 framePosition, glowPosition, balloonPosition;
         Vector2[] backgroundPositions;
 
-        double Now => Time.realtimeSinceStartupAsDouble * 1000 - startedAt;
+        double Now => GameTimeline.FrameTime * 1000 - startedAt;
         static double Clamp01(double v) => v < 0 ? 0 : v > 1 ? 1 : v;
 
         void Awake()
         {
             switcher = SceneSwitcher.EnsureInstance();
-            startedAt = Time.realtimeSinceStartupAsDouble * 1000;
+            startedAt = GameTimeline.FrameTime * 1000;
             songBoard = LumenClip.Parse(songBoardTimeline.text);
             glowClip = LumenClip.Parse(cursorGlowTimeline.text);
             uraLoop = LumenClip.Parse(uraLoopTimeline.text);

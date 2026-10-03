@@ -231,8 +231,8 @@ namespace OurTaiko
                 while (!operation.isDone) await Awaitable.NextFrameAsync(lifetime);
                 // MajdataPlay waits for target initialization, then another 50 ms before opening.
                 await Awaitable.NextFrameAsync(lifetime);
-                float openAt = Time.realtimeSinceStartup + 0.05f;
-                while (Time.realtimeSinceStartup < openAt) await Awaitable.NextFrameAsync(lifetime);
+                double openAt = GameTimeline.FrameTime + 0.05f;
+                while (GameTimeline.FrameTime < openAt) await Awaitable.NextFrameAsync(lifetime);
                 if (autoFadeOut) await StartTransitionAsync(false);
             }
             catch
@@ -292,10 +292,10 @@ namespace OurTaiko
             transition.blocksRaycasts = true;
             float from = transition.alpha, to = closing ? 1 : 0;
             float duration = closing ? closeDuration : openDuration;
-            float started = Time.realtimeSinceStartup;
-            while (!Mathf.Approximately(from, to) && Time.realtimeSinceStartup - started < duration)
+            double started = GameTimeline.FrameTime;
+            while (!Mathf.Approximately(from, to) && GameTimeline.FrameTime - started < duration)
             {
-                float progress = Mathf.Clamp01((Time.realtimeSinceStartup - started) / duration);
+                float progress = Mathf.Clamp01((float)((GameTimeline.FrameTime - started) / duration));
                 // The same OutQuint curve and real-time durations as MajdataPlay, in pure C#.
                 transition.alpha = Mathf.Lerp(from, to, 1 - Mathf.Pow(1 - progress, 5));
                 await Awaitable.NextFrameAsync(cancellation);
