@@ -18,7 +18,7 @@ namespace OurTaiko.Tests
             yield return null;
             var entry = Object.FindFirstObjectByType<EntryScene>();
             Assert.That(entry, Is.Not.Null);
-            Assert.That(entry.bgm.isPlaying, Is.True);
+            Assert.That(entry.bgm.IsAudioPlaying(), Is.True);
 
             // Credit screen: both rows fade in and blink; the timer stands at 60; no nameplate yet.
             yield return new WaitForSecondsRealtime(0.4f);

@@ -64,8 +64,10 @@ namespace OurTaiko
 
         void Start()
         {
+            sfx.PrepareAudioEffects(don, ka, cloud);
+            voice.PrepareAudioTracks(entryStart, selectMode);
             bgm.loop = true;
-            bgm.Play();
+            bgm.PlayAudio();
         }
 
         void OnDestroy()
@@ -75,7 +77,7 @@ namespace OurTaiko
 
         void OnSceneChanging(string scene)
         {
-            bgm.Stop(); voice.Stop();
+            bgm.StopAudio(); voice.StopAudio();
         }
 
         // The boards (box_manager.cpp's order: 演奏ゲーム first, ゲーム設定 last), their texts and the
@@ -140,7 +142,7 @@ namespace OurTaiko
                 else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft) || InputManager.GetKeyDown(InputKey.MenuUp)) Ka(-1);
                 else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight) || InputManager.GetKeyDown(InputKey.MenuDown)) Ka(1);
             }
-            if (!announced && Flow.IsModeReady(now) && !voice.isPlaying)
+            if (!announced && Flow.IsModeReady(now) && !voice.IsAudioPlaying())
             {
                 announced = true;
                 Play(voice, selectMode);
@@ -185,10 +187,10 @@ namespace OurTaiko
         static void Play(AudioSource source, AudioClip clip, bool oneShot = false)
         {
             if (source == null || clip == null) return;
-            if (oneShot) { source.PlayOneShot(clip); return; }
-            source.Stop();
+            if (oneShot) { source.PlayAudioOneShot(clip); return; }
+            source.StopAudio();
             source.clip = clip;
-            source.Play();
+            source.PlayAudio();
         }
 
         void Show(double now)

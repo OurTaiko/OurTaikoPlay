@@ -186,7 +186,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 结算参照 `scenes/result.cpp`、`objects/result/player.cpp` 与 Nijiiro `Scripts/result/*.lua`：淡入（100 ms 延迟 + 316.67 ms）→ 等待 100 帧 → 每格 7 帧填充魂槽 → 等待 100 帧 → 各行每 50 帧落定、总分再 100 帧 → 500 帧后皇冠 → 过关时再 150 帧显示评语与金色背景（未过关立即显示）。演出结束后需等待 500+500 帧才可返回，3600 帧后自动返回。ScoreRank 演出未移植，因此不插入其 2 秒状态。
 - 动画曲线全部来自原 `Scripts/anim/*.lua` 导出表（云层、富士山、成功背景、皇冠、皇冠光芒、评语气泡、数字弹出、魂火、彩虹、最高分条、曲目板、光晕、おに／裏交替），原样复制为 `.txt` 后由 `LumenClip` 线性采样并在首末行处截断。
 - TMP 的 Mobile SDF 只有在 `OUTLINE_ON` 关键字下绘制描边；新增 `Generated/Nijiiro SDF Outline.mat` 供新场景文字使用，使该着色器变体也会进入播放器构建。
-- 修复：歌曲 AudioClip 为 DecompressOnLoad 且不预载，首次 `PlayScheduled` 会同步解码约 1 秒；现于 PlayScene 初始化时（全局遮罩仍关闭）调用 `LoadAudioData`。
+- 修复：歌曲 AudioClip 为 DecompressOnLoad 且不预载，首次 `PlayScheduled` 会同步解码约 1 秒；当时改为在 PlayScene 初始化时（全局遮罩仍关闭）调用 `LoadAudioData`。2026-10-03 原生音频重做后，此步骤仅保留给 Unity 后端；BASS 后端在幕布下直接准备原始编码文件。
 - 验证：EditMode 108/108、PlayMode 18/18（`TestResults/songselect-editmode.json`、`songselect-playmode.json`）。`SongSelectResultTests` 覆盖选曲、难度光标、裏切换、自动演奏开关、游玩、结算跳过与返回，以及未过关结算；截图在 `TestResults/SongSelect*.png`、`Result*.png`。PlayMode 测试使用临时成绩文件，不写入玩家数据。
 
 ## 游玩页触控鼓（2026-10-01）
@@ -416,8 +416,44 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - **流程**：Entry「演奏ゲーム」→ `ServerLogin`（Build Settings 在 GlobalSettingScene 之后）→ SongSelect。每次进入都重新连接全部启用的服务器（同原版每次从模式选择进入选曲时刷新）。每台服务器依次显示：ログイン（登录并拉取账号成绩）、ゲスト（只拉曲库，不上传成绩）、スキップ（不连接）、もどる（回 Entry）。没有启用的服务器时直接进入 SongSelect。成功登录过的账号下次自动登录（`autoLogin`），密码错误或选择ゲスト后关闭自动登录。键位：咔／方向键移动焦点，咚／Enter 执行；在输入框中 Enter 进入下一栏或登录、Esc 退出输入框；请求中 Esc／もどる 取消请求。
 - **配置**：`persistentDataPath/servers.json`（`ServerList`：`name`、`baseUrl`、`username`、`password`、`httpProxy`、`enabled`、`autoLogin`）。内置两台服务器 OurTaiko Fanmade `https://fanmade.ourtaiko.org` 与 ESE `https://ese-backend.llx.life`（用户指定）：文件缺失时写入两者，已有文件缺少某个内置地址时补上；不要的服务器设 `"enabled": false`（删掉会被补回）。空 `httpProxy` 表示直连（也不读环境代理）。Token 只在内存中。
 - **曲库与文件夹（用户决定：分类文件夹）**：连接时拉 bootstrap 后依次请求所有分类（OurTaikoPlayer 要等打开服务器文件夹才请求）。SongSelect 在本地歌曲之后为每台服务器的每个分类放一个文件夹板，默认全部关闭；层级只有一层（不做服务器文件夹）。照搬 `Navigator::load_current_directory` 无子文件夹的就地展开：文件夹板换成「もどる」（`bar_genre_back`），歌曲按 API 顺序接在后面，每 10 首再插一个もどる（`songs_added % 10 == 0`）；聚焦停在もどる；打开另一个文件夹先收起当前（`collapse_inline_now`），所以同时只有一个；もどる 或 Esc 收起并聚焦回文件夹板。列表末尾另有一个根「もどる」（用户要求，原版 `setup_back_box` 在根目录不加）：曲目轮循环，它位于第一首歌上方，初始聚焦仍是第一首歌；选它与 Esc 一样回到 Entry。从文件夹内歌曲游玩回来时重新打开该文件夹并聚焦该曲（`reopen_folder_path`）；经过 ServerLogin 后全部关闭。文件夹板（Nijiiro `draw_folder_board`）：关闭为 `bar_genre`，聚焦后按 `anim/folder_board`（`Animations/folder_board.txt`，select_on 5／select_off 30，关闭 8 帧）放大为 `folder_graphic`，`box_chara` 左右角色从 340 滑到 440 并淡入，标题上移 94，下方显示「N songs　服务器名」。板颜色按分类 genre（`OnlineManager.GenreFrame`），文件夹内歌曲用所在文件夹的颜色。未移植：Nijiiro 的文件夹进入／退出整轮飞出动画（wheel_decide）、genre 背景条展开、事件／排序文件夹。**曲目轮按需绑定视图**：场景保存的前几块板仍固定属于对应的本地歌曲（保留 Inspector 微调），其余歌曲／文件夹在进入屏幕时从 `SongBoard.prefab`／`Generated/FolderBoard.prefab` 池中取视图、离开时归还；1500 首的文件夹展开时约 120 FPS、视图 < 30 个。迁移 `ProjectBuilder.ApplySongSelectFolders()`（导入 `folder_graphic`／`bar_genre_back` 3-slice、`box_chara` 切左右半，生成 FolderBoard 预制体并绑定到 SongSelect；重复执行文件哈希不变）。
-- **下载**：确定难度后在 SongLoadingScene 的幕布下重新取详情（作者新版本此时生效）、按 SHA-256 校验／下载 TJA 与音频、生成 `play.tja`（API 的块与标题、`WAVE:audio.ogg|mp3`、UTF-8；Shift-JIS 用 `Encoding.GetEncoding(932)`）。进度与错误显示在幕布新增的 `Status` 文字上（迁移 `ProjectBuilder.ApplyCurtainStatus()`）；Esc 取消；失败显示错误码 3 秒后回到选曲。音频用 `UnityWebRequestMultimedia` 从缓存解码。缓存 `persistentDataPath/cache/fanmade/objects/<端点>/<谱面>/<版本>/`。
+- **下载**：确定难度后在 SongLoadingScene 的幕布下重新取详情（作者新版本此时生效）、按 SHA-256 校验／下载 TJA 与音频、生成 `play.tja`（API 的块与标题、`WAVE:audio.ogg|mp3`、UTF-8；Shift-JIS 用 `Encoding.GetEncoding(932)`）。进度与错误显示在幕布新增的 `Status` 文字上（迁移 `ProjectBuilder.ApplyCurtainStatus()`）；Esc 取消；失败显示错误码 3 秒后回到选曲。原生后端直接读取缓存文件交给 BASS 解码；显式 Unity 后端才使用 `UnityWebRequestMultimedia`。缓存 `persistentDataPath/cache/fanmade/objects/<端点>/<谱面>/<版本>/`。
 - **成绩**：正常结束、非自动演奏、该难度 `cloudScoreEligible` 且已登录时，写入 `cache/fanmade/pending/<端点>/<幂等键>.json` 后台发送（每 30 秒重试，重启后继续，同一请求体与 `Idempotency-Key`）；4xx（401／408／429 除外，含 409 换版）改名 `.rejected` 保留。服务器声明 `scoreReplayVersion: 1` 时附带 `replay_data`（`PlayScene.Record`：每次判定的击打，游戏时间毫秒，0 左咔／1 左咚／2 右咚／3 右咔，及音画偏移）。本地 `scores.json` 照常保存（键 `fanmade/<端点>/<谱面>`），结算的历史最高取本地与服务器较高者。
 - **代码**：`Runtime/Online/`（`ServerConfig`、`FanmadeModels`、`FanmadeEndpoint`、`FanmadeClient`、`PlayableTja`、`OnlineManager`），`Runtime/Scenes/ServerLoginScene.cs`／`ServerLoginView.cs`，Editor `ProjectBuilder.ServerLogin.cs`（菜单 OurTaiko/Create Server Login Scene：仅缺失时生成场景，并把 Entry 演奏ゲーム板的 scene 改为 ServerLogin；重复执行文件哈希不变）。界面用 PyTaikoGreen 设置美术（同 GlobalSettingScene）。
 - **测试**：EditMode `FanmadeClientTests`（本地 `HttpListener` 夹具 `Tests/Shared/FanmadeFixture.cs`）、PlayMode `ServerLoginFlowTests`（登录错误／成功、文件夹开合与回来重开、下载、游玩、成绩与回放上传；ゲスト／スキップ、一次只开一个文件夹、下载失败返回；1500 首文件夹的もどる间隔与池化；无服务器直通）。`TestData.Use` 默认无服务器并使用临时缓存；`EntryFlowTests` 的上一场景断言改为 ServerLogin。
 - **未做**：服务器层文件夹、谱师署名轮播、`Loading.png`、真机与独立 Player 验证。
+
+## 跨平台原生音频（2026-10-03，按 MajdataPlay 重做）
+
+行为参考为 TeamMajdata/MajdataPlay `dc19722d602f099131d93b37091624ad30150ad1` 的 `AudioManager`、`BassHelper`、`BassSimpleAudioSample`、`BassAudioSample` 和 `GamePlayManager.AudioTimeUpdate`。参考项目只读。旧的 AudioClip→GetData→浮点 WAV 桥接及八路音效池已删除。
+
+### 依赖
+
+- `Assets/Plugins/ManagedBass` 是 `https://github.com/TeamMajdata/ManagedBass.git` 的 Git 子模块，锁定 `5944aad3842484d78f588d63d5bdc8a85569495b`，不修改源码或 asmdef。克隆后执行 `git submodule update --init --recursive`；更新主仓库后也执行此命令，不用 `--remote`，不自动跟随上游最新版本。
+- `Assets/csc.rsp` 与参考工程一样启用 `-unsafe` 和 `-langVersion:preview`；`System.Runtime.CompilerServices.Unsafe` 6.1.2 的原版 DLL、包来源和 MIT 许可在 `Assets/Plugins/System.Runtime.CompilerServices.Unsafe`。无需把上游 `Unsafe.As` 改成装箱转换。
+- BASS、BASSmix、BASS FX、Opus，以及 Windows/Linux/Android 的 AAC，来自参考项目的原生库；Windows 另含 WASAPI/ASIO。文件散列在 `Un4seen.Bass/provenance.json`，各库许可分别保留。macOS/iOS 的 AAC 由 BASS 调用系统解码器。
+- iOS 通过 Player Settings 的 `__STATIC_LINKING__` 配置 BassMix，使用上游原有条件编译；Bass/Opus/FX 已有 iOS 条件。
+
+### 解码与播放
+
+`NativeAudioSample` 保留原文件编码字节并固定其内存，按 `BassHelper` 顺序尝试 BASS→Opus→AAC（AAC 分支仅 Windows/Linux/Android）。使用 `Prescan|AsyncFile`，不经过 Unity 解码、不复制整首 PCM。
+
+- BassSimple：独立原生播放流，关闭流缓冲；不创建全局 BASSmix。
+- WASAPI/ASIO：无声设备解码，每个采样先经立体声重采样器，再按输出矩阵进入全局浮点混音器；保留参考工程的暂停标志、设备声道数、ASIO channel join 和 WASAPI exclusive/raw/shared 降级顺序。
+- 同一音效重复触发时把原有采样归零重播，不新建声音实例或八路池。不同音效各持一个采样。
+- 歌曲采用参考实现的峰值扫描归一化，场景音效/语音/BGM 不归一化；静音输入保留增益 1。正式歌曲启用 FX tempo，预览关闭（同 SongDetail）；不新增游戏演奏选项。
+- 原生开始由单调时钟到点触发；BassSimple 在开始/恢复后两秒按参考工程的 0.8 系数修正音频与谱面时钟。暂停/离场取消待开始的播放并停止音效。实际输出延迟必须在设备上测量。
+- 保留显式 Unity 后端和原生初始化失败时的 Unity 后备；只有该后端使用 Unity 解码和混音。
+
+### 资源与场景衔接
+
+场景保留 AudioSource/AudioClip 供 Inspector 编辑，播放调用统一经过 `AudioPlayback`。Editor 读取 AudioClip 对应原文件；构建前 `AudioAssetBuild` 将原文件无损包装为 Resources 字节资产并生成引用映射，构建后删除临时目录。这个包装适配 Unity 场景资源及 Android APK，只负责取原文件字节，不负责音频解码。导入资源使用 CompressedInMemory、关闭 preload，不再强制 DecompressOnLoad。
+
+在线歌曲下载完成后保存实际音源路径；SongLoadingScene 在线程池建立原生采样、扫描峰值，将它交给 PlayScene。不创建下载音源的 AudioClip。读盘/解码失败显示错误并回选曲；取消加载会释放未接收的采样。选曲预览在线程池扫描峰值，切歌/离场后丢弃并释放过期结果；直接运行和重开也使用同一原始数据路径。
+
+`AudioBus` 拥有当前歌曲/预览及预载音效，销毁时释放流和固定的编码缓冲；`NativeAudioSample` 对异常中途创建失败同样清理。参考实现中的静音增益无穷大及部分错误路径未释放资源没有照搬。
+
+### 验证
+
+- 全部 EditMode 189/189、全部 PlayMode 59/59（420 秒），覆盖原始 OGG/MP3/M4A/Opus 解码、归一化、FX、混音重采样、暂停恢复、预览、在线下载与完整演奏/结算。报告 `TestResults/audio-redo-editmode.json`、`audio-redo-playmode-final.json`。
+- Windows、Android、iOS、Linux、WebGL 条件编译通过；原生库来源的 60 个文件 SHA-256 与清单一致，Android ARM64 五个音频库均为 16 KB ELF LOAD 对齐。
+- 独立构建与链接结果见 `Documentation/Building.md`。平台编译/构建不等于 Windows 声卡或 Android/iOS 真机输出、延迟验收。

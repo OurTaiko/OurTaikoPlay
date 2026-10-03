@@ -13,3 +13,6 @@ TestResults/
 *.slnx
 *.pidb
 *.unityproj
+
+/Assets/OurTaikoNativeAudioBuild/
+/Assets/OurTaikoNativeAudioBuild.meta

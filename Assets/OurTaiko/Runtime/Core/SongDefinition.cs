@@ -7,6 +7,12 @@ namespace OurTaiko
     {
         public TextAsset chart;
         public AudioClip music;
+        [System.NonSerialized] public string audioPath;
+        NativeAudioSample preparedAudio;
+        public bool HasPreparedAudio => preparedAudio != null;
+        public void SetPreparedAudio(NativeAudioSample audio) { preparedAudio?.Dispose(); preparedAudio = audio; }
+        public NativeAudioSample TakePreparedAudio() { var audio = preparedAudio; preparedAudio = null; return audio; }
+        void OnDisable() { preparedAudio?.Dispose(); preparedAudio = null; }
         public string course = "Oni";
         [Tooltip("Positive values delay judgments relative to the music, in milliseconds.")]
         public float audioOffsetMs;

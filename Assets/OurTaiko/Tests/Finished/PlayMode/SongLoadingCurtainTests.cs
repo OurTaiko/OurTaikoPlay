@@ -61,7 +61,7 @@ namespace OurTaiko.Tests
             Assert.That(curtain.stars.All(s => s.enabled && Mathf.Approximately(s.color.a, 1)), Is.True);
             Assert.That(curtain.band.rectTransform.sizeDelta, Is.EqualTo(new Vector2(1600, 256)));
             yield return WaitUntil(() => loader.IsLoaded);
-            Assert.That(song.music.loadState, Is.EqualTo(AudioDataLoadState.Loaded), "The song is in memory before play.");
+            Assert.That(song.HasPreparedAudio, Is.True, "The native song is ready before play.");
             Capture("SongLoading.png");
 
             yield return WaitUntil(() => SceneSwitcher.CurrentScene == SceneSwitcher.GameScene);

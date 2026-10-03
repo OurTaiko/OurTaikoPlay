@@ -9,7 +9,7 @@
 ## 2. 当前已知事实/约束条件
 
 - 工作项目：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayerUnity`；玩法参考源码：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayer`；全局场景切换架构参照相邻 MajdataPlay 的 `Assets/Scripts/Global/SceneSwitcher.cs`。两个参考项目都只读，不修改。
-- 技术栈：Unity **6000.3.25f1**、Universal 2D／URP **17.3.0**、uGUI、TextMeshPro、Input System。运行逻辑和 Editor 工具全部使用 **C#**，不引入 C++、Lua 或原模拟器的原生插件。
+- 技术栈：Unity **6000.3.25f1**、Universal 2D／URP **17.3.0**、uGUI、TextMeshPro、Input System。运行逻辑和 Editor 工具全部使用 **C#**，不引入 C++、Lua 或原模拟器的原生插件。**音频例外（用户要求，2026-10-03）**：采用 MajdataPlay 的原文件字节直接解码流程（BASS→Opus→AAC）、BassSimple 直接输出及 Windows WASAPI／ASIO 混音；同一音效重播已有采样，歌曲峰值归一化。ManagedBass 使用未修改的 TeamMajdata Git 子模块，克隆后 `git submodule update --init --recursive`；原生库包括 BASS／BASSmix／FX／Opus／AAC／WASAPI／ASIO，C# 管理层在 `Runtime/Audio/`；保留 AudioSource 作为场景资源引用，运行时统一调用 `AudioPlayback`，不能直接 Play／PlayOneShot 绕过后端。详见 `PortingNotes.md`「跨平台原生音频」。
 - 所有场景设计画布与默认窗口均为 **1920×1080**（SongSelect／Result 的 Viewport 带 RectMask2D）；宽高比变化时保持设计区域比例并居中留边。贴图对齐与局部偏移使用相对锚点或尺寸比例，不能写成固定屏幕像素补丁。
 - 当前只做 **Nijiiro**。素材主要来自 `Skins/YataiDONNijiiro`；缺少的资源已从 Green 直接复制补齐并打平。不实现皮肤继承、运行时回退或 Green 皮肤切换。图片保持原文件，使用 Sprite 切片；来源见 `Documentation/ImportedAssets.json`，保留 LICENSE／NOTICE 与资源权利归属。
 - 默认目标 **120 FPS**：关闭 VSync，`renderFrameInterval = 1`，`targetFrameRate = 120`；可在设置 Display › Target Frame Rate 改为 60 FPS 或 Unlimited，Display › VSync（默认关）开启后 `vSyncCount = 1`，桌面端由刷新率取代目标帧率，移动端忽略 VSync（`DisplaySettings.Apply`，由 `SceneSwitcher` 启动时及设置变化时应用）。FPS 计数器每 **0.5 秒**显示实际平均帧率，暂停时仍更新；目标帧率不保证显示器实际达到 120 Hz。

@@ -10,6 +10,7 @@ namespace OurTaiko
     {
         public PlaySettings play = new PlaySettings();
         public DisplaySettings display = new DisplaySettings();
+        public AudioOptions audio = new AudioOptions();
 
         public GameSettings Clone() => FromJson(ToJson());
         public string ToJson() => JsonUtility.ToJson(this, true);
@@ -20,6 +21,7 @@ namespace OurTaiko
             if (!string.IsNullOrWhiteSpace(json)) JsonUtility.FromJsonOverwrite(json, settings);
             settings.play ??= new PlaySettings();
             settings.display ??= new DisplaySettings();
+            settings.audio ??= new AudioOptions();
             return settings;
         }
     }

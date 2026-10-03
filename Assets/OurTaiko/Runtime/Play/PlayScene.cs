@@ -49,7 +49,7 @@ namespace OurTaiko
         public PlayResult Result { get; private set; }
         // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
         public Online.PlayRecord Record { get; private set; }
-        public double SongTime => !isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioSettings.dspTime - startDsp;
+        public double SongTime => !isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioEngine.Clock - startDsp;
         public double RenderedTime { get; private set; }
         // Views come from pools while a note is on the lane; null when it is not drawn.
         public RectTransform NoteRoot(int index) => shownNotes[index]?.Root;
@@ -58,7 +58,7 @@ namespace OurTaiko
         SongDefinition song;
         bool autoPlay, isReady, hitKa;
         SceneSwitcher switcher;
-        double startDsp, frozenTime;
+        double startDsp, frozenTime, audioSyncUntil;
         float feedbackTime = -10;
         readonly float[] flashedAt = { -10, -10, -10, -10 };
         ClipSampler[] flashClips;
@@ -132,7 +132,9 @@ namespace OurTaiko
                 title.text = Session.Chart.Title;
                 subtitle.text = $"{Session.Chart.Subtitle}    {Session.Chart.Course.ToUpperInvariant()}  LV.{Session.Chart.Level}";
                 CreateNotes();
-                music.clip = song.music;
+                music.SetAudioSong(song);
+                hitAudio.PrepareAudioEffects(don, ka, balloonPop);
+                hitAudio.PrepareAudioEffects(comboAnnounce.voices);
                 UpdateHud();
             }
             catch (Exception error)
@@ -142,12 +144,9 @@ namespace OurTaiko
                 resultText.text = "CHART COULD NOT LOAD\n<size=22>" + error.Message + "</size>";
             }
             if (IsFinished) yield break;
-            // The clip decompresses on load; do it behind the global cover, not on the first PlayScheduled.
-            foreach (var clip in new[] { music.clip, don, ka })
-                if (clip != null && clip.loadState != AudioDataLoadState.Loaded) clip.LoadAudioData();
             while (switcher.IsInputBlocked) yield return null;
             // Start the full countdown and DSP clock only after the global cover has opened.
-            startDsp = AudioSettings.dspTime + Math.Max(2, Session.Chart.Offset + 2);
+            startDsp = AudioEngine.Clock + Math.Max(2, Session.Chart.Offset + 2);
             isReady = true;
             ScheduleMusic();
         }
@@ -162,19 +161,20 @@ namespace OurTaiko
 
         void ScheduleMusic()
         {
-            music.Stop();
-            if (music.clip == null) return;
-            double time = AudioSettings.dspTime - startDsp;
-            if (time >= music.clip.length) return;
-            if (time < 0) { music.timeSamples = 0; music.PlayScheduled(startDsp); }
+            music.StopAudio();
+            audioSyncUntil = Math.Max(AudioEngine.Clock, startDsp) + 2;
+            if (music.AudioLength() <= 0) return;
+            double time = AudioEngine.Clock - startDsp;
+            if (time >= music.AudioLength()) return;
+            if (time < 0) { music.SeekAudio(0); music.PlayAudioScheduled(startDsp); }
             else
             {
                 // Schedule both the clip position and chart origin against the same DSP clock.
                 const double lead = 0.05;
                 double resumeAt = time + lead;
-                if (resumeAt >= music.clip.length) return;
-                music.timeSamples = Math.Min(music.clip.samples - 1, (int)(resumeAt * music.clip.frequency));
-                music.PlayScheduled(AudioSettings.dspTime + lead);
+                if (resumeAt >= music.AudioLength()) return;
+                music.SeekAudio(Math.Min(music.AudioLength() - 1.0 / 48000, resumeAt));
+                music.PlayAudioScheduled(AudioEngine.Clock + lead);
             }
         }
 
@@ -187,6 +187,14 @@ namespace OurTaiko
             if (InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
             if (IsPaused) { pauseMenu.HandleInput(); return; }
             if (Session == null || IsFinished) return;
+            // Like MajdataPlay, use the monotonic clock between frames and align BASS's
+            // device playback position during the first two seconds after start/resume.
+            if (AudioEngine.EnsureInstance().Backend == AudioBackend.Bass && SongTime > 0
+                && AudioEngine.Clock < audioSyncUntil && music.IsAudioPlaying())
+            {
+                double position = music.AudioPosition();
+                if (position > 0) startDsp += (SongTime - position) * 0.8;
+            }
             double time = SongTime - song.audioOffsetMs / 1000.0;
             Session.Advance(time, autoPlay);
             if (branchLane != null) branchLane.ShowTime(time);
@@ -203,7 +211,7 @@ namespace OurTaiko
             hitFace.ShowTime(time);
             hitRing.ShowTime(time);
             for (int i = 0; i < drumFlashes.Length; i++) ShowFlash(i);
-            if (time > Math.Max(Session.Chart.Duration, song.music != null ? song.music.length : 0) + 1) Finish();
+            if (time > Math.Max(Session.Chart.Duration, music.AudioLength()) + 1) Finish();
         }
 
         // Input mutex: a frame judges only its earliest drum press; later ones in the same frame are dropped.
@@ -228,7 +236,7 @@ namespace OurTaiko
         void Feedback(bool isKa, bool right)
         {
             var clip = isKa ? ka : don;
-            if (clip != null) hitAudio.PlayOneShot(clip);
+            if (clip != null) hitAudio.PlayAudioOneShot(clip);
             int flash = (isKa ? 2 : 0) + (right ? 1 : 0);
             flashedAt[flash] = Time.unscaledTime;
             ShowFlash(flash);
@@ -258,7 +266,7 @@ namespace OurTaiko
                 var note = Session.Chart.Notes[index];
                 balloonCounter.RecordHit(index, note.BalloonHits, Session.LongHits[index], note.EndTime,
                     SongTime - song.audioOffsetMs / 1000.0);
-                if (Session.LongHits[index] == note.BalloonHits) hitAudio.PlayOneShot(balloonPop);
+                if (Session.LongHits[index] == note.BalloonHits) hitAudio.PlayAudioOneShot(balloonPop);
             }
             UpdateHud();
         }
@@ -290,7 +298,7 @@ namespace OurTaiko
             if (Session.Combo != lastCombo && Session.Combo > 0 && Session.Combo % 100 == 0)
             {
                 var voice = comboAnnounce.Announce(Session.Combo, SongTime - song.audioOffsetMs / 1000.0);
-                if (voice != null) hitAudio.PlayOneShot(voice);
+                if (voice != null) hitAudio.PlayAudioOneShot(voice);
             }
             lastCombo = Session.Combo;
         }
@@ -305,7 +313,7 @@ namespace OurTaiko
             frozenTime = SongTime;
             IsPaused = true;
             pauseOpenedFrame = Time.frameCount;
-            music.Stop(); hitAudio.Stop();
+            music.StopAudio(); hitAudio.StopAudio();
             DisableDrumPads();
             pauseButton.interactable = false;
             pauseMenu.Show();
@@ -325,7 +333,7 @@ namespace OurTaiko
                     pauseMenu.Show();
                     return;
                 }
-                startDsp = AudioSettings.dspTime - frozenTime;
+                startDsp = AudioEngine.Clock - frozenTime;
                 IsPaused = false;
                 resumeFrame = Time.frameCount;
                 ScheduleMusic();
@@ -361,7 +369,7 @@ namespace OurTaiko
         // GameScreen::end_song: store the record, then hand the result to the Result scene.
         void Finish()
         {
-            frozenTime = SongTime; IsFinished = true; music.Stop();
+            frozenTime = SongTime; IsFinished = true; music.StopAudio();
             Result = PlayResult.From(Session, song.name, autoPlay);
             ScoreStore.Shared.Save(Result);
             SubmitOnline();
@@ -394,7 +402,7 @@ namespace OurTaiko
         void PrepareToLeave(string scene)
         {
             frozenTime = SongTime; IsPaused = true;
-            music.Stop(); hitAudio.Stop();
+            music.StopAudio(); hitAudio.StopAudio();
             DisableDrumPads();
         }
         void OnDestroy()

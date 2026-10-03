@@ -104,8 +104,12 @@ namespace OurTaiko
 
         void Start()
         {
+            sfx.PrepareAudioEffects(don, donBig, countStop, achieve, atmosClear, crownSilver, crownGold, crownRainbow);
+            voice.PrepareAudioTracks(highScoreVoice, fullComboVoice);
+            voice.PrepareAudioTracks(messageVoices);
+            loop.PrepareAudioTracks(countLoop);
             bgm.loop = true;
-            bgm.Play();
+            bgm.PlayAudio();
         }
 
         void OnDestroy()
@@ -116,7 +120,7 @@ namespace OurTaiko
         void OnSceneChanging(string scene)
         {
             IsLeaving = true;
-            loop.Stop();
+            loop.StopAudio();
         }
 
         void Update()
@@ -162,13 +166,13 @@ namespace OurTaiko
             if (Sequence.RevealEndMs <= 0)
             {
                 if (!Sequence.Skip()) return;
-                sfx.PlayOneShot(this.don);
-                loop.Stop();
-                sfx.PlayOneShot(donBig);
+                sfx.PlayAudioOneShot(this.don);
+                loop.StopAudio();
+                sfx.PlayAudioOneShot(donBig);
                 return;
             }
             if (!Sequence.CanAdvance) return;
-            sfx.PlayOneShot(this.don);
+            sfx.PlayAudioOneShot(this.don);
             Leave();
         }
 
@@ -183,28 +187,28 @@ namespace OurTaiko
         {
             switch (cue)
             {
-                case ResultCue.CountLoopStart: loop.clip = countLoop; loop.loop = true; loop.Play(); break;
-                case ResultCue.CountLoopStop: loop.Stop(); break;
-                case ResultCue.AchieveSoul: sfx.PlayOneShot(achieve); break;
-                case ResultCue.RowLanded: sfx.PlayOneShot(countStop); break;
-                case ResultCue.ScoreLanded: sfx.PlayOneShot(donBig); break;
+                case ResultCue.CountLoopStart: loop.clip = countLoop; loop.loop = true; loop.PlayAudio(); break;
+                case ResultCue.CountLoopStop: loop.StopAudio(); break;
+                case ResultCue.AchieveSoul: sfx.PlayAudioOneShot(achieve); break;
+                case ResultCue.RowLanded: sfx.PlayAudioOneShot(countStop); break;
+                case ResultCue.ScoreLanded: sfx.PlayAudioOneShot(donBig); break;
                 case ResultCue.HighScore: PlayVoice(highScoreVoice); break;
                 case ResultCue.Crown:
                     var crown = Result.ResultCrown;
-                    sfx.PlayOneShot(crown == Crown.DonderfulCombo ? crownRainbow : crown == Crown.FullCombo ? crownGold : crownSilver);
+                    sfx.PlayAudioOneShot(crown == Crown.DonderfulCombo ? crownRainbow : crown == Crown.FullCombo ? crownGold : crownSilver);
                     if (crown == Crown.FullCombo || crown == Crown.DonderfulCombo) PlayVoice(fullComboVoice);
                     break;
                 case ResultCue.Message: PlayVoice(messageVoices[(int)Result.Message]); break;
-                case ResultCue.SuccessBackground: successAt = clock; sfx.PlayOneShot(atmosClear); break;
+                case ResultCue.SuccessBackground: successAt = clock; sfx.PlayAudioOneShot(atmosClear); break;
             }
         }
 
         void PlayVoice(AudioClip clip)
         {
             if (clip == null) return;
-            voice.Stop();
+            voice.StopAudio();
             voice.clip = clip;
-            voice.Play();
+            voice.PlayAudio();
         }
 
         // ---------------------------------------------------------------- drawing

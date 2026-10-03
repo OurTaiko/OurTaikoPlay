@@ -33,8 +33,9 @@ namespace OurTaiko
         void Start()
         {
             if (bgm == null || bgm.clip == null) return;
+            sfx.PrepareAudioEffects(don, ka);
             bgm.loop = true;
-            bgm.Play();
+            bgm.PlayAudio();
         }
 
         void OnDestroy()
@@ -44,7 +45,7 @@ namespace OurTaiko
 
         void OnSceneChanging(string scene)
         {
-            if (bgm != null) bgm.Stop();
+            if (bgm != null) bgm.StopAudio();
         }
 
         void Update()
@@ -79,7 +80,7 @@ namespace OurTaiko
 
         void Play(AudioClip clip)
         {
-            if (sfx != null && clip != null) sfx.PlayOneShot(clip);
+            if (sfx != null && clip != null) sfx.PlayAudioOneShot(clip);
         }
     }
 }

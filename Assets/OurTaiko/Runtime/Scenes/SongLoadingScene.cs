@@ -54,10 +54,45 @@ namespace OurTaiko
             // GameScreen::init_tja, moved behind the curtain: the parse and Player::reset_chart's options.
             try { switcher.SetPreparedChart(song, course, PlayScene.PrepareChart(song, course)); }
             catch (Exception error) { Debug.LogException(error, this); }  // SinglePlayScene parses again and shows it.
-            var clip = song != null ? song.music : null;
-            if (clip != null && clip.loadState != AudioDataLoadState.Loaded) clip.LoadAudioData();
-            while (clip != null && clip.loadState == AudioDataLoadState.Loading) yield return null;
-            if (clip != null && clip.loadState == AudioDataLoadState.Failed) Debug.LogError("Could not load song audio: " + clip.name, this);
+            var engine = AudioEngine.EnsureInstance();
+            if (engine.Native && song != null && (song.music != null || !string.IsNullOrEmpty(song.audioPath)))
+            {
+                byte[] encoded = null;
+                try { if (string.IsNullOrEmpty(song.audioPath)) encoded = AudioAssetCatalog.Read(song.music); }
+                catch (Exception error) { Error = "AUDIO_LOAD_FAILED"; Debug.LogException(error); }
+                if (Error == null)
+                {
+                    string path = song.audioPath;
+                    var preparation = Task.Run(() => new NativeAudioSample(encoded ?? System.IO.File.ReadAllBytes(path), engine, true, true));
+                    // A cancelled scene must still release a completed native decode.
+                    bool claimed = false;
+                    try
+                    {
+                        while (!preparation.IsCompleted) yield return null;
+                        if (preparation.IsCompletedSuccessfully) { song.SetPreparedAudio(preparation.Result); claimed = true; }
+                        else { Error = "AUDIO_DECODE_FAILED"; Debug.LogException(preparation.Exception.GetBaseException()); }
+                    }
+                    finally
+                    {
+                        if (!claimed) _ = preparation.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
+                    }
+                }
+            }
+            else
+            {
+                var clip = song != null ? song.music : null;
+                if (clip != null && clip.loadState != AudioDataLoadState.Loaded) clip.LoadAudioData();
+                while (clip != null && clip.loadState == AudioDataLoadState.Loading) yield return null;
+                if (clip != null && clip.loadState == AudioDataLoadState.Failed) Error = "AUDIO_DECODE_FAILED";
+            }
+            if (Error != null)
+            {
+                switcher.Curtain?.SetStatus(Error, new Color(1, 0.35f, 0.35f));
+                yield return new WaitForSecondsRealtime(errorSeconds);
+                while (switcher.IsSwitching) yield return null;
+                switcher.SwitchScene(switcher.ReturnScene);
+                yield break;
+            }
             IsLoaded = true;
 
             while (Time.realtimeSinceStartup - started < minimumSeconds || switcher.IsSwitching) yield return null;
@@ -89,9 +124,17 @@ namespace OurTaiko
             var (path, chart) = task.Result;
             switcher.Curtain?.SetStatus("音源を読み込み中…");
             string audio = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path), chart.CachedAudioName);
-            var type = chart.CachedAudioName.EndsWith(".mp3", StringComparison.Ordinal) ? AudioType.MPEG : AudioType.OGGVORBIS;
-            using (var request = UnityWebRequestMultimedia.GetAudioClip(new Uri(audio).AbsoluteUri, type))
+            string text;
+            try { text = System.IO.File.ReadAllText(path); }
+            catch (Exception error) { Error = "CACHE_READ_FAILED"; Debug.LogException(error); yield break; }
+            if (AudioEngine.EnsureInstance().Native)
             {
+                online.SetPrepared(song, chart, text, null);
+                song.audioPath = audio;
+            }
+            else
+            {
+                using var request = UnityWebRequestMultimedia.GetAudioClip(new Uri(audio).AbsoluteUri, AudioType.UNKNOWN);
                 ((DownloadHandlerAudioClip)request.downloadHandler).streamAudio = false;
                 yield return request.SendWebRequest();
                 if (request.result != UnityWebRequest.Result.Success)
@@ -102,10 +145,8 @@ namespace OurTaiko
                 }
                 var clip = DownloadHandlerAudioClip.GetContent(request);
                 clip.name = song.name;
-                string text;
-                try { text = System.IO.File.ReadAllText(path); }
-                catch (Exception error) { Error = "CACHE_READ_FAILED"; Debug.LogException(error); yield break; }
                 online.SetPrepared(song, chart, text, clip);
+                song.audioPath = audio;
             }
             switcher.ShowSongOnCurtain(song);
             switcher.Curtain?.SetStatus("");
