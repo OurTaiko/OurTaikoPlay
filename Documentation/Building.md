@@ -4,9 +4,9 @@ Unity **6000.3.25f1**。打开项目后使用 **OurTaiko → Build**，可以单
 
 | 菜单 | 产物 | 架构／脚本后端 |
 | --- | --- | --- |
-| macOS Universal | `Builds/macOS/OurTaikoPlayerUnity.app` | Intel x64 + Apple Silicon ARM64／Mono |
-| Windows x64 | `Builds/Windows/OurTaikoPlayerUnity.exe` 及同目录依赖 | x64／Mono，可从 macOS 交叉构建 |
-| Android ARM64 APK | `Builds/Android/OurTaikoPlayerUnity.apk` | ARM64／IL2CPP |
+| macOS Universal | `Builds/macOS/OurTaikoPlay.app` | Intel x64 + Apple Silicon ARM64／Mono |
+| Windows x64 | `Builds/Windows/OurTaikoPlay.exe` 及同目录依赖 | x64／Mono，可从 macOS 交叉构建 |
+| Android ARM64 APK | `Builds/Android/OurTaikoPlay.apk` | ARM64／IL2CPP |
 | iOS Xcode Project | `Builds/iOS/Unity-iPhone.xcodeproj` | 设备 ARM64／IL2CPP |
 
 两个移动平台的 application identifier 均为 **`org.ourtaiko.play`**。移动端仅允许左右横屏，Android 声明联网权限。版本沿用 Player Settings 的 Bundle Version、Android Version Code 和 iOS Build Number。`Configure Platforms` 可单独应用设置。桌面不需要 C++ 构建工具；Android／iOS 的 IL2CPP 是 Unity 构建后端，不引入手写原生玩法代码。
@@ -69,3 +69,7 @@ Unity 平台切换与批处理规则参考：[Build a player from the command li
 - Android ARM64 APK 约 102 MiB，包含 BASS/BASSmix/FX/Opus/AAC；包内 12 个原生库 ELF LOAD 均为 16 KB 对齐，16 KB ZIP 对齐与 APK v2 签名校验通过。`TestResults/audio-redo-android-artifact.json`。
 - iOS Xcode Release 设备 ARM64 无签名编译、链接通过，最终 app 嵌入 UnityFramework 与 bass/bassmix/bass_fx/bassopus 四个框架；`TestResults/audio-redo-ios-xcode.log`。Unity 生成代码仍有 SDK 弃用和构建脚本输出声明警告。
 - 全部 EditMode 189/189、PlayMode 59/59；Android/iOS 真机安装、系统音频路由与端到端延迟尚未验证。编辑器恢复为 macOS 目标。上节桌面压缩包是旧音频版本，当前版本请使用各平台构建目录。
+
+## 项目更名（2026-10-03）
+
+产品名称改为 `OurTaikoPlay`，后续 macOS/Windows/Android 构建输出分别为 `OurTaikoPlay.app`、`OurTaikoPlay.exe`、`OurTaikoPlay.apk`，iOS 显示名称同步采用新名称。移动包名仍为 `org.ourtaiko.play`。本地项目目录仍为 `OurTaikoPlayerUnity`，上面的旧产物路径记录当时的实际构建名称。桌面端存档目录随产品名称变化；沿用旧存档时，将旧名称目录的设置、成绩及缓存复制到新名称目录，保留原文件。移动端包名不变。

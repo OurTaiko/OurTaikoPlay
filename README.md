@@ -1,4 +1,4 @@
-# OurTaikoPlayerUnity
+# OurTaikoPlay
 
 从相邻 `OurTaikoPlayer` 提取单人游玩页面的 Unity 2D 工程。使用 **Unity 6000.3.25f1 / Universal 2D / uGUI + TextMeshPro**。所有新增运行逻辑和 Editor 工具均为 **C#**，不包含 C++、Lua 或原项目的原生插件。
 
@@ -103,4 +103,4 @@ unity test . --mode PlayMode --output TestResults/playmode.xml
 unity run . -- -executeMethod OurTaiko.Editor.ProjectBuilder.BuildMac
 ```
 
-Mac 开发构建输出到 `Builds/OurTaikoPlayerUnity.app`。以上构建与测试不代表移动设备的音频延迟已经校准。
+macOS 构建输出到 `Builds/macOS/OurTaikoPlay.app`；其他平台构建方式见 [构建说明](Documentation/Building.md)。以上构建与测试不代表移动设备的音频延迟已经校准。

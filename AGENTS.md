@@ -4,6 +4,8 @@
 
 ## 1. 核心项目目标
 
+项目产品名称为 **OurTaikoPlay**（2026-10-03 从 OurTaikoPlayerUnity 更名），构建文件使用新名称；移动包名 `org.ourtaiko.play`。
+
 将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件、Entry、ServerLogin（在线服务器登录）、SongSelect、SongLoadingScene、SinglePlayScene 与 Result 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行单人流程。SceneSwitcher 不是场景；入口为 Entry（Build Settings 首个场景、`SceneSwitcher.MenuScene`；2026-10-02 删除 Test_DefaultScene 测试入口及 LaunchMenu，随后移植 Entry），所有运行时场景切换从全局控件开始，并交由它完成。
 
 ## 2. 当前已知事实/约束条件
