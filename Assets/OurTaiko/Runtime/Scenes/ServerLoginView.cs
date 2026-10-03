@@ -26,7 +26,7 @@ namespace OurTaiko
         public Image usernameBox, passwordBox;
         public Button[] buttons = Array.Empty<Button>();
         public Sprite fieldOff, fieldOn, buttonOff, buttonOn;
-        public Color messageColor = Color.white, errorColor = new Color(1, 0.42f, 0.42f), successColor = new Color(0.55f, 1, 0.55f);
+        public Color messageColor = Color.black, errorColor = new Color(1, 0.42f, 0.42f), successColor = new Color(0.55f, 1, 0.55f);
 
         public static readonly Item[] Order = { Item.Username, Item.Password, Item.Login, Item.Guest, Item.Skip, Item.Back };
 
