@@ -9,40 +9,25 @@ namespace OurTaiko
     // Entry:draw_background (Nijiiro entry.lua): the street, four twinkles and two lantern glows
     // sampled from anim/entry_bg (a 360-frame loop), and the street-light flash over the first
     // 19 frames only. The other parent layers (tower, shops, people, lights) are not drawn.
+    // The images are saved in the scene (EntryView); only alpha and twinkle scale change here.
     public sealed class EntryBackground
     {
-        // {texture index (position), texture frame, track}
-        static readonly (int Index, int Frame, string Track)[] Twinkles = {
-            (0, 0, "#11@1/#5@0/#3@0"), (1, 0, "#11@1/#9@2/#3@0"),
-            (2, 1, "#11@1/#8@1/#6@0"), (3, 1, "#11@1/#10@3/#6@0"),
-        };
-        static readonly Vector2[] TwinklePositions = { new Vector2(1186, -142), new Vector2(576, 16), new Vector2(206, -108), new Vector2(928, 104) };
-        static readonly Vector2[] GlowPositions = { new Vector2(0, 186), new Vector2(1331, 234) };
+        // anim/entry_bg track of each twinkle (EntryView.twinkles order)
+        static readonly string[] TwinkleTracks = { "#11@1/#5@0/#3@0", "#11@1/#9@2/#3@0", "#11@1/#8@1/#6@0", "#11@1/#10@3/#6@0" };
         const double StreetLitFrames = 19;
 
         readonly LumenClip clip;
         readonly double loopFrames;
-        readonly Image[] twinkles = new Image[4], glows = new Image[2];
+        readonly Image[] twinkles, glows;
         readonly Image streetLit;
 
-        public EntryBackground(Transform parent, Sprite background, Sprite street, Sprite[] glow, Sprite[] twinkle, LumenClip clip)
+        public EntryBackground(EntryView view, LumenClip clip)
         {
             this.clip = clip;
             loopFrames = Math.Max(1, clip.Last - clip.First + 1);
-            var root = SkinUi.Rect("Background", parent);
-            SkinUi.Image("Street", root, background, 1920, 1080).rectTransform.TopLeft(0, 0);
-            for (int i = 0; i < twinkles.Length; i++)
-            {
-                twinkles[i] = SkinUi.Image("Twinkle" + i, root, twinkle[Twinkles[i].Frame]);
-                twinkles[i].rectTransform.TopLeft(TwinklePositions[i].x, TwinklePositions[i].y);
-            }
-            for (int i = 0; i < glows.Length; i++)
-            {
-                glows[i] = SkinUi.Image("Glow" + i, root, glow[i]);
-                glows[i].rectTransform.TopLeft(GlowPositions[i].x, GlowPositions[i].y);
-            }
-            streetLit = SkinUi.Image("StreetLit", root, street, 1920, 1080);
-            streetLit.rectTransform.TopLeft(0, 0);
+            twinkles = view.twinkles;
+            glows = view.glows;
+            streetLit = view.streetLit;
         }
 
         public void Show(double elapsedMs)
@@ -51,8 +36,9 @@ namespace OurTaiko
             double f = frames % loopFrames;
             for (int i = 0; i < twinkles.Length; i++)
             {
-                double? scale = clip.Get(Twinkles[i].Track, f, "sx");
-                float alpha = (float)(clip.Get(Twinkles[i].Track, f, "a") ?? 0);
+                string track = TwinkleTracks[i % TwinkleTracks.Length];
+                double? scale = clip.Get(track, f, "sx");
+                float alpha = (float)(clip.Get(track, f, "a") ?? 0);
                 twinkles[i].Alpha(scale.HasValue && alpha > 0.002f ? alpha : 0);
                 if (scale.HasValue) twinkles[i].rectTransform.localScale = Vector3.one * (float)scale.Value;
             }
@@ -69,52 +55,22 @@ namespace OurTaiko
     // the rows fade out.
     public sealed class EntryCredit
     {
-        const float LabelX = 960 - 443, MessageX = 960 + 190, FontSize = 56;
-        static readonly float[] RowY = { 432 + 72, 432 + 248 };
         const double LoopStart = 5, LoopFrames = 120, DecideFlashFrames = 24;
 
         readonly LumenClip row, fade;
-        readonly Image[] pills = new Image[2], flashes = new Image[2];
-        readonly TextMeshProUGUI[] labels = new TextMeshProUGUI[2], messages = new TextMeshProUGUI[2], highlights = new TextMeshProUGUI[2];
+        readonly Image[] pills, flashes;
+        readonly TextMeshProUGUI[] labels, messages, highlights;
 
         public float Alpha { get; private set; }
         public float FlashAlpha { get; private set; }
         public bool IsVisible => Alpha > 0.002f;
 
-        public EntryCredit(Transform parent, Sprite pill, Sprite flash, LumenClip row, LumenClip fade)
+        public EntryCredit(EntryView view, LumenClip row, LumenClip fade)
         {
             this.row = row; this.fade = fade;
-            var root = SkinUi.Rect("Credit", parent);
-            string[] names = { "１人プレイ", "２人プレイ" };
-            for (int i = 0; i < 2; i++)
-            {
-                pills[i] = SkinUi.Image("Pill" + (i + 1), root, pill);
-                pills[i].rectTransform.TopLeft(380, 404 + i * 176);
-                // entry_credit_Np: black fill
-                labels[i] = Text(root, "Label" + (i + 1), Color.black, names[i]);
-                labels[i].alignment = TextAlignmentOptions.MidlineLeft;
-                labels[i].rectTransform.pivot = new Vector2(0, 0.5f);
-                labels[i].rectTransform.anchoredPosition = new Vector2(LabelX, -RowY[i]);
-                // entry_credit_start: white fill; a highlighted copy blends over it
-                messages[i] = Text(root, "Message" + (i + 1), Color.white, "太鼓をたたいてスタート！");
-                messages[i].rectTransform.Center(MessageX, RowY[i]);
-                highlights[i] = Text(root, "Highlight" + (i + 1), Color.white, "太鼓をたたいてスタート！");
-                highlights[i].rectTransform.Center(MessageX, RowY[i]);
-            }
-            for (int i = 0; i < 2; i++)
-            {
-                flashes[i] = SkinUi.Image("Flash" + (i + 1), root, flash);
-                flashes[i].rectTransform.TopLeft(380, 404 + i * 176);
-            }
-        }
-
-        static TextMeshProUGUI Text(Transform parent, string name, Color fill, string value)
-        {
-            var text = SkinUi.Text(name, parent, FontSize);
-            text.color = fill;
-            text.UseUiFont();
-            text.text = value;
-            return text;
+            pills = view.creditPills; flashes = view.creditFlashes;
+            labels = view.creditLabels; messages = view.creditMessages; highlights = view.creditHighlights;
+            view.credit.gameObject.SetActive(true);
         }
 
         // Credit screen: rows fade in on credit_fade frames 5..15 and blink together (arcade model).
@@ -146,7 +102,7 @@ namespace OurTaiko
             FlashAlpha = flashRow >= 0 ? alpha * flash : 0;
             float message = (float)row.Get("text_message_instance", frame, "a", 1);
             float yellow = (float)(row.Get("text_message_instance_2", frame, "cr", 0) / 256.0);
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < pills.Length; i++)
             {
                 pills[i].Alpha(alpha);
                 labels[i].alpha = alpha;
@@ -160,12 +116,10 @@ namespace OurTaiko
         }
     }
 
-    // One mode board of the Entry list: its open and closed plates, title and comment lines.
+    // One mode board of the Entry list: its saved title and the scene it opens.
     public sealed class EntryMode
     {
         public string Title, Scene;
-        public string[] Info;
-        public Sprite On, Off;
     }
 
     // EntryBox:draw (Nijiiro box.lua): the arcade mode list. The selected board sits open at the
@@ -180,7 +134,7 @@ namespace OurTaiko
         const double FrameMs = 1000.0 / 60, SlideFrames = 9, ListInDelay = 10, ListInFrames = 12;
 
         readonly LumenClip board, glow, list;
-        readonly double selectOn, selectOff, inLabel, chooseLabel, onLimit, offLimit, inLimit, chooseLimit, glowFrames, waitLabel;
+        readonly double selectOn, selectOff, inLabel, chooseLabel, onLimit, offLimit, inLimit, chooseLimit, glowFrames;
         readonly Vector2 listIn;
         readonly EntryModeBoard[] boards;
         int selected;
@@ -193,8 +147,9 @@ namespace OurTaiko
         public float Fade => Selected.Fade;
         public float ChooseFlash => Selected.ChooseFlash;
 
-        public EntryModeList(Transform parent, IReadOnlyList<EntryMode> modes, Sprite boardFlash, Sprite cursorGlow,
-            LumenClip board, LumenClip glow, LumenClip list)
+        // The boards are saved at their first layout (the first board selected), so each board's
+        // base is its saved position minus that slot; the slides add slot offsets to the base.
+        public EntryModeList(EntryView view, LumenClip board, LumenClip glow, LumenClip list)
         {
             this.board = board; this.glow = glow; this.list = list;
             selectOn = board.Label("select_on") ?? 27;
@@ -206,21 +161,24 @@ namespace OurTaiko
             inLimit = chooseLabel - inLabel - 1;
             chooseLimit = board.Last - chooseLabel;
             glowFrames = Math.Max(1, glow.Last - glow.First + 1);
-            waitLabel = list.Label("wait") ?? 13;
             double listInLabel = list.Label("in") ?? 87;
             listIn = new Vector2((float)list.Get("kanban_3", listInLabel, "tx", 170), (float)list.Get("kanban_3", listInLabel, "ty", 878));
-            Root = SkinUi.Rect("ModeBoards", parent);
-            boards = new EntryModeBoard[modes.Count];
-            for (int i = 0; i < modes.Count; i++)
-                boards[i] = new EntryModeBoard(Root, modes[i], boardFlash, cursorGlow);
+            Root = view.modeBoards;
+            boards = new EntryModeBoard[view.boards.Length];
+            for (int i = 0; i < boards.Length; i++)
+                boards[i] = new EntryModeBoard(view.boards[i], Slot(i));
         }
 
-        // kanban_1 is the selected slot; the slots above/below are kanban_2/3, 4/5, 6/7.
-        Vector2 Slot(int rel)
+        Vector2 Slot(int rel) => Slot(list, rel);
+
+        // A board's offset (y down) from the open-board slot, rel slots below it (mode_list
+        // `wait`): kanban_1 is the selected slot; the slots above/below are kanban_2/3, 4/5, 6/7.
+        public static Vector2 Slot(LumenClip list, int rel)
         {
             if (rel == 0) return Vector2.zero;
             int n = Math.Abs(rel);
             string kanban = "kanban_" + (2 * n + (rel < 0 ? 0 : 1));
+            double waitLabel = list.Label("wait") ?? 13;
             double? tx = list.Get(kanban, waitLabel, "tx"), ty = list.Get(kanban, waitLabel, "ty");
             if (tx.HasValue && ty.HasValue) return new Vector2((float)tx.Value, (float)ty.Value);
             int sign = rel < 0 ? -1 : 1;    // more slots than the arcade list carries
@@ -293,25 +251,21 @@ namespace OurTaiko
         }
     }
 
-    // One board's plates and texts, drawn at a list offset (y down, from the open-board slot).
+    // One board's saved plates and texts, drawn at a list offset (y down) from its saved slot.
     public sealed class EntryModeBoard
     {
         public const double ClosedSy = 0.1857;
-        // The visible plate inside the 1160x460 frames (box.lua: "off" 964x157, "on" 1050x436): the
-        // tap area follows the openness between the two so a closed board's empty margin never
-        // covers the open board.
-        public static readonly Vector2 ClosedPlate = new Vector2(964, 157), OpenPlate = new Vector2(1050, 436);
-        const float CenterX = 960, CenterY = 535, InfoY = 59.5f, InfoLineHeight = 53;
-        const float TitleYOn = -97, TitleYOff = 4, TitleSize = 72, InfoSize = 34;
 
+        readonly EntryView.BoardView view;
         readonly Image cursor, closed, open, flash;
         readonly TextMeshProUGUI title;
-        public Image Hit { get; }
         readonly TextMeshProUGUI[] info;
+        readonly Vector2 basePosition;
         Vector2 from, target;
         float fromVisibility, targetVisibility;
         double slideStartedAt = double.NaN;
 
+        public Image Hit { get; }
         public EntryMode Mode { get; }
         public RectTransform Root { get; }
         public float Openness { get; private set; }
@@ -323,39 +277,15 @@ namespace OurTaiko
         internal bool Opening;
         internal double OpenStartedAt = double.NaN;
 
-        public EntryModeBoard(Transform parent, EntryMode mode, Sprite boardFlash, Sprite cursorGlow)
+        public EntryModeBoard(EntryView.BoardView view, Vector2 savedSlot)
         {
-            Mode = mode;
-            Root = SkinUi.Rect(mode.Title, parent);
-            // the cursor glow sits under the board (mode_select.nulm depth order)
-            cursor = Plate("Cursor", cursorGlow);
-            closed = Plate("Closed", mode.Off);
-            open = Plate("Open", mode.On);
-            info = new TextMeshProUGUI[mode.Info.Length];
-            for (int i = 0; i < info.Length; i++)
-            {
-                // text_info: 34, white
-                info[i] = SkinUi.Text("Info" + i, Root, InfoSize);
-                info[i].characterSpacing = 100f / InfoSize;
-                info[i].text = mode.Info[i];
-                info[i].rectTransform.Center(CenterX, CenterY + InfoY + (i - (info.Length - 1) / 2f) * InfoLineHeight);
-            }
-            title = SkinUi.Text("Title", Root, TitleSize);
-            title.characterSpacing = 2 * 100f / TitleSize;
-            title.text = mode.Title;
-            flash = Plate("Flash", boardFlash);
-            Hit = SkinUi.Image("Hit", Root, null, ClosedPlate.x, ClosedPlate.y);
-            Hit.color = Color.clear;
-            Hit.raycastTarget = true;
-            Hit.rectTransform.Center(CenterX, CenterY);
-            Hit.gameObject.AddComponent<PointerRelay>();
-        }
-
-        Image Plate(string name, Sprite sprite)
-        {
-            var image = SkinUi.Image(name, Root, sprite);
-            image.rectTransform.TopLeft(380, 305);
-            return image;
+            this.view = view;
+            Root = view.root;
+            cursor = view.cursor; closed = view.closed; open = view.open; flash = view.flash;
+            title = view.title; info = view.info;
+            Hit = view.hit;
+            Mode = new EntryMode { Title = title.text, Scene = view.scene };
+            basePosition = Root.anchoredPosition - new Vector2(savedSlot.x, -savedSlot.y);
         }
 
         // list_anim_up / list_anim_down: every board moves to its next slot linearly; the
@@ -381,7 +311,7 @@ namespace OurTaiko
 
         public void Draw(Vector2 offset, float openness, float fade, float infoAlpha, float cursorAlpha, float titleAlpha, float chooseFlash)
         {
-            Root.anchoredPosition = new Vector2(offset.x, -offset.y);
+            Root.anchoredPosition = basePosition + new Vector2(offset.x, -offset.y);
             Openness = openness;
             Fade = fade;
             ChooseFlash = chooseFlash;
@@ -398,9 +328,9 @@ namespace OurTaiko
             }
             title.alpha = titleAlpha;
             title.enabled = titleAlpha > 0.001f;
-            title.rectTransform.Center(CenterX, CenterY + TitleYOff + (TitleYOn - TitleYOff) * openness);
+            title.rectTransform.anchoredPosition = Vector2.Lerp(view.titleClosed.anchoredPosition, view.titleOpen.anchoredPosition, openness);
             flash.Alpha(chooseFlash);
-            Hit.rectTransform.sizeDelta = Vector2.Lerp(ClosedPlate, OpenPlate, openness);
+            Hit.rectTransform.sizeDelta = Vector2.Lerp(view.closedHitSize, view.openHitSize, openness);
         }
     }
 }

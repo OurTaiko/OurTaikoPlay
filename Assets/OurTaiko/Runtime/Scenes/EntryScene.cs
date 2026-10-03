@@ -12,27 +12,16 @@ namespace OurTaiko
     // SongSelect, ゲーム設定 to GlobalSettingScene. The arcade's 60 s timer is shown as a placeholder that never
     // counts down (user decision: the simulator does not limit the player's time). Not ported: the 3D Don and its join
     // cloud, 2P joining, the other boards (特訓モード / きせかえ), the costume menu and the
-    // ALL.Net indicator. The screen is built in Awake.
+    // ALL.Net indicator. The screen is saved in the scene (EntryView); Awake only binds it.
     public sealed class EntryScene : MonoBehaviour
     {
         public const int TimerSeconds = 60;
 
         public RectTransform stage;
-
-        [Header("Background")]
-        public Sprite background;
-        public Sprite streetLit;
-        public Sprite[] glow, twinkle;
-
-        [Header("Credit and mode select")]
-        public Sprite creditPill;
-        public Sprite creditFlash, boardOn, boardOff, boardFlash, boardCursor;
-        [Tooltip("ゲーム設定 board: mode_select/box frames 9 (open) and 10 (closed).")]
-        public Sprite settingsBoardOn, settingsBoardOff;
+        public EntryView view;
 
         [Header("Global chrome")]
         public ArcadeOverlayArt overlay;
-        public NameplateView nameplatePrefab;
 
         [Header("Timelines")]
         public TextAsset backgroundTimeline;
@@ -67,9 +56,8 @@ namespace OurTaiko
         {
             switcher = SceneSwitcher.EnsureInstance();
             double now = Now;
-            Modes = BuildModes();
+            Bind();
             Flow = new EntryFlow(now, Modes.Length);
-            Build();
             switcher.SceneChanging += OnSceneChanging;
             Show(now);
         }
@@ -90,62 +78,34 @@ namespace OurTaiko
             bgm.Stop(); voice.Stop();
         }
 
-        // box_manager.cpp's board order with the boards this port has: 演奏ゲーム first, ゲーム設定 last.
-        // Texts are Nijiiro's skin_config entry_* (ja); rims are box.lua's MODES colours.
-        EntryMode[] BuildModes() => new[]
+        // The boards (box_manager.cpp's order: 演奏ゲーム first, ゲーム設定 last), their texts and the
+        // touch areas are saved in the scene; here they only get their clips and callbacks.
+        void Bind()
         {
-            new EntryMode
-            {
-                Title = "演奏ゲーム", Info = new[] { "すきな曲や、むずかしさを", "えらんであそべるよ！" },
-                On = boardOn, Off = boardOff, Scene = SceneSwitcher.SongSelectScene,
-            },
-            new EntryMode
-            {
-                Title = "ゲーム設定", Info = new[] { "ゲームのせっていを", "かえられるよ！" },
-                On = settingsBoardOn, Off = settingsBoardOff, Scene = SceneSwitcher.SettingScene,
-            },
-        };
-
-        void Build()
-        {
-            backdrop = new EntryBackground(stage, background, streetLit, glow, twinkle, Clip(backgroundTimeline));
-            Board = new EntryModeList(stage, Modes, boardFlash, boardCursor,
-                Clip(modeBoardTimeline), Clip(cursorGlowTimeline), Clip(modeListTimeline));
-            Credit = new EntryCredit(stage, creditPill, creditFlash, Clip(creditRowTimeline), Clip(creditFadeTimeline));
-            Guide = new ControlGuideView(stage, overlay);
-            if (nameplatePrefab != null)
-            {
-                Nameplate = Instantiate(nameplatePrefab, stage);
-                Nameplate.name = "Nameplate";
-                // nameplate_entry_left
-                Nameplate.Place(14, 910);
-                nameplateGroup = Nameplate.gameObject.AddComponent<CanvasGroup>();
-                nameplateGroup.alpha = 0;
-            }
-            TimerView = new ArcadeTimerView(stage, overlay);
+            backdrop = new EntryBackground(view, Clip(backgroundTimeline));
+            Board = new EntryModeList(view, Clip(modeBoardTimeline), Clip(cursorGlowTimeline), Clip(modeListTimeline));
+            Modes = new EntryMode[Board.Boards.Count];
+            for (int i = 0; i < Modes.Length; i++) Modes[i] = Board.Boards[i].Mode;
+            Credit = new EntryCredit(view, Clip(creditRowTimeline), Clip(creditFadeTimeline));
+            Guide = new ControlGuideView(view.controlGuide, overlay);
+            Nameplate = view.nameplate;
+            nameplateGroup = view.nameplateGroup;
+            if (nameplateGroup != null) nameplateGroup.alpha = 0;
+            TimerView = new ArcadeTimerView(overlay, view.timerDigits);
             TimerView.Show(TimerSeconds);
-            StatusChips.Build(stage, overlay);
-            Coins = new CoinOverlayView(stage, overlay);
+            Coins = new CoinOverlayView(overlay, view.freePlay, view.qrChip, view.inviteBubble, view.invitePlayer, view.inviteMessage);
             // Touch: on the credit screen a tap anywhere joins (the drum's face). On the mode list taps
             // work like SongSelect's boards: tap another board to move to it, tap the open board to
             // pick it; elsewhere a tap does nothing. Vertical swipes move through the boards. The
             // full-stage area sits under the boards so their own tap areas win.
-            var touch = SkinUi.Image("TouchArea", stage, null, 1920, 1080);
-            touch.rectTransform.TopLeft(0, 0);
-            touch.color = Color.clear;
-            touch.raycastTarget = true;
-            touch.transform.SetSiblingIndex(Board.Root.GetSiblingIndex());
-            touch.gameObject.AddComponent<PointerRelay>().Clicked = TapBackground;
-            TouchArea = touch;
-            foreach (var swipe in new[] { touch.gameObject.AddComponent<SwipeRelay>(), Board.Root.gameObject.AddComponent<SwipeRelay>() })
-            {
-                swipe.step = 200;
-                swipe.Swiped = SwipeBoards;
-            }
-            for (int i = 0; i < Board.Boards.Count; i++)
+            TouchArea = view.touchArea;
+            view.touchRelay.Clicked = TapBackground;
+            view.touchSwipe.Swiped = SwipeBoards;
+            view.boardSwipe.Swiped = SwipeBoards;
+            for (int i = 0; i < view.boards.Length; i++)
             {
                 int index = i;
-                Board.Boards[i].Hit.GetComponent<PointerRelay>().Clicked = () => TapBoard(index);
+                view.boards[i].hitRelay.Clicked = () => TapBoard(index);
             }
         }
 

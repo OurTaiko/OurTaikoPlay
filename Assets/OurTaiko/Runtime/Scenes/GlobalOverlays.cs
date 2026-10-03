@@ -34,7 +34,7 @@ namespace OurTaiko
         readonly ArcadeOverlayArt art;
         readonly Transform root;
         readonly System.Collections.Generic.List<Image> digits = new System.Collections.Generic.List<Image>();
-        readonly SongSelectOverlayView savedView;
+        readonly Image[][] savedRows;
 
         public int Seconds { get; private set; } = -1;
 
@@ -48,8 +48,12 @@ namespace OurTaiko
         // SongSelect keeps both supported placeholder layouts in the scene. Binding does not
         // recreate graphics or reset their Inspector-authored positions, dimensions or styling.
         public ArcadeTimerView(SongSelectOverlayView view, ArcadeOverlayArt art)
+            : this(art, view.timerTwoDigits, view.timerThreeDigits) { }
+
+        // Saved digit rows (Entry keeps one, for 60); a row shows only a value of its length.
+        public ArcadeTimerView(ArcadeOverlayArt art, params Image[][] rows)
         {
-            savedView = view;
+            savedRows = rows;
             this.art = art;
         }
 
@@ -58,10 +62,9 @@ namespace OurTaiko
             if (seconds == Seconds) return;
             Seconds = seconds;
             string text = seconds.ToString();
-            if (savedView != null)
+            if (savedRows != null)
             {
-                ShowSavedDigits(savedView.timerTwoDigits, text);
-                ShowSavedDigits(savedView.timerThreeDigits, text);
+                foreach (var row in savedRows) ShowSavedDigits(row, text);
                 return;
             }
             // song select's list timer shows 100
@@ -100,15 +103,17 @@ namespace OurTaiko
         public int FrameCount { get; }
         public Image Image => image;
 
-        public ControlGuideView(Transform parent, ArcadeOverlayArt art)
+        // Binds a saved guide image (Entry places it at (0,12), 352x276); its ClipSampler plays
+        // the overlay art's clip.
+        public ControlGuideView(Image image, ArcadeOverlayArt art)
         {
             clip = art.guideClip;
             FrameCount = Mathf.RoundToInt(clip.length * clip.frameRate);
-            image = SkinUi.Image("ControlGuide", parent, null);
-            sampler = ClipSampler.Attach(image.gameObject, clip);
+            this.image = image;
+            sampler = image.GetComponent<ClipSampler>();
+            if (sampler == null) sampler = ClipSampler.Attach(image.gameObject, clip);
+            sampler.clip = clip;
             Sample(0);
-            image.rectTransform.sizeDelta = image.sprite.rect.size;
-            image.rectTransform.TopLeft(0, 12);
         }
 
         public void Show(double elapsedMs, float alpha)
@@ -170,12 +175,18 @@ namespace OurTaiko
         }
 
         public CoinOverlayView(SongSelectOverlayView view, ArcadeOverlayArt art)
+            : this(art, null, view.qrChip, view.inviteBubble, view.invitePlayer, view.inviteMessage) { }
+
+        // Binds saved objects; a null part is a part this screen does not show.
+        public CoinOverlayView(ArcadeOverlayArt art, TMP_Text freePlay, Image qrChip,
+            Image inviteBubble, TextMeshProUGUI invitePlayer, TextMeshProUGUI inviteMessage)
         {
             clip = art.creditSideTimeline != null ? LumenClip.Parse(art.creditSideTimeline.text) : LumenClip.Empty;
-            QrChip = view.qrChip;
-            bubble = view.inviteBubble;
-            player = view.invitePlayer;
-            message = view.inviteMessage;
+            FreePlay = freePlay;
+            QrChip = qrChip;
+            bubble = inviteBubble;
+            player = invitePlayer;
+            message = inviteMessage;
         }
 
         static TextMeshProUGUI Text(Transform parent, string name, string value)
@@ -198,19 +209,6 @@ namespace OurTaiko
             bubble.Alpha(BubbleAlpha);
             player.alpha = message.alpha = textAlpha;
             player.enabled = message.enabled = textAlpha > 0.002f;
-        }
-    }
-
-    // EntryOverlay:draw offline: 段位道場 NG, 「1プレイ 4曲」 and IC Card NG chips.
-    public static class StatusChips
-    {
-        public static RectTransform Build(Transform parent, ArcadeOverlayArt art)
-        {
-            var root = SkinUi.Rect("StatusChips", parent);
-            SkinUi.Image("Stage", root, art.stageChip).rectTransform.TopLeft(1200, 45);
-            SkinUi.Image("Card", root, art.cardChip).rectTransform.TopLeft(1460, 38);
-            SkinUi.Image("Dan", root, art.danChip).rectTransform.TopLeft(1040, 38);
-            return root;
         }
     }
 }
