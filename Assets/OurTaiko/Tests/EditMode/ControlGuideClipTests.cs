@@ -42,10 +42,11 @@ namespace OurTaiko.Tests
             var parent = new GameObject("Parent", typeof(RectTransform));
             try
             {
-                var view = new ControlGuideView(parent.transform, new ArcadeOverlayArt { guideClip = clip });
+                var image = SkinUi.Image("ControlGuide", parent.transform, null);
+                var view = new ControlGuideView(image, new ArcadeOverlayArt { guideClip = clip });
                 Assert.That(view.FrameCount, Is.EqualTo(115));
+                Assert.That(view.Image, Is.SameAs(image));
                 Assert.That(view.Image.sprite.name, Is.EqualTo("ControlGuide210"));
-                Assert.That(view.Image.rectTransform.sizeDelta, Is.EqualTo(new Vector2(352, 276)));
                 foreach (var (ms, frame) in new[] { (0.0, 0), (33.3, 0), (33.4, 1), (1000.0, 30), (3800.0, 114), (3833.4, 0), (4000.0, 5) })
                 {
                     view.Show(ms, 1);

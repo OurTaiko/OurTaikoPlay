@@ -33,6 +33,15 @@
 
 ### 当前完成状态与交接边界
 
+#### 最新完成：Entry 界面持久化（2026-10-03）
+
+- Entry 画面保存在 `Entry.unity` 的 `Stage` 下（`EntryView` 组件），`EntryScene.Awake` 只绑定引用、赋回调，运行时只改透明度、帧、缩放与模式板滑动偏移；不再在运行时创建任何对象。`EntryScene` 上的建场景用 Sprite 字段与 `nameplatePrefab` 已删除（名牌为场景中的预制体实例＋CanvasGroup）。
+- 层级：Background（街景、4 闪光、2 灯笼光、街灯）→ TouchArea → ModeBoards（每块板 Cursor／Closed／Open／Info／Title／TitleOpen／TitleClosed 标记／Flash／Hit）→ Credit → ControlGuide（ClipSampler）→ Nameplate → Timer（60 占位）→ StatusChips → CoinOverlay。
+- 模式板保存在首次布局：第一块打开居中，其余关闭在 `mode_list` 槽位（ゲーム設定 在 +50,+305）；运行时以「保存位置 − 初始槽位」为基准加滑动偏移，所以在 Inspector 中拖动板会整体保留。标题在 `TitleClosed` 与 `TitleOpen` 两个空标记之间随打开程度插值；点击区大小为 `EntryView.BoardView.closedHitSize`／`openHitSize`；板的场景名、标题与说明文字均在场景中编辑（`EntryScene.Modes` 由保存的标题与 `scene` 生成）。
+- 共享类新增绑定构造：`ControlGuideView(Image, art)`、`ArcadeTimerView(art, params Image[][] rows)`、`CoinOverlayView(art, freePlay, qrChip, bubble, player, message)`；运行时 `StatusChips` 已删除（改为 Editor 生成）。Result 仍在运行时构建。
+- Inspector：选中 Entry 控制器可用「投币画面／模式选择」预览（只切换显示与透明度，会把场景标为已修改）。迁移入口仍为 `ProjectBuilder.CreateEntryScene()`：仅在没有 `EntryView` 时生成层级（`ProjectBuilder.EntryLayout.cs`），已有布局只重绑时间轴、音效与 overlay 美术；连续执行文件哈希不变。
+- 验证：EditMode `ControlGuideClipTests` 2/2；PlayMode `EntryFlowTests` 1/1、`EntryTouchFlowTests` 1/1、`GlobalSettingFlowTests` 3/3、`GlobalOverlayFlowTests` 2/2；截图 `TestResults/EntryCredit.png`、`EntryModeSelect.png` 与改动前一致。
+
 #### 最新完成：GlobalSettingScene 与 SettingManager（2026-10-02）
 
 - **入口**：Entry 模式列表改为街机 `box.lua` 的多板列表——演奏ゲーム（选中、居中打开）与其下方关闭的ゲーム設定（`mode_select/box` 9／10 帧、蓝色 (0,132,212) 标题边、skin_config `entry_settings_comment_1/2`）。左咔上移、右咔下移，两端夹住（原 `BoxManager::move_left/right`）；列表 9 帧线性滑动（`mode_list.txt` 的 kanban 槽位），新选中板滑动结束后才 select_on，旧板 select_off；首次出现时关闭的板从 3 格外飞入。选ゲーム設定后切到 `SceneSwitcher.SettingScene`（GlobalSettingScene，Build Settings 第 2 位）。**Entry 触控**（用户要求，原为全屏点击一律当咚）：投币画面点任意处加入；模式列表时点其他板移动到该板、点打开的板决定（同 SongSelect），点空白无反应，纵向滑动（`SwipeRelay`，约 200 px 一格，上滑＝右咔）移动；每块板的透明点击区 `EntryModeBoard.Hit` 随打开程度在可见板面 964×157（关）与 1050×436（开）之间插值，全屏 `TouchArea` 放在板列表之下。测试 `EntryTouchFlowTests`（已完成，用 EventSystem 实际射线检查点击归属）。`EntryModeList`／`EntryModeBoard`（`EntryViews.cs`），`EntryFlow.MoveMode`／`SelectedMode`。
@@ -54,10 +63,10 @@
 
 #### 此前完成：SongSelect 界面持久化（2026-10-02）
 
-**范围**：SongSelect 与演奏设置菜单保存为场景层级／Prefab，运行时代码只更新内容、输入和动画。Entry／Result 仍在运行时构建，未扩大范围。暂停菜单 `ad16cb9` 与删除 SampleScene `b48f531` 在此之前提交。
+**范围**：SongSelect 与演奏设置菜单保存为场景层级／Prefab，运行时代码只更新内容、输入和动画。Entry 与 Result 当时仍在运行时构建（Entry 已于 2026-10-03 持久化，见上）。暂停菜单 `ad16cb9` 与删除 SampleScene `b48f531` 在此之前提交。
 
 - `SongSelectScene.cs` 不再在运行时构建 UI，改为绑定 `public SongSelectView view`；当前 3 首歌使用场景中保存的实例，新增歌曲时才 Instantiate `Generated/SongBoard.prefab`。视图脚本在 Runtime/Scenes：`SongSelectView`、`SongBoardView`、`OptionPanelView`、`SongSelectOverlayView`、独立的 `PointerRelay`（点击回调仍在 Awake 绑定）。
-- `OptionPanel` 构造为 `new OptionPanel(OptionPanelView view, OptionPanelArt art)`，只更新已有对象；`GlobalOverlays` 新增绑定保存对象的构造函数，Entry／Result 仍用旧方式。
+- `OptionPanel` 构造为 `new OptionPanel(OptionPanelView view, OptionPanelArt art)`，只更新已有对象；`GlobalOverlays` 新增绑定保存对象的构造函数（Entry 现在也使用绑定构造，Result 仍用旧方式）。
 - Editor：`ProjectBuilder.SongSelectLayout.cs`、`ProjectBuilder.OptionPanelView.cs`、`ProjectBuilder.SongSelectOverlays.cs`、`SongSelectSceneEditor.cs`。迁移菜单 **OurTaiko/Apply Song Select Layout**（`ProjectBuilder.ApplySongSelectLayout()`）只处理尚无 view 的场景，已有布局直接返回。文字共用 `SkinUi` 的两种材质（`Generated/SongSelectMaterials` 已删除）。
 - 动画以保存的 RectTransform 为基线施加偏移，保留 Inspector 调整。曲目轮整体参数位于 `SongSelectView`；`SongBoardView.authoredWheelPosition` 与 `PlateView.authoredContentX` 保存生成时的参考位置，使整体参数、换歌及 TJA 增删难度都能与单板／单牌的微调共存。
 - Inspector 的「选曲列表／难度选择／演奏选项」预览只切换显示：不播放音频、不创建全局控制器、不读写玩家设置（因此编辑态名牌没有玩家名，运行时才填入）。预览会把场景标记为已修改；如不想保存预览状态，重新打开场景即可。进入 Play 会恢复正常列表状态。
@@ -73,7 +82,7 @@
 - Unity Editor 可能仍由上一会话打开（项目已安装 Pipeline 包）；先用 `unity status` 确认连接再操作，修改 C# 后刷新并确认 `EditorUtility.scriptCompilationFailed` 为 false（编译错误会让 CLI 无法连接或静默失败，看 `~/Library/Logs/Unity/Editor.log` 的 `error CS`）。耗时较长的 Editor 方法会让 CLI 报 5 秒超时，但会在 Editor 中继续执行，需轮询结果。Editor 未运行时用 `unity open <项目路径>` 启动并轮询 `unity status` 到 ready；关闭用 `unity projects close <项目路径>`（不保存，先确认没有未保存场景）。zsh 不会对未加引号的 `$var` 分词，多参数 CLI 调用写成 bash 脚本。
 - 若 Editor 报「assets located in immutable packages were unexpectedly altered」：这是 `Library/PackageCache` 中包文件（2026-10-02 为 `com.unity.render-pipelines.core` 的 LookDev 图标 .meta）被改写，与项目文件无关。修复：关闭 Editor，删除该包的 `Library/PackageCache/<包名>@<hash>` 目录，重开后 Package Manager **不会自动**补回（会出现大量 URP／Shader Graph 的 `error CS`），需在 Editor 中执行 `UnityEditor.PackageManager.Client.Resolve()` 重新解析，等待目录恢复并重新编译。
 - 选曲／结算的下一步候选（均未授权，需用户确认）：文件夹与类别、成绩等级演出、曲目板飞入、难度决定标记弹出、皇冠光芒加算混合、支持字母扩展音符以游玩 TRIPLE HELIX Edit。
-- **SongSelect 已保存为可编辑层级**：`SinglePlayScene` 与 `SongSelect` 的界面均持久化；选曲场景保存曲目板、4 张难度卡、演奏选项、名牌与全局覆盖层，`SongSelectScene.Awake` 只绑定引用，内容与动画在运行时更新。`Generated/SongBoard.prefab` 为新增歌曲模板，`Generated/PlayOptions.prefab` 可独立打开编辑；选择场景控制器时可用 Inspector 的列表／难度／选项预览。动画以保存的 RectTransform 为基线，曲目轮布局参数位于 `SongSelectView`。迁移入口 `ProjectBuilder.ApplySongSelectLayout()`，已有布局不会被重建。Entry／Result 仍在运行时构建，SongLoadingScene 的画面仍来自 SceneSwitcher 幕布。
+- **SongSelect 已保存为可编辑层级**：`SinglePlayScene` 与 `SongSelect` 的界面均持久化；选曲场景保存曲目板、4 张难度卡、演奏选项、名牌与全局覆盖层，`SongSelectScene.Awake` 只绑定引用，内容与动画在运行时更新。`Generated/SongBoard.prefab` 为新增歌曲模板，`Generated/PlayOptions.prefab` 可独立打开编辑；选择场景控制器时可用 Inspector 的列表／难度／选项预览。动画以保存的 RectTransform 为基线，曲目轮布局参数位于 `SongSelectView`。迁移入口 `ProjectBuilder.ApplySongSelectLayout()`，已有布局不会被重建。Entry 也已持久化（见「Entry 界面持久化」），Result 仍在运行时构建，SongLoadingScene 的画面仍来自 SceneSwitcher 幕布。
 - 当前验证针对 Unity Editor。早期曾成功构建 macOS Development Player，但 `Builds/OurTaikoPlayerUnity.app` **没有随最近各次修复重新打包**，不能视作当前版本。移动端、真机音频延迟与独立播放器长期手动游玩尚未验收。
 
 ### 动画剪辑（Generated/Clips，2026-10-02）
@@ -111,7 +120,7 @@
 
 | 核心文件／目录 | 当前职责 |
 | --- | --- |
-| `Assets/Scenes/Entry.unity`、`Runtime/Scenes/EntryScene.cs`、`EntryViews.cs`、`Runtime/Core/EntryFlow.cs` | Nijiiro Entry（街机投币模式）：街景背景、「１人プレイ／２人プレイ 太鼓をたたいてスタート！」两行、1P 加入后名牌与操作指引淡入、演奏ゲーム 模式板（`mode_board` 时间轴）、决定后进入 SongSelect。画面在 `Awake` 中由代码构建。迁移入口 `ProjectBuilder.CreateEntryScene()`（菜单 OurTaiko/Create Entry Scene）。 |
+| `Assets/Scenes/Entry.unity`、`Runtime/Scenes/EntryScene.cs`、`EntryViews.cs`、`Runtime/Core/EntryFlow.cs` | Nijiiro Entry（街机投币模式）：街景背景、「１人プレイ／２人プレイ 太鼓をたたいてスタート！」两行、1P 加入后名牌与操作指引淡入、演奏ゲーム 模式板（`mode_board` 时间轴）、决定后进入 SongSelect。画面保存在场景中（`EntryView.cs`），`Awake` 只绑定；Inspector 有投币／模式选择预览（`Editor/EntrySceneEditor.cs`）。迁移入口 `ProjectBuilder.CreateEntryScene()`（菜单 OurTaiko/Create Entry Scene，仅缺少布局时生成，`ProjectBuilder.EntryLayout.cs`）。 |
 | `Runtime/Scenes/GlobalOverlays.cs` | 全局街机界面元素：计时器（`ArcadeTimerView`，占位，只显示固定数字）、左上操作指引（`global/indicator` 决定循环）、フリープレイ／QR 芯片／2P 邀请云（`coin_overlay`）、段位道場／1プレイ4曲／IC Card 状态芯片（`entry_overlay`）。Entry 全部显示；SongSelect 显示计时器占位（列表 100、难度选择 60，不倒数）、QR 芯片与 2P 邀请云（已玩曲数 < 2）；Result 只显示フリープレイ（在 FadeIn 之上）。迁移入口 `ProjectBuilder.ApplyGlobalOverlays()`。 |
 | `Assets/Scenes/GlobalSettingScene.unity`、`Runtime/Scenes/GlobalSettingScene.cs`、`GlobalSettingView.cs`、`SettingManager.cs`、`SwipeRelay.cs`、`Runtime/Core/GameSettings.cs`、`SettingsMenu.cs` | 全局设置：Entry 的ゲーム設定板进入；类型（Play）／项目／选项三级焦点，咚咔、Esc 与触控（点击＋纵向滑动）操作，Return 项返回；`SettingManager` 读写 `persistentDataPath/settings.json`。当前设置：Play › Enable Drumpad for Single Player Mode（默认开，控制 SinglePlayScene 触控鼓启用与显示）。PyTaikoGreen 设置美术。迁移 `ProjectBuilder.CreateGlobalSettingScene()`。 |
 | `Assets/Scenes/SongSelect.unity`、`Runtime/Scenes/SongSelectScene.cs` | Nijiiro 纵向曲目板、展开／收起时间轴、试听与 BGM、难度面板、裏切换；扳手按钮打开演奏オプション。光标规则 `Core/DifficultyCursor.cs`，谱面信息 `Core/SongInfo.cs`。 |

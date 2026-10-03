@@ -15,8 +15,9 @@ namespace OurTaiko.Editor
         // indicator/background: 325 cells of 352x276, 13 per row; cells 210..324 are the decide loop.
         const int GuideColumns = 13, GuideFirstDecide = 210, GuideCells = 325;
 
-        // Creates Entry only when missing, then (re)binds its art, timelines and sounds and makes it
-        // the first build scene (SceneSwitcher.MenuScene).
+        // Creates Entry only when missing, then (re)binds its timelines and sounds, saves the screen
+        // hierarchy if the scene has none yet (an existing layout is never rebuilt) and makes it the
+        // first build scene (SceneSwitcher.MenuScene).
         [MenuItem("OurTaiko/Create Entry Scene")]
         public static void CreateEntryScene()
         {
@@ -38,7 +39,9 @@ namespace OurTaiko.Editor
                 EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), EntryPath);
             }
             var scene = EditorSceneManager.OpenScene(EntryPath);
-            ConfigureEntry(UnityEngine.Object.FindFirstObjectByType<EntryScene>());
+            var entry = UnityEngine.Object.FindFirstObjectByType<EntryScene>();
+            ConfigureEntry(entry);
+            if (entry.view == null) BuildEntryLayout(entry);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             var scenes = EditorBuildSettings.scenes.Where(s => s.path != EntryPath).ToList();
@@ -82,22 +85,7 @@ namespace OurTaiko.Editor
 
         static void ConfigureEntry(EntryScene entry)
         {
-            entry.background = Required("entry/background/bg");
-            entry.streetLit = Required("entry/background/street_lit");
-            entry.glow = new[] { Required("entry/background/glow/0"), Required("entry/background/glow/1") };
-            entry.twinkle = new[] { Required("entry/background/twinkle/0"), Required("entry/background/twinkle/1") };
-            entry.creditPill = Required("entry/side_select/credit_pill");
-            entry.creditFlash = Required("entry/side_select/credit_flash");
-            // mode_select/box frames: 0 = 演奏ゲーム open, 1 = closed, 8 = the white `choose` silhouette
-            entry.boardOn = Required("entry/mode_select/box/0");
-            entry.boardOff = Required("entry/mode_select/box/1");
-            entry.boardFlash = Required("entry/mode_select/box/8");
-            // 9 / 10 = ゲーム設定 open / closed (box.lua MODES.settings, the baked `aprilfool` board)
-            entry.settingsBoardOn = Required("entry/mode_select/box/9");
-            entry.settingsBoardOff = Required("entry/mode_select/box/10");
-            entry.boardCursor = Required("entry/mode_select/box_highlight_center");
             entry.overlay = OverlayArt();
-            entry.nameplatePrefab = AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);
             entry.backgroundTimeline = RequiredTimeline("entry_bg");
             entry.creditRowTimeline = RequiredTimeline("credit_row");
             entry.creditFadeTimeline = RequiredTimeline("credit_fade");
