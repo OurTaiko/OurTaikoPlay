@@ -34,6 +34,25 @@ namespace OurTaiko.Tests
                         Difficulty.Easy, Difficulty.Normal, Difficulty.Hard, Difficulty.Oni, Difficulty.Ura,
                     }), "Saved plates cover every course; runtime only changes their contents and visibility.");
                 }
+                var best = view.bestScore;
+                Assert.That(best.group.alpha, Is.EqualTo(1), "The saved window must be visible without entering Play mode.");
+                Assert.That(best.digits.Count(d => d.enabled), Is.EqualTo(7), "The Editor shows a sample best score.");
+                Assert.That(best.judgments.counts[0].childCount, Is.GreaterThanOrEqualTo(3));
+                Assert.That(best.difficulty.color.a, Is.EqualTo(1));
+                var iconPath = AssetDatabase.GetAssetPath(best.difficulty.sprite);
+                Assert.That(iconPath, Is.EqualTo("Assets/OurTaiko/Art/game/lane/lane_difficulty.png"));
+                var texture = new Texture2D(2, 2);
+                try
+                {
+                    ImageConversion.LoadImage(texture, System.IO.File.ReadAllBytes(iconPath));
+                    foreach (var icon in best.difficultySprites)
+                    {
+                        var r = icon.rect;
+                        Assert.That(texture.GetPixels((int)r.x, (int)r.y, (int)r.width, (int)r.height).Max(c => c.a),
+                            Is.EqualTo(1), "Use opaque difficulty artwork, not the course-select watermark.");
+                    }
+                }
+                finally { Object.DestroyImmediate(texture); }
                 var serializedView = new SerializedObject(view);
                 AssertReferences(serializedView, "boardPrefab", "courseGroup", "mark", "backboard", "back", "option", "auto", "frame", "glow",
                     "balloon", "uraChange", "header", "headerSub", "options", "nameplate", "overlays");
