@@ -8,6 +8,7 @@ namespace OurTaiko
     [Serializable]
     public sealed class GameSettings
     {
+        public GeneralSettings general = new GeneralSettings();
         public PlaySettings play = new PlaySettings();
         public DisplaySettings display = new DisplaySettings();
         public AudioOptions audio = new AudioOptions();
@@ -19,12 +20,23 @@ namespace OurTaiko
         {
             var settings = new GameSettings();
             if (!string.IsNullOrWhiteSpace(json)) JsonUtility.FromJsonOverwrite(json, settings);
+            settings.general ??= new GeneralSettings();
             settings.play ??= new PlaySettings();
             settings.display ??= new DisplaySettings();
             settings.audio ??= new AudioOptions();
             settings.audio.volume ??= new SoundVolumes();
             return settings;
         }
+    }
+
+    [Serializable]
+    public sealed class GeneralSettings
+    {
+        public static readonly string[] Languages = { "en", "ja", "zh", "zh_tw", "ko" };
+        public static readonly string[] LanguageNames = { "English", "日本語", "简体中文", "繁體中文", "Korean" };
+        // Only song titles/subtitles use this setting until interface localization is added.
+        public string language = "en";
+        public string Language => Array.IndexOf(Languages, language) >= 0 ? language : "en";
     }
 
     [Serializable]

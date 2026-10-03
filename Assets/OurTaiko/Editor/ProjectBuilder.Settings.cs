@@ -111,7 +111,7 @@ namespace OurTaiko.Editor
             header.rectTransform.TopLeft(60, 40);
 
             var view = stage.gameObject.AddComponent<GlobalSettingView>();
-            view.typeSwipe = SwipeArea(stage, "TypeList", SettingTypeList, new Vector2(620, 700), view.typePitch);
+            view.typeSwipe = SwipeArea(stage, "TypeList", SettingTypeList, new Vector2(620, 738), view.typePitch);
             view.itemSwipe = SwipeArea(stage, "ItemList", SettingItemList, new Vector2(SettingItemWidth + 40, 730), view.itemPitch);
             view.typeSwipe.transform.SetAsLastSibling();
 

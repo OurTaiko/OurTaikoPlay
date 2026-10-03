@@ -135,7 +135,7 @@ namespace OurTaiko
             // The play scene reports an unreadable chart; the curtain just falls back to the asset name.
             try
             {
-                var info = SongInfo.Read(song.chart.text);
+                var info = song.ReadDisplayInfo();
                 songTransition.SetSong(info.Title, info.Subtitle);
             }
             catch (Exception) { songTransition.SetSong(song.name, ""); }

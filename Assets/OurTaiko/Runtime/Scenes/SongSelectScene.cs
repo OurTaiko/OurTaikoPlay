@@ -443,7 +443,7 @@ namespace OurTaiko
             for (int i = 0; i < songsIn.Length; i++)
             {
                 if (i > 0 && i % BackEvery == 0) inserted.Add(NewBack(folder, folderBoard));
-                var song = new Board { Kind = BoardKind.Song, Song = songsIn[i], Info = songsIn[i].ReadInfo(), Folder = folder, folders = folders };
+                var song = new Board { Kind = BoardKind.Song, Song = songsIn[i], Info = songsIn[i].ReadDisplayInfo(), Folder = folder, folders = folders };
                 Place(song, folderBoard, 0);
                 inserted.Add(song);
             }
@@ -851,7 +851,7 @@ namespace OurTaiko
             var saved = view.songBoards ?? Array.Empty<SongBoardView>();
             for (int i = 0; i < songs.Length; i++)
             {
-                var board = new Board { Kind = BoardKind.Song, Song = songs[i], Info = songs[i].ReadInfo() };
+                var board = new Board { Kind = BoardKind.Song, Song = songs[i], Info = songs[i].ReadDisplayInfo() };
                 wheelBoards.Add(board);
                 // The authored song list keeps its scene objects; later songs borrow pooled prefabs on screen.
                 if (i < saved.Length) Bind(board, NewSlot(saved[i], true));

@@ -39,7 +39,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
                 var view = scene.view;
-                scene.Ka(2); scene.Don();
+                scene.Ka(3); scene.Don();
                 Assert.That(scene.Menu.CurrentType.Label, Is.EqualTo("Sound"));
                 Assert.That(scene.Menu.ItemCount, Is.EqualTo(8)); // six volumes, backend, Return
                 Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Master Volume"));

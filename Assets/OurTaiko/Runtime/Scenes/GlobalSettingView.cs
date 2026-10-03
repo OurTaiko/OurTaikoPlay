@@ -29,7 +29,7 @@ namespace OurTaiko
         public List<Row> choiceRows = new List<Row>();
         [Tooltip("Vertical distance between type rows / item rows; horizontal between choice buttons " +
             "(wide enough for the arrow between two buttons).")]
-        public float typePitch = 160, itemPitch = 150, choicePitch = 380;
+        public float typePitch = 142, itemPitch = 150, choicePitch = 380;
         public SwipeRelay typeSwipe, itemSwipe;
         public Sprite typeBox, typeBoxSelected, itemBox, itemBoxSelected, choiceOff, choiceOn;
         [Tooltip("blue_arrow: points at the focused row or choice from its right.")]
