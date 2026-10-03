@@ -93,11 +93,11 @@ namespace OurTaiko.Editor
             (view.username, view.usernameBox) = LoginField(panel, "Username", "ユーザー名", 190, false, uiFont, white, plain);
             (view.password, view.passwordBox) = LoginField(panel, "Password", "パスワード", 320, true, uiFont, white, plain);
 
-            view.message = SettingText(panel, "Message", uiFont, plain, LoginGrey, 30, TextAlignmentOptions.TopLeft, textWidth);
+            view.message = SettingText(panel, "Message", uiFont, plain, Color.black, 30, TextAlignmentOptions.TopLeft, textWidth);
             view.message.textWrappingMode = TextWrappingModes.Normal;
             view.message.rectTransform.sizeDelta = new Vector2(textWidth, 90);
             view.message.rectTransform.TopLeft(LoginInset, 455);
-            view.messageColor = LoginGrey;
+            view.messageColor = Color.black;
             view.errorColor = new Color32(190, 30, 30, 255);
             view.successColor = new Color32(10, 95, 20, 255);
 
