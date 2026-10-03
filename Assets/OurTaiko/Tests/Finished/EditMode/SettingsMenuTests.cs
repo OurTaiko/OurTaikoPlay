@@ -14,7 +14,7 @@ namespace OurTaiko.Tests
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types), "The focus starts on the types.");
             Assert.That(menu.Types[0].Label, Is.EqualTo("Play"));
             Assert.That(menu.Types[1].Label, Is.EqualTo("Display"));
-            Assert.That(menu.TypeCount, Is.EqualTo(3), "Play, Display and Return.");
+            Assert.That(menu.TypeCount, Is.EqualTo(4), "Play, Display, Sound and Return.");
 
             // ka wraps through Play, Display and Return; the item focus does not move with it.
             Assert.That(menu.Ka(-1), Is.EqualTo(SettingsMenu.Result.Moved));
@@ -73,7 +73,7 @@ namespace OurTaiko.Tests
         {
             var menu = Menu();
             // Tapping another type selects it; tapping the focused one confirms it.
-            Assert.That(menu.TapType(2), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.TapType(menu.Types.Count), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.IsTypeReturn, Is.True);
             Assert.That(menu.TapType(0), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.TapType(0), Is.EqualTo(SettingsMenu.Result.Entered));

@@ -79,6 +79,7 @@ namespace OurTaiko
                     "Wait for the display's refresh before each frame to prevent tearing. While enabled, the refresh rate replaces Target Frame Rate.",
                     s => s.display.vSync, (s, on) => s.display.vSync = on),
             }),
+            new SettingType("Sound", SoundSettings.Catalog(SoundSettings.Platform)),
         };
 
         public int TypeCount => Types.Count + 1;
