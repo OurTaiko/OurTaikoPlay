@@ -86,7 +86,8 @@ namespace OurTaiko.Tests
 
             // The categories follow the local songs as closed folders: Game (1 song) and Pop (empty).
             var select = Object.FindFirstObjectByType<SongSelectScene>();
-            Assert.That(select.BoardCount, Is.EqualTo(5));
+            Assert.That(select.BoardCount, Is.EqualTo(6), "3 songs, 2 folders and the root もどる.");
+            Assert.That(select.KindAt(5), Is.EqualTo(SongSelectScene.BoardKind.Back));
             Assert.That(select.KindAt(3), Is.EqualTo(SongSelectScene.BoardKind.Folder));
             Assert.That(select.KindAt(4), Is.EqualTo(SongSelectScene.BoardKind.Folder));
             Assert.That(select.OpenFolder, Is.Null, "Folders start closed.");
@@ -184,7 +185,7 @@ namespace OurTaiko.Tests
             var select = Object.FindFirstObjectByType<SongSelectScene>();
             yield return Focus(select, 3);
             select.Confirm();
-            Assert.That(select.BoardCount, Is.EqualTo(6));
+            Assert.That(select.BoardCount, Is.EqualTo(7));
             yield return Focus(select, 5);
             Assert.That(select.KindAt(5), Is.EqualTo(SongSelectScene.BoardKind.Folder));
             select.Confirm();
@@ -192,7 +193,7 @@ namespace OurTaiko.Tests
             Assert.That(select.KindAt(3), Is.EqualTo(SongSelectScene.BoardKind.Folder), "Game closed again.");
             Assert.That(select.KindAt(4), Is.EqualTo(SongSelectScene.BoardKind.Back), "The empty Pop folder holds only もどる.");
             Assert.That(select.Focused, Is.EqualTo(4));
-            Assert.That(select.BoardCount, Is.EqualTo(5));
+            Assert.That(select.BoardCount, Is.EqualTo(6));
             yield return new WaitForSecondsRealtime(0.4f);
             select.Confirm();
             Assert.That(select.OpenFolder, Is.Null);
@@ -230,11 +231,11 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.SongSelectScene, 30);
 
             var select = Object.FindFirstObjectByType<SongSelectScene>();
-            Assert.That(select.BoardCount, Is.EqualTo(5));
+            Assert.That(select.BoardCount, Is.EqualTo(6));
             yield return Focus(select, 4);
             select.Confirm();
             // Pop holds the 1500 odd charts: もどる, then one more もどる after every ten songs.
-            Assert.That(select.BoardCount, Is.EqualTo(4 + 1 + 1500 + 149));
+            Assert.That(select.BoardCount, Is.EqualTo(4 + 1 + 1500 + 149 + 1));
             Assert.That(select.KindAt(4), Is.EqualTo(SongSelectScene.BoardKind.Back));
             Assert.That(select.SongAt(5).ReadInfo().Title, Is.EqualTo("Bulk 1"));
             Assert.That(select.KindAt(15), Is.EqualTo(SongSelectScene.BoardKind.Back));
@@ -261,7 +262,18 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            Assert.That(Object.FindFirstObjectByType<SongSelectScene>().BoardCount, Is.EqualTo(3), "No folders without servers.");
+            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            Assert.That(select.BoardCount, Is.EqualTo(4), "No folders without servers, only the root もどる.");
+            Assert.That(select.Focused, Is.Zero, "The first song is focused, not もどる.");
+            // The wheel wraps: one step back from the first song is the root もどる, which leaves for Entry.
+            yield return new WaitForSecondsRealtime(0.3f);
+            select.Left();
+            Assert.That(select.KindAt(select.Focused), Is.EqualTo(SongSelectScene.BoardKind.Back));
+            Assert.That(select.FocusedSong, Is.Null);
+            yield return new WaitForSecondsRealtime(0.8f);
+            TestCapture.Capture("SongSelectRootBack.png");
+            select.Confirm();
+            yield return WaitForScene(SceneSwitcher.EntryScene);
         }
 
         // Steps the wheel with ka until the board at `index` is focused.

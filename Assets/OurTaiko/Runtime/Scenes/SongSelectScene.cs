@@ -12,6 +12,8 @@ namespace OurTaiko
     // button. ServerLogin's categories follow the local songs as closed genre folders; a folder opens
     // inline (Navigator::load_current_directory without child folders): its board turns into もどる,
     // its songs follow with a もどる every ten songs, and opening another folder closes it first.
+    // A root もどる ends the list (the wheel wraps, so it sits above the first song) and leaves for
+    // Entry like the back key.
     // Search, sorting, nested folders, the standalone neiro panel, dan boards and 2P are not ported.
     public sealed class SongSelectScene : MonoBehaviour
     {
@@ -109,9 +111,9 @@ namespace OurTaiko
         sealed class Board
         {
             public BoardKind Kind;
-            public int Folder = -1;  // folders[] index of a folder or もどる board, or of the folder a song is in
+            public int Folder = -1;  // folders[] index of a folder or もどる board (-1: the root もどる), or of the folder a song is in
             // A song wears its folder's genre (the box.def it was loaded from), else its own.
-            public int Genre => Folder >= 0 ? folders[Folder].Genre : Song.genre;
+            public int Genre => Folder >= 0 ? folders[Folder].Genre : Song != null ? Song.genre : 0;
             public Online.OnlineFolder[] folders;
             public FolderSlot FolderSlot;
             public Slot Slot;
@@ -289,6 +291,7 @@ namespace OurTaiko
             {
                 var focused = wheelBoards[Focused];
                 if (focused.Kind == BoardKind.Folder) OpenFolderAt(Focused);
+                else if (focused.Kind == BoardKind.Back && focused.Folder < 0) switcher.SwitchScene(SceneSwitcher.EntryScene);
                 else if (focused.Kind == BoardKind.Back) CloseFolder();
                 else EnterCourseSelect();
                 return;
@@ -811,6 +814,8 @@ namespace OurTaiko
             for (int i = 0; i < saved.Length; i++) saved[i].gameObject.SetActive(false);
             // The online categories, closed.
             for (int f = 0; f < folders.Length; f++) wheelBoards.Add(new Board { Kind = BoardKind.Folder, Folder = f, folders = folders });
+            // The root もどる, which returns to Entry.
+            wheelBoards.Add(new Board { Kind = BoardKind.Back, folders = folders });
         }
 
         // Later songs draw over earlier ones, as when every song had its own board: the bound views
@@ -881,19 +886,22 @@ namespace OurTaiko
             restackBoards = true;
             board.FolderSlot = slot; board.Root = item.Root; board.Group = item.group; board.RootOffset = Vector2.zero;
             item.click.Clicked = () => OnBoardClicked(board);
-            var folder = folders[board.Folder];
             bool back = board.Kind == BoardKind.Back;
+            var folder = board.Folder >= 0 ? folders[board.Folder] : null;
             item.panelClosed.sprite = back ? backBoard : boards[folder.Genre];
             item.panelClosed.Alpha(1);
-            item.panelOpen.sprite = folderBoards[folder.Genre];
             item.panelOpen.enabled = false;
-            int chara = Mathf.Clamp(folder.Genre, 0, charaLeft.Length - 1);
-            item.charaLeft.sprite = charaLeft[chara];
-            item.charaRight.sprite = charaRight[chara];
             item.charaLeft.enabled = item.charaRight.enabled = false;
             item.title.text = back ? BackLabel : folder.Title;
             item.title.Squeeze(860);
             item.count.text = back ? "" : $"{folder.Songs.Length} songs　{folder.ServerName}";
+            if (!back)
+            {
+                item.panelOpen.sprite = folderBoards[folder.Genre];
+                int chara = Mathf.Clamp(folder.Genre, 0, charaLeft.Length - 1);
+                item.charaLeft.sprite = charaLeft[chara];
+                item.charaRight.sprite = charaRight[chara];
+            }
             item.count.Squeeze(860);
             item.count.enabled = false;
         }
