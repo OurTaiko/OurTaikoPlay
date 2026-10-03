@@ -40,10 +40,12 @@ namespace OurTaiko
         public CourseInfo Course(Difficulty difficulty) => Courses.Find(c => c.Difficulty == difficulty);
         public bool Has(Difficulty difficulty) => Course(difficulty) != null;
 
-        public static SongInfo Read(string text)
+        public static SongInfo Read(string text, string language = null)
         {
             if (string.IsNullOrWhiteSpace(text)) throw new FormatException("The TJA chart is empty.");
             var info = new SongInfo();
+            var titles = new Dictionary<string, string>();
+            var subtitles = new Dictionary<string, string>();
             string course = "Oni";
             int level = 0;
             CourseInfo reading = null;
@@ -74,18 +76,45 @@ namespace OurTaiko
                 string key = line.Substring(0, colon).Trim().ToUpperInvariant(), value = line.Substring(colon + 1).Trim();
                 switch (key)
                 {
-                    case "TITLE": info.Title = value; break;
-                    case "SUBTITLE": info.Subtitle = value.TrimStart('-', '+'); break;
+                    case "TITLE": info.Title = value; titles["en"] = value; break;
+                    case "SUBTITLE": info.Subtitle = value.TrimStart('-', '+'); subtitles["en"] = info.Subtitle; break;
                     case "GENRE": info.Genre = value; break;
                     case "BPM": info.Bpm = Number(value, info.Bpm); break;
                     case "DEMOSTART": info.DemoStart = Number(value, 0); break;
                     case "COURSE": course = value; level = 0; break;
                     case "LEVEL": level = (int)Number(value, 0); break;
+                    default:
+                        bool subtitle = key.StartsWith("SUBTITLE", StringComparison.Ordinal);
+                        string prefix = subtitle ? "SUBTITLE" : "TITLE";
+                        if (!key.StartsWith(prefix, StringComparison.Ordinal)) break;
+                        string locale = TitleLanguage(key.Substring(prefix.Length));
+                        if (locale != null) (subtitle ? subtitles : titles)[locale] = subtitle ? value.TrimStart('-', '+') : value;
+                        break;
                 }
+            }
+            if (language != null)
+            {
+                info.Title = Translated(titles, language, info.Title);
+                info.Subtitle = Translated(subtitles, language, info.Subtitle);
             }
             info.Courses.Sort((a, b) => a.Difficulty.CompareTo(b.Difficulty));
             return info;
         }
+
+        static string Translated(Dictionary<string, string> values, string language, string fallback)
+        {
+            if (values.TryGetValue(language, out string text) && !string.IsNullOrWhiteSpace(text)) return text;
+            if (values.TryGetValue("ja", out text) && !string.IsNullOrWhiteSpace(text)) return text;
+            return fallback;
+        }
+
+        static string TitleLanguage(string suffix) => suffix switch
+        {
+            "EN" => "en", "JA" or "JP" => "ja", "KO" => "ko",
+            "ZH" or "CN" or "ZH_CN" or "ZH-CN" => "zh",
+            "TW" or "ZH_TW" or "ZH-TW" => "zh_tw",
+            _ => null,
+        };
 
         static double Number(string value, double fallback)
             => double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double result) ? result : fallback;

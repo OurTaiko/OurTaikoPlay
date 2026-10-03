@@ -57,6 +57,7 @@ namespace OurTaiko
         public RectTransform MojiRoot(int index) => shownMoji[index]?.Root;
         public RectTransform BarRoot(int index) => shownBars[index];
         SongDefinition song;
+        SongInfo displayInfo;
         bool autoPlay, hitKa;
         SceneSwitcher switcher;
         double feedbackTime = -10;
@@ -129,8 +130,9 @@ namespace OurTaiko
                 Session.Judged += OnJudged;
                 Session.BranchSelected += OnBranchSelected;
                 if (branchLane != null) branchLane.Initialize(Session.Chart.Branches.Count > 0);
-                title.text = Session.Chart.Title;
-                subtitle.text = $"{Session.Chart.Subtitle}    {Session.Chart.Course.ToUpperInvariant()}  LV.{Session.Chart.Level}";
+                displayInfo = song.ReadDisplayInfo();
+                title.text = displayInfo.Title;
+                subtitle.text = $"{displayInfo.Subtitle}    {Session.Chart.Course.ToUpperInvariant()}  LV.{Session.Chart.Level}";
                 CreateNotes();
                 music.SetAudioSong(song);
                 hitAudio.PrepareAudioEffects(don, ka, balloonPop);
@@ -356,6 +358,8 @@ namespace OurTaiko
         {
             songClock.Pause(); IsFinished = true; music.StopAudio();
             Result = PlayResult.From(Session, song.name, autoPlay);
+            Result.Title = displayInfo.Title;
+            Result.Subtitle = displayInfo.Subtitle;
             ScoreStore.Shared.Save(Result);
             SubmitOnline();
             switcher.ShowResult(Result);

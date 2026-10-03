@@ -22,5 +22,8 @@ namespace OurTaiko
         public TaikoChart Parse() => TjaParser.Parse(chart.text, course);
         public TaikoChart Parse(string requestedCourse) => TjaParser.Parse(chart.text, string.IsNullOrEmpty(requestedCourse) ? course : requestedCourse);
         public SongInfo ReadInfo() => SongInfo.Read(chart.text);
+        // Display metadata is separate from the parsed chart and score identity.
+        public SongInfo ReadDisplayInfo() => SongInfo.Read(chart.text,
+            SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language : "en");
     }
 }

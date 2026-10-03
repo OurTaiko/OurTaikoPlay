@@ -59,21 +59,23 @@ namespace OurTaiko.Tests
                 var menu = scene.Menu;
                 var view = scene.view;
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
-                Assert.That(view.typeRows[0].label.text, Is.EqualTo("Play"));
-                Assert.That(view.typeRows[1].label.text, Is.EqualTo("Display"));
-                Assert.That(view.typeRows[2].label.text, Is.EqualTo("Sound"));
-                Assert.That(view.typeRows[3].label.text, Is.EqualTo("Return"));
+                Assert.That(view.typeRows[0].label.text, Is.EqualTo("General"));
+                scene.Ka(1);
+                Assert.That(view.typeRows[1].label.text, Is.EqualTo("Play"));
+                Assert.That(view.typeRows[2].label.text, Is.EqualTo("Display"));
+                Assert.That(view.typeRows[3].label.text, Is.EqualTo("Sound"));
+                Assert.That(view.typeRows[4].label.text, Is.EqualTo("Return"));
                 Assert.That(view.itemRows[0].label.text, Is.EqualTo("Enable Drumpad for Single Player Mode"));
                 Assert.That(view.itemRows[0].value.text, Is.EqualTo("Enabled"));
-                Assert.That(view.typeRows[0].box.sprite, Is.SameAs(view.typeBoxSelected));
+                Assert.That(view.typeRows[1].box.sprite, Is.SameAs(view.typeBoxSelected));
                 AssertPopup(view, false);
                 TestCapture.Capture("SettingsTypes.png");
 
                 // Drum keys: ka wraps over Return, don enters Play, don opens the choices.
-                scene.Ka(-1);
+                scene.Ka(-2);
                 Assert.That(menu.IsTypeReturn, Is.True);
                 Assert.That(view.itemRows[0].root.gameObject.activeSelf, Is.False, "Return has no items.");
-                scene.Ka(1);
+                scene.Ka(2);
                 scene.Don();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
                 Assert.That(view.itemRows[0].box.sprite, Is.SameAs(view.itemBoxSelected));
@@ -106,11 +108,11 @@ namespace OurTaiko.Tests
                 AssertPopup(view, false);
                 view.itemSwipe.Swiped(1);
                 Assert.That(menu.IsItemReturn, Is.True);
-                view.typeSwipe.Swiped(-1);
+                view.typeSwipe.Swiped(-2);
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
                 Assert.That(menu.IsTypeReturn, Is.True);
-                view.typeRows[0].click.Clicked();
-                view.typeRows[0].click.Clicked();
+                view.typeRows[1].click.Clicked();
+                view.typeRows[1].click.Clicked();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items), "Tapping the focused type confirms it.");
                 view.itemRows[0].click.Clicked();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Choice), "The focused item opens on one tap.");

@@ -4,23 +4,27 @@ namespace OurTaiko.Tests
 {
     public sealed class SettingsMenuTests
     {
-        static SettingsMenu Menu(bool drumPad = true) =>
-            new SettingsMenu(SettingsMenu.Catalog(), new GameSettings { play = new PlaySettings { singlePlayerDrumPad = drumPad } });
+        static SettingsMenu Menu(bool drumPad = true)
+        {
+            var menu = new SettingsMenu(SettingsMenu.Catalog(), new GameSettings { play = new PlaySettings { singlePlayerDrumPad = drumPad } });
+            menu.Ka(1); // Play follows General.
+            return menu;
+        }
 
         [Test]
         public void DrumKeysWalkTypesItemsAndChoicesWithReturnEntries()
         {
             var menu = Menu();
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types), "The focus starts on the types.");
-            Assert.That(menu.Types[0].Label, Is.EqualTo("Play"));
-            Assert.That(menu.Types[1].Label, Is.EqualTo("Display"));
-            Assert.That(menu.TypeCount, Is.EqualTo(4), "Play, Display, Sound and Return.");
+            Assert.That(menu.Types[0].Label, Is.EqualTo("General"));
+            Assert.That(menu.Types[1].Label, Is.EqualTo("Play"));
+            Assert.That(menu.TypeCount, Is.EqualTo(5), "General, Play, Display, Sound and Return.");
 
             // ka wraps through Play, Display and Return; the item focus does not move with it.
-            Assert.That(menu.Ka(-1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.Ka(-2), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.IsTypeReturn, Is.True);
-            menu.Ka(1);
-            Assert.That(menu.TypeIndex, Is.Zero);
+            menu.Ka(2);
+            Assert.That(menu.TypeIndex, Is.EqualTo(1));
             menu.Ka(1);
             Assert.That(menu.CurrentType.Label, Is.EqualTo("Display"));
             menu.Ka(-1);
@@ -48,8 +52,8 @@ namespace OurTaiko.Tests
             Assert.That(menu.IsItemReturn, Is.True);
             Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Returned));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
-            Assert.That(menu.TypeIndex, Is.Zero, "The type stays where it was.");
-            menu.Ka(-1);
+            Assert.That(menu.TypeIndex, Is.EqualTo(1), "The type stays where it was.");
+            menu.Ka(-2);
             Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Exit));
         }
 
@@ -75,12 +79,12 @@ namespace OurTaiko.Tests
             // Tapping another type selects it; tapping the focused one confirms it.
             Assert.That(menu.TapType(menu.Types.Count), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.IsTypeReturn, Is.True);
-            Assert.That(menu.TapType(0), Is.EqualTo(SettingsMenu.Result.Moved));
-            Assert.That(menu.TapType(0), Is.EqualTo(SettingsMenu.Result.Entered));
+            Assert.That(menu.TapType(1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.TapType(1), Is.EqualTo(SettingsMenu.Result.Entered));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
 
             // An item tap from the types moves the focus to the items; a second tap opens the choices.
-            menu.TapType(0);
+            menu.TapType(1);
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
             Assert.That(menu.TapItem(0), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
@@ -93,11 +97,11 @@ namespace OurTaiko.Tests
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
 
             // Swipes move the focus into the swiped list, then through it (wrapping).
-            Assert.That(menu.SwipeTypes(-1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.SwipeTypes(-2), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
             Assert.That(menu.IsTypeReturn, Is.True);
             Assert.That(menu.SwipeItems(1), Is.EqualTo(SettingsMenu.Result.None), "Return has no items.");
-            menu.SwipeTypes(1);
+            menu.SwipeTypes(2);
             Assert.That(menu.SwipeItems(1), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
             Assert.That(menu.IsItemReturn, Is.True);
@@ -135,7 +139,7 @@ namespace OurTaiko.Tests
             var odd = new GameSettings { display = new DisplaySettings { targetFrameRate = 75 } };
             Assert.That(odd.display.TargetFrameRate, Is.EqualTo(120));
             menu = new SettingsMenu(SettingsMenu.Catalog(), odd);
-            menu.Ka(1); menu.Don(); menu.Don();
+            menu.Ka(2); menu.Don(); menu.Don();
             Assert.That(menu.ChoiceIndex, Is.Zero);
         }
 

@@ -492,3 +492,14 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 - **用户明确要求保留按帧判定**：输入时间戳只用于选出同帧最早的一击，其余打击丢弃；判定使用本帧 SongTime 减 audioOffset，不使用单次按键事件的时刻。120 FPS 下的帧时间量化是有意选择。DrumInputMutexTests 同时检查一帧只记录一击、记录的判定时间等于本帧歌曲时间。
 - 删除 AudioEngine.Clock 和独立 InputManagerUpdater，由 GameTimeline／GameLoop 接管；未添加未使用的时间源接口或每个动画一份计时器。
 - 验证：全部 EditMode 200/200、PlayMode 67/67，通过原生／Unity 音频调度、按帧输入互斥、HitFace 真正演奏帧、暂停恢复与场景流程；报告 `TestResults/unified-clock-editmode.json`、`unified-clock-playmode.json`。未重新构建独立 Player。
+
+
+## General 语言设置（2026-10-03）
+
+`settings.json` 新增 `general.language`，默认 `en`；旧配置缺少该分区时使用默认。General › Language 提供 English、日本語、简体中文、繁體中文、Korean（现有 DDFont 没有韩文字形，选项用英文避免方框）。仅选择歌曲主标题／副标题的语言，菜单文字、类别、皮肤与玩法均不受影响。
+
+`SongInfo.Read(text, language)` 读取 TJA 的 TITLE／SUBTITLE 及语言后缀，支持 JA／JP、ZH／CN／ZH_CN、TW／ZH_TW、KO、EN。在线目录与下载后的谱面沿用现有 API 元数据（en／ja／zh／ko）；API 不提供繁体中文，不扩展接口字段，选择繁体时回退到日文。每个字段独立按 **所选语言 → 日文** 回退；都缺失时保留基础 TITLE／SUBTITLE。空译名视为缺失。`ReadInfo()` 仍读取基础元数据，显示入口单独使用 `ReadDisplayInfo()`，覆盖选曲板、难度页、加载幕布、游玩和结算；不修改谱面判定数据或成绩标识。
+
+五个类型行（含 Return）使用 142 行距，保留原有行尺寸，在 footer 之前放下；语言选项使用现有三项可视区域及左右切换。
+
+验证：EditMode 208/208，语言完整流程 PlayMode 1/1，现有设置相关 PlayMode 9/9；报告 `TestResults/language-editmode.json`、`language-flow-playmode.json`、`language-settings-playmode.json`，截图 `SettingsGeneral.png`／`SettingsLanguage.png` 已检查。未重新构建独立 Player。

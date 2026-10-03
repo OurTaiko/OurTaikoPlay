@@ -62,6 +62,14 @@ namespace OurTaiko
 
         public static IReadOnlyList<SettingType> Catalog() => new[]
         {
+            new SettingType("General", new[]
+            {
+                new SettingItem("Language",
+                    "Choose the language for song titles and subtitles. Missing translations use Japanese, then the base title. Menus and skin artwork are unchanged.",
+                    GeneralSettings.LanguageNames,
+                    s => Array.IndexOf(GeneralSettings.Languages, s.general.Language),
+                    (s, choice) => s.general.language = GeneralSettings.Languages[choice]),
+            }),
             new SettingType("Play", new[]
             {
                 SettingItem.Toggle("Enable Drumpad for Single Player Mode",
