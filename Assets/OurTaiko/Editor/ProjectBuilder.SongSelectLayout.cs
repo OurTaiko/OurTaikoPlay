@@ -64,7 +64,7 @@ namespace OurTaiko.Editor
                 view.nameplate.Place(14, 908);
                 view.nameplate.transform.SetSiblingIndex(select.coursePanel.GetSiblingIndex());
             }
-            view.overlays = CreateSongSelectOverlayView(stage, select.overlay, select.font, select.outlineMaterial);
+            view.overlays = CreateSongSelectOverlayView(stage, select.overlay);
             view.overlays.transform.SetSiblingIndex(select.coursePanel.GetSiblingIndex() + 1);
             PersistSongSelectTextMaterials(stage);
             PreviewSongSelectLayout(select, 0, false);
@@ -106,12 +106,9 @@ namespace OurTaiko.Editor
             board.crown = SkinUi.Image("Crown", root, select.crownClear[0], 72, 72);
             board.crown.rectTransform.Center(-425, -27);
             board.crown.enabled = false;
-            var outline = new Color32(0, 0, 0, 153);
-            board.title = SkinUi.Text("Title", root, select.font, select.outlineMaterial, 42, outline, 0.3f);
-            board.title.OutlineOutsidePixels(5);
+            board.title = SkinUi.Text("Title", root, 42);
             board.title.text = "曲名";
-            board.subtitle = SkinUi.Text("Subtitle", root, select.font, select.outlineMaterial, 24, outline, 0.3f);
-            board.subtitle.OutlineOutsidePixels(3.5f);
+            board.subtitle = SkinUi.Text("Subtitle", root, 24);
             board.subtitle.text = "サブタイトル";
             board.subtitle.rectTransform.Center(0, -28);
             board.subtitle.enabled = false;
@@ -133,8 +130,7 @@ namespace OurTaiko.Editor
             plate.star.rectTransform.Center(27, 0);
             plate.level = SkinUi.Image("Level", root, select.levels[d * 11], 48, 48);
             plate.level.rectTransform.Center(61, 0);
-            plate.label = SkinUi.Text("Course", root, select.font, select.outlineMaterial, 18, new Color32(40, 20, 20, 255), 0.25f);
-            plate.label.OutlineOutsidePixels(1.5f);
+            plate.label = SkinUi.Text("Course", root, 18);
             plate.label.characterSpacing = 100f / 18;
             plate.label.text = SavedCourseNames[d];
             plate.label.rectTransform.Center(-42, 30);
@@ -214,19 +210,16 @@ namespace OurTaiko.Editor
                 }
                 card.branch = SkinUi.Image("Branch", card.board.transform, select.courseBranch, 40, 40);
                 card.branch.rectTransform.Center(100, 324);
-                card.name = SkinUi.Text("CourseName", card.board.transform, select.font, select.outlineMaterial, 34, new Color32(20, 20, 20, 255), 0.25f);
-                card.name.OutlineOutsidePixels(4.5f);
+                card.name = SkinUi.Text("CourseName", card.board.transform, 34);
                 card.name.characterSpacing = 100f / 34;
                 card.name.rectTransform.Center(100, 229);
             }
             view.uraChange = SkinUi.Image("UraChange", panel, null, 340, 400);
             view.uraChange.rectTransform.TopLeft(SavedCourseX[3] - 170, 373);
             view.uraChange.enabled = false;
-            view.header = SkinUi.Text("Title", panel, select.font, select.outlineMaterial, 48, Color.black, 0.25f);
-            view.header.OutlineOutsidePixels(7);
+            view.header = SkinUi.Text("Title", panel, 48);
             view.header.rectTransform.Center(960, 178);
-            view.headerSub = SkinUi.Text("Subtitle", panel, select.font, select.outlineMaterial, 30, Color.black, 0.25f);
-            view.headerSub.OutlineOutsidePixels(4);
+            view.headerSub = SkinUi.Text("Subtitle", panel, 30);
             view.headerSub.rectTransform.Center(960, 242);
             view.balloon = SkinUi.Image("PlayerBalloon", panel, select.playerBalloon, 124, 124);
             view.balloon.rectTransform.Center(SavedCourseX[0], 370);
@@ -234,7 +227,7 @@ namespace OurTaiko.Editor
             var optionsPrefab = AssetDatabase.LoadAssetAtPath<OptionPanelView>(PlayOptionsPrefabPath);
             if (optionsPrefab == null)
             {
-                var options = CreateOptionPanelView(null, select.optionArt, select.font, select.outlineMaterial);
+                var options = CreateOptionPanelView(null, select.optionArt);
                 PersistSongSelectTextMaterials(options.transform);
                 var prefab = PrefabUtility.SaveAsPrefabAsset(options.gameObject, PlayOptionsPrefabPath);
                 optionsPrefab = prefab.GetComponent<OptionPanelView>();
@@ -299,24 +292,11 @@ namespace OurTaiko.Editor
             SceneView.RepaintAll();
         }
 
-        // SkinUi creates per-text material instances. Give every distinct shader style a stable
-        // asset and discard TMP's instance caches before a scene or prefab is serialized.
+        // Texts share SkinUi's saved materials; drop any TMP instance caches before serializing.
         static void PersistSongSelectTextMaterials(Transform root)
         {
-            const string directory = Root + "Generated/SongSelectMaterials";
-            if (!AssetDatabase.IsValidFolder(directory)) AssetDatabase.CreateFolder(Root + "Generated", "SongSelectMaterials");
             foreach (var text in root.GetComponentsInChildren<TMP_Text>(true))
             {
-                var source = text.fontSharedMaterial;
-                if (source == null || AssetDatabase.Contains(source)) continue;
-                string path = directory + "/Style-" + SavedMaterialKey(source) + ".mat";
-                var saved = AssetDatabase.LoadAssetAtPath<Material>(path);
-                if (saved == null)
-                {
-                    saved = new Material(source) { name = "SongSelect " + text.name };
-                    AssetDatabase.CreateAsset(saved, path);
-                }
-                text.fontSharedMaterial = saved;
                 var serialized = new SerializedObject(text);
                 serialized.FindProperty("m_fontMaterial").objectReferenceValue = null;
                 serialized.FindProperty("m_fontSharedMaterials").ClearArray();
@@ -325,32 +305,6 @@ namespace OurTaiko.Editor
                 text.UpdateMeshPadding();
                 EditorUtility.SetDirty(text);
             }
-        }
-
-        static string SavedMaterialKey(Material material)
-        {
-            var value = new StringBuilder(material.shader.name);
-            value.Append('|').Append(string.Join(",", material.shaderKeywords.OrderBy(s => s)));
-            for (int i = 0; i < ShaderUtil.GetPropertyCount(material.shader); i++)
-            {
-                string name = ShaderUtil.GetPropertyName(material.shader, i);
-                value.Append('|').Append(name).Append('=');
-                switch (ShaderUtil.GetPropertyType(material.shader, i))
-                {
-                    case ShaderUtil.ShaderPropertyType.Color:
-                        value.Append(material.GetColor(name).ToString("R")); break;
-                    case ShaderUtil.ShaderPropertyType.Vector:
-                        value.Append(material.GetVector(name).ToString("R")); break;
-                    case ShaderUtil.ShaderPropertyType.TexEnv:
-                        value.Append(AssetDatabase.GetAssetPath(material.GetTexture(name)));
-                        value.Append(material.GetTextureScale(name).ToString("R"));
-                        value.Append(material.GetTextureOffset(name).ToString("R")); break;
-                    default:
-                        value.Append(material.GetFloat(name).ToString("R", CultureInfo.InvariantCulture)); break;
-                }
-            }
-            using (var sha = SHA256.Create())
-                return string.Concat(sha.ComputeHash(Encoding.UTF8.GetBytes(value.ToString())).Take(8).Select(b => b.ToString("x2")));
         }
     }
 }

@@ -8,7 +8,8 @@ namespace OurTaiko
     // coordinates, every element is anchored to the stage's top-left corner and the Canvas scales it.
     public static class SkinUi
     {
-        static TMP_FontAsset outlinedFont;
+        static TMP_FontAsset font;
+        static Material outlineMaterial;
 
         public static RectTransform Rect(string name, Transform parent, float width = 0, float height = 0)
         {
@@ -45,64 +46,41 @@ namespace OurTaiko
             graphic.enabled = alpha > 0.001f;
         }
 
-        // Mobile SDF draws outlines only with OUTLINE_ON; scenes pass a saved material that enables it
-        // so the shader variant also survives player builds.
-        public static TextMeshProUGUI Text(string name, Transform parent, TMP_FontAsset font, Material outlineMaterial, float size, Color32 outline, float outlineWidth)
+        // All text uses one SDF font. Light text gets an opaque black outline; text that is itself
+        // black (or near-black) gets none. TMP outline widths are a fraction of the em, so the
+        // border follows each text's font size and scale.
+        public const string FontName = "Nijiiro UI SDF", OutlineMaterialName = "Nijiiro UI SDF Outline";
+        public const float OutlineWidth = 0.125f;
+
+        public static TMP_FontAsset Font => font != null ? font : font = Resources.Load<TMP_FontAsset>(FontName)
+            ?? throw new System.InvalidOperationException("Missing " + FontName + " font asset.");
+        public static Material OutlineMaterial => outlineMaterial != null ? outlineMaterial
+            : outlineMaterial = Resources.Load<Material>(OutlineMaterialName)
+            ?? throw new System.InvalidOperationException("Missing " + OutlineMaterialName + " material.");
+
+        public static TextMeshProUGUI Text(string name, Transform parent, float size)
         {
             var rect = Rect(name, parent, 1200, size * 1.6f);
             var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
-            text.font = font;
-            // Bind the material before the outline: TMP instances it for per-text outline colours.
-            var material = new Material(outlineMaterial != null ? outlineMaterial : font.material);
-            material.EnableKeyword(ShaderUtilities.Keyword_Outline);
-            material.SetColor(ShaderUtilities.ID_OutlineColor, outline);
-            text.fontSharedMaterial = material;
             text.fontSize = size;
+            text.UseUiFont();
             text.alignment = TextAlignmentOptions.Center;
             text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Overflow;
             text.raycastTarget = false;
             text.color = Color.white;
-            text.outlineWidth = outlineWidth;
-            text.outlineColor = outline;
             return text;
         }
 
-        // Compatibility for the original 90-point / 9-padding material settings. Keep their visible
-        // border thickness, but render on an atlas with enough distance around each glyph.
-        public static void OutlineOutside(this TMP_Text text, float width)
-        {
-            float ratio = 1 / Mathf.Max(1, 0.75f / 4 + 2 * width);
-            text.OutlineOutsidePixels(2 * 9 * width * ratio * text.fontSize / 90);
-        }
+        public static bool IsDark(Color color) => 0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b < 0.3f;
 
-        // Width is in the 1920x1080 stage's units, so the Canvas also scales the border. TMP's SDF
-        // spans 2 * gradientScale atlas pixels. Equal dilate/outline keeps the white glyph intact;
-        // using the old narrow atlas here makes even empty texels visible as grey rectangles.
-        public static void OutlineOutsidePixels(this TMP_Text text, float pixels)
+        // Binds the shared font and, by the text's colour, the outline or plain shared material
+        // (never a per-text instance). Call again after changing a text between light and dark.
+        public static void UseUiFont(this TMP_Text text)
         {
-            if (outlinedFont == null) outlinedFont = Resources.Load<TMP_FontAsset>("Nijiiro UI SDF");
-            if (outlinedFont == null) throw new System.InvalidOperationException("Missing Nijiiro UI SDF font asset.");
-            if (text.font != outlinedFont)
-            {
-                var color = text.outlineColor;
-                text.font = outlinedFont;
-                text.fontSharedMaterial = outlinedFont.material;
-                // Refresh TMP's cached instance before its outline setters can restore the old one.
-                // Write the material directly: TMP's cached outlineColor already equals this colour,
-                // so its property setter would skip it after switching to the new default material.
-                text.fontMaterial.SetColor(ShaderUtilities.ID_OutlineColor, color);
-                // SetOutlineThickness can bind a texture separately from the material. Updating the
-                // material alone leaves that old atlas on CanvasRenderer, producing scrambled glyphs.
-                text.canvasRenderer.SetTexture(outlinedFont.atlasTexture);
-            }
-            float width = pixels * outlinedFont.faceInfo.pointSize / (2 * outlinedFont.atlasPadding * text.fontSize);
-            var material = text.fontMaterial;
-            material.EnableKeyword(ShaderUtilities.Keyword_Outline);
-            material.SetFloat(ShaderUtilities.ID_FaceDilate, width);
-            text.outlineWidth = width;
+            text.font = Font;
+            text.fontSharedMaterial = IsDark(text.color) ? Font.material : OutlineMaterial;
             text.UpdateMeshPadding();
-            text.SetMaterialDirty();
         }
 
         // Arcade EditText boxes squeeze long text horizontally down to the box width.

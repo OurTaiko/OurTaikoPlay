@@ -28,7 +28,7 @@ namespace OurTaiko.Tests
             Assert.That(canvas.GetComponent<UnityEngine.UI.CanvasScaler>().referenceResolution, Is.EqualTo(new Vector2(1920, 1080)));
             Assert.That(canvas.transform.Find("Viewport1920x1080").GetComponent<RectTransform>().sizeDelta, Is.EqualTo(new Vector2(1920, 1080)));
             Assert.That(play.noteSprites[1].rect.size, Is.EqualTo(new Vector2(192, 192)));
-            Assert.That(play.title.font.name, Is.EqualTo("Nijiiro SDF"));
+            Assert.That(play.title.font, Is.SameAs(SkinUi.Font));
             var gauge = play.soulGauge;
             foreach (double threshold in new[] { 0.6, 0.7, 0.8 })
             {

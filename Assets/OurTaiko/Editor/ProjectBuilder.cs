@@ -44,13 +44,7 @@ namespace OurTaiko.Editor
                 importer.maxTextureSize = 4096;
                 importer.SaveAndReimport();
             }
-            font = TMP_FontAsset.CreateFontAsset(AssetDatabase.LoadAssetAtPath<Font>(Root + "Art/Taiko.ttf"));
-            font.name = "Nijiiro SDF";
-            AssetDatabase.CreateAsset(font, Root + "Generated/Nijiiro SDF.asset");
-            AssetDatabase.AddObjectToAsset(font.material, font);
-            foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
-            font.TryAddCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 /:.,!?+-()_★");
-            EditorUtility.SetDirty(font);
+            font = UiFont();
             var triple = Song("TripleHelix", "Oni", true);
             var calibration = Song("Calibration", "Hard", false);
             var branchTraining = Song("BranchTraining", "Oni", false);
@@ -120,9 +114,9 @@ namespace OurTaiko.Editor
         static TMP_Text Label(Transform parent, string name, string value, float x, float y, float w, float h, int size, TextAlignmentOptions align = TextAlignmentOptions.Center)
         {
             var label = Rect(name, parent, x, y, w, h).gameObject.AddComponent<TextMeshProUGUI>();
-            label.font = font; label.text = value; label.fontSize = size; label.alignment = align;
+            label.text = value; label.fontSize = size; label.alignment = align;
             label.color = Color.white; label.raycastTarget = false; label.textWrappingMode = TextWrappingModes.NoWrap;
-            label.outlineWidth = 0.15f; label.outlineColor = new Color32(25, 17, 27, 255);
+            label.UseUiFont();
             return label;
         }
         static UnityEngine.UI.Button Button(Transform parent, string name, string caption, float x, float y, float w, float h, Color color)
@@ -247,7 +241,7 @@ namespace OurTaiko.Editor
         public static void AddFpsCounter(Transform root)
         {
             if (root.Find("FpsPanel") != null) return;
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
+            font = UiFont();
             var panel = Panel(root, "FpsPanel", 24, 132, 148, 30, new Color32(28, 29, 32, 225));
             var label = Label(panel.transform, "FpsCounter", "FPS --", 8, 0, 132, 30, 18, TextAlignmentOptions.Left);
             label.gameObject.AddComponent<FpsCounter>();

@@ -72,7 +72,6 @@ namespace OurTaiko
         const float LabelX = 960 - 443, MessageX = 960 + 190, FontSize = 56;
         static readonly float[] RowY = { 432 + 72, 432 + 248 };
         const double LoopStart = 5, LoopFrames = 120, DecideFlashFrames = 24;
-        static readonly Color32 Yellow = new Color32(255, 236, 67, 255);
 
         readonly LumenClip row, fade;
         readonly Image[] pills = new Image[2], flashes = new Image[2];
@@ -82,7 +81,7 @@ namespace OurTaiko
         public float FlashAlpha { get; private set; }
         public bool IsVisible => Alpha > 0.002f;
 
-        public EntryCredit(Transform parent, Sprite pill, Sprite flash, TMP_FontAsset font, Material outline, LumenClip row, LumenClip fade)
+        public EntryCredit(Transform parent, Sprite pill, Sprite flash, LumenClip row, LumenClip fade)
         {
             this.row = row; this.fade = fade;
             var root = SkinUi.Rect("Credit", parent);
@@ -91,15 +90,15 @@ namespace OurTaiko
             {
                 pills[i] = SkinUi.Image("Pill" + (i + 1), root, pill);
                 pills[i].rectTransform.TopLeft(380, 404 + i * 176);
-                // entry_credit_Np: black fill, white border 7
-                labels[i] = Text(root, "Label" + (i + 1), font, outline, Color.black, Color.white, names[i]);
+                // entry_credit_Np: black fill
+                labels[i] = Text(root, "Label" + (i + 1), Color.black, names[i]);
                 labels[i].alignment = TextAlignmentOptions.MidlineLeft;
                 labels[i].rectTransform.pivot = new Vector2(0, 0.5f);
                 labels[i].rectTransform.anchoredPosition = new Vector2(LabelX, -RowY[i]);
-                // entry_credit_start: white fill, black border; a yellow-bordered copy blends over it
-                messages[i] = Text(root, "Message" + (i + 1), font, outline, Color.white, Color.black, "太鼓をたたいてスタート！");
+                // entry_credit_start: white fill; a highlighted copy blends over it
+                messages[i] = Text(root, "Message" + (i + 1), Color.white, "太鼓をたたいてスタート！");
                 messages[i].rectTransform.Center(MessageX, RowY[i]);
-                highlights[i] = Text(root, "Highlight" + (i + 1), font, outline, Color.white, Yellow, "太鼓をたたいてスタート！");
+                highlights[i] = Text(root, "Highlight" + (i + 1), Color.white, "太鼓をたたいてスタート！");
                 highlights[i].rectTransform.Center(MessageX, RowY[i]);
             }
             for (int i = 0; i < 2; i++)
@@ -109,11 +108,11 @@ namespace OurTaiko
             }
         }
 
-        static TextMeshProUGUI Text(Transform parent, string name, TMP_FontAsset font, Material outline, Color fill, Color32 border, string value)
+        static TextMeshProUGUI Text(Transform parent, string name, Color fill, string value)
         {
-            var text = SkinUi.Text(name, parent, font, outline, FontSize, border, 0);
-            text.OutlineOutside(0.6f);
+            var text = SkinUi.Text(name, parent, FontSize);
             text.color = fill;
+            text.UseUiFont();
             text.text = value;
             return text;
         }
@@ -166,7 +165,6 @@ namespace OurTaiko
     {
         public string Title, Scene;
         public string[] Info;
-        public Color32 Rim;          // the title's mode-colour rim (box.lua MODES[*].outline)
         public Sprite On, Off;
     }
 
@@ -196,7 +194,7 @@ namespace OurTaiko
         public float ChooseFlash => Selected.ChooseFlash;
 
         public EntryModeList(Transform parent, IReadOnlyList<EntryMode> modes, Sprite boardFlash, Sprite cursorGlow,
-            TMP_FontAsset font, Material outline, LumenClip board, LumenClip glow, LumenClip list)
+            LumenClip board, LumenClip glow, LumenClip list)
         {
             this.board = board; this.glow = glow; this.list = list;
             selectOn = board.Label("select_on") ?? 27;
@@ -214,7 +212,7 @@ namespace OurTaiko
             Root = SkinUi.Rect("ModeBoards", parent);
             boards = new EntryModeBoard[modes.Count];
             for (int i = 0; i < modes.Count; i++)
-                boards[i] = new EntryModeBoard(Root, modes[i], boardFlash, cursorGlow, font, outline);
+                boards[i] = new EntryModeBoard(Root, modes[i], boardFlash, cursorGlow);
         }
 
         // kanban_1 is the selected slot; the slots above/below are kanban_2/3, 4/5, 6/7.
@@ -325,7 +323,7 @@ namespace OurTaiko
         internal bool Opening;
         internal double OpenStartedAt = double.NaN;
 
-        public EntryModeBoard(Transform parent, EntryMode mode, Sprite boardFlash, Sprite cursorGlow, TMP_FontAsset font, Material outline)
+        public EntryModeBoard(Transform parent, EntryMode mode, Sprite boardFlash, Sprite cursorGlow)
         {
             Mode = mode;
             Root = SkinUi.Rect(mode.Title, parent);
@@ -336,29 +334,13 @@ namespace OurTaiko
             info = new TextMeshProUGUI[mode.Info.Length];
             for (int i = 0; i < info.Length; i++)
             {
-                // text_info: 34, white, black border 5
-                info[i] = SkinUi.Text("Info" + i, Root, font, outline, InfoSize, new Color32(0, 0, 0, 255), 0);
-                info[i].OutlineOutside(0.6f);
+                // text_info: 34, white
+                info[i] = SkinUi.Text("Info" + i, Root, InfoSize);
                 info[i].characterSpacing = 100f / InfoSize;
                 info[i].text = mode.Info[i];
                 info[i].rectTransform.Center(CenterX, CenterY + InfoY + (i - (info.Length - 1) / 2f) * InfoLineHeight);
             }
-            // two stacked titles in the arcade: a mode-colour rim under a wider black one
-            title = SkinUi.Text("Title", Root, font, outline, TitleSize, mode.Rim, 0);
-            title.OutlineOutside(0.3f);
-            var material = title.fontMaterial;
-            material.EnableKeyword(ShaderUtilities.Keyword_Underlay);
-            material.SetColor(ShaderUtilities.ID_UnderlayColor, Color.black);
-            // Preserve the previous black rim (5.481 design units) when using the wider UI atlas.
-            // Underlay dilation shares half of the face expansion; it has its own TMP scale ratio.
-            ShaderUtilities.UpdateShaderRatios(material);
-            float gradient = material.GetFloat(ShaderUtilities.ID_GradientScale);
-            float face = material.GetFloat(ShaderUtilities.ID_FaceDilate) * material.GetFloat(ShaderUtilities.ID_ScaleRatio_A);
-            float underlay = (5.481f * title.font.faceInfo.pointSize / (gradient * TitleSize) - face)
-                / material.GetFloat(ShaderUtilities.ID_ScaleRatio_C);
-            material.SetFloat(ShaderUtilities.ID_UnderlayDilate, underlay);
-            material.SetFloat(ShaderUtilities.ID_UnderlaySoftness, 0);
-            title.UpdateMeshPadding();
+            title = SkinUi.Text("Title", Root, TitleSize);
             title.characterSpacing = 2 * 100f / TitleSize;
             title.text = mode.Title;
             flash = Plate("Flash", boardFlash);

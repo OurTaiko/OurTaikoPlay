@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 4f5a6624e13ff4f648354208e85846b8
+guid: 211419a00effc4ccfba5a608cc3a0f14
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - DFPKanTeiRyu-XB
+  - FOT-OedKtr Std
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

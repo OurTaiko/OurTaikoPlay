@@ -64,7 +64,7 @@ namespace OurTaiko.Editor
 
         static void BuildNameplatePrefab()
         {
-            var uiFont = OutlinedUiFont();
+            var uiFont = UiFont();
             var root = new GameObject("Nameplate", typeof(RectTransform));
             try
             {
@@ -84,10 +84,10 @@ namespace OurTaiko.Editor
                 view.badge = PlateImage(root.transform, "Badge", Sprite(art + "1p"), NameplateLayout.BadgeX, NameplateLayout.BadgeY);
                 // text_title: black, no border. text_name: white with a black border (outline material).
                 view.title = PlateText(root.transform, "Title", uiFont,
-                    OutlinedUiMaterial("Nameplate Title", uiFont, NameplateLayout.TitleFontSize, 0),
+                    uiFont.material,
                     Color.black, NameplateLayout.TitleBoxWidth, NameplateLayout.TitleFontSize);
                 view.playerName = PlateText(root.transform, "Name", uiFont,
-                    OutlinedUiMaterial("Nameplate Name", uiFont, 24, 3), Color.white, NameplateLayout.NameBoxWidth, 24);
+                    UiOutlineMaterial(), Color.white, NameplateLayout.NameBoxWidth, 24);
                 AttachClip(root, NameplateRainbowClip());
                 PrefabUtility.SaveAsPrefabAsset(root, NameplatePrefabPath);
             }

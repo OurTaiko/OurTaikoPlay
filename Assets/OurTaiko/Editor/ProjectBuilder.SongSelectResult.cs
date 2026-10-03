@@ -23,14 +23,13 @@ namespace OurTaiko.Editor
                 if (EditorSceneManager.GetSceneAt(i).isDirty)
                     throw new InvalidOperationException("Save the current scene edits first.");
             ImportSongSelectResultArt();
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
+            font = UiFont();
             var songs = new[] { "TripleHelix", "Calibration", "BranchTraining" }
                 .Select(n => AssetDatabase.LoadAssetAtPath<SongDefinition>(Root + "Songs/" + n + ".asset")).ToArray();
             if (songs.Any(s => s == null)) throw new FileNotFoundException("A song asset is missing.");
             if (!File.Exists(SongSelectPath)) CreateSongSelectScene(songs);
             if (!File.Exists(ResultPath)) CreateResultScene();
-            var outline = OutlineMaterial();
-            UpgradeStage(SongSelectPath, outline); UpgradeStage(ResultPath, outline);
+            UpgradeStage(SongSelectPath); UpgradeStage(ResultPath);
             var scenes = EditorBuildSettings.scenes.ToList();
             foreach (var path in new[] { SongSelectPath, ResultPath })
                 if (!scenes.Any(s => s.path == path)) scenes.Add(new EditorBuildSettingsScene(path, true));
@@ -112,25 +111,10 @@ namespace OurTaiko.Editor
             label.gameObject.AddComponent<FpsCounter>();
         }
 
-        static Material OutlineMaterial()
-        {
-            const string path = Root + "Generated/Nijiiro SDF Outline.mat";
-            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (material != null) return material;
-            material = new Material(font.material) { name = "Nijiiro SDF Outline" };
-            material.EnableKeyword(ShaderUtilities.Keyword_Outline);
-            AssetDatabase.CreateAsset(material, path);
-            return material;
-        }
-
-        // Targeted upgrade of scenes built earlier: the outline material and the bottom-right FPS panel.
-        static void UpgradeStage(string path, Material outline)
+        // Targeted upgrade of scenes built earlier: the bottom-right FPS panel.
+        static void UpgradeStage(string path)
         {
             var scene = EditorSceneManager.OpenScene(path);
-            var select = UnityEngine.Object.FindFirstObjectByType<SongSelectScene>();
-            var result = UnityEngine.Object.FindFirstObjectByType<ResultScene>();
-            if (select != null) { select.outlineMaterial = outline; EditorUtility.SetDirty(select); }
-            if (result != null) { result.outlineMaterial = outline; EditorUtility.SetDirty(result); }
             var panel = UnityEngine.Object.FindFirstObjectByType<FpsCounter>()?.transform.parent as RectTransform;
             if (panel != null) panel.anchoredPosition = new Vector2(1662, -1011);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -142,7 +126,6 @@ namespace OurTaiko.Editor
             var root = NewStage();
             var controller = new GameObject("SongSelect").AddComponent<SongSelectScene>();
             controller.songs = songs;
-            controller.font = font;
             controller.nameplatePrefab = AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);
             var background = Rect("Background", root, 0, 0, 1920, 1080);
             controller.backgroundTiles = new UnityEngine.UI.Image[4];
@@ -200,7 +183,6 @@ namespace OurTaiko.Editor
         {
             var root = NewStage();
             var controller = new GameObject("Result").AddComponent<ResultScene>();
-            controller.font = font;
             controller.nameplatePrefab = AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);
             var stage = Rect("Stage", root, 0, 0, 1920, 1080);
             controller.stage = stage;

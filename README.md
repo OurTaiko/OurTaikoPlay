@@ -76,7 +76,7 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 - `Runtime/Core/PlayResult.cs`、`ScoreStore.cs`：结算数据与本地最佳成绩（`Application.persistentDataPath/scores.json`）。与原 `save_score` 相同，自动演奏不保存；选曲板和难度卡显示保存的皇冠。
 - `Scenes/SongSelect.unity` 保存选曲、难度选择、演奏选项、名牌与计时器的完整层级。选中 `SongSelectScene` 控制组件，在 Inspector 切换「选曲列表／难度选择／演奏选项」预览，无需进入 Play；预览切换只控制显示状态。
 - `Generated/SongBoard.prefab` 与 `Generated/PlayOptions.prefab` 可在 Prefab Mode 中编辑。运行时代码绑定保存的引用，更新歌曲内容、输入与动画；静态布局保留 Inspector 调整，动画从保存的位置与尺寸施加偏移。迁移菜单 **OurTaiko/Apply Song Select Layout** 只处理尚未迁移的场景。
-- `Editor/ProjectBuilder.SongSelectResult.cs`：菜单 **OurTaiko/Create Song Select And Result Scenes**，导入新素材、生成切片与描边材质，仅在场景不存在时创建，之后可直接编辑场景。
+- `Editor/ProjectBuilder.SongSelectResult.cs`：菜单 **OurTaiko/Create Song Select And Result Scenes**，导入新素材、生成切片，仅在场景不存在时创建，之后可直接编辑场景。
 - `Editor/ProjectBuilder.cs`：通过 Editor API 创建初始场景和 sprite 切片。生成后不自动覆盖场景，后续直接编辑现有场景。
 
 选曲／结算尚未移植：文件夹与类别、搜索与排序、独立音色面板、演奏スキップ、段位、2P、成绩等级（粋／雅／極）演出、3D 咚、曲目板飞入动画、难度决定后的标记弹出，以及皇冠光芒的加算混合（目前按普通透明度绘制）。TRIPLE HELIX 的 Edit（裏）谱面使用字母扩展音符，可在选曲中选择但会显示“CHART COULD NOT LOAD”。

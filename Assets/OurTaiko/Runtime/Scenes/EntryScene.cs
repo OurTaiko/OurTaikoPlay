@@ -17,8 +17,6 @@ namespace OurTaiko
     {
         public const int TimerSeconds = 60;
 
-        public TMP_FontAsset font;
-        public Material outlineMaterial;
         public RectTransform stage;
 
         [Header("Background")]
@@ -99,21 +97,21 @@ namespace OurTaiko
             new EntryMode
             {
                 Title = "演奏ゲーム", Info = new[] { "すきな曲や、むずかしさを", "えらんであそべるよ！" },
-                Rim = new Color32(251, 1, 29, 255), On = boardOn, Off = boardOff, Scene = SceneSwitcher.SongSelectScene,
+                On = boardOn, Off = boardOff, Scene = SceneSwitcher.SongSelectScene,
             },
             new EntryMode
             {
                 Title = "ゲーム設定", Info = new[] { "ゲームのせっていを", "かえられるよ！" },
-                Rim = new Color32(0, 132, 212, 255), On = settingsBoardOn, Off = settingsBoardOff, Scene = SceneSwitcher.SettingScene,
+                On = settingsBoardOn, Off = settingsBoardOff, Scene = SceneSwitcher.SettingScene,
             },
         };
 
         void Build()
         {
             backdrop = new EntryBackground(stage, background, streetLit, glow, twinkle, Clip(backgroundTimeline));
-            Board = new EntryModeList(stage, Modes, boardFlash, boardCursor, font, outlineMaterial,
+            Board = new EntryModeList(stage, Modes, boardFlash, boardCursor,
                 Clip(modeBoardTimeline), Clip(cursorGlowTimeline), Clip(modeListTimeline));
-            Credit = new EntryCredit(stage, creditPill, creditFlash, font, outlineMaterial, Clip(creditRowTimeline), Clip(creditFadeTimeline));
+            Credit = new EntryCredit(stage, creditPill, creditFlash, Clip(creditRowTimeline), Clip(creditFadeTimeline));
             Guide = new ControlGuideView(stage, overlay);
             if (nameplatePrefab != null)
             {
@@ -127,7 +125,7 @@ namespace OurTaiko
             TimerView = new ArcadeTimerView(stage, overlay);
             TimerView.Show(TimerSeconds);
             StatusChips.Build(stage, overlay);
-            Coins = new CoinOverlayView(stage, overlay, font, outlineMaterial);
+            Coins = new CoinOverlayView(stage, overlay);
             // Touch: on the credit screen a tap anywhere joins (the drum's face). On the mode list taps
             // work like SongSelect's boards: tap another board to move to it, tap the open board to
             // pick it; elsewhere a tap does nothing. Vertical swipes move through the boards. The

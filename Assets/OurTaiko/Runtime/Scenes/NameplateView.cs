@@ -85,15 +85,12 @@ namespace OurTaiko
             title.gameObject.SetActive(hasBand && info.HasTitle);
             if (title.gameObject.activeSelf)
             {
-                title.OutlineOutsidePixels(0);
                 SetText(title, info.title, NameplateLayout.TitleFontSize,
                     NameplateLayout.TitleX, NameplateLayout.TitleY, NameplateLayout.TitleBoxWidth);
             }
 
             var box = NameplateLayout.NameBox(info);
             playerName.fontSize = box.FontSize;
-            playerName.OutlineOutsidePixels(3);
-            playerName.fontMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
             SetText(playerName, info.name, box.FontSize, box.X, box.Y, NameplateLayout.NameBoxWidth);
         }
 

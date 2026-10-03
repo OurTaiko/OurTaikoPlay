@@ -9,8 +9,7 @@ namespace OurTaiko.Editor
     {
         // Builds the former runtime hierarchy once. Save this view in a scene/prefab; runtime only
         // binds its controls and adds animation offsets to the editable resting RectTransforms.
-        public static OptionPanelView CreateOptionPanelView(RectTransform parent, OptionPanelArt art,
-            TMP_FontAsset panelFont, Material outline)
+        public static OptionPanelView CreateOptionPanelView(RectTransform parent, OptionPanelArt art)
         {
             if (EditorApplication.isPlaying)
                 throw new InvalidOperationException("Exit Play mode before creating the option panel.");
@@ -32,20 +31,20 @@ namespace OurTaiko.Editor
             view.top.raycastTarget = true;
             view.player = SkinUi.Image("Player", view.board, art.player);
             view.player.rectTransform.TopLeft(32, 17);
-            view.title = SkinUi.Text("Title", view.board, panelFont, outline, 32, Color.black, 0.3f);
+            view.title = SkinUi.Text("Title", view.board, 32);
             view.title.text = "演奏オプション";
             view.title.rectTransform.Center(215, 49);
 
             view.rows = new OptionPanelView.RowView[OptionMenu.Rows.Length];
             for (int i = 0; i < view.rows.Length; i++)
-                view.rows[i] = CreateOptionPanelRow(view.board, i, art, panelFont, outline);
+                view.rows[i] = CreateOptionPanelRow(view.board, i, art);
             // Leave the new hierarchy visible with ordinary default settings for Prefab/Scene view.
             // No PlayOptions.Shared access here: editor construction must not load or save user data.
             return view;
         }
 
         static OptionPanelView.RowView CreateOptionPanelRow(RectTransform board, int index,
-            OptionPanelArt art, TMP_FontAsset panelFont, Material outline)
+            OptionPanelArt art)
         {
             const float rowTop = 86, rowPitch = 61, rowX = 31, boxX = 208, iconX = 165;
             const float nameX = 44, valueX = 300, arrowX = 214, arrowSpan = 140;
@@ -61,12 +60,12 @@ namespace OurTaiko.Editor
             view.highlight.color = greyed ? new Color32(166, 168, 171, 255) : Color.white;
             view.box = SkinUi.Image("Box", board, art.box);
             view.box.rectTransform.TopLeft(boxX, y + 8);
-            view.name = SkinUi.Text("Name", board, panelFont, outline, 26, Color.black, 0.3f);
+            view.name = SkinUi.Text("Name", board, 26);
             view.name.alignment = TextAlignmentOptions.Left;
             view.name.rectTransform.pivot = new Vector2(0, 0.5f);
             view.name.rectTransform.anchoredPosition = new Vector2(nameX, -(y + 28));
             view.name.text = labels[index];
-            view.value = SkinUi.Text("Value", board, panelFont, outline, 26, Color.black, 0.3f);
+            view.value = SkinUi.Text("Value", board, 26);
             view.value.rectTransform.Center(valueX, y + 28);
             view.value.text = OptionMenu.Rows[index] == OptionRow.Speed ? "1.0"
                 : OptionMenu.Rows[index] == OptionRow.Neiro

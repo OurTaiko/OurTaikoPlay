@@ -9,8 +9,6 @@ namespace OurTaiko
     // score-rank clip and option icons are not ported.
     public sealed class ResultScene : MonoBehaviour
     {
-        public TMP_FontAsset font;
-        public Material outlineMaterial;
         public RectTransform stage;
         public NameplateView nameplatePrefab;
         public ArcadeOverlayArt overlay;
@@ -394,12 +392,12 @@ namespace OurTaiko
         void Build()
         {
             background = new ResultBackground(stage, "Background", this, bgClip, Clip(fujiTimeline));
-            var title = SkinUi.Text("SongTitle", stage, font, outlineMaterial, 56, new Color32(0, 0, 0, 255), 0.3f);
+            var title = SkinUi.Text("SongTitle", stage, 56);
             title.text = Result.Title;
             title.rectTransform.sizeDelta = new Vector2(1730, 90);
             title.rectTransform.Center(95 + 1730 / 2f, 82);
             title.Squeeze(1730);
-            var songNumber = SkinUi.Text("SongNumber", stage, font, outlineMaterial, 24, new Color32(0, 0, 0, 255), 0.25f);
+            var songNumber = SkinUi.Text("SongNumber", stage, 24);
             songNumber.alignment = TextAlignmentOptions.TopLeft;
             songNumber.rectTransform.pivot = new Vector2(0, 1);
             songNumber.rectTransform.anchoredPosition = new Vector2(1655, -22);
@@ -426,7 +424,7 @@ namespace OurTaiko
             highScoreGroup.anchorMin = highScoreGroup.anchorMax = new Vector2(0, 1);
             highScoreAlpha = highScoreGroup.gameObject.AddComponent<CanvasGroup>();
             Place("Bar", highScore, 64, 266, highScoreGroup);
-            var caption = SkinUi.Text("Caption", highScoreGroup, font, outlineMaterial, 24, new Color32(70, 35, 10, 255), 0.3f);
+            var caption = SkinUi.Text("Caption", highScoreGroup, 24);
             caption.text = "ベストスコア更新！";
             caption.rectTransform.Center(64 + 154.4f, 266 + 26.6f);
             highScoreNumber = new Image[7];
@@ -447,7 +445,7 @@ namespace OurTaiko
             stars = Centered("Stars", gleam[4], CrownCentre);
             shine = Centered("Shine", gleam[0], CrownCentre);
             messageImage = Centered("Message", messages[(int)Result.Message], MessageCentre);
-            messageText = SkinUi.Text("MessageText", stage, font, outlineMaterial, 52, new Color32(0, 0, 0, 255), 0.25f);
+            messageText = SkinUi.Text("MessageText", stage, 52);
             messageText.textWrappingMode = TextWrappingModes.Normal;
             messageText.rectTransform.sizeDelta = new Vector2(480, 300);
             messageText.rectTransform.Center(MessageCentre.x, MessageCentre.y);
@@ -480,7 +478,7 @@ namespace OurTaiko
 
             fadeIn = new ResultBackground(stage, "FadeIn", this, bgClip, Clip(fujiTimeline));
             // ResultScreen::draw_overlay: coin_overlay's credit line (result shows no chip or invite), over the wipe.
-            if (overlay != null) Coins = new CoinOverlayView(stage, overlay, font, outlineMaterial, qrChip: false, invite: false);
+            if (overlay != null) Coins = new CoinOverlayView(stage, overlay, qrChip: false, invite: false);
             var touch = SkinUi.Image("TouchArea", stage, null, 1920, 1080);
             touch.rectTransform.TopLeft(0, 0);
             touch.color = Color.clear;

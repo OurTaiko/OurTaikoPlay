@@ -70,9 +70,9 @@ namespace OurTaiko.Editor
             var glowSprite = Slice("RainbowGlow", RainbowArt + "rainbow_bg_bottom", 0, 288, 1600, 512);
             var starSprite = Slice("RainbowStar", RainbowArt + "rainbow_bg_bottom", 0, 832, 128, 128);
             var additive = AdditiveUiMaterial();
-            var uiFont = OutlinedUiFont();
-            var titleMaterial = OutlinedUiMaterial("Curtain Title", uiFont, 64, 5);
-            var subtitleMaterial = OutlinedUiMaterial("Curtain Subtitle", uiFont, 40, 5);
+            var uiFont = UiFont();
+            var titleMaterial = UiOutlineMaterial();
+            var subtitleMaterial = UiOutlineMaterial();
             var timeline = Timeline("loading_song");
             if (timeline == null) throw new FileNotFoundException("Animations/loading_song.txt is missing.");
 

@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Nijiiro UI Curtain Title
+  m_Name: Nijiiro UI SDF Outline
   m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -32,16 +32,16 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 0
-    - _FaceDilate: 0.078125
+    - _FaceDilate: 0.125
     - _GradientScale: 33
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
     - _OutlineSoftness: 0
-    - _OutlineWidth: 0.078125
+    - _OutlineWidth: 0.125
     - _PerspectiveFilter: 0.875
     - _ScaleRatioA: 0.969697
     - _ScaleRatioB: 1
-    - _ScaleRatioC: 0.7121212
+    - _ScaleRatioC: 0.6666667
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0

@@ -27,16 +27,7 @@ namespace OurTaiko.Editor
                 importer.maxTextureSize = 4096;
                 importer.SaveAndReimport();
             }
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
-            if (font == null)
-            {
-                font = TMP_FontAsset.CreateFontAsset(AssetDatabase.LoadAssetAtPath<Font>(Root + "Art/Taiko.ttf"));
-                font.name = "Nijiiro SDF";
-                AssetDatabase.CreateAsset(font, Root + "Generated/Nijiiro SDF.asset");
-                AssetDatabase.AddObjectToAsset(font.material, font);
-                foreach (var atlas in font.atlasTextures) AssetDatabase.AddObjectToAsset(atlas, font);
-                font.TryAddCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 /:.,!?+-()_★％");
-            }
+            font = UiFont();
             foreach (var path in new[] { "Assets/Scenes/SinglePlayScene.unity" })
             {
                 var scene = EditorSceneManager.OpenScene(path);
@@ -54,9 +45,7 @@ namespace OurTaiko.Editor
         static void ConfigureNijiiroLayout(Transform root, PlayScene play)
         {
             // Opening another scene can unload a font retained only by a managed reference.
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
-            font.material.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.15f);
-            font.material.SetColor(ShaderUtilities.ID_OutlineColor, new Color32(25, 17, 27, 255));
+            font = UiFont();
             if (root.name == "Viewport1280x720")
             {
                 foreach (var rect in root.GetComponentsInChildren<RectTransform>(true))
@@ -75,8 +64,7 @@ namespace OurTaiko.Editor
             root.GetComponentInParent<UnityEngine.UI.CanvasScaler>().referenceResolution = new Vector2(1920, 1080);
             foreach (var label in root.GetComponentsInChildren<TMP_Text>(true))
             {
-                label.font = font;
-                label.fontSharedMaterial = font.material;
+                label.UseUiFont();
                 // Remove cached material instances referencing the previous font atlas.
                 var serialized = new SerializedObject(label);
                 serialized.FindProperty("m_fontMaterial").objectReferenceValue = null;
