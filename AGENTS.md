@@ -36,6 +36,13 @@
 
 ### 当前完成状态与交接边界
 
+#### 最新完成：Sound 设置（2026-10-03）
+
+- 用户最新决定：GlobalSettingScene 的 Sound 显示 **Master／BGM／Track／Drum／Effects／Voice 音量组＋Output Backend**（及 Return）；音量范围 0–200%、5% 一档，确认后即时保存并生效，鼓音／语音确认时试听。设备、采样率与缓冲等高级参数仅保留在 `settings.json` 的 `audio` 中，不放回菜单。后端按平台显示 Automatic／BASS／Unity，Windows 另有 WASAPI／ASIO，WebGL 仅 Unity。
+- 确认后端后保存，退出设置时通过 SceneSwitcher 淡黑后热切换，进入 Entry 前完成。未改设备参数不重建输出；切换失败恢复之前配置并留在设置显示原因。原生加载与释放共用生命周期锁，旧异步任务按 generation 失效，未领取样本统一释放。切换后端保留配置文件中的其他音频参数。
+- Sound 共 8 行（含 Return），每页 4 行，支持分页／滑动／滚轮；选项弹窗仍最多显示 3 项并支持左右切换，供 Windows 的 5 种后端使用。场景控件通过 `ProjectBuilder.ApplySoundSettings()` 保存。实现 `SoundSettings.cs`、`AudioBus` 音量分组；详情与验证报告见 `PortingNotes.md`「Sound 设置」。
+- **HitFace／HitRing 原生时钟修复**：BASS 的 Stopwatch 时钟在同一帧内仍递增；原 Update 先取时间，再在 OnJudged 取较晚时间，ShowTime 用旧时间导致 elapsed<0，刚生成的效果立即被取消。PlayScene 现在在音频同步修正后捕获一次歌曲时间，整个 Update 及其判定／分支回调共享该时间，结束时释放快照；保留帧间时钟、暂停及动画长度。真实自动演奏帧回归 `HitFeedbackClockTests` 修复前失败；旧的暂停后手动采样测试未覆盖此路径。
+
 #### 最新完成：在线服务器与 ServerLogin（2026-10-03）
 
 - 移植 OurTaikoPlayer `fanmade.cpp`：Entry 演奏ゲーム → **ServerLogin**（MajdataPlay Login 式，每台启用服务器 ログイン／ゲスト／スキップ／もどる）→ SongSelect。库：`System.Net.Http.HttpClient` ＋ Newtonsoft JSON（同 MajdataPlay）。代码 `Runtime/Online/`，全局 `OnlineManager`（同 SettingManager 模式）。
@@ -68,7 +75,7 @@
 - **场景**：`Assets/Scenes/GlobalSettingScene.unity` 保存可编辑层级（`GlobalSettingScene` 控制器＋`GlobalSettingView`）：左侧类型行、右侧项目行（标签自动缩小以免压到当前值）、选项弹窗（用户决定：名称、说明、选项按钮，只在焦点进入选项时出现，居中于半透明黑色 `PopupShade` 之上；浏览类型与项目时隐藏；点遮罩不改值关闭、同 Esc）、`blue_arrow` 指向焦点（在弹窗之上）、底部 footer、右下 FPS。美术来自 PyTaikoGreen `Graphics/settings`（Nijiiro 无自有设置美术，继承 Green），1.5 倍绘制，九宫格；BGM `Audio/settings/bgm.ogg`。行 0 为布局基准，行距在 `GlobalSettingView` 可调，多出的行运行时复制。迁移 `ProjectBuilder.CreateGlobalSettingScene()`（菜单 OurTaiko/Create Global Setting Scene，仅缺失时创建，已有布局只重绑美术／音效，并给 SinglePlayScene 的 `PlayScene.drumPad` 赋值）；Entry 重绑用 `CreateEntryScene()`。两者重复执行文件哈希不变。
 - **游玩**：`PlayScene.Start` 按设置 `drumPad.gameObject.SetActive(...)`——关闭时触控鼓既不绘制也不向 InputManager 注册；暂停恢复只重新启用自己禁用的鼓，不会把它打开。
 - 测试（已完成，2026-10-02 用户确认后移入 Finished）：EditMode `SettingsMenuTests` 5/5，PlayMode `GlobalSettingFlowTests` 3/3（Entry 列表滑动／打开时序、进入设置、咚咔与触控全流程、设置写入 SettingManager、触控鼓开／关）；`EntryFlowTests` 的咔断言改为左咔在顶端不动。全部程序集：进行中 EditMode 35/35、PlayMode 15/15，已完成 EditMode 136/136、PlayMode 30/30，报告 `TestResults/settings-*.json`，截图 `TestResults/EntrySettingsBoard.png`、`SettingsTypes.png`、`SettingsChoice.png`、`SinglePlayNoDrumPad.png`。
-- **添加设置**：在 `SettingsMenu.Catalog()` 中加 `SettingItem`（布尔用 `SettingItem.Toggle`，选项标签 Enabled／Disabled），并在 `GameSettings` 对应分区加带默认值的字段；新类型加 `SettingType` 与新的 `[Serializable]` 分区。视图会自动复制行。**布局限制**：项目列表从 y 150 起、行距 150、底部 footer 在 y 888，右侧放得下 5 行（4 个设置＋Return）；超过时需做列表滚动（未授权）。详情已改为选项弹窗，不再占用右侧。离开设置回到 Entry 时从投币画面重新开始（与原版一致）。
+- **添加设置**：在 `SettingsMenu.Catalog()` 中加 `SettingItem`（布尔用 `SettingItem.Toggle`，选项标签 Enabled／Disabled），并在 `GameSettings` 对应分区加带默认值的字段；新类型加 `SettingType` 与新的 `[Serializable]` 分区。视图会自动复制行。**布局**（2026-10-03 Sound 设置更新）：右侧列表每页 4 行，随焦点滚动，支持滚轮、滑动和翻页按钮；选择弹窗最多显示相邻 3 项，并支持左右按钮切换。详情已改为选项弹窗，不再占用右侧。离开设置回到 Entry 时从投币画面重新开始（与原版一致）。
 - 注意：Unity 6 默认把新复制的 PNG 自动切成 Multiple 修剪 sprite；新增美术必须显式设为 Single（`ImportSettingArt`、`ImportEntryArt` 已处理）。
 
 #### 此前完成：判定计数器（2026-10-02）

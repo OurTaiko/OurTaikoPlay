@@ -93,6 +93,10 @@ Branch Training 是新增的无音乐练习谱：前三个咚的命中率低于 
 
 魂槽行为按当前原模拟器的 `gauge.cpp`、Nijiiro `skin_config.json` 和 `game/animation.json` 实现。源码没有“每 0.5 秒整条闪黄”的循环；其新增格子采用 450 ms 淡入，因此这里没有另加未经源码确认的周期闪黄。
 
+## Sound 设置
+
+从 Entry 的「ゲーム設定」进入 Sound，可调整总音量及 BGM／歌曲／鼓音／效果音／语音音量，确认后即时保存并生效。音频后端按平台显示，退出设置、画面淡黑时自动切换。设备、采样率及缓冲等高级参数仅在 `settings.json` 的 `audio` 中配置；更改后端不会覆盖这些参数。
+
 ## 验证
 
 用 Unity Test Runner 运行测试。`OurTaiko.Tests`（EditMode）和 `OurTaiko.PlayModeTests`（PlayMode）是进行中功能的测试；已完成功能的测试在 `Tests/Finished/` 的 `OurTaiko.FinishedTests` 和 `OurTaiko.FinishedPlayModeTests`，共享辅助在 `Tests/Shared/`（`OurTaiko.TestSupport`）。已完成的 EditMode 测试覆盖谱面、判定、流速、分支阈值／时序、Shinuchi 预算／取整和魂槽增减／边界；已完成的 PlayMode 测试覆盖选曲 → 游玩 → 暂停/恢复 → 重开 → 返回、独立打开 SinglePlayScene、音乐时间同步、分支表现与结算，以及实际场景分数、魂槽、气球与连打。PlayMode 测试将实际场景渲染图输出到 `TestResults/`。

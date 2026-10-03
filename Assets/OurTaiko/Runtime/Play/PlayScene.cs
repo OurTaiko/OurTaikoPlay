@@ -49,7 +49,10 @@ namespace OurTaiko
         public PlayResult Result { get; private set; }
         // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
         public Online.PlayRecord Record { get; private set; }
-        public double SongTime => !isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioEngine.Clock - startDsp;
+        // BASS uses a continuously advancing clock. Judgment callbacks and drawing within an
+        // Update must share one timestamp, or a just-started effect can appear to be in the future.
+        double? frameSongTime;
+        public double SongTime => frameSongTime ?? (!isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioEngine.Clock - startDsp);
         public double RenderedTime { get; private set; }
         // Views come from pools while a note is on the lane; null when it is not drawn.
         public RectTransform NoteRoot(int index) => shownNotes[index]?.Root;
@@ -195,23 +198,28 @@ namespace OurTaiko
                 double position = music.AudioPosition();
                 if (position > 0) startDsp += (SongTime - position) * 0.8;
             }
-            double time = SongTime - song.audioOffsetMs / 1000.0;
-            Session.Advance(time, autoPlay);
-            if (branchLane != null) branchLane.ShowTime(time);
-            if (!autoPlay) HitFirstDrumPress();
-            balloonCounter.ShowTime(time);
-            RenderNotes(time - song.visualOffsetMs / 1000.0);
-            soulGauge.ShowTime(time);
-            if (noteArcs != null) noteArcs.ShowTime(time);
-            foreach (var dancer in dancers) dancer.SampleLoop(time);
-            combo.ShowTime(time);
-            comboAnnounce.ShowTime(time);
-            judgmentFade ??= judgment.GetComponent<ClipSampler>();
-            judgmentFade.Sample(Math.Min(Time.unscaledTime - feedbackTime, judgmentFade.clip.length));
-            hitFace.ShowTime(time);
-            hitRing.ShowTime(time);
-            for (int i = 0; i < drumFlashes.Length; i++) ShowFlash(i);
-            if (time > Math.Max(Session.Chart.Duration, music.AudioLength()) + 1) Finish();
+            frameSongTime = SongTime;
+            try
+            {
+                double time = SongTime - song.audioOffsetMs / 1000.0;
+                Session.Advance(time, autoPlay);
+                if (branchLane != null) branchLane.ShowTime(time);
+                if (!autoPlay) HitFirstDrumPress();
+                balloonCounter.ShowTime(time);
+                RenderNotes(time - song.visualOffsetMs / 1000.0);
+                soulGauge.ShowTime(time);
+                if (noteArcs != null) noteArcs.ShowTime(time);
+                foreach (var dancer in dancers) dancer.SampleLoop(time);
+                combo.ShowTime(time);
+                comboAnnounce.ShowTime(time);
+                judgmentFade ??= judgment.GetComponent<ClipSampler>();
+                judgmentFade.Sample(Math.Min(Time.unscaledTime - feedbackTime, judgmentFade.clip.length));
+                hitFace.ShowTime(time);
+                hitRing.ShowTime(time);
+                for (int i = 0; i < drumFlashes.Length; i++) ShowFlash(i);
+                if (time > Math.Max(Session.Chart.Duration, music.AudioLength()) + 1) Finish();
+            }
+            finally { frameSongTime = null; }
         }
 
         // Input mutex: a frame judges only its earliest drum press; later ones in the same frame are dropped.
@@ -236,7 +244,7 @@ namespace OurTaiko
         void Feedback(bool isKa, bool right)
         {
             var clip = isKa ? ka : don;
-            if (clip != null) hitAudio.PlayAudioOneShot(clip);
+            if (clip != null) hitAudio.PlayAudioOneShot(clip, AudioGroup.Drum);
             int flash = (isKa ? 2 : 0) + (right ? 1 : 0);
             flashedAt[flash] = Time.unscaledTime;
             ShowFlash(flash);
@@ -298,7 +306,7 @@ namespace OurTaiko
             if (Session.Combo != lastCombo && Session.Combo > 0 && Session.Combo % 100 == 0)
             {
                 var voice = comboAnnounce.Announce(Session.Combo, SongTime - song.audioOffsetMs / 1000.0);
-                if (voice != null) hitAudio.PlayAudioOneShot(voice);
+                if (voice != null) hitAudio.PlayAudioOneShot(voice, AudioGroup.Voice);
             }
             lastCombo = Session.Combo;
         }

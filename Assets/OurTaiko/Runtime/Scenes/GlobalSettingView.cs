@@ -42,6 +42,12 @@ namespace OurTaiko
         public Image shade;
         public PointerRelay shadeClick;
 
+        public PointerRelay previousItems, nextItems, previousChoice, nextChoice;
+        public TMP_Text itemPage, outputStatus;
+        public int visibleItems = 4;
+        public int FirstItem { get; private set; }
+        public int FirstChoice { get; private set; }
+        int lastType = -1;
         Vector2 typeBase, itemBase, choiceBase;
         bool bound;
 
@@ -74,13 +80,17 @@ namespace OurTaiko
         }
 
         // Hooks the rows' taps; extra rows created later are hooked as they appear.
-        public void Bind(Action<int> tapType, Action<int> tapItem, Action<int> tapChoice, Action<int> swipeTypes, Action<int> swipeItems, Action tapShade)
+        public void Bind(Action<int> tapType, Action<int> tapItem, Action<int> tapChoice, Action<int> swipeTypes, Action<int> swipeItems, Action tapShade, Action<int> moveChoice = null)
         {
             Bind();
             shadeClick.Clicked = tapShade;
             tapTypeHandler = tapType; tapItemHandler = tapItem; tapChoiceHandler = tapChoice;
             typeSwipe.Swiped = swipeTypes;
             itemSwipe.Swiped = swipeItems;
+            if (previousItems != null) previousItems.Clicked = () => swipeItems(-visibleItems);
+            if (nextItems != null) nextItems.Clicked = () => swipeItems(visibleItems);
+            if (previousChoice != null) previousChoice.Clicked = () => moveChoice?.Invoke(-1);
+            if (nextChoice != null) nextChoice.Clicked = () => moveChoice?.Invoke(1);
             Hook();
         }
 
@@ -90,7 +100,7 @@ namespace OurTaiko
         {
             for (int i = 0; i < typeRows.Count; i++) { int index = i; typeRows[i].click.Clicked = () => tapTypeHandler?.Invoke(index); }
             for (int i = 0; i < itemRows.Count; i++) { int index = i; itemRows[i].click.Clicked = () => tapItemHandler?.Invoke(index); }
-            for (int i = 0; i < choiceRows.Count; i++) { int index = i; choiceRows[i].click.Clicked = () => tapChoiceHandler?.Invoke(index); }
+            for (int i = 0; i < choiceRows.Count; i++) { int index = i; choiceRows[i].click.Clicked = () => tapChoiceHandler?.Invoke(index + FirstChoice); }
         }
 
         public void Show(SettingsMenu menu)
@@ -103,7 +113,7 @@ namespace OurTaiko
             int before = typeRows.Count + itemRows.Count + choiceRows.Count;
             Ensure(typeRows, types);
             Ensure(itemRows, Math.Max(1, items));
-            Ensure(choiceRows, Math.Max(1, choices));
+            Ensure(choiceRows, Math.Max(1, Math.Min(3, choices)));
             if (typeRows.Count + itemRows.Count + choiceRows.Count != before) Hook();
 
             for (int i = 0; i < typeRows.Count; i++)
@@ -117,17 +127,32 @@ namespace OurTaiko
                 row.box.sprite = i == menu.TypeIndex ? typeBoxSelected : typeBox;
             }
 
+            if (lastType != menu.TypeIndex) { FirstItem = 0; lastType = menu.TypeIndex; }
+            FirstItem = Mathf.Clamp(FirstItem, Math.Max(0, menu.ItemIndex - visibleItems + 1), menu.ItemIndex);
+            FirstItem = Mathf.Clamp(FirstItem, 0, Math.Max(0, items - visibleItems));
+            bool paged = items > visibleItems;
+            if (previousItems != null) previousItems.gameObject.SetActive(paged);
+            if (nextItems != null) nextItems.gameObject.SetActive(paged);
+            if (itemPage != null) itemPage.text = paged ? $"{FirstItem + 1}–{Math.Min(items, FirstItem + visibleItems)} / {items}" : "";
+            if (outputStatus != null)
+            {
+                var engine = AudioEngine.Instance;
+                outputStatus.text = menu.CurrentType?.Label == "Sound" && engine != null
+                    ? $"Current output: {engine.Backend}" + (engine.HasPendingDeviceChanges ? "   •   Applies on exit" : "") : "";
+            }
             bool inItems = menu.Focus != SettingsFocus.Types;
             for (int i = 0; i < itemRows.Count; i++)
             {
                 var row = itemRows[i];
-                bool shown = i < items;
+                bool shown = i >= FirstItem && i < Math.Min(items, FirstItem + visibleItems);
                 row.root.gameObject.SetActive(shown);
                 if (!shown) continue;
-                row.root.anchoredPosition = itemBase + new Vector2(0, -i * itemPitch);
+                row.root.anchoredPosition = itemBase + new Vector2(0, -(i - FirstItem) * itemPitch);
                 bool isReturn = i == menu.CurrentType.Items.Count;
                 var rowItem = isReturn ? null : menu.CurrentType.Items[i];
                 row.label.text = isReturn ? "Return" : rowItem.Label;
+                row.value.enableAutoSizing = true; row.value.fontSizeMin = 18; row.value.fontSizeMax = 40;
+                row.value.overflowMode = TextOverflowModes.Ellipsis;
                 row.value.text = isReturn ? "" : rowItem.Choices[rowItem.Get(menu.Settings)];
                 row.box.sprite = inItems && i == menu.ItemIndex ? itemBoxSelected : itemBox;
             }
@@ -138,12 +163,16 @@ namespace OurTaiko
             detail.alpha = open ? 1 : 0;
             detail.blocksRaycasts = open;
             shade.gameObject.SetActive(open);
+            if (previousChoice != null) previousChoice.gameObject.SetActive(open && choices > 3);
+            if (nextChoice != null) nextChoice.gameObject.SetActive(open && choices > 3);
             if (open)
             {
                 detailTitle.text = shownItem.Label;
+                description.enableAutoSizing = true; description.fontSizeMin = 22; description.fontSizeMax = 32;
                 description.text = shownItem.Description;
                 int lit = menu.ChoiceIndex;
-                int count = shownItem.Choices.Count;
+                FirstChoice = Mathf.Clamp(lit - 1, 0, Math.Max(0, choices - 3));
+                int count = Math.Min(3, choices);
                 // Centre the buttons together with the arrow's room right of the last one.
                 float shift = -(cursorGap + cursor.rect.width) / 2;
                 for (int i = 0; i < choiceRows.Count; i++)
@@ -153,8 +182,10 @@ namespace OurTaiko
                     row.root.gameObject.SetActive(shown);
                     if (!shown) continue;
                     row.root.anchoredPosition = choiceBase + new Vector2((i - (count - 1) / 2f) * choicePitch + shift, 0);
-                    row.label.text = shownItem.Choices[i];
-                    row.box.sprite = i == lit ? choiceOn : choiceOff;
+                    row.label.enableAutoSizing = true; row.label.fontSizeMin = 18; row.label.fontSizeMax = 40;
+                    row.label.overflowMode = TextOverflowModes.Ellipsis;
+                    row.label.text = shownItem.Choices[i + FirstChoice];
+                    row.box.sprite = i + FirstChoice == lit ? choiceOn : choiceOff;
                 }
             }
 
@@ -162,7 +193,7 @@ namespace OurTaiko
             {
                 SettingsFocus.Types => typeRows[menu.TypeIndex].root,
                 SettingsFocus.Items => itemRows[menu.ItemIndex].root,
-                _ => choiceRows[menu.ChoiceIndex].root,
+                _ => choiceRows[menu.ChoiceIndex - FirstChoice].root,
             };
             PlaceCursor(target);
         }

@@ -190,7 +190,10 @@ namespace OurTaiko
             return await taskToRun;
         }
 
-        Task BeginSwitch(string sceneName, Task preparation, bool autoFadeOut, TransitionStyle style)
+        public Task SwitchSceneAfterFadeAsync(string sceneName, Func<Task> prepare)
+            => BeginSwitch(sceneName, Task.CompletedTask, true, TransitionStyle.Fade, prepare);
+
+        Task BeginSwitch(string sceneName, Task preparation, bool autoFadeOut, TransitionStyle style, Func<Task> afterFade = null)
         {
             if (IsSwitching) return switchTask;
             if (preparation == null) return Task.FromException(new ArgumentNullException(nameof(preparation)));
@@ -199,18 +202,18 @@ namespace OurTaiko
             IsSwitching = true;
             var completion = new TaskCompletionSource<bool>();
             switchTask = completion.Task;
-            _ = CompleteSwitchAsync(completion, sceneName, preparation, autoFadeOut, style);
+            _ = CompleteSwitchAsync(completion, sceneName, preparation, autoFadeOut, style, afterFade);
             return switchTask;
         }
 
-        async Task CompleteSwitchAsync(TaskCompletionSource<bool> completion, string sceneName, Task preparation, bool autoFadeOut, TransitionStyle style)
+        async Task CompleteSwitchAsync(TaskCompletionSource<bool> completion, string sceneName, Task preparation, bool autoFadeOut, TransitionStyle style, Func<Task> afterFade)
         {
-            try { await SwitchSceneInternalAsync(sceneName, preparation, autoFadeOut, style); completion.TrySetResult(true); }
+            try { await SwitchSceneInternalAsync(sceneName, preparation, autoFadeOut, style, afterFade); completion.TrySetResult(true); }
             catch (OperationCanceledException) { completion.TrySetCanceled(); }
             catch (Exception error) { completion.TrySetException(error); }
         }
 
-        async Task SwitchSceneInternalAsync(string sceneName, Task preparation, bool autoFadeOut, TransitionStyle style)
+        async Task SwitchSceneInternalAsync(string sceneName, Task preparation, bool autoFadeOut, TransitionStyle style, Func<Task> afterFade)
         {
             var lifetime = destroyCancellationToken;
             try
@@ -221,6 +224,7 @@ namespace OurTaiko
                 await StartTransitionAsync(true, style);
                 while (!preparation.IsCompleted) await Awaitable.NextFrameAsync(lifetime);
                 await preparation;
+                if (afterFade != null) await afterFade();
                 lifetime.ThrowIfCancellationRequested();
                 var operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
                 if (operation == null) throw new InvalidOperationException("Could not load scene: " + sceneName);

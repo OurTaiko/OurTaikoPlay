@@ -457,3 +457,29 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 全部 EditMode 189/189、全部 PlayMode 59/59（420 秒），覆盖原始 OGG/MP3/M4A/Opus 解码、归一化、FX、混音重采样、暂停恢复、预览、在线下载与完整演奏/结算。报告 `TestResults/audio-redo-editmode.json`、`audio-redo-playmode-final.json`。
 - Windows、Android、iOS、Linux、WebGL 条件编译通过；原生库来源的 60 个文件 SHA-256 与清单一致，Android ARM64 五个音频库均为 16 KB ELF LOAD 对齐。
 - 独立构建与链接结果见 `Documentation/Building.md`。平台编译/构建不等于 Windows 声卡或 Android/iOS 真机输出、延迟验收。
+
+## Sound 设置（2026-10-03）
+
+Entry「ゲーム設定」→ Sound，沿用咔移动／咚确认、触控选择及遮罩取消。用户最新决定：**界面显示六个音量组（Master／BGM／Track／Drum／Effects／Voice）、Output Backend 和 Return**。音量以 0–200%、5% 一档显示，确认后立即保存并生效；鼓音／语音确认时试听。详细设备参数留在 `settings.json` 的 `audio` 中，不在设置场景显示。所有原生平台提供 Automatic／BASS／Unity，Windows 增加 WASAPI／ASIO；WebGL 只提供 Unity。修改后端不会覆盖其他配置。
+
+配置文件保留 `audio.volume` 的 master、bgm、track（歌曲及预览）、drum、effects、voice；值为倍率（1=100%，支持 0–2），总音量与组音量相乘，旧配置缺失字段取 1。Unity 最终单源音量仍受 0–1 上限约束。设备字段保留 BASS devicePeriodMs/deviceBufferMs/updatePeriodMs/playbackBufferMs、Windows WASAPI／ASIO 参数及 Android androidAAudio。手工修改配置文件后重新启动读取；不监听文件变化。
+
+确认后端时即时写盘，退出设置时再次保存，并通过 `SceneSwitcher.SwitchSceneAfterFadeAsync` 在画面淡黑后应用，随后进入 Entry；无须重启游戏。页面显示实际后端及 Applies on exit，改回已应用的值会清除提示。没有设备变化时不重建输出。
+
+切换先等待后台原生解码完成（逐帧等待生命周期锁），停止并释放所有 AudioBus 和未领取的 NativeAudioSample，再关闭设备与混音器并重建。异步加载捕获 generation，旧任务迟到时不能向新设备创建流；SongDefinition 不会领取已失效样本。显式后端初始化失败时恢复上次配置（保留新音量）、重新保存并留在设置界面显示原因、恢复 BGM；恢复设备也不可用时沿用启动流程的 Unity 兜底。WASAPI 仍保留 exclusive/raw 到 shared 的兼容尝试，Automatic 仍可选用 BASS。
+
+Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、滚轮；选项弹窗最多显示相邻 3 项，左右按钮供 Windows 的 5 种后端选择，点选项或咚确认后才保存。新增控件保存在 `GlobalSettingScene.unity`，迁移 `ProjectBuilder.ApplySoundSettings()`（菜单 OurTaiko/Apply Sound Settings）；重复执行场景内容不变。音量试听使用 Drum／Voice 分组。
+
+此前完整设备参数界面的测试报告 `TestResults/sound-settings-*.json`、`SoundDeviceSettings.png` 及后端单项界面的 `backend-only-settings-*.json` 属于历史验证；当前截图为 `SoundSettings.png`、`SoundVolumeChoice.png`、`SoundBackendChoice.png`。
+
+音频退出切换验证（2026-10-03）：PlayMode Settings 7/7（含 BASS→Unity→BASS、无设备变化不重建、淡黑后才切换、失败恢复／留在设置／恢复 BGM、未领取样本失效、后台准备锁等待）、Native 9/9（与 Settings 重叠一项音量测试）；Windows／Android／iOS／WebGL／Linux 条件编译全部通过。报告 `TestResults/sound-reload-settings-playmode.json`、`sound-reload-native-playmode.json`、`sound-reload-platform-compilation.txt`。实际后端往返在 macOS Editor 验证；Windows／移动端设备热切换未实机验证。
+
+## HitFace／HitRing 原生时钟回归修复（2026-10-03）
+
+切换原生音频后，`AudioEngine.Clock` 使用持续递增的 Stopwatch。`PlayScene.Update` 在帧开始读取时间，随后 `OnJudged` 又读取较晚的时间作为动画起点，最后用帧开始的时间调用 ShowTime；HitFace／HitRing 因 elapsed<0 立即取消，表现为笑脸与外圈消失。对象、素材和层级没有丢失。原测试暂停后手动调用 ShowTime，因此未覆盖真实帧路径。
+
+修复：音频同步校正后捕获一次歌曲时间，在整个 Update 及其判定／分支回调中共享，finally 清除快照；帧间仍使用原生时钟。`HitFeedbackClockTests.HitFaceSurvivesJudgmentFrameWithNativeClock` 使用真实自动演奏及帧末观察，修复前复现失败（`TestResults/hit-face-native-before-fix.json`）。动画时长、显隐规则、每帧输入互斥均保持原规格。
+
+本次最终验证：Settings EditMode 15/15、Settings PlayMode 7/7、HitFace PlayMode 2/2。报告 `TestResults/backend-only-settings-editmode.json`、`backend-only-settings-playmode.json`、`hit-face-native-fixed-playmode.json`；截图 `SoundSettings.png`、`SoundBackendChoice.png`、`HitFaceNativeClock.png` 已检查。Windows／Android／iOS／WebGL／Linux 条件编译通过（`backend-menu-hit-face-platform-compilation.txt`）；未重新构建独立 Player。
+
+恢复音量组后的验证：SoundSettings EditMode 7/7、Settings PlayMode 7/7，覆盖六组音量、后端平台过滤、即时音量、语音试听、分页／滚轮、隐藏设备配置保留和退出切换。报告 `TestResults/volume-groups-restored-editmode.json`、`volume-groups-restored-playmode.json`；`SoundSettings.png` 已检查。

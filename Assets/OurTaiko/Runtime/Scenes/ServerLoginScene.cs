@@ -62,6 +62,7 @@ namespace OurTaiko
 
         void Start()
         {
+            bgm.SetAudioGroup(AudioGroup.Bgm);
             sfx.PrepareAudioEffects(don, ka);
             if (servers.Count > 0 && bgm != null && bgm.clip != null) { bgm.loop = true; bgm.PlayAudio(); }
         }

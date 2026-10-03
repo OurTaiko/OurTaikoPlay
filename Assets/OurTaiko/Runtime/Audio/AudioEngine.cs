@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS
 using ManagedBass;
@@ -25,6 +27,11 @@ namespace OurTaiko
         public int Mixer { get; private set; }
         public float[,] MixingMatrix { get; private set; }
         public static double Clock => EnsureInstance().Native ? Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency : AudioSettings.dspTime;
+        AudioOptions appliedOptions;
+        public bool HasPendingDeviceChanges => appliedOptions != null && !appliedOptions.SameDeviceSettings(SettingManager.EnsureInstance().Settings.audio);
+        internal static readonly object DeviceLock = new object();
+        public int Generation { get; private set; }
+        bool applying;
         bool initialized;
         bool nativeInitialized;
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
@@ -57,7 +64,12 @@ namespace OurTaiko
             if (initialized) return;
             initialized = true;
             DontDestroyOnLoad(gameObject);
-            var options = SettingManager.EnsureInstance().Settings.audio;
+            appliedOptions = SettingManager.EnsureInstance().Settings.Clone().audio;
+            InitializeOutput(appliedOptions, true);
+        }
+        void InitializeOutput(AudioOptions options, bool allowFallback)
+        {
+            Backend = AudioBackend.Unity;
             string failure = null;
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS
             if (options.backend != AudioBackend.Unity)
@@ -67,8 +79,8 @@ namespace OurTaiko
 #if UNITY_ANDROID && !UNITY_EDITOR
                     Bass.Configure(Configuration.AndroidAAudio, options.androidAAudio);
 #endif
-                    Bass.Configure(Configuration.UpdatePeriod, 100);
-                    Bass.Configure(Configuration.PlaybackBufferLength, 1000);
+                    Bass.Configure(Configuration.UpdatePeriod, Math.Clamp(options.updatePeriodMs, 5, 100));
+                    Bass.Configure(Configuration.PlaybackBufferLength, Math.Clamp(options.playbackBufferMs, Math.Clamp(options.updatePeriodMs, 5, 100) + 1, 5000));
                     Bass.Configure(Configuration.DevicePeriod, options.Period(Application.isMobilePlatform));
                     Bass.Configure(Configuration.DeviceBufferLength, options.Buffer(Application.isMobilePlatform));
                     Bass.Configure(Configuration.DevNonStop, true);
@@ -82,10 +94,15 @@ namespace OurTaiko
                         }
                         catch (Exception error)
                         {
-                            failure = error.Message;
                             FreeNative();
+                            if (!allowFallback && options.backend != AudioBackend.Automatic) throw;
+                            failure = error.Message;
                         }
                     }
+#endif
+#if !UNITY_EDITOR_WIN && !(UNITY_STANDALONE_WIN && !UNITY_EDITOR)
+                    if (!allowFallback && (options.backend == AudioBackend.Wasapi || options.backend == AudioBackend.Asio))
+                        throw new PlatformNotSupportedException("This audio backend requires Windows");
 #endif
                     if (Mixer == 0) InitBass(options);
                     Diagnostics = $"{Backend}; {options.Rate} Hz requested; device period {options.Period(Application.isMobilePlatform)} ms requested; buffer {options.Buffer(Application.isMobilePlatform)} ms requested; stream buffering disabled";
@@ -96,10 +113,15 @@ namespace OurTaiko
                     failure = error.Message;
                     FreeNative();
                     Backend = AudioBackend.Unity;
+                    if (!allowFallback) throw;
                 }
             }
 #else
-            if (options.backend != AudioBackend.Unity) failure = "Native BASS is unavailable on this platform";
+            if (options.backend != AudioBackend.Unity)
+            {
+                failure = "Native BASS is unavailable on this platform";
+                if (!allowFallback) throw new PlatformNotSupportedException(failure);
+            }
 #endif
             if (!Native)
             {
@@ -175,6 +197,49 @@ namespace OurTaiko
             Backend = AudioBackend.Asio;
         }
 #endif
+        // Called under the settings scene's closed transition, before the next scene loads.
+        // Native preparation holds the same lock; wait without blocking the main thread.
+        public async Task ApplyPendingSettingsAsync()
+        {
+            if (!HasPendingDeviceChanges) return;
+            if (applying) throw new InvalidOperationException("Audio settings are already being applied");
+            applying = true;
+            bool entered = false;
+            try
+            {
+                while (!(entered = Monitor.TryEnter(DeviceLock)))
+                    await Awaitable.NextFrameAsync(destroyCancellationToken);
+                var manager = SettingManager.EnsureInstance();
+                var requested = manager.Settings.Clone().audio;
+                var previous = appliedOptions;
+                Generation++;
+                foreach (var bus in FindObjectsByType<AudioBus>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                { bus.Stop(); bus.Release(); }
+                NativeAudioSample.ReleaseAll();
+                FreeNative();
+                try
+                {
+                    InitializeOutput(requested, false);
+                    appliedOptions = requested;
+                }
+                catch (Exception error)
+                {
+                    FreeNative();
+                    InitializeOutput(previous, true);
+                    // Keep live volume changes while restoring the last usable device configuration.
+                    var restored = manager.Settings.Clone();
+                    previous.volume = restored.audio.volume;
+                    restored.audio = previous;
+                    manager.Set(restored);
+                    throw new InvalidOperationException("Could not apply audio settings; restored " + Backend + ": " + error.Message, error);
+                }
+            }
+            finally
+            {
+                if (entered) Monitor.Exit(DeviceLock);
+                applying = false;
+            }
+        }
         public static float[,] CreateMixingMatrix(int channels)
         {
             var matrix = new float[channels, 2];
@@ -209,7 +274,12 @@ namespace OurTaiko
             if (Instance != this) return;
             // Release pinned stream memory before unloading the native device, including Play-mode exit.
             foreach (var bus in FindObjectsByType<AudioBus>(FindObjectsInactive.Include, FindObjectsSortMode.None)) bus.Release();
-            FreeNative();
+            lock (DeviceLock)
+            {
+                Generation++;
+                NativeAudioSample.ReleaseAll();
+                FreeNative();
+            }
             Instance = null;
         }
     }

@@ -63,7 +63,8 @@ namespace OurTaiko
                 if (Error == null)
                 {
                     string path = song.audioPath;
-                    var preparation = Task.Run(() => new NativeAudioSample(encoded ?? System.IO.File.ReadAllBytes(path), engine, true, true));
+                    int audioGeneration = engine.Generation;
+                    var preparation = Task.Run(() => new NativeAudioSample(encoded ?? System.IO.File.ReadAllBytes(path), engine, true, true, audioGeneration));
                     // A cancelled scene must still release a completed native decode.
                     bool claimed = false;
                     try

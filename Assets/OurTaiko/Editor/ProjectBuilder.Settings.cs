@@ -48,6 +48,7 @@ namespace OurTaiko.Editor
             var controller = UnityEngine.Object.FindFirstObjectByType<GlobalSettingScene>();
             ConfigureSettingScene(controller);
             ConfigureSettingPopup(controller.view);
+            ConfigureSoundSettings(controller);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
 

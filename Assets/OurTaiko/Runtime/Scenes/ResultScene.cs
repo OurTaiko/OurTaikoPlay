@@ -104,6 +104,8 @@ namespace OurTaiko
 
         void Start()
         {
+            bgm.SetAudioGroup(AudioGroup.Bgm);
+            voice.SetAudioGroup(AudioGroup.Voice);
             sfx.PrepareAudioEffects(don, donBig, countStop, achieve, atmosClear, crownSilver, crownGold, crownRainbow);
             voice.PrepareAudioTracks(highScoreVoice, fullComboVoice);
             voice.PrepareAudioTracks(messageVoices);

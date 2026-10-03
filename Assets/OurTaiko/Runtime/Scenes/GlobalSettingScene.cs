@@ -12,7 +12,7 @@ namespace OurTaiko
     {
         public GlobalSettingView view;
         public AudioSource bgm, sfx;
-        public AudioClip don, ka;
+        public AudioClip don, ka, previewVoice;
 
         public SettingsMenu Menu { get; private set; }
         public bool HasLeft { get; private set; }
@@ -22,16 +22,19 @@ namespace OurTaiko
         void Awake()
         {
             switcher = SceneSwitcher.EnsureInstance();
-            Menu = new SettingsMenu(SettingsMenu.Catalog(), SettingManager.EnsureInstance().Settings);
-            view.Bind(i => Handle(Menu.TapType(i)), i => Handle(Menu.TapItem(i)), i => Handle(Menu.TapChoice(i)),
-                d => Handle(Menu.SwipeTypes(d)), d => Handle(Menu.SwipeItems(d)),
-                () => { if (Menu.Focus == SettingsFocus.Choice) Handle(Menu.Back()); });
+            var settings = SettingManager.EnsureInstance().Settings;
+            Menu = new SettingsMenu(SettingsMenu.Catalog(), settings);
+            view.Bind(i => Run(() => Menu.TapType(i)), i => Run(() => Menu.TapItem(i)), i => Run(() => Menu.TapChoice(i)),
+                d => Run(() => Menu.SwipeTypes(d)), d => Run(() => Menu.SwipeItems(d)),
+                () => { if (Menu.Focus == SettingsFocus.Choice) Run(() => Menu.Back()); },
+                d => { if (Menu.Focus == SettingsFocus.Choice) Ka(d); });
             view.Show(Menu);
             switcher.SceneChanging += OnSceneChanging;
         }
 
         void Start()
         {
+            bgm.SetAudioGroup(AudioGroup.Bgm);
             if (bgm == null || bgm.clip == null) return;
             sfx.PrepareAudioEffects(don, ka);
             bgm.loop = true;
@@ -58,24 +61,55 @@ namespace OurTaiko
             else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuDown) || InputManager.GetKeyDown(InputKey.MenuRight))
                 Ka(1);
             else if (InputManager.GetKeyDown(InputKey.Back))
-                Handle(Menu.Back());
+                Run(() => Menu.Back());
         }
 
-        public void Don() => Handle(Menu.Don());
-        public void Ka(int delta) => Handle(Menu.Ka(delta));
+        public void Don() => Run(() => Menu.Don());
+        public void Ka(int delta) => Run(() => Menu.Ka(delta));
 
+        void Run(System.Func<SettingsMenu.Result> action)
+        {
+            if (switcher.IsInputBlocked || HasLeft) return;
+            Handle(action());
+        }
         void Handle(SettingsMenu.Result result)
         {
             if (result == SettingsMenu.Result.None || switcher.IsInputBlocked || HasLeft) return;
             // Moves answer with the rim sound, everything that confirms or steps with the face.
-            Play(result == SettingsMenu.Result.Moved ? ka : don);
-            if (result == SettingsMenu.Result.Changed) SettingManager.EnsureInstance().Set(Menu.Settings);
+            if (result == SettingsMenu.Result.Changed)
+            {
+                SettingManager.EnsureInstance().Set(Menu.Settings);
+                if (Menu.CurrentItem.Label == "Drum Volume") sfx.PlayAudioOneShot(don, AudioGroup.Drum);
+                else if (Menu.CurrentItem.Label == "Voice Volume" && previewVoice != null) sfx.PlayAudioOneShot(previewVoice, AudioGroup.Voice);
+                else Play(don);
+            }
+            else Play(result == SettingsMenu.Result.Moved ? ka : don);
             if (result == SettingsMenu.Result.Exit)
             {
                 HasLeft = true;
-                switcher.SwitchScene(SceneSwitcher.EntryScene);
+                SaveAndLeave();
             }
             view.Show(Menu);
+        }
+
+        async void SaveAndLeave()
+        {
+            try
+            {
+                SettingManager.EnsureInstance().Set(Menu.Settings);
+                await switcher.SwitchSceneAfterFadeAsync(SceneSwitcher.EntryScene,
+                    () => AudioEngine.EnsureInstance().ApplyPendingSettingsAsync());
+            }
+            catch (System.Exception error)
+            {
+                if (this == null) return;
+                HasLeft = false;
+                Menu.Settings.audio = SettingManager.EnsureInstance().Settings.Clone().audio;
+                view.Show(Menu);
+                if (view.outputStatus != null) view.outputStatus.text = error.Message;
+                Debug.LogWarning("[Audio] " + error.Message);
+                if (bgm != null && bgm.clip != null) bgm.PlayAudio();
+            }
         }
 
         void Play(AudioClip clip)

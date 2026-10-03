@@ -207,6 +207,8 @@ namespace OurTaiko
 
         void Start()
         {
+            bgm.SetAudioGroup(AudioGroup.Bgm);
+            voice.SetAudioGroup(AudioGroup.Voice);
             sfx.PrepareAudioEffects(don, ka, uraSwitch);
             if (optionArt.hitSounds != null) { sfx.PrepareAudioEffects(optionArt.hitSounds.don); sfx.PrepareAudioEffects(optionArt.hitSounds.ka); }
             voice.PrepareAudioTracks(voiceEnter, voiceStartSong, optionArt.voice);
@@ -359,7 +361,7 @@ namespace OurTaiko
             // step_neiro previews the new set's don; 無音 plays nothing.
             if (menu.Current == OptionRow.Neiro && optionArt.hitSounds != null
                 && optionArt.hitSounds.TryGet(menu.Options.neiro, out var preview, out _))
-                sfx.PlayAudioOneShot(preview);
+                sfx.PlayAudioOneShot(preview, AudioGroup.Drum);
         }
 
         void OnOptionRowTapped(int row, int direction)
@@ -578,7 +580,8 @@ namespace OurTaiko
                 catch (Exception error) { readError = error; }
                 if (readError != null) { Debug.LogWarning("Preview audio: " + readError.Message); StopPreview(); yield break; }
                 string path = song.audioPath;
-                var task = Task.Run(() => new NativeAudioSample(bytes ?? System.IO.File.ReadAllBytes(path), engine, true, false));
+                int audioGeneration = engine.Generation;
+                var task = Task.Run(() => new NativeAudioSample(bytes ?? System.IO.File.ReadAllBytes(path), engine, true, false, audioGeneration));
                 bool claimed = false;
                 try
                 {
