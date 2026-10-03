@@ -122,9 +122,9 @@ namespace OurTaiko.Editor
         {
             switch (target)
             {
-                case BuildTarget.StandaloneOSX: return "Builds/macOS/OurTaikoPlayerUnity.app";
-                case BuildTarget.StandaloneWindows64: return "Builds/Windows/OurTaikoPlayerUnity.exe";
-                case BuildTarget.Android: return "Builds/Android/OurTaikoPlayerUnity.apk";
+                case BuildTarget.StandaloneOSX: return "Builds/macOS/OurTaikoPlay.app";
+                case BuildTarget.StandaloneWindows64: return "Builds/Windows/OurTaikoPlay.exe";
+                case BuildTarget.Android: return "Builds/Android/OurTaikoPlay.apk";
                 case BuildTarget.iOS: return "Builds/iOS";
                 default: throw new ArgumentOutOfRangeException(nameof(target));
             }

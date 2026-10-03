@@ -54,7 +54,7 @@ namespace OurTaiko.Editor
             EditorSettings.defaultBehaviorMode = EditorBehaviorMode.Mode2D;
             EditorSettings.serializationMode = SerializationMode.ForceText;
             PlayerSettings.companyName = "OurTaiko";
-            PlayerSettings.productName = "OurTaikoPlayerUnity";
+            PlayerSettings.productName = "OurTaikoPlay";
             PlayerSettings.defaultScreenWidth = 1920; PlayerSettings.defaultScreenHeight = 1080;
             PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
             PlayerSettings.runInBackground = true;
