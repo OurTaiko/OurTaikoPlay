@@ -396,7 +396,7 @@ namespace OurTaiko.Tests
                 var counter = play.balloonCounter;
                 Assert.That(play.balloonPop, Is.Not.Null);
                 Assert.That(play.balloonPop.name, Is.EqualTo("balloon_pop"));
-                Assert.That(play.balloonPop.loadState, Is.EqualTo(AudioDataLoadState.Loaded));
+                Assert.That(play.hitAudio.GetComponent<AudioBus>().PreparedEffects, Is.GreaterThan(0));
                 Assert.That(counter.IsVisible, Is.False);
                 yield return Reach(0.1);
                 play.Hit(true, false);
@@ -610,16 +610,16 @@ namespace OurTaiko.Tests
             if (play.IsPaused) { play.Resume(); yield return WaitForResume(play); }
             yield return new WaitForSecondsRealtime(2.4f);
             Assert.That(play.Session.Good, Is.GreaterThan(0));
-            Assert.That(play.music.isPlaying, Is.True);
-            Assert.That(play.music.time, Is.EqualTo(play.SongTime).Within(0.15));
+            Assert.That(play.music.IsAudioPlaying(), Is.True);
+            Assert.That(play.music.AudioPosition(), Is.EqualTo(play.SongTime).Within(0.15));
             play.TogglePause(); double pausedAt = play.SongTime;
             yield return new WaitForSecondsRealtime(0.2f);
             Assert.That(play.SongTime, Is.EqualTo(pausedAt).Within(0.001));
-            Assert.That(play.music.isPlaying, Is.False);
+            Assert.That(play.music.IsAudioPlaying(), Is.False);
             play.TogglePause();
             yield return WaitForResume(play);
             yield return new WaitForSecondsRealtime(0.4f);
-            Assert.That(play.music.time, Is.EqualTo(play.SongTime).Within(0.15));
+            Assert.That(play.music.AudioPosition(), Is.EqualTo(play.SongTime).Within(0.15));
             Capture("SinglePlayScene.png");
             play.Restart();
             yield return WaitForRestart(play);

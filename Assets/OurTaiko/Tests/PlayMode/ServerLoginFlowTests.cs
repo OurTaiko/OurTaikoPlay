@@ -125,8 +125,9 @@ namespace OurTaiko.Tests
             // The verified copy plays: API title, downloaded audio.
             var play = Object.FindFirstObjectByType<PlayScene>();
             Assert.That(play.Session.Chart.Title, Is.EqualTo("Fixture Song"));
-            Assert.That(song.music, Is.Not.Null);
-            Assert.That(song.music.loadState, Is.EqualTo(AudioDataLoadState.Loaded));
+            Assert.That(song.audioPath, Is.Not.Null.And.Not.Empty);
+            Assert.That(play.music.AudioLength(), Is.GreaterThan(0));
+            if (AudioEngine.Instance.Native) Assert.That(song.music, Is.Null, "Online audio must bypass Unity decoding.");
             Assert.That(fixture.Downloads, Is.EqualTo(2));
             yield return WaitUntil(() => play.SongTime > 0.2, 10);
             play.Hit(isKa: false, right: false);

@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -89,7 +91,7 @@ namespace OurTaiko
         public BoardKind KindAt(int index) => wheelBoards[index].Kind;
         public SongDefinition SongAt(int index) => wheelBoards[index].Song;
         public double CourseFade => Phase == State.Browsing ? 0 : Clamp01((Now - courseEnteredAt - CourseFadeDelayMs) / CourseFadeMs);
-        public bool IsPreviewPlaying => preview != null && preview.isPlaying;
+        public bool IsPreviewPlaying => preview != null && preview.IsAudioPlaying();
 
         sealed class Plate { public Difficulty Difficulty; public CanvasGroup Group; }
         // A board view and its authored sizes/positions before any song changed them.
@@ -205,20 +207,25 @@ namespace OurTaiko
 
         void Start()
         {
+            sfx.PrepareAudioEffects(don, ka, uraSwitch);
+            if (optionArt.hitSounds != null) { sfx.PrepareAudioEffects(optionArt.hitSounds.don); sfx.PrepareAudioEffects(optionArt.hitSounds.ka); }
+            voice.PrepareAudioTracks(voiceEnter, voiceStartSong, optionArt.voice);
             bgm.loop = true;
-            bgm.Play();
+            bgm.PlayAudio();
             PlayVoice(voiceEnter);
             started = true;
         }
 
         void OnDestroy()
         {
+            previewGeneration++;
             if (switcher != null) switcher.SceneChanging -= OnSceneChanging;
         }
 
         void OnSceneChanging(string scene)
         {
-            bgm.Stop(); preview.Stop();
+            previewGeneration++;
+            bgm.StopAudio(); preview.StopAudio();
             if (IsOptionPanelOpen) PlayOptions.Shared.Save();
         }
 
@@ -229,7 +236,7 @@ namespace OurTaiko
             if (!started) return;
             double now = Now;
             HandleInput();
-            if (Phase == State.Decided && !voice.isPlaying && !switcher.IsSwitching) StartSong();
+            if (Phase == State.Decided && !voice.IsAudioPlaying() && !switcher.IsSwitching) StartSong();
             UpdatePreview(now);
             DrawBackground(now);
             for (int i = 0; i < wheelBoards.Count; i++) DrawBoard(wheelBoards[i], i == Focused, now);
@@ -247,7 +254,7 @@ namespace OurTaiko
             if (InputManager.GetKeyDown(InputKey.Back))
             {
                 if (IsOptionPanelOpen) CloseOptions();
-                else if (Phase == State.Browsing && openFolder >= 0) { if (AcceptsInput()) { sfx.PlayOneShot(don); CloseFolder(); } }
+                else if (Phase == State.Browsing && openFolder >= 0) { if (AcceptsInput()) { sfx.PlayAudioOneShot(don); CloseFolder(); } }
                 else switcher.SwitchScene(SceneSwitcher.EntryScene);
                 return;
             }
@@ -262,7 +269,7 @@ namespace OurTaiko
         public void Left()
         {
             if (!AcceptsInput()) return;
-            sfx.PlayOneShot(ka);
+            sfx.PlayAudioOneShot(ka);
             if (IsOptionPanelOpen) ChangeOption(-1);
             else if (Phase == State.Browsing) Navigate(-1);
             else Cursor.Left();
@@ -271,13 +278,13 @@ namespace OurTaiko
         public void Right()
         {
             if (!AcceptsInput()) return;
-            sfx.PlayOneShot(ka);
+            sfx.PlayAudioOneShot(ka);
             if (IsOptionPanelOpen) ChangeOption(+1);
             else if (Phase == State.Browsing) Navigate(+1);
             else if (Cursor.Right())
             {
                 // toggle_ura_mode: the oni card plays change_ura / change_oni for 90 frames.
-                sfx.PlayOneShot(uraSwitch);
+                sfx.PlayAudioOneShot(uraSwitch);
                 uraChangedAt = Now; uraChangeToUraSide = Cursor.IsUra;
             }
         }
@@ -285,7 +292,7 @@ namespace OurTaiko
         public void Confirm()
         {
             if (!AcceptsInput()) return;
-            sfx.PlayOneShot(don);
+            sfx.PlayAudioOneShot(don);
             if (IsOptionPanelOpen) { optionPanel.Menu.Confirm(); return; }
             if (Phase == State.Browsing)
             {
@@ -310,9 +317,9 @@ namespace OurTaiko
 
         void PlayVoice(AudioClip clip)
         {
-            voice.Stop();
+            voice.StopAudio();
             voice.clip = clip;
-            if (clip != null) voice.Play();
+            if (clip != null) voice.PlayAudio();
         }
 
         bool AcceptsInput()
@@ -340,7 +347,7 @@ namespace OurTaiko
         void CloseOptions()
         {
             if (!AcceptsInput() || !IsOptionPanelOpen || optionPanel.IsClosing) return;
-            sfx.PlayOneShot(don);
+            sfx.PlayAudioOneShot(don);
             optionPanel.Close(Now);
         }
 
@@ -352,7 +359,7 @@ namespace OurTaiko
             // step_neiro previews the new set's don; 無音 plays nothing.
             if (menu.Current == OptionRow.Neiro && optionArt.hitSounds != null
                 && optionArt.hitSounds.TryGet(menu.Options.neiro, out var preview, out _))
-                sfx.PlayOneShot(preview);
+                sfx.PlayAudioOneShot(preview);
         }
 
         void OnOptionRowTapped(int row, int direction)
@@ -362,7 +369,7 @@ namespace OurTaiko
             if (direction == 0)
             {
                 if (menu.Index == row) Confirm();
-                else { sfx.PlayOneShot(ka); menu.Select(row); }
+                else { sfx.PlayAudioOneShot(ka); menu.Select(row); }
                 return;
             }
             menu.Select(row);
@@ -545,28 +552,63 @@ namespace OurTaiko
         {
             var board = wheelBoards[Focused];
             bool open = Phase == State.Browsing && board.Song != null && board.OpenStart >= 0 && now - board.OpenStart >= board.Hold + OpenGrowMs;
-            if (open && !previewStarted && board.Song.music != null)
+            if (open && !previewStarted && (board.Song.music != null || !string.IsNullOrEmpty(board.Song.audioPath)))
             {
                 previewStarted = true;
-                bgm.Stop();
+                bgm.StopAudio();
                 bgmResumeAt = -1;
-                preview.clip = board.Song.music;
-                preview.time = Mathf.Clamp((float)board.Info.DemoStart, 0, Mathf.Max(0, board.Song.music.length - 0.1f));
-                preview.Play();
+                StartCoroutine(LoadPreview(board.Song, board.Info.DemoStart, ++previewGeneration));
             }
             if (bgmResumeAt >= 0 && now >= bgmResumeAt && !previewStarted)
             {
                 bgmResumeAt = -1;
-                bgm.Play();
+                bgm.PlayAudio();
             }
+        }
+
+        int previewGeneration;
+        IEnumerator LoadPreview(SongDefinition song, double demoStart, int generation)
+        {
+            var engine = AudioEngine.EnsureInstance();
+            if (engine.Native)
+            {
+                byte[] bytes = null;
+                Exception readError = null;
+                try { if (string.IsNullOrEmpty(song.audioPath)) bytes = AudioAssetCatalog.Read(song.music); }
+                catch (Exception error) { readError = error; }
+                if (readError != null) { Debug.LogWarning("Preview audio: " + readError.Message); StopPreview(); yield break; }
+                string path = song.audioPath;
+                var task = Task.Run(() => new NativeAudioSample(bytes ?? System.IO.File.ReadAllBytes(path), engine, true, false));
+                bool claimed = false;
+                try
+                {
+                    while (!task.IsCompleted) yield return null;
+                    if (generation != previewGeneration) yield break;
+                    if (!task.IsCompletedSuccessfully)
+                    {
+                        Debug.LogWarning("Preview audio: " + task.Exception?.GetBaseException().Message);
+                        StopPreview(); yield break;
+                    }
+                    song.SetPreparedAudio(task.Result); claimed = true;
+                }
+                finally
+                {
+                    if (!claimed) _ = task.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
+                }
+            }
+            if (generation != previewGeneration) yield break;
+            preview.SetAudioSong(song, false);
+            preview.SeekAudio(Math.Clamp(demoStart, 0, Math.Max(0, preview.AudioLength() - 0.1)));
+            preview.PlayAudio();
         }
 
         // SongBox::close_box: stop the preview; the select bgm comes back 330 ms later.
         void StopPreview()
         {
+            previewGeneration++;
             if (!previewStarted) return;
             previewStarted = false;
-            preview.Stop();
+            preview.StopAudio();
             bgmResumeAt = Now + BgmResumeMs;
         }
 
@@ -999,7 +1041,7 @@ namespace OurTaiko
             if (Phase != State.Browsing || !AcceptsInput()) return;
             int index = wheelBoards.IndexOf(board);
             if (index == Focused) { Confirm(); return; }
-            sfx.PlayOneShot(ka);
+            sfx.PlayAudioOneShot(ka);
             int count = wheelBoards.Count, delta = index - Focused;
             if (delta > count / 2) delta -= count;
             else if (delta < -count / 2) delta += count;

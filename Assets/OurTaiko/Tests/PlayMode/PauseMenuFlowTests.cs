@@ -54,7 +54,7 @@ namespace OurTaiko.Tests
             if (song != null)
             {
                 Object.Destroy(song.chart);
-                Object.Destroy(song.music);
+                // The test uses an imported clip; it is not owned by the test.
                 Object.Destroy(song);
             }
             if (keyboard != null && keyboard.added) InputSystem.RemoveDevice(keyboard);
@@ -68,7 +68,7 @@ namespace OurTaiko.Tests
         public IEnumerator PauseFreezesAudioAndNotesAndBlocksDrumsUntilFadeOutCompletes()
         {
             yield return StartPlay();
-            Assert.That(play.music.isPlaying, Is.True);
+            Assert.That(play.music.IsAudioPlaying(), Is.True);
             Assert.That(pad.enabled, Is.True);
             play.TogglePause();
             double frozenTime = play.SongTime;
@@ -76,7 +76,7 @@ namespace OurTaiko.Tests
             Vector3 notePosition = play.NoteRoot(0).localPosition;
             Assert.That(play.IsPaused, Is.True, "Pause must freeze gameplay at the start of the fade.");
             Assert.That(pad.enabled, Is.False);
-            Assert.That(play.music.isPlaying || play.hitAudio.isPlaying, Is.False);
+            Assert.That(play.music.IsAudioPlaying() || play.hitAudio.IsAudioPlaying(), Is.False);
             Assert.That(play.pausePanel.activeInHierarchy, Is.True);
             Assert.That(play.pauseMenu.group.alpha, Is.LessThan(0.01f));
 
@@ -93,7 +93,7 @@ namespace OurTaiko.Tests
             Assert.That(play.NoteRoot(0).localPosition, Is.EqualTo(notePosition));
             Assert.That(play.Session.Rolls, Is.Zero, "Paused drum keys and background pointers must not hit the roll.");
             Assert.That(play.drumFlashes.Any(f => f.enabled), Is.False);
-            Assert.That(play.hitAudio.isPlaying, Is.False);
+            Assert.That(play.hitAudio.IsAudioPlaying(), Is.False);
             Assert.That(pad.drum.localScale, Is.EqualTo(Vector3.one), "Disabled drum pads must not animate on pointer presses.");
 
             play.Resume();
@@ -115,7 +115,7 @@ namespace OurTaiko.Tests
             Assert.That(Time.realtimeSinceStartup - closingAt, Is.GreaterThanOrEqualTo(0.48f));
             Assert.That(play.pausePanel.activeInHierarchy, Is.False);
             Assert.That(pad.enabled, Is.True);
-            Assert.That(play.music.isPlaying, Is.True);
+            Assert.That(play.music.IsAudioPlaying(), Is.True);
             yield return Press(Key.F);
             Assert.That(play.Session.Rolls, Is.EqualTo(1), "The first new drum press after resume must be playable.");
         }
@@ -258,7 +258,7 @@ namespace OurTaiko.Tests
             yield return WaitForOpen();
             Assert.That(play.SongTime, Is.EqualTo(frozenTime),
                 "Losing focus during the fade must leave the song frozen and reopen the menu.");
-            Assert.That(play.music.isPlaying || play.hitAudio.isPlaying, Is.False);
+            Assert.That(play.music.IsAudioPlaying() || play.hitAudio.IsAudioPlaying(), Is.False);
             Assert.That(pad.enabled, Is.False);
             Assert.That(play.pauseButton.interactable, Is.False);
 
@@ -267,7 +267,7 @@ namespace OurTaiko.Tests
             Assert.That(play.pauseMenu.IsClosing, Is.True, "A new keyboard confirmation can resume after focus returns.");
             yield return WaitUntil(() => !play.IsPaused, "Resume stayed blocked after focus returned.");
             Assert.That(pad.enabled && play.pauseButton.interactable, Is.True);
-            Assert.That(play.music.isPlaying, Is.True);
+            Assert.That(play.music.IsAudioPlaying(), Is.True);
             Assert.That(play.Session.Rolls, Is.Zero);
         }
 
@@ -279,7 +279,7 @@ namespace OurTaiko.Tests
             song.name = "PauseMenuTest";
             // A long roll makes every accepted drum input observable and avoids natural song completion.
             song.chart = new TextAsset("TITLE:Pause Menu Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#MEASURE 4/1\n5,\n0,\n8,\n#END");
-            song.music = AudioClip.Create("PauseTestSilence", 30 * 8000, 1, 8000, false);
+            song.music = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/OurTaiko/Audio/entry/bgm.ogg");
             PlayOptions.Shared = new PlayOptions();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;

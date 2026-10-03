@@ -62,7 +62,8 @@ namespace OurTaiko
 
         void Start()
         {
-            if (servers.Count > 0 && bgm != null && bgm.clip != null) { bgm.loop = true; bgm.Play(); }
+            sfx.PrepareAudioEffects(don, ka);
+            if (servers.Count > 0 && bgm != null && bgm.clip != null) { bgm.loop = true; bgm.PlayAudio(); }
         }
 
         void OnDestroy()
@@ -73,7 +74,7 @@ namespace OurTaiko
 
         void OnSceneChanging(string scene)
         {
-            if (bgm != null) bgm.Stop();
+            if (bgm != null) bgm.StopAudio();
         }
 
         ServerConfig Server => online.Servers.servers[servers[ServerIndex]];
@@ -273,7 +274,7 @@ namespace OurTaiko
 
         void Play(AudioClip clip)
         {
-            if (sfx != null && clip != null) sfx.PlayOneShot(clip);
+            if (sfx != null && clip != null) sfx.PlayAudioOneShot(clip);
         }
     }
 }

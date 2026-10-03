@@ -17,3 +17,16 @@ attributions and license notices.
 Modified on 2026-09-15: renamed the application and build products to OurTaiko,
 identified OurTaiko as the author and maintainer of this modified version, and
 included the original GNU license and author attribution in build packages.
+
+Audio implementation adapted on 2026-10-03 from TeamMajdata/MajdataPlay
+(revision dc19722d602f099131d93b37091624ad30150ad1), including AudioManager,
+BassHelper, BassSimpleAudioSample and BassAudioSample. Copyright remains with
+TeamMajdata and its contributors; these adaptations are distributed under GPLv3.
+https://github.com/TeamMajdata/MajdataPlay
+
+ManagedBass is included as the unmodified TeamMajdata/ManagedBass Git submodule
+at 5944aad3842484d78f588d63d5bdc8a85569495b, under its included MIT license.
+System.Runtime.CompilerServices.Unsafe 6.1.2 is Microsoft's MIT-licensed binary
+dependency; its license and package provenance are included beside the DLL.
+BASS and its native add-ons retain their individual licenses and notices in
+Assets/Plugins/Un4seen.Bass, separate from the ManagedBass license.

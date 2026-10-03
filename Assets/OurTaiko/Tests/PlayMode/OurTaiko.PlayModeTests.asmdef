@@ -1,7 +1,20 @@
 {
   "name": "OurTaiko.PlayModeTests",
-  "references": ["OurTaiko.Runtime", "OurTaiko.TestSupport", "Unity.ugui", "Unity.TextMeshPro", "Unity.InputSystem"],
+  "references": [
+    "OurTaiko.Runtime",
+    "OurTaiko.TestSupport",
+    "Unity.ugui",
+    "Unity.TextMeshPro",
+    "Unity.InputSystem",
+    "ManagedBass",
+    "ManagedBass.BassMix"
+  ],
   "overrideReferences": true,
-  "precompiledReferences": ["nunit.framework.dll", "Newtonsoft.Json.dll"],
-  "optionalUnityReferences": ["TestAssemblies"]
+  "precompiledReferences": [
+    "nunit.framework.dll",
+    "Newtonsoft.Json.dll"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
 }
