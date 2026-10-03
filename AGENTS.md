@@ -36,6 +36,12 @@
 
 ### 当前完成状态与交接边界
 
+#### SongSelect 最佳成绩与 SQLite（2026-10-03）
+
+- 左侧最佳成绩窗口保存为 `SongSelectView.bestScore`，选曲列表中随选中歌曲显示，进入难度选择继续显示；魔王／里魔王都有记录时每秒轮播，只有一个时固定；两者都无记录才显示困难→普通→简单中最高难度的记录，全部无记录则隐藏。迁移 `ProjectBuilder.ApplySongBestScore()`，直接复用 SinglePlay 的 JudgeCounter 四行布局、面板与计分数字，上方加难度图标和最高分；四行显示该次最高分的良／可／不可／连打数，保留可编辑布局。
+- 用户指定 `com.gilzoide.sqlite-net` Git 包 1.3.2（允许该包自带的 SQLite 原生库）。`scores.sqlite3` 中 `BestScores` 只存本地谱面，`PendingScoreUploads` 独立存已登录对应服务器的账号待上传请求。在线历史成绩只来自登录拉取和成功上传的服务器响应。旧 JSON 本地成绩与旧队列自动迁移，旧在线历史条目不导入。
+
+
 #### 最新完成：Sound 设置（2026-10-03）
 
 - 用户最新决定：GlobalSettingScene 的 Sound 显示 **Master／BGM／Track／Drum／Effects／Voice 音量组＋Output Backend**（及 Return）；音量范围 0–200%、5% 一档，确认后即时保存并生效，鼓音／语音确认时试听。设备、采样率与缓冲等高级参数仅保留在 `settings.json` 的 `audio` 中，不放回菜单。后端按平台显示 Automatic／BASS／Unity，Windows 另有 WASAPI／ASIO，WebGL 仅 Unity。

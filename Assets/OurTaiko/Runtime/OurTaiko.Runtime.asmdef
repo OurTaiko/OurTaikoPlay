@@ -11,6 +11,7 @@
     "ManagedBass.BassAsio",
     "ManagedBass.BassAac",
     "ManagedBass.BassOpus",
-    "ManagedBass.BassFx"
+    "ManagedBass.BassFx",
+    "Gilzoide.SqliteNet"
   ]
 }

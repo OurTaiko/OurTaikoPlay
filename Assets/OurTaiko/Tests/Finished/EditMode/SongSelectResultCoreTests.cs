@@ -136,7 +136,7 @@ namespace OurTaiko.Tests
         [Test]
         public void ScoreStoreKeepsBestScoreAndCrownButNotAutoPlay()
         {
-            string path = Path.Combine(Application.temporaryCachePath, "editmode-scores.json");
+            string path = Path.Combine(Application.temporaryCachePath, "editmode-scores.sqlite3");
             if (File.Exists(path)) File.Delete(path);
             try
             {

@@ -63,7 +63,8 @@ namespace OurTaiko.Online
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            UseCache(Path.Combine(Application.persistentDataPath, "cache", "fanmade"));
+            UseCache(Path.Combine(Application.persistentDataPath, "cache", "fanmade"),
+                Path.Combine(Application.persistentDataPath, "scores.sqlite3"));
             Load(Path.Combine(Application.persistentDataPath, ServerList.FileName));
         }
 
@@ -102,11 +103,11 @@ namespace OurTaiko.Online
             else Disconnect();
         }
 
-        void UseCache(string root)
+        void UseCache(string root, string databasePath = null)
         {
             Client?.Dispose();
             ClearSongs();
-            Client = new FanmadeClient(root);
+            Client = new FanmadeClient(root, databasePath);
         }
 
         // Remembers the account ServerLogin used, in the same servers.json entry.
