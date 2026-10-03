@@ -507,9 +507,10 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 ## SongSelect 最佳成绩窗口与 SQLite（2026-10-03）
 
 - `SongSelectView.bestScore`／`SongBestScoreView` 是场景保存的左侧小窗口，选曲列表中显示当前选中歌曲的成绩，进入难度选择继续显示；文件夹、返回项、无记录时隐藏。优先显示おに／裏おに：两者都有记录时每秒轮流显示，只有一个时固定显示；两者都没有时，仅显示むずかしい→ふつう→かんたん中有成绩的最高难度（不按分数大小选）。普通难度不会轮播。
-- 按用户要求改为直接复用 SinglePlay 场景中保存的 `JudgeCounter`（组件和四行层级）、橙色面板／浅色行条和计分数字；上方增加难度图标、自己ベスト和最高分。良／可／不可／连打数属于该次最高分的记录。难度图标直接引用 SongSelect 已有的 `courseMarks`，不另外导入；删除不再使用的白底／金条／旧数字与专用小图标副本。资产来源见 `ImportedAssets.json`。迁移菜单 `OurTaiko/Apply Song Best Score`，重复执行保留已有布局；位置、大小、数字和轮播间隔可在场景编辑。
+- 按用户要求改为直接复用 SinglePlay 场景中保存的 `JudgeCounter`（组件和四行层级）、橙色面板／浅色行条和计分数字；上方增加难度图标、自己ベスト和最高分。良／可／不可／连打数属于该次最高分的记录。难度图标切自已有 `game/lane/lane_difficulty.png` 不透明图集，不另外导入 PNG；`courseMarks` 对应的是最高 alpha 153/255 的背景水印，不能用于成绩窗；删除不再使用的白底／金条／旧数字与专用小图标副本。资产来源见 `ImportedAssets.json`。迁移菜单 `OurTaiko/Apply Song Best Score`，重复执行保留已有布局；位置、大小、数字和轮播间隔可在场景编辑。
 - 用户指定 UPM `com.gilzoide.sqlite-net` 1.3.2（Git URL，含该包自身 SQLite 原生库）。`persistentDataPath/scores.sqlite3` 含两张独立表：`BestScores` 仅本地谱面最佳分／判定统计／最佳皇冠；`PendingScoreUploads` 仅已登录账号的待上传请求（含永久拒绝状态）。选择界面读内存缓存，不逐帧查 SQLite。
 - `ScoreStore` 首次迁移旧 `scores.json` 的本地条目，忽略旧 `fanmade/` 条目，保留旧 JSON 作备份。旧 `cache/fanmade/pending/<端点>` 的 JSON／rejected 请求保留原幂等键和请求体导入队列表，落盘成功后删除原队列文件，防止再次导入。
 - `SongScores` 统一路由本地与在线成绩，选曲皇冠同样使用正确的数据源。API 无魂槽／普通通关标志，在线皇冠只能由良可不可确认全连／全良，不能凭分数猜普通通关。自动演奏不保存、不入队。
 - 验证：EditMode 211/211；最终 SQLite 定向回归 3/3；最佳成绩窗口 PlayMode 1/1、在线登录／游玩／上传 4/4、SongSelect 回归 10/10。场景迁移连续执行两次，文件均不变；截图 `TestResults/SongSelectBestScore.png`。尚未重新构建或在手机上验证。
 - JudgeCounter 改版后追加验证：`SongBestScoreTests` 1/1（列表显示、切歌隐藏／恢复、四行数据、进入难度、优先级轮播）；在线登录到上传 1/1。两次迁移文件不变，所有 Graphic 不接收射线。截图 `TestResults/SongSelectBestScoreList.png`／`SongSelectBestScore.png`。
+- Editor 默认显示 BestScore 示例成绩（1002540，良 853／可 14／不可 2／连打 35），三种选曲预览按钮也会填入示例；不读玩家成绩文件。运行时 Awake 隐藏示例，随后根据真实记录显示，防止示例闪现。

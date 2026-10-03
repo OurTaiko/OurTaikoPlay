@@ -281,6 +281,7 @@ namespace OurTaiko.Editor
             select.wheel.gameObject.SetActive(mode == 0);
             select.coursePanel.gameObject.SetActive(mode != 0);
             view.courseGroup.alpha = 1;
+            if (view.bestScore != null) PreviewBestScore(view.bestScore);
             view.options.gameObject.SetActive(mode == 2);
             if (PrefabUtility.IsPartOfPrefabInstance(view.options))
                 PrefabUtility.RecordPrefabInstancePropertyModifications(view.options.gameObject);

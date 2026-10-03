@@ -15,16 +15,22 @@ namespace OurTaiko.Editor
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode first.");
             for (int i = 0; i < EditorSceneManager.sceneCount; i++)
                 if (EditorSceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save the current scene first.");
+            // Reuse the opaque gameplay sheet, not the 60%-alpha course-select watermark.
+            var icons = SliceSheet("game/lane/lane_difficulty", Enumerable.Range(0, 5)
+                .Select(i => ("BestScoreDifficulty" + i, 0, i * 96, 132, 96)).ToArray());
             var scene = EditorSceneManager.OpenScene(SongSelectPath);
             var select = UnityEngine.Object.FindFirstObjectByType<SongSelectScene>();
             if (select.view.bestScore != null && select.view.bestScore.judgments != null)
             {
                 var existing = select.view.bestScore;
-                if (!existing.difficultySprites.SequenceEqual(select.courseMarks))
+                if (!existing.difficultySprites.SequenceEqual(icons) || existing.group.alpha == 0)
                 {
                     int shown = Array.IndexOf(existing.difficultySprites, existing.difficulty.sprite);
-                    existing.difficultySprites = select.courseMarks.ToArray();
+                    existing.difficultySprites = icons;
+                    existing.difficulty.rectTransform.sizeDelta = new Vector2(64, 48);
+                    existing.difficulty.rectTransform.TopLeft(10, 12);
                     existing.difficulty.sprite = existing.difficultySprites[Mathf.Max(0, shown)];
+                    PreviewBestScore(existing);
                     EditorUtility.SetDirty(existing);
                     EditorUtility.SetDirty(existing.difficulty);
                     EditorSceneManager.MarkSceneDirty(scene);
@@ -69,10 +75,10 @@ namespace OurTaiko.Editor
                 title.transform.SetAsLastSibling();
                 title.text = "自己ベスト"; title.fontSize = 28; title.color = Color.white; title.UseUiFont();
                 title.rectTransform.sizeDelta = new Vector2(216, 34); title.rectTransform.TopLeft(76, 18);
-                view.difficultySprites = select.courseMarks.ToArray();
-                view.difficulty ??= SkinUi.Image("Difficulty", root, null, 42, 42);
+                view.difficultySprites = icons;
+                view.difficulty ??= SkinUi.Image("Difficulty", root, null, 64, 48);
                 view.difficulty.sprite = view.difficultySprites[3];
-                view.difficulty.preserveAspect = true; view.difficulty.rectTransform.TopLeft(20, 14);
+                view.difficulty.preserveAspect = true; view.difficulty.rectTransform.TopLeft(10, 12);
                 view.numbers = source.digits;
                 view.scoreCount = SkinUi.Rect("Score", root, 260, 42);
                 view.scoreCount.TopLeft(28, 60);
@@ -94,6 +100,7 @@ namespace OurTaiko.Editor
                 stats.anchorMin = stats.anchorMax = stats.pivot = new Vector2(0, 1);
                 stats.anchoredPosition = new Vector2(0, -106);
                 stats.localScale = Vector3.one * (root.rect.width / stats.rect.width);
+                PreviewBestScore(view);
                 select.view.bestScore = view;
                 EditorUtility.SetDirty(view); EditorUtility.SetDirty(select.view);
                 EditorSceneManager.MarkSceneDirty(scene);
@@ -102,6 +109,24 @@ namespace OurTaiko.Editor
             }
             finally { EditorSceneManager.CloseScene(playScene, true); }
             AssetDatabase.DeleteAsset(Root + "Art/song_select/best_score");
+        }
+        // Editor-only sample content: no globals, player files, or runtime score lookup.
+        public static void PreviewBestScore(SongBestScoreView view)
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Preview is only available in Edit mode.");
+            view.group.alpha = 1;
+            view.difficulty.sprite = view.difficultySprites[(int)Difficulty.Oni];
+            view.difficulty.color = Color.white;
+            const string score = "1002540";
+            for (int i = 0; i < view.digits.Length; i++)
+            {
+                int position = i - (view.digits.Length - score.Length);
+                view.digits[i].enabled = position >= 0;
+                if (position >= 0)
+                    JudgeCounterView.PlaceDigit(view.digits[i], view.numbers[score[position] - '0'], position,
+                        score.Length, view.scoreCount.rect.height, view.judgments.pitch);
+            }
+            view.judgments.Show(853, 14, 2, 35);
         }
     }
 }

@@ -25,6 +25,9 @@ namespace OurTaiko
         long onlineRevision = -1;
         double started;
 
+        // Saved sample content is visible in the Editor; never flash it before runtime binding.
+        void Awake() => group.alpha = 0;
+
         public void Show(SongDefinition selected, SongInfo info, float alpha, double now)
         {
             int local = SongScores.IsOnline(selected) ? -1 : ScoreStore.Shared.Revision;
