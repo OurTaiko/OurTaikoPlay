@@ -4,7 +4,7 @@
 
 ## 1. 核心项目目标
 
-将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件、Entry、SongSelect、SongLoadingScene、SinglePlayScene 与 Result 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行单人流程。SceneSwitcher 不是场景；入口为 Entry（Build Settings 首个场景、`SceneSwitcher.MenuScene`；2026-10-02 删除 Test_DefaultScene 测试入口及 LaunchMenu，随后移植 Entry），所有运行时场景切换从全局控件开始，并交由它完成。
+将相邻 OurTaikoPlayer 的单人游玩页面与玩法移植为纯 C# 的 Unity 2D 项目，通过全局 SceneSwitcher 控件、Entry、ServerLogin（在线服务器登录）、SongSelect、SongLoadingScene、SinglePlayScene 与 Result 提供采用 Nijiiro 皮肤、行为参照原模拟器的可运行单人流程。SceneSwitcher 不是场景；入口为 Entry（Build Settings 首个场景、`SceneSwitcher.MenuScene`；2026-10-02 删除 Test_DefaultScene 测试入口及 LaunchMenu，随后移植 Entry），所有运行时场景切换从全局控件开始，并交由它完成。
 
 ## 2. 当前已知事实/约束条件
 
@@ -33,7 +33,15 @@
 
 ### 当前完成状态与交接边界
 
-#### 最新完成：Result 界面持久化（2026-10-03）
+#### 最新完成：在线服务器与 ServerLogin（2026-10-03）
+
+- 移植 OurTaikoPlayer `fanmade.cpp`：Entry 演奏ゲーム → **ServerLogin**（MajdataPlay Login 式，每台启用服务器 ログイン／ゲスト／スキップ／もどる）→ SongSelect。库：`System.Net.Http.HttpClient` ＋ Newtonsoft JSON（同 MajdataPlay）。代码 `Runtime/Online/`，全局 `OnlineManager`（同 SettingManager 模式）。
+- 配置 `persistentDataPath/servers.json`；**内置** `https://fanmade.ourtaiko.org` 与 `https://ese-backend.llx.life`（用户要求），缺失时自动补回，停用用 `"enabled": false`。
+- **分类文件夹（用户决定）**：本地歌曲之后，每台服务器的每个分类是一个文件夹（Nijiiro `bar_genre` 关闭／`folder_graphic`＋`box_chara` 打开），默认全部关闭；决定后就地展开（原 `load_current_directory` 无子文件夹分支）：文件夹板变为「もどる」、歌曲接在后面、每 10 首再插一个もどる；同时只能打开一个（打开另一个先收起当前）；もどる 或 Esc 收起并聚焦回文件夹。从该文件夹的歌曲游玩回来时重新打开并聚焦该曲；每次经过 ServerLogin 全部重置为关闭。歌曲板颜色取所在文件夹。SongSelect 曲目轮按需绑定视图（保存的板固定属于本地歌曲，其余用池化 `SongBoard.prefab`／`FolderBoard.prefab`），1500 首文件夹展开时约 120 FPS。迁移 `ProjectBuilder.ApplySongSelectFolders()`（菜单 OurTaiko/Apply Song Select Folders）。
+- 下载在 SongLoadingScene 幕布下进行（SHA-256 校验、缓存、`play.tja`），幕布新增 `Status` 文字；成绩经持久化幂等队列上传并附 `replay_data`。详见 `PortingNotes.md`「在线服务器与 ServerLogin」。
+- 验证：EditMode `FanmadeClientTests` 14/14，PlayMode `ServerLoginFlowTests` 4/4（含文件夹开合、一次一个、每 10 首もどる、回来重开）；回归 进行中 EditMode 44/44、PlayMode 16/16，已完成 EditMode 143/143、PlayMode 34/34（报告 `TestResults/folders-*.json`）。真实服务器只做过游客只读拉取（Fanmade 26 首、ESE 2958 首解析成功），未用真实账号登录或上传。
+
+#### 此前完成：Result 界面持久化（2026-10-03）
 
 - Result 画面保存在 `Result.unity` 的 `Stage` 下（`ResultView` 组件），层级与原运行时构建顺序相同（Background → 标题／曲数 → Success → 成绩板与数字 → HighScore → 皇冠／评语 → 魂槽 → Nameplate → FadeIn → CoinOverlay → TouchArea），测试依赖的 `SoulSheen`／`FadeIn` 等名称不变。`ResultScene.Awake` 改为 `Bind()`：只填入本局内容（标题、曲数、难度贴图、数字、魂槽贴图、评语贴图与文字、最高分差值）并驱动动画；不再创建对象。`ResultScene` 只保留随成绩变化的贴图（难度、数字、魂槽三种难度贴图、彩虹、魂火、皇冠、光芒、评语）；背景、成绩板、标签、皇冠淡影等静态图与 `nameplatePrefab` 已删除，名牌为场景中的预制体实例。
 - 动画以保存位置为基准：云与通关富士山保存在第 0 帧位置（`ResultBackground.Layers`／`Default`），运行时加时间轴位移；星群相对皇冠保存位置；最高分组相对自身保存位置；魂槽宽度只改 `sizeDelta.x`。魂槽クリア标记（Transition／Top／Bottom）与「クリア」字样按 `ResultView.gaugeArt`（默认 2＝むずかしい／おに）放置，其他难度在运行时按 `ClearCell`／`ClearCaptionX` 的差值平移。

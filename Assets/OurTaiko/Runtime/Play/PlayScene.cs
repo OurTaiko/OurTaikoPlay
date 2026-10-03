@@ -47,6 +47,8 @@ namespace OurTaiko
         public bool IsPaused { get; private set; }
         public bool IsFinished { get; private set; }
         public PlayResult Result { get; private set; }
+        // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
+        public Online.PlayRecord Record { get; private set; }
         public double SongTime => !isReady ? -2 : IsPaused || IsFinished ? frozenTime : AudioSettings.dspTime - startDsp;
         public double RenderedTime { get; private set; }
         // Views come from pools while a note is on the lane; null when it is not drawn.
@@ -97,6 +99,10 @@ namespace OurTaiko
             switcher.SceneChanging += PrepareToLeave;
             song = switcher.SelectedSong != null ? switcher.SelectedSong : defaultSong;
             autoPlay = switcher.AutoPlay;
+            Record = new Online.PlayRecord
+            {
+                AudioOffsetMs = (int)Math.Round(song.audioOffsetMs), VisualOffsetMs = (int)Math.Round(song.visualOffsetMs),
+            };
             pauseButton.onClick.AddListener(TogglePause);
             resumeButton.onClick.AddListener(Resume);
             restartButton.onClick.AddListener(Restart);
@@ -215,7 +221,9 @@ namespace OurTaiko
             if (Session == null || !isReady || switcher.IsInputBlocked || IsPaused || IsFinished || autoPlay) return;
             Feedback(isKa, right);
             hitKa = isKa;
-            Session.Hit(isKa, SongTime - song.audioOffsetMs / 1000.0);
+            double time = SongTime - song.audioOffsetMs / 1000.0;
+            Record.Inputs.Add((time * 1000, Online.PlayRecord.TypeOf(isKa, right)));
+            Session.Hit(isKa, time);
         }
         void Feedback(bool isKa, bool right)
         {
@@ -356,7 +364,23 @@ namespace OurTaiko
             frozenTime = SongTime; IsFinished = true; music.Stop();
             Result = PlayResult.From(Session, song.name, autoPlay);
             ScoreStore.Shared.Save(Result);
+            SubmitOnline();
             switcher.ShowResult(Result);
+        }
+        // A finished, non-auto play of an online chart is queued for the logged-in account
+        // (fanmade.cpp submit); its best from the server also counts as the previous best.
+        void SubmitOnline()
+        {
+            var online = Online.OnlineManager.Instance;
+            var chart = online != null ? online.ChartOf(song) : null;
+            if (chart == null || autoPlay) return;
+            int difficulty = (int)Result.Difficulty;
+            var best = online.Client.Best(chart, difficulty);
+            if (best != null) Result.PreviousBest = (int)Math.Min(int.MaxValue, Math.Max(Result.PreviousBest, best.Score));
+            online.Client.Submit(chart, difficulty, new Online.FanmadeScore
+            {
+                Good = Result.Good, Ok = Result.Ok, Bad = Result.Bad, Score = Result.Score, Drumroll = Result.Rolls, MaxCombo = Result.MaxCombo,
+            }, Record);
         }
         public void Restart() => LeavePlay(() => SceneSwitcher.EnsureInstance().Restart());
         public void Back() => LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene));

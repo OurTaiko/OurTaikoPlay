@@ -118,6 +118,7 @@ namespace OurTaiko.Editor
                 // skin_config transition_title / _subtitle (64 / 40 px) minus rainbow_up 1224 (816 x 1.5).
                 view.title = CurtainText("Title", stage, uiFont, titleMaterial, 64, 382);
                 view.subtitle = CurtainText("Subtitle", stage, uiFont, subtitleMaterial, 40, 462);
+                view.status = CurtainStatus(stage, uiFont);
 
                 var serialized = new SerializedObject(switcher);
                 serialized.FindProperty("songTransition").objectReferenceValue = view;
@@ -126,6 +127,33 @@ namespace OurTaiko.Editor
                 PrefabUtility.SaveAsPrefabAsset(root, SwitcherPrefab);
             }
             finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        // Adds the online download status line to a curtain built before it existed; an existing
+        // line keeps its edited layout.
+        [MenuItem("OurTaiko/Apply Curtain Status")]
+        public static void ApplyCurtainStatus()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before editing the curtain.");
+            var root = PrefabUtility.LoadPrefabContents(SwitcherPrefab);
+            try
+            {
+                var view = root.GetComponentInChildren<SongTransition>(true) ?? throw new InvalidOperationException("Apply the song loading curtain first.");
+                if (view.status != null) return;
+                view.status = CurtainStatus(view.title.transform.parent, UiFont());
+                EditorUtility.SetDirty(view);
+                PrefabUtility.SaveAsPrefabAsset(root, SwitcherPrefab);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        // Between the subtitle and the hint art: download progress, then errors in red.
+        static TMP_Text CurtainStatus(Transform stage, TMP_FontAsset uiFont)
+        {
+            var status = CurtainText("Status", stage, uiFont, UiOutlineMaterial(), 34, 524);
+            status.textWrappingMode = TextWrappingModes.Normal;
+            ((RectTransform)status.transform).sizeDelta = new Vector2(1600, 34 * 2.6f);
+            return status;
         }
 
         static TMP_Text CurtainText(string name, Transform parent, TMP_FontAsset uiFont, Material outline, float size, float centerY)
