@@ -249,9 +249,7 @@ namespace OurTaiko.Editor
 
         public static void BuildMac()
         {
-            Directory.CreateDirectory("Builds");
-            var report = BuildPipeline.BuildPlayer(EditorBuildSettings.scenes, "Builds/OurTaikoPlayerUnity.app", BuildTarget.StandaloneOSX, BuildOptions.Development);
-            if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded) throw new Exception("Player build failed.");
+            PlayerBuilds.BuildMacOS();
         }
     }
 }

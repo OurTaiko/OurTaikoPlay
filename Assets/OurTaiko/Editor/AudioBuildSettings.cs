@@ -89,7 +89,9 @@ namespace OurTaiko.Editor
             project.ReadFromFile(file);
             foreach (string id in new[] { project.GetUnityMainTargetGuid(), project.GetUnityFrameworkTargetGuid() })
                 project.AddBuildProperty(id, "LD_RUNPATH_SEARCH_PATHS", "@executable_path/Frameworks");
-            project.AddFrameworkToProject(project.GetUnityFrameworkTargetGuid(), "libc++.tbd", false);
+            // A .tbd is a system library, not a System/Library/Frameworks bundle.
+            string cpp = project.AddFile("usr/lib/libc++.tbd", "Frameworks/libc++.tbd", UnityEditor.iOS.Xcode.PBXSourceTree.Sdk);
+            project.AddFileToBuild(project.GetUnityFrameworkTargetGuid(), cpp);
             project.WriteToFile(file);
         }
 #endif
