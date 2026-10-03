@@ -62,10 +62,10 @@ namespace OurTaiko.Editor
             var boardImage = PauseImage(board, Sprite(PauseMenuArt + "bg"));
             boardImage.raycastTarget = false;
 
-            var uiFont = OutlinedUiFont();
-            var titleMaterial = OutlinedUiMaterial("Pause Title", uiFont, 64, 4);
-            var buttonMaterial = OutlinedUiMaterial("Pause Button", uiFont, 40, 0);
-            var hintMaterial = OutlinedUiMaterial("Pause Hint", uiFont, 25, 2);
+            var uiFont = UiFont();
+            var titleMaterial = UiOutlineMaterial();
+            var buttonMaterial = uiFont.material;
+            var hintMaterial = UiOutlineMaterial();
             // Reuse the old heading when upgrading the original simple overlay.
             var title = board.Find("Title") as RectTransform;
             if (title == null) title = root.Find("Title") as RectTransform;

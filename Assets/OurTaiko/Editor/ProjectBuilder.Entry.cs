@@ -25,7 +25,7 @@ namespace OurTaiko.Editor
                 if (EditorSceneManager.GetSceneAt(i).isDirty)
                     throw new InvalidOperationException("Save the current scene edits first.");
             ImportEntryArt();
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
+            font = UiFont();
             if (!File.Exists(EntryPath))
             {
                 var root = NewStage();
@@ -82,8 +82,6 @@ namespace OurTaiko.Editor
 
         static void ConfigureEntry(EntryScene entry)
         {
-            entry.font = font;
-            entry.outlineMaterial = OutlineMaterial();
             entry.background = Required("entry/background/bg");
             entry.streetLit = Required("entry/background/street_lit");
             entry.glow = new[] { Required("entry/background/glow/0"), Required("entry/background/glow/1") };

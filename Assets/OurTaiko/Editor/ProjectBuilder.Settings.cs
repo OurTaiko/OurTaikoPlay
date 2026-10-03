@@ -36,7 +36,7 @@ namespace OurTaiko.Editor
                     throw new InvalidOperationException("Save the current scene edits first.");
             ImportSettingArt();
             // AddStageFps's label uses the shared Nijiiro font like the other scenes.
-            font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
+            font = UiFont();
             if (!File.Exists(SettingPath))
             {
                 var root = NewStage();
@@ -96,9 +96,9 @@ namespace OurTaiko.Editor
 
         static void BuildSettingScene(RectTransform viewport)
         {
-            var uiFont = OutlinedUiFont();
-            var white = OutlinedUiMaterial("Settings Label", uiFont, 56, 4);
-            var plain = OutlinedUiMaterial("Settings Plain", uiFont, 36, 0);
+            var uiFont = UiFont();
+            var white = UiOutlineMaterial();
+            var plain = uiFont.material;
             var controller = new GameObject("GlobalSetting").AddComponent<GlobalSettingScene>();
             controller.bgm = Source(controller.transform, "Bgm", 0.8f);
             controller.sfx = Source(controller.transform, "Sounds");

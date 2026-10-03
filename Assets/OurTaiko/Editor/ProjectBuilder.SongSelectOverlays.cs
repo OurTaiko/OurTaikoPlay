@@ -7,7 +7,7 @@ namespace OurTaiko.Editor
     public static partial class ProjectBuilder
     {
         public static SongSelectOverlayView CreateSongSelectOverlayView(RectTransform parent,
-            ArcadeOverlayArt art, TMP_FontAsset font, Material outline)
+            ArcadeOverlayArt art)
         {
             var root = SkinUi.Rect("GlobalOverlays", parent);
             var view = root.gameObject.AddComponent<SongSelectOverlayView>();
@@ -22,8 +22,8 @@ namespace OurTaiko.Editor
             view.qrChip.rectTransform.TopLeft(1570, 38);
             view.inviteBubble = SkinUi.Image("InviteBubble", coins, art.inviteBubble);
             view.inviteBubble.rectTransform.TopLeft(1492, 638);
-            view.invitePlayer = CreateInviteText(coins, "InvitePlayer", font, outline, "2人プレイ", 749);
-            view.inviteMessage = CreateInviteText(coins, "InviteMessage", font, outline, "太鼓をたたいてスタート!", 802);
+            view.invitePlayer = CreateInviteText(coins, "InvitePlayer", "2人プレイ", 749);
+            view.inviteMessage = CreateInviteText(coins, "InviteMessage", "太鼓をたたいてスタート!", 802);
             return view;
         }
 
@@ -40,11 +40,9 @@ namespace OurTaiko.Editor
             return images;
         }
 
-        static TextMeshProUGUI CreateInviteText(Transform parent, string name, TMP_FontAsset font,
-            Material outline, string value, float y)
+        static TextMeshProUGUI CreateInviteText(Transform parent, string name, string value, float y)
         {
-            var text = SkinUi.Text(name, parent, font, outline, 40, new Color32(0, 0, 0, 255), 0);
-            text.OutlineOutsidePixels(6);
+            var text = SkinUi.Text(name, parent, 40);
             text.characterSpacing = 2 * 100f / 40;
             text.text = value;
             text.rectTransform.Center(1700, y);

@@ -297,7 +297,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 
 ## UI 字体外描边修复（2026-10-02）
 
-- 字体仍为 Nijiiro 的 `Taiko.ttf`。旧 `Nijiiro SDF` 使用 90 采样字号／9 padding，粗描边使透明字形边缘出现灰色矩形；选曲的居中描边还会侵蚀白色笔画。
+- 字体当时为 Nijiiro 的 `Taiko.ttf`（2026-10-02 已换为 `DDFont.ttf`，见「源字体替换」）。旧 `Nijiiro SDF` 使用 90 采样字号／9 padding，粗描边使透明字形边缘出现灰色矩形；选曲的居中描边还会侵蚀白色笔画。
 - 新增 `Resources/Nijiiro UI SDF.asset`：64 采样字号／32 padding、SDFAA、1024 动态多图集、构建时清理动态数据。迁移入口 `ProjectBuilder.CreateOutlinedUiFont()`，不重建已有字体、不改动旧动态字体。旧字体的 Editor 自动变更仍应排除提交。
 - `SkinUi.OutlineOutsidePixels` 按设计区域单位指定外描边，字面扩张与描边宽度相等，保留白色字形；Canvas 缩放自然作用于描边。换算为 `pixels × pointSize / (2 × padding × fontSize)`，由 TMP 更新材质比例；换字体时同时更新实例材质、描边颜色与 CanvasRenderer 的图集绑定，避免旧材质缓存导致颜色丢失或字形错乱。
 - 恢复参考配置：列表标题／副标题为类别色 5／3.5 px；难度标题／副标题为黑色 7／4 px；名牌名字黑色 3 px；2P 邀请黑色 6 px；フリープレイ黑色 4.5 px。宽度均指 1920×1080 设计区域，随画面缩放。
@@ -392,3 +392,19 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - **导入陷阱**：Unity 6 2D 项目对新复制的 PNG 默认 Multiple 自动切片（9.png 被切成 966×387 的修剪 sprite）；`ImportEntryArt` 现把 `mode_select/box/*.png` 强制为 Single，`ImportSettingArt` 同样处理并设九宫格边。
 - **验证**：`SettingsMenuTests` 5/5、`GlobalSettingFlowTests` 3/3；全部程序集 35/35、136/136、15/15、30/30（`TestResults/settings-*.json`）；截图 `TestResults/EntrySettingsBoard.png`、`SettingsTypes.png`、`SettingsChoice.png`、`SinglePlayNoDrumPad.png`。`CreateGlobalSettingScene()`／`CreateEntryScene()` 连续执行，场景与 Build Settings 文件哈希不变。
 - 未做：全局覆盖层（计时器、フリープレイ、操作指引）未放入设置场景；项目超过 5 行时会压到 footer，届时需加滚动（详情已改为弹窗，迁移 `ConfigureSettingPopup` 只在场景还没有遮罩时执行一次）；多语言未做（标签为英文，标题与 Entry 文字为日文）。
+
+## 源字体替换（2026-10-02）
+
+- 用户要求用 `DDFont.ttf`（字族 FOT-OedKtr Std）取代原 Nijiiro 的 `Taiko.ttf`（DFPKanTeiRyu-XB）。新字体位于 `Art/DDFont.ttf`，`Taiko.ttf` 已删除。
+- `Generated/Nijiiro SDF.asset`（2026-10-03 已删除）与 `Resources/Nijiiro UI SDF.asset` 原地改指新字体（GUID 不变，场景、预制体与描边材质的引用不受影响）：更新源字体引用与 FaceInfo（采样字号不变：90／64），清空动态图集后按原字符表重新生成。迁移入口 `ProjectBuilder.ApplySourceFont()`（菜单 OurTaiko/Apply Source Font，重复执行不改动）；新建字体的生成代码也改用 `DDFont.ttf`。
+- 新字体字形更宽。SongSelect 保存的 2P 邀请文字是生成场景时按字体压扁的，已在 Editor 中按新字体重新 `Squeeze` 到 416 并保存场景（`InviteMessage` 横向比例 0.960→0.874；用户要求直接改场景中的比例，不在运行时重算）。今后换字体须同样在 Editor 中更新这类保存的比例。
+- 验证：PlayMode `NameplateFlowTests` 3/3，截图检查选曲、游玩与结算文字。
+
+## 单一字体与黑色描边（2026-10-03）
+
+- 用户要求：不同时保留两个 SDF，只留更通用的一个；浅色文字用不透明纯黑描边，本身为黑色的文字不加描边；粗细只取决于字号与缩放，不写死像素。期间试过 60% 透明黑与按背景亮度（L = 0.2126R+0.7152G+0.0722B）调整 alpha／宽度的方案，均由用户撤回，不要恢复。
+- 保留 `Resources/Nijiiro UI SDF.asset`（64 采样字号／32 padding，能容纳粗描边）；删除 `Generated/Nijiiro SDF.asset`（90／9 padding）及其 `Nijiiro SDF Outline.mat`、`Generated/Nijiiro UI *.mat`（10 个按用途、按 px 计算的材质）与 `Generated/SongSelectMaterials`（9 个去重样式）。
+- 浅色文字共用 `Resources/Nijiiro UI SDF Outline.mat`：`OUTLINE_ON`，`_OutlineColor` 纯黑，`_OutlineWidth` = `_FaceDilate` = `SkinUi.OutlineWidth`（0.125）。TMP 的归一化宽度是 em 的比例，所以描边随字号与 RectTransform 缩放（包括 `Squeeze` 的横向压缩）变化；在本字体上外描边约为字号的 1/8（24 号 3 px、64 号 8 px），等值 dilate 使描边在字面之外，白字不被侵蚀。黑色／近黑色文字（`SkinUi.IsDark`：颜色亮度 < 0.3）用字体自带材质（描边宽度与 dilate 为 0）：名牌称号 000000、暂停按钮 2D1E0E、设置详情标题 281E14 与说明 463C32、Entry「１人プレイ／２人プレイ」000000，即原本就没有描边的那些文字。
+- 运行时：`SkinUi.Text(name, parent, size)` 与 `TMP_Text.UseUiFont()` 只绑定共享字体，并按文字颜色选两种共享材质之一，不生成材质实例（改变文字深浅后需再调用 `UseUiFont`）；`OutlineOutside`／`OutlineOutsidePixels` 删除。原先各处的 px／颜色（Entry 模式板色边与黑色 underlay 双层边、Entry 黄色高亮边、结算标题棕边、选曲 60% 黑边等）一律改为统一黑色描边；FPS 等原本无描边的白色文字也加描边。场景控制器的 `font`／`outlineMaterial` 字段删除。
+- 迁移：`ProjectBuilder.ApplyUnifiedUiFont()`（菜单 OurTaiko/Apply Unified UI Font）先处理全部预制体再处理 `Assets/Scenes` 下全部场景，把字体换成上述字体、按文字颜色选材质并清空 TMP 材质缓存；重复执行不改动文件。保存的 59 段文字中 53 段描边、6 段无描边（名牌预制体称号、3 个暂停按钮、2 段设置详情；场景中的名牌实例继承预制体）。
+- 字体资产：Editor 与测试运行时 TMP 会把新字形写进动态字体资产。提交前执行 `ProjectBuilder.RegenerateUiFontAtlas()`（菜单 OurTaiko/Regenerate UI Font Atlas），清空图集，不留种子字符：额外图集页每次创建都会得到新的随机 fileID，种子字符超过一页（本字体 1024² 一页约 64 字）就会使结果每次不同。清空后提交的资产只取决于 `DDFont.ttf` 且每次相同；Editor 重绘打开的场景会再次加字形，所以执行后立即提交。

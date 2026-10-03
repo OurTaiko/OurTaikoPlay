@@ -16,8 +16,6 @@ namespace OurTaiko
 
         [Header("Songs")]
         public SongDefinition[] songs;
-        public TMP_FontAsset font;
-        public Material outlineMaterial;
 
         [Header("Stage")]
         public RectTransform wheel, coursePanel;

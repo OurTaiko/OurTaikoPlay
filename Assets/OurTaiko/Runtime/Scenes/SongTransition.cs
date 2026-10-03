@@ -51,12 +51,6 @@ namespace OurTaiko
         {
             if (gameObject.activeSelf) return;
             gameObject.SetActive(true);
-            // OutlinedText(..., outline 5): the same 5 px black outer border at 64 and 40 px.
-            // Do not inherit normalized widths serialized for the old narrow SDF atlas.
-            title.OutlineOutsidePixels(5);
-            subtitle.OutlineOutsidePixels(5);
-            title.fontMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
-            subtitle.fontMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
             title.text = pendingTitle;
             subtitle.text = pendingSubtitle;
             // The arcade EditText boxes span the whole 1920-px stage.

@@ -51,7 +51,7 @@ namespace OurTaiko.Editor
                 label.rectTransform.SetParent(viewport, false);
                 label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(0.5f, 0.1f);
                 label.rectTransform.sizeDelta = new Vector2(1600, 80);
-                label.font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(Root + "Generated/Nijiiro SDF.asset");
+                label.font = UiFont();
                 label.fontSize = 36; label.alignment = TextAlignmentOptions.Center;
                 label.color = Color.white; label.raycastTarget = false; label.text = "";
                 var serialized = new SerializedObject(control.GetComponent<SceneSwitcher>());

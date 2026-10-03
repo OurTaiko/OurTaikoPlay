@@ -141,15 +141,15 @@ namespace OurTaiko
         public Image QrChip { get; }
         public bool HasInvite => bubble != null;
 
-        public CoinOverlayView(Transform parent, ArcadeOverlayArt art, TMP_FontAsset font, Material outline,
+        public CoinOverlayView(Transform parent, ArcadeOverlayArt art,
             bool freePlay = true, bool qrChip = true, bool invite = true)
         {
             clip = art.creditSideTimeline != null ? LumenClip.Parse(art.creditSideTimeline.text) : LumenClip.Empty;
             var root = SkinUi.Rect("CoinOverlay", parent);
             if (freePlay)
             {
-                // credit: size 40, white with a black border (OutlinedText 3 x 1.5 = 4.5 px)
-                FreePlay = Text(root, "FreePlay", font, outline, "フリープレイ", 4.5f);
+                // credit: size 40, white
+                FreePlay = Text(root, "FreePlay", "フリープレイ");
                 FreePlay.rectTransform.Center(960, 1046);
             }
             if (qrChip)
@@ -160,10 +160,10 @@ namespace OurTaiko
             if (!invite) return;
             bubble = SkinUi.Image("InviteBubble", root, art.inviteBubble);
             bubble.rectTransform.TopLeft(1492, 638);
-            player = Text(root, "InvitePlayer", font, outline, "2人プレイ");
+            player = Text(root, "InvitePlayer", "2人プレイ");
             player.rectTransform.Center(SeatX, PlayerY);
             player.Squeeze(BubbleWidth);
-            message = Text(root, "InviteMessage", font, outline, "太鼓をたたいてスタート!");
+            message = Text(root, "InviteMessage", "太鼓をたたいてスタート!");
             message.rectTransform.Center(SeatX, MessageY);
             message.Squeeze(BubbleWidth);
             ShowInvite(false, 0);
@@ -178,10 +178,9 @@ namespace OurTaiko
             message = view.inviteMessage;
         }
 
-        static TextMeshProUGUI Text(Transform parent, string name, TMP_FontAsset font, Material outline, string value, float border = 6)
+        static TextMeshProUGUI Text(Transform parent, string name, string value)
         {
-            var text = SkinUi.Text(name, parent, font, outline, 40, new Color32(0, 0, 0, 255), 0);
-            text.OutlineOutsidePixels(border);
+            var text = SkinUi.Text(name, parent, 40);
             text.characterSpacing = 2 * 100f / 40;
             text.text = value;
             return text;
