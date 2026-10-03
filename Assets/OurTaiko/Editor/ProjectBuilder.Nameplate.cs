@@ -49,15 +49,9 @@ namespace OurTaiko.Editor
             EditorUtility.SetDirty(select);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-
-            scene = EditorSceneManager.OpenScene(ResultPath);
-            var result = UnityEngine.Object.FindFirstObjectByType<ResultScene>();
-            result.nameplatePrefab = NameplatePrefab();
-            EditorUtility.SetDirty(result);
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
+            // Result saves its nameplate instance with its layout (ApplyResultLayout).
             AssetDatabase.SaveAssets();
-            Debug.Log("OurTaiko: nameplate applied to SinglePlayScene, SongSelect and Result.");
+            Debug.Log("OurTaiko: nameplate applied to SinglePlayScene and SongSelect.");
         }
 
         static NameplateView NameplatePrefab() => AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);

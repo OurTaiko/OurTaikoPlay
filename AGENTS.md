@@ -33,12 +33,19 @@
 
 ### 当前完成状态与交接边界
 
-#### 最新完成：Entry 界面持久化（2026-10-03）
+#### 最新完成：Result 界面持久化（2026-10-03）
+
+- Result 画面保存在 `Result.unity` 的 `Stage` 下（`ResultView` 组件），层级与原运行时构建顺序相同（Background → 标题／曲数 → Success → 成绩板与数字 → HighScore → 皇冠／评语 → 魂槽 → Nameplate → FadeIn → CoinOverlay → TouchArea），测试依赖的 `SoulSheen`／`FadeIn` 等名称不变。`ResultScene.Awake` 改为 `Bind()`：只填入本局内容（标题、曲数、难度贴图、数字、魂槽贴图、评语贴图与文字、最高分差值）并驱动动画；不再创建对象。`ResultScene` 只保留随成绩变化的贴图（难度、数字、魂槽三种难度贴图、彩虹、魂火、皇冠、光芒、评语）；背景、成绩板、标签、皇冠淡影等静态图与 `nameplatePrefab` 已删除，名牌为场景中的预制体实例。
+- 动画以保存位置为基准：云与通关富士山保存在第 0 帧位置（`ResultBackground.Layers`／`Default`），运行时加时间轴位移；星群相对皇冠保存位置；最高分组相对自身保存位置；魂槽宽度只改 `sizeDelta.x`。魂槽クリア标记（Transition／Top／Bottom）与「クリア」字样按 `ResultView.gaugeArt`（默认 2＝むずかしい／おに）放置，其他难度在运行时按 `ClearCell`／`ClearCaptionX` 的差值平移。
+- Inspector：选中 Result 控制器可用「结算画面／淡入遮罩」预览（示例おに过关 45 格；只改贴图、文字、显示与宽度）。迁移 `ProjectBuilder.ApplyResultLayout()`（菜单 OurTaiko/Apply Result Layout，`ProjectBuilder.ResultLayout.cs`，也由 `CreateSongSelectAndResult()` 调用），已有布局直接返回，重复执行文件哈希不变。`ApplyNameplate()` 不再处理 Result；`ApplyJudgeCounter()` 改为更新保存的 `JudgeLabels` 图片。
+- 验证：PlayMode `SongSelectResultTests` 2/2、`NameplateFlowTests` 3/3、`GlobalOverlayFlowTests` 2/2、`ScoreGaugeFlowTests` 1/1；截图 `ResultFullCombo`／`ResultFailed`／`ResultGaugeFilling`／`NameplateResult`（むずかしい，验证クリア平移）与改动前一致。
+
+#### 此前完成：Entry 界面持久化（2026-10-03）
 
 - Entry 画面保存在 `Entry.unity` 的 `Stage` 下（`EntryView` 组件），`EntryScene.Awake` 只绑定引用、赋回调，运行时只改透明度、帧、缩放与模式板滑动偏移；不再在运行时创建任何对象。`EntryScene` 上的建场景用 Sprite 字段与 `nameplatePrefab` 已删除（名牌为场景中的预制体实例＋CanvasGroup）。
 - 层级：Background（街景、4 闪光、2 灯笼光、街灯）→ TouchArea → ModeBoards（每块板 Cursor／Closed／Open／Info／Title／TitleOpen／TitleClosed 标记／Flash／Hit）→ Credit → ControlGuide（ClipSampler）→ Nameplate → Timer（60 占位）→ StatusChips → CoinOverlay。
 - 模式板保存在首次布局：第一块打开居中，其余关闭在 `mode_list` 槽位（ゲーム設定 在 +50,+305）；运行时以「保存位置 − 初始槽位」为基准加滑动偏移，所以在 Inspector 中拖动板会整体保留。标题在 `TitleClosed` 与 `TitleOpen` 两个空标记之间随打开程度插值；点击区大小为 `EntryView.BoardView.closedHitSize`／`openHitSize`；板的场景名、标题与说明文字均在场景中编辑（`EntryScene.Modes` 由保存的标题与 `scene` 生成）。
-- 共享类新增绑定构造：`ControlGuideView(Image, art)`、`ArcadeTimerView(art, params Image[][] rows)`、`CoinOverlayView(art, freePlay, qrChip, bubble, player, message)`；运行时 `StatusChips` 已删除（改为 Editor 生成）。Result 仍在运行时构建。
+- 共享类新增绑定构造：`ControlGuideView(Image, art)`、`ArcadeTimerView(art, params Image[][] rows)`、`CoinOverlayView(art, freePlay, qrChip, bubble, player, message)`；运行时 `StatusChips` 已删除（改为 Editor 生成）。
 - Inspector：选中 Entry 控制器可用「投币画面／模式选择」预览（只切换显示与透明度，会把场景标为已修改）。迁移入口仍为 `ProjectBuilder.CreateEntryScene()`：仅在没有 `EntryView` 时生成层级（`ProjectBuilder.EntryLayout.cs`），已有布局只重绑时间轴、音效与 overlay 美术；连续执行文件哈希不变。
 - 验证：EditMode `ControlGuideClipTests` 2/2；PlayMode `EntryFlowTests` 1/1、`EntryTouchFlowTests` 1/1、`GlobalSettingFlowTests` 3/3、`GlobalOverlayFlowTests` 2/2；截图 `TestResults/EntryCredit.png`、`EntryModeSelect.png` 与改动前一致。
 
@@ -66,7 +73,7 @@
 **范围**：SongSelect 与演奏设置菜单保存为场景层级／Prefab，运行时代码只更新内容、输入和动画。Entry 与 Result 当时仍在运行时构建（Entry 已于 2026-10-03 持久化，见上）。暂停菜单 `ad16cb9` 与删除 SampleScene `b48f531` 在此之前提交。
 
 - `SongSelectScene.cs` 不再在运行时构建 UI，改为绑定 `public SongSelectView view`；当前 3 首歌使用场景中保存的实例，新增歌曲时才 Instantiate `Generated/SongBoard.prefab`。视图脚本在 Runtime/Scenes：`SongSelectView`、`SongBoardView`、`OptionPanelView`、`SongSelectOverlayView`、独立的 `PointerRelay`（点击回调仍在 Awake 绑定）。
-- `OptionPanel` 构造为 `new OptionPanel(OptionPanelView view, OptionPanelArt art)`，只更新已有对象；`GlobalOverlays` 新增绑定保存对象的构造函数（Entry 现在也使用绑定构造，Result 仍用旧方式）。
+- `OptionPanel` 构造为 `new OptionPanel(OptionPanelView view, OptionPanelArt art)`，只更新已有对象；`GlobalOverlays` 新增绑定保存对象的构造函数（Entry 与 Result 现在也使用绑定构造）。
 - Editor：`ProjectBuilder.SongSelectLayout.cs`、`ProjectBuilder.OptionPanelView.cs`、`ProjectBuilder.SongSelectOverlays.cs`、`SongSelectSceneEditor.cs`。迁移菜单 **OurTaiko/Apply Song Select Layout**（`ProjectBuilder.ApplySongSelectLayout()`）只处理尚无 view 的场景，已有布局直接返回。文字共用 `SkinUi` 的两种材质（`Generated/SongSelectMaterials` 已删除）。
 - 动画以保存的 RectTransform 为基线施加偏移，保留 Inspector 调整。曲目轮整体参数位于 `SongSelectView`；`SongBoardView.authoredWheelPosition` 与 `PlateView.authoredContentX` 保存生成时的参考位置，使整体参数、换歌及 TJA 增删难度都能与单板／单牌的微调共存。
 - Inspector 的「选曲列表／难度选择／演奏选项」预览只切换显示：不播放音频、不创建全局控制器、不读写玩家设置（因此编辑态名牌没有玩家名，运行时才填入）。预览会把场景标记为已修改；如不想保存预览状态，重新打开场景即可。进入 Play 会恢复正常列表状态。
@@ -82,7 +89,7 @@
 - Unity Editor 可能仍由上一会话打开（项目已安装 Pipeline 包）；先用 `unity status` 确认连接再操作，修改 C# 后刷新并确认 `EditorUtility.scriptCompilationFailed` 为 false（编译错误会让 CLI 无法连接或静默失败，看 `~/Library/Logs/Unity/Editor.log` 的 `error CS`）。耗时较长的 Editor 方法会让 CLI 报 5 秒超时，但会在 Editor 中继续执行，需轮询结果。Editor 未运行时用 `unity open <项目路径>` 启动并轮询 `unity status` 到 ready；关闭用 `unity projects close <项目路径>`（不保存，先确认没有未保存场景）。zsh 不会对未加引号的 `$var` 分词，多参数 CLI 调用写成 bash 脚本。
 - 若 Editor 报「assets located in immutable packages were unexpectedly altered」：这是 `Library/PackageCache` 中包文件（2026-10-02 为 `com.unity.render-pipelines.core` 的 LookDev 图标 .meta）被改写，与项目文件无关。修复：关闭 Editor，删除该包的 `Library/PackageCache/<包名>@<hash>` 目录，重开后 Package Manager **不会自动**补回（会出现大量 URP／Shader Graph 的 `error CS`），需在 Editor 中执行 `UnityEditor.PackageManager.Client.Resolve()` 重新解析，等待目录恢复并重新编译。
 - 选曲／结算的下一步候选（均未授权，需用户确认）：文件夹与类别、成绩等级演出、曲目板飞入、难度决定标记弹出、皇冠光芒加算混合、支持字母扩展音符以游玩 TRIPLE HELIX Edit。
-- **SongSelect 已保存为可编辑层级**：`SinglePlayScene` 与 `SongSelect` 的界面均持久化；选曲场景保存曲目板、4 张难度卡、演奏选项、名牌与全局覆盖层，`SongSelectScene.Awake` 只绑定引用，内容与动画在运行时更新。`Generated/SongBoard.prefab` 为新增歌曲模板，`Generated/PlayOptions.prefab` 可独立打开编辑；选择场景控制器时可用 Inspector 的列表／难度／选项预览。动画以保存的 RectTransform 为基线，曲目轮布局参数位于 `SongSelectView`。迁移入口 `ProjectBuilder.ApplySongSelectLayout()`，已有布局不会被重建。Entry 也已持久化（见「Entry 界面持久化」），Result 仍在运行时构建，SongLoadingScene 的画面仍来自 SceneSwitcher 幕布。
+- **SongSelect 已保存为可编辑层级**：`SinglePlayScene` 与 `SongSelect` 的界面均持久化；选曲场景保存曲目板、4 张难度卡、演奏选项、名牌与全局覆盖层，`SongSelectScene.Awake` 只绑定引用，内容与动画在运行时更新。`Generated/SongBoard.prefab` 为新增歌曲模板，`Generated/PlayOptions.prefab` 可独立打开编辑；选择场景控制器时可用 Inspector 的列表／难度／选项预览。动画以保存的 RectTransform 为基线，曲目轮布局参数位于 `SongSelectView`。迁移入口 `ProjectBuilder.ApplySongSelectLayout()`，已有布局不会被重建。Entry 与 Result 也已持久化（见「Entry 界面持久化」「Result 界面持久化」），SongLoadingScene 的画面仍来自 SceneSwitcher 幕布。
 - 当前验证针对 Unity Editor。早期曾成功构建 macOS Development Player，但 `Builds/OurTaikoPlayerUnity.app` **没有随最近各次修复重新打包**，不能视作当前版本。移动端、真机音频延迟与独立播放器长期手动游玩尚未验收。
 
 ### 动画剪辑（Generated/Clips，2026-10-02）
@@ -125,7 +132,7 @@
 | `Assets/Scenes/GlobalSettingScene.unity`、`Runtime/Scenes/GlobalSettingScene.cs`、`GlobalSettingView.cs`、`SettingManager.cs`、`SwipeRelay.cs`、`Runtime/Core/GameSettings.cs`、`SettingsMenu.cs` | 全局设置：Entry 的ゲーム設定板进入；类型（Play）／项目／选项三级焦点，咚咔、Esc 与触控（点击＋纵向滑动）操作，Return 项返回；`SettingManager` 读写 `persistentDataPath/settings.json`。当前设置：Play › Enable Drumpad for Single Player Mode（默认开，控制 SinglePlayScene 触控鼓启用与显示）。PyTaikoGreen 设置美术。迁移 `ProjectBuilder.CreateGlobalSettingScene()`。 |
 | `Assets/Scenes/SongSelect.unity`、`Runtime/Scenes/SongSelectScene.cs` | Nijiiro 纵向曲目板、展开／收起时间轴、试听与 BGM、难度面板、裏切换；扳手按钮打开演奏オプション。光标规则 `Core/DifficultyCursor.cs`，谱面信息 `Core/SongInfo.cs`。 |
 | `Runtime/Core/PlayOptions.cs`、`OptionMenu.cs`、`Runtime/Scenes/OptionPanel.cs` | 演奏オプション：设置与 `options.json` 持久化、速度档位、`ChartModifiers`（あべこべ／ランダム／はやさ／ドロン）；7 行面板逻辑与滑入滑出；Nijiiro 面板绘制和触控区。游玩侧 `Play/HitSoundLibrary.cs`（`Generated/HitSounds.asset`，21 套音色）与 `Play/ModifierBadgeView.cs`（轨道徽章）。迁移入口 `ProjectBuilder.ApplyPlayOptions()`。 |
-| `Assets/Scenes/Result.unity`、`Runtime/Scenes/ResultScene.cs`、`ResultBackground.cs` | Nijiiro 结算背景、成绩板、魂槽填充、皇冠、评语、最高分条；时间轴 `Core/ResultSequence.cs`，数据 `Core/PlayResult.cs`，本地最佳成绩 `Core/ScoreStore.cs`。 |
+| `Assets/Scenes/Result.unity`、`Runtime/Scenes/ResultScene.cs`、`ResultView.cs`、`ResultBackground.cs` | Nijiiro 结算背景、成绩板、魂槽填充、皇冠、评语、最高分条；时间轴 `Core/ResultSequence.cs`，数据 `Core/PlayResult.cs`，本地最佳成绩 `Core/ScoreStore.cs`。画面保存在场景中（`ResultView.cs`），`Awake` 只绑定并填入本局内容；Inspector 预览 `Editor/ResultSceneEditor.cs`，迁移 `ProjectBuilder.ApplyResultLayout()`。 |
 | `Assets/OurTaiko/Animations`、`Runtime/Core/LumenClip.cs` | 原 `Scripts/anim/*.lua` 导出表的原样 `.txt` 副本与纯 C# 线性采样器（只读数据，不运行 Lua）。 |
 | `Assets/Scenes/SongLoadingScene.unity`、`Runtime/Scenes/SongLoadingScene.cs`、`SongTransition.cs` | 选曲加载：`SceneSwitcher.Play()` 以彩虹幕布（SceneSwitcher 预制体内的 `SongTransition`，`TransitionStyle.Curtain`）关闭并进入此场景；场景在停住的幕布下解析 TJA（含演奏オプション）、载入歌曲音频，至少 2 秒后切到 SinglePlayScene 并在其上打开幕布。迁移入口 `ProjectBuilder.ApplySongLoadingCurtain()`。 |
 | `Assets/Scenes/SinglePlayScene.unity` | 单人游玩场景（`SceneSwitcher.GameScene`；2026-10-01 由 PlayScene 改名，GUID 不变，控制组件类仍为 `PlayScene`）。已保存并可编辑的游玩 Canvas、轨道、判定圈、鼓面、魂槽、舞者、暂停与结果界面；可直接运行，默认 TRIPLE HELIX。 |
@@ -142,7 +149,7 @@
 | `Assets/OurTaiko/Runtime/Play/BranchLaneView.cs` | 分支轨道色、右侧字样、升降级和过渡动画。 |
 | `Assets/OurTaiko/Runtime/Play/SoulGaugeView.cs` | 50 格魂槽、过关黄色区、新格淡入、满槽彩虹与魂火。 |
 | `Assets/OurTaiko/Runtime/Core/NoteArcPath.cs`、`GaugeHitEffectLayout.cs`、`Generated/Clips/GaugeHitEffect.anim`、`Runtime/Play/NoteArcView.cs`、`GaugeHitEffectView.cs` | 命中音符飞向魂徽章：Nijiiro `note_arc_pivot` 圆弧、30 帧；到达后在徽章播放 GaugeHitEffect（光圈换帧、0.8→1.5 放大、黄→橙→红、383 ms 淡出，音符同步淡出）。`NoteArcs`、`GaugeHitEffect` 层依次在 `SoulGauge` 之后。迁移入口 `ProjectBuilder.ApplyNoteArcs()`。 |
-| `Runtime/Core/PlayerInfo.cs`、`NameplateLayout.cs`、`Runtime/Scenes/PlayerInfoController.cs`、`NameplateView.cs`、`Generated/Nameplate.prefab` | 玩家名牌：数据与规则（coin／称号／段位、名字框、彩虹帧）、全局持有者（读 `player.json`，`Changed` 事件更新名牌）、Nijiiro 名牌预制体。SinglePlayScene 与 SongSelect 保存实例；Result 由 `nameplatePrefab` 运行时实例化。迁移入口 `ProjectBuilder.ApplyNameplate()`。 |
+| `Runtime/Core/PlayerInfo.cs`、`NameplateLayout.cs`、`Runtime/Scenes/PlayerInfoController.cs`、`NameplateView.cs`、`Generated/Nameplate.prefab` | 玩家名牌：数据与规则（coin／称号／段位、名字框、彩虹帧）、全局持有者（读 `player.json`，`Changed` 事件更新名牌）、Nijiiro 名牌预制体。SinglePlayScene、SongSelect、Entry 与 Result 均保存实例。迁移入口 `ProjectBuilder.ApplyNameplate()`。 |
 | `Runtime/Play/HitFaceView.cs`、`HitRingView.cs`、`Generated/Clips/HitFace.anim`、`HitRing*.anim`、`Generated/HitFace.prefab`、`HitRing.prefab` | 判定点笑脸与外圈（原 `Judgment::draw_effect`／`draw_outer_effect`）：只在良／可时显示，不可、超时漏音与连打击打不显示；良／可与大音符分别用 `hit_effect_good/ok(_big)` 与 `outer_good/ok(_big)`（4 帧 336×336，`HitRing_*` 切片，`UI Additive` 加算混合）。笑脸透明度按 Nijiiro 动画 28（66.7 ms 0.5→1、保持 216.6 ms、66.7 ms 回 0.5 后移除，共 350 ms，存于 `HitFace.anim`，预制体自带 ClipSampler）；外圈帧按动画 30（54.5／72.7／90.9 ms 换帧，之后停在第 3 帧），透明度按动画 27（166.7 ms 后 33.3 ms 淡出，共 200 ms），四个变体各存为 `HitRingGood/Ok/GoodBig/OkBig.anim`。用歌曲时钟、暂停冻结；同时只有一个（新判定替换旧的，原版最多叠 7 个）。层级照搬 `Player::draw`：笑脸在 `LaneClip`（音符）之前，外圈在音符／文字与 PlayerCover 之后、`Drum` 之前。SinglePlayScene 中均为预制体实例（取代旧 `HitFlash`）。迁移入口 `ProjectBuilder.ApplyHitEffects()`（菜单 OurTaiko/Apply Hit Effects，可重复执行）；测试 `HitFaceTests`、`HitFaceFlowTests`（已完成，2026-10-02 用户确认后移入 Finished）。判定文字动画未改。 |
 | `Runtime/Play/ScoreCounterView.cs` | 游玩分数计数器（`lane_score_cover`＋`score_number` 数字、TextStretch 弹动），布局在 `Core/NameplateLayout.cs` 的 `ScoreCounterLayout`，弹动由 `Generated/Clips/TextStretch.anim` 给出，与气球数字共用。 |
 | `Runtime/Play/ComboView.cs`、`ComboAnnounceView.cs`、`Generated/Clips/ComboGlimmer.anim`、`ComboAnnounce.anim`、`Art/game/combo`、`Audio/combo` | 游玩连击数（原 `combo.cpp`）：`NoteLane/Combo` 居中于鼓面，连击 < 10 隐藏（用户决定），10–49 白、50–99 银、≥100 金（`combo_100_ja`＋闪光，歌曲时钟），变化时 TextStretch 弹动。每 100 连击提示（原 `combo_announce.cpp`＋Nijiiro lua 排版）：Viewport 中 `GaugeHitEffect` 之后的 `ComboAnnounce` 卷轴，100 ms 淡入、保持到 1666.67 ms、100 ms 淡出，并播放一次 1P 语音（100–5000）。两者层级都保存在 SinglePlayScene 中可编辑，代码只换数字与排版。迁移入口 `ProjectBuilder.ApplyCombo()`／`ApplyComboAnnounce()`（仅在对象缺失或生成代码改动时需要重跑）；测试 `ComboFlowTests`、`ComboGlimmerClipTests`（已完成）。 |

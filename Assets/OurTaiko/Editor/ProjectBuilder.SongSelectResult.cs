@@ -30,6 +30,7 @@ namespace OurTaiko.Editor
             if (!File.Exists(SongSelectPath)) CreateSongSelectScene(songs);
             if (!File.Exists(ResultPath)) CreateResultScene();
             UpgradeStage(SongSelectPath); UpgradeStage(ResultPath);
+            ApplyResultLayout();
             var scenes = EditorBuildSettings.scenes.ToList();
             foreach (var path in new[] { SongSelectPath, ResultPath })
                 if (!scenes.Any(s => s.path == path)) scenes.Add(new EditorBuildSettingsScene(path, true));
@@ -183,45 +184,23 @@ namespace OurTaiko.Editor
         {
             var root = NewStage();
             var controller = new GameObject("Result").AddComponent<ResultScene>();
-            controller.nameplatePrefab = AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);
             var stage = Rect("Stage", root, 0, 0, 1920, 1080);
             controller.stage = stage;
             AddStageFps(root);
-            const string bg = "result/background/";
-            controller.sky = Sprite(bg + "background_1p");
-            controller.skyClear = Sprite(bg + "bg_sky_clear");
-            controller.fuji = Sprite(bg + "bg_fuji");
-            controller.fujiClear = Sprite(bg + "bg_fuji_clear");
-            controller.header = Sprite(bg + "bg_header");
-            controller.success = Sprite(bg + "footer_1p");
-            controller.clouds = Enumerable.Range(0, 8).Select(i => Sprite(bg + "bg_cloud_" + i)).ToArray();
-            controller.cloudsClear = Enumerable.Range(0, 8).Select(i => Sprite(bg + "bg_cloud_clear_" + i)).ToArray();
-            controller.board = Sprite("result/score/overlay/0");
-            controller.donBack = Sprite("result/bottom/chara_0/0");
-            // max_combo_ja is a sheet: the judge counter cuts its rows (ApplyJudgeCounter).
-            controller.judgeLabels = SliceSheet(JudgeLabelSheet, JudgeLabelCells)[0];
-            controller.scoreLabel = Sprite("result/score/score_shinuchi_ja");
             controller.difficulties = Cells("ResultDifficulty", "result/score/difficulty", 5, 320, 96);
             controller.judgeDigits = Cells("ResultJudgeDigit", "result/score/judge_num", 10, 36, 48);
             controller.scoreDigits = Cells("ResultScoreDigit", "result/score/score_num", 20, 64, 82);
-            controller.highScore = Sprite("result/score/high_score");
             controller.highScoreDigits = Cells("ResultHighScoreDigit", "result/score/high_score_num", 10, 16, 20);
             string[] arts = { "easy", "normal", "hard" };
             controller.unfilled = arts.Select(a => Sprite("result/gauge/1p_unfilled_" + a)).ToArray();
             controller.overlays = arts.Select(a => Sprite("result/gauge/overlay_" + a)).ToArray();
             controller.rainbow = arts.SelectMany(a => Cells("ResultRainbow" + char.ToUpperInvariant(a[0]) + a.Substring(1), "result/gauge/rainbow_" + a, 8, 1057, 78, true)).ToArray();
-            controller.bar = Sprite("result/gauge/1p_bar");
-            controller.clearTop = Sprite("result/gauge/bar_clear_top");
-            controller.clearBottom = Sprite("result/gauge/bar_clear_bottom");
-            controller.clearTransition = Sprite("result/gauge/bar_clear_transition");
             controller.clearCaption = Sprite("result/gauge/clear_ja");
             controller.clearCaptionDark = Sprite("result/gauge/clear_dark_ja");
             controller.soul = Sprite("result/gauge/tamashii");
             controller.soulDark = Sprite("result/gauge/tamashii_dark");
-            controller.soulOverlay = Sprite("result/gauge/tamashii_overlay");
             controller.soulFire = Frames("result/gauge/tamashii_fire", 8);
             controller.crowns = new[] { "crown_clear", "crown_fc", "crown_dfc" }.Select(n => Sprite("result/crown/" + n)).ToArray();
-            controller.crownFade = Sprite("result/crown/crown_fade");
             controller.gleam = Cells("ResultCrownGleam", "result/crown/gleam", 5, 320, 320);
             controller.messages = Frames("result/crown/message", 4);
             controller.backgroundTimeline = Timeline("result_bg");
@@ -254,6 +233,7 @@ namespace OurTaiko.Editor
             controller.messageVoices = new[] { "max_fail_voice_1p", "fail_voice_1p", "clear_voice_1p", "max_clear_voice_1p" }
                 .Select(n => Clip("result/" + n)).ToArray();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), ResultPath);
+            // the screen itself is saved by ApplyResultLayout (run by CreateSongSelectAndResult)
         }
     }
 }
