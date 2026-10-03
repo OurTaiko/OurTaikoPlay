@@ -27,7 +27,7 @@ namespace OurTaiko.Editor
 
         // Adds the judgement counter to SinglePlayScene, after ComboAnnounce like the original's
         // judge_counter after combo_announce in draw_overlays. Cutting the label rows turns
-        // max_combo_ja into a sheet, so Result's judgeLabels moves to the whole-sheet cut. An existing
+        // max_combo_ja into a sheet, so Result's saved JudgeLabels image moves to the whole-sheet cut. An existing
         // view keeps its saved layout; only sprites are refreshed.
         [MenuItem("OurTaiko/Apply Judge Counter")]
         public static void ApplyJudgeCounter()
@@ -38,8 +38,12 @@ namespace OurTaiko.Editor
 
             var scene = EditorSceneManager.OpenScene(ResultPath);
             var result = UnityEngine.Object.FindFirstObjectByType<ResultScene>();
-            result.judgeLabels = labels[0];
-            EditorUtility.SetDirty(result);
+            if (result.view != null && result.stage.Find("JudgeLabels") is RectTransform judgeLabels)
+            {
+                var image = judgeLabels.GetComponent<UnityEngine.UI.Image>();
+                image.sprite = labels[0];
+                EditorUtility.SetDirty(image);
+            }
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
 
