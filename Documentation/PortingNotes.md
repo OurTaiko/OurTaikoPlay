@@ -478,8 +478,17 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 
 切换原生音频后，`AudioEngine.Clock` 使用持续递增的 Stopwatch。`PlayScene.Update` 在帧开始读取时间，随后 `OnJudged` 又读取较晚的时间作为动画起点，最后用帧开始的时间调用 ShowTime；HitFace／HitRing 因 elapsed<0 立即取消，表现为笑脸与外圈消失。对象、素材和层级没有丢失。原测试暂停后手动调用 ShowTime，因此未覆盖真实帧路径。
 
-修复：音频同步校正后捕获一次歌曲时间，在整个 Update 及其判定／分支回调中共享，finally 清除快照；帧间仍使用原生时钟。`HitFeedbackClockTests.HitFaceSurvivesJudgmentFrameWithNativeClock` 使用真实自动演奏及帧末观察，修复前复现失败（`TestResults/hit-face-native-before-fix.json`）。动画时长、显隐规则、每帧输入互斥均保持原规格。
+最初修复为 Update 内临时共享歌曲时间。随后统一时钟时改为 `SongClock.Time` 每帧更新、持续保留该帧结果，替代临时快照；判定与动画仍共享歌曲时间。`HitFeedbackClockTests.HitFaceSurvivesJudgmentFrameWithNativeClock` 使用真实自动演奏及帧末观察，修复前复现失败（`TestResults/hit-face-native-before-fix.json`）。动画时长、显隐规则、每帧输入互斥均保持原规格。
 
 本次最终验证：Settings EditMode 15/15、Settings PlayMode 7/7、HitFace PlayMode 2/2。报告 `TestResults/backend-only-settings-editmode.json`、`backend-only-settings-playmode.json`、`hit-face-native-fixed-playmode.json`；截图 `SoundSettings.png`、`SoundBackendChoice.png`、`HitFaceNativeClock.png` 已检查。Windows／Android／iOS／WebGL／Linux 条件编译通过（`backend-menu-hit-face-platform-compilation.txt`）；未重新构建独立 Player。
 
 恢复音量组后的验证：SoundSettings EditMode 7/7、Settings PlayMode 7/7，覆盖六组音量、后端平台过滤、即时音量、语音试听、分页／滚轮、隐藏设备配置保留和退出切换。报告 `TestResults/volume-groups-restored-editmode.json`、`volume-groups-restored-playmode.json`；`SoundSettings.png` 已检查。
+
+
+## 统一时钟与按帧判定（2026-10-03）
+
+- `GameTimeline` 集中读取时钟，`GameLoop`（执行顺序 -32000）先采样再发布输入。FrameTime 用 Stopwatch 的单调时间，AudioFrameTime 按后端选择同一单调时间或 Unity DSP 时间；同一帧重复读取保持不变。异步场景切换在 Update 前恢复时也能按 frameCount 得到新帧快照。AudioNow 仅供音频调度，Realtime 供 FPS 等真实耗时测量。
+- `SongClock` 管理倒计时、暂停冻结、恢复后的播放时间与提前 50 ms 调度，以及 Bass 后端启动／恢复后的 2 秒位置校正（0.8 权重）。PlayScene 负责每帧调用及玩法，删除原有 startDsp、frozenTime、audioSyncUntil、frameSongTime 与重复就绪状态。UI／幕布／鼓面闪光等统一使用 FrameTime，歌曲暂停时这些界面时间仍继续。
+- **用户明确要求保留按帧判定**：输入时间戳只用于选出同帧最早的一击，其余打击丢弃；判定使用本帧 SongTime 减 audioOffset，不使用单次按键事件的时刻。120 FPS 下的帧时间量化是有意选择。DrumInputMutexTests 同时检查一帧只记录一击、记录的判定时间等于本帧歌曲时间。
+- 删除 AudioEngine.Clock 和独立 InputManagerUpdater，由 GameTimeline／GameLoop 接管；未添加未使用的时间源接口或每个动画一份计时器。
+- 验证：全部 EditMode 200/200、PlayMode 67/67，通过原生／Unity 音频调度、按帧输入互斥、HitFace 真正演奏帧、暂停恢复与场景流程；报告 `TestResults/unified-clock-editmode.json`、`unified-clock-playmode.json`。未重新构建独立 Player。

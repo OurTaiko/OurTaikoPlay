@@ -48,7 +48,7 @@ namespace OurTaiko
         bool announced, creditGone;
         double modeShownAt = double.NaN;
 
-        public double Now => Time.realtimeSinceStartupAsDouble * 1000;
+        public double Now => GameTimeline.FrameTime * 1000;
 
         static LumenClip Clip(TextAsset asset) => asset != null ? LumenClip.Parse(asset.text) : LumenClip.Empty;
 

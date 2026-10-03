@@ -41,7 +41,7 @@ namespace OurTaiko
         {
             if (value == combo) return;
             // update_count: any change restarts the stretch, the first count does not.
-            if (combo >= 0) changedAt = Time.unscaledTimeAsDouble;
+            if (combo >= 0) changedAt = GameTimeline.FrameTime;
             combo = value;
             bool shown = value >= minimum;
             if (gameObject.activeSelf != shown) gameObject.SetActive(shown);
@@ -74,7 +74,7 @@ namespace OurTaiko
         float SampleStretch()
         {
             var sampler = GetComponent<ClipSampler>();
-            sampler.Sample(System.Math.Min(Time.unscaledTimeAsDouble - changedAt, sampler.clip.length));
+            sampler.Sample(System.Math.Min(GameTimeline.FrameTime - changedAt, sampler.clip.length));
             return GetComponent<AnimatedFloat>().value;
         }
 

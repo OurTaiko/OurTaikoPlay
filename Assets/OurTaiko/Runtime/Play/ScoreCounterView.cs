@@ -26,7 +26,7 @@ namespace OurTaiko
         {
             if (value == score) return;
             // ScoreCounter starts at 0 without a stretch; later changes restart it.
-            if (score >= 0) changedAt = Time.unscaledTimeAsDouble;
+            if (score >= 0) changedAt = GameTimeline.FrameTime;
             score = value;
             Text = ScoreCounterLayout.Text(value);
             while (images.Count < Text.Length) images.Add(SkinUi.Image("Digit" + images.Count, transform, null));
@@ -50,7 +50,7 @@ namespace OurTaiko
         float SampleStretch()
         {
             var sampler = GetComponent<ClipSampler>();
-            sampler.Sample(System.Math.Min(Time.unscaledTimeAsDouble - changedAt, sampler.clip.length));
+            sampler.Sample(System.Math.Min(GameTimeline.FrameTime - changedAt, sampler.clip.length));
             return GetComponent<AnimatedFloat>().value;
         }
 

@@ -45,11 +45,11 @@ namespace OurTaiko
         IEnumerator Fade(float target)
         {
             float from = group.alpha;
-            double began = Time.realtimeSinceStartupAsDouble;
-            while (Time.realtimeSinceStartupAsDouble - began < FadeDuration)
+            double began = GameTimeline.FrameTime;
+            while (GameTimeline.FrameTime - began < FadeDuration)
             {
                 group.alpha = Mathf.Lerp(from, target,
-                    (float)((Time.realtimeSinceStartupAsDouble - began) / FadeDuration));
+                    (float)((GameTimeline.FrameTime - began) / FadeDuration));
                 yield return null;
             }
             group.alpha = target;

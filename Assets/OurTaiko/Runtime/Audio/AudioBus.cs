@@ -116,13 +116,13 @@ namespace OurTaiko
             }
             PrepareMain();
             if (main == null) return;
-            scheduledAt = at ?? AudioEngine.Clock; pending = true;
+            scheduledAt = at ?? GameTimeline.AudioNow; pending = true;
             Update();
         }
         void Update()
         {
             // Like MajdataPlay's game clock, trigger native playback when the countdown expires.
-            if (!pending || AudioEngine.Clock < scheduledAt) return;
+            if (!pending || GameTimeline.AudioNow < scheduledAt) return;
             pending = false;
             main.Play(Volume(Group), source.loop, seek, source.pitch);
         }

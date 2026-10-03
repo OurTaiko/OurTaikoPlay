@@ -63,12 +63,12 @@ namespace OurTaiko.Tests
             clip = AudioClip.Create("Fallback PCM", 48000, 1, 48000, false);
             source.clip = clip;
             source.SeekAudio(0.2);
-            source.PlayAudioScheduled(AudioEngine.Clock + 0.1);
+            source.PlayAudioScheduled(GameTimeline.AudioNow + 0.1);
             yield return new WaitForSecondsRealtime(0.3f);
             Assert.That(source.isPlaying, Is.True);
             Assert.That(source.AudioPosition(), Is.InRange(0.3, 0.6));
             source.StopAudio();
-            source.PlayAudioScheduled(AudioEngine.Clock + 0.1);
+            source.PlayAudioScheduled(GameTimeline.AudioNow + 0.1);
             source.StopAudio();
             yield return new WaitForSecondsRealtime(0.2f);
             Assert.That(source.IsAudioPlaying(), Is.False);

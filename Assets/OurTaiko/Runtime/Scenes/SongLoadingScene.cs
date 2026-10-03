@@ -35,7 +35,7 @@ namespace OurTaiko
                 switcher.ShowSongOnCurtain(song);
                 switcher.ParkCurtain();
             }
-            float started = Time.realtimeSinceStartup;
+            double started = GameTimeline.FrameTime;
 
             var online = OnlineManager.EnsureInstance();
             if (online.IsOnline(song))
@@ -44,8 +44,8 @@ namespace OurTaiko
                 if (Error != null)
                 {
                     switcher.Curtain?.SetStatus(Error, new Color(1, 0.35f, 0.35f));
-                    float failedAt = Time.realtimeSinceStartup;
-                    while (Time.realtimeSinceStartup - failedAt < errorSeconds || switcher.IsSwitching) yield return null;
+                    double failedAt = GameTimeline.FrameTime;
+                    while (GameTimeline.FrameTime - failedAt < errorSeconds || switcher.IsSwitching) yield return null;
                     switcher.SwitchScene(switcher.ReturnScene);
                     yield break;
                 }
@@ -96,7 +96,7 @@ namespace OurTaiko
             }
             IsLoaded = true;
 
-            while (Time.realtimeSinceStartup - started < minimumSeconds || switcher.IsSwitching) yield return null;
+            while (GameTimeline.FrameTime - started < minimumSeconds || switcher.IsSwitching) yield return null;
             switcher.Curtain?.SetStatus("");
             switcher.SwitchScene(SceneSwitcher.GameScene);
         }

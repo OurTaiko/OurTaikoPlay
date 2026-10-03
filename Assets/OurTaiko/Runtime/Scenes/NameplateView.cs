@@ -29,7 +29,7 @@ namespace OurTaiko
         {
             controller = PlayerInfoController.EnsureInstance();
             controller.Changed += Show;
-            rainbowStart = Time.unscaledTimeAsDouble;
+            rainbowStart = GameTimeline.FrameTime;
             renderedCanvasScale = float.NaN;
             Canvas.willRenderCanvases += RefreshCanvasScale;
             Show(controller.Info);
@@ -54,7 +54,7 @@ namespace OurTaiko
         }
 
         // The rainbow band runs on real time, like the original's current_ms (it keeps cycling in pause).
-        void Update() => ShowRainbow(Time.unscaledTimeAsDouble - rainbowStart);
+        void Update() => ShowRainbow(GameTimeline.FrameTime - rainbowStart);
 
         // Top-left of the plate canvas, in its stage-anchored parent's skin pixels.
         public void Place(float x, float y)
@@ -73,7 +73,7 @@ namespace OurTaiko
             bandUnder.enabled = false;
             if (hasBand && !info.rainbow) band.sprite = titleBackgrounds[info.TitleFrame];
             RainbowFrame = 0;
-            ShowRainbow(Time.unscaledTimeAsDouble - rainbowStart);
+            ShowRainbow(GameTimeline.FrameTime - rainbowStart);
 
             // *_dani labels only exist in the band family.
             bool hasDan = info.HasDan && hasBand;

@@ -74,7 +74,7 @@ namespace OurTaiko
         Image crownImage, crownGhost, burstA, burstB, stars, shine, messageImage;
         TextMeshProUGUI messageText;
 
-        double Clock => Time.realtimeSinceStartupAsDouble * 1000;
+        double Clock => GameTimeline.FrameTime * 1000;
         double Reveal => revealStart < 0 ? -1 : Clock - revealStart;
 
         void Awake()
