@@ -39,11 +39,14 @@ namespace OurTaiko
 
         // Application.targetFrameRate: 120, 60 or Unlimited (-1).
         public int targetFrameRate = 120;
+        // Wait for every display refresh (vSyncCount 1). On desktop the refresh rate then replaces
+        // targetFrameRate; mobile platforms ignore vSyncCount and always use targetFrameRate.
+        public bool vSync;
 
         // Applies these settings to the running player; render every frame (no frame skipping).
         public void Apply()
         {
-            QualitySettings.vSyncCount = 0;
+            QualitySettings.vSyncCount = vSync ? 1 : 0;
             UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
             Application.targetFrameRate = TargetFrameRate;
         }

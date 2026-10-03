@@ -75,6 +75,9 @@ namespace OurTaiko
                     new[] { "120 FPS", "60 FPS", "Unlimited" },
                     s => Math.Max(0, Array.IndexOf(DisplaySettings.FrameRates, s.display.targetFrameRate)),
                     (s, choice) => s.display.targetFrameRate = DisplaySettings.FrameRates[choice]),
+                SettingItem.Toggle("VSync",
+                    "Wait for the display's refresh before each frame to prevent tearing. While enabled, the refresh rate replaces Target Frame Rate.",
+                    s => s.display.vSync, (s, on) => s.display.vSync = on),
             }),
         };
 

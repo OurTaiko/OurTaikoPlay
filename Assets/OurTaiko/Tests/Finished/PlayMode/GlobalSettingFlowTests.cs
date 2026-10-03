@@ -142,7 +142,20 @@ namespace OurTaiko.Tests
                 scene.Don();
                 view.choiceRows[0].click.Clicked();
                 Assert.That(Application.targetFrameRate, Is.EqualTo(120));
-                scene.Ka(-1);
+
+                // Display › VSync: off by default, applied at once.
+                scene.Ka(1);
+                Assert.That(view.itemRows[1].label.text, Is.EqualTo("VSync"));
+                Assert.That(view.itemRows[1].value.text, Is.EqualTo("Disabled"));
+                scene.Don();
+                view.choiceRows[0].click.Clicked();
+                Assert.That(Settings.Settings.display.vSync, Is.True);
+                Assert.That(QualitySettings.vSyncCount, Is.EqualTo(1));
+                Assert.That(view.itemRows[1].value.text, Is.EqualTo("Enabled"));
+                scene.Don();
+                view.choiceRows[1].click.Clicked();
+                Assert.That(QualitySettings.vSyncCount, Is.Zero);
+                scene.Ka(1);
                 scene.Don();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
                 scene.Ka(1);

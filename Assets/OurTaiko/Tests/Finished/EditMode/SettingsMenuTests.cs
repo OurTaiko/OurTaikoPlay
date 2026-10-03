@@ -112,6 +112,7 @@ namespace OurTaiko.Tests
             var off = new GameSettings { play = new PlaySettings { singlePlayerDrumPad = false } };
             Assert.That(GameSettings.FromJson(off.ToJson()).play.singlePlayerDrumPad, Is.False);
             Assert.That(GameSettings.FromJson("{\"play\":{}}").display.targetFrameRate, Is.EqualTo(120));
+            Assert.That(GameSettings.FromJson("{\"display\":{\"targetFrameRate\":60}}").display.vSync, Is.False);
         }
 
         [Test]
@@ -136,6 +137,21 @@ namespace OurTaiko.Tests
             menu = new SettingsMenu(SettingsMenu.Catalog(), odd);
             menu.Ka(1); menu.Don(); menu.Don();
             Assert.That(menu.ChoiceIndex, Is.Zero);
+        }
+
+        [Test]
+        public void VSyncIsADisplayToggleOffByDefault()
+        {
+            var menu = Menu();
+            menu.Ka(1); menu.Don(); menu.Ka(1);
+            Assert.That(menu.CurrentItem.Label, Is.EqualTo("VSync"));
+            Assert.That(menu.ItemCount, Is.EqualTo(3), "Target Frame Rate, VSync and Return.");
+            menu.Don();
+            Assert.That(menu.CurrentItem.Choices, Is.EqualTo(new[] { "Enabled", "Disabled" }));
+            Assert.That(menu.ChoiceIndex, Is.EqualTo(1), "Disabled is the default.");
+            menu.Ka(-1); menu.Don();
+            Assert.That(menu.Settings.display.vSync, Is.True);
+            Assert.That(GameSettings.FromJson(menu.Settings.ToJson()).display.vSync, Is.True);
         }
 
         [Test]
