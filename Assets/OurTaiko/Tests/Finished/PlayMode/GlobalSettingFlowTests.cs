@@ -60,7 +60,8 @@ namespace OurTaiko.Tests
                 var view = scene.view;
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
                 Assert.That(view.typeRows[0].label.text, Is.EqualTo("Play"));
-                Assert.That(view.typeRows[1].label.text, Is.EqualTo("Return"));
+                Assert.That(view.typeRows[1].label.text, Is.EqualTo("Display"));
+                Assert.That(view.typeRows[2].label.text, Is.EqualTo("Return"));
                 Assert.That(view.itemRows[0].label.text, Is.EqualTo("Enable Drumpad for Single Player Mode"));
                 Assert.That(view.itemRows[0].value.text, Is.EqualTo("Enabled"));
                 Assert.That(view.typeRows[0].box.sprite, Is.SameAs(view.typeBoxSelected));
@@ -68,7 +69,7 @@ namespace OurTaiko.Tests
                 TestCapture.Capture("SettingsTypes.png");
 
                 // Drum keys: ka wraps over Return, don enters Play, don opens the choices.
-                scene.Ka(1);
+                scene.Ka(-1);
                 Assert.That(menu.IsTypeReturn, Is.True);
                 Assert.That(view.itemRows[0].root.gameObject.activeSelf, Is.False, "Return has no items.");
                 scene.Ka(1);
@@ -104,7 +105,7 @@ namespace OurTaiko.Tests
                 AssertPopup(view, false);
                 view.itemSwipe.Swiped(1);
                 Assert.That(menu.IsItemReturn, Is.True);
-                view.typeSwipe.Swiped(1);
+                view.typeSwipe.Swiped(-1);
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
                 Assert.That(menu.IsTypeReturn, Is.True);
                 view.typeRows[0].click.Clicked();
@@ -117,6 +118,31 @@ namespace OurTaiko.Tests
 
                 // Items' Return goes back to the types; the types' Return leaves for Entry.
                 scene.Ka(1);
+                scene.Don();
+                Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
+
+                // Display › Target Frame Rate applies at once: 120 FPS by default, 60 or Unlimited.
+                Assert.That(Application.targetFrameRate, Is.EqualTo(120));
+                scene.Ka(1);
+                scene.Don();
+                Assert.That(view.itemRows[0].label.text, Is.EqualTo("Target Frame Rate"));
+                Assert.That(view.itemRows[0].value.text, Is.EqualTo("120 FPS"));
+                scene.Don();
+                Assert.That(view.choiceRows[2].label.text, Is.EqualTo("Unlimited"));
+                Assert.That(view.choiceRows[2].root.gameObject.activeSelf, Is.True);
+                scene.Ka(1);
+                TestCapture.Capture("SettingsFrameRate.png");
+                scene.Don();
+                Assert.That(Settings.Settings.display.targetFrameRate, Is.EqualTo(60));
+                Assert.That(Application.targetFrameRate, Is.EqualTo(60));
+                scene.Don();
+                view.choiceRows[2].click.Clicked();
+                Assert.That(Application.targetFrameRate, Is.EqualTo(-1));
+                Assert.That(QualitySettings.vSyncCount, Is.Zero);
+                scene.Don();
+                view.choiceRows[0].click.Clicked();
+                Assert.That(Application.targetFrameRate, Is.EqualTo(120));
+                scene.Ka(-1);
                 scene.Don();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
                 scene.Ka(1);

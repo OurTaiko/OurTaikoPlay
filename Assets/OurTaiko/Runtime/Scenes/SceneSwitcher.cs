@@ -95,10 +95,14 @@ namespace OurTaiko
             MainCamera = Camera.main;
             SetTransitionState(false);
             if (songTransition != null) songTransition.Hide();
-            QualitySettings.vSyncCount = 0;
-            UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
-            Application.targetFrameRate = 120;
+            var settings = SettingManager.EnsureInstance();
+            settings.Changed -= ApplyDisplay;
+            settings.Changed += ApplyDisplay;
+            ApplyDisplay(settings.Settings);
         }
+
+        // VSync, frame interval and target frame rate come from Display settings (120 FPS default).
+        static void ApplyDisplay(GameSettings settings) => settings.display.Apply();
 
         void OnUnitySceneChanged(Scene previous, Scene next)
         {
@@ -305,6 +309,7 @@ namespace OurTaiko
         {
             if (Instance != this) return;
             SceneManager.activeSceneChanged -= OnUnitySceneChanged;
+            if (SettingManager.Instance != null) SettingManager.Instance.Changed -= ApplyDisplay;
             transitionCancellation?.Cancel();
             transitionCancellation?.Dispose();
             Instance = null; MainCamera = null;

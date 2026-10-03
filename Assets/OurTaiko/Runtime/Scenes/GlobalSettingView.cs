@@ -27,8 +27,9 @@ namespace OurTaiko
         public List<Row> typeRows = new List<Row>();
         public List<Row> itemRows = new List<Row>();
         public List<Row> choiceRows = new List<Row>();
-        [Tooltip("Vertical distance between type rows / item rows; horizontal between choice buttons.")]
-        public float typePitch = 160, itemPitch = 150, choicePitch = 330;
+        [Tooltip("Vertical distance between type rows / item rows; horizontal between choice buttons " +
+            "(wide enough for the arrow between two buttons).")]
+        public float typePitch = 160, itemPitch = 150, choicePitch = 380;
         public SwipeRelay typeSwipe, itemSwipe;
         public Sprite typeBox, typeBoxSelected, itemBox, itemBoxSelected, choiceOff, choiceOn;
         [Tooltip("blue_arrow: points at the focused row or choice from its right.")]
@@ -143,13 +144,15 @@ namespace OurTaiko
                 description.text = shownItem.Description;
                 int lit = menu.ChoiceIndex;
                 int count = shownItem.Choices.Count;
+                // Centre the buttons together with the arrow's room right of the last one.
+                float shift = -(cursorGap + cursor.rect.width) / 2;
                 for (int i = 0; i < choiceRows.Count; i++)
                 {
                     var row = choiceRows[i];
                     bool shown = i < count;
                     row.root.gameObject.SetActive(shown);
                     if (!shown) continue;
-                    row.root.anchoredPosition = choiceBase + new Vector2((i - (count - 1) / 2f) * choicePitch, 0);
+                    row.root.anchoredPosition = choiceBase + new Vector2((i - (count - 1) / 2f) * choicePitch + shift, 0);
                     row.label.text = shownItem.Choices[i];
                     row.box.sprite = i == lit ? choiceOn : choiceOff;
                 }

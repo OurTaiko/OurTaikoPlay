@@ -68,6 +68,14 @@ namespace OurTaiko
                     "Show the touch drum in single player mode and let touches and clicks hit it.",
                     s => s.play.singlePlayerDrumPad, (s, on) => s.play.singlePlayerDrumPad = on),
             }),
+            new SettingType("Display", new[]
+            {
+                new SettingItem("Target Frame Rate",
+                    "The highest frame rate the game renders at. Unlimited renders as fast as the device can.",
+                    new[] { "120 FPS", "60 FPS", "Unlimited" },
+                    s => Math.Max(0, Array.IndexOf(DisplaySettings.FrameRates, s.display.targetFrameRate)),
+                    (s, choice) => s.display.targetFrameRate = DisplaySettings.FrameRates[choice]),
+            }),
         };
 
         public int TypeCount => Types.Count + 1;

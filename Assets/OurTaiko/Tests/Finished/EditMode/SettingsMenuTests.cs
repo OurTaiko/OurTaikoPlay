@@ -13,15 +13,16 @@ namespace OurTaiko.Tests
             var menu = Menu();
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types), "The focus starts on the types.");
             Assert.That(menu.Types[0].Label, Is.EqualTo("Play"));
-            Assert.That(menu.TypeCount, Is.EqualTo(2), "Play and Return.");
+            Assert.That(menu.Types[1].Label, Is.EqualTo("Display"));
+            Assert.That(menu.TypeCount, Is.EqualTo(3), "Play, Display and Return.");
 
-            // ka wraps through Play and Return; the item focus does not move with it.
-            Assert.That(menu.Ka(1), Is.EqualTo(SettingsMenu.Result.Moved));
+            // ka wraps through Play, Display and Return; the item focus does not move with it.
+            Assert.That(menu.Ka(-1), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.IsTypeReturn, Is.True);
             menu.Ka(1);
             Assert.That(menu.TypeIndex, Is.Zero);
-            menu.Ka(-1);
-            Assert.That(menu.IsTypeReturn, Is.True);
+            menu.Ka(1);
+            Assert.That(menu.CurrentType.Label, Is.EqualTo("Display"));
             menu.Ka(-1);
 
             // don on Play focuses its items: the drum pad setting, then Return.
@@ -48,7 +49,7 @@ namespace OurTaiko.Tests
             Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Returned));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
             Assert.That(menu.TypeIndex, Is.Zero, "The type stays where it was.");
-            menu.Ka(1);
+            menu.Ka(-1);
             Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Exit));
         }
 
@@ -72,7 +73,7 @@ namespace OurTaiko.Tests
         {
             var menu = Menu();
             // Tapping another type selects it; tapping the focused one confirms it.
-            Assert.That(menu.TapType(1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.TapType(2), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.IsTypeReturn, Is.True);
             Assert.That(menu.TapType(0), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.TapType(0), Is.EqualTo(SettingsMenu.Result.Entered));
@@ -92,7 +93,7 @@ namespace OurTaiko.Tests
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
 
             // Swipes move the focus into the swiped list, then through it (wrapping).
-            Assert.That(menu.SwipeTypes(1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.SwipeTypes(-1), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
             Assert.That(menu.IsTypeReturn, Is.True);
             Assert.That(menu.SwipeItems(1), Is.EqualTo(SettingsMenu.Result.None), "Return has no items.");
@@ -110,6 +111,31 @@ namespace OurTaiko.Tests
             Assert.That(GameSettings.FromJson("").play.singlePlayerDrumPad, Is.True);
             var off = new GameSettings { play = new PlaySettings { singlePlayerDrumPad = false } };
             Assert.That(GameSettings.FromJson(off.ToJson()).play.singlePlayerDrumPad, Is.False);
+            Assert.That(GameSettings.FromJson("{\"play\":{}}").display.targetFrameRate, Is.EqualTo(120));
+        }
+
+        [Test]
+        public void TargetFrameRateOffers120By60AndUnlimited()
+        {
+            var menu = Menu();
+            menu.Ka(1); menu.Don();
+            Assert.That(menu.CurrentItem.Label, Is.EqualTo("Target Frame Rate"));
+            menu.Don();
+            Assert.That(menu.CurrentItem.Choices, Is.EqualTo(new[] { "120 FPS", "60 FPS", "Unlimited" }));
+            Assert.That(menu.ChoiceIndex, Is.Zero, "120 FPS is the default.");
+            menu.Ka(1); menu.Don();
+            Assert.That(menu.Settings.display.targetFrameRate, Is.EqualTo(60));
+            menu.Don(); menu.Ka(1); menu.Don();
+            Assert.That(menu.Settings.display.targetFrameRate, Is.EqualTo(DisplaySettings.Unlimited));
+            Assert.That(menu.Settings.display.TargetFrameRate, Is.EqualTo(-1));
+            Assert.That(GameSettings.FromJson(menu.Settings.ToJson()).display.targetFrameRate, Is.EqualTo(-1));
+
+            // An unknown value shows and applies as the default.
+            var odd = new GameSettings { display = new DisplaySettings { targetFrameRate = 75 } };
+            Assert.That(odd.display.TargetFrameRate, Is.EqualTo(120));
+            menu = new SettingsMenu(SettingsMenu.Catalog(), odd);
+            menu.Ka(1); menu.Don(); menu.Don();
+            Assert.That(menu.ChoiceIndex, Is.Zero);
         }
 
         [Test]

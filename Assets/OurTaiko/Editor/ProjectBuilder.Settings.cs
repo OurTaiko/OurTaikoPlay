@@ -17,9 +17,10 @@ namespace OurTaiko.Editor
         // Layout (stage pixels, y down): the type list on the left, the item list on the right (room
         // for five rows above the footer), the footer strip at the bottom and the choice popup
         // centred over a dimming shade.
-        static readonly Vector2 SettingTypeList = new Vector2(40, 150), SettingItemList = new Vector2(690, 150), SettingDetail = new Vector2(375, 340);
+        static readonly Vector2 SettingTypeList = new Vector2(40, 150), SettingItemList = new Vector2(690, 150), SettingDetail = new Vector2(315, 340);
         static readonly Color SettingShade = new Color(0, 0, 0, 0.55f);
-        const float SettingItemWidth = 1170, SettingItemHeight = 130, SettingDetailHeight = 400;
+        // The popup is wider than an item row so three choice buttons and the arrow fit inside it.
+        const float SettingItemWidth = 1170, SettingItemHeight = 130, SettingDetailWidth = 1290, SettingDetailHeight = 400;
         // overlay.png keeps a transparent margin around its plate; texts sit inside the visible box.
         const float SettingDetailInset = 90, ChoiceScale = 1.2f;
 
@@ -134,11 +135,11 @@ namespace OurTaiko.Editor
             view.itemRows.Add(itemRow);
 
             // Detail: overlay.png as the panel, the item's name and description, the choice buttons.
-            var detailRect = Rect("Detail", stage, SettingDetail.x, SettingDetail.y, SettingItemWidth, SettingDetailHeight);
+            var detailRect = Rect("Detail", stage, SettingDetail.x, SettingDetail.y, SettingDetailWidth, SettingDetailHeight);
             var panel = detailRect.gameObject.AddComponent<Image>();
             panel.sprite = SettingSprite("background/overlay"); panel.type = Image.Type.Sliced; panel.raycastTarget = false;
             view.detail = detailRect.gameObject.AddComponent<CanvasGroup>();
-            float textWidth = SettingItemWidth - 2 * SettingDetailInset;
+            float textWidth = SettingDetailWidth - 2 * SettingDetailInset;
             view.detailTitle = SettingText(detailRect, "Title", uiFont, plain, new Color32(40, 30, 20, 255), 42, TextAlignmentOptions.MidlineLeft, textWidth);
             view.detailTitle.rectTransform.TopLeft(SettingDetailInset, 44);
             view.description = SettingText(detailRect, "Description", uiFont, plain, new Color32(70, 60, 50, 255), 32, TextAlignmentOptions.TopLeft, textWidth);
@@ -147,7 +148,7 @@ namespace OurTaiko.Editor
             view.description.rectTransform.TopLeft(SettingDetailInset, 112);
             // option buttons at 1.2x so the pair fits inside the panel's visible box
             var buttonSize = new Vector2(212, 102) * ChoiceScale;
-            var choiceRow = RowRect("ChoiceRow0", detailRect, new Vector2((SettingItemWidth - buttonSize.x) / 2, SettingDetailHeight - buttonSize.y - 64), buttonSize, SettingSprite("option/button_off"));
+            var choiceRow = RowRect("ChoiceRow0", detailRect, new Vector2((SettingDetailWidth - buttonSize.x) / 2, SettingDetailHeight - buttonSize.y - 64), buttonSize, SettingSprite("option/button_off"));
             var choiceLabel = SettingText(choiceRow.root, "Label", uiFont, white, Color.white, 40, TextAlignmentOptions.Center, buttonSize.x - 20);
             Stretch(choiceLabel.rectTransform);
             choiceRow.label = choiceLabel;
