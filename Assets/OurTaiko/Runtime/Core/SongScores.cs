@@ -16,9 +16,9 @@ namespace OurTaiko
             var manager = Online.OnlineManager.Instance;
             var best = manager?.Client.Best(manager.ChartOf(song), (int)difficulty);
             if (best == null) return null;
-            // The API has no clear/gauge flag. Only FC/DFC can be established from judgments.
-            var crown = best.Good + best.Ok + best.Bad == 0 || best.Bad > 0 ? Crown.None
-                : best.Ok > 0 ? Crown.FullCombo : Crown.DonderfulCombo;
+            // The server's ClearStatus is authoritative: 0 none, 1 silver, 2 gold, 3 rainbow.
+            // Missing (old server/history) or unknown values never imply a crown from judgments.
+            var crown = best.ClearStatus >= 0 && best.ClearStatus <= 3 ? (Crown)best.ClearStatus : Crown.None;
             return new ScoreStore.Record { key = ScoreStore.Key(song.name, difficulty), score = Clamp(best.Score),
                 good = Clamp(best.Good), ok = Clamp(best.Ok), bad = Clamp(best.Bad), maxCombo = Clamp(best.MaxCombo),
                 rolls = Clamp(best.Drumroll), crown = crown };

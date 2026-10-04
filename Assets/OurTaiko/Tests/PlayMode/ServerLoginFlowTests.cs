@@ -47,7 +47,8 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator LoginListsOnlineChartsThenDownloadsPlaysAndUploads()
         {
-            fixture.AddAccountScore("don", chart, "Oni", 1002540);
+            fixture.AddAccountScore("don", chart, "Oni", 1002540, 1);
+            fixture.AccountScores[0]["bad"] = 10;
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             TestData.UseServers(new ServerList { servers = { fixture.Server("don", "wrong") } });
@@ -114,6 +115,9 @@ namespace OurTaiko.Tests
             select.Right();
             yield return new WaitForSecondsRealtime(0.8f);
             Assert.That(select.FocusedSong, Is.SameAs(song));
+            var board = select.wheel.GetComponentsInChildren<SongBoardView>().Single(v => v.title.text == "Fixture Song");
+            Assert.That(board.crown.enabled, Is.True, "A server clear with misses still shows a silver crown.");
+            Assert.That(board.crown.sprite, Is.SameAs(select.crownClear[(int)Difficulty.Oni]));
             TestCapture.Capture("SongSelectOnline.png");
 
             SceneSwitcher.Instance.LastDifficulty = (int)Difficulty.Oni;
@@ -123,6 +127,7 @@ namespace OurTaiko.Tests
             yield return null;
             Assert.That(select.view.bestScore.DisplayedScore, Is.EqualTo(1002540), "Best score comes from login bootstrap.");
             Assert.That(select.view.bestScore.group.alpha, Is.EqualTo(1));
+            Assert.That(select.view.cards[(int)Difficulty.Oni].crown.sprite, Is.SameAs(select.smallCrowns[1]));
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
             select.Confirm();
             yield return WaitForScene(SceneSwitcher.GameScene, 30);
@@ -144,6 +149,7 @@ namespace OurTaiko.Tests
             fixture.AcceptedScores.TryDequeue(out var body);
             Assert.That((string)body["songId"], Is.EqualTo(chart.Id));
             Assert.That((string)body["difficulty"], Is.EqualTo("Oni"));
+            Assert.That((int)body["ClearStatus"], Is.EqualTo((int)play.Result.StoredCrown));
             Assert.That((long)body["good"] + (long)body["ok"] + (long)body["bad"], Is.EqualTo(4), "Every note is judged.");
             var inputs = (JArray)body["replay_data"]["inputs"];
             Assert.That(inputs.Select(i => (int)i[1]), Is.EqualTo(new[] { 1, 3 }), "Left don, then right ka.");
@@ -157,6 +163,56 @@ namespace OurTaiko.Tests
             select = Object.FindFirstObjectByType<SongSelectScene>();
             Assert.That(select.KindAt(3), Is.EqualTo(SongSelectScene.BoardKind.Back));
             Assert.That(select.FocusedSong, Is.SameAs(song));
+        }
+
+        [UnityTest]
+        public IEnumerator OnlineCrownsFollowClearStatusForBoardsAndCourseCards()
+        {
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            fixture.AddAccountScore("don", chart, "Oni", 500000, 0);
+            TestData.UseServers(new ServerList { servers = { fixture.Server("don", "katsu") } });
+            var online = OnlineManager.Instance;
+            var endpoint = online.Client.Add(online.Servers.servers[0]);
+            var connect = online.Client.ConnectAsync(endpoint, false);
+            yield return WaitUntil(() => connect.IsCompleted, 10);
+            connect.GetAwaiter().GetResult();
+            online.RefreshSongs();
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
+            yield return new WaitForSecondsRealtime(.6f);
+            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            select.OpenFolderAt(3);
+            yield return Focus(select, 4);
+            yield return new WaitForSecondsRealtime(.8f);
+            var song = select.FocusedSong;
+            var board = select.wheel.GetComponentsInChildren<SongBoardView>().Single(v => v.title.text == "Fixture Song");
+            Assert.That(board.crown.enabled, Is.False, "ClearStatus 0 wins even when bad and ok are zero.");
+            int score = 500000;
+            foreach (int status in new[] { 1, 2, 3, 0 })
+            {
+                // Contradictory counters ensure the explicit status, not inferred judgments, wins.
+                Assert.That(online.Client.Submit(online.ChartOf(song), (int)Difficulty.Oni,
+                    new FanmadeScore { Score = score += 10000, Good = 100, Bad = 10, ClearStatus = status }), Is.True);
+                var upload = online.Client.WaitForUploadsAsync();
+                yield return WaitUntil(() => upload.IsCompleted, 10);
+                upload.GetAwaiter().GetResult();
+                yield return null;
+                Assert.That(SongScores.Get(song, Difficulty.Oni).crown, Is.EqualTo((Crown)status));
+                Assert.That(board.crown.enabled, Is.EqualTo(status != 0));
+                if (status != 0)
+                {
+                    var art = status == 1 ? select.crownClear : status == 2 ? select.crownFullCombo : select.crownDonderful;
+                    Assert.That(board.crown.sprite, Is.SameAs(art[(int)Difficulty.Oni]));
+                }
+                select.Confirm();
+                yield return WaitUntil(() => select.CourseFade >= 1, 5);
+                yield return null;
+                Assert.That(select.view.cards[(int)Difficulty.Oni].crown.sprite, Is.SameAs(select.smallCrowns[status]));
+                for (int i = 0; i < 7 && select.Cursor.Selected != Difficulty.Back; i++) select.Left();
+                Assert.That(select.Cursor.Selected, Is.EqualTo(Difficulty.Back));
+                select.Confirm();
+                yield return new WaitForSecondsRealtime(.8f);
+            }
         }
 
         [UnityTest]

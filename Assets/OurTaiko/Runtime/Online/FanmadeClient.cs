@@ -280,6 +280,7 @@ namespace OurTaiko.Online
                 ["songId"] = chart.Id, ["versionId"] = chart.Version, ["difficulty"] = FanmadeChart.Courses[difficulty],
                 ["good"] = score.Good, ["ok"] = score.Ok, ["bad"] = score.Bad, ["score"] = score.Score,
                 ["drumroll"] = score.Drumroll, ["max_combo"] = score.MaxCombo,
+                ["ClearStatus"] = score.ClearStatus,
             };
             if (e.ScoreReplayV1) body["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull();
             try

@@ -133,13 +133,14 @@ namespace OurTaiko.Online
     public sealed class FanmadeScore
     {
         public string Id = "", Song = "", Version = "", Difficulty = "";
-        public long Good, Ok, Bad, Score, Drumroll, MaxCombo;
+        public long Good, Ok, Bad, Score, Drumroll, MaxCombo, ClearStatus;
 
         public static FanmadeScore From(JToken v) => new FanmadeScore
         {
             Id = Json.Str(v, "id"), Song = Json.Str(v, "songId"), Version = Json.Str(v, "versionId"), Difficulty = Json.Str(v, "difficulty"),
             Good = Json.Number(v, "good"), Ok = Json.Number(v, "ok"), Bad = Json.Number(v, "bad"), Score = Json.Number(v, "score"),
             Drumroll = Json.Number(v, "drumroll"), MaxCombo = Json.Number(v, "max_combo"),
+            ClearStatus = v["ClearStatus"] == null ? 0 : Json.Number(v, "ClearStatus"),
         };
     }
 

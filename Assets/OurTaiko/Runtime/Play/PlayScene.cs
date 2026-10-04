@@ -377,6 +377,7 @@ namespace OurTaiko
             online.Client.Submit(chart, difficulty, new Online.FanmadeScore
             {
                 Good = Result.Good, Ok = Result.Ok, Bad = Result.Bad, Score = Result.Score, Drumroll = Result.Rolls, MaxCombo = Result.MaxCombo,
+                ClearStatus = (int)Result.StoredCrown,
             }, Record);
         }
         public void Restart() => LeavePlay(() => SceneSwitcher.EnsureInstance().Restart());
