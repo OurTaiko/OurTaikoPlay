@@ -36,6 +36,10 @@
 
 ### 当前完成状态与交接边界
 
+#### 游玩暂停按钮（2026-10-03）
+
+- SinglePlay 左上角改为本地 Material Symbols `pause_circle` 圆形图标按钮（设计尺寸 48×48，位置 24,0），FPS 面板移至 x82/y2；圆内可点击，四角不响应，原暂停／恢复逻辑保持。迁移 `ProjectBuilder.ApplyCircularPauseButton()`，图标源与许可证位于 `Documentation/ThirdParty/MaterialSymbols/`。
+
 #### SongSelect 最佳成绩与 SQLite（2026-10-03）
 
 - 左侧最佳成绩窗口保存为 `SongSelectView.bestScore`，选曲列表中随选中歌曲显示，进入难度选择继续显示；魔王／里魔王都有记录时每秒轮播，只有一个时固定；两者都无记录才显示困难→普通→简单中最高难度的记录，全部无记录则隐藏。迁移 `ProjectBuilder.ApplySongBestScore()`，直接复用 SinglePlay 的 JudgeCounter 四行布局、面板与计分数字，上方加难度图标和最高分；四行显示该次最高分的良／可／不可／连打数，保留可编辑布局。Editor 默认可见并显示示例成绩，运行时换真实记录；难度图标切自现有 `game/lane/lane_difficulty.png`，不要用 `diff_tower_shadow` 半透明水印。
