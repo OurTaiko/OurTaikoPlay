@@ -199,19 +199,21 @@ namespace OurTaiko.Tests
                 ["id"] = Hex(32), ["songId"] = body["songId"], ["versionId"] = body["versionId"], ["difficulty"] = body["difficulty"],
                 ["good"] = body["good"], ["ok"] = body["ok"], ["bad"] = body["bad"], ["score"] = body["score"],
                 ["drumroll"] = body["drumroll"], ["max_combo"] = body["max_combo"],
+                ["ClearStatus"] = body["ClearStatus"] ?? new JValue(0),
             };
             Idempotent[key] = score;
             AcceptedScores.Enqueue(body);
             Reply(context, 200, score);
         }
 
-        public void AddAccountScore(string user, Chart chart, string course, long score)
+        public void AddAccountScore(string user, Chart chart, string course, long score, int clearStatus = 0)
         {
             lock (AccountScores)
                 AccountScores.Add(new JObject
                 {
                     ["user"] = user, ["id"] = Hex(32), ["songId"] = chart.Id, ["versionId"] = chart.Version, ["difficulty"] = course,
                     ["good"] = 1, ["ok"] = 0, ["bad"] = 0, ["score"] = score, ["drumroll"] = 0, ["max_combo"] = 1,
+                    ["ClearStatus"] = clearStatus,
                 });
         }
 

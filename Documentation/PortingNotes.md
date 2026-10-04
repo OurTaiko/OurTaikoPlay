@@ -510,7 +510,8 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 - 按用户要求改为直接复用 SinglePlay 场景中保存的 `JudgeCounter`（组件和四行层级）、橙色面板／浅色行条和计分数字；上方增加难度图标、自己ベスト和最高分。良／可／不可／连打数属于该次最高分的记录。难度图标切自已有 `game/lane/lane_difficulty.png` 不透明图集，不另外导入 PNG；`courseMarks` 对应的是最高 alpha 153/255 的背景水印，不能用于成绩窗；删除不再使用的白底／金条／旧数字与专用小图标副本。资产来源见 `ImportedAssets.json`。迁移菜单 `OurTaiko/Apply Song Best Score`，重复执行保留已有布局；位置、大小、数字和轮播间隔可在场景编辑。
 - 用户指定 UPM `com.gilzoide.sqlite-net` 1.3.2（Git URL，含该包自身 SQLite 原生库）。`persistentDataPath/scores.sqlite3` 含两张独立表：`BestScores` 仅本地谱面最佳分／判定统计／最佳皇冠；`PendingScoreUploads` 仅已登录账号的待上传请求（含永久拒绝状态）。选择界面读内存缓存，不逐帧查 SQLite。
 - `ScoreStore` 首次迁移旧 `scores.json` 的本地条目，忽略旧 `fanmade/` 条目，保留旧 JSON 作备份。旧 `cache/fanmade/pending/<端点>` 的 JSON／rejected 请求保留原幂等键和请求体导入队列表，落盘成功后删除原队列文件，防止再次导入。
-- `SongScores` 统一路由本地与在线成绩，选曲皇冠同样使用正确的数据源。API 无魂槽／普通通关标志，在线皇冠只能由良可不可确认全连／全良，不能凭分数猜普通通关。自动演奏不保存、不入队。
+- `SongScores` 统一路由本地与在线成绩，选曲皇冠同样使用正确的数据源。在线成绩上传、登录拉取及上传响应均使用 API 的 `ClearStatus`（注意大小写）：0 无皇冠、1 银冠（通关）、2 金冠（全连）、3 彩冠（全良）。上传取本局 `StoredCrown`；歌曲板与难度卡直接使用服务器最高分记录的字段，不再根据判定数推断。缺失或未知值显示无皇冠。已有待上传请求保持原请求体与幂等键，不补写未知通关状态。自动演奏不保存、不入队。
+- `ClearStatus` 验证：本地模拟接口 EditMode 19/19（含四种值上传／拉取／响应、缺字段旧记录及重试）；原在线流程 PlayMode 4/4，新增歌曲板／难度卡四种皇冠切换测试 1/1。报告 `TestResults/clear-status-editmode.json`、`clear-status-flow-first.json`（含新增测试检查时机修正前的失败）、`clear-status-crowns-playmode.json`（修正后通过）。未向真实账号提交测试成绩。
 - 验证：EditMode 211/211；最终 SQLite 定向回归 3/3；最佳成绩窗口 PlayMode 1/1、在线登录／游玩／上传 4/4、SongSelect 回归 10/10。场景迁移连续执行两次，文件均不变；截图 `TestResults/SongSelectBestScore.png`。尚未重新构建或在手机上验证。
 - JudgeCounter 改版后追加验证：`SongBestScoreTests` 1/1（列表显示、切歌隐藏／恢复、四行数据、进入难度、优先级轮播）；在线登录到上传 1/1。两次迁移文件不变，所有 Graphic 不接收射线。截图 `TestResults/SongSelectBestScoreList.png`／`SongSelectBestScore.png`。
 - Editor 默认显示 BestScore 示例成绩（1002540，良 853／可 14／不可 2／连打 35），三种选曲预览按钮也会填入示例；不读玩家成绩文件。运行时 Awake 隐藏示例，随后根据真实记录显示，防止示例闪现。

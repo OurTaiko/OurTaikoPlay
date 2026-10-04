@@ -83,6 +83,34 @@ namespace OurTaiko.Tests
             Assert.That(client.Best(client.Charts[0], (int)Difficulty.Hard), Is.Null);
         }
 
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        public void ClearStatusSurvivesBootstrapSubmissionAndResponse(int clearStatus)
+        {
+            fixture.AddAccountScore("don", first, "Oni", 700000, clearStatus);
+            Connect(guest: false);
+            var chart = client.Charts[0];
+            Assert.That(client.Best(chart, (int)Difficulty.Oni).ClearStatus, Is.EqualTo(clearStatus));
+            Assert.That(client.Submit(chart, (int)Difficulty.Oni,
+                new FanmadeScore { Score = 800000, Good = 100, Bad = 10, ClearStatus = clearStatus }), Is.True);
+            Run(() => client.WaitForUploadsAsync());
+            Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
+            Assert.That(body["ClearStatus"]?.Type, Is.EqualTo(JTokenType.Integer));
+            Assert.That((int)body["ClearStatus"], Is.EqualTo(clearStatus));
+            Assert.That(client.Best(chart, (int)Difficulty.Oni).ClearStatus, Is.EqualTo(clearStatus));
+        }
+
+        [Test]
+        public void LegacyScoresWithoutClearStatusDefaultToNoCrown()
+        {
+            fixture.AddAccountScore("don", first, "Oni", 700000, 3);
+            fixture.AccountScores[0].Remove("ClearStatus");
+            Connect(guest: false);
+            Assert.That(client.Best(client.Charts[0], (int)Difficulty.Oni).ClearStatus, Is.Zero);
+        }
+
         [Test]
         public void RejectedCredentialsThrowAndAGuestRetryStillConnects()
         {
@@ -170,7 +198,7 @@ namespace OurTaiko.Tests
             fixture.ScoreFailures.Enqueue(503);
             var record = new PlayRecord { AudioOffsetMs = 12, VisualOffsetMs = -3 };
             record.Inputs.Add((100.5, 1)); record.Inputs.Add((100.5, 3)); record.Inputs.Add((-20, 0));
-            Assert.That(client.Submit(chart, (int)Difficulty.Oni, new FanmadeScore { Good = 3, Score = 3000, MaxCombo = 3 }, record), Is.True);
+            Assert.That(client.Submit(chart, (int)Difficulty.Oni, new FanmadeScore { Good = 3, Score = 3000, MaxCombo = 3, ClearStatus = 3 }, record), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(client.PendingCount(endpoint), Is.EqualTo(1), "A temporary failure keeps the queued request.");
             string queued = client.UploadQueue.Pending(endpoint.Id)[0].Body;
@@ -182,6 +210,7 @@ namespace OurTaiko.Tests
             Assert.That(body.ToString(Newtonsoft.Json.Formatting.None), Is.EqualTo(queued), "Retries send the original body.");
             Assert.That((string)body["difficulty"], Is.EqualTo("Oni"));
             Assert.That((long)body["max_combo"], Is.EqualTo(3));
+            Assert.That((int)body["ClearStatus"], Is.EqualTo(3));
             var replay = (JObject)body["replay_data"];
             Assert.That((int)replay["version"], Is.EqualTo(1));
             Assert.That((int)replay["audio_offset_ms"], Is.EqualTo(12));
