@@ -13,7 +13,11 @@ namespace OurTaiko.Editor
     {
         const string Root = "Assets/OurTaikoNativeAudioBuild";
         public int callbackOrder => 10;
-        public void OnPreprocessBuild(BuildReport report) => Generate();
+        public void OnPreprocessBuild(BuildReport report)
+        {
+            if (report.summary.platform == BuildTarget.WebGL) Cleanup();
+            else Generate();
+        }
         public void OnPostprocessBuild(BuildReport report) => Cleanup();
         public static void Cleanup() => AssetDatabase.DeleteAsset(Root);
         public static void Generate()

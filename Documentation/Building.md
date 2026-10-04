@@ -1,6 +1,6 @@
-# 四平台构建
+# 跨平台构建
 
-Unity **6000.3.25f1**。打开项目后使用 **OurTaiko → Build**，可以单独构建，也可以用 **All Platforms** 顺序构建四个平台。入口为 `Assets/OurTaiko/Editor/PlayerBuilds.cs`，队列在切换平台／脚本重新加载后继续；遇到失败停止。构建使用启用的 Build Settings 场景，并要求 Entry 排在首位，不重建场景。
+Unity **6000.3.25f1**。打开项目后使用 **OurTaiko → Build**，可以单独构建，也可以用 **All Platforms** 顺序构建五个平台。入口为 `Assets/OurTaiko/Editor/PlayerBuilds.cs`，队列在切换平台／脚本重新加载后继续；遇到失败停止。构建使用启用的 Build Settings 场景，并要求 Entry 排在首位，不重建场景。
 
 | 菜单 | 产物 | 架构／脚本后端 |
 | --- | --- | --- |
@@ -8,6 +8,7 @@ Unity **6000.3.25f1**。打开项目后使用 **OurTaiko → Build**，可以单
 | Windows x64 | `Builds/Windows/OurTaikoPlay.exe` 及同目录依赖 | x64／Mono，可从 macOS 交叉构建 |
 | Android ARM64 APK | `Builds/Android/OurTaikoPlay.apk` | ARM64／IL2CPP |
 | iOS Xcode Project | `Builds/iOS/OurTaikoPlay.xcodeproj` | 设备 ARM64／IL2CPP |
+| Web | `Builds/Web/index.html` 及同目录依赖 | WebAssembly／IL2CPP，Unity 音频后端 |
 
 两个移动平台的 application identifier 均为 **`org.ourtaiko.play`**。移动端仅允许左右横屏，Android 声明联网权限。版本沿用 Player Settings 的 Bundle Version、Android Version Code 和 iOS Build Number。`Configure Platforms` 可单独应用设置。桌面不需要 C++ 构建工具；Android／iOS 的 IL2CPP 是 Unity 构建后端，不引入手写原生玩法代码。
 
@@ -21,7 +22,7 @@ ManagedBass 使用 TeamMajdata 的 Git 子模块；首次克隆和更新主仓�
 
 ## 工具链
 
-- Unity Hub 安装同版本的 **Windows Build Support (Mono)**、**Android Build Support**（包含 SDK、NDK、OpenJDK）、**iOS Build Support**。macOS 的 Mono Player 随 Editor 提供。
+- Unity Hub 安装同版本的 **Windows Build Support (Mono)**、**Android Build Support**（包含 SDK、NDK、OpenJDK）、**iOS Build Support**、**Web Build Support**。macOS 的 Mono Player 随 Editor 提供。
 - Android 在 Preferences → External Tools 使用 Unity 配套 SDK／NDK／JDK。首次构建需要网络下载 Gradle 依赖。
 - iOS 导出与 Xcode 编译应在 macOS 上执行，需安装 Xcode 并完成首次启动配置。
 - Android 没有配置自定义 keystore 时，Unity 使用开发签名，可用于本地安装；发布版本需另外配置自己的 keystore。
@@ -37,9 +38,10 @@ unity run . -- -buildTarget StandaloneOSX -executeMethod OurTaiko.Editor.PlayerB
 unity run . -- -buildTarget StandaloneWindows64 -executeMethod OurTaiko.Editor.PlayerBuilds.BuildWindows -logFile Builds/Windows-build.log
 unity run . -- -buildTarget Android -executeMethod OurTaiko.Editor.PlayerBuilds.BuildAndroid -logFile Builds/Android-build.log
 unity run . -- -buildTarget iOS -executeMethod OurTaiko.Editor.PlayerBuilds.BuildIOS -logFile Builds/iOS-build.log
+unity run . -- -buildTarget WebGL -executeMethod OurTaiko.Editor.PlayerBuilds.BuildWeb -logFile Builds/Web-build.log
 ```
 
-也可以直接调用 Unity Editor 可执行文件，加上 `-batchmode -quit -projectPath <项目绝对路径>` 和上面相应的参数。**必须传入匹配的 `-buildTarget`**：在进入构建方法前完成平台切换，保证条件编译与 iOS 后处理正确。每次运行只构建一个平台；四次命令必须顺序执行。
+也可以直接调用 Unity Editor 可执行文件，加上 `-batchmode -quit -projectPath <项目绝对路径>` 和上面相应的参数。**必须传入匹配的 `-buildTarget`**：在进入构建方法前完成平台切换，保证条件编译与 iOS 后处理正确。每次运行只构建一个平台；各平台命令必须顺序执行。
 
 每个平台的构建报告在 `Builds/Reports/<BuildTarget>.json`；Editor 队列当前状态在 `Builds/build-status.json`。失败会抛出异常，使批处理返回失败。`Builds` 与 Android 的 `.utmp` 原生编译缓存已被 Git 忽略。分发 Windows 时应打包整个 `Builds/Windows`，不能只复制 exe。
 
@@ -84,3 +86,26 @@ Unity 平台切换与批处理规则参考：[Build a player from the command li
 - 独立目录 `Builds/BrandingVerification/iOS/OurTaikoPlay.xcodeproj` 实际导出并同目录增量导出成功。Xcode 列出的工程、主 Target 和 Scheme 均为 OurTaikoPlay，实际 Products 引用为 OurTaikoPlay.app；名称还原／重设后工程内容稳定，主 Target／UnityFramework GUID 与自定义构建字段保持不变。
 - iOS 图标已检查，商店图为无 alpha 的 1024×1024 PNG。Xcode Release ARM64 无签名设备构建 `BUILD SUCCEEDED`，产物 OurTaikoPlay.app，显示名／可执行文件名正确、包名仍为 org.ourtaiko.play，并嵌入原四个 BASS 框架。
 - 报告与日志在 `TestResults/branding-*`。Unity 导出报告的唯一 Error 是 Pipeline 调用等待超过 5 秒，后台导出正常完成；警告为现有 Pipeline Runtime 配置提示。Xcode 保留 Unity 自动生成代码的 SDK 弃用及脚本输出声明警告。本次未重新构建 macOS／Windows／Android，也未签名或上传 iOS 应用。
+
+## Web 版本
+
+使用 **OurTaiko → Build → Web**。产物是 `Builds/Web` 整个目录，需通过 HTTP/HTTPS 静态服务器提供，不能直接双击 HTML。配置为 Gzip＋解压回退，因此无需服务器配置特殊压缩响应头；推荐正式部署使用 HTTPS。自定义模板填满浏览器窗口，游戏仍按设计比例留边，并启用 `autoSyncPersistentDataPath`，设置和缓存保存到当前网站的浏览器存储；SQLite 包使用自身的 IndexedDB VFS。清除网站数据也会清除这些存档。
+
+本地预览：
+
+```sh
+python3 -m http.server 8080 --bind 127.0.0.1 --directory Builds/Web
+```
+
+打开 `http://127.0.0.1:8080`。Web 使用 Unity/Web Audio，不加载 BASS 原生库，也不重复打包供 BASS 解码的音频字节；首次点击页面后浏览器才允许播放声音。练习变速沿用 Unity 音频后备方案，音高会随速度改变。
+
+Web 联网使用 UnityWebRequest，经浏览器 Fetch 发出；文件读写和校验留在主线程，不依赖不可用的托管线程池。服务器必须允许页面来源的 CORS，请求方法 GET/POST/OPTIONS，及 Authorization、Content-Type、Idempotency-Key 请求头。HTTPS 页面也要求服务器为 HTTPS。客户端不能绕过浏览器跨域限制。浏览器版的下载音乐从虚拟文件系统读出，再交由浏览器解码；可播放格式取决于浏览器支持。
+
+### 2026-10-04 Web 首次验证
+
+- Unity BuildReport：Succeeded，0 errors，1 warning（开发用 Pipeline 未配置 RuntimePipelineConfig）；输出约 62.4 MiB。分发包 `Builds/OurTaikoPlay-Web.zip`，根目录含 index.html。
+- Chromium 内置浏览器：Entry → 跳过服务器 → 本地选曲 → 难度选择 → SinglePlay → Result 完整通过；168840 分及判定记录刷新后仍显示。IndexedDB 中已观察到 settings.json、player.json、servers.json 和 SQLite 数据页。
+- 练习模式：经过登录选择页后进入 PracticeScene，初始暂停、跳至第二小节、速度调至 0.9x、继续播放通过。未测端到端音频延迟或移动浏览器。
+- Safari：资源加载、首页渲染、键盘输入和音频启动通过；未在 Safari 重复完整结算流程。Chrome 扩展连接当时不可用，Chromium 验证使用内置浏览器完成。
+- FanmadeClientTests 19/19，报告 `TestResults/web-fanmade-regression.json`；截图 `TestResults/web-result.jpg`、`web-persisted-score.jpg`、`web-practice.jpg`。
+- 在线连接未通过：内置浏览器游客请求返回 HTTP_500；直接 GET bootstrap 为 HTTP 200，但 Fanmade／ESE 未返回页面来源的 Access-Control-Allow-Origin。仍需服务器允许 Web 页面的来源、方法和请求头后，验证登录、下载音频及上传；此次没有修改或部署服务器。

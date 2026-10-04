@@ -58,7 +58,7 @@ namespace OurTaiko.Editor
         }
 
         [MenuItem("OurTaiko/Build/All Platforms")]
-        public static void QueueAll() => Enqueue(BuildTarget.StandaloneOSX, BuildTarget.StandaloneWindows64, BuildTarget.Android, BuildTarget.iOS);
+        public static void QueueAll() => Enqueue(BuildTarget.StandaloneOSX, BuildTarget.StandaloneWindows64, BuildTarget.Android, BuildTarget.iOS, BuildTarget.WebGL);
         [MenuItem("OurTaiko/Build/macOS Universal")]
         public static void QueueMacOS() => Enqueue(BuildTarget.StandaloneOSX);
         [MenuItem("OurTaiko/Build/Windows x64")]
@@ -67,11 +67,14 @@ namespace OurTaiko.Editor
         public static void QueueAndroid() => Enqueue(BuildTarget.Android);
         [MenuItem("OurTaiko/Build/iOS Xcode Project")]
         public static void QueueIOS() => Enqueue(BuildTarget.iOS);
+        [MenuItem("OurTaiko/Build/Web")]
+        public static void QueueWeb() => Enqueue(BuildTarget.WebGL);
 
         public static void BuildMacOS() => Build(BuildTarget.StandaloneOSX);
         public static void BuildWindows() => Build(BuildTarget.StandaloneWindows64);
         public static void BuildAndroid() => Build(BuildTarget.Android);
         public static void BuildIOS() => Build(BuildTarget.iOS);
+        public static void BuildWeb() => Build(BuildTarget.WebGL);
 
         static void Enqueue(params BuildTarget[] targets)
         {
@@ -127,6 +130,7 @@ namespace OurTaiko.Editor
                 case BuildTarget.StandaloneWindows64: return "Builds/Windows/OurTaikoPlay.exe";
                 case BuildTarget.Android: return "Builds/Android/OurTaikoPlay.apk";
                 case BuildTarget.iOS: return "Builds/iOS";
+                case BuildTarget.WebGL: return "Builds/Web";
                 default: throw new ArgumentOutOfRangeException(nameof(target));
             }
         }
@@ -143,6 +147,7 @@ namespace OurTaiko.Editor
             if (EditorUserBuildSettings.activeBuildTarget != target)
                 throw new BuildFailedException("Select " + target + " first. In batch mode pass -buildTarget; in the Editor use OurTaiko/Build.");
             ConfigurePlatforms();
+            if (target == BuildTarget.WebGL) ConfigureWeb();
 #if UNITY_STANDALONE_OSX
             // This API lives in the macOS module; other Editor hosts need not install it.
             if (target == BuildTarget.StandaloneOSX)
@@ -200,6 +205,23 @@ namespace OurTaiko.Editor
             Directory.CreateDirectory("Builds");
             result.timestamp = DateTime.UtcNow.ToString("O");
             File.WriteAllText("Builds/build-status.json", JsonUtility.ToJson(result, true));
+        }
+
+        [MenuItem("OurTaiko/Build/Configure Web")]
+        public static void ConfigureWeb()
+        {
+            PlayerSettings.SetScriptingBackend(NamedBuildTarget.WebGL, ScriptingImplementation.IL2CPP);
+            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.WebGL, ManagedStrippingLevel.Low);
+            // A self-contained static build also works on hosts without compressed-file headers.
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.WebGL.dataCaching = true;
+            PlayerSettings.WebGL.template = "PROJECT:OurTaikoPlay";
+            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
+            PlayerSettings.WebGL.initialMemorySize = 256;
+            PlayerSettings.WebGL.maximumMemorySize = 2048;
+            PlayerSettings.WebGL.memoryGrowthMode = WebGLMemoryGrowthMode.Geometric;
+            AssetDatabase.SaveAssets();
         }
     }
 }

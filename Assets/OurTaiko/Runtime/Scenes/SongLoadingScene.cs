@@ -135,7 +135,14 @@ namespace OurTaiko
             }
             else
             {
-                using var request = UnityWebRequestMultimedia.GetAudioClip(new Uri(audio).AbsoluteUri, AudioType.UNKNOWN);
+                string audioUrl = new Uri(audio).AbsoluteUri;
+#if UNITY_WEBGL && !UNITY_EDITOR
+                // Browser fetch cannot open the virtual filesystem through file://.
+                string extension = System.IO.Path.GetExtension(audio).ToLowerInvariant();
+                string mime = extension == ".mp3" ? "audio/mpeg" : extension == ".wav" ? "audio/wav" : "audio/ogg";
+                audioUrl = "data:" + mime + ";base64," + Convert.ToBase64String(System.IO.File.ReadAllBytes(audio));
+#endif
+                using var request = UnityWebRequestMultimedia.GetAudioClip(audioUrl, AudioType.UNKNOWN);
                 ((DownloadHandlerAudioClip)request.downloadHandler).streamAudio = false;
                 yield return request.SendWebRequest();
                 if (request.result != UnityWebRequest.Result.Success)

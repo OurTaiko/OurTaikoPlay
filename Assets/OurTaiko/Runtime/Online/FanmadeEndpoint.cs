@@ -17,7 +17,7 @@ namespace OurTaiko.Online
     // One configured server and account (fanmade.cpp Endpoint + request/login/authorized), on
     // System.Net.Http as in MajdataPlay. Redirects are refused, TLS is verified, an empty proxy is
     // an explicit direct connection, and the bearer token lives only in memory.
-    public sealed class FanmadeEndpoint : IDisposable
+    public sealed partial class FanmadeEndpoint : IDisposable
     {
         public const long DefaultLimit = 64L * 1024 * 1024;
         public readonly ServerConfig Config;
@@ -31,7 +31,11 @@ namespace OurTaiko.Online
         // Serializes HTTP per endpoint, like the C++ http_mutex.
         internal readonly SemaphoreSlim Transport = new SemaphoreSlim(1, 1);
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        bool disposed;
+#else
         readonly HttpClient http;
+#endif
         volatile bool authenticated;
         string token = "";
 
@@ -41,14 +45,23 @@ namespace OurTaiko.Online
             Config.baseUrl = (Config.baseUrl ?? "").TrimEnd('/');
             Config.username ??= ""; Config.password ??= ""; Config.httpProxy ??= "";
             Id = Sha256Hex(Encoding.UTF8.GetBytes(Config.baseUrl + "\n" + Config.username));
+#if !UNITY_WEBGL || UNITY_EDITOR
             var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false };
             if (string.IsNullOrEmpty(Config.httpProxy)) handler.UseProxy = false;
             else { handler.UseProxy = true; handler.Proxy = new WebProxy(new Uri(Config.httpProxy)); }
             // Per-request timeouts below; the client-wide one only bounds pathological cases.
             http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
+#endif
         }
 
-        public void Dispose() => http.Dispose();
+        public void Dispose()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            disposed = true;
+#else
+            http.Dispose();
+#endif
+        }
 
         public static string Sha256Hex(byte[] bytes)
         {
@@ -114,6 +127,9 @@ namespace OurTaiko.Online
         public async Task<byte[]> RequestBytesAsync(string path, string body = "", string key = "", long limit = DefaultLimit,
             CancellationToken cancel = default, Action<long, long> progress = null)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return await RequestWebBytesAsync(path, body, key, limit, cancel, progress);
+#else
             if (cancel.IsCancellationRequested) throw new FanmadeException("DOWNLOAD_CANCELLED");
             bool file = path.Contains("/versions/");
             using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(file ? 120000 : 15000));
@@ -148,6 +164,7 @@ namespace OurTaiko.Online
             catch (OperationCanceledException error) { throw new FanmadeException("NETWORK_TIMEOUT", error); }
             catch (HttpRequestException error) { throw new FanmadeException(NetworkCode(error), error); }
             catch (IOException error) { throw new FanmadeException(NetworkCode(error), error); }
+#endif
         }
 
         // The distinct DNS / connect / TLS codes OurTaikoPlayer shows instead of one network error.

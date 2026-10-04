@@ -81,7 +81,9 @@ namespace OurTaiko.Online
         // Drops every server and its catalog (uploads finish first). Pending scores stay on disk.
         public void Reset()
         {
+#if !UNITY_WEBGL || UNITY_EDITOR
             try { uploads?.Wait(); } catch (AggregateException) { }
+#endif
             uploads = null;
             lock (sync)
             {
@@ -220,8 +222,8 @@ namespace OurTaiko.Online
                     if (File.Exists(file))
                     {
                         transfer.Status = FileProgress.State.Verifying; Publish();
-                        var cached = await Task.Run(() => File.ReadAllBytes(file), cancel);
-                        if (await Task.Run(() => FanmadeEndpoint.Sha256Hex(cached)) == digest)
+                        var cached = await CacheWork(() => File.ReadAllBytes(file), cancel);
+                        if (await CacheWork(() => FanmadeEndpoint.Sha256Hex(cached), cancel) == digest)
                         {
                             transfer.Status = FileProgress.State.Cached; transfer.Received = transfer.Total = cached.Length; Publish();
                             return;
@@ -235,8 +237,8 @@ namespace OurTaiko.Online
                         transfer.Received = received; transfer.Total = total; Publish();
                     });
                     transfer.Status = FileProgress.State.Verifying; transfer.Received = transfer.Total = bytes.Length; Publish();
-                    if (await Task.Run(() => FanmadeEndpoint.Sha256Hex(bytes)) != digest) throw new FanmadeException("DOWNLOAD_HASH_MISMATCH");
-                    await Task.Run(() => WriteAtomic(file, bytes));
+                    if (await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != digest) throw new FanmadeException("DOWNLOAD_HASH_MISMATCH");
+                    await CacheWork(() => { WriteAtomic(file, bytes); return true; }, cancel);
                     transfer.Status = FileProgress.State.Complete; Publish();
                 }
 
@@ -303,7 +305,11 @@ namespace OurTaiko.Online
                 var now = DateTime.UtcNow;
                 if (endpoints.Count == 0 || now < retryAt) return;
                 retryAt = now + RetryInterval;
+#if UNITY_WEBGL && !UNITY_EDITOR
+                uploads = DrainAsync();
+#else
                 uploads = Task.Run(DrainAsync);
+#endif
             }
         }
 
@@ -362,6 +368,16 @@ namespace OurTaiko.Online
             var bytes = new byte[32];
             using (var random = RandomNumberGenerator.Create()) random.GetBytes(bytes);
             return FanmadeEndpoint.Sha256Hex(bytes);
+        }
+
+        static Task<T> CacheWork<T>(Func<T> work, CancellationToken cancel)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            cancel.ThrowIfCancellationRequested();
+            return Task.FromResult(work());
+#else
+            return Task.Run(work, cancel);
+#endif
         }
 
         static void WriteAtomic(string path, byte[] bytes)
