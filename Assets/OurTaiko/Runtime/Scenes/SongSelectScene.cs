@@ -287,12 +287,14 @@ namespace OurTaiko
             sfx.PlayAudioOneShot(ka);
             if (IsOptionPanelOpen) ChangeOption(+1);
             else if (Phase == State.Browsing) Navigate(+1);
-            else if (Cursor.Right())
-            {
-                // toggle_ura_mode: the oni card plays change_ura / change_oni for 90 frames.
-                sfx.PlayAudioOneShot(uraSwitch);
-                uraChangedAt = Now; uraChangeToUraSide = Cursor.IsUra;
-            }
+            else if (Cursor.Right()) AnimateUraChange();
+        }
+
+        void AnimateUraChange()
+        {
+            // Both drum input and long presses use the same 90-frame card flip.
+            sfx.PlayAudioOneShot(uraSwitch);
+            uraChangedAt = Now; uraChangeToUraSide = Cursor.IsUra;
         }
 
         public void Confirm()
@@ -1059,17 +1061,32 @@ namespace OurTaiko
         void AddClick(Image image, Difficulty difficulty)
         {
             image.raycastTarget = true;
-            image.GetComponent<PointerRelay>().Clicked = () =>
+            var pointer = image.GetComponent<PointerRelay>();
+            if (difficulty == Difficulty.Oni)
             {
-                if (!AcceptsInput() || Phase != State.CourseSelect) return;
+                pointer.CanLongPress = () => AcceptsInput() && Phase == State.CourseSelect && !IsOptionPanelOpen
+                    && wheelBoards[Focused].Info.Has(Difficulty.Oni) && wheelBoards[Focused].Info.Has(Difficulty.Ura);
+                pointer.LongPressed = () =>
+                {
+                    if (pointer.CanLongPress() && Cursor.TryToggleUra()) AnimateUraChange();
+                };
+            }
+            pointer.Clicked = () =>
+            {
+                if (!AcceptsInput() || Phase != State.CourseSelect || IsOptionPanelOpen) return;
                 var target = difficulty == Difficulty.Oni && Cursor.IsUra ? Difficulty.Ura : difficulty;
                 if (target >= Difficulty.Easy && wheelBoards[Focused].Info.Course(target) == null) return;
+                if (Cursor.Selected == target) { Confirm(); return; }
                 // Walk the cursor so a click obeys the same rules as the drum.
                 for (int guard = 0; guard < 8 && Cursor.Selected != target; guard++)
                 {
                     if (Order(Cursor.Selected) < Order(target)) Cursor.Right(); else Cursor.Left();
                 }
-                if (Cursor.Selected == target) Confirm();
+                if (Cursor.Selected == target)
+                {
+                    if (target < Difficulty.Easy) Confirm();
+                    else sfx.PlayAudioOneShot(ka);
+                }
             };
             static int Order(Difficulty d) => d == Difficulty.Ura ? (int)Difficulty.Oni : (int)d;
         }

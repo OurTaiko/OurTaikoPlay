@@ -330,6 +330,12 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 验证：Unity Editor 编译通过；新增暂停菜单专项 5/5，所在进行中 PlayMode 程序集 10/10；Finished PlayMode 回归 28/28。报告 `TestResults/pause-final-playmode.json`、`TestResults/pause-regression-playmode.json`。实时 Overlay 画面 `TestResults/PauseMenuLive.png`；1920×1080 与 1440×1080 渲染检查通过，后者另验证面板未越界且宽高比保持 1100:780。截图 [PauseMenu.png](PauseMenu.png)。独立播放器未重新构建。
 
 
+## 魔王／里魔王长按切换（2026-10-04）
+
+难度牌的鼠标／触控短按采用两步确认：点击未选中的难度只移动光标并播放咔音，点击当前已选中的难度才决定游玩，里魔王同样适用。返回与演奏选项按钮保留原有点击行为。
+
+难度选择页的魔王牌支持鼠标左键和触控长按：持续超过 1 秒，在同时具有魔王与里魔王的歌曲中切换表／里并聚焦该难度，复用原有翻牌动画和音效。每次按住只切换一次，松开不确认歌曲；之后短按仍正常确认。移出牌面、失去窗口焦点、隐藏牌面或打开演奏选项会取消正在等待的长按。只有表谱或只有里谱时不切换；原鼓键连续十次右咔切换保持不变。`PointerRelay` 的长按回调仅绑定魔王牌。
+
 ## SongSelect 界面持久化（2026-10-02）
 
 按用户要求，将选曲界面从 `Awake` 创建全部对象改为绑定场景／Prefab 的持久化引用。`SongSelectView` 保存曲目板、难度卡、演奏选项、名牌与覆盖层；`SongBoardView` 保存每块曲目板的图文与 5 个难度条目；`OptionPanelView` 保存 7 行菜单和点击区域；`SongSelectOverlayView` 保存计时器 60／100 两套数字、QR 与邀请云。`PointerRelay` 拆成独立同名脚本，供场景与 Prefab 持久化，点击回调仍由运行时绑定。

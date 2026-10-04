@@ -65,7 +65,7 @@ namespace OurTaiko
             if ((Selected == Difficulty.Oni || Selected == Difficulty.Ura) && hasUra && hasOni)
             {
                 uraToggle = (uraToggle + 1) % UraPresses;
-                if (uraToggle == 0) { ToggleUra(); return true; }
+                if (uraToggle == 0) return TryToggleUra();
             }
             else if (Selected == Difficulty.Modifier) { if (visible.Count > 0) Selected = visible[0]; }
             else if (Selected == Difficulty.Back) Selected = Difficulty.Modifier;
@@ -78,11 +78,13 @@ namespace OurTaiko
             return false;
         }
 
-        void ToggleUra()
+        public bool TryToggleUra()
         {
+            if (!courses.Contains(Difficulty.Oni) || !courses.Contains(Difficulty.Ura)) return false;
             uraToggle = 0;
             IsUra = !IsUra;
-            Selected = (Difficulty)(7 - (int)Selected);
+            Selected = IsUra ? Difficulty.Ura : Difficulty.Oni;
+            return true;
         }
     }
 }
