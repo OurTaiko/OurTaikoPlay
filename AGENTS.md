@@ -38,6 +38,11 @@
 
 ### 当前完成状态与交接边界
 
+#### 跨平台产品名称与图标（2026-10-04）
+
+- `PlayerBranding.Configure()` 统一应用 OurTaikoPlay 产品名及 OurTaikoPlayer 原图 `assets/branding/icon.png`（无修改复制到 `Assets/OurTaiko/Branding/AppIcon.png`）。桌面与 iOS 全尺寸图标均绑定；Android Adaptive 沿用原项目白底／20% 内缩。Unity Build Profiles 与 OurTaiko 构建入口均自动应用。
+- `IosProjectBranding` 在音频后处理之后将 iOS 工程、主 App Target、Scheme 改为 OurTaikoPlay；下一次导出前还原 Unity 内部名称以支持增量。UnityFramework／GameAssembly 和引擎文件目录不改。用户应打开 `Builds/iOS/OurTaikoPlay.xcodeproj`，Scheme 选择 OurTaikoPlay。详见 `Documentation/Building.md`。
+
 #### 首页三项可见与选曲返回牌尺寸（2026-10-04）
 
 - Entry 同时显示三块模式牌（演奏／练习／设置），不再按原模拟器只显示选中项及相邻一项。保留原槽位间距、9 帧滑动及打开时序，牌组整体按 `EntryView.modeSafeArea`（设计画布高度的 15%–92.5%）避让顶部与底部装饰；各牌保存的局部调整仍保留。Editor 预览采用同样布局。

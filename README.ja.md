@@ -82,9 +82,9 @@ Unity の **OurTaiko → Build** を使用します。先に Unity Hub で対象
 | macOS | `Builds/macOS/OurTaikoPlay.app` | Intel + Apple Silicon |
 | Windows | `Builds/Windows/OurTaikoPlay.exe` と同じフォルダーの依存ファイル | x64 |
 | Android | `Builds/Android/OurTaikoPlay.apk` | ARM64 |
-| iOS / iPadOS | `Builds/iOS/Unity-iPhone.xcodeproj` | ARM64 実機 |
+| iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 実機 |
 
-iOS のビルドには macOS と Xcode が必要です。エクスポート後、Xcode で自分の署名チームを設定してから実機にインストールします。モバイル版のパッケージ名は `org.ourtaiko.play` で、横画面専用です。必要なツール、コマンドラインでのビルド方法、検証記録は[ビルドガイド](Documentation/Building.md)を参照してください。
+iOS のビルドには macOS と Xcode が必要です。自動署名は Hoshino Network LLC チームに設定済みです。Xcode には同チームの権限を持つ開発者アカウントでログインしてください。別のチームを使う場合は Unity Player Settings で変更します。モバイル版のパッケージ名は `org.ourtaiko.play` で、横画面専用です。必要なツール、コマンドラインでのビルド方法、検証記録は[ビルドガイド](Documentation/Building.md)を参照してください。
 
 ## 開発状況とドキュメント
 

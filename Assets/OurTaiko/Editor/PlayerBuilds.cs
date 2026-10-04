@@ -38,6 +38,7 @@ namespace OurTaiko.Editor
         [MenuItem("OurTaiko/Build/Configure Platforms")]
         public static void ConfigurePlatforms()
         {
+            PlayerBranding.Configure();
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, MobileIdentifier);
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, MobileIdentifier);
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
@@ -161,10 +162,15 @@ namespace OurTaiko.Editor
             var preloaded = PlayerSettings.GetPreloadedAssets();
             try
             {
+                var options = BuildOptions.CompressWithLz4HC;
+#if UNITY_IOS
+                if (target == BuildTarget.iOS && IosProjectBranding.PrepareForExport(output))
+                    options |= BuildOptions.AcceptExternalModificationsToPlayer;
+#endif
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
                     scenes = scenes, target = target, locationPathName = output,
-                    options = BuildOptions.CompressWithLz4HC
+                    options = options
                 });
                 var summary = report.summary;
                 var result = new Result

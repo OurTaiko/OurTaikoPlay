@@ -82,9 +82,9 @@ General → Language 当前只影响歌名和副标题，缺失翻译时优先�
 | macOS | `Builds/macOS/OurTaikoPlay.app` | Intel + Apple Silicon |
 | Windows | `Builds/Windows/OurTaikoPlay.exe` 及同目录依赖 | x64 |
 | Android | `Builds/Android/OurTaikoPlay.apk` | ARM64 |
-| iOS / iPadOS | `Builds/iOS/Unity-iPhone.xcodeproj` | ARM64 真机 |
+| iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 真机 |
 
-iOS 构建需要 macOS 和 Xcode；导出后在 Xcode 中配置自己的签名团队，再安装到设备。移动端包名为 `org.ourtaiko.play`，仅使用横屏。完整工具链、命令行构建与验证记录见[构建说明](Documentation/Building.md)。
+iOS 构建需要 macOS 和 Xcode；项目默认开启 Hoshino Network LLC 团队的自动签名，Xcode 需登录有该团队权限的开发者账号；使用其他团队时请在 Unity Player Settings 中修改。移动端包名为 `org.ourtaiko.play`，仅使用横屏。完整工具链、命令行构建与验证记录见[构建说明](Documentation/Building.md)。
 
 ## 开发状态与文档
 

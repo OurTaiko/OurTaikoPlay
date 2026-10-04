@@ -7,9 +7,13 @@ Unity **6000.3.25f1**。打开项目后使用 **OurTaiko → Build**，可以单
 | macOS Universal | `Builds/macOS/OurTaikoPlay.app` | Intel x64 + Apple Silicon ARM64／Mono |
 | Windows x64 | `Builds/Windows/OurTaikoPlay.exe` 及同目录依赖 | x64／Mono，可从 macOS 交叉构建 |
 | Android ARM64 APK | `Builds/Android/OurTaikoPlay.apk` | ARM64／IL2CPP |
-| iOS Xcode Project | `Builds/iOS/Unity-iPhone.xcodeproj` | 设备 ARM64／IL2CPP |
+| iOS Xcode Project | `Builds/iOS/OurTaikoPlay.xcodeproj` | 设备 ARM64／IL2CPP |
 
 两个移动平台的 application identifier 均为 **`org.ourtaiko.play`**。移动端仅允许左右横屏，Android 声明联网权限。版本沿用 Player Settings 的 Bundle Version、Android Version Code 和 iOS Build Number。`Configure Platforms` 可单独应用设置。桌面不需要 C++ 构建工具；Android／iOS 的 IL2CPP 是 Unity 构建后端，不引入手写原生玩法代码。
+
+所有平台的产品名称和图标由 `PlayerBranding.Configure()` 统一设置，也会在 Unity 原生 Build Profiles 构建前应用。原始图标直接复制自 OurTaikoPlayer 的 `assets/branding/icon.png`，保存在 `Assets/OurTaiko/Branding/AppIcon.png`；桌面全部尺寸与 iOS App／Spotlight／Settings／Notifications／Marketing 图标共用原图。Android Legacy／Round 使用原图，Adaptive 沿用参考项目的白色背景与 20% 内缩前景，避免启动器遮罩裁掉文字。菜单 **OurTaiko → Build → Configure Name and Icons** 可重新应用。
+
+iOS 导出后将 `.xcodeproj`、主 App Target 和共享 Scheme 改为 **OurTaikoPlay**。UnityFramework、GameAssembly、Unity 自动生成的源文件目录及测试 Target 保留引擎名称；不影响应用名称。再次导出到同一目录时，构建前暂时还原 Unity 需要的工程／Target／Scheme 名，完成后重新应用名称，以支持增量导出。工程 GUID、签名设置和音频框架引用保留；旧导出请重新从 Unity 导出才能更新图标。若目录同时存在新旧两份工程，构建停止并要求换新目录，避免覆盖已有修改。
 
 构建使用非 Development 模式及 LZ4HC。原生音频导入规则由 `AudioBuildSettings` 在构建前检查：macOS BASS/BASSmix/FX/Opus，Windows x64 BASS/BASSmix/FX/Opus/AAC/WASAPI/ASIO，Android ARM64 BASS/BASSmix/FX/Opus/AAC，iOS 四个 xcframework（BASS/BASSmix/FX/Opus）。iOS 构建后补齐运行库搜索路径与 libc++ 链接。不支持 Windows x86。
 
@@ -21,7 +25,7 @@ ManagedBass 使用 TeamMajdata 的 Git 子模块；首次克隆和更新主仓�
 - Android 在 Preferences → External Tools 使用 Unity 配套 SDK／NDK／JDK。首次构建需要网络下载 Gradle 依赖。
 - iOS 导出与 Xcode 编译应在 macOS 上执行，需安装 Xcode 并完成首次启动配置。
 - Android 没有配置自定义 keystore 时，Unity 使用开发签名，可用于本地安装；发布版本需另外配置自己的 keystore。
-- iOS 导出工程不包含个人签名配置。在 Xcode 的 Unity-iPhone target 中选择团队并配置 provisioning 后，才能安装到真实设备或归档分发。下面的无签名编译只验证编译／链接，不生成可直接安装的 IPA。
+- iOS 已在 Unity Player Settings 开启自动签名，团队为 Hoshino Network LLC（Team ID `253AX6B3P2`）；之后导出的工程会沿用此设置，无需每次手动勾选。Xcode 需登录具有该团队权限的开发者账号，由 Xcode 管理证书和 provisioning。旧导出需重新从 Unity 导出才会应用这些设置。下面的无签名编译只验证编译／链接，不生成可直接安装的 IPA。
 - macOS 构建未进行 Developer ID 签名与公证；Windows 未进行 Authenticode 签名。
 
 ## 命令行
@@ -42,8 +46,8 @@ unity run . -- -buildTarget iOS -executeMethod OurTaiko.Editor.PlayerBuilds.Buil
 iOS 无签名设备编译：
 
 ```sh
-xcodebuild -project Builds/iOS/Unity-iPhone.xcodeproj \
-  -scheme Unity-iPhone -configuration Release -sdk iphoneos \
+xcodebuild -project Builds/iOS/OurTaikoPlay.xcodeproj \
+  -scheme OurTaikoPlay -configuration Release -sdk iphoneos \
   -destination 'generic/platform=iOS' -derivedDataPath Builds/iOS-DerivedData \
   CODE_SIGNING_ALLOWED=NO build
 ```
@@ -73,3 +77,10 @@ Unity 平台切换与批处理规则参考：[Build a player from the command li
 ## 项目更名（2026-10-03）
 
 产品名称改为 `OurTaikoPlay`，后续 macOS/Windows/Android 构建输出分别为 `OurTaikoPlay.app`、`OurTaikoPlay.exe`、`OurTaikoPlay.apk`，iOS 显示名称同步采用新名称。移动包名仍为 `org.ourtaiko.play`。本地项目目录仍为 `OurTaikoPlayerUnity`，上面的旧产物路径记录当时的实际构建名称。桌面端存档目录随产品名称变化；沿用旧存档时，将旧名称目录的设置、成绩及缓存复制到新名称目录，保留原文件。移动端包名不变。
+
+## 2026-10-04 名称与图标验证
+
+- 原始图标与 OurTaikoPlayer 源文件 SHA-256 一致；桌面全部尺寸、iOS 19 个槽位和 Android 18 个槽位（含 Adaptive 双层）均有有效贴图；重复执行配置，Player Settings 内容不变。
+- 独立目录 `Builds/BrandingVerification/iOS/OurTaikoPlay.xcodeproj` 实际导出并同目录增量导出成功。Xcode 列出的工程、主 Target 和 Scheme 均为 OurTaikoPlay，实际 Products 引用为 OurTaikoPlay.app；名称还原／重设后工程内容稳定，主 Target／UnityFramework GUID 与自定义构建字段保持不变。
+- iOS 图标已检查，商店图为无 alpha 的 1024×1024 PNG。Xcode Release ARM64 无签名设备构建 `BUILD SUCCEEDED`，产物 OurTaikoPlay.app，显示名／可执行文件名正确、包名仍为 org.ourtaiko.play，并嵌入原四个 BASS 框架。
+- 报告与日志在 `TestResults/branding-*`。Unity 导出报告的唯一 Error 是 Pipeline 调用等待超过 5 秒，后台导出正常完成；警告为现有 Pipeline Runtime 配置提示。Xcode 保留 Unity 自动生成代码的 SDK 弃用及脚本输出声明警告。本次未重新构建 macOS／Windows／Android，也未签名或上传 iOS 应用。

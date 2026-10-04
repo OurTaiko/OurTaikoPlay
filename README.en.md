@@ -82,9 +82,9 @@ Use **OurTaiko → Build** in Unity. Install the appropriate platform modules th
 | macOS | `Builds/macOS/OurTaikoPlay.app` | Intel + Apple Silicon |
 | Windows | `Builds/Windows/OurTaikoPlay.exe` and adjacent dependencies | x64 |
 | Android | `Builds/Android/OurTaikoPlay.apk` | ARM64 |
-| iOS / iPadOS | `Builds/iOS/Unity-iPhone.xcodeproj` | ARM64 devices |
+| iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 devices |
 
-iOS builds require macOS and Xcode. After export, select your signing team in Xcode before installing on a device. Mobile builds use `org.ourtaiko.play` and landscape orientation. Toolchain requirements, command-line builds, and validation records are in the [build guide](Documentation/Building.md).
+iOS builds require macOS and Xcode. Automatic signing defaults to the Hoshino Network LLC team; sign in to Xcode with a developer account that has access to that team, or change the team in Unity Player Settings. Mobile builds use `org.ourtaiko.play` and landscape orientation. Toolchain requirements, command-line builds, and validation records are in the [build guide](Documentation/Building.md).
 
 ## Development status and documentation
 
