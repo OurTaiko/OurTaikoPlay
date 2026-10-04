@@ -254,8 +254,12 @@ namespace OurTaiko
             double judgedAt = SongTime - song.audioOffsetMs / 1000.0;
             hitFace.Play(result, big, judgedAt);
             hitRing.Play(result, big, judgedAt);
-            feedbackTime = GameTimeline.FrameTime;
-            if (result != Judgment.Roll) judgment.sprite = judgmentSprites[(int)result - 1];
+            if (result != Judgment.Roll)
+            {
+                // Long-note hits must not restart the previous normal judgment's text fade.
+                feedbackTime = GameTimeline.FrameTime;
+                judgment.sprite = judgmentSprites[(int)result - 1];
+            }
             else if (Session.Chart.Notes[index].Kind == NoteKind.Balloon)
             {
                 var note = Session.Chart.Notes[index];

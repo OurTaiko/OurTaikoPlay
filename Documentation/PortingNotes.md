@@ -476,6 +476,8 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 
 ## HitFace／HitRing 原生时钟回归修复（2026-10-03）
 
+2026-10-04 判定文字修复：`PlayScene.OnJudged` 原先在 `Judgment.Roll` 时也重置 `feedbackTime`，但仍保留上次普通判定的贴图，导致击打气球或连打不断重播旧的良／可／不可。现在只有普通判定更新文字与淡出起点，5／6／7／9 号长音符击打不干预已有文字的 250 ms 淡出。真实帧回归在修复前复现（125 ms 时应约半透明，实际被重置为 1）；修复后 `HitFeedbackClockTests` 3/3，通过普通／练习场景的四种长音符、气球打爆、后续普通音符及原有 HitFace／HitRing。报告 `TestResults/long-hit-judgment-before-fix.json`（复现失败）、`TestResults/long-hit-judgment-fixed-playmode.json`（通过）。
+
 切换原生音频后，`AudioEngine.Clock` 使用持续递增的 Stopwatch。`PlayScene.Update` 在帧开始读取时间，随后 `OnJudged` 又读取较晚的时间作为动画起点，最后用帧开始的时间调用 ShowTime；HitFace／HitRing 因 elapsed<0 立即取消，表现为笑脸与外圈消失。对象、素材和层级没有丢失。原测试暂停后手动调用 ShowTime，因此未覆盖真实帧路径。
 
 最初修复为 Update 内临时共享歌曲时间。随后统一时钟时改为 `SongClock.Time` 每帧更新、持续保留该帧结果，替代临时快照；判定与动画仍共享歌曲时间。`HitFeedbackClockTests.HitFaceSurvivesJudgmentFrameWithNativeClock` 使用真实自动演奏及帧末观察，修复前复现失败（`TestResults/hit-face-native-before-fix.json`）。动画时长、显隐规则、每帧输入互斥均保持原规格。
