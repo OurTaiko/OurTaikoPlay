@@ -98,7 +98,7 @@ namespace OurTaiko
 
             while (GameTimeline.FrameTime - started < minimumSeconds || switcher.IsSwitching) yield return null;
             switcher.Curtain?.SetStatus("");
-            switcher.SwitchScene(SceneSwitcher.GameScene);
+            switcher.SwitchScene(switcher.SelectedPlayScene);
         }
 
         IEnumerator Download(SceneSwitcher switcher, OnlineManager online, SongDefinition song)

@@ -49,6 +49,13 @@ namespace OurTaiko
             Place(arc, 0);
         }
 
+        public void ResetDisplay()
+        {
+            foreach (var arc in active) { arc.Root.gameObject.SetActive(false); pool.Add(arc); }
+            active.Clear();
+            if (gaugeHitEffect != null) gaugeHitEffect.ResetDisplay();
+        }
+
         public void ShowTime(double time)
         {
             for (int i = 0; i < active.Count; i++)

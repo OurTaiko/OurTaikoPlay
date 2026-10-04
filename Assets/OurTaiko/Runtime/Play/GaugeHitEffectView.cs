@@ -24,6 +24,8 @@ namespace OurTaiko
             IsPlaying = true;
         }
 
+        public void ResetDisplay() { IsPlaying = false; burst.enabled = note.enabled = false; }
+
         public void ShowTime(double time)
         {
             if (sampler == null) sampler = GetComponent<ClipSampler>();

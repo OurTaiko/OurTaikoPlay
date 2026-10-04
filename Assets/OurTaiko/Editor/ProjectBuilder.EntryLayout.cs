@@ -13,10 +13,11 @@ namespace OurTaiko.Editor
         // box_manager.cpp's board order with the boards this port has; texts are Nijiiro's
         // skin_config entry_* (ja). mode_select/box frames: 0 / 1 = 演奏ゲーム open / closed,
         // 9 / 10 = ゲーム設定 (box.lua MODES.settings, the baked `aprilfool` board).
-        static readonly (string Title, string[] Info, string On, string Off, string Scene)[] EntryModes =
+        static readonly (string Title, string[] Info, string On, string Off, string Scene, bool Practice)[] EntryModes =
         {
-            ("演奏ゲーム", new[] { "すきな曲や、むずかしさを", "えらんであそべるよ！" }, "entry/mode_select/box/0", "entry/mode_select/box/1", SceneSwitcher.SongSelectScene),
-            ("ゲーム設定", new[] { "ゲームのせっていを", "かえられるよ！" }, "entry/mode_select/box/9", "entry/mode_select/box/10", SceneSwitcher.SettingScene),
+            ("演奏ゲーム", new[] { "すきな曲や、むずかしさを", "えらんであそべるよ！" }, "entry/mode_select/box/0", "entry/mode_select/box/1", SceneSwitcher.ServerLoginScene, false),
+            ("練習モード", new[] { "小節とスピードをえらんで", "くりかえし練習できるよ！" }, "entry/mode_select/box/2", "entry/mode_select/box/3", SceneSwitcher.ServerLoginScene, true),
+            ("ゲーム設定", new[] { "ゲームのせっていを", "かえられるよ！" }, "entry/mode_select/box/9", "entry/mode_select/box/10", SceneSwitcher.SettingScene, false),
         };
 
         // Saves the Entry screen once as an editable hierarchy under Stage, at the skin's
@@ -124,7 +125,7 @@ namespace OurTaiko.Editor
             for (int i = 0; i < EntryModes.Length; i++)
             {
                 var mode = EntryModes[i];
-                var board = view.boards[i] = new EntryView.BoardView { scene = mode.Scene };
+                var board = view.boards[i] = new EntryView.BoardView { scene = mode.Scene, practice = mode.Practice };
                 board.root = SkinUi.Rect(mode.Title, view.modeBoards);
                 var slot = EntryModeList.Slot(list, i);
                 board.root.anchoredPosition = new Vector2(slot.x, -slot.y);

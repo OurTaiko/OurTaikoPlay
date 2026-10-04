@@ -29,6 +29,8 @@ namespace OurTaiko
             IsPlaying = true;
         }
 
+        public void ResetDisplay() { IsPlaying = false; image.enabled = false; }
+
         public void ShowTime(double time)
         {
             double elapsed = time - start;

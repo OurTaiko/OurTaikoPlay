@@ -139,11 +139,21 @@ namespace OurTaiko.Tests
             Assert.That(play.music.AudioLength(), Is.GreaterThan(0));
             if (AudioEngine.Instance.Native) Assert.That(song.music, Is.Null, "Online audio must bypass Unity decoding.");
             Assert.That(fixture.Downloads, Is.EqualTo(2));
+            int pendingBeforeResult = -1;
+            bool uploadedBeforeResult = true;
+            SceneSwitcher.Instance.SceneChanging += scene =>
+            {
+                if (scene != SceneSwitcher.ResultScene) return;
+                pendingBeforeResult = online.Client.PendingCount(online.Client.Endpoints[0]);
+                uploadedBeforeResult = !fixture.AcceptedScores.IsEmpty;
+            };
             yield return WaitUntil(() => play.SongTime > 0.2, 10);
             play.Hit(isKa: false, right: false);
             yield return null;
             play.Hit(isKa: true, right: true);
             yield return WaitForScene(SceneSwitcher.ResultScene, 20);
+            Assert.That(pendingBeforeResult, Is.Zero, "PlayScene must not enqueue the score before ResultScene loads.");
+            Assert.That(uploadedBeforeResult, Is.False);
 
             yield return WaitUntil(() => !fixture.AcceptedScores.IsEmpty, 10);
             fixture.AcceptedScores.TryDequeue(out var body);
@@ -156,6 +166,19 @@ namespace OurTaiko.Tests
             Assert.That(online.Client.PendingCount(online.Client.Endpoints[0]), Is.Zero);
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null, "Online plays never enter local best scores.");
 
+            // Reopening Result retains the display but does not submit the same play again.
+            int uploads = fixture.Requests.Count(r => r == "POST /api/v1/game/scores");
+            int previousBest = SceneSwitcher.Instance.LastResult.PreviousBest;
+            yield return WaitUntil(() => !SceneSwitcher.Instance.IsInputBlocked, 10);
+            SceneSwitcher.Instance.SwitchScene(SceneSwitcher.ResultScene);
+            yield return WaitForScene(SceneSwitcher.ResultScene);
+            var uploadTask = online.Client.WaitForUploadsAsync();
+            yield return WaitUntil(() => uploadTask.IsCompleted, 10);
+            uploadTask.GetAwaiter().GetResult();
+            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/scores"), Is.EqualTo(uploads));
+            Assert.That(fixture.AcceptedScores.IsEmpty, Is.True);
+            Assert.That(SceneSwitcher.Instance.LastResult.PreviousBest, Is.EqualTo(previousBest));
+
             // Back from the result: the folder is open again on the song just played.
             yield return WaitUntil(() => !SceneSwitcher.Instance.IsInputBlocked, 10);
             SceneSwitcher.Instance.ReturnToMenu();
@@ -163,6 +186,62 @@ namespace OurTaiko.Tests
             select = Object.FindFirstObjectByType<SongSelectScene>();
             Assert.That(select.KindAt(3), Is.EqualTo(SongSelectScene.BoardKind.Back));
             Assert.That(select.FocusedSong, Is.SameAs(song));
+        }
+
+        [UnityTest]
+        public IEnumerator PracticeEntryLogsInShowsHistoryAndDownloadsWithoutUploadingPracticeScores()
+        {
+            fixture.AddAccountScore("don", chart, "Oni", 1002540, 1);
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            TestData.UseServers(new ServerList { servers = { fixture.Server("don", "katsu") } });
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
+            yield return null;
+            var entry = Object.FindFirstObjectByType<EntryScene>();
+            entry.Don();
+            yield return new WaitForSecondsRealtime(1.5f);
+            entry.Ka(1);
+            yield return new WaitForSecondsRealtime(.3f);
+            entry.Don();
+            yield return WaitForScene(SceneSwitcher.ServerLoginScene);
+            Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
+            var login = Object.FindFirstObjectByType<ServerLoginScene>();
+            Assert.That(login.view.message.text, Does.Contain("過去のスコア"));
+            login.Activate(ServerLoginView.Item.Login);
+            yield return WaitForScene(SceneSwitcher.SongSelectScene);
+            Assert.That(fixture.Requests, Does.Contain("POST /api/v1/game/login"));
+            Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
+
+            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            select.OpenFolderAt(3);
+            yield return Focus(select, 4);
+            yield return new WaitForSecondsRealtime(.8f);
+            var song = select.FocusedSong;
+            Assert.That(OnlineManager.Instance.IsOnline(song), Is.True);
+            SceneSwitcher.Instance.LastDifficulty = (int)Difficulty.Oni;
+            select.Confirm();
+            yield return WaitUntil(() => select.CourseFade >= 1, 5);
+            yield return null;
+            Assert.That(select.view.bestScore.DisplayedScore, Is.EqualTo(1002540));
+            Assert.That(select.view.bestScore.group.alpha, Is.EqualTo(1));
+            Assert.That(select.view.cards[(int)Difficulty.Oni].crown.sprite, Is.SameAs(select.smallCrowns[1]));
+            select.Confirm();
+            yield return WaitForScene(SceneSwitcher.PracticeScene, 30);
+            var play = Object.FindFirstObjectByType<PlayScene>();
+            Assert.That(play.IsPractice, Is.True);
+            Assert.That(play.Session.Chart.Title, Is.EqualTo("Fixture Song"));
+            Assert.That(play.music.AudioLength(), Is.GreaterThan(0));
+            Assert.That(fixture.Downloads, Is.EqualTo(2));
+            yield return WaitUntil(() => !SceneSwitcher.Instance.IsInputBlocked, 10);
+            play.ConfirmPractice();
+            yield return null;
+            play.ConfirmPractice();
+            Assert.That(play.IsPaused, Is.False);
+            yield return WaitUntil(() => play.IsPaused, 20);
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.PracticeScene));
+            Assert.That(fixture.AcceptedScores.IsEmpty, Is.True);
+            Assert.That(OnlineManager.Instance.Client.PendingCount(OnlineManager.Instance.Client.Endpoints[0]), Is.Zero);
+            Assert.That(SongScores.Get(song, Difficulty.Oni).score, Is.EqualTo(1002540), "Practice preserves server history.");
         }
 
         [UnityTest]

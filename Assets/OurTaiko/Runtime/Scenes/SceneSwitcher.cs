@@ -15,6 +15,9 @@ namespace OurTaiko
     public sealed class SceneSwitcher : MonoBehaviour
     {
         public const string GameScene = "SinglePlayScene";
+        public const string PracticeScene = "PracticeScene";
+        public bool PracticeMode { get; set; }
+        public string SelectedPlayScene => PracticeMode ? PracticeScene : GameScene;
         public const string SongSelectScene = "SongSelect", ResultScene = "Result", EntryScene = "Entry";
         // The first scene and where Back falls back to.
         public const string MenuScene = EntryScene;
@@ -41,6 +44,9 @@ namespace OurTaiko
         // Scene that started the current song; Back and the result screen return there.
         public string ReturnScene { get; private set; } = MenuScene;
         public PlayResult LastResult { get; private set; }
+        // Consumed once by ResultScene; reopening a result must not save or upload it again.
+        SongDefinition completedSong;
+        Online.PlayRecord completedRecord;
         // global_data.last_difficulty / songs_played for the single local player.
         public int LastDifficulty { get; set; } = -1;
         public int SongsPlayed { get; private set; }
@@ -120,11 +126,12 @@ namespace OurTaiko
         {
             if (IsInputBlocked || song == null) return;
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
+            completedSong = null; completedRecord = null;
             preparedChart = null;
-            if (CurrentScene != GameScene && CurrentScene != ResultScene && CurrentScene != SongLoadingScene && !string.IsNullOrEmpty(CurrentScene))
+            if (CurrentScene != GameScene && CurrentScene != PracticeScene && CurrentScene != ResultScene && CurrentScene != SongLoadingScene && !string.IsNullOrEmpty(CurrentScene))
                 ReturnScene = CurrentScene;
             // song_select.cpp select_song: the rainbow curtain closes, SongLoadingScene loads under it.
-            if (songTransition == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(GameScene); return; }
+            if (songTransition == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(SelectedPlayScene); return; }
             ShowSongOnCurtain(song);
             SwitchScene(SongLoadingScene, TransitionStyle.Curtain, false);
         }
@@ -159,14 +166,22 @@ namespace OurTaiko
             preparedChart = null; preparedSong = null; preparedCourse = null;
             return chart;
         }
-        public void Restart() => SwitchScene(GameScene);
+        public void Restart() => SwitchScene(SelectedPlayScene);
         public void ReturnToMenu() => SwitchScene(Application.CanStreamedLevelBeLoaded(ReturnScene) ? ReturnScene : MenuScene);
-        public void ShowResult(PlayResult result)
+        public void ShowResult(PlayResult result, SongDefinition song = null, Online.PlayRecord record = null)
         {
             if (result == null || IsSwitching) return;
             LastResult = result;
+            completedSong = song; completedRecord = record;
             SongsPlayed++;
             SwitchScene(ResultScene);
+        }
+
+        internal bool TakeCompletedPlay(out SongDefinition song, out Online.PlayRecord record)
+        {
+            song = completedSong; record = completedRecord;
+            completedSong = null; completedRecord = null;
+            return song != null;
         }
 
         public void SwitchScene(string sceneName, bool autoFadeOut = true) => SwitchScene(sceneName, TransitionStyle.Fade, autoFadeOut);

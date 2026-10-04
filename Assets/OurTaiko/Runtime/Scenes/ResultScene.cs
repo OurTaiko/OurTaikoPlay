@@ -82,6 +82,7 @@ namespace OurTaiko
         {
             switcher = SceneSwitcher.EnsureInstance();
             Result = switcher.LastResult ?? Placeholder();
+            SaveScore();
             Sequence = new ResultSequence(Result);
             int difficulty = Math.Min(Math.Max((int)Result.Difficulty, 0), 3);
             art = difficulty == 0 ? 0 : difficulty == 3 ? 2 : 1;
@@ -93,6 +94,25 @@ namespace OurTaiko
             Bind();
             if (view.scoreRank != null) view.scoreRank.Show(0);
             switcher.SceneChanging += OnSceneChanging;
+        }
+
+        // Only entering ResultScene commits a completed play. Practice never enters this scene.
+        // Consume before saving so scene reloads and Editor previews cannot submit a run twice.
+        void SaveScore()
+        {
+            if (!switcher.TakeCompletedPlay(out var song, out var record) || Result.AutoPlay) return;
+            if (!SongScores.IsOnline(song)) { ScoreStore.Shared.Save(Result); return; }
+            var online = Online.OnlineManager.Instance;
+            var chart = online != null ? online.ChartOf(song) : null;
+            if (chart == null) return;
+            int difficulty = (int)Result.Difficulty;
+            var best = online.Client.Best(chart, difficulty);
+            if (best != null) Result.PreviousBest = (int)Math.Min(int.MaxValue, Math.Max(Result.PreviousBest, best.Score));
+            online.Client.Submit(chart, difficulty, new Online.FanmadeScore
+            {
+                Good = Result.Good, Ok = Result.Ok, Bad = Result.Bad, Score = Result.Score,
+                Drumroll = Result.Rolls, MaxCombo = Result.MaxCombo, ClearStatus = (int)Result.StoredCrown,
+            }, record);
         }
 
         static LumenClip Clip(TextAsset asset) => asset != null ? LumenClip.Parse(asset.text) : LumenClip.Empty;

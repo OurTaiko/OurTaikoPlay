@@ -36,6 +36,19 @@
 
 ### 当前完成状态与交接边界
 
+#### PracticeScene 练习模式（2026-10-04）
+
+- Entry 模式顺序为演奏ゲーム／練習モード／ゲーム設定；普通与练习入口都先经过 ServerLogin，再进入 SongSelect，以连接服务器、下载歌曲和显示历史成绩。`SceneSwitcher.PracticeMode` 由 Entry 决定模式时设置并保留经过登录；SongLoadingScene 用 `SelectedPlayScene` 路由，练习返回选曲后仍选练习，普通入口重新置 false。
+- PracticeScene 是通过 Editor API 完整复制 SinglePlayScene 后添加顶部 `PracticeView` 的独立场景；共享 `PlayScene` 的音符显示、输入和动画，练习逻辑在 `PlayScene.Practice.cs`。迁移 `ProjectBuilder.ApplyPracticeMode()`（OurTaiko/Apply Practice Mode）只在缺少时复制场景／添加入口，已有布局保留。
+- 初始及结束后停在第一小节。播放中第一次暂停：冻结音频和谱面、清空判定计数与本轮成绩；第一项「小节进度」，左／右咔按实际小节时间前后移动（200 ms 滚动，隐藏小节线也计入）。咚进入「播放速度」，每次咔 ±0.1x，默认 1.0x、范围 0.1x–3.0x；再咚从当前位置开始。速度独立于 HS；BASS FX Tempo 保持音高，Unity 后备 pitch 随变速改变音高。鼠标／触控按钮也可操作。
+- 调整层再次按暂停才打开原 SinglePlay 菜单：Resume 回到调整层，Restart 回到第一小节暂停，只有 Back 返回 SongSelect。Esc／Space 不直接退出、快捷 Restart 禁用。结束不显示 Result、不保存或上传成绩、不增加 SongsPlayed。
+- **成绩处理在 ResultScene（用户决定）**：PlayScene 只生成普通游玩的 `PlayResult`，连同歌曲和回放经 SceneSwitcher 交接；ResultScene 在初始化演出前一次性领取并保存本地成绩／提交在线上传队列。练习结束直接回到第一小节暂停，不进入 ResultScene，所以不会提交。重载结算与独立预览不重复保存／上传；自动演奏仍不保存。
+- 跳转用 `PlaySession.PracticeAt` 跳过历史判定、重置计数，保留游标前分支并让游标后分支重算；进入长音符中途不会补算此前的自动连打。`SongClock.Rate` 统一控制谱面进度和音乐调度／seek，保持普通游玩 Rate=1 和每帧同一判定时刻。
+- 验证：EditMode 99/99＋143/143；练习 PlayMode 3/3＋直接启动 1/1，普通暂停 5/5、已完成场景回归 34/34；BASS／Unity 的 0.8x／1.2x 音画同步、1080p／720p 与鼠标操作通过，迁移两次三份场景哈希不变。报告 `TestResults/practice-*.json`。尚未实测移动设备与 Windows。
+- 练习登录入口补充验证：`ServerLoginFlowTests` 6/6、`PracticeFlowTests` 4/4；模拟服务器验证 Entry→登录→历史成绩／皇冠→下载→PracticeScene，练习结束无上传且历史成绩保留。重复迁移不改变三份场景内容。
+- 参考与素材来源、交互细节见 `Documentation/PortingNotes.md`「PracticeScene 练习模式」。新增测试保留在进行中目录，等待用户确认后再移入 Finished。
+
+
 #### ScoreRank（2026-10-03）
 
 - Result、选曲歌曲板、难度牌已接入 ScoreRank；七档分数门槛为 50／60／70／80／90／95／100 万。等级从 `SongScores` 的最高分派生；本地／在线成绩来源及自动演奏不保存规则不变。
@@ -210,7 +223,7 @@
 
 **Entry。** 照搬 `scenes/entry.cpp`、`objects/entry/*` 与 Nijiiro `Scripts/entry/entry.lua`、`box.lua`、`player.lua`，Nijiiro 开启 `entry_credit_arcade`（街机投币模式）。用户决定：模式板为「演奏ゲーム」与「ゲーム設定」（2026-10-02 加入，进入 GlobalSettingScene；特訓モード／きせかえ 留待对应场景移植；段位道場 板在原版 `dan_available` 恒为 false，从不显示）；3D 咚与加入时的云不绘制，但模式选择仍按原版云动画结束时刻（加入后 550+350+333 ms）出现；两行信用行都显示，只有 1P 可以加入（任意咚面）；操作指引、フリープレイ＋QR＋2P 邀请云、状态芯片移植，60 秒计时器只作占位不倒数（ALL.Net 图标未做）。时间轴 `entry_bg`／`credit_row`／`credit_fade`／`credit_side`／`mode_board`／`cursor_glow` 由 `LumenClip` 采样。操作指引原图 4576×6900（325 格），只切片决定循环 210–324 格，导入上限 8192、CompressedHQ（未压缩约 126 MB）。这 115 帧在原图导入设置中切片（Multiple 模式，名称 `ControlGuide210`–`324`，重复执行保留 spriteID），由单个 `Generated/Clips/ControlGuide.anim`（`Image.m_Sprite`，30 fps 循环，长 115/30 s）引用；`ControlGuideView` 通过 `ClipSampler`（Animator＋手动求值的 Playables 图，`AnimationClip.SampleAnimation` 不会应用 sprite 关键帧）按 Entry 的时钟取帧中点采样，加入时仍从头开始。迁移入口 `ProjectBuilder.ApplyControlGuideClip()`（菜单 OurTaiko/Apply Control Guide Clip），测试 `ControlGuideClipTests`（进行中）。`entry/global/player_entry_*` 为全透明 8×8 占位图，不绘制。文字描边按统一规则（模式板标题不再有色边与双层边）。详见 `Documentation/PortingNotes.md`「Entry 场景」。
 
-**选曲／结算。** 流程：Entry（入口）→ SongSelect →（幕布＋SongLoadingScene）→ SinglePlayScene → Result → 发起游玩的场景（`SceneSwitcher.ReturnScene`）。`PlayScene.Finish` 保存成绩（自动演奏不保存）后调用 `SceneSwitcher.ShowResult`，场景内结果面板只用于谱面加载失败。时间与布局均取自原 `song_select.cpp`／`navigator.cpp`／`player.cpp`／`result.cpp` 及 Nijiiro Lua，详见 `Documentation/PortingNotes.md`“选曲与结算场景”。TMP Mobile SDF 描边需 `OUTLINE_ON`，由共用描边材质提供。歌曲音频现在主要在 SongLoadingScene 中载入；PlayScene 仍于遮罩关闭期间预载（重开／直接运行），避免首次 PlayScheduled 卡顿约 1 秒。
+**选曲／结算。** 流程：Entry（入口）→ SongSelect →（幕布＋SongLoadingScene）→ SinglePlayScene → Result → 发起游玩的场景（`SceneSwitcher.ReturnScene`）。`PlayScene.Finish` 只生成结果并通过 `SceneSwitcher.ShowResult` 交接歌曲及回放；`ResultScene.Awake` 在创建结算演出前一次性领取本局，保存本地成绩或发起在线上传（自动演奏不保存，重载结算页不重复处理），场景内结果面板只用于谱面加载失败。时间与布局均取自原 `song_select.cpp`／`navigator.cpp`／`player.cpp`／`result.cpp` 及 Nijiiro Lua，详见 `Documentation/PortingNotes.md`“选曲与结算场景”。TMP Mobile SDF 描边需 `OUTLINE_ON`，由共用描边材质提供。歌曲音频现在主要在 SongLoadingScene 中载入；PlayScene 仍于遮罩关闭期间预载（重开／直接运行），避免首次 PlayScheduled 卡顿约 1 秒。
 
 ### 已完成玩法与表现的核心逻辑
 
@@ -262,7 +275,7 @@
 
 ### 明确尚未实现的范围
 
-- **Entry 未移植部分**：3D 咚与加入云（原版 `player.lua` 的 drum_back／drum_front）、2P 加入、其他模式板（特訓モード／きせかえ）与きせかえ菜单（`costume_menu`）、ALL.Net 图标（`allnet_indicator`）。选曲与结算的全局元素已放置（ALL.Net 图标仍未做）。
+- **Entry 未移植部分**：3D 咚与加入云（原版 `player.lua` 的 drum_back／drum_front）、2P 加入、其他模式板（きせかえ）与きせかえ菜单（`costume_menu`）、ALL.Net 图标（`allnet_indicator`）。选曲与结算的全局元素已放置（ALL.Net 图标仍未做）。
 - **设置场景待办**：右侧项目列表无滚动，超过 5 行会压到 footer（见「最新完成：GlobalSettingScene」）；设置场景未放全局覆盖层（计时器、フリープレイ、操作指引）；无多语言（设置标签英文）。
 - **名牌待办**：原版段位选择（`dan_select.cpp`）与段位结算（`dan_result.cpp`／`dan_result_draw.lua` 的 `nameplate_pos`）场景也显示名牌。将来移植这些场景时须同样复用 `Generated/Nameplate.prefab` 与 `PlayerInfoController`；2P／AI 名牌（`2p.png`／`ai.png`）与名牌编辑界面同样未做。
 - **可选：判定点效果叠加**（用户 2026-10-02 记为选项，暂不做，需用户确认后再动）：原版 `player.cpp` 每次判定向 `draw_judge_list` 加入一个独立 `Judgment`（笑脸、外圈与判定文字各自计时），每帧按旧→新全部更新绘制，笑脸动画结束（约 350 ms）后移除；密集连段时多个效果在不同动画阶段重叠。上限只在加入良时检查（`size() < 7`），可与不可不检查；不可条目只有文字、无笑脸／外圈，但同样占名额。本项目目前笑脸、外圈与判定文字各只有一个，新判定替换旧的。移植做法：用现有 `HitFace`／`HitRing` 预制体建小型实例池，每次判定取一个独立计时，旧的先画、新的在上，按原版规则限 7 个；判定文字也需同样改为叠加。

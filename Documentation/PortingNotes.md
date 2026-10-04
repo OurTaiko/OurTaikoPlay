@@ -181,7 +181,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 
 ## 选曲与结算场景（2026-10-01）
 
-- 新增 `SongSelect.unity`、`Result.unity`，入口 → 选曲 → 游玩 → 结算 → 选曲全部经由全局 SceneSwitcher；`SceneSwitcher.Play(song, course, auto)` 记录发起场景作为返回目标，`ShowResult` 交付 `PlayResult`。游玩结束时 `PlayScene.Finish` 保存成绩并切到结算，不再显示场景内结果面板（谱面加载失败仍用该面板提示）。
+- 新增 `SongSelect.unity`、`Result.unity`，入口 → 选曲 → 游玩 → 结算 → 选曲全部经由全局 SceneSwitcher；`SceneSwitcher.Play(song, course, auto)` 记录发起场景作为返回目标，`ShowResult` 交付 `PlayResult`。游玩结束时 `PlayScene.Finish` 生成结果并切到结算，由 `ResultScene.Awake` 保存本地成绩或发起在线上传（2026-10-04 调整），不再显示场景内结果面板（谱面加载失败仍用该面板提示）。
 - 选曲参照 `scenes/song_select.cpp`、`objects/song_select/player.cpp`、`file_navigator/navigator.cpp` 与 Nijiiro `Scripts/song_select/song_select.lua`：纵向画廊（中心 y=540，行距 135，展开间隔 120，斜移 40/行，移动 166 ms 三次缓出）；选中板在导航后等待 61 帧@120fps（508.33 ms）再按 `anim/song_board` 的 select_on 展开，收起 13 帧（216.7 ms）；进入场景与从难度返回时立即展开。难度面板淡入为 400 ms 延迟 + 483 ms；其他曲目板 800 ms 退出并 166 ms 淡出，返回时 500 ms 归位。初始光标遵循 `last_difficulty`（初值 -1 → もどる）。音色面板未移植，因此光标按 option_neiro_row 布局：首个难度 ↔ 扳手 ↔ もどる。
 - 结算参照 `scenes/result.cpp`、`objects/result/player.cpp` 与 Nijiiro `Scripts/result/*.lua`：淡入（100 ms 延迟 + 316.67 ms）→ 等待 100 帧 → 每格 7 帧填充魂槽 → 等待 100 帧 → 各行每 50 帧落定、总分再 100 帧 → 500 帧后皇冠 → 过关时再 150 帧显示评语与金色背景（未过关立即显示）。演出结束后需等待 500+500 帧才可返回，3600 帧后自动返回。ScoreRank 已补齐：达到等级门槛后在皇冠前插入 2 秒演出，详见「ScoreRank」章节。
 - 动画曲线全部来自原 `Scripts/anim/*.lua` 导出表（云层、富士山、成功背景、皇冠、皇冠光芒、评语气泡、数字弹出、魂火、彩虹、最高分条、曲目板、光晕、おに／裏交替），原样复制为 `.txt` 后由 `LumenClip` 线性采样并在首末行处截断。
@@ -417,7 +417,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - **配置**：`persistentDataPath/servers.json`（`ServerList`：`name`、`baseUrl`、`username`、`password`、`httpProxy`、`enabled`、`autoLogin`）。内置两台服务器 OurTaiko Fanmade `https://fanmade.ourtaiko.org` 与 ESE `https://ese-backend.llx.life`（用户指定）：文件缺失时写入两者，已有文件缺少某个内置地址时补上；不要的服务器设 `"enabled": false`（删掉会被补回）。空 `httpProxy` 表示直连（也不读环境代理）。Token 只在内存中。
 - **曲库与文件夹（用户决定：分类文件夹）**：连接时拉 bootstrap 后依次请求所有分类（OurTaikoPlayer 要等打开服务器文件夹才请求）。SongSelect 在本地歌曲之后为每台服务器的每个分类放一个文件夹板，默认全部关闭；层级只有一层（不做服务器文件夹）。照搬 `Navigator::load_current_directory` 无子文件夹的就地展开：文件夹板换成「もどる」（`bar_genre_back`），歌曲按 API 顺序接在后面，每 10 首再插一个もどる（`songs_added % 10 == 0`）；聚焦停在もどる；打开另一个文件夹先收起当前（`collapse_inline_now`），所以同时只有一个；もどる 或 Esc 收起并聚焦回文件夹板。列表末尾另有一个根「もどる」（用户要求，原版 `setup_back_box` 在根目录不加）：曲目轮循环，它位于第一首歌上方，初始聚焦仍是第一首歌；选它与 Esc 一样回到 Entry。从文件夹内歌曲游玩回来时重新打开该文件夹并聚焦该曲（`reopen_folder_path`）；经过 ServerLogin 后全部关闭。文件夹板（Nijiiro `draw_folder_board`）：关闭为 `bar_genre`，聚焦后按 `anim/folder_board`（`Animations/folder_board.txt`，select_on 5／select_off 30，关闭 8 帧）放大为 `folder_graphic`，`box_chara` 左右角色从 340 滑到 440 并淡入，标题上移 94，下方显示「N songs　服务器名」。板颜色按分类 genre（`OnlineManager.GenreFrame`），文件夹内歌曲用所在文件夹的颜色。未移植：Nijiiro 的文件夹进入／退出整轮飞出动画（wheel_decide）、genre 背景条展开、事件／排序文件夹。**曲目轮按需绑定视图**：场景保存的前几块板仍固定属于对应的本地歌曲（保留 Inspector 微调），其余歌曲／文件夹在进入屏幕时从 `SongBoard.prefab`／`Generated/FolderBoard.prefab` 池中取视图、离开时归还；1500 首的文件夹展开时约 120 FPS、视图 < 30 个。迁移 `ProjectBuilder.ApplySongSelectFolders()`（导入 `folder_graphic`／`bar_genre_back` 3-slice、`box_chara` 切左右半，生成 FolderBoard 预制体并绑定到 SongSelect；重复执行文件哈希不变）。
 - **下载**：确定难度后在 SongLoadingScene 的幕布下重新取详情（作者新版本此时生效）、按 SHA-256 校验／下载 TJA 与音频、生成 `play.tja`（API 的块与标题、`WAVE:audio.ogg|mp3`、UTF-8；Shift-JIS 用 `Encoding.GetEncoding(932)`）。进度与错误显示在幕布新增的 `Status` 文字上（迁移 `ProjectBuilder.ApplyCurtainStatus()`）；Esc 取消；失败显示错误码 3 秒后回到选曲。原生后端直接读取缓存文件交给 BASS 解码；显式 Unity 后端才使用 `UnityWebRequestMultimedia`。缓存 `persistentDataPath/cache/fanmade/objects/<端点>/<谱面>/<版本>/`。
-- **成绩（2026-10-03 更新）**：正常结束、非自动演奏、该难度 `cloudScoreEligible` 且已登录对应服务器时，写入 `scores.sqlite3` 的独立 `PendingScoreUploads` 表后台发送（每 30 秒重试，重启后继续，同一请求体与 `Idempotency-Key`）；按服务器＋账号隔离。上传成功删除，4xx（401／408／429 除外，含 409 换版）标为 Rejected 保留但不再重试。服务器声明 `scoreReplayVersion: 1` 时附带 `replay_data`（游戏时间毫秒及音画偏移）。在线历史最佳只使用登录 bootstrap 和成功上传响应返回的服务器成绩，不写本地 BestScores，也不把未上传成绩当作历史最佳。
+- **成绩（2026-10-04 更新）**：正常结束并进入 ResultScene 后，由结算场景发起保存／上传；非自动演奏、该难度 `cloudScoreEligible` 且已登录对应服务器时，写入 `scores.sqlite3` 的独立 `PendingScoreUploads` 表后台发送（每 30 秒重试，重启后继续，同一请求体与 `Idempotency-Key`）；按服务器＋账号隔离。上传成功删除，4xx（401／408／429 除外，含 409 换版）标为 Rejected 保留但不再重试。服务器声明 `scoreReplayVersion: 1` 时附带 `replay_data`（游戏时间毫秒及音画偏移）。在线历史最佳只使用登录 bootstrap 和成功上传响应返回的服务器成绩，不写本地 BestScores，也不把未上传成绩当作历史最佳。
 - **代码**：`Runtime/Online/`（`ServerConfig`、`FanmadeModels`、`FanmadeEndpoint`、`FanmadeClient`、`PlayableTja`、`OnlineManager`），`Runtime/Scenes/ServerLoginScene.cs`／`ServerLoginView.cs`，Editor `ProjectBuilder.ServerLogin.cs`（菜单 OurTaiko/Create Server Login Scene：仅缺失时生成场景，并把 Entry 演奏ゲーム板的 scene 改为 ServerLogin；重复执行文件哈希不变）。界面用 PyTaikoGreen 设置美术（同 GlobalSettingScene）。
 - **测试**：EditMode `FanmadeClientTests`（本地 `HttpListener` 夹具 `Tests/Shared/FanmadeFixture.cs`）、PlayMode `ServerLoginFlowTests`（登录错误／成功、文件夹开合与回来重开、下载、游玩、成绩与回放上传；ゲスト／スキップ、一次只开一个文件夹、下载失败返回；1500 首文件夹的もどる间隔与池化；无服务器直通）。`TestData.Use` 默认无服务器并使用临时缓存；`EntryFlowTests` 的上一场景断言改为 ServerLogin。
 - **未做**：服务器层文件夹、谱师署名轮播、`Loading.png`、真机与独立 Player 验证。
@@ -533,3 +533,25 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 - `ResultSequence.RankAtMs` 在分数完成后的原皇冠时间开始，皇冠／评语延后 2000 ms；未过关也按分数显示等级。音效通过 `AudioPlayback` 播放 `scorerank_c.ogg`。跳过立即显示最终图标，不重播等级音效；低分不插入该状态。
 - Editor 迁移菜单 `OurTaiko/Apply Score Rank`；只向已有场景／SongBoard 添加绑定，不重建原布局，已存在图标与位置保留。结算 Inspector 预览随示例分数显示银级。
 - 验证：ScoreRank EditMode 21/21、既有选曲／结算核心测试 7/7、新增三处显示 PlayMode 1/1、原有选曲→游玩→结算→返回 PlayMode 2/2；两个场景、SongBoard 与七个 Prefab 共 10 个文件在连续两次迁移后哈希不变。报告 `TestResults/score-rank-*.json`，三处截图 `ScoreRankSongBoard.png`／`ScoreRankCourse.png`／`ScoreRankResult.png`。未重新构建独立 Player。
+
+## PracticeScene 练习模式（2026-10-04）
+
+入口为 Entry「演奏ゲーム」下一项「練習モード」，先经过 ServerLogin 再进入现有 SongSelect，以连接服务器并显示账号历史成绩；选曲、难度、演奏选项和 SongLoadingScene 在线歌曲下载均复用原流程。Entry 在决定模式时设置 `SceneSwitcher.PracticeMode`，登录保留该标记，SongLoadingScene 按 `SelectedPlayScene` 进入 PracticeScene，练习返回选曲后继续保持该模式。再次从 Entry 选择普通演奏会清除练习标记。登录界面在练习模式说明可查看历史成绩、练习成绩不保存。
+
+`ProjectBuilder.ApplyPracticeMode()` 先用 `AssetDatabase.CopyAsset` 完整复制 SinglePlayScene 为 `Assets/Scenes/PracticeScene.unity`，保留原游玩层级、素材、音符池、输入互斥、动画与可编辑布局；只在副本增加顶部 `PracticeControls`／`PracticeView`。Entry 只复制新增一块模式板并移动后续板到下一槽位，使用 Nijiiro 原始 `entry/mode_select/box/2.png`、`3.png`（完整 Sprite，来源登记于 ImportedAssets.json）。迁移会拒绝覆盖未保存场景，已有练习控件和入口布局保留，同时将已有练习入口更新为 ServerLogin，可重复执行。
+
+- 首次进入停在第一小节，显示「小节进度」。播放中第一次按暂停会停止音频、冻结歌曲时钟，清空 JudgeCounter、分数、魂槽、连击和反馈特效。咔控制前后小节，咚进入「播放速度」，再咚从选定位置继续。顶部左右／决定按钮提供同样操作；触控鼓遵循原设置。
+- 小节取解析后的 `Chart.Bars`，包含隐藏小节线及真实 BPM／拍号／DELAY／OFFSET。分支采用已经选中的路线，尚未判定的分支预览普通路线；不会把三条路线同时列成小节。`PracticeProgress` 在 200 ms 内插值谱面时间，交给原 `RenderNotes`，小节线与音符、连打头尾均通过原位移公式滚动。
+- 播放速度使用整数十分位，默认 1.0x、每次 ±0.1x、范围 0.1x–3.0x（兼容 Unity AudioSource 的上限），独立于 HS，不修改演奏设置。`SongClock.Rate` 同时影响谱面时间、负时间预备段、音乐 seek 与调度提前量。原生 BASS FX 使用 Tempo 保持音高；Unity 后备使用 AudioSource.pitch，因此 Unity 后备变速也会改变音高。鼓音和提示音不变速。
+- `PlaySession.PracticeAt` 新建练习计数并直接定位事件游标，保留游标之前已经选择的分支、不执行历史判定或漏音惩罚；后退后未来分支重新判定。长音符中途开始可继续击打，自动演奏不会补算跳过部分的连打。画面偏移换算包含音画偏移，使选择的小节线对齐判定点。
+- 练习暂停中再次按暂停打开原 SinglePlay 暂停菜单。Resume 回到练习调整层；Restart 回到第一小节并停在调整层；只有菜单 Back to Song Select 返回选曲。Esc／Space 只操作暂停层，快捷 Restart 在练习中禁用。失焦先进入练习暂停，不会退出。
+- 播放结束直接回到第一小节并打开调整层，保留当前播放速度；不进入 Result、不累计 SongsPlayed、不保存本地最佳成绩、不调用在线上传。
+- **结算负责保存／上传（用户决定，2026-10-04）**：`PlayScene.Finish` 仅生成正常游玩的 `PlayResult` 并调用 `SceneSwitcher.ShowResult(result, song, record)`；不再写入成绩或调用上传。`ResultScene.Awake` 在创建演出序列与绑定视图之前调用 `SaveScore()`，一次性领取本局歌曲和回放，本地歌曲保存到 ScoreStore，在线歌曲读取原最高分并提交现有持久化上传队列；网络发送与重试继续由 FanmadeClient 执行。练习不进入 ResultScene，因此不会触发保存／上传。领取后清空交接数据，重载 Result 保留显示但不重复提交，也不覆盖 PreviousBest；无本局交接的独立预览和自动演奏不保存。
+
+参考仅只读：OurTaikoPlayer `src/scenes/game_practice.cpp` 的小节列表／200 ms scrobble／十分位速度与 `practice_player` 的 seek/reset；MajdataPlay `Scenes/Practice/PracticeManager.cs` 的独立 PlaybackSpeed、`GamePlayManager.cs` 的练习循环和音频 sample 的变速接口。界面交互以本次用户指定的两项顺序及两层暂停为准。
+
+验证：进行中 EditMode 99/99、已完成 EditMode 143/143；练习 PlayMode 3/3（BASS／Unity 的 0.8x 与 1.2x 实际音频位置和谱面时间、鼠标按钮、200 ms 小节滚动、结束回首小节及无成绩保存）与直接启动 PracticeScene 1/1；普通暂停回归 5/5、已完成场景回归 34/34。报告 `TestResults/practice-*.json`，截图 `PracticeMeasures-{Bass,Unity}.png`、`PracticeMeasures720-{Bass,Unity}.png`、`PracticeSpeed-{Bass,Unity}.png`。连续执行迁移两次，Entry／PracticeScene／SinglePlayScene 三个文件的 SHA-256 均不变。验证环境为 macOS Unity Editor，未在 Windows／Android／iOS 设备上实测。
+
+练习入口接入登录后的补充验证：`ServerLoginFlowTests` 6/6（本地模拟服务器，包含从 Entry 选择练习、登录、显示历史最佳成绩／皇冠、下载 TJA／音频、进入 PracticeScene、结束不上传且历史成绩不变）；`PracticeFlowTests` 4/4（无服务器入口、BASS／Unity 两层暂停和变速、直接启动）。报告 `TestResults/practice-server-login-playmode.json`、`TestResults/practice-login-route-regression.json`；重复迁移后上述三个场景文件内容不变。
+
+成绩处理移到 ResultScene 后验证：`ResultScoreFlowTests` 1/1（结算加载前无本地写入、进入后保存、重载不重复保存且 PreviousBest 不变、自动演奏不保存）；`ServerLoginFlowTests` 6/6（结算加载前没有上传队列／已上传记录，进入后提交并保留回放，重载不重复上传，练习仍不提交）。报告 `TestResults/result-score-local-playmode.json`、`TestResults/result-score-online-playmode.json`，使用本地模拟服务器，未向真实账号上传测试成绩。

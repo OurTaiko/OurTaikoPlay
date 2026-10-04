@@ -19,7 +19,7 @@ namespace OurTaiko.Editor
         static readonly Color LoginDark = new Color32(40, 30, 20, 255), LoginGrey = new Color32(90, 80, 70, 255);
 
         // Creates ServerLogin only when missing (an existing layout is kept), rebinds its art and
-        // sounds, puts it in Build Settings after GlobalSettingScene and sends Entry's 演奏ゲーム board
+        // sounds, puts it in Build Settings after GlobalSettingScene and sends Entry's play boards
         // to it instead of SongSelect. Repeated runs change nothing.
         [MenuItem("OurTaiko/Create Server Login Scene")]
         public static void CreateServerLoginScene()

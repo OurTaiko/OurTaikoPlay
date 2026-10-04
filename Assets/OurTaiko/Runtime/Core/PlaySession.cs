@@ -40,6 +40,7 @@ namespace OurTaiko
         readonly List<TimelineEvent> timeline = new List<TimelineEvent>();
         int nextEvent, branchNotes, branchRolls;
         double branchPoints;
+        double practiceStart = double.NegativeInfinity;
 
         sealed class TimelineEvent
         {
@@ -67,6 +68,34 @@ namespace OurTaiko
         }
 
         public bool IsActive(ChartNote note) => IsActive(note.BranchId, note.Route);
+
+        // Start a fresh practice attempt without replaying judgments, sounds or missed-note penalties.
+        // Preserve already chosen branches before the cursor, and recalculate future checkpoints.
+        public static PlaySession PracticeAt(TaikoChart chart, double time, PlaySession previous = null)
+        {
+            var session = new PlaySession(chart) { practiceStart = time };
+            while (session.nextEvent < session.timeline.Count && session.timeline[session.nextEvent].Time <= time)
+            {
+                var item = session.timeline[session.nextEvent++];
+                if (item.Branch == null) continue;
+                var route = previous?.SelectedRoute(item.Branch.Id) ?? BranchRoute.Normal;
+                session.selectedRoutes[item.Branch.Id] = (int)route;
+                session.CurrentBranch = route;
+                session.branchHistory.Add(route);
+            }
+            for (int i = 0; i < chart.Notes.Count; i++)
+            {
+                var note = chart.Notes[i];
+                bool past = (note.IsLong ? note.EndTime : note.Time) < time - 1e-7;
+                session.Resolved[i] = past;
+                // Past notes still scroll out naturally when browsing backwards/forwards.
+                session.Missed[i] = past && !note.IsLong;
+            }
+            return session;
+        }
+
+        public bool IsPracticePreviewActive(ChartNote note) => note.BranchId < 0
+            || note.Route == (SelectedRoute(note.BranchId) ?? BranchRoute.Normal);
         bool IsActive(int branchId, BranchRoute route) => branchId < 0 || selectedRoutes[branchId] == (int)route;
         public BranchRoute? SelectedRoute(int branchId) => selectedRoutes[branchId] < 0 ? (BranchRoute?)null : (BranchRoute)selectedRoutes[branchId];
 
@@ -121,7 +150,7 @@ namespace OurTaiko
                 {
                     if (auto)
                     {
-                        int expected = (int)(Math.Max(0, Math.Min(time, note.EndTime) - note.Time) * 15) + 1;
+                        int expected = (int)(Math.Max(0, Math.Min(time, note.EndTime) - Math.Max(note.Time, practiceStart)) * 15) + 1;
                         while (!Resolved[i] && LongHits[i] < expected) HitLong(i);
                     }
                     if (time > note.EndTime) Resolved[i] = true;

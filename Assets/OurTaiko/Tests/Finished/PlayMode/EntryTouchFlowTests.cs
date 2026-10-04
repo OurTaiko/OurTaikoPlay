@@ -32,7 +32,7 @@ namespace OurTaiko.Tests
                 // Each board takes the taps on its visible plate; empty space falls to the touch area.
                 var boards = entry.Board.Boards;
                 Assert.That(TopHit(entry, 960, 535), Is.SameAs(boards[0].Hit.gameObject), "The open 演奏ゲーム board.");
-                Assert.That(TopHit(entry, 960 + 50, 535 + 305), Is.SameAs(boards[1].Hit.gameObject), "The closed ゲーム設定 board.");
+                Assert.That(TopHit(entry, 960 + 50, 535 + 305), Is.SameAs(boards[1].Hit.gameObject), "The closed 練習モード board.");
                 Assert.That(TopHit(entry, 960, 535 + 205), Is.SameAs(boards[0].Hit.gameObject), "The open plate wins over the closed board's margin.");
                 Assert.That(TopHit(entry, 200, 600), Is.SameAs(entry.TouchArea.gameObject));
 
@@ -51,13 +51,13 @@ namespace OurTaiko.Tests
                 Assert.That(entry.Flow.SelectedMode, Is.EqualTo(1));
                 yield return new WaitForSecondsRealtime(0.8f);
 
-                // The settings board is now open at the centre; tapping it picks it.
+                // The practice board is now open at the centre; tapping it picks it.
                 Assert.That(TopHit(entry, 960, 535), Is.SameAs(boards[1].Hit.gameObject));
                 boards[1].Hit.GetComponent<PointerRelay>().Clicked();
                 Assert.That(entry.Flow.IsSelected, Is.True);
                 float deadline = Time.realtimeSinceStartup + 20;
                 do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
-                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.SettingScene);
+                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene);
             }
             finally
             {

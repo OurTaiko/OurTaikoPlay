@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // Between Entry's 演奏ゲーム and SongSelect, after MajdataPlay's Login scene: each enabled server
+    // Between Entry's play/practice modes and SongSelect, after MajdataPlay's Login scene: each enabled server
     // of servers.json is shown in turn with its account. ログイン logs in and loads the catalog with
     // the account's scores, ゲスト loads the catalog only (no score upload, as in OurTaikoPlayer),
     // スキップ leaves the server out, もどる returns to Entry. A remembered account that logged in
@@ -91,7 +91,9 @@ namespace OurTaiko
             view.progress.text = servers.Count > 1 ? $"{index + 1} / {servers.Count}" : "";
             view.username.text = server.username ?? "";
             view.password.text = server.password ?? "";
-            view.ShowMessage("ログインするとスコアがサーバーに保存されます。ゲストはスコアを保存しません。");
+            view.ShowMessage(switcher.PracticeMode
+                ? "ログインすると過去のスコアを確認できます。練習のスコアは保存しません。"
+                : "ログインするとスコアがサーバーに保存されます。ゲストはスコアを保存しません。");
             Focus = server.HasCredentials ? ServerLoginView.Item.Login : ServerLoginView.Item.Username;
             view.ShowFocus(Focus, false);
             if (server.autoLogin && server.HasCredentials) Connect(guest: false);

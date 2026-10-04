@@ -24,21 +24,21 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
                 yield return null;
                 var entry = Object.FindFirstObjectByType<EntryScene>();
-                Assert.That(entry.Modes.Length, Is.EqualTo(2));
-                Assert.That(entry.Modes[1].Title, Is.EqualTo("ゲーム設定"));
+                Assert.That(entry.Modes.Length, Is.EqualTo(3));
+                Assert.That(entry.Modes[2].Title, Is.EqualTo("ゲーム設定"));
                 yield return new WaitForSecondsRealtime(0.2f);
                 entry.Don();
                 yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 3);
                 yield return new WaitForSecondsRealtime(1f);
 
-                // 演奏ゲーム open at the centre, ゲーム設定 closed one slot below (kanban_3: +50, +305).
+                // 演奏ゲーム open at the centre, 練習モード closed one slot below (kanban_3: +50, +305).
                 var boards = entry.Board.Boards;
                 Assert.That(boards[0].Openness, Is.EqualTo(1).Within(1e-3));
                 Assert.That(boards[1].Openness, Is.EqualTo(0).Within(1e-3));
                 Assert.That(boards[1].Position, Is.EqualTo(new Vector2(50, 305)));
                 Assert.That(boards[1].Root.gameObject.activeSelf, Is.True);
 
-                // Right ka slides the list up; the settings board opens after the slide.
+                // Right ka slides the list up; the practice board opens after the slide.
                 entry.Ka(1);
                 Assert.That(entry.Flow.SelectedMode, Is.EqualTo(1));
                 yield return new WaitForSecondsRealtime(0.08f);
@@ -49,9 +49,11 @@ namespace OurTaiko.Tests
                 Assert.That(boards[0].Position, Is.EqualTo(new Vector2(-50, -305)));
                 Assert.That(boards[1].Openness, Is.EqualTo(1).Within(1e-3));
                 Assert.That(boards[0].Openness, Is.EqualTo(0).Within(1e-3));
+                entry.Ka(1);
+                yield return new WaitForSecondsRealtime(0.6f);
                 TestCapture.Capture("EntrySettingsBoard.png");
                 entry.Ka(1);
-                Assert.That(entry.Flow.SelectedMode, Is.EqualTo(1), "Clamped at the bottom.");
+                Assert.That(entry.Flow.SelectedMode, Is.EqualTo(2), "Clamped at the bottom.");
 
                 entry.Don();
                 yield return WaitForScene(SceneSwitcher.SettingScene);

@@ -152,6 +152,7 @@ namespace OurTaiko
             if (Flow.IsFinished(now) && !HasLeft)
             {
                 HasLeft = true;
+                switcher.PracticeMode = view.boards[Flow.SelectedMode].practice;
                 switcher.SwitchScene(Modes[Flow.SelectedMode].Scene);
             }
             Show(now);

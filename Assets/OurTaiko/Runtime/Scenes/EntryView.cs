@@ -19,6 +19,7 @@ namespace OurTaiko
             public RectTransform root;
             [Tooltip("Scene loaded when this board is picked.")]
             public string scene;
+            public bool practice;
             public Image cursor, closed, open, flash;
             public TextMeshProUGUI title;
             public TextMeshProUGUI[] info;

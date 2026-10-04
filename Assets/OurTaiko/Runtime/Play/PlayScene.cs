@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    public sealed class PlayScene : MonoBehaviour
+    public sealed partial class PlayScene : MonoBehaviour
     {
         public SongDefinition defaultSong;
         public AudioSource music, hitAudio;
@@ -97,6 +97,8 @@ namespace OurTaiko
         IEnumerator Start()
         {
             switcher = SceneSwitcher.EnsureInstance();
+            // Direct Editor runs must return to the same mode after Back and another song.
+            switcher.PracticeMode = IsPractice;
             switcher.SceneChanging += PrepareToLeave;
             song = switcher.SelectedSong != null ? switcher.SelectedSong : defaultSong;
             autoPlay = switcher.AutoPlay;
@@ -149,7 +151,8 @@ namespace OurTaiko
             while (switcher.IsInputBlocked) yield return null;
             // The full countdown starts only after the global cover has opened.
             songClock.Start(GameTimeline.AudioNow, Math.Max(2, Session.Chart.Offset + 2));
-            ScheduleMusic();
+            if (IsPractice) InitializePractice();
+            else ScheduleMusic();
         }
 
         // Player::reset_chart: the play options change the chart before load times are taken.
@@ -179,8 +182,13 @@ namespace OurTaiko
             if (closingPauseMenu || Time.frameCount == resumeFrame || Time.frameCount == pauseOpenedFrame) return;
             if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause))
             { TogglePause(); return; }
-            if (InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
-            if (IsPaused) { pauseMenu.HandleInput(); return; }
+            if (!IsPractice && InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
+            if (IsPaused)
+            {
+                if (IsPractice && !pausePanel.activeSelf) UpdatePracticePause();
+                else pauseMenu.HandleInput();
+                return;
+            }
             if (Session == null || IsFinished) return;
             double time = SongTime - song.audioOffsetMs / 1000.0;
             Session.Advance(time, autoPlay);
@@ -296,6 +304,7 @@ namespace OurTaiko
         public void TogglePause()
         {
             if (IsFinished || Session == null || !songClock.Started || switcher.IsInputBlocked || closingPauseMenu) return;
+            if (IsPractice) { TogglePracticePause(); return; }
             if (IsPaused) { Resume(); return; }
             songClock.Pause();
             IsPaused = true;
@@ -309,6 +318,7 @@ namespace OurTaiko
         public void Resume()
         {
             if (!IsPaused || closingPauseMenu || switcher.IsInputBlocked || IsFinished) return;
+            if (IsPractice) { ClosePracticeMenu(); return; }
             resuming = true;
             resumeLostFocus = false;
             StartCoroutine(ClosePauseMenu(() =>
@@ -353,35 +363,31 @@ namespace OurTaiko
             if (resuming) resumeLostFocus = true;
             if (Session != null && !IsPaused && !IsFinished) TogglePause();
         }
-        // GameScreen::end_song: store the record, then hand the result to the Result scene.
+        // Practice loops here; completed plays hand their data to ResultScene for persistence.
         void Finish()
         {
+            if (IsPractice) { PausePractice(true); return; }
             songClock.Pause(); IsFinished = true; music.StopAudio();
             Result = PlayResult.From(Session, song.name, autoPlay);
             Result.Title = displayInfo.Title;
             Result.Subtitle = displayInfo.Subtitle;
-            if (!SongScores.IsOnline(song)) ScoreStore.Shared.Save(Result);
-            SubmitOnline();
-            switcher.ShowResult(Result);
+            switcher.ShowResult(Result, song, Record);
         }
-        // A finished, non-auto play of an online chart is queued for the logged-in account
-        // (fanmade.cpp submit); its best from the server also counts as the previous best.
-        void SubmitOnline()
+        public void Restart()
         {
-            var online = Online.OnlineManager.Instance;
-            var chart = online != null ? online.ChartOf(song) : null;
-            if (chart == null || autoPlay) return;
-            int difficulty = (int)Result.Difficulty;
-            var best = online.Client.Best(chart, difficulty);
-            if (best != null) Result.PreviousBest = (int)Math.Min(int.MaxValue, Math.Max(Result.PreviousBest, best.Score));
-            online.Client.Submit(chart, difficulty, new Online.FanmadeScore
+            if (IsPractice && !IsFinished)
             {
-                Good = Result.Good, Ok = Result.Ok, Bad = Result.Bad, Score = Result.Score, Drumroll = Result.Rolls, MaxCombo = Result.MaxCombo,
-                ClearStatus = (int)Result.StoredCrown,
-            }, Record);
+                if (pausePanel.activeSelf && !closingPauseMenu)
+                    StartCoroutine(ClosePauseMenu(() => { RestorePracticePads(); PausePractice(true); }));
+                return;
+            }
+            LeavePlay(() => SceneSwitcher.EnsureInstance().Restart());
         }
-        public void Restart() => LeavePlay(() => SceneSwitcher.EnsureInstance().Restart());
-        public void Back() => LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene));
+        public void Back()
+        {
+            if (IsPractice && !pausePanel.activeSelf && !IsFinished) return;
+            LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene));
+        }
 
         void LeavePlay(Action action)
         {
@@ -585,7 +591,7 @@ namespace OurTaiko
                 // only a hit removes a note: a 5/6 roll resolved at its tail and a note
                 // missed by timeout keep scrolling until they leave the lane.
                 bool rolling = note.IsLong && !note.IsBalloon;
-                bool alive = note.Display && Session.IsActive(note) && (rolling || Session.Missed[i] || !Session.Resolved[i]);
+                bool alive = note.Display && (IsPractice && IsPaused ? Session.IsPracticePreviewActive(note) : Session.IsActive(note)) && (rolling || Session.Missed[i] || !Session.Resolved[i]);
                 bool visible = alive && InLane(pos.x, Reach(note, view, length));
                 if (mojiLayer != null) mojiEntered |= RenderMoji(i, note, pos, length, alive);
                 if (!visible)
@@ -618,7 +624,7 @@ namespace OurTaiko
                 var bar = Session.Chart.Bars[i];
                 var pos = Position(bar, time); pos.y -= 4;
                 float half = (bar.IsBranchStart ? 6 : 3) / 2f;
-                bool visible = bar.Display && Session.IsActive(bar) && InLane(pos.x, new Vector2(-half, half));
+                bool visible = bar.Display && (IsPractice && IsPaused ? Session.IsPracticePreviewActive(bar) : Session.IsActive(bar)) && InLane(pos.x, new Vector2(-half, half));
                 var root = shownBars[i];
                 if (!visible)
                 {
