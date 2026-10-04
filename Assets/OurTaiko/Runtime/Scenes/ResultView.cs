@@ -49,6 +49,8 @@ namespace OurTaiko
         [Tooltip("Ones digit first.")]
         public Image[] highScoreDigits;
 
+        public ScoreRankView scoreRank;
+
         [Header("Crown and message")]
         public Image crown;
         public Image crownFade, burstA, burstB, stars, shine, message;

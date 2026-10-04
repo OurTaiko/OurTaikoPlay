@@ -36,6 +36,12 @@
 
 ### 当前完成状态与交接边界
 
+#### ScoreRank（2026-10-03）
+
+- Result、选曲歌曲板、难度牌已接入 ScoreRank；七档分数门槛为 50／60／70／80／90／95／100 万。等级从 `SongScores` 的最高分派生；本地／在线成绩来源及自动演奏不保存规则不变。
+- **用户明确要求只保留七个可复用图标 Prefab**，位于 `Assets/OurTaiko/Generated/ScoreRank/`，三个位置共用结果页原图并缩放。不要再导入 yellow_box 的等级／难度组合图，不按显示位置或难度生成额外 Prefab。
+- 结算等级在皇冠前演出 2 秒，含原时间轴和音效；跳过直接显示最终等级、不重播音效。`ScoreRankView` 绑定保存的 Image；仅 Result 增加 `ScoreRankAnimation` 特效层。迁移 `ProjectBuilder.ApplyScoreRank()` 保留已有布局。详见 `PortingNotes.md`「ScoreRank」。
+
 #### 游玩暂停按钮（2026-10-03）
 
 - SinglePlay 左上角改为本地 Material Symbols `pause_circle` 圆形图标按钮（设计尺寸 48×48，位置 24,0），FPS 面板移至 x82/y2；圆内可点击，四角不响应，原暂停／恢复逻辑保持。迁移 `ProjectBuilder.ApplyCircularPauseButton()`，图标源与许可证位于 `Documentation/ThirdParty/MaterialSymbols/`。

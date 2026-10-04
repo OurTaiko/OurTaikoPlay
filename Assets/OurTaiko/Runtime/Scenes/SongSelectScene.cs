@@ -98,7 +98,7 @@ namespace OurTaiko
         sealed class Slot
         {
             public SongBoardView View;
-            public Vector2 PanelSize, GlowSize, TitlePosition, CrownPosition, CrownSize, RootOffset;
+            public Vector2 PanelSize, GlowSize, TitlePosition, CrownPosition, CrownSize, RankPosition, RootOffset;
             public Vector2[] PlateBase;
             public bool Saved;
         }
@@ -120,7 +120,7 @@ namespace OurTaiko
             public FolderSlot FolderSlot;
             public Slot Slot;
             public SongBoardView View;
-            public Vector2 PanelSize, GlowSize, TitlePosition, CrownPosition, CrownSize, RootOffset;
+            public Vector2 PanelSize, GlowSize, TitlePosition, CrownPosition, CrownSize, RankPosition, RootOffset;
             public SongDefinition Song;
             public SongInfo Info;
             public RectTransform Root;
@@ -137,6 +137,7 @@ namespace OurTaiko
         sealed class CourseCard
         {
             public Image Board, Crown, Star, Level, Bar, Branch;
+            public ScoreRankView Rank;
             public Image[] Dots;
             public TextMeshProUGUI Name;
         }
@@ -683,6 +684,7 @@ namespace OurTaiko
             board.Subtitle.Alpha((float)ia);
             DrawPlates(board, now);
             DrawCrown(board, (float)pb, (float)(pb > 0 ? ia : 1));
+            DrawScoreRank(board, (float)pb, (float)(pb > 0 ? ia : 1));
         }
 
         // draw_folder_board / draw_back_board: the genre folder grows into folder_graphic with its two
@@ -829,6 +831,34 @@ namespace OurTaiko
             headerSub.Squeeze(1000);
         }
 
+        void DrawScoreRank(Board board, float p, float fade)
+        {
+            var view = board.View.scoreRank;
+            if (view == null) return;
+            int rank = 0;
+            Difficulty course = Difficulty.Easy;
+            // SearchAnyCrown walks upward in difficulty; rank and crown are independent.
+            foreach (var info in board.Info.Courses)
+            {
+                int candidate = ScoreRank.FromScore(SongScores.Get(board.Song, info.Difficulty)?.score ?? 0);
+                if (candidate > 0 && (rank == 0 || info.Difficulty > course)) { rank = candidate; course = info.Difficulty; }
+            }
+            // While selecting a course, prefer its record if it has an earned rank.
+            if (board.Song == FocusedSong && Phase != State.Browsing && Cursor != null)
+            {
+                var selected = Cursor.Selected;
+                if ((int)selected >= 0 && (int)selected <= 4 && board.Info.Has(selected))
+                {
+                    int candidate = ScoreRank.FromScore(SongScores.Get(board.Song, selected)?.score ?? 0);
+                    if (candidate > 0) { rank = candidate; course = selected; }
+                }
+            }
+            view.Show(rank, course);
+            view.group.alpha = fade;
+            view.transform.localScale = Vector3.one * (0.75f + 0.25f * p);
+            ((RectTransform)view.transform).anchoredPosition = board.RankPosition + board.View.rankOpenOffset * p;
+        }
+
         void FillCard(CourseCard card, Board board, Difficulty difficulty, bool changing)
         {
             var info = board.Info.Course(difficulty);
@@ -841,8 +871,9 @@ namespace OurTaiko
             foreach (var image in new[] { card.Crown, card.Star, card.Level, card.Bar }) image.enabled = details;
             card.Branch.enabled = details && info.IsBranching;
             for (int k = 0; k < card.Dots.Length; k++) card.Dots[k].enabled = details && k < Math.Min(10, info.Level);
-            if (!details) return;
+            if (!details) { card.Rank?.Show(0); return; }
             var record = SongScores.Get(board.Song, difficulty);
+            card.Rank?.Show(ScoreRank.FromScore(record?.score ?? 0), difficulty);
             card.Crown.sprite = smallCrowns[(int)(record?.crown ?? Crown.None)];
             card.Level.sprite = smallStars[Mathf.Clamp(info.Level, 1, 11)];
         }
@@ -882,6 +913,7 @@ namespace OurTaiko
             PanelSize = item.panel.rectTransform.sizeDelta, GlowSize = item.glow.rectTransform.sizeDelta,
             TitlePosition = item.title.rectTransform.anchoredPosition,
             CrownPosition = item.crown.rectTransform.anchoredPosition, CrownSize = item.crown.rectTransform.sizeDelta,
+            RankPosition = item.scoreRank != null ? ((RectTransform)item.scoreRank.transform).anchoredPosition : Vector2.zero,
             RootOffset = saved ? item.Root.anchoredPosition - item.authoredWheelPosition : Vector2.zero,
             PlateBase = item.plates.Select(plate => ((RectTransform)plate.group.transform).anchoredPosition).ToArray(),
         };
@@ -962,7 +994,7 @@ namespace OurTaiko
             board.Group = item.group; board.Glow = item.glow; board.Panel = item.panel; board.Crown = item.crown;
             board.Title = item.title; board.Subtitle = item.subtitle; board.Contents = item.contents;
             board.PanelSize = slot.PanelSize; board.GlowSize = slot.GlowSize; board.TitlePosition = slot.TitlePosition;
-            board.CrownPosition = slot.CrownPosition; board.CrownSize = slot.CrownSize; board.RootOffset = slot.RootOffset;
+            board.RankPosition = slot.RankPosition; board.CrownPosition = slot.CrownPosition; board.CrownSize = slot.CrownSize; board.RootOffset = slot.RootOffset;
             item.click.Clicked = () => OnBoardClicked(board);
             board.Panel.sprite = boards[board.Genre];
             board.Title.text = board.Info.Title;
@@ -1007,7 +1039,7 @@ namespace OurTaiko
             for (int i = 0; i < cards.Length; i++)
             {
                 var saved = view.cards[i];
-                cards[i] = new CourseCard { Board = saved.board, Crown = saved.crown, Star = saved.star,
+                cards[i] = new CourseCard { Rank = saved.scoreRank, Board = saved.board, Crown = saved.crown, Star = saved.star,
                     Level = saved.level, Bar = saved.bar, Branch = saved.branch, Dots = saved.dots, Name = saved.name };
                 AddClick(saved.board, (Difficulty)i);
             }

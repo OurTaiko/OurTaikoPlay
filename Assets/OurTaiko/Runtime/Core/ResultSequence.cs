@@ -6,15 +6,15 @@ namespace OurTaiko
     public enum ResultCue
     {
         CountLoopStart, CountLoopStop, AchieveSoul, RowLanded, ScoreLanded,
-        HighScore, Crown, Message, SuccessBackground,
+        HighScore, ScoreRank, Crown, Message, SuccessBackground,
     }
 
     // The single-player result reveal of scenes/result.cpp + objects/result/player.cpp driving the
     // Nijiiro result_player.lua state machine (frame counts on the cabinet's 120 fps script clock):
     // Fadein -> WaitUpdateTamashiiGage (100 f) -> gauge fill (7 f per cell) -> WaitUpdateScore (100 f)
-    // -> rows land every 50 f, the total 100 f after the last row -> Crown (UpdateScore 500 f)
-    // -> MoveResultAction 150 f later (immediately for a failed gauge). The ScoreRank state is not
-    // ported. Times are milliseconds since the scene started revealing.
+    // -> rows land every 50 f, the total 100 f after the last row (UpdateScore lasts 500 f)
+    // -> ScoreRank (2 s for a ranked score) -> Crown -> MoveResultAction (150 f for a clear).
+    // Times are milliseconds since the scene started revealing.
     public sealed class ResultSequence
     {
         public const double Frame = 1000.0 / 120.0;
@@ -22,6 +22,7 @@ namespace OurTaiko
         public const double FadeInEndMs = FadeInDelayMs + FadeInMs;
         public const double WaitGaugeMs = 100 * Frame, GaugeCellMs = 7 * Frame, WaitScoreMs = 100 * Frame;
         public const double RowMs = 50 * Frame, ScoreMs = 100 * Frame;
+        public const double RankDurationMs = 2000;
         public const double ScoreToCrownMs = 500 * Frame, CrownToActionMs = 150 * Frame;
         public const double EnableSkipMs = 100 * Frame, WaitEffectEndMs = 500 * Frame, WaitNextSceneMs = 500 * Frame;
         public const double AutoNextSceneMs = 3600 * Frame;
@@ -30,7 +31,7 @@ namespace OurTaiko
         readonly PlayResult result;
         readonly List<(ResultCue Cue, int Row)> cues = new List<(ResultCue, int)>();
         double? scoreDelay, rowDelay;
-        bool gaugeDone, countLoop, achieved, crownShown, messageShown, highScoreShown;
+        bool gaugeDone, countLoop, achieved, crownShown, rankShown, messageShown, highScoreShown;
 
         public ResultSequence(PlayResult result) { this.result = result; }
 
@@ -42,6 +43,7 @@ namespace OurTaiko
         public double[] RowLandMs { get; } = new double[Rows];
         public double? ScoreLandMs { get; private set; }
         public double? RainbowStartMs { get; private set; }
+        public double? RankAtMs { get; private set; }
         public double? CrownAtMs { get; private set; }
         public double? MessageAtMs { get; private set; }
         public double? HighScoreAtMs { get; private set; }
@@ -82,6 +84,11 @@ namespace OurTaiko
             {
                 rowDelay = now;
                 CrownAtMs = now + ScoreToCrownMs;
+                if (ScoreRank.FromScore(result.Score) > 0)
+                {
+                    RankAtMs = CrownAtMs;
+                    CrownAtMs += RankDurationMs;
+                }
                 MessageAtMs = CrownAtMs + (result.GaugeState != GaugeState.Failed ? CrownToActionMs : 0);
             }
             // ResultPlayer::update_score_animation with count_up_instant: each row lands whole.
@@ -95,12 +102,18 @@ namespace OurTaiko
             }
             if (Skipped && rowDelay.HasValue)
             {
+                if (RankAtMs.HasValue) RankAtMs = Math.Min(RankAtMs.Value, now);
                 CrownAtMs = Math.Min(CrownAtMs.Value, now);
                 MessageAtMs = Math.Min(MessageAtMs.Value, now);
             }
             if (ScoreLandMs.HasValue && !highScoreShown && result.ScoreDifference > 0 && !result.AutoPlay)
             {
                 highScoreShown = true; HighScoreAtMs = now; cues.Add((ResultCue.HighScore, 0));
+            }
+            if (RankAtMs.HasValue && now >= RankAtMs.Value && !rankShown)
+            {
+                rankShown = true;
+                if (!Skipped) cues.Add((ResultCue.ScoreRank, 0));
             }
             if (CrownAtMs.HasValue && now >= CrownAtMs.Value && result.GaugeState != GaugeState.Failed && !crownShown)
             {

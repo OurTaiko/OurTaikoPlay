@@ -21,6 +21,8 @@ namespace OurTaiko
         public SongDefinition song;
         public CanvasGroup group, contents;
         public Image glow, panel, crown;
+        public ScoreRankView scoreRank;
+        public Vector2 rankOpenOffset = new Vector2(0, 69);
         public TextMeshProUGUI title, subtitle;
         public PointerRelay click;
         public PlateView[] plates;
