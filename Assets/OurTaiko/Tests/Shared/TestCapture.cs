@@ -9,7 +9,7 @@ namespace OurTaiko.Tests
     public static class TestCapture
     {
         public static Canvas SceneCanvas() => Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None)
-            .Single(canvas => canvas.gameObject.scene == SceneManager.GetActiveScene());
+            .Single(canvas => canvas.isRootCanvas && canvas.gameObject.scene == SceneManager.GetActiveScene());
 
         public static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null)
         {

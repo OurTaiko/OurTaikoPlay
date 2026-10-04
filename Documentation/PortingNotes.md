@@ -252,7 +252,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 名字描边：原版白字黑边 3 px（OutlinedText 2×1.5）。现使用独立的宽留白 UI 字体恢复 3 px 外描边；早期 padding 9／outline 0.6 的近似已被替换，见「UI 字体外描边修复」。
 - 实现：`Scenes/NameplateView.cs` 挂在预制体 `Generated/Nameplate.prefab`（408×96，子物体按原绘制顺序：Shadow、BandUnder、Band、Outline、DanBackground、Dan、Badge、Title、Name），切片 ``global/nameplate/frame_top.png` 导入设置中的 NameplateTitle0–4（2026-10-02 起不再是 Generated 资产）`、`NameplateRainbow0–5`、`NameplateDan00–24`、`NameplateDanGold00–24`。SinglePlayScene 在 `NoteLane` 下保存预制体实例（drum／连击／判定之后、BalloonCounter 之前，与 `Player::draw` 一致，压在鼓面左缘之上）；SongSelect 在 `Awake` 中实例化到 Wheel 与 CoursePanel 之间（原版在选曲轮之上、选项面板之下）；Result 在 `Build` 中实例化到 SoulSheen 之后、FadeIn 之前。迁移入口 `ProjectBuilder.ApplyNameplate()`（菜单 OurTaiko/Apply Nijiiro Nameplate），会重建预制体并更新三个场景，可重复执行。
 - 自动演奏（用户决定，有意偏离）：原版自动演奏时在名牌位置画 `lane/auto_icon` 取代名牌；本项目名牌始终显示，自动演奏只在演奏オプション徽章区（`ModifierBadgeView`）第一位加入选曲的 `song_select/modifier/mod_auto`（40×40，modifier.cpp 中 auto 排第一），没有其他视觉差别。
-- 分数计数器（用户要求一并移植，因原 TMP 占位分数与名牌重叠）：照搬 `score_counter.cpp`。`lane/lane_score_cover` 画在轨道局部 (0,12)；`lane/score_number` 十个 56×64 数字右对齐到 x 255、间距 30（Nijiiro 未覆盖 `score_counter_margin`，继承 Green 的 20×1.5），不补零，顶边 5.5（277.5-272）。分数变化时重启 TextStretch（id 4，与气球数字同一公式，抽成 `Core/TextStretch`）：50 ms 内升到 12 px，再按 16.57 ms 阶梯回落，最后两帧略为负值，数字底边固定、向上伸长。Nijiiro `delay_score_addition` 为 false，分数即时更新。实现 `Play/ScoreCounterView.cs`，作为 `NoteLane` 最后一个子物体（原版最后画分数）；切片 ``game/lane/score_number.png` 导入设置中的 ScoreNumber0–9`。未移植：加分时飞出的「+分数」动画（`ScoreCounterAnimation`）。
+- 分数计数器（用户要求一并移植，因原 TMP 占位分数与名牌重叠）：照搬 `score_counter.cpp`。`lane/lane_score_cover` 画在轨道局部 (0,12)；`lane/score_number` 十个 56×64 数字右对齐到 x 255、间距 30（Nijiiro 未覆盖 `score_counter_margin`，继承 Green 的 20×1.5），不补零，顶边 5.5（277.5-272）。分数变化时重启 TextStretch（id 4，与气球数字同一公式，抽成 `Core/TextStretch`）：50 ms 内升到 12 px，再按 16.57 ms 阶梯回落，最后两帧略为负值，数字底边固定、向上伸长。Nijiiro `delay_score_addition` 为 false，分数即时更新。实现 `Play/ScoreCounterView.cs`，作为 `NoteLane` 最后一个子物体（原版最后画分数）；切片 ``game/lane/score_number.png` 导入设置中的 ScoreNumber0–9`。单次加分动画已于 2026-10-04 补齐，见下。
 - 移除：SinglePlayScene 左上调试文字「OURTAIKO / PLAYER 1」（PlayerName）与「READY n／AUTO PLAY／1 PLAYER」（PlayState），均为用户决定，自动演奏因此只体现在徽章区；以及原 TMP 分数标签 `Score`。
 - 验证：EditMode `NameplateTests`（coin／称号／段位判定、越界回退、名字框、彩虹帧时序、JSON、分数布局、TextStretch），PlayMode `NameplateFlowTests`（三个场景的位置与层级、称号带／段位／金色、信息变更即时更新、长名字压扁到 190、彩虹循环、AUTO 徽章在首位、分数计数器初始 0／伸长／回落／位置、PlayerName／PlayState 已移除），截图 `TestResults/NameplatePlay.png`、`NameplatePlayCoin.png`、`NameplateSongSelect.png`、`NameplateResult.png`。EditMode 139/139、PlayMode 29/29 通过。
 
@@ -557,3 +557,14 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 练习入口接入登录后的补充验证：`ServerLoginFlowTests` 6/6（本地模拟服务器，包含从 Entry 选择练习、登录、显示历史最佳成绩／皇冠、下载 TJA／音频、进入 PracticeScene、结束不上传且历史成绩不变）；`PracticeFlowTests` 4/4（无服务器入口、BASS／Unity 两层暂停和变速、直接启动）。报告 `TestResults/practice-server-login-playmode.json`、`TestResults/practice-login-route-regression.json`；重复迁移后上述三个场景文件内容不变。
 
 成绩处理移到 ResultScene 后验证：`ResultScoreFlowTests` 1/1（结算加载前无本地写入、进入后保存、重载不重复保存且 PreviousBest 不变、自动演奏不保存）；`ServerLoginFlowTests` 6/6（结算加载前没有上传队列／已上传记录，进入后提交并保留回放，重载不重复上传，练习仍不提交）。报告 `TestResults/result-score-local-playmode.json`、`TestResults/result-score-online-playmode.json`，使用本地模拟服务器，未向真实账号上传测试成绩。
+
+
+## 总分上方的单次加分数字（2026-10-04）
+
+参考 OurTaikoPlayer `score_counter_animation.cpp`、`player.cpp` 的 `base_score_list` 与 Nijiiro `Graphics/game/animation.json` 35–39。加分数字复用总分的 `score_number` 0–9（56×64，间距 30），1P 为橙色 (254,102,0)，只显示本次增加的数字，没有加号。50 ms 淡入；前 80 ms 右端由 x285 移到 x255；y255 保持至 146 ms 后切至 y219＋(位序＋1)×5，279.36–345.36 ms 再上移 3；366.74–446.74 ms 淡出。纹理 y=-272 与总分基线统一换算，不改原总分位置和即时计分规则。
+
+`ScoreCounterView.Show` 读取相邻两次实际分数的正增量，生成独立 `ScoreAdditionView`；良、可、大音符以及 5／6／7／9 号每次长音符击打均使用真实增量，不可／初始赋值／相同分数不触发。为满足每次加分都显示，不沿用参考代码对普通击打／连打同时 5 条后的丢弃逻辑；行对象按需扩充、过期复用，不覆盖上一条。动画与现有总分弹动共用 FrameTime。降分／练习清零时清除旧行。
+
+SinglePlayScene 与 PracticeScene 均保存 `NoteLane/ScoreCounter/ScoreAddition` 模板和十位数字引用，`ScoreAddition.anim` 控制透明度与位移，运行时仅复用行和填写数字。新控件相对于总分定位，跟随画布缩放；加分行使用独立绘制层避免被本项目的 JudgeCounter 下缘遮挡，仍低于全局幕布。迁移菜单 `OurTaiko/Apply Score Addition` 只补缺少的模板，不重建已有布局。没有新增图片或修改计分。
+
+验证：ScoreAdditionClipTests 2/2、ScoreAdditionFlowTests 2/2、原 ScoreGaugeFlowTests 1/1；覆盖两场景的动画时间／相对锚点、良／可／不可、5／7／9 号击打增量、独立多行、复用、练习清零与原有计分／结算。1080p／720p 截图 ScoreAddition-{SinglePlayScene,PracticeScene}.png、ScoreAddition720-{SinglePlayScene,PracticeScene}.png 已检查。迁移再次执行后两个场景与动画文件内容不变。报告 TestResults/score-addition-*.json；未重新构建独立 Player。

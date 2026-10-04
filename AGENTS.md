@@ -36,6 +36,11 @@
 
 ### 当前完成状态与交接边界
 
+#### 单次加分数字（2026-10-04）
+
+- SinglePlayScene／PracticeScene 的 `ScoreCounter` 均已添加可编辑 `ScoreAddition` 模板；每次实际正增量显示橙色数字，复用总分数字图，按 Nijiiro `ScoreCounterAnimation` 35–39 的 446.74 ms 时间轴淡入、左移、上移错开、淡出，没有加号。初始值／不可不触发，练习清零清除旧行；连续加分独立播放、池化复用，不丢弃第六条以后的加分。
+- 模板跟随总分定位和画布缩放，以子 Canvas 绘制在 JudgeCounter 上方、全局幕布下方，避免判定统计面板遮住数字。迁移 `ProjectBuilder.ApplyScoreAddition()` 只补两个场景缺少的模板，不改总分和计分逻辑。来源、动画参数与验证见 `Documentation/PortingNotes.md`「总分上方的单次加分数字」。
+
 #### PracticeScene 练习模式（2026-10-04）
 
 - Entry 模式顺序为演奏ゲーム／練習モード／ゲーム設定；普通与练习入口都先经过 ServerLogin，再进入 SongSelect，以连接服务器、下载歌曲和显示历史成绩。`SceneSwitcher.PracticeMode` 由 Entry 决定模式时设置并保留经过登录；SongLoadingScene 用 `SelectedPlayScene` 路由，练习返回选曲后仍选练习，普通入口重新置 false。

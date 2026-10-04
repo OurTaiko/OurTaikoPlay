@@ -13,8 +13,11 @@ namespace OurTaiko
         public Image cover;
         [Tooltip("score_number frames 0-9.")]
         public Sprite[] digits;
+        public ScoreAdditionView additionTemplate;
 
         readonly List<Image> images = new List<Image>();
+        readonly List<ScoreAdditionView> additions = new List<ScoreAdditionView>();
+        public IReadOnlyList<ScoreAdditionView> Additions => additions;
         int score = -1;
         double changedAt = double.NegativeInfinity;
 
@@ -25,6 +28,8 @@ namespace OurTaiko
         public void Show(int value)
         {
             if (value == score) return;
+            int increase = score >= 0 ? value - score : 0;
+            if (increase < 0) ClearAdditions();
             // ScoreCounter starts at 0 without a stretch; later changes restart it.
             if (score >= 0) changedAt = GameTimeline.FrameTime;
             score = value;
@@ -37,6 +42,23 @@ namespace OurTaiko
                 if (shown) images[i].sprite = digits[Text[i] - '0'];
             }
             Layout(SampleStretch());
+            if (increase > 0 && additionTemplate != null)
+            {
+                if (additions.Count == 0) additions.Add(additionTemplate);
+                var row = additions.Find(item => !item.gameObject.activeSelf);
+                if (row == null)
+                {
+                    row = Instantiate(additionTemplate, additionTemplate.transform.parent);
+                    row.name = "ScoreAddition" + additions.Count;
+                    additions.Add(row);
+                }
+                row.Begin(increase, digits, GameTimeline.FrameTime);
+            }
+        }
+
+        public void ClearAdditions()
+        {
+            foreach (var row in additions) row.gameObject.SetActive(false);
         }
 
         void Update()
@@ -44,6 +66,7 @@ namespace OurTaiko
             if (score < 0) return;
             float stretch = SampleStretch();
             if (stretch != Stretch) Layout(stretch);
+            foreach (var row in additions) if (row.gameObject.activeSelf) row.ShowTime(GameTimeline.FrameTime);
         }
 
         // TextStretch.anim (TextStretchAnimation id 4): how many pixels the digits grow upwards.
