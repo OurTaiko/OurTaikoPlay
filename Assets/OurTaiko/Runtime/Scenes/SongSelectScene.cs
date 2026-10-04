@@ -250,7 +250,7 @@ namespace OurTaiko
             DrawOverlays(now);
             if (view.bestScore != null)
                 view.bestScore.Show(FocusedSong, FocusedKind == BoardKind.Song ? wheelBoards[Focused].Info : null,
-                    1, GameTimeline.FrameTime);
+                    IsOptionPanelOpen ? 0 : 1, GameTimeline.FrameTime);
         }
 
         void HandleInput()
