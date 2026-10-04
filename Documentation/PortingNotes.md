@@ -514,3 +514,10 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 - 验证：EditMode 211/211；最终 SQLite 定向回归 3/3；最佳成绩窗口 PlayMode 1/1、在线登录／游玩／上传 4/4、SongSelect 回归 10/10。场景迁移连续执行两次，文件均不变；截图 `TestResults/SongSelectBestScore.png`。尚未重新构建或在手机上验证。
 - JudgeCounter 改版后追加验证：`SongBestScoreTests` 1/1（列表显示、切歌隐藏／恢复、四行数据、进入难度、优先级轮播）；在线登录到上传 1/1。两次迁移文件不变，所有 Graphic 不接收射线。截图 `TestResults/SongSelectBestScoreList.png`／`SongSelectBestScore.png`。
 - Editor 默认显示 BestScore 示例成绩（1002540，良 853／可 14／不可 2／连打 35），三种选曲预览按钮也会填入示例；不读玩家成绩文件。运行时 Awake 隐藏示例，随后根据真实记录显示，防止示例闪现。
+
+## 游玩圆形暂停按钮（2026-10-03）
+
+- 游玩页 PAUSE 文字按钮改为 Google Material Symbols Outlined `pause_circle`（opsz 48／wght 600／fill 0／grad 0），白色图标＋黑色细边。官方 SVG 栅格化成透明 192×192 PNG，运行时只引用本地 Sprite，不加载字体或联网。源 SVG、Apache-2.0 许可证和转换命令在 `Documentation/ThirdParty/MaterialSymbols/`，版权说明已加入 NOTICE。
+- 原按钮对象与 onClick 暂停行为保留，删除文字子对象。位置保存在 SinglePlayScene 的 1920×1080 Viewport 左上角 (24,0)，尺寸 48×48；FPS 面板左侧从 x36 移至 x82，y2 不变，不挡下方判定计数器。
+- `CircularHitArea` 让圆内部（含图标透明中心）可点击，四个角不接收按钮点击。原键盘暂停、菜单动画和鼓面输入隔离保持不变。迁移菜单 `OurTaiko/Apply Circular Pause Button`，重复执行不覆盖保存的布局。
+- 验证：鼠标／触控暂停恢复与圆形射线范围 1/1，键盘菜单导航 1/1；场景迁移重复执行文件不变，Editor 编译无错误。截图 `TestResults/CircularPauseButton.png`。整套暂停测试因 Editor 中途退出未得到完整结果，重开后上述两项单独通过；尚未在实体手机上验证。

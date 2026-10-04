@@ -30,3 +30,7 @@ System.Runtime.CompilerServices.Unsafe 6.1.2 is Microsoft's MIT-licensed binary
 dependency; its license and package provenance are included beside the DLL.
 BASS and its native add-ons retain their individual licenses and notices in
 Assets/Plugins/Un4seen.Bass, separate from the ManagedBass license.
+
+The pause_circle icon is from Google's Material Symbols Outlined, licensed
+under Apache License 2.0. The original SVG, license, source URL and local
+rasterization details are in Documentation/ThirdParty/MaterialSymbols.

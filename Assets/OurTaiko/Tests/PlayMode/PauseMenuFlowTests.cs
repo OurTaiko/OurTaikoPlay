@@ -166,6 +166,18 @@ namespace OurTaiko.Tests
         public IEnumerator MouseAndTouchCanOpenAndResumeTheMenu()
         {
             yield return StartPlay();
+            var pauseRect = (RectTransform)play.pauseButton.transform;
+            var fpsRect = pauseRect.parent.Find("FpsPanel") as RectTransform;
+            Assert.That(pauseRect.rect.width, Is.EqualTo(pauseRect.rect.height));
+            Assert.That(pauseRect.anchoredPosition.x + pauseRect.rect.width, Is.LessThan(fpsRect.anchoredPosition.x));
+            Assert.That(play.pauseButton.GetComponentInChildren<TMP_Text>(), Is.Null, "The pause trigger is an icon, not a text button.");
+            var hits = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = ScreenPoint(pauseRect) }, hits);
+            Assert.That(hits[0].gameObject.GetComponentInParent<Button>(), Is.SameAs(play.pauseButton), "The transparent centre of the circle must remain clickable.");
+            hits.Clear();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = ScreenPoint(pauseRect, new Vector2(.02f, .02f)) }, hits);
+            Assert.That(hits.Any(hit => hit.gameObject.GetComponentInParent<Button>() == play.pauseButton), Is.False, "The square corners are outside the round button.");
+            TestCapture.Capture("CircularPauseButton.png");
             yield return Click(ScreenPoint((RectTransform)play.pauseButton.transform));
             yield return WaitForOpen();
             Assert.That(pad.enabled, Is.False);
