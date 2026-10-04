@@ -581,3 +581,11 @@ SinglePlayScene 与 PracticeScene 共用 PlayScene，在开始时锁定本局偏
 Replay v1 输入继续保存校正后的判定毫秒数，不重复补偿；为保持旧双偏移约定，audio_offset_ms 记录有效 A+B，visual_offset_ms 记录既有视觉偏移−B，因此显示时间仍可由判定时间−visual_offset_ms 重建。练习仍不进入 Result、不保存或上传成绩。
 
 验证：EditMode 设置相关 22/22、BranchTests 27/27、PracticeTests 5/5；PlayMode OffsetFlowTests 5/5（正负 A/B、两场景实际击打与音频时钟、0.8x 练习定位／重置、数值保存与取消、键盘与触控），GlobalSettingFlowTests 3/3、PracticeFlowTests 4/4（含 BASS 与 Unity 后备）、DrumInputMutexTests 2/2。1080p／720p 弹窗截图已检查，无文字重叠。报告 `TestResults/offset-*.json`；验证环境为 macOS Unity Editor，未重新构建独立 Player。
+
+## 首页三项可见与选曲返回牌尺寸（2026-10-04）
+
+Entry 原先沿用 Nijiiro `Scripts/entry/box.lua` 的相邻项可见规则（`abs(relativeSlot) <= 1`），所以选中演奏时第三项设置透明度为 0；仅恢复透明度又会使设置落到画布底部之外。现在保持三项可见，保留 `mode_list` 槽位、各牌编辑位置及 9 帧滑动时序，用 `EntryView.modeSafeArea`（高度比例 0.15–0.925）将牌组整体移入顶部控件与底部 footer 之间。选中项打开，其余收起；三个焦点状态均能看到并点击全部三项。Inspector 预览同样显示三项并调整组位置。
+
+返回牌 `bar_genre_back.png` 原先被 Unity 自动导入为 Multiple，并裁成 952×334、border=0 的子图，TextureImporter 的上下 56 边框没有应用到子图。修复后以 Single 使用完整 960×352 图片及上下 56 边框，与歌曲牌相同，闭合高度 164、展开高度 352。`folder_graphic` 的 13 张图同样修复完整贴图导入，FolderBoard 的展开图改用 Sliced；角色图 `box_chara` 仍保留左右切片。通过 `ApplySongSelectFolders()` 修改导入器、Prefab 和场景 Sprite 引用，未改变源 PNG 或重建场景布局。
+
+验证：PlayMode `MenuBoardLayoutTests` 2/2、`EntryTouchFlowTests` 1/1、`GlobalSettingFlowTests` 3/3、`ServerLoginFlowTests` 6/6（本地模拟服务器）。覆盖三项各自选中时全部可见、真实 EventSystem 点击命中、进入设置、返回牌展开／闭合与歌曲牌同尺寸、文件夹开合与返回。1080p／720p 截图 `EntryThreeModes*.png`、`ReturnBoard*.png` 已检查；报告 `TestResults/menu-board-*.json`。Editor 重复预览位置稳定、三项均启用；重复迁移检查的 54 个场景／预制体／素材元数据文件哈希均不变。验证环境为 macOS Unity Editor，未重新构建独立 Player。

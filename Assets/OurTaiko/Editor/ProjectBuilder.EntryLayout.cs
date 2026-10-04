@@ -208,8 +208,8 @@ namespace OurTaiko.Editor
         }
 
         // Edit-mode preview of the saved Entry screen: 0 = the credit screen, 1 = the mode list
-        // (first board open, nameplate and 2P invite shown). Only visibility and alpha change;
-        // positions and sizes stay as authored. Play mode drives everything from code.
+        // (first board open, nameplate and 2P invite shown). Individual board positions/sizes
+        // stay authored; the group fits the same safe area as play mode.
         public static void PreviewEntryLayout(EntryScene entry, int mode, bool recordUndo = true)
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Layout preview is available only in Edit mode.");
@@ -229,11 +229,12 @@ namespace OurTaiko.Editor
                 view.creditFlashes[i].Alpha(0);
             }
             view.modeBoards.gameObject.SetActive(!credit);
+            view.modeBoards.anchoredPosition = EntryModeList.FitPosition(view, LumenClip.Parse(RequiredTimeline("mode_list").text), 0, view.modeBoards.anchoredPosition);
             for (int i = 0; i < view.boards.Length; i++)
             {
                 var board = view.boards[i];
                 bool open = i == 0;
-                board.root.gameObject.SetActive(i <= 1);
+                board.root.gameObject.SetActive(i < 3);
                 board.cursor.Alpha(open ? 1 : 0);
                 board.closed.Alpha(open ? 0 : 1);
                 board.open.Alpha(open ? 1 : 0);

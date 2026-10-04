@@ -26,7 +26,7 @@ namespace OurTaiko.Editor
             foreach (string path in Directory.GetFiles(Root + "Art/" + FolderArt + "folder_graphic", "*.png").Append(Root + "Art/" + FolderArt + "bar_genre_back.png"))
                 ImportBoardArt(path.Replace('\\', '/'), new Vector4(0, 56, 0, 56));
             foreach (string path in Directory.GetFiles(Root + "Art/" + FolderArt + "box_chara", "*.png"))
-                ImportBoardArt(path.Replace('\\', '/'), Vector4.zero);
+                ImportBoardArt(path.Replace('\\', '/'), Vector4.zero, true);
             var left = new Sprite[10];
             var right = new Sprite[10];
             for (int i = 0; i < 10; i++)
@@ -48,6 +48,21 @@ namespace OurTaiko.Editor
             select.backBoard = backBoard;
             select.folderBoardTimeline = timeline;
             var prefab = AssetDatabase.LoadAssetAtPath<FolderBoardView>(FolderBoardPrefabPath) ?? CreateFolderBoardPrefab(select);
+            // Old assets may have been created from Unity's automatic trimmed Multiple sprites,
+            // which lose the full-image borders. Persist the corrected art and image modes too.
+            var contents = PrefabUtility.LoadPrefabContents(FolderBoardPrefabPath);
+            try
+            {
+                var folderView = contents.GetComponent<FolderBoardView>();
+                if (folderView.panelOpen.sprite != folderBoards[0] || folderView.panelOpen.type != UnityEngine.UI.Image.Type.Sliced
+                    || folderView.panelClosed.type != UnityEngine.UI.Image.Type.Sliced)
+                {
+                    folderView.panelOpen.sprite = folderBoards[0];
+                    folderView.panelOpen.type = folderView.panelClosed.type = UnityEngine.UI.Image.Type.Sliced;
+                    PrefabUtility.SaveAsPrefabAsset(contents, FolderBoardPrefabPath);
+                }
+            }
+            finally { PrefabUtility.UnloadPrefabContents(contents); }
             changed |= select.view.folderPrefab != prefab;
             if (changed)
             {
@@ -61,11 +76,12 @@ namespace OurTaiko.Editor
             Debug.Log("OurTaiko: SongSelect folders are ready.");
         }
 
-        static void ImportBoardArt(string path, Vector4 border)
+        static void ImportBoardArt(string path, Vector4 border, bool multiple = false)
         {
             var importer = (TextureImporter)AssetImporter.GetAtPath(path) ?? throw new FileNotFoundException(path);
-            // Sheets cut into halves (Multiple) keep their sub-sprites.
-            var mode = importer.spriteImportMode == SpriteImportMode.Multiple ? SpriteImportMode.Multiple : SpriteImportMode.Single;
+            // Only character sheets are Multiple. Panel artwork must keep its full 960x352
+            // extent and 56-unit caps, including when Unity auto-sliced it on its first import.
+            var mode = multiple ? SpriteImportMode.Multiple : SpriteImportMode.Single;
             if (importer.textureType == TextureImporterType.Sprite && importer.spriteImportMode == mode && importer.spriteBorder == border
                 && !importer.mipmapEnabled && importer.textureCompression == TextureImporterCompression.Uncompressed) return;
             importer.textureType = TextureImporterType.Sprite;

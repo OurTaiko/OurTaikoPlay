@@ -45,6 +45,8 @@ namespace OurTaiko
         public RectTransform modeBoards;
         public SwipeRelay boardSwipe;
         public BoardView[] boards;
+        [Tooltip("Mode list's vertical safe area as fractions of the design stage, below the header and above the footer.")]
+        public Vector2 modeSafeArea = new Vector2(0.15f, 0.925f);
 
         [Header("Global chrome")]
         public Image controlGuide;

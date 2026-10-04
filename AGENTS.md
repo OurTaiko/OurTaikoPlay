@@ -38,6 +38,12 @@
 
 ### 当前完成状态与交接边界
 
+#### 首页三项可见与选曲返回牌尺寸（2026-10-04）
+
+- Entry 同时显示三块模式牌（演奏／练习／设置），不再按原模拟器只显示选中项及相邻一项。保留原槽位间距、9 帧滑动及打开时序，牌组整体按 `EntryView.modeSafeArea`（设计画布高度的 15%–92.5%）避让顶部与底部装饰；各牌保存的局部调整仍保留。Editor 预览采用同样布局。
+- `bar_genre_back` 与 `folder_graphic` 必须以 **Single** 完整贴图导入、上下 border=56，Image 使用 Sliced；只有 `box_chara` 保留 Multiple 左右切片。Unity 自动修剪的 Multiple 子图会丢失九宫格边框，使返回牌比歌曲牌高、圆角变形。`ApplySongSelectFolders()` 可修复已有资产且保留布局。
+- 验证及截图见 `Documentation/PortingNotes.md`「首页三项可见与选曲返回牌尺寸」。
+
 #### 单次加分数字（2026-10-04）
 
 - SinglePlayScene／PracticeScene 的 `ScoreCounter` 均已添加可编辑 `ScoreAddition` 模板；每次实际正增量显示橙色数字，复用总分数字图，按 Nijiiro `ScoreCounterAnimation` 35–39 的 446.74 ms 时间轴淡入、左移、上移错开、淡出，没有加号。初始值／不可不触发，练习清零清除旧行；连续加分独立播放、池化复用，不丢弃第六条以后的加分。

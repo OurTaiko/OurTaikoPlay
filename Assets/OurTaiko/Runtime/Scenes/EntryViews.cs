@@ -123,8 +123,8 @@ namespace OurTaiko
     }
 
     // EntryBox:draw (Nijiiro box.lua): the arcade mode list. The selected board sits open at the
-    // centre and the others closed one slot above/below (mode_list `wait`: kanban_2 / kanban_3,
-    // boards further than one slot fade out). A ka slides every board to its next slot linearly
+    // centre and the others closed in mode_list slots. Three boards remain visible, including
+    // at either end of the list; the group shifts within the stage's safe area. A ka slides every board linearly
     // over 9 frames, and the newly selected board only opens (select_on) after the slide while the
     // old one closes (select_off). The first appearance plays `in`: the selected board fades up and
     // opens, the closed boards fly in from three slots out. The cursor glow pulses on cursor_glow,
@@ -137,6 +137,11 @@ namespace OurTaiko
         readonly double selectOn, selectOff, inLabel, chooseLabel, onLimit, offLimit, inLimit, chooseLimit, glowFrames;
         readonly Vector2 listIn;
         readonly EntryModeBoard[] boards;
+        readonly EntryView view;
+        readonly Vector2 authoredRoot;
+        readonly Vector2[] authoredPositions;
+        Vector2 rootFrom, rootTarget;
+        double rootSlideStarted = double.NaN;
         int selected;
 
         public RectTransform Root { get; }
@@ -151,6 +156,7 @@ namespace OurTaiko
         // base is its saved position minus that slot; the slides add slot offsets to the base.
         public EntryModeList(EntryView view, LumenClip board, LumenClip glow, LumenClip list)
         {
+            this.view = view;
             this.board = board; this.glow = glow; this.list = list;
             selectOn = board.Label("select_on") ?? 27;
             selectOff = board.Label("select_off") ?? 52;
@@ -164,12 +170,40 @@ namespace OurTaiko
             double listInLabel = list.Label("in") ?? 87;
             listIn = new Vector2((float)list.Get("kanban_3", listInLabel, "tx", 170), (float)list.Get("kanban_3", listInLabel, "ty", 878));
             Root = view.modeBoards;
+            authoredRoot = Root.anchoredPosition;
             boards = new EntryModeBoard[view.boards.Length];
+            authoredPositions = new Vector2[boards.Length];
             for (int i = 0; i < boards.Length; i++)
+            {
+                authoredPositions[i] = view.boards[i].root.anchoredPosition;
                 boards[i] = new EntryModeBoard(view.boards[i], Slot(i));
+            }
         }
 
         Vector2 Slot(int rel) => Slot(list, rel);
+
+        public static int FirstVisible(int selected, int count) => Math.Max(0, Math.Min(selected - 1, count - 3));
+
+        // Preserve each board's authored adjustment and the skin's slot spacing. Move the group
+        // only as far as necessary to keep all three visible hit areas clear of the global chrome.
+        public static Vector2 FitPosition(EntryView view, LumenClip list, int selected, Vector2 authoredRoot, IReadOnlyList<Vector2> authoredPositions = null)
+        {
+            float top = float.PositiveInfinity, bottom = float.NegativeInfinity;
+            int first = FirstVisible(selected, view.boards.Length);
+            for (int i = first; i < Math.Min(first + 3, view.boards.Length); i++)
+            {
+                var b = view.boards[i];
+                var saved = Slot(list, i);
+                var target = Slot(list, i - selected);
+                float y = -(authoredRoot.y + (authoredPositions == null ? b.root.anchoredPosition.y : authoredPositions[i].y) + saved.y - target.y + b.hit.rectTransform.anchoredPosition.y);
+                float half = (i == selected ? b.openHitSize.y : b.closedHitSize.y) / 2;
+                top = Math.Min(top, y - half); bottom = Math.Max(bottom, y + half);
+            }
+            float height = ((RectTransform)view.modeBoards.parent).rect.height;
+            float shift = top < height * view.modeSafeArea.x ? height * view.modeSafeArea.x - top
+                : bottom > height * view.modeSafeArea.y ? height * view.modeSafeArea.y - bottom : 0;
+            return authoredRoot - Vector2.up * shift;
+        }
 
         // A board's offset (y down) from the open-board slot, rel slots below it (mode_list
         // `wait`): kanban_1 is the selected slot; the slots above/below are kanban_2/3, 4/5, 6/7.
@@ -200,6 +234,10 @@ namespace OurTaiko
         public void Show(double nowMs, double msSinceIn, int selectedIndex, float fade, double msSinceChoose)
         {
             selected = Math.Max(0, Math.Min(boards.Length - 1, selectedIndex));
+            var destination = FitPosition(view, list, selected, authoredRoot, authoredPositions);
+            if (double.IsNaN(rootSlideStarted)) { rootFrom = rootTarget = destination; rootSlideStarted = nowMs - SlideFrames * FrameMs; }
+            if (destination != rootTarget) { rootFrom = Root.anchoredPosition; rootTarget = destination; rootSlideStarted = nowMs; }
+            Root.anchoredPosition = Vector2.Lerp(rootFrom, rootTarget, (float)Clamp01((nowMs - rootSlideStarted) / (SlideFrames * FrameMs)));
             double tIn = msSinceIn / FrameMs;
             bool inRunning = tIn <= inLimit;
             double pulse = glow.Get("#12@0", nowMs / FrameMs % glowFrames, "a", 1);
@@ -216,7 +254,8 @@ namespace OurTaiko
                 }
                 int rel = i - selected;
                 var slot = Slot(rel);
-                b.Retarget(nowMs, slot, Math.Abs(rel) <= 1 ? 1 : 0, SlideFrames * FrameMs);
+                int first = FirstVisible(selected, boards.Length);
+                b.Retarget(nowMs, slot, i >= first && i < first + 3 ? 1 : 0, SlideFrames * FrameMs);
                 var position = b.Position;
                 if (inRunning && rel != 0)
                 {
