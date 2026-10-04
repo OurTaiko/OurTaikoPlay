@@ -183,7 +183,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 
 - 新增 `SongSelect.unity`、`Result.unity`，入口 → 选曲 → 游玩 → 结算 → 选曲全部经由全局 SceneSwitcher；`SceneSwitcher.Play(song, course, auto)` 记录发起场景作为返回目标，`ShowResult` 交付 `PlayResult`。游玩结束时 `PlayScene.Finish` 保存成绩并切到结算，不再显示场景内结果面板（谱面加载失败仍用该面板提示）。
 - 选曲参照 `scenes/song_select.cpp`、`objects/song_select/player.cpp`、`file_navigator/navigator.cpp` 与 Nijiiro `Scripts/song_select/song_select.lua`：纵向画廊（中心 y=540，行距 135，展开间隔 120，斜移 40/行，移动 166 ms 三次缓出）；选中板在导航后等待 61 帧@120fps（508.33 ms）再按 `anim/song_board` 的 select_on 展开，收起 13 帧（216.7 ms）；进入场景与从难度返回时立即展开。难度面板淡入为 400 ms 延迟 + 483 ms；其他曲目板 800 ms 退出并 166 ms 淡出，返回时 500 ms 归位。初始光标遵循 `last_difficulty`（初值 -1 → もどる）。音色面板未移植，因此光标按 option_neiro_row 布局：首个难度 ↔ 扳手 ↔ もどる。
-- 结算参照 `scenes/result.cpp`、`objects/result/player.cpp` 与 Nijiiro `Scripts/result/*.lua`：淡入（100 ms 延迟 + 316.67 ms）→ 等待 100 帧 → 每格 7 帧填充魂槽 → 等待 100 帧 → 各行每 50 帧落定、总分再 100 帧 → 500 帧后皇冠 → 过关时再 150 帧显示评语与金色背景（未过关立即显示）。演出结束后需等待 500+500 帧才可返回，3600 帧后自动返回。ScoreRank 演出未移植，因此不插入其 2 秒状态。
+- 结算参照 `scenes/result.cpp`、`objects/result/player.cpp` 与 Nijiiro `Scripts/result/*.lua`：淡入（100 ms 延迟 + 316.67 ms）→ 等待 100 帧 → 每格 7 帧填充魂槽 → 等待 100 帧 → 各行每 50 帧落定、总分再 100 帧 → 500 帧后皇冠 → 过关时再 150 帧显示评语与金色背景（未过关立即显示）。演出结束后需等待 500+500 帧才可返回，3600 帧后自动返回。ScoreRank 已补齐：达到等级门槛后在皇冠前插入 2 秒演出，详见「ScoreRank」章节。
 - 动画曲线全部来自原 `Scripts/anim/*.lua` 导出表（云层、富士山、成功背景、皇冠、皇冠光芒、评语气泡、数字弹出、魂火、彩虹、最高分条、曲目板、光晕、おに／裏交替），原样复制为 `.txt` 后由 `LumenClip` 线性采样并在首末行处截断。
 - TMP 的 Mobile SDF 只有在 `OUTLINE_ON` 关键字下绘制描边；新增 `Generated/Nijiiro SDF Outline.mat` 供新场景文字使用，使该着色器变体也会进入播放器构建。
 - 修复：歌曲 AudioClip 为 DecompressOnLoad 且不预载，首次 `PlayScheduled` 会同步解码约 1 秒；当时改为在 PlayScene 初始化时（全局遮罩仍关闭）调用 `LoadAudioData`。2026-10-03 原生音频重做后，此步骤仅保留给 Unity 后端；BASS 后端在幕布下直接准备原始编码文件。
@@ -521,3 +521,14 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 - 原按钮对象与 onClick 暂停行为保留，删除文字子对象。位置保存在 SinglePlayScene 的 1920×1080 Viewport 左上角 (24,0)，尺寸 48×48；FPS 面板左侧从 x36 移至 x82，y2 不变，不挡下方判定计数器。
 - `CircularHitArea` 让圆内部（含图标透明中心）可点击，四个角不接收按钮点击。原键盘暂停、菜单动画和鼓面输入隔离保持不变。迁移菜单 `OurTaiko/Apply Circular Pause Button`，重复执行不覆盖保存的布局。
 - 验证：鼠标／触控暂停恢复与圆形射线范围 1/1，键盘菜单导航 1/1；场景迁移重复执行文件不变，Editor 编译无错误。截图 `TestResults/CircularPauseButton.png`。整套暂停测试因 Editor 中途退出未得到完整结果，重开后上述两项单独通过；尚未在实体手机上验证。
+
+
+## ScoreRank（2026-10-03）
+
+- `ScoreRank.FromScore` 统一计算七档：500000／600000／700000／800000／900000／950000／1000000，对应白／铜／银／金／粋／雅／極；低于 500000 隐藏。原项目来源：Nijiiro `Scripts/result/result_player.lua` 的 `rank_of`。
+- **仅七个图标 Prefab**：`Assets/OurTaiko/Generated/ScoreRank/`。原图来自 `game/rank_result_anim/s74` 至 `s86`（每隔 2）；用户明确不要 yellow_box 的成绩等级素材。Result、选曲歌曲板、难度牌复用这七个 Prefab 的 Sprite，在已保存 Image 中更新；选曲不预建多套图标、不在每次切歌时创建对象。默认设计尺寸分别 208／72／40；White 原图 208×160 保持比例。
+- `ScoreRankView` 保存共享 Prefab 引用与 Image，歌曲板在开合时按保存位置加 `rankOpenOffset`。歌曲板选取有等级记录的最高难度，进入难度选择优先当前难度；难度牌各显示本难度，里魔王切换沿用原显隐时序。数据走 `SongScores`，本地读 SQLite，在线只读服务器成绩；等级从最高分派生，不新增存储字段。自动演奏仍不写成绩。
+- Result 使用单独 `ScoreRankAnimation` 图层播放 Nijiiro 的两份 `rank_result` 数据表（C# 解析数据，不执行 Lua），保留 60 Hz、缩放、旋转、形状原点和加色混合；7 档共用图标，極有独立演出。修正源脚本只映射 shape 74 而后续帧使用 shape 76 的问题，全部等级形状都映射到实际等级。
+- `ResultSequence.RankAtMs` 在分数完成后的原皇冠时间开始，皇冠／评语延后 2000 ms；未过关也按分数显示等级。音效通过 `AudioPlayback` 播放 `scorerank_c.ogg`。跳过立即显示最终图标，不重播等级音效；低分不插入该状态。
+- Editor 迁移菜单 `OurTaiko/Apply Score Rank`；只向已有场景／SongBoard 添加绑定，不重建原布局，已存在图标与位置保留。结算 Inspector 预览随示例分数显示银级。
+- 验证：ScoreRank EditMode 21/21、既有选曲／结算核心测试 7/7、新增三处显示 PlayMode 1/1、原有选曲→游玩→结算→返回 PlayMode 2/2；两个场景、SongBoard 与七个 Prefab 共 10 个文件在连续两次迁移后哈希不变。报告 `TestResults/score-rank-*.json`，三处截图 `ScoreRankSongBoard.png`／`ScoreRankCourse.png`／`ScoreRankResult.png`。未重新构建独立 Player。

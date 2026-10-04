@@ -40,6 +40,7 @@ namespace OurTaiko
         [Header("Audio")]
         public AudioSource bgm;
         public AudioSource loop, sfx, voice;
+        public AudioClip rankSound;
         public AudioClip don, donBig, countStop, countLoop, achieve, atmosClear, crownSilver, crownGold, crownRainbow, highScoreVoice, fullComboVoice;
         public AudioClip[] messageVoices; // miss, near, success, perfect
 
@@ -90,6 +91,7 @@ namespace OurTaiko
             highScoreClip = Clip(highScoreTimeline);
             sceneStart = Clock;
             Bind();
+            if (view.scoreRank != null) view.scoreRank.Show(0);
             switcher.SceneChanging += OnSceneChanging;
         }
 
@@ -106,7 +108,7 @@ namespace OurTaiko
         {
             bgm.SetAudioGroup(AudioGroup.Bgm);
             voice.SetAudioGroup(AudioGroup.Voice);
-            sfx.PrepareAudioEffects(don, donBig, countStop, achieve, atmosClear, crownSilver, crownGold, crownRainbow);
+            sfx.PrepareAudioEffects(don, donBig, countStop, achieve, atmosClear, crownSilver, crownGold, crownRainbow, rankSound);
             voice.PrepareAudioTracks(highScoreVoice, fullComboVoice);
             voice.PrepareAudioTracks(messageVoices);
             loop.PrepareAudioTracks(countLoop);
@@ -151,6 +153,10 @@ namespace OurTaiko
             DrawScore(now);
             DrawGauge(now);
             DrawHighScore(now);
+            if (view.scoreRank != null)
+                view.scoreRank.Show(Sequence.RankAtMs.HasValue && now >= Sequence.RankAtMs.Value
+                    ? ScoreRank.FromScore(Result.Score) : 0, Result.Difficulty,
+                    Sequence.Skipped ? -1 : (now - Sequence.RankAtMs.GetValueOrDefault()) / 1000);
             DrawCrown(now);
             DrawMessage(now);
         }
@@ -195,6 +201,7 @@ namespace OurTaiko
                 case ResultCue.RowLanded: sfx.PlayAudioOneShot(countStop); break;
                 case ResultCue.ScoreLanded: sfx.PlayAudioOneShot(donBig); break;
                 case ResultCue.HighScore: PlayVoice(highScoreVoice); break;
+                case ResultCue.ScoreRank: sfx.PlayAudioOneShot(rankSound); break;
                 case ResultCue.Crown:
                     var crown = Result.ResultCrown;
                     sfx.PlayAudioOneShot(crown == Crown.DonderfulCombo ? crownRainbow : crown == Crown.FullCombo ? crownGold : crownSilver);

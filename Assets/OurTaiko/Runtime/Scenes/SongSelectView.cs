@@ -11,6 +11,7 @@ namespace OurTaiko
         public sealed class CourseCardView
         {
             public Image board, crown, star, level, bar, branch;
+            public ScoreRankView scoreRank;
             public Image[] dots;
             public TextMeshProUGUI name;
             public PointerRelay click;
