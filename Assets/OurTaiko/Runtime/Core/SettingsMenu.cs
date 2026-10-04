@@ -5,12 +5,16 @@ namespace OurTaiko
 {
     public enum SettingsFocus { Types, Items, Choice }
 
-    // One editable setting: a label, a description and a fixed list of choices mapped onto a field.
+    // An editable field, either named choices or an integer adjusted by a configured step.
     public sealed class SettingItem
     {
         public string Label { get; }
         public string Description { get; }
         public IReadOnlyList<string> Choices { get; }
+        public bool IsNumber { get; private set; }
+        public int DefaultValue { get; private set; }
+        public int Step { get; private set; }
+        public string Unit { get; private set; }
         readonly Func<GameSettings, int> get;
         readonly Action<GameSettings, int> set;
 
@@ -23,6 +27,18 @@ namespace OurTaiko
 
         public int Get(GameSettings settings) => get(settings);
         public void Set(GameSettings settings, int choice) => set(settings, choice);
+        public string Format(int value) => IsNumber ? $"{value:+0;-0;0} {Unit}" : Choices[value];
+        public int Move(int value, int delta) => IsNumber
+            ? (int)Math.Max(int.MinValue, Math.Min(int.MaxValue, (long)value + (long)delta * Step))
+            : ((value + delta) % Choices.Count + Choices.Count) % Choices.Count;
+
+        public static SettingItem Number(string label, string description, int defaultValue, int step, string unit,
+            Func<GameSettings, int> get, Action<GameSettings, int> set)
+        {
+            if (step <= 0) throw new ArgumentOutOfRangeException(nameof(step));
+            return new SettingItem(label, description, Array.Empty<string>(), get, set)
+                { IsNumber = true, DefaultValue = defaultValue, Step = step, Unit = unit };
+        }
 
         // settings_template's bool rows: "Enabled" for true, "Disabled" for false.
         public static SettingItem Toggle(string label, string description, Func<GameSettings, bool> get, Action<GameSettings, bool> set)
@@ -75,6 +91,14 @@ namespace OurTaiko
                 SettingItem.Toggle("Enable Drumpad for Single Player Mode",
                     "Show the touch drum in single player mode and let touches and clicks hit it.",
                     s => s.play.singlePlayerDrumPad, (s, on) => s.play.singlePlayerDrumPad = on),
+                SettingItem.Number("Offset A (Audio)",
+                    "Move the chart relative to music. Negative: earlier; positive: later.",
+                    PlaySettings.OffsetDefaultMs, PlaySettings.OffsetStepMs, "ms",
+                    s => s.play.audioOffsetMs, (s, value) => s.play.audioOffsetMs = value),
+                SettingItem.Number("Offset B (Judgment)",
+                    "Move the judgment window only. Negative: earlier; positive: later.",
+                    PlaySettings.OffsetDefaultMs, PlaySettings.OffsetStepMs, "ms",
+                    s => s.play.judgeOffsetMs, (s, value) => s.play.judgeOffsetMs = value),
             }),
             new SettingType("Display", new[]
             {
@@ -105,7 +129,7 @@ namespace OurTaiko
             {
                 case SettingsFocus.Types: TypeIndex = Wrap(TypeIndex + delta, TypeCount); ItemIndex = 0; break;
                 case SettingsFocus.Items: ItemIndex = Wrap(ItemIndex + delta, ItemCount); break;
-                default: ChoiceIndex = Wrap(ChoiceIndex + delta, CurrentItem.Choices.Count); break;
+                default: ChoiceIndex = CurrentItem.Move(ChoiceIndex, delta); break;
             }
             return Result.Moved;
         }
@@ -171,6 +195,8 @@ namespace OurTaiko
         // Touch: a tap on a choice of the current item applies it at once.
         public Result TapChoice(int index)
         {
+            if (Focus == SettingsFocus.Choice && CurrentItem?.IsNumber == true)
+                return index == 0 ? Don() : Result.None;
             if (CurrentItem == null || index < 0 || index >= CurrentItem.Choices.Count) return Result.None;
             Focus = SettingsFocus.Choice;
             ChoiceIndex = index;

@@ -44,6 +44,10 @@ namespace OurTaiko
     {
         // The touch drum in SinglePlayScene: enabled and visible, or disabled and hidden.
         public bool singlePlayerDrumPad = true;
+        public const int OffsetDefaultMs = 0, OffsetStepMs = 1;
+        // A shifts the chart relative to music; B shifts judgment only. Positive means later.
+        public int audioOffsetMs = OffsetDefaultMs;
+        public int judgeOffsetMs = OffsetDefaultMs;
     }
 
     [Serializable]

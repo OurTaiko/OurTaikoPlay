@@ -108,7 +108,7 @@ namespace OurTaiko.Tests
                 view.choiceRows[0].click.Clicked();
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.True);
                 AssertPopup(view, false);
-                view.itemSwipe.Swiped(1);
+                view.itemSwipe.Swiped(3);
                 Assert.That(menu.IsItemReturn, Is.True);
                 view.typeSwipe.Swiped(-2);
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
@@ -122,7 +122,7 @@ namespace OurTaiko.Tests
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.False);
 
                 // Items' Return goes back to the types; the types' Return leaves for Entry.
-                scene.Ka(1);
+                scene.Ka(3);
                 scene.Don();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
 

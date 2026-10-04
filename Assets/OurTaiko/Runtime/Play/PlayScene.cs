@@ -57,6 +57,8 @@ namespace OurTaiko
         public RectTransform MojiRoot(int index) => shownMoji[index]?.Root;
         public RectTransform BarRoot(int index) => shownBars[index];
         SongDefinition song;
+        double audioOffset, visualOffset, judgeOffset;
+        double ChartTime => SongTime - audioOffset;
         SongInfo displayInfo;
         bool autoPlay, hitKa;
         SceneSwitcher switcher;
@@ -102,9 +104,16 @@ namespace OurTaiko
             switcher.SceneChanging += PrepareToLeave;
             song = switcher.SelectedSong != null ? switcher.SelectedSong : defaultSong;
             autoPlay = switcher.AutoPlay;
+            var playSettings = SettingManager.EnsureInstance().Settings.play;
+            audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
+            visualOffset = song.visualOffsetMs / 1000.0;
+            judgeOffset = autoPlay ? 0 : playSettings.judgeOffsetMs / 1000.0;
             Record = new Online.PlayRecord
             {
-                AudioOffsetMs = (int)Math.Round(song.audioOffsetMs), VisualOffsetMs = (int)Math.Round(song.visualOffsetMs),
+                // Replay v1 stores already corrected judgment time. Keep its two-offset convention:
+                // visual time = recorded judgment time - VisualOffsetMs (B cancels here).
+                AudioOffsetMs = (int)Math.Round((audioOffset + judgeOffset) * 1000),
+                VisualOffsetMs = (int)Math.Round((visualOffset - judgeOffset) * 1000),
             };
             pauseButton.onClick.AddListener(TogglePause);
             resumeButton.onClick.AddListener(Resume);
@@ -122,7 +131,7 @@ namespace OurTaiko
                 string course = switcher.SelectedSong != null ? switcher.SelectedCourse : null;
                 var options = PlayOptions.Shared;
                 var chart = switcher.TakePreparedChart(song, course) ?? PrepareChart(song, course);
-                Session = new PlaySession(chart);
+                Session = new PlaySession(chart, judgeOffset);
                 if (modifierBadges != null) modifierBadges.Show(options, autoPlay);
                 // 音色: hit_sounds/<neiro>/don.ogg and ka.ogg; 無音 leaves both empty.
                 if (hitSounds != null) hitSounds.TryGet(options.neiro, out don, out ka);
@@ -150,7 +159,7 @@ namespace OurTaiko
             if (IsFinished) yield break;
             while (switcher.IsInputBlocked) yield return null;
             // The full countdown starts only after the global cover has opened.
-            songClock.Start(GameTimeline.AudioNow, Math.Max(2, Session.Chart.Offset + 2));
+            songClock.Start(GameTimeline.AudioNow, Math.Max(2, Session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset)));
             if (IsPractice) InitializePractice();
             else ScheduleMusic();
         }
@@ -190,12 +199,12 @@ namespace OurTaiko
                 return;
             }
             if (Session == null || IsFinished) return;
-            double time = SongTime - song.audioOffsetMs / 1000.0;
+            double time = ChartTime;
             Session.Advance(time, autoPlay);
             if (branchLane != null) branchLane.ShowTime(time);
             if (!autoPlay) HitFirstDrumPress();
             balloonCounter.ShowTime(time);
-            RenderNotes(time - song.visualOffsetMs / 1000.0);
+            RenderNotes(time - visualOffset);
             soulGauge.ShowTime(time);
             if (noteArcs != null) noteArcs.ShowTime(time);
             foreach (var dancer in dancers) dancer.SampleLoop(time);
@@ -206,7 +215,7 @@ namespace OurTaiko
             hitFace.ShowTime(time);
             hitRing.ShowTime(time);
             for (int i = 0; i < drumFlashes.Length; i++) ShowFlash(i);
-            if (time > Math.Max(Session.Chart.Duration, music.AudioLength()) + 1) Finish();
+            if (time > Session.Chart.Duration + Math.Max(0, judgeOffset) + 1 && SongTime > music.AudioLength() + 1) Finish();
         }
 
         // Input mutex: a frame judges only its earliest drum press; later ones in the same frame are dropped.
@@ -224,8 +233,8 @@ namespace OurTaiko
             if (Session == null || !songClock.Started || switcher.IsInputBlocked || IsPaused || IsFinished || autoPlay) return;
             Feedback(isKa, right);
             hitKa = isKa;
-            double time = SongTime - song.audioOffsetMs / 1000.0;
-            Record.Inputs.Add((time * 1000, Online.PlayRecord.TypeOf(isKa, right)));
+            double time = ChartTime;
+            Record.Inputs.Add(((time - judgeOffset) * 1000, Online.PlayRecord.TypeOf(isKa, right)));
             Session.Hit(isKa, time);
         }
         void Feedback(bool isKa, bool right)
@@ -246,12 +255,12 @@ namespace OurTaiko
         void OnJudged(int index, Judgment result)
         {
             if (result != Judgment.Roll)
-                soulGauge.SetPoints(Session.GaugePoints, SongTime - song.audioOffsetMs / 1000.0);
+                soulGauge.SetPoints(Session.GaugePoints, ChartTime);
             if (autoPlay) Feedback(Session.Chart.Notes[index].IsKa, (index & 1) != 0);
             SpawnArc(index, result);
             var judged = Session.Chart.Notes[index];
             bool big = judged.Kind == NoteKind.BigDon || judged.Kind == NoteKind.BigKa;
-            double judgedAt = SongTime - song.audioOffsetMs / 1000.0;
+            double judgedAt = ChartTime;
             hitFace.Play(result, big, judgedAt);
             hitRing.Play(result, big, judgedAt);
             if (result != Judgment.Roll)
@@ -263,8 +272,8 @@ namespace OurTaiko
             else if (Session.Chart.Notes[index].Kind == NoteKind.Balloon)
             {
                 var note = Session.Chart.Notes[index];
-                balloonCounter.RecordHit(index, note.BalloonHits, Session.LongHits[index], note.EndTime,
-                    SongTime - song.audioOffsetMs / 1000.0);
+                balloonCounter.RecordHit(index, note.BalloonHits, Session.LongHits[index], note.EndTime + judgeOffset,
+                    ChartTime);
                 if (Session.LongHits[index] == note.BalloonHits) hitAudio.PlayAudioOneShot(balloonPop);
             }
             UpdateHud();
@@ -286,7 +295,7 @@ namespace OurTaiko
             else kind = hitKa && !autoPlay ? NoteKind.Ka : NoteKind.Don;
             // NoteArc's is_big picks the gauge burst's circle: big don/ka and the balloon.
             bool big = kind == NoteKind.BigDon || kind == NoteKind.BigKa || kind == NoteKind.Balloon;
-            noteArcs.Spawn(noteSprites[(int)kind], big, SongTime - song.audioOffsetMs / 1000.0);
+            noteArcs.Spawn(noteSprites[(int)kind], big, ChartTime);
         }
         void UpdateHud()
         {
@@ -296,14 +305,14 @@ namespace OurTaiko
             // Player::check_note: each 100th combo starts a ComboAnnounce and its voice.
             if (Session.Combo != lastCombo && Session.Combo > 0 && Session.Combo % 100 == 0)
             {
-                var voice = comboAnnounce.Announce(Session.Combo, SongTime - song.audioOffsetMs / 1000.0);
+                var voice = comboAnnounce.Announce(Session.Combo, ChartTime);
                 if (voice != null) hitAudio.PlayAudioOneShot(voice, AudioGroup.Voice);
             }
             lastCombo = Session.Combo;
         }
         void OnBranchSelected(ChartBranch branch, BranchRoute route)
         {
-            if (branchLane != null) branchLane.Select(route, SongTime - song.audioOffsetMs / 1000.0);
+            if (branchLane != null) branchLane.Select(route, ChartTime);
         }
         public void TogglePause()
         {

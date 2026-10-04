@@ -29,10 +29,10 @@ namespace OurTaiko.Tests
             Assert.That(menu.CurrentType.Label, Is.EqualTo("Display"));
             menu.Ka(-1);
 
-            // don on Play focuses its items: the drum pad setting, then Return.
+            // don on Play focuses its items: the drum pad setting, A/B offsets, then Return.
             Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Entered));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
-            Assert.That(menu.ItemCount, Is.EqualTo(2));
+            Assert.That(menu.ItemCount, Is.EqualTo(4));
             Assert.That(menu.CurrentItem.Label, Is.EqualTo("Enable Drumpad for Single Player Mode"));
 
             // don on the item opens its choices on the current value; ka moves, don applies and
@@ -48,7 +48,7 @@ namespace OurTaiko.Tests
             Assert.That(menu.Settings.play.singlePlayerDrumPad, Is.False);
 
             // The items' Return goes back to the types; the types' Return leaves.
-            menu.Ka(1);
+            menu.Ka(3);
             Assert.That(menu.IsItemReturn, Is.True);
             Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Returned));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
@@ -102,7 +102,7 @@ namespace OurTaiko.Tests
             Assert.That(menu.IsTypeReturn, Is.True);
             Assert.That(menu.SwipeItems(1), Is.EqualTo(SettingsMenu.Result.None), "Return has no items.");
             menu.SwipeTypes(2);
-            Assert.That(menu.SwipeItems(1), Is.EqualTo(SettingsMenu.Result.Moved));
+            Assert.That(menu.SwipeItems(3), Is.EqualTo(SettingsMenu.Result.Moved));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
             Assert.That(menu.IsItemReturn, Is.True);
         }

@@ -109,7 +109,8 @@ namespace OurTaiko
             int types = menu.TypeCount;
             int items = menu.CurrentType != null ? menu.ItemCount : 0;
             var item = menu.CurrentItem;
-            int choices = item?.Choices.Count ?? 0;
+            bool numeric = item?.IsNumber == true;
+            int choices = numeric ? 1 : item?.Choices.Count ?? 0;
             int before = typeRows.Count + itemRows.Count + choiceRows.Count;
             Ensure(typeRows, types);
             Ensure(itemRows, Math.Max(1, items));
@@ -153,7 +154,7 @@ namespace OurTaiko
                 row.label.text = isReturn ? "Return" : rowItem.Label;
                 row.value.enableAutoSizing = true; row.value.fontSizeMin = 18; row.value.fontSizeMax = 40;
                 row.value.overflowMode = TextOverflowModes.Ellipsis;
-                row.value.text = isReturn ? "" : rowItem.Choices[rowItem.Get(menu.Settings)];
+                row.value.text = isReturn ? "" : rowItem.Format(rowItem.Get(menu.Settings));
                 row.box.sprite = inItems && i == menu.ItemIndex ? itemBoxSelected : itemBox;
             }
 
@@ -163,14 +164,15 @@ namespace OurTaiko
             detail.alpha = open ? 1 : 0;
             detail.blocksRaycasts = open;
             shade.gameObject.SetActive(open);
-            if (previousChoice != null) previousChoice.gameObject.SetActive(open && choices > 3);
-            if (nextChoice != null) nextChoice.gameObject.SetActive(open && choices > 3);
+            if (previousChoice != null) previousChoice.gameObject.SetActive(open && (numeric || choices > 3));
+            if (nextChoice != null) nextChoice.gameObject.SetActive(open && (numeric || choices > 3));
             if (open)
             {
                 detailTitle.text = shownItem.Label;
                 description.enableAutoSizing = true; description.fontSizeMin = 22; description.fontSizeMax = 32;
                 description.text = shownItem.Description;
-                int lit = menu.ChoiceIndex;
+                if (numeric) description.text += $"\nDefault: {shownItem.Format(shownItem.DefaultValue)}  /  Step: {shownItem.Step} {shownItem.Unit}  /  Ka: adjust  /  Don or tap: save";
+                int lit = numeric ? 0 : menu.ChoiceIndex;
                 FirstChoice = Mathf.Clamp(lit - 1, 0, Math.Max(0, choices - 3));
                 int count = Math.Min(3, choices);
                 // Centre the buttons together with the arrow's room right of the last one.
@@ -184,7 +186,7 @@ namespace OurTaiko
                     row.root.anchoredPosition = choiceBase + new Vector2((i - (count - 1) / 2f) * choicePitch + shift, 0);
                     row.label.enableAutoSizing = true; row.label.fontSizeMin = 18; row.label.fontSizeMax = 40;
                     row.label.overflowMode = TextOverflowModes.Ellipsis;
-                    row.label.text = shownItem.Choices[i + FirstChoice];
+                    row.label.text = numeric ? shownItem.Format(menu.ChoiceIndex) : shownItem.Choices[i + FirstChoice];
                     row.box.sprite = i + FirstChoice == lit ? choiceOn : choiceOff;
                 }
             }
@@ -193,7 +195,7 @@ namespace OurTaiko
             {
                 SettingsFocus.Types => typeRows[menu.TypeIndex].root,
                 SettingsFocus.Items => itemRows[menu.ItemIndex].root,
-                _ => choiceRows[menu.ChoiceIndex - FirstChoice].root,
+                _ => choiceRows[numeric ? 0 : menu.ChoiceIndex - FirstChoice].root,
             };
             PlaceCursor(target);
         }

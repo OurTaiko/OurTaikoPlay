@@ -10,8 +10,8 @@ namespace OurTaiko
         public bool IsPractice => practiceView != null;
         public PracticeProgress Practice { get; private set; }
         public bool ChoosingPracticeSpeed { get; private set; }
-        double AudioOffset => song.audioOffsetMs / 1000.0;
-        double VisualOffset => song.visualOffsetMs / 1000.0;
+        double AudioOffset => audioOffset;
+        double VisualOffset => visualOffset;
 
         void InitializePractice()
         {
@@ -43,7 +43,7 @@ namespace OurTaiko
             if (first)
             {
                 Session.Judged -= OnJudged; Session.BranchSelected -= OnBranchSelected;
-                Session = new PlaySession(Session.Chart);
+                Session = new PlaySession(Session.Chart, judgeOffset);
             }
             RefreshPracticeBars();
             // The cursor is visual chart time, so a bar aligns exactly even with configured offsets.

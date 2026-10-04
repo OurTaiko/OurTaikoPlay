@@ -568,3 +568,16 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 SinglePlayScene 与 PracticeScene 均保存 `NoteLane/ScoreCounter/ScoreAddition` 模板和十位数字引用，`ScoreAddition.anim` 控制透明度与位移，运行时仅复用行和填写数字。新控件相对于总分定位，跟随画布缩放；加分行使用独立绘制层避免被本项目的 JudgeCounter 下缘遮挡，仍低于全局幕布。迁移菜单 `OurTaiko/Apply Score Addition` 只补缺少的模板，不重建已有布局。没有新增图片或修改计分。
 
 验证：ScoreAdditionClipTests 2/2、ScoreAdditionFlowTests 2/2、原 ScoreGaugeFlowTests 1/1；覆盖两场景的动画时间／相对锚点、良／可／不可、5／7／9 号击打增量、独立多行、复用、练习清零与原有计分／结算。1080p／720p 截图 ScoreAddition-{SinglePlayScene,PracticeScene}.png、ScoreAddition720-{SinglePlayScene,PracticeScene}.png 已检查。迁移再次执行后两个场景与动画文件内容不变。报告 TestResults/score-addition-*.json；未重新构建独立 Player。
+
+
+## A/B 全局延迟与数值设置（2026-10-04）
+
+参照 MajdataPlay `dc19722d`：`GamePlayManager` 将 `AudioOffset` 加到谱面时间；`NoteDrop.JudgeTimingWithOffset` 只将 `JudgeOffset` 加到判定时间；`GameOffsetEnumerator` 的秒制步长为 0.001 秒。OurTaikoPlay 在 Settings › Play 添加 **Offset A (Audio)** 和 **Offset B (Judgment)**，单位固定 ms，默认 0、步长 1；正值推迟，负值提前。A 同时移动音符、小节线和判定相对音乐的位置，B 只移动手动判定窗口（包括漏判、连打及气球有效区间），不移动谱面显示或自动演奏节拍。
+
+`PlaySettings.audioOffsetMs/judgeOffsetMs` 写入原 `settings.json`，缺少字段的旧配置仍为 0。`SettingItem.Number` 接受 defaultValue、step、unit 与字段读写委托，不生成庞大的选项数组。弹窗中央显示当前毫秒数，左右咔或触控箭头按步长调整，咚或点击数值确认保存；Esc／点遮罩取消。说明显示默认值、步长和操作方式；枚举／开关弹窗保持原逻辑。直接复用 GlobalSettingScene 已保存的控件，无需重新生成场景。
+
+SinglePlayScene 与 PracticeScene 共用 PlayScene，在开始时锁定本局偏移。音乐时钟保持音轨进度：谱面时间 = SongTime − A；手动判定时间 = 谱面时间 − B；分支和视觉特效使用谱面时间。兼容既有 SongDefinition 序列化偏移，但不增加单曲设置入口。练习的小节游标采用视觉谱面时间，定位歌曲时只加 A（以及已有视觉偏移），B 不改变定位；重置计数、跳小节、恢复、结束回首小节均保留 B。变速沿用谱面时间单位，A/B 与谱面一起受速度影响（例如 0.8x 下 100 ms 谱面偏移对应 125 ms 实际时间）。
+
+Replay v1 输入继续保存校正后的判定毫秒数，不重复补偿；为保持旧双偏移约定，audio_offset_ms 记录有效 A+B，visual_offset_ms 记录既有视觉偏移−B，因此显示时间仍可由判定时间−visual_offset_ms 重建。练习仍不进入 Result、不保存或上传成绩。
+
+验证：EditMode 设置相关 22/22、BranchTests 27/27、PracticeTests 5/5；PlayMode OffsetFlowTests 5/5（正负 A/B、两场景实际击打与音频时钟、0.8x 练习定位／重置、数值保存与取消、键盘与触控），GlobalSettingFlowTests 3/3、PracticeFlowTests 4/4（含 BASS 与 Unity 后备）、DrumInputMutexTests 2/2。1080p／720p 弹窗截图已检查，无文字重叠。报告 `TestResults/offset-*.json`；验证环境为 macOS Unity Editor，未重新构建独立 Player。

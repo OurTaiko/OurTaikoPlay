@@ -9,6 +9,7 @@ namespace OurTaiko
     {
         public const double GoodWindow = 0.0250250015258789, OkWindow = 0.0750750045776367, BadWindow = 0.108441665649414;
         public readonly TaikoChart Chart;
+        public double JudgeOffset { get; }
         public readonly bool[] Resolved;
         // Normal notes judged 不可 because the window passed without a hit.
         public readonly bool[] Missed;
@@ -50,8 +51,9 @@ namespace OurTaiko
             public int Priority => Branch != null ? 1 : Section.BranchId < 0 ? 0 : 2;
         }
 
-        public PlaySession(TaikoChart chart)
+        public PlaySession(TaikoChart chart, double judgeOffset = 0)
         {
+            JudgeOffset = judgeOffset;
             Chart = chart; Resolved = new bool[chart.Notes.Count]; Missed = new bool[chart.Notes.Count]; LongHits = new int[chart.Notes.Count];
             var statistics = new ChartStatistics(chart);
             scoring = new ShinuchiScore(statistics);
@@ -73,7 +75,7 @@ namespace OurTaiko
         // Preserve already chosen branches before the cursor, and recalculate future checkpoints.
         public static PlaySession PracticeAt(TaikoChart chart, double time, PlaySession previous = null)
         {
-            var session = new PlaySession(chart) { practiceStart = time };
+            var session = new PlaySession(chart, previous?.JudgeOffset ?? 0) { practiceStart = time };
             while (session.nextEvent < session.timeline.Count && session.timeline[session.nextEvent].Time <= time)
             {
                 var item = session.timeline[session.nextEvent++];
@@ -86,7 +88,7 @@ namespace OurTaiko
             for (int i = 0; i < chart.Notes.Count; i++)
             {
                 var note = chart.Notes[i];
-                bool past = (note.IsLong ? note.EndTime : note.Time) < time - 1e-7;
+                bool past = (note.IsLong ? note.EndTime : note.Time) < time - session.JudgeOffset - 1e-7;
                 session.Resolved[i] = past;
                 // Past notes still scroll out naturally when browsing backwards/forwards.
                 session.Missed[i] = past && !note.IsLong;
@@ -141,6 +143,8 @@ namespace OurTaiko
 
         void AdvanceNotes(double time, bool auto)
         {
+            // B changes manual judgment and timeout together; chart events and autoplay stay on A.
+            if (!auto) time -= JudgeOffset;
             for (int i = 0; i < Chart.Notes.Count; i++)
             {
                 if (Resolved[i] || !IsActive(Chart.Notes[i])) continue;
@@ -163,6 +167,7 @@ namespace OurTaiko
         public Judgment Hit(bool ka, double time)
         {
             Advance(time, false);
+            time -= JudgeOffset;
             // check_note: don and ka are separate lanes, so a press judges the front of
             // its own colour's lane regardless of a pending note of the other colour.
             int target = NextInLane(ka, 0);
