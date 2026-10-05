@@ -612,7 +612,7 @@ Entry 原先沿用 Nijiiro `Scripts/entry/box.lua` 的相邻项可见规则（`a
 
 协议阶段验证：`ResourceDownloadTests` 19/19（独立 API/资源 HTTP fixture）、旧 `FanmadeClientTests` 19/19、`ServerLoginFlowTests` 6/6；报告为 `TestResults/resource-*.json`。Unity Editor 6000.3.25f1 编译通过。使用无账号临时缓存从正式 Fanmade 拉取曲库、直连下载并解析真实歌曲，第二次准备的 TJA/audio 状态均为 Cached。未上传真实账号成绩；未构建移动端/桌面 Player，未验证 WebGL CORS、CloudFront 或实机。
 
-## 在线分块试听（2026-10-05，独立于协议适配提交）
+## 在线分块试听（2026-10-05，历史实现，已由下节替换）
 
 `PreviewRangeStream` 为每次选曲建立独立音频哈希/长度会话。新协议先读清单，再用 headUrl 获取实际 ETag；GET 只发送单段 Range + If-Match，严格要求 206、完整匹配的 Content-Range、ETag 和字节数。首次 403/404 允许刷新一次链接，只在哈希与长度未变时继续；412、ETag 变化或内容变化终止会话，不拼接新旧分块。旧服务器单独走带 API 鉴权的版本音频路由与 If-Range 哈希约定。
 
@@ -625,3 +625,13 @@ Entry 原先沿用 Nijiiro `Scripts/entry/box.lua` 的相邻项可见规则（`a
 最终 `OnlinePreviewFlowTests` 3/3：真实解码/播放、播放后切歌停止、Range 下载途中切歌取消；报告 `TestResults/preview-playmode.json`。`OnlinePreviewTests` 报告 `TestResults/preview-editmode.json`。
 
 接入预览后 `ServerLoginFlowTests` 完整回归 6/6，报告 `TestResults/preview-login-regression.json`。旧服务器已有完整本地音频时优先保留旧本地试听路径；新能力服务器每次开启预览重新取当前清单，避免旧缓存掩盖歌曲更新。
+
+## 统一 preview.ogg 试听（2026-10-05）
+
+在线选曲统一读取最新资源清单的 `resources.preview`，下载完整 `preview.ogg`，校验长度与 SHA-256 后原子写入独立哈希缓存，再交给当前音频后端播放。每次选曲刷新清单以识别上传者修改试听范围后的新文件；签名过期或 403/404 最多刷新一次。没有 preview、下载失败或解码失败时不播放试听，不回退到整首音频或旧服务器接口。
+
+BASS（含共用流程的 WASAPI/ASIO）、Unity 后备与 WebGL 均走此流程。原生使用 NativeAudioSample，Unity/WebGL 使用完整文件 AudioClip；WebGL 从已校验字节生成 data URL。服务端已裁切片段，播放从 0 开始，不再套用 DEMOSTART 或固定 12 秒上限。选曲 BGM 在下载、试听和失败期间持续播放，切歌只停止试听；离开场景仍按原流程停止 BGM。
+
+删除 PreviewRangeStream、OnlinePreviewDecoder 和 FanmadeEndpoint.Preview 的旧 HEAD/Range 流。切歌取消下载，generation 防止旧任务播放，临时原生样本和 AudioClip 按所有权释放。
+
+验证：OnlinePreviewTests 8/8，覆盖完整下载、缓存复用/更新/损坏、签名刷新、失败不回退与取消；OnlinePreviewFlowTests 4/4，覆盖 BASS 和 Unity 实际试听、下载途中切歌、下载失败及 BGM 持续播放。ResourceDownloadTests 19/19 回归通过。测试环境为 macOS Unity Editor；未进行 WebGL 浏览器和其他平台实机验证。

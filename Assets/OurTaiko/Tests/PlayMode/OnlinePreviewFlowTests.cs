@@ -21,9 +21,10 @@ namespace OurTaiko.Tests
         long downloaded;
         int requests, wrongMethod, delayMs;
         byte[] audio;
+        bool failDownload;
         [SetUp] public void Setup()
         {
-            downloaded = requests = wrongMethod = delayMs = 0;
+            downloaded = requests = wrongMethod = delayMs = 0; failDownload = false;
             api = new FanmadeFixture { SongIdOnly = true, CourseKeyed = true, ResourceDownloadVersion = 1 };
             origin = new FanmadeFixture();
             audio = File.ReadAllBytes("Assets/OurTaiko/Audio/song_select/bgm.ogg");
@@ -34,20 +35,17 @@ namespace OurTaiko.Tests
                 JObject R(byte[] bytes, string type) => new JObject { ["url"] = origin.BaseUrl + "/audio?get", ["headUrl"] = origin.BaseUrl + "/audio?head",
                     ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
                 return new JObject { ["chartId"] = c.Id, ["expiresAt"] = DateTime.UtcNow.AddMinutes(15).ToString("o"),
-                    ["resources"] = new JObject { ["tja"] = R(c.Tja, "application/octet-stream"), ["audio"] = R(c.Audio, "audio/ogg") } };
+                    ["resources"] = new JObject { ["tja"] = R(c.Tja, "application/octet-stream"), ["audio"] = R(c.Audio, "audio/ogg"), ["preview"] = R(audio, "audio/ogg") } };
             };
             origin.CustomRequest = ctx =>
             {
-                var r = ctx.Response; r.Headers["ETag"] = "\"object-etag\"";
-                if (ctx.Request.HttpMethod == "HEAD") { r.ContentLength64 = audio.Length; r.Close(); return true; }
+                var r = ctx.Response;
                 Interlocked.Increment(ref requests);
                 if (delayMs > 0) Thread.Sleep(delayMs);
-                string range = ctx.Request.Headers["Range"];
-                if (range == null) { Interlocked.Increment(ref wrongMethod); r.StatusCode = 400; r.Close(); return true; }
-                string[] parts = range.Substring(6).Split('-'); int start = int.Parse(parts[0]), end = int.Parse(parts[1]);
-                r.StatusCode = 206; r.Headers["Content-Range"] = "bytes " + start + "-" + end + "/" + audio.Length;
-                r.ContentLength64 = end - start + 1; r.OutputStream.Write(audio, start, end - start + 1); r.Close();
-                Interlocked.Add(ref downloaded, end - start + 1); return true;
+                if (ctx.Request.HttpMethod != "GET" || ctx.Request.Headers["Range"] != null) Interlocked.Increment(ref wrongMethod);
+                if (failDownload) { r.StatusCode = 403; r.Close(); return true; }
+                r.ContentLength64 = audio.Length; r.OutputStream.Write(audio, 0, audio.Length); r.Close();
+                Interlocked.Add(ref downloaded, audio.Length); return true;
             };
             TestData.UseServers(new ServerList());
             endpoint = OnlineManager.Instance.Client.Add(api.Server()); endpoint.AllowLoopbackResourcesForTests = true;
@@ -59,28 +57,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.UnloadSceneAsync(old);
             api.Dispose(); origin.Dispose(); TestData.UseServers(new ServerList());
         }
-        [UnityTest] public IEnumerator DecoderSeeksDemoStartAndPlaysOnlyAnExcerpt()
-        {
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
-            var online = OnlineManager.Instance;
-            var connect = online.Client.ConnectAsync(endpoint, true);
-            while (!connect.IsCompleted) yield return null;
-            Assert.That(connect.IsCompletedSuccessfully, Is.True, connect.Exception?.ToString());
-            var engine = AudioEngine.EnsureInstance(); Assert.That(engine.Native, Is.True, engine.Diagnostics);
-            int generation = engine.Generation;
-            using var cancel = new CancellationTokenSource();
-            var task = Task.Run(() => OnlinePreviewDecoder.PrepareAsync(endpoint, online.Client.Charts[0], engine, generation, cancel.Token));
-            double deadline = Time.realtimeSinceStartupAsDouble + 30;
-            while (!task.IsCompleted && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
-            if (!task.IsCompleted) cancel.Cancel();
-            Assert.That(task.IsCompletedSuccessfully, Is.True, task.Exception?.ToString());
-            using var sample = task.Result;
-            Assert.That(sample.Length, Is.InRange(11.9, 12.1));
-            Assert.That(downloaded, Is.LessThan(audio.Length)); Assert.That(wrongMethod, Is.Zero);
-            sample.Play(0.1f, false); yield return new WaitForSecondsRealtime(.2f);
-            Assert.That(sample.Playing, Is.True); sample.Stop();
-        }
-        [UnityTest] public IEnumerator SwitchingWhileRangeIsPendingCancelsTheOldPreview()
+        [UnityTest] public IEnumerator SwitchingWhileDownloadIsPendingCancelsTheOldPreview()
         {
             delayMs = 600;
             var online = OnlineManager.Instance;
@@ -103,9 +80,21 @@ namespace OurTaiko.Tests
             select.Left(); int atCancel = requests;
             yield return new WaitForSecondsRealtime(1.2f);
             Assert.That(select.IsPreviewPlaying, Is.False); Assert.That(requests, Is.EqualTo(atCancel));
+            Assert.That(select.bgm.IsAudioPlaying(), Is.True);
         }
-        [UnityTest] public IEnumerator SongSelectionPlaysPreviewAndMovingAwayStopsIt()
+        [UnityTest] public IEnumerator NativeSelectionPlaysPreview() { yield return PlaySelection(false); }
+        [UnityTest] public IEnumerator UnitySelectionPlaysPreview() { yield return PlaySelection(true); }
+        [UnityTest] public IEnumerator FailedPreviewKeepsBgmPlaying() { failDownload = true; yield return PlaySelection(true); }
+        IEnumerator PlaySelection(bool unity)
         {
+            var settings = SettingManager.EnsureInstance();
+            var saved = settings.Settings.Clone();
+            var options = saved.Clone(); options.audio.backend = unity ? AudioBackend.Unity : AudioBackend.Bass;
+            settings.UseUnsaved(options);
+            if (AudioEngine.Instance != null) Object.Destroy(AudioEngine.Instance.gameObject);
+            yield return null;
+            AudioEngine.EnsureInstance();
+            try {
             var online = OnlineManager.Instance;
             var connect = online.Client.ConnectAsync(endpoint, true); while (!connect.IsCompleted) yield return null;
             Assert.That(connect.IsCompletedSuccessfully, Is.True, connect.Exception?.ToString());
@@ -121,12 +110,22 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(.8f); select.Confirm();
             yield return new WaitForSecondsRealtime(.5f); select.Right();
             double deadline = Time.realtimeSinceStartupAsDouble + 30;
+            if (failDownload) {
+                while (requests < 2 && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
+                yield return new WaitForSecondsRealtime(.2f);
+                Assert.That(requests, Is.EqualTo(2)); Assert.That(select.IsPreviewPlaying, Is.False);
+                Assert.That(select.bgm.IsAudioPlaying(), Is.True); yield break;
+            }
             while (!select.IsPreviewPlaying && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
             Assert.That(select.IsPreviewPlaying, Is.True); Assert.That(online.IsOnline(select.FocusedSong), Is.True);
+            Assert.That(select.preview.AudioPosition(), Is.LessThan(5), "Must start the excerpt at zero, not DEMOSTART=15");
+            Assert.That(select.bgm.IsAudioPlaying(), Is.True);
             select.Left(); yield return new WaitForSecondsRealtime(.3f);
             Assert.That(select.IsPreviewPlaying, Is.False);
             int atStop = requests; yield return new WaitForSecondsRealtime(.3f); Assert.That(requests, Is.EqualTo(atStop));
             Assert.That(wrongMethod, Is.Zero);
+            Assert.That(AudioEngine.Instance.Native, Is.EqualTo(!unity));
+            } finally { settings.UseUnsaved(saved); if (AudioEngine.Instance != null) Object.Destroy(AudioEngine.Instance.gameObject); }
         }
     }
 }

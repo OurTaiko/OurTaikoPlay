@@ -15,7 +15,7 @@ namespace OurTaiko.Online
     public sealed class FanmadeResources
     {
         public DateTimeOffset ExpiresAt;
-        public FanmadeResource Tja, Audio;
+        public FanmadeResource Tja, Audio, Preview;
         public static FanmadeResources Parse(JObject value, string chartId, Action<string> validateUrl)
         {
             if (Json.Str(value, "chartId") != chartId) throw new FanmadeException("RESOURCE_CHART_MISMATCH");
@@ -33,6 +33,10 @@ namespace OurTaiko.Online
             }
             var result = new FanmadeResources { ExpiresAt = expires, Tja = Read("tja", 4L * 1024 * 1024), Audio = Read("audio", 256L * 1024 * 1024) };
             if (result.Audio.ContentType != "audio/ogg" && result.Audio.ContentType != "audio/mpeg") throw new FanmadeException("API_AUDIO_FORMAT_UNSUPPORTED");
+            if (resources["preview"] != null) {
+                result.Preview = Read("preview", 32L * 1024 * 1024);
+                if (result.Preview.ContentType != "audio/ogg") throw new FanmadeException("API_AUDIO_FORMAT_UNSUPPORTED");
+            }
             return result;
         }
     }

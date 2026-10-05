@@ -6,6 +6,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 
 namespace OurTaiko
 {
@@ -67,7 +68,7 @@ namespace OurTaiko
         public const string BackLabel = "もどる";
         const double CourseExitMoveMs = 500, CourseEnterMoveMs = 800, BoardFadeMs = 166;
         const double CourseFadeDelayMs = 400, CourseFadeMs = 483, GenreFadeMs = 200, BackgroundLoopMs = 15000;
-        const double BgmResumeMs = 330, UraChangeMs = 1500, UraSwapMs = 450;
+        const double UraChangeMs = 1500, UraSwapMs = 450;
         const int UraCells = 90;
         static readonly string[] ChipNames = { "かんたん", "ふつう", "むずかしい", "おに", "おに(裏)" };
 
@@ -153,7 +154,7 @@ namespace OurTaiko
         readonly CourseCard[] cards = new CourseCard[4];
         LumenClip songBoard, glowClip, uraLoop;
         SceneSwitcher switcher;
-        double startedAt, genreChangedAt = -10000, courseEnteredAt, bgmResumeAt = -1, uraChangedAt = -1;
+        double startedAt, genreChangedAt = -10000, courseEnteredAt, uraChangedAt = -1;
         int previousGenre, currentGenre;
         bool uraChangeToUraSide, previewStarted, started;
         Sprite[] uraToUraCells, uraToOniCells;
@@ -562,18 +563,11 @@ namespace OurTaiko
         {
             var board = wheelBoards[Focused];
             bool open = Phase == State.Browsing && board.Song != null && board.OpenStart >= 0 && now - board.OpenStart >= board.Hold + OpenGrowMs;
-            bool remote = board.Song != null && Online.OnlineManager.Instance?.IsOnline(board.Song) == true && AudioEngine.EnsureInstance().Native;
+            bool remote = board.Song != null && Online.OnlineManager.Instance?.IsOnline(board.Song) == true;
             if (open && !previewStarted && (remote || board.Song.music != null || !string.IsNullOrEmpty(board.Song.audioPath)))
             {
                 previewStarted = true;
-                bgm.StopAudio();
-                bgmResumeAt = -1;
                 StartCoroutine(LoadPreview(board.Song, board.Info.DemoStart, ++previewGeneration));
-            }
-            if (bgmResumeAt >= 0 && now >= bgmResumeAt && !previewStarted)
-            {
-                bgmResumeAt = -1;
-                bgm.PlayAudio();
             }
         }
 
@@ -584,51 +578,82 @@ namespace OurTaiko
         {
             if (onlinePreviewSong == null) return;
             if (preview != null) preview.GetComponent<AudioBus>()?.Release();
+            if (preview != null) preview.clip = null;
+            if (onlinePreviewSong.music != null) Destroy(onlinePreviewSong.music);
             Destroy(onlinePreviewSong); onlinePreviewSong = null;
         }
         IEnumerator LoadOnlinePreview(SongDefinition song, int generation)
         {
             var online = Online.OnlineManager.Instance;
-            var chart = online.ChartOf(song);
-            var endpoint = online.Client.Endpoint(chart.Server);
-            var engine = AudioEngine.EnsureInstance();
-            int audioGeneration = engine.Generation;
             var cancellation = previewCancellation = new System.Threading.CancellationTokenSource();
-            var task = Task.Run(() => OnlinePreviewDecoder.PrepareAsync(endpoint, chart, engine, audioGeneration, cancellation.Token));
+            NativeAudioSample sample = null;
+            AudioClip clip = null;
+            Task<NativeAudioSample> decode = null;
             bool claimed = false;
+            bool Stale() => generation != previewGeneration || cancellation.IsCancellationRequested;
+            var task = online.Client.PreparePreviewAsync(online.ChartOf(song), cancellation.Token);
             try
             {
                 while (!task.IsCompleted) yield return null;
-                if (generation != previewGeneration || cancellation.IsCancellationRequested) yield break;
+                if (Stale()) yield break;
                 if (!task.IsCompletedSuccessfully)
                 {
                     Debug.LogWarning("Online preview: " + task.Exception?.GetBaseException().Message);
-                    // Keep the attempt marked until the next selection; do not retry every frame.
-                    bgm.PlayAudio(); yield break;
+                    yield break;
                 }
+                var engine = AudioEngine.EnsureInstance();
+                int audioGeneration = engine.Generation;
+                string path = task.Result;
+                if (engine.Native)
+                {
+                    decode = Task.Run(() => new NativeAudioSample(System.IO.File.ReadAllBytes(path), engine, true, false, audioGeneration), cancellation.Token);
+                    while (!decode.IsCompleted) yield return null;
+                    if (Stale()) yield break;
+                    if (!decode.IsCompletedSuccessfully) { Debug.LogWarning("Preview audio decode failed"); yield break; }
+                    sample = decode.Result;
+                }
+                else
+                {
+                    string url = new Uri(path).AbsoluteUri;
+#if UNITY_WEBGL && !UNITY_EDITOR
+                    string mime = System.IO.Path.GetExtension(path).ToLowerInvariant() == ".mp3" ? "audio/mpeg" : "audio/ogg";
+                    url = "data:" + mime + ";base64," + Convert.ToBase64String(System.IO.File.ReadAllBytes(path));
+#endif
+                    using var request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.UNKNOWN);
+                    ((DownloadHandlerAudioClip)request.downloadHandler).streamAudio = false;
+                    var operation = request.SendWebRequest();
+                    while (!operation.isDone) { if (Stale()) { request.Abort(); yield break; } yield return null; }
+                    if (request.result != UnityWebRequest.Result.Success) { Debug.LogWarning("Preview audio decode failed"); yield break; }
+                    clip = DownloadHandlerAudioClip.GetContent(request);
+                }
+                if (Stale() || engine.Generation != audioGeneration) yield break;
                 ReleaseOnlinePreview();
                 onlinePreviewSong = ScriptableObject.CreateInstance<SongDefinition>();
                 onlinePreviewSong.hideFlags = HideFlags.DontSave;
-                onlinePreviewSong.SetPreparedAudio(task.Result); claimed = true;
+                onlinePreviewSong.music = clip;
+                if (sample != null) onlinePreviewSong.SetPreparedAudio(sample);
+                claimed = true;
                 preview.SetAudioSong(onlinePreviewSong, false);
-                preview.SeekAudio(0); preview.PlayAudio();
+                preview.SeekAudio(0);
+                preview.PlayAudio();
             }
             finally
             {
                 cancellation.Cancel();
                 if (previewCancellation == cancellation) previewCancellation = null;
-                if (!claimed) _ = task.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); cancellation.Dispose(); });
-                else cancellation.Dispose();
+                if (!claimed)
+                {
+                    if (clip != null) Destroy(clip);
+                    if (decode != null) _ = decode.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
+                }
+                cancellation.Dispose();
             }
         }
         IEnumerator LoadPreview(SongDefinition song, double demoStart, int generation)
         {
             var engine = AudioEngine.EnsureInstance();
             var online = Online.OnlineManager.Instance;
-            bool useRemote = online?.IsOnline(song) == true &&
-                (online.Client.Endpoint(online.ChartOf(song).Server)?.ResourceDownloadVersion == 1 ||
-                 (song.music == null && string.IsNullOrEmpty(song.audioPath)));
-            if (engine.Native && useRemote)
+            if (online?.IsOnline(song) == true)
             {
                 yield return LoadOnlinePreview(song, generation);
                 yield break;
@@ -666,7 +691,7 @@ namespace OurTaiko
             preview.PlayAudio();
         }
 
-        // SongBox::close_box: stop the preview; the select bgm comes back 330 ms later.
+        // Selection changes stop only the preview. The selection BGM keeps playing.
         void StopPreview()
         {
             previewCancellation?.Cancel();
@@ -675,7 +700,6 @@ namespace OurTaiko
             if (!previewStarted) return;
             previewStarted = false;
             preview.StopAudio();
-            bgmResumeAt = Now + BgmResumeMs;
         }
 
         // ---------------------------------------------------------------- drawing
