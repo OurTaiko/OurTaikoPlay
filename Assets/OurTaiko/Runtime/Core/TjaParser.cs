@@ -33,7 +33,7 @@ namespace OurTaiko
                 if (line.StartsWith("#START", StringComparison.OrdinalIgnoreCase))
                 {
                     reading = string.Equals(Course(course), Course(requestedCourse), StringComparison.OrdinalIgnoreCase);
-                    if (reading) { found = true; chart.Course = Course(course); chart.Level = level; }
+                    if (reading) { found = true; chart.Course = Course(course).Split('_')[0]; chart.Level = level; }
                     continue;
                 }
                 if (line.Equals("#END", StringComparison.OrdinalIgnoreCase)) { if (reading) { ended = true; break; } reading = false; continue; }

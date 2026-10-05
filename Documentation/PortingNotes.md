@@ -595,3 +595,19 @@ Entry 原先沿用 Nijiiro `Scripts/entry/box.lua` 的相邻项可见规则（`a
 返回牌 `bar_genre_back.png` 原先被 Unity 自动导入为 Multiple，并裁成 952×334、border=0 的子图，TextureImporter 的上下 56 边框没有应用到子图。修复后以 Single 使用完整 960×352 图片及上下 56 边框，与歌曲牌相同，闭合高度 164、展开高度 352。`folder_graphic` 的 13 张图同样修复完整贴图导入，FolderBoard 的展开图改用 Sliced；角色图 `box_chara` 仍保留左右切片。通过 `ApplySongSelectFolders()` 修改导入器、Prefab 和场景 Sprite 引用，未改变源 PNG 或重建场景布局。
 
 验证：PlayMode `MenuBoardLayoutTests` 2/2、`EntryTouchFlowTests` 1/1、`GlobalSettingFlowTests` 3/3、`ServerLoginFlowTests` 6/6（本地模拟服务器）。覆盖三项各自选中时全部可见、真实 EventSystem 点击命中、进入设置、返回牌展开／闭合与歌曲牌同尺寸、文件夹开合与返回。1080p／720p 截图 `EntryThreeModes*.png`、`ReturnBoard*.png` 已检查；报告 `TestResults/menu-board-*.json`。Editor 重复预览位置稳定、三项均启用；重复迁移检查的 54 个场景／预制体／素材元数据文件哈希均不变。验证环境为 macOS Unity Editor，未重新构建独立 Player。
+
+## Fanmade 歌曲 ID 与资源直连（2026-10-05）
+
+接入契约：相邻后端 `docs/GAME_CLIENT_RESOURCE_DOWNLOAD.md`。每个 endpoint 重连后读取 `songIdOnly`、`resourceDownloadVersion`、`courseKeyedDifficulties`，旧服务器保持版本路由；未知下载协议号明确拒绝。base URL 路径前缀仍保留。
+
+资源清单校验歌曲 ID、HTTPS URL、SHA-256、64 位大小及到期时间；音频扩展名来自 contentType。独立资源请求不带 API token、Cookie、幂等键，不重定向，也不会触发游戏重新登录。准备操作最多重新获取一轮详情/清单，处理详情竞态、即将过期、403/404 和暂时错误；禁止失败后退回代理下载。WebGL 使用独立无 token 请求，仍需源站 CORS，未验证浏览器直连。
+
+缓存按 endpoint（服务器+账号）、歌曲、资源种类、哈希保存，实际读盘校验大小和内容；旧版本目录仅在实际内容验证后导入。两份资源验证完成才发布可播放组合，翻译变化仍重建 play.tja；不持久保存签名 URL。临时写入使用原子替换，取消或失败保留旧组合。
+
+新版成绩请求完全移除 versionId，在线最佳成绩键为 songId/course，bootstrap 完整替换快照。SQLite outbox 保存本局两份哈希；上传前核对当前详情和清单，文件变化或旧记录缺少可信哈希时保留记录并停止自动上传。可信旧记录转换只更新原记录的 body，保持幂等键。409/404 等永久拒绝维持 rejected，不自动换 key。
+
+翻译字典完整保留在 DTO，显示按所选语言→en→原文，zh-Hans 映射 zh；本地 TJA 的既有语言回退不变。双人资源按 COURSE + #START P1/P2 匹配，与数组顺序无关。当前单人玩法用两个标有 P1/P2 的歌曲条目分别选择谱面，成绩使用完整 Oni_1p/Oni_2p 等 course，未增加同时双人游玩。
+
+自动测试与现场验证结果见本次交付记录；在线分块试听按用户要求在本次协议提交之后另行接入。
+
+协议阶段验证：`ResourceDownloadTests` 19/19（独立 API/资源 HTTP fixture）、旧 `FanmadeClientTests` 19/19、`ServerLoginFlowTests` 6/6；报告为 `TestResults/resource-*.json`。Unity Editor 6000.3.25f1 编译通过。使用无账号临时缓存从正式 Fanmade 拉取曲库、直连下载并解析真实歌曲，第二次准备的 TJA/audio 状态均为 Cached。未上传真实账号成绩；未构建移动端/桌面 Player，未验证 WebGL CORS、CloudFront 或实机。

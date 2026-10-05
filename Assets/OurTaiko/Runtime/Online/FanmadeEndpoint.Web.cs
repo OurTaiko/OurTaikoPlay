@@ -10,22 +10,22 @@ namespace OurTaiko.Online
     public sealed partial class FanmadeEndpoint
     {
         async Task<byte[]> RequestWebBytesAsync(string path, string body, string key, long limit,
-            CancellationToken cancel, Action<long, long> progress)
+            CancellationToken cancel, Action<long, long> progress, bool external = false)
         {
             if (disposed || cancel.IsCancellationRequested) throw new FanmadeException("DOWNLOAD_CANCELLED");
             // Browser fetch owns TLS, proxy selection and CORS. Never block its main thread.
-            using var request = new UnityWebRequest(Config.baseUrl + path, string.IsNullOrEmpty(body) ? "GET" : "POST");
+            using var request = new UnityWebRequest(external ? path : Config.baseUrl + path, string.IsNullOrEmpty(body) ? "GET" : "POST");
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Accept", "application/json");
-            if (!string.IsNullOrEmpty(token)) request.SetRequestHeader("Authorization", "Bearer " + token);
-            if (!string.IsNullOrEmpty(key)) request.SetRequestHeader("Idempotency-Key", key);
+            if (!external && !string.IsNullOrEmpty(token)) request.SetRequestHeader("Authorization", "Bearer " + token);
+            if (!external && !string.IsNullOrEmpty(key)) request.SetRequestHeader("Idempotency-Key", key);
             if (!string.IsNullOrEmpty(body))
             {
                 request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                 request.SetRequestHeader("Content-Type", "application/json");
             }
             request.redirectLimit = 0;
-            double deadline = GameTimeline.Realtime + (path.Contains("/versions/") ? 120 : 15);
+            double deadline = GameTimeline.Realtime + (external || path.Contains("/versions/") ? 120 : 15);
             var operation = request.SendWebRequest();
             while (!operation.isDone)
             {
@@ -51,6 +51,7 @@ namespace OurTaiko.Online
             }
             if (disposed || cancel.IsCancellationRequested) throw new FanmadeException("DOWNLOAD_CANCELLED");
             int status = (int)request.responseCode;
+            if (external && status != 200) throw new HttpStatusException(status);
             if (status > 0 && (status < 200 || status >= 300)) throw new HttpStatusException(status);
             if (request.result != UnityWebRequest.Result.Success) throw new FanmadeException("NETWORK_ERROR");
             var bytes = request.downloadHandler.data;

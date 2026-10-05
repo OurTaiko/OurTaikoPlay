@@ -29,7 +29,7 @@ namespace OurTaiko
 
         public static Difficulty? DifficultyOf(string course)
         {
-            string value = course.Trim();
+            string value = course.Trim().Split('_')[0];
             if (int.TryParse(value, out int n)) return n >= 0 && n < CourseNames.Length ? (Difficulty)n : (Difficulty?)null;
             if (value.Equals("Ura", StringComparison.OrdinalIgnoreCase)) return Difficulty.Ura;
             for (int i = 0; i < CourseNames.Length; i++)

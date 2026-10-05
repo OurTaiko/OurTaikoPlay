@@ -19,11 +19,35 @@ namespace OurTaiko
         public float visualOffsetMs;
         [Tooltip("Song-select board colour: the Nijiiro genre frame (0 default ... 9).")]
         [Range(0, 9)] public int genre;
-        public TaikoChart Parse() => TjaParser.Parse(chart.text, course);
-        public TaikoChart Parse(string requestedCourse) => TjaParser.Parse(chart.text, string.IsNullOrEmpty(requestedCourse) ? course : requestedCourse);
+        [System.NonSerialized] public Online.FanmadeChart onlineChart;
+        string ResolveCourse(string requested)
+        {
+            var difficulty = SongInfo.DifficultyOf(requested);
+            return onlineChart != null && difficulty.HasValue ? onlineChart.Difficulties[(int)difficulty.Value]?.Course ?? requested : requested;
+        }
+        public TaikoChart Parse() => TjaParser.Parse(chart.text, ResolveCourse(course));
+        public TaikoChart Parse(string requestedCourse) => TjaParser.Parse(chart.text, ResolveCourse(string.IsNullOrEmpty(requestedCourse) ? course : requestedCourse));
         public SongInfo ReadInfo() => SongInfo.Read(chart.text);
         // Display metadata is separate from the parsed chart and score identity.
-        public SongInfo ReadDisplayInfo() => SongInfo.Read(chart.text,
-            SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language : "en");
+        public SongInfo ReadDisplayInfo()
+        {
+            string language = SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language : "en";
+            var info = SongInfo.Read(chart.text, language);
+            if (onlineChart?.SongIdOnly == true)
+            {
+                info.Title = onlineChart.DisplayTitle(language);
+                info.Subtitle = onlineChart.DisplayTitle(language, true);
+            }
+            if (onlineChart?.CourseKeyed == true)
+            {
+                info.Courses.RemoveAll(entry => onlineChart.Difficulties[(int)entry.Difficulty] == null);
+                foreach (var entry in info.Courses)
+                {
+                    var d = onlineChart.Difficulties[(int)entry.Difficulty];
+                    if (d != null) { entry.Course = d.Course; entry.Level = d.Level; }
+                }
+            }
+            return info;
+        }
     }
 }

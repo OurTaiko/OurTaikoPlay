@@ -50,6 +50,22 @@ namespace OurTaiko.Tests
         };
         public readonly List<Chart> Charts = new List<Chart>();
         public int ScoreReplayVersion = 1;
+        public bool SongIdOnly, CourseKeyed;
+        public int ResourceDownloadVersion;
+        public Func<Chart, JObject> Manifest;
+        public Func<HttpListenerContext, bool> CustomRequest;
+        JObject ChartJson(Chart chart)
+        {
+            var value = chart.ToJson();
+            if (SongIdOnly) value.Remove("versionId");
+            if (CourseKeyed)
+            {
+                value["isSingle"] = chart.Difficulties.All(d => string.IsNullOrEmpty(d.Player));
+                value["difficulties"] = new JArray(chart.Difficulties.Select(d => new JObject
+                { ["course"] = d.Course + (d.Player == "P1" ? "_1p" : d.Player == "P2" ? "_2p" : ""), ["level"] = d.Level, ["maker"] = "Tester" }));
+            }
+            return value;
+        }
         // Status codes returned (and consumed) before the next score submissions succeed.
         public readonly ConcurrentQueue<int> ScoreFailures = new ConcurrentQueue<int>();
         public readonly ConcurrentQueue<JObject> AcceptedScores = new ConcurrentQueue<JObject>();
@@ -120,6 +136,7 @@ namespace OurTaiko.Tests
             Requests.Add(request.HttpMethod + " " + path);
             try
             {
+                if (CustomRequest?.Invoke(context) == true) return;
                 if (Fail.TryGetValue(path, out int failure)) { Reply(context, failure, new JObject { ["error"] = "FIXTURE" }); return; }
                 string body = new StreamReader(request.InputStream, Encoding.UTF8).ReadToEnd();
                 string auth = request.Headers["Authorization"] ?? "";
@@ -131,7 +148,7 @@ namespace OurTaiko.Tests
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/bootstrap") { Bootstrap(context, user); return; }
                 if (request.HttpMethod == "GET" && parts.Length == 6 && parts[3] == "categories" && parts[5] == "charts")
                 {
-                    var charts = Charts.Where(c => c.Categories.Contains(parts[4])).Select(c => c.ToJson());
+                    var charts = Charts.Where(c => c.Categories.Contains(parts[4])).Select(c => ChartJson(c));
                     Reply(context, 200, new JObject { ["categoryId"] = parts[4], ["charts"] = new JArray(charts) });
                     return;
                 }
@@ -139,8 +156,16 @@ namespace OurTaiko.Tests
                 {
                     var chart = Charts.Find(c => c.Id == parts[3]);
                     if (chart == null) Reply(context, 404, new JObject());
-                    else Reply(context, 200, chart.ToJson());
+                    else Reply(context, 200, ChartJson(chart));
                     return;
+                }
+                if (request.HttpMethod == "GET" && parts.Length == 5 && parts[2] == "charts")
+                {
+                    var chart = Charts.Find(c => c.Id == parts[3]);
+                    if (chart == null) { Reply(context, 404, new JObject()); return; }
+                    if (parts[4] == "resources") { Reply(context, 200, Manifest(chart)); return; }
+                    if (SongIdOnly && (parts[4] == "tja" || parts[4] == "audio"))
+                    { Interlocked.Increment(ref Downloads); Bytes(context, parts[4] == "tja" ? chart.Tja : chart.Audio); return; }
                 }
                 if (request.HttpMethod == "GET" && parts.Length == 7 && parts[4] == "versions")
                 {
@@ -183,6 +208,13 @@ namespace OurTaiko.Tests
                 ["user"] = user == null ? null : new JObject { ["username"] = user },
                 ["categories"] = categories, ["chartCount"] = Charts.Count, ["scores"] = scores,
             };
+            if (SongIdOnly)
+            {
+                reply["songIdOnly"] = true;
+                foreach (JObject score in scores) score.Remove("versionId");
+            }
+            if (CourseKeyed) reply["courseKeyedDifficulties"] = true;
+            if (ResourceDownloadVersion > 0) reply["resourceDownloadVersion"] = ResourceDownloadVersion;
             if (ScoreReplayVersion > 0) reply["scoreReplayVersion"] = ScoreReplayVersion;
             Reply(context, 200, reply);
         }
@@ -193,6 +225,7 @@ namespace OurTaiko.Tests
             if (string.IsNullOrEmpty(key)) { Reply(context, 400, new JObject()); return; }
             if (Idempotent.TryGetValue(key, out var existing)) { Reply(context, 200, existing); return; }
             if (ScoreFailures.TryDequeue(out int status)) { Reply(context, status, new JObject()); return; }
+            if (SongIdOnly && body.ContainsKey("versionId")) { Reply(context, 400, new JObject()); return; }
             if (body["max_combo"]?.Type != JTokenType.Integer) { Reply(context, 400, new JObject()); return; }
             var score = new JObject
             {
@@ -201,6 +234,7 @@ namespace OurTaiko.Tests
                 ["drumroll"] = body["drumroll"], ["max_combo"] = body["max_combo"],
                 ["ClearStatus"] = body["ClearStatus"] ?? new JValue(0),
             };
+            if (SongIdOnly) score.Remove("versionId");
             Idempotent[key] = score;
             AcceptedScores.Enqueue(body);
             Reply(context, 200, score);

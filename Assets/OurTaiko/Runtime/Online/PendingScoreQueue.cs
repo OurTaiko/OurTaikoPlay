@@ -15,6 +15,8 @@ namespace OurTaiko.Online
             [Indexed] public string Endpoint { get; set; }
             [Column("Body")] public string Body { get; set; }
             [Column("Rejected")] public bool Rejected { get; set; }
+            public string TjaHash { get; set; }
+            public string AudioHash { get; set; }
             [Column("Created")] public long Created { get; set; }
         }
         readonly string path;
@@ -37,9 +39,13 @@ namespace OurTaiko.Online
                 }
         }
         SQLiteConnection Open() => new SQLiteConnection(path) { BusyTimeout = TimeSpan.FromSeconds(5) };
-        public void Enqueue(string endpoint, string key, string body)
+        public void Enqueue(string endpoint, string key, string body, string tjaHash = null, string audioHash = null)
         {
-            lock (sync) { using var db = Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, Created = DateTime.UtcNow.Ticks }); }
+            lock (sync) { using var db = Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, TjaHash = tjaHash, AudioHash = audioHash, Created = DateTime.UtcNow.Ticks }); }
+        }
+        public void UpdateBody(string key, string body)
+        {
+            lock (sync) { using var db = Open(); db.Execute("UPDATE PendingScoreUploads SET Body = ? WHERE Key = ?", body, key); }
         }
         public Entry[] Pending(string endpoint)
         {

@@ -132,7 +132,7 @@ namespace OurTaiko.Online
         {
             var keep = new HashSet<string>();
             songs.Clear(); charts.Clear();
-            foreach (var chart in Client.Charts)
+            foreach (var chart in Client.Charts.SelectMany(c => c.CourseKeyed && !c.IsSingle ? new[] { c.ForPlayer("P1"), c.ForPlayer("P2") }.Where(x => x.IsPlayable) : new[] { c }))
             {
                 string key = SongKey(chart);
                 keep.Add(key);
@@ -146,6 +146,8 @@ namespace OurTaiko.Online
                     entry = (song, chart);
                 }
                 entry.Chart = chart;
+                entry.Song.onlineChart = chart;
+                SetChartText(entry.Song, chart.CatalogTja());
                 entry.Song.genre = GenreFrame(chart.Genre);
                 entry.Song.course = chart.Difficulties.First(d => d != null).Course;
                 byKey[key] = entry;
@@ -159,12 +161,11 @@ namespace OurTaiko.Online
                 {
                     Key = category.Server + "/" + category.Id, Title = category.Title, ServerName = category.ServerName,
                     Genre = GenreFrame(category.Genre),
-                    Songs = category.ChartIds.Select(id => byKey.TryGetValue("fanmade/" + category.Server + "/" + id, out var entry) ? entry.Song : null)
-                        .Where(song => song != null).ToArray(),
+                    Songs = category.ChartIds.SelectMany(id => songs.Where(song => charts[song].Server == category.Server && charts[song].Id == id)).ToArray(),
                 });
         }
 
-        public static string SongKey(FanmadeChart chart) => "fanmade/" + chart.Server + "/" + chart.Id;
+        public static string SongKey(FanmadeChart chart) => "fanmade/" + chart.Server + "/" + chart.Id + (chart.SelectedPlayer.Length > 0 ? "/" + chart.SelectedPlayer : "");
 
         public bool IsOnline(SongDefinition song) => song != null && charts.ContainsKey(song);
         public FanmadeChart ChartOf(SongDefinition song) => song != null && charts.TryGetValue(song, out var chart) ? chart : null;
@@ -173,6 +174,7 @@ namespace OurTaiko.Online
         public void SetPrepared(SongDefinition song, FanmadeChart chart, string playableTja, AudioClip music)
         {
             charts[song] = chart;
+            song.onlineChart = chart;
             if (byKey.ContainsKey(song.name)) byKey[song.name] = (song, chart);
             SetChartText(song, playableTja);
             if (song.music != null && song.music != music && owned.Remove(song.music)) Destroy(song.music);

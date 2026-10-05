@@ -23,6 +23,8 @@ namespace OurTaiko
         public bool IsLoaded { get; private set; }
         // Set when an online download failed or was cancelled; the scene then returns instead of playing.
         public string Error { get; private set; }
+        CancellationTokenSource downloadCancellation;
+        void OnDisable() => downloadCancellation?.Cancel();
 
         IEnumerator Start()
         {
@@ -103,7 +105,7 @@ namespace OurTaiko
 
         IEnumerator Download(SceneSwitcher switcher, OnlineManager online, SongDefinition song)
         {
-            var cancel = new CancellationTokenSource();
+            var cancel = downloadCancellation = new CancellationTokenSource();
             DownloadProgress latest = null;
             var task = online.Client.PrepareAsync(online.ChartOf(song), cancel.Token, progress => Volatile.Write(ref latest, progress));
             while (!task.IsCompleted)
@@ -114,6 +116,7 @@ namespace OurTaiko
                 if (progress != null) switcher.Curtain?.SetStatus(Describe(progress));
                 yield return null;
             }
+            downloadCancellation = null;
             cancel.Dispose();
             if (!task.IsCompletedSuccessfully)
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace OurTaiko.Online
 {
@@ -30,11 +31,13 @@ namespace OurTaiko.Online
             var body = new StringBuilder();
             bool inBlock = false, seenCourse = false;
             int block = -1;
+            string course = "Oni";
             var wanted = new SortedDictionary<int, FanmadeDifficulty>();
             var found = new HashSet<int>();
             foreach (var d in chart.Difficulties)
             {
                 if (d == null) continue;
+                if (chart.CourseKeyed) continue;
                 wanted[d.BlockIndex] = d;
                 if (!d.Cloud) foreach (var other in chart.Blocks) if (other.Course == d.Course) wanted[other.BlockIndex] = other;
             }
@@ -44,7 +47,22 @@ namespace OurTaiko.Online
                 string line = Trim(comment >= 0 ? raw.Substring(0, comment) : raw);
                 if (line.Length == 0) continue;
                 string key = Key(line);
-                if (line.StartsWith("#START", StringComparison.Ordinal)) { inBlock = true; block++; body.Clear(); continue; }
+                if (line.StartsWith("#START", StringComparison.Ordinal))
+                {
+                    inBlock = true; block++; body.Clear();
+                    if (chart.CourseKeyed)
+                    {
+                        string player = line.Substring(6).Trim().ToUpperInvariant();
+                        string name = course + (player == "P1" ? "_1p" : player == "P2" ? "_2p" : "");
+                        var d = chart.Blocks.Find(x => x.Course == name);
+                        if (d != null)
+                        {
+                            if (wanted.Values.Any(x => x.Course == name)) throw new FanmadeException("TJA_BLOCK_MISMATCH");
+                            wanted[block] = d;
+                        }
+                    }
+                    continue;
+                }
                 if (line == "#END")
                 {
                     if (inBlock && wanted.TryGetValue(block, out var d))
@@ -61,10 +79,16 @@ namespace OurTaiko.Online
                     continue;
                 }
                 if (inBlock) { body.Append(line).Append('\n'); continue; }
-                if (key == "COURSE") { seenCourse = true; headers.Clear(); continue; }
+                if (key == "COURSE")
+                {
+                    string value = line.Substring(line.IndexOf(':') + 1).Trim();
+                    var difficulty = SongInfo.DifficultyOf(value);
+                    course = difficulty.HasValue ? FanmadeChart.Courses[(int)difficulty.Value] : value;
+                    seenCourse = true; headers.Clear(); continue;
+                }
                 (seenCourse ? headers : globals).Add(line);
             }
-            if (found.Count != wanted.Count || inBlock) throw new FanmadeException("TJA_BLOCK_MISMATCH");
+            if (found.Count != wanted.Count || (chart.CourseKeyed && found.Count != chart.Blocks.Count) || inBlock) throw new FanmadeException("TJA_BLOCK_MISMATCH");
             return output.ToString();
         }
 
