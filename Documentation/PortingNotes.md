@@ -611,3 +611,17 @@ Entry 原先沿用 Nijiiro `Scripts/entry/box.lua` 的相邻项可见规则（`a
 自动测试与现场验证结果见本次交付记录；在线分块试听按用户要求在本次协议提交之后另行接入。
 
 协议阶段验证：`ResourceDownloadTests` 19/19（独立 API/资源 HTTP fixture）、旧 `FanmadeClientTests` 19/19、`ServerLoginFlowTests` 6/6；报告为 `TestResults/resource-*.json`。Unity Editor 6000.3.25f1 编译通过。使用无账号临时缓存从正式 Fanmade 拉取曲库、直连下载并解析真实歌曲，第二次准备的 TJA/audio 状态均为 Cached。未上传真实账号成绩；未构建移动端/桌面 Player，未验证 WebGL CORS、CloudFront 或实机。
+
+## 在线分块试听（2026-10-05，独立于协议适配提交）
+
+`PreviewRangeStream` 为每次选曲建立独立音频哈希/长度会话。新协议先读清单，再用 headUrl 获取实际 ETag；GET 只发送单段 Range + If-Match，严格要求 206、完整匹配的 Content-Range、ETag 和字节数。首次 403/404 允许刷新一次链接，只在哈希与长度未变时继续；412、ETag 变化或内容变化终止会话，不拼接新旧分块。旧服务器单独走带 API 鉴权的版本音频路由与 If-Range 哈希约定。
+
+原生 BASS 的 `OnlinePreviewDecoder` 从 DEMOSTART 解码最多 12 秒片段，再通过原 AudioPlayback 播放。解码回调只读内存；遇到缺少的 128 KiB 分块时结束本次尝试，在后台取得分块再重试，网络请求不持有音频设备锁，也不发生在实时音频回调中。每会话最多 64 块（8 MiB），没有整首扫描/归一化，不把分块称作完整 SHA-256 验证。切歌、离开场景或禁用组件取消任务；generation 防止晚到任务更新新歌曲，未领取的样本释放。预览失败恢复选曲 BGM，停留同一歌曲不无限重试。
+
+当前实现覆盖使用 BASS 输出的原生客户端（含 WASAPI/ASIO 的公共解码流程）。Unity 音频后备和 WebGL 保留已有本地/完整缓存试听，不自动下载整首作为远程试听替代；未增加浏览器解码器或调整 CORS。未验证移动 IL2CPP、Windows 或 CloudFront，不能将 Editor 验证视为这些平台已通过。
+
+预览验证：独立 API/资源 fixture 的 `OnlinePreviewTests` 12/12（含旧服务器分支）；真实 OGG 的分块解码与选曲停止 PlayMode 测试通过。正式服游客读取的 OGG（007589b816e67e792009303bbcff23d4）和 MP3（7a506d0e5f44b864ba47a75d547b1531）均经 HEAD/Range 成功解码 12 秒片段；未播放/上传真实成绩。
+
+最终 `OnlinePreviewFlowTests` 3/3：真实解码/播放、播放后切歌停止、Range 下载途中切歌取消；报告 `TestResults/preview-playmode.json`。`OnlinePreviewTests` 报告 `TestResults/preview-editmode.json`。
+
+接入预览后 `ServerLoginFlowTests` 完整回归 6/6，报告 `TestResults/preview-login-regression.json`。旧服务器已有完整本地音频时优先保留旧本地试听路径；新能力服务器每次开启预览重新取当前清单，避免旧缓存掩盖歌曲更新。
