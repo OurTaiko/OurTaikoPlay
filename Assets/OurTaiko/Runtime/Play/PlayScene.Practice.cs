@@ -118,7 +118,7 @@ namespace OurTaiko
             if (!ChoosingPracticeSpeed) { ChoosingPracticeSpeed = true; ShowPracticePause(); return; }
             ResetPracticeAttempt(Practice.Target);
             music.pitch = (float)Practice.Speed;
-            songClock.Seek(Practice.Target + AudioOffset + VisualOffset, Practice.Speed);
+            songClock.Seek(Practice.PlaybackStart(AudioOffset, VisualOffset, judgeOffset), Practice.Speed);
             songClock.Resume(GameTimeline.AudioNow);
             IsPaused = false;
             practiceView.panel.SetActive(false);

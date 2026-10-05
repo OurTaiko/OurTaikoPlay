@@ -8,6 +8,12 @@ namespace OurTaiko
     public sealed class PracticeProgress
     {
         public const double ScrollSeconds = 0.2;
+        public const double PreparationSeconds = 2;
+        // The cursor remains on the requested bar. Only playback rewinds, so skipped
+        // notes stay resolved. Scale by Speed to retain two real seconds at any rate.
+        public double PlaybackStart(double audioOffset, double visualOffset, double judgeOffset)
+            => Target + audioOffset + visualOffset - PreparationSeconds * Speed
+                + Math.Min(0, judgeOffset - visualOffset);
         public int SpeedTenths { get; private set; } = 10;
         public double Speed => SpeedTenths / 10.0;
         public double Position { get; private set; }

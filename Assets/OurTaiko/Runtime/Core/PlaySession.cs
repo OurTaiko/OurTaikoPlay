@@ -152,7 +152,7 @@ namespace OurTaiko
                 if (note.Time > time) continue;
                 if (note.IsLong)
                 {
-                    if (auto)
+                    if (auto && time >= practiceStart)
                     {
                         int expected = (int)(Math.Max(0, Math.Min(time, note.EndTime) - Math.Max(note.Time, practiceStart)) * 15) + 1;
                         while (!Resolved[i] && LongHits[i] < expected) HitLong(i);
@@ -190,7 +190,7 @@ namespace OurTaiko
             for (int i = 0; i < Chart.Notes.Count; i++)
             {
                 var n = Chart.Notes[i];
-                if (!Resolved[i] && IsActive(n) && n.IsLong && time >= n.Time && time <= n.EndTime && (!n.IsBalloon || !ka))
+                if (!Resolved[i] && IsActive(n) && n.IsLong && time >= Math.Max(n.Time, practiceStart) && time <= n.EndTime && (!n.IsBalloon || !ka))
                 { HitLong(i); return Judgment.Roll; }
             }
             return Judgment.None;

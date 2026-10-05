@@ -5,6 +5,37 @@ namespace OurTaiko.Tests
 {
     public sealed class PracticeTests
     {
+        [TestCase(0.1, -0.3)]
+        [TestCase(1.0, 0.0)]
+        [TestCase(3.0, 0.4)]
+        public void PreparationKeepsTwoRealSecondsAndTargetBoundary(double rate, double judgeOffset)
+        {
+            var progress = new PracticeProgress(); progress.SetBars(new[] { 0.0, 10.0 });
+            progress.PauseAt(10, 0);
+            while (progress.Speed < rate) progress.ChangeSpeed(1);
+            while (progress.Speed > rate) progress.ChangeSpeed(-1);
+            var clock = new SongClock();
+            double start = progress.PlaybackStart(0.2, 0, judgeOffset);
+            clock.Seek(start, rate); clock.Resume(100); clock.Update(102);
+            Assert.That(progress.Target, Is.EqualTo(10));
+            Assert.That(clock.Time, Is.EqualTo(10.2 + System.Math.Min(0, judgeOffset)).Within(1e-8));
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\n#START\n1111,\n1111,\n#END");
+            var session = PlaySession.PracticeAt(chart, 2);
+            session.Advance(0, true); session.Advance(1.9, true);
+            Assert.That(session.Good + session.Bad, Is.Zero);
+            Assert.That(session.Hit(false, 2), Is.EqualTo(Judgment.Good));
+        }
+        [Test]
+        public void PreparationInsideLongNoteDoesNotCountEarlyHits()
+        {
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\n#START\n5000,\n0000,\n0008,\n#END");
+            var session = PlaySession.PracticeAt(chart, 4);
+            session.Advance(2, true);
+            Assert.That(session.Hit(false, 3.9), Is.EqualTo(Judgment.None));
+            Assert.That(session.Rolls, Is.Zero);
+            session.Advance(4, true);
+            Assert.That(session.Rolls, Is.EqualTo(1));
+        }
         [Test]
         public void ClockRateChangesChartSecondsAndScheduledAudioTogether()
         {

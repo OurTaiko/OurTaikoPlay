@@ -40,6 +40,29 @@ namespace OurTaiko.Tests
             InputSystem.settings.backgroundBehavior = background;
             InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
         }
+        [UnityTest]
+        public IEnumerator FirstAndSelectedMeasureBothHavePreparation()
+        {
+            yield return StartPractice(AudioBackend.Unity, true);
+            yield return Click(play.practiceView.confirm);
+            yield return Click(play.practiceView.confirm);
+            Assert.That(play.SongTime, Is.LessThan(-1.8));
+            Assert.That(play.Session.Good + play.Session.Bad + play.Session.Rolls, Is.Zero);
+            yield return Wait(() => play.SongTime >= 0);
+            yield return Press(Key.F);
+            Assert.That(play.Session.Good + play.Session.Ok, Is.GreaterThan(0), "The note at the very first bar must be hittable.");
+            play.TogglePause(); yield return null;
+            play.MovePractice(1); yield return new WaitForSecondsRealtime(0.25f);
+            double target = play.Practice.Target;
+            yield return Click(play.practiceView.confirm);
+            yield return Press(Key.D); yield return Press(Key.D);
+            Assert.That(play.Practice.Speed, Is.EqualTo(0.8));
+            yield return Click(play.practiceView.confirm);
+            Assert.That(play.SongTime, Is.LessThan(target - 1.4));
+            yield return new WaitForSecondsRealtime(1);
+            Assert.That(play.SongTime, Is.LessThan(target));
+            Assert.That(play.Session.Bad, Is.Zero, "Preparation must not count skipped notes as misses.");
+        }
         [UnityTest] public IEnumerator NativePlaybackAndTwoLayerPause() => ExercisePlayback(AudioBackend.Bass);
         [UnityTest] public IEnumerator UnityPlaybackAndTwoLayerPause() => ExercisePlayback(AudioBackend.Unity);
 
@@ -88,7 +111,7 @@ namespace OurTaiko.Tests
             for (int i = 0; i < 4; i++) yield return Press(Key.K);
             Assert.That(play.Practice.Speed, Is.EqualTo(1.2));
             yield return Click(play.practiceView.confirm);
-            yield return new WaitForSecondsRealtime(0.3f);
+            yield return new WaitForSecondsRealtime(2.3f);
             songStart = play.SongTime; audioStart = play.music.AudioPosition(); realStart = GameTimeline.AudioNow;
             yield return new WaitForSecondsRealtime(0.5f);
             elapsed = GameTimeline.AudioNow - realStart;
