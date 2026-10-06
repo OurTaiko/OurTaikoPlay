@@ -26,8 +26,8 @@ namespace OurTaiko.Tests
         {
             foreach (string course in new[] { "Oni", "Hard", "Normal", "Easy" })
                 yield return new TestCaseData("Tests/EditMode/Charts/Donkama2000.txt", course).SetName("{m}(Donkama2000 " + course + ")");
-            yield return new TestCaseData("Songs/TripleHelix.txt", "Oni").SetName("{m}(TripleHelix Oni)");
-            yield return new TestCaseData("Songs/BranchTraining.txt", "Oni").SetName("{m}(BranchTraining Oni)");
+            yield return new TestCaseData("Tests/Shared/Songs/TripleHelix.txt", "Oni").SetName("{m}(TripleHelix Oni)");
+            yield return new TestCaseData("Tests/Shared/Songs/BranchTraining.txt", "Oni").SetName("{m}(BranchTraining Oni)");
             yield return new TestCaseData(null, "Oni").SetName("{m}(Synthetic scrolls)");
         }
 

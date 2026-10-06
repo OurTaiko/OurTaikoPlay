@@ -4901,7 +4901,7 @@ PrefabInstance:
     - target: {fileID: 1785703540169396442, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: song
       value: 
-      objectReference: {fileID: 11400000, guid: 420a21fce330e4787a8a21485e1e731f, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 1785703540169396442, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: authoredWheelPosition.x
       value: 1000
@@ -5743,7 +5743,7 @@ PrefabInstance:
     - target: {fileID: 1785703540169396442, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: song
       value: 
-      objectReference: {fileID: 11400000, guid: a2663e87839904e5db191887828c6496, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 1785703540169396442, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: authoredWheelPosition.x
       value: 920
@@ -7783,10 +7783,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71e49d00c685a46159a03e96e088c0e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.SongSelectScene
-  songs:
-  - {fileID: 11400000, guid: 3bb825665732f4ca2857b56efed72208, type: 2}
-  - {fileID: 11400000, guid: 420a21fce330e4787a8a21485e1e731f, type: 2}
-  - {fileID: 11400000, guid: a2663e87839904e5db191887828c6496, type: 2}
+  songs: []
   wheel: {fileID: 937354437}
   coursePanel: {fileID: 2051997581}
   view: {fileID: 1860933928}
@@ -8248,7 +8245,7 @@ PrefabInstance:
     - target: {fileID: 1785703540169396442, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: song
       value: 
-      objectReference: {fileID: 11400000, guid: 3bb825665732f4ca2857b56efed72208, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 1785703540169396442, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: authoredWheelPosition.x
       value: 960

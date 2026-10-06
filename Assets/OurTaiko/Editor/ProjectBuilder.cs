@@ -45,10 +45,7 @@ namespace OurTaiko.Editor
                 importer.SaveAndReimport();
             }
             font = UiFont();
-            var triple = Song("TripleHelix", "Oni", true);
-            var calibration = Song("Calibration", "Hard", false);
-            var branchTraining = Song("BranchTraining", "Oni", false);
-            CreatePlay(triple);
+            CreatePlay();
             CreateSceneSwitcherPrefab();
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene("Assets/Scenes/SinglePlayScene.unity", true) };
             EditorSettings.defaultBehaviorMode = EditorBehaviorMode.Mode2D;
@@ -61,16 +58,7 @@ namespace OurTaiko.Editor
             QualitySettings.vSyncCount = 0;
             AssetDatabase.SaveAssets();
             EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
-            Debug.Log("OurTaiko: Created SinglePlayScene, global SceneSwitcher, songs, sprite slices and font.");
-        }
-
-        static SongDefinition Song(string name, string course, bool audio)
-        {
-            var song = ScriptableObject.CreateInstance<SongDefinition>();
-            song.chart = AssetDatabase.LoadAssetAtPath<TextAsset>(Root + "Songs/" + name + ".txt");
-            song.music = audio ? AssetDatabase.LoadAssetAtPath<AudioClip>(Root + "Songs/" + name + ".ogg") : null;
-            song.course = course; song.Parse();
-            AssetDatabase.CreateAsset(song, Root + "Songs/" + name + ".asset"); return song;
+            Debug.Log("OurTaiko: Created SinglePlayScene, global SceneSwitcher, sprite slices and font.");
         }
 
         static Transform NewScene()
@@ -138,10 +126,10 @@ namespace OurTaiko.Editor
             Picture(root, "Footer", "background/footer/0", 0, 656);
         }
 
-        static void CreatePlay(SongDefinition defaultSong)
+        static void CreatePlay()
         {
             var root = NewScene(); Background(root);
-            var controller = new GameObject("PlayScene").AddComponent<PlayScene>(); controller.defaultSong = defaultSong;
+            var controller = new GameObject("PlayScene").AddComponent<PlayScene>();
             controller.music = new GameObject("Music").AddComponent<AudioSource>(); controller.music.transform.SetParent(controller.transform); controller.music.playOnAwake = false; controller.music.volume = 0.8f;
             controller.hitAudio = new GameObject("Hitsounds").AddComponent<AudioSource>(); controller.hitAudio.transform.SetParent(controller.transform); controller.hitAudio.playOnAwake = false;
             controller.don = AssetDatabase.LoadAssetAtPath<AudioClip>(Root + "Audio/don.ogg"); controller.ka = AssetDatabase.LoadAssetAtPath<AudioClip>(Root + "Audio/ka.ogg");

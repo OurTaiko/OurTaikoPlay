@@ -19,6 +19,7 @@ namespace OurTaiko.Tests
             PlayerInfoController.EnsureInstance().UseUnsaved(new PlayerInfo());
             SettingManager.EnsureInstance().UseUnsaved(new GameSettings());
             UseServers(new Online.ServerList());
+            SongSelectScene.SongsOverride = TestSongs.All;
         }
 
         // Unsaved servers over a fresh temporary cache.
@@ -34,6 +35,7 @@ namespace OurTaiko.Tests
         {
             ScoreStore.Shared = null;
             PlayOptions.Shared = null;
+            SongSelectScene.SongsOverride = null;
             if (File.Exists(ScorePath)) File.Delete(ScorePath);
             if (Directory.Exists(OnlineCache)) Directory.Delete(OnlineCache, true);
         }

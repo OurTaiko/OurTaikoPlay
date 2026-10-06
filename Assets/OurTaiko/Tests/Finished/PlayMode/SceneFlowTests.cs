@@ -19,6 +19,7 @@ namespace OurTaiko.Tests
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
+            TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
             var play = Object.FindFirstObjectByType<PlayScene>();
@@ -161,6 +162,7 @@ namespace OurTaiko.Tests
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
+            TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
             var play = Object.FindFirstObjectByType<PlayScene>();
@@ -572,6 +574,7 @@ namespace OurTaiko.Tests
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
+            TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
             var play = Object.FindFirstObjectByType<PlayScene>();
@@ -645,6 +648,7 @@ namespace OurTaiko.Tests
             QualitySettings.vSyncCount = 1;
             Application.targetFrameRate = 60;
             UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 2;
+            TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
             var play = Object.FindFirstObjectByType<PlayScene>();

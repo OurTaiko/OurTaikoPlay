@@ -8,7 +8,6 @@ namespace OurTaiko
 {
     public sealed partial class PlayScene : MonoBehaviour
     {
-        public SongDefinition defaultSong;
         public AudioSource music, hitAudio;
         public AudioClip don, ka, balloonPop;
         public HitSoundLibrary hitSounds;
@@ -112,7 +111,14 @@ namespace OurTaiko
             // Direct Editor runs must return to the same mode after Back and another song.
             switcher.PracticeMode = IsPractice;
             switcher.SceneChanging += PrepareToLeave;
-            song = switcher.SelectedSong != null ? switcher.SelectedSong : defaultSong;
+            song = switcher.SelectedSong;
+            // Play scenes start from the song list; a direct run without a song goes back to Entry.
+            if (song == null)
+            {
+                Debug.LogWarning("No song is selected; returning to Entry.", this);
+                switcher.SwitchScene(SceneSwitcher.MenuScene);
+                yield break;
+            }
             autoPlay = switcher.AutoPlay;
             var playSettings = SettingManager.EnsureInstance().Settings.play;
             audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
@@ -138,7 +144,7 @@ namespace OurTaiko
             try
             {
                 // SongLoadingScene parsed the chart behind the curtain; restarts and direct runs parse here.
-                string course = switcher.SelectedSong != null ? switcher.SelectedCourse : null;
+                string course = switcher.SelectedCourse;
                 var options = PlayOptions.Shared;
                 var chart = switcher.TakePreparedChart(song, course) ?? PrepareChart(song, course);
                 // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.

@@ -10754,7 +10754,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.PlayScene
   practiceView: {fileID: 208061732}
-  defaultSong: {fileID: 11400000, guid: 3bb825665732f4ca2857b56efed72208, type: 2}
   music: {fileID: 976959716}
   hitAudio: {fileID: 549007535}
   don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}

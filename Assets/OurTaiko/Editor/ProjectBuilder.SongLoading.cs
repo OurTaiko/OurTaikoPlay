@@ -179,8 +179,7 @@ namespace OurTaiko.Editor
             camera.transform.position = new Vector3(0, 0, -10); camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = Color.black;
             // Everything visible is the global curtain parked over this scene.
-            var loader = new GameObject("SongLoading").AddComponent<SongLoadingScene>();
-            loader.defaultSong = AssetDatabase.LoadAssetAtPath<SongDefinition>(Root + "Songs/TripleHelix.asset");
+            new GameObject("SongLoading").AddComponent<SongLoadingScene>();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), SongLoadingPath);
         }
     }

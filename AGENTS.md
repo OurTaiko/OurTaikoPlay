@@ -224,7 +224,7 @@
 | `Assets/Scenes/Result.unity`、`Runtime/Scenes/ResultScene.cs`、`ResultView.cs`、`ResultBackground.cs` | Nijiiro 结算背景、成绩板、魂槽填充、皇冠、评语、最高分条；时间轴 `Core/ResultSequence.cs`，数据 `Core/PlayResult.cs`，本地最佳成绩 `Core/ScoreStore.cs`。画面保存在场景中（`ResultView.cs`），`Awake` 只绑定并填入本局内容；Inspector 预览 `Editor/ResultSceneEditor.cs`，迁移 `ProjectBuilder.ApplyResultLayout()`。 |
 | `Assets/OurTaiko/Animations`、`Runtime/Core/LumenClip.cs` | 原 `Scripts/anim/*.lua` 导出表的原样 `.txt` 副本与纯 C# 线性采样器（只读数据，不运行 Lua）。 |
 | `Assets/Scenes/SongLoadingScene.unity`、`Runtime/Scenes/SongLoadingScene.cs`、`SongTransition.cs` | 选曲加载：`SceneSwitcher.Play()` 以彩虹幕布（SceneSwitcher 预制体内的 `SongTransition`，`TransitionStyle.Curtain`）关闭并进入此场景；场景在停住的幕布下解析 TJA（含演奏オプション）、载入歌曲音频，至少 2 秒后切到 SinglePlayScene 并在其上打开幕布。迁移入口 `ProjectBuilder.ApplySongLoadingCurtain()`。 |
-| `Assets/Scenes/SinglePlayScene.unity` | 单人游玩场景（`SceneSwitcher.GameScene`；2026-10-01 由 PlayScene 改名，GUID 不变，控制组件类仍为 `PlayScene`）。已保存并可编辑的游玩 Canvas、轨道、判定圈、鼓面、魂槽、舞者、暂停与结果界面；可直接运行，默认 TRIPLE HELIX。 |
+| `Assets/Scenes/SinglePlayScene.unity` | 单人游玩场景（`SceneSwitcher.GameScene`；2026-10-01 由 PlayScene 改名，GUID 不变，控制组件类仍为 `PlayScene`）。已保存并可编辑的游玩 Canvas、轨道、判定圈、鼓面、魂槽、舞者、暂停与结果界面。只能从选曲进入：未选歌曲时（直接运行）回到 Entry，`defaultSong` 字段已删除。 |
 | `Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.cs`、`Assets/OurTaiko/Resources/SceneSwitcher.prefab` | 加载首场景前自动创建的全局 uGUI 控件，跨场景保留。统一接管输入锁定、准备任务、关闭／打开过渡、异步加载、当前／上一场景及切换事件；设置 120 FPS。两种过渡样式 `TransitionStyle.Fade`（`Transition` 深色遮罩，MajdataPlay OutQuint）与 `Curtain`（`SongTransition` 彩虹幕布）；`Play()` 用幕布进入 SongLoadingScene，其余切换默认淡入淡出。另持有一次性的预解析谱面（`SetPreparedChart`／`TakePreparedChart`）。 |
 | `Assets/OurTaiko/Runtime/Core/TaikoChart.cs`、`TjaParser.cs` | 纯 C# 谱面模型与 TJA 解析；课程选择、音符 1–9、长音符、BPM／拍号／延迟／复数 SCROLL／GOGO／小节线与三路线分支。 |
 | `Assets/OurTaiko/Runtime/Core/PlaySession.cs` | 独立于 Unity 的输入判定、连击、长音符次数、自动演奏与分支统计／时间线；将判定交给计分和魂槽模块，通过事件通知表现层。 |
@@ -248,7 +248,7 @@
 | `Assets/OurTaiko/Editor/ProjectBuilder.SongSelectResult.cs` | 菜单 OurTaiko/Create Song Select And Result Scenes：导入选曲／结算素材、生成切片，仅在场景缺失时创建，并对已有场景只做定向升级。 |
 | `Assets/OurTaiko/Editor/ProjectBuilder.cs`、`ProjectBuilder.Nijiiro.cs`、`ProjectBuilder.Balloon.cs`、`ProjectBuilder.SceneSwitcher.cs`、`ProjectBuilder.SongLoading.cs` | 初始生成、Nijiiro 布局／魂槽／连打切片、气球资源配置、全局控件专项迁移，以及选曲加载幕布（重建预制体内的 `SongTransition` 子物体，SongLoadingScene 仅缺失时创建）；按需使用专项入口，避免全量重建现有场景。 |
 | `Assets/OurTaiko/Art`、`Audio`、`Generated` | 打平的皮肤图片／音效、已生成 Sprite 切片与字体；运行时无需原仓库。 |
-| `Assets/OurTaiko/Songs` | TRIPLE HELIX（含音乐）、Input Calibration（无音乐）、Branch Training（无音乐分支练习谱）。 |
+| `Tests/Shared/Songs`、`Tests/Shared/TestSongs.cs` | **游戏不自带歌曲**（2026-10-06 用户决定删除自带的 TRIPLE HELIX、Input Calibration、Branch Training），SongSelect 的 `songs` 为空，本地只剩在线分类文件夹。三首谱面（含 TripleHelix.ogg）作为测试夹具保留于此，不被任何场景引用、不进构建：`TestData.Use` 通过 `SongSelectScene.SongsOverride` 把它们注入选曲列表，直接载入游玩场景的测试先调用 `TestSongs.Select()`（`SceneSwitcher.Select`）。场景中 3 块保存的曲目板保留为布局模板，`song` 为空。 |
 | `README.md`、`Documentation/PortingNotes.md`、`Documentation/ImportedAssets.json` | 运行说明、详细行为依据与历次验证、素材来源记录。 |
 
 操作：F／J 为咚，D／K 为咔（游玩时同一帧只判定最早的一次打击，其余同帧打击丢弃——太鼓输入互斥），Space／Esc 打开暂停菜单／恢复，F1 重开；暂停菜单依次为 Resume、Restart、Back to Song Select，↑／↓（或 D／K、←／→）选择，Enter／F／J 确认，也可点击／触摸。菜单淡入和淡出各 0.5 秒，全程禁用 DrumPad，淡出后才继续演奏。Entry 中 F／J（或点击）加入／决定，D／K 只有咔声。选曲 D／K 移动、F／J 决定（自动演奏只在演奏オプション的オート行切换，A 键快捷与各场景 KeyHelp 按键提示已删除）、Esc 返回 Entry（演奏オプション中 D／K 改值、F／J 下一行、Esc 关闭）；结算 F／J 跳过／返回。游玩页也可用鼠标／触控敲击原版样式的触控鼓，选曲板、难度卡和结算画面也可点击。

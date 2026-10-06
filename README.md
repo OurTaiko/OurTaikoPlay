@@ -34,10 +34,10 @@ git submodule update --init --recursive
 1. 用 Unity Hub 打开项目，等待包解析与资源导入完成。
 2. 打开 `Assets/Scenes/Entry.unity`，点击 Play。
 3. 敲咚或点击画面加入，选择「演奏ゲーム」。
-4. 在服务器页面登录、以游客进入，或跳过服务器使用本地曲目。
+4. 在服务器页面登录或以游客进入。
 5. 选择歌曲和难度，开始演奏。
 
-仓库包含 TRIPLE HELIX、Input Calibration 和 Branch Training 示例。后两者是无音乐的校准／练习谱。Entry 的「ゲーム設定」可进入系统设置。
+游戏不自带歌曲，曲目全部来自在线服务器的分类文件夹。Entry 的「ゲーム設定」可进入系统设置。
 
 ## 操作
 

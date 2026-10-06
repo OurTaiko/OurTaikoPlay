@@ -13,7 +13,6 @@ namespace OurTaiko
     // verified (fanmade.cpp prepare) with its progress on the curtain; Back cancels the download.
     public sealed class SongLoadingScene : MonoBehaviour
     {
-        public SongDefinition defaultSong;
         [Tooltip("The title and hints stay up at least this long, however fast the song loads.")]
         [Min(0)] public float minimumSeconds = 2;
         [Tooltip("How long a download error stays on the curtain before returning to the song list.")]
@@ -28,8 +27,14 @@ namespace OurTaiko
         IEnumerator Start()
         {
             var switcher = SceneSwitcher.EnsureInstance();
-            var song = switcher.SelectedSong != null ? switcher.SelectedSong : defaultSong;
-            string course = switcher.SelectedSong != null ? switcher.SelectedCourse : null;
+            var song = switcher.SelectedSong;
+            string course = switcher.SelectedCourse;
+            if (song == null)
+            {
+                Debug.LogWarning("No song is selected; returning to Entry.", this);
+                switcher.SwitchScene(SceneSwitcher.MenuScene);
+                yield break;
+            }
             if (!switcher.IsCovered)
             {
                 // Entered directly (Play mode on this scene): show the parked curtain at once.

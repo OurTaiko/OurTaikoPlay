@@ -19,6 +19,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             var switcher = SceneSwitcher.EnsureInstance();
+            TestSongs.Select();
             Assert.That(Resources.Load<SceneSwitcher>("SceneSwitcher"), Is.Not.Null);
             Assert.That(SceneManager.GetActiveScene().GetRootGameObjects().Any(root => root.GetComponent<SceneSwitcher>() != null), Is.False);
             Assert.That(Application.CanStreamedLevelBeLoaded("SceneSwitcher"), Is.False);
@@ -81,6 +82,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             var switcher = SceneSwitcher.EnsureInstance();
+            TestSongs.Select();
             var value = new TaskCompletionSource<int>();
             var operation = switcher.SwitchSceneAfterTaskAsync(SceneSwitcher.GameScene, value.Task, false);
             value.SetResult(42);

@@ -23,6 +23,7 @@ namespace OurTaiko.Tests
             yield return null;
             try
             {
+                TestSongs.Select();
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
                 yield return null;
                 yield return null;

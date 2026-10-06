@@ -167,6 +167,7 @@ namespace OurTaiko.Tests
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
+            TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.PracticeScene);
             play = Object.FindFirstObjectByType<PlayScene>();
             yield return Wait(() => play.Practice != null && play.IsPaused);

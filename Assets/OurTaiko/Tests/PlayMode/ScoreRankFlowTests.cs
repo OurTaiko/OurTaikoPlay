@@ -18,7 +18,8 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(.6f);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
             var song = select.FocusedSong;
-            var board = select.view.songBoards.Single(b => b.song == song);
+            // Saved board i shows local song i.
+            var board = select.view.songBoards[System.Array.IndexOf(select.songs, song)];
             Assert.That(board.scoreRank.DisplayedRank, Is.Zero);
             ScoreStore.Shared.Save(new PlayResult { ChartKey = song.name, Difficulty = Difficulty.Oni,
                 Score = 960000, IsClear = true, Good = 890, Ok = 15, Bad = 0 });
@@ -29,7 +30,7 @@ namespace OurTaiko.Tests
             TestCapture.Capture("ScoreRankSongBoard.png");
             select.Right();
             yield return new WaitForSecondsRealtime(.6f);
-            Assert.That(select.view.songBoards.Single(b => b.song == select.FocusedSong).scoreRank.DisplayedRank, Is.Zero);
+            Assert.That(select.view.songBoards[System.Array.IndexOf(select.songs, select.FocusedSong)].scoreRank.DisplayedRank, Is.Zero);
             select.Left();
             yield return new WaitForSecondsRealtime(.6f);
             select.Confirm();

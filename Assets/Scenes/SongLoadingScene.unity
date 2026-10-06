@@ -148,8 +148,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 217804e3cb23840ecaaae767a27078ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.SongLoadingScene
-  defaultSong: {fileID: 11400000, guid: 3bb825665732f4ca2857b56efed72208, type: 2}
   minimumSeconds: 2
+  errorSeconds: 3
 --- !u!4 &153401622
 Transform:
   m_ObjectHideFlags: 0

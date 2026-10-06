@@ -22,7 +22,10 @@ namespace OurTaiko
         public enum State { Browsing, CourseSelect, Decided }
 
         [Header("Songs")]
+        // Local songs ahead of the online folders. None ship with the game; tests list their charts
+        // through SongsOverride, copied in when the scene wakes with an empty list.
         public SongDefinition[] songs;
+        public static SongDefinition[] SongsOverride;
 
         [Header("Stage")]
         public RectTransform wheel, coursePanel;
@@ -179,6 +182,7 @@ namespace OurTaiko
             wheel.gameObject.SetActive(true);
             var online = Online.OnlineManager.EnsureInstance();
             folders = online.Folders.ToArray();
+            if ((songs == null || songs.Length == 0) && SongsOverride != null) songs = (SongDefinition[])SongsOverride.Clone();
             BindBoards();
             backgroundPositions = backgroundTiles.Select(tile => tile.rectTransform.anchoredPosition).ToArray();
             // Coming back from a song in a folder reopens that folder on the song (reopen_folder_path).

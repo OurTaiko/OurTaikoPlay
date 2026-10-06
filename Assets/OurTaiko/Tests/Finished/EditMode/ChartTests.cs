@@ -120,7 +120,7 @@ namespace OurTaiko.Tests
         [TestCase("Calibration", "Hard")]
         public void ImportedChartParsesAndAutoPlayCompletesWithoutMisses(string name, string course)
         {
-            var chart = TjaParser.Parse(File.ReadAllText("Assets/OurTaiko/Songs/" + name + ".txt"), course);
+            var chart = TjaParser.Parse(File.ReadAllText("Assets/OurTaiko/Tests/Shared/Songs/" + name + ".txt"), course);
             Assert.That(chart.Notes.Count, Is.GreaterThan(50));
             var session = new PlaySession(chart);
             for (double t = -2; t < chart.Duration + 2; t += 1.0 / 60) session.Advance(t, true);

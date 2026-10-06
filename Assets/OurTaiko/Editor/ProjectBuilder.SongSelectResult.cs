@@ -24,10 +24,8 @@ namespace OurTaiko.Editor
                     throw new InvalidOperationException("Save the current scene edits first.");
             ImportSongSelectResultArt();
             font = UiFont();
-            var songs = new[] { "TripleHelix", "Calibration", "BranchTraining" }
-                .Select(n => AssetDatabase.LoadAssetAtPath<SongDefinition>(Root + "Songs/" + n + ".asset")).ToArray();
-            if (songs.Any(s => s == null)) throw new FileNotFoundException("A song asset is missing.");
-            if (!File.Exists(SongSelectPath)) CreateSongSelectScene(songs);
+            // No local songs ship with the game; the list holds the online folders.
+            if (!File.Exists(SongSelectPath)) CreateSongSelectScene(Array.Empty<SongDefinition>());
             if (!File.Exists(ResultPath)) CreateResultScene();
             UpgradeStage(SongSelectPath); UpgradeStage(ResultPath);
             ApplyResultLayout();
