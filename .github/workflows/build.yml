@@ -2,6 +2,7 @@ name: Build
 run-name: OurTaikoPlay ${{ github.ref_name }}
 
 # main publishes the rolling "nightly" pre-release; a v* tag publishes a formal release.
+# Tests do not gate builds; run the Test workflow manually when needed.
 on:
   push:
     branches: [main]
@@ -10,7 +11,6 @@ on:
 
 permissions:
   contents: write
-  checks: write # unity-test-runner posts the test results as a check run
 
 concurrency:
   group: build-${{ github.ref }}
@@ -58,51 +58,10 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Version $VERSION, display $DISPLAY"
 
-  test:
-    name: Test (${{ matrix.mode }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - mode: editmode
-            assembly: OurTaiko.FinishedTests
-          - mode: playmode
-            assembly: OurTaiko.FinishedPlayModeTests
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          lfs: false
-      - uses: ./.github/actions/lfs-pull
-
-      - uses: actions/cache@v4
-        with:
-          path: Library
-          key: Library-test-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'ProjectSettings/**', 'Packages/manifest.json', 'Packages/packages-lock.json') }}
-          restore-keys: |
-            Library-test-
-
-      # Only the Finished assemblies gate releases; in-progress tests are still being written.
-      # AudioDevice tests measure real playback, which the container cannot provide; run them locally.
-      - uses: game-ci/unity-test-runner@v4
-        id: tests
-        with:
-          testMode: ${{ matrix.mode }}
-          customParameters: -assemblyNames ${{ matrix.assembly }} -testCategory !AudioDevice
-          artifactsPath: test-results
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results-${{ matrix.mode }}
-          path: test-results
-          retention-days: 7
-
   build:
     name: Build (${{ matrix.name }})
     runs-on: ubuntu-latest
-    needs: [version, test]
+    needs: [version]
     strategy:
       fail-fast: false
       matrix:

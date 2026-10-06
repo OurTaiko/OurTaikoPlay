@@ -1,0 +1,74 @@
+name: Test
+run-name: OurTaikoPlay tests (${{ inputs.suite }}, ${{ inputs.mode }}) ${{ github.ref_name }}
+
+# Manual only; builds no longer wait for tests.
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Test assemblies
+        type: choice
+        default: finished
+        options: [finished, in-progress, all]
+      mode:
+        description: Test mode
+        type: choice
+        default: both
+        options: [both, editmode, playmode]
+
+permissions:
+  contents: read
+  checks: write # unity-test-runner posts the test results as a check run
+
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+
+jobs:
+  test:
+    name: Test (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: ${{ fromJSON(inputs.mode == 'both' && '["editmode","playmode"]' || format('["{0}"]', inputs.mode)) }}
+    env:
+      FINISHED: ${{ matrix.mode == 'editmode' && 'OurTaiko.FinishedTests' || 'OurTaiko.FinishedPlayModeTests' }}
+      IN_PROGRESS: ${{ matrix.mode == 'editmode' && 'OurTaiko.Tests' || 'OurTaiko.PlayModeTests' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          lfs: false
+      - uses: ./.github/actions/lfs-pull
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-test-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'ProjectSettings/**', 'Packages/manifest.json', 'Packages/packages-lock.json') }}
+          restore-keys: |
+            Library-test-
+
+      - id: assemblies
+        run: |
+          # "all" passes no filter: every project test assembly of this mode.
+          case "${{ inputs.suite }}" in
+            finished) echo "filter=-assemblyNames $FINISHED" >> "$GITHUB_OUTPUT" ;;
+            in-progress) echo "filter=-assemblyNames $IN_PROGRESS" >> "$GITHUB_OUTPUT" ;;
+            *) echo "filter=" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      # AudioDevice tests measure real playback, which the container cannot provide; run them locally.
+      - uses: game-ci/unity-test-runner@v4
+        with:
+          testMode: ${{ matrix.mode }}
+          customParameters: ${{ steps.assemblies.outputs.filter }} -testCategory !AudioDevice
+          artifactsPath: test-results
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.mode }}
+          path: test-results
+          retention-days: 7
