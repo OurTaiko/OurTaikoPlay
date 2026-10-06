@@ -187,7 +187,7 @@ namespace OurTaiko
             backgroundPositions = backgroundTiles.Select(tile => tile.rectTransform.anchoredPosition).ToArray();
             // Coming back from a song in a folder reopens that folder on the song (reopen_folder_path).
             int remembered = Array.IndexOf(songs, switcher.SelectedSong);
-            int reopen = Array.FindIndex(folders, f => f.Key == online.OpenFolderKey);
+            int reopen = Array.FindIndex(folders, f => f.Key == SongSelectManager.OpenFolderKey);
             if (reopen >= 0)
             {
                 InsertFolder(FolderBoardIndex(reopen));
@@ -423,7 +423,7 @@ namespace OurTaiko
             if (openFolder >= 0) { CollapseFolder(); index = FolderBoardIndex(folder); }
             InsertFolder(index);
             Focused = openAt;
-            Online.OnlineManager.Instance.OpenFolderKey = folders[folder].Key;
+            SongSelectManager.OpenFolderKey = folders[folder].Key;
             SetPositions(false, MoveMs);
             // A folder enter snaps the new focus open (no 508 ms hold).
             OpenFocused(0);
@@ -438,7 +438,7 @@ namespace OurTaiko
             int folder = openFolder;
             CollapseFolder();
             Focused = FolderBoardIndex(folder);
-            Online.OnlineManager.Instance.OpenFolderKey = null;
+            SongSelectManager.OpenFolderKey = null;
             SetPositions(false, MoveMs);
             OpenFocused(0);
             StopPreview();

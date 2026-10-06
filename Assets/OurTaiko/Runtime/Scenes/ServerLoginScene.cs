@@ -55,6 +55,7 @@ namespace OurTaiko
             switcher.SceneChanging += OnSceneChanging;
             // OurTaikoPlayer refreshes every server whenever song select is entered from the mode select.
             online.Disconnect();
+            SongSelectManager.Reset();
             // Rescan the songs folder meanwhile, so songs added since the last visit appear.
             LocalSongLibrary.EnsureInstance().Refresh();
             for (int i = 0; i < online.Servers.servers.Count; i++)

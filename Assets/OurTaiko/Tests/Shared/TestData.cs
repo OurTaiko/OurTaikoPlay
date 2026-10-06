@@ -28,6 +28,7 @@ namespace OurTaiko.Tests
         {
             var manager = Online.OnlineManager.EnsureInstance();
             manager.Disconnect();
+            SongSelectManager.Reset();
             if (Directory.Exists(OnlineCache)) Directory.Delete(OnlineCache, true);
             manager.UseUnsaved(servers, OnlineCache);
         }

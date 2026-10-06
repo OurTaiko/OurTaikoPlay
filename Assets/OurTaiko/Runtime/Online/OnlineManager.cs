@@ -23,8 +23,6 @@ namespace OurTaiko.Online
         public IReadOnlyList<SongDefinition> Songs => songs;
         // One folder per server category, in server then bootstrap order.
         public IReadOnlyList<SongFolder> Folders => folders;
-        // The folder song select had open, reopened when it comes back from a song; reset by ServerLogin.
-        public string OpenFolderKey { get; set; }
 
         readonly List<SongDefinition> songs = new List<SongDefinition>();
         readonly List<SongFolder> folders = new List<SongFolder>();
@@ -186,7 +184,6 @@ namespace OurTaiko.Online
         {
             foreach (var item in owned) if (item != null) Destroy(item);
             owned.Clear(); songs.Clear(); byKey.Clear(); charts.Clear(); folders.Clear();
-            OpenFolderKey = null;
         }
 
         // box.def GENRE names (enums.h GENRE_MAP) to the Nijiiro bar_genre frame (GENRE_TO_REF_FRAME).
