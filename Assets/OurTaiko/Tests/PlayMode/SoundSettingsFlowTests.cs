@@ -60,7 +60,7 @@ namespace OurTaiko.Tests
                 scene.Ka(1);
                 Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Output Backend"));
                 scene.Don();
-                scene.Ka(scene.Menu.CurrentItem.Choices.Count - 1); // BASS (ASIO on Windows)
+                scene.Ka(scene.Menu.CurrentItem.Choices.Count - 1); // BassSimple, the last choice everywhere
                 TestCapture.Capture("SoundBackendChoice.png");
                 int slot = scene.Menu.ChoiceIndex - view.FirstChoice;
                 AssertRaycast(view.choiceRows[slot].click);
@@ -70,7 +70,7 @@ namespace OurTaiko.Tests
                 Assert.That(engine.HasPendingDeviceChanges, Is.True);
                 Assert.That(view.outputStatus.text, Does.Contain("Applies on exit"));
                 var saved = GameSettings.FromJson(File.ReadAllText(settings.FilePath));
-                Assert.That(saved.audio.backend, Is.EqualTo(SoundSettings.Platform == SoundPlatform.Windows ? AudioBackend.Asio : AudioBackend.Bass));
+                Assert.That(saved.audio.backend, Is.EqualTo(AudioBackend.BassSimple));
                 Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
                 Assert.That(saved.audio.volume.master, Is.EqualTo(.5f));
                 Assert.That(scene.bgm.IsAudioPlaying(), Is.True);
@@ -104,7 +104,7 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             // Automatic -> BASS -> Automatic reopens the device each time, then leave with volume-only changes.
-            foreach (var backend in new[] { AudioBackend.Bass, AudioBackend.Automatic, AudioBackend.Automatic })
+            foreach (var backend in new[] { AudioBackend.BassSimple, AudioBackend.Automatic, AudioBackend.Automatic })
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
                 yield return null;
@@ -121,7 +121,7 @@ namespace OurTaiko.Tests
                 float deadline = Time.realtimeSinceStartup + 15;
                 while ((scene != null || SceneSwitcher.Instance.IsInputBlocked) && Time.realtimeSinceStartup < deadline) yield return null;
                 Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.EntryScene));
-                Assert.That(engine.Backend, Is.EqualTo(backend == AudioBackend.Automatic && SoundSettings.Platform == SoundPlatform.Windows ? AudioBackend.Wasapi : AudioBackend.Bass));
+                Assert.That(engine.Backend, Is.EqualTo(backend == AudioBackend.Automatic && SoundSettings.Platform == SoundPlatform.Windows ? AudioBackend.BassWASAPI : AudioBackend.BassSimple));
                 Assert.That(engine.Silent, Is.False, engine.Diagnostics);
                 Assert.That(engine.Generation, Is.EqualTo(before + (changed ? 1 : 0)));
                 Assert.That(engine.HasPendingDeviceChanges, Is.False);
@@ -164,7 +164,7 @@ namespace OurTaiko.Tests
                 float deadline = Time.realtimeSinceStartup + 5;
                 while (!entered.IsSet && !worker.IsCompleted && Time.realtimeSinceStartup < deadline) yield return null;
                 Assert.That(entered.IsSet, Is.True);
-                var next = settings.Settings.Clone(); next.audio.backend = AudioBackend.Bass; settings.Set(next);
+                var next = settings.Settings.Clone(); next.audio.backend = AudioBackend.BassSimple; settings.Set(next);
                 var applying = engine.ApplyPendingSettingsAsync();
                 yield return null; yield return null;
                 Assert.That(applying.IsCompleted, Is.False);
@@ -174,7 +174,7 @@ namespace OurTaiko.Tests
                 yield return WaitFor(applying);
                 Assert.That(sample.IsDisposed, Is.True);
                 Assert.That(NativeAudioSample.LiveStreams, Is.Zero);
-                Assert.That(engine.Backend, Is.EqualTo(AudioBackend.Bass));
+                Assert.That(engine.Backend, Is.EqualTo(AudioBackend.BassSimple));
             }
             finally { release.Set(); }
             settings.UseUnsaved(new GameSettings());
@@ -193,7 +193,7 @@ namespace OurTaiko.Tests
             var sample = new NativeAudioSample(bytes, engine, false);
             song.SetPreparedAudio(sample);
             int oldGeneration = engine.Generation;
-            var changed = settings.Settings.Clone(); changed.audio.backend = AudioBackend.Bass;
+            var changed = settings.Settings.Clone(); changed.audio.backend = AudioBackend.BassSimple;
             settings.Set(changed);
             yield return WaitFor(engine.ApplyPendingSettingsAsync());
             Assert.That(sample.IsDisposed, Is.True);
@@ -210,7 +210,7 @@ namespace OurTaiko.Tests
             yield return null;
             var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
             // Invalid driver on Windows, unsupported backend on other platforms.
-            scene.Menu.Settings.audio.backend = AudioBackend.Asio;
+            scene.Menu.Settings.audio.backend = AudioBackend.BassASIO;
             scene.Menu.Settings.audio.asioDevice = int.MaxValue;
             scene.Menu.Settings.audio.volume.master = .6f;
             scene.Ka(scene.Menu.TypeCount - 1); scene.Don();

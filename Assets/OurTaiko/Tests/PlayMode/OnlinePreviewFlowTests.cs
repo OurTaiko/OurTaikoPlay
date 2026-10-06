@@ -88,7 +88,7 @@ namespace OurTaiko.Tests
         {
             var settings = SettingManager.EnsureInstance();
             var saved = settings.Settings.Clone();
-            var options = saved.Clone(); options.audio.backend = AudioBackend.Bass;
+            var options = saved.Clone(); options.audio.backend = AudioBackend.BassSimple;
             settings.UseUnsaved(options);
             if (AudioEngine.Instance != null) Object.Destroy(AudioEngine.Instance.gameObject);
             yield return null;

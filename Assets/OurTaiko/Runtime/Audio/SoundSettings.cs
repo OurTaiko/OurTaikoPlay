@@ -49,8 +49,9 @@ namespace OurTaiko
         public static IReadOnlyList<SettingItem> Catalog(SoundPlatform platform)
         {
             var backends = platform == SoundPlatform.Windows
-                ? new[] { AudioBackend.Automatic, AudioBackend.Bass, AudioBackend.Wasapi, AudioBackend.Asio }
-                : new[] { AudioBackend.Automatic, AudioBackend.Bass };
+                // The cross-platform BassSimple output comes last.
+                ? new[] { AudioBackend.Automatic, AudioBackend.BassWASAPI, AudioBackend.BassASIO, AudioBackend.BassSimple }
+                : new[] { AudioBackend.Automatic, AudioBackend.BassSimple };
             return new[]
             {
                 Volume("Master Volume", "Overall volume.", v => v.master, (v, n) => v.master = n),
@@ -59,8 +60,8 @@ namespace OurTaiko
                 Volume("Drum Volume", "Don and ka during gameplay and drum-sound previews.", v => v.drum, (v, n) => v.drum = n),
                 Volume("Effects Volume", "Menu feedback, balloon pops and result effects.", v => v.effects, (v, n) => v.effects = n),
                 Volume("Voice Volume", "Entry, song selection, combo and result voices.", v => v.voice, (v, n) => v.voice = n),
-                new SettingItem("Output Backend", "Automatic uses WASAPI on Windows and BASS on other native platforms. ASIO requires an installed driver." + " Applies when leaving settings. Advanced audio settings are available in settings.json.",
-                Array.ConvertAll(backends, b => b == AudioBackend.Bass ? "BASS" : b == AudioBackend.Wasapi ? "WASAPI" : b == AudioBackend.Asio ? "ASIO" : b.ToString()),
+                new SettingItem("Output Backend", "Automatic uses BassWASAPI on Windows and BassSimple on other platforms. BassSimple is BASS's cross-platform output through the system mixer; BassASIO requires an installed driver." + " Applies when leaving settings. Advanced audio settings are available in settings.json.",
+                Array.ConvertAll(backends, b => b.ToString()),
                 s => Math.Max(0, Array.IndexOf(backends, s.audio.backend)), (s,i) => s.audio.backend = backends[i]),
             };
         }

@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
                 ManagedBass.BassFlags.Decode | ManagedBass.BassFlags.Float | ManagedBass.BassFlags.MixerNonStop);
             Assert.That(mixer, Is.Not.Zero);
             var type = typeof(AudioEngine);
-            type.GetProperty("Backend").SetValue(engine, AudioBackend.Wasapi);
+            type.GetProperty("Backend").SetValue(engine, AudioBackend.BassWASAPI);
             type.GetProperty("Mixer").SetValue(engine, mixer);
             type.GetProperty("MixingMatrix").SetValue(engine, AudioEngine.CreateMixingMatrix(6));
             try

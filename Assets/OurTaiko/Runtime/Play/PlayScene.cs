@@ -197,7 +197,7 @@ namespace OurTaiko
         {
             if (switcher == null || switcher.IsInputBlocked || !songClock.Started) return;
             // Keep the intentional frame-based judgment; input event timestamps only sort hits.
-            double? playback = AudioEngine.EnsureInstance().Backend == AudioBackend.Bass && music.IsAudioPlaying()
+            double? playback = AudioEngine.EnsureInstance().Backend == AudioBackend.BassSimple && music.IsAudioPlaying()
                 ? music.AudioPosition() : null;
             songClock.Update(GameTimeline.AudioFrameTime, playback);
             if (closingPauseMenu || Time.frameCount == resumeFrame || Time.frameCount == pauseOpenedFrame) return;

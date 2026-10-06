@@ -107,7 +107,7 @@
 
 #### 最新完成：Sound 设置（2026-10-03）
 
-- 用户最新决定：GlobalSettingScene 的 Sound 显示 **Master／BGM／Track／Drum／Effects／Voice 音量组＋Output Backend**（及 Return）；音量范围 0–200%、5% 一档，确认后即时保存并生效，鼓音／语音确认时试听。设备、采样率与缓冲等高级参数仅保留在 `settings.json` 的 `audio` 中，不放回菜单。后端按平台显示 Automatic／BASS，Windows 另有 WASAPI／ASIO；旧配置中的 Unity（值 4）读取为 Automatic。
+- 用户最新决定：GlobalSettingScene 的 Sound 显示 **Master／BGM／Track／Drum／Effects／Voice 音量组＋Output Backend**（及 Return）；音量范围 0–200%、5% 一档，确认后即时保存并生效，鼓音／语音确认时试听。设备、采样率与缓冲等高级参数仅保留在 `settings.json` 的 `audio` 中，不放回菜单。后端按平台显示 Automatic／BassSimple，Windows 为 Automatic／BassWASAPI／BassASIO／BassSimple（跨平台的 BassSimple 固定放最后）；旧配置中的 Unity（值 4）读取为 Automatic。**命名（用户决定，2026-10-06）**：三个后端都用 BASS 解码混音，名字表示出声通道——`BassSimple`（原 Bass，BASS 自带输出、经系统混音，同 MajdataPlay BassSimple）、`BassWASAPI`（原 Wasapi）、`BassASIO`（原 Asio）；整数值不变，旧 settings.json 兼容。设备缓冲默认值按平台：Android 16 ms（MajdataPlay 推荐，用户决定 2026-10-06）、iOS 32 ms、桌面 64 ms，周期移动端 8 ms／桌面 16 ms（`AudioOptions.Period/Buffer(SoundPlatform)`）。
 - 确认后端后保存，退出设置时通过 SceneSwitcher 淡黑后热切换，进入 Entry 前完成。未改设备参数不重建输出；切换失败恢复之前配置并留在设置显示原因。原生加载与释放共用生命周期锁，旧异步任务按 generation 失效，未领取样本统一释放。切换后端保留配置文件中的其他音频参数。
 - Sound 共 8 行（含 Return），每页 4 行，支持分页／滑动／滚轮；选项弹窗仍最多显示 3 项并支持左右切换，供 Windows 的 5 种后端使用。场景控件通过 `ProjectBuilder.ApplySoundSettings()` 保存。实现 `SoundSettings.cs`、`AudioBus` 音量分组；详情与验证报告见 `PortingNotes.md`「Sound 设置」。
 - **语言设置（2026-10-03）**：General › Language 保存到 `settings.json` 的 `general.language`（en／ja／zh／zh_tw／ko，默认 en）。当前只影响歌名和副标题，不翻译菜单、登录提示、类别或皮肤。名称按所选语言 → 日文（TITLEJA／TITLEJP）回退；两者都缺失才保留基础 TITLE／SUBTITLE。`SongDefinition.ReadDisplayInfo()` 供选曲、加载幕布与游玩使用，结算沿用本局显示标题；原始谱面、成绩键与上传标识不改。General 在类型列表首位，类型行距 142，使五行含 Return 均在 footer 上方；语言弹窗沿用三项可视选择与左右翻页。

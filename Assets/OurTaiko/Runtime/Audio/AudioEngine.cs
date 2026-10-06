@@ -19,7 +19,7 @@ namespace OurTaiko
     public sealed class AudioEngine : MonoBehaviour
     {
         public static AudioEngine Instance { get; private set; }
-        public AudioBackend Backend { get; private set; } = AudioBackend.Bass;
+        public AudioBackend Backend { get; private set; } = AudioBackend.BassSimple;
         public string Diagnostics { get; private set; }
         // Why the requested output could not open; null while it plays through a device.
         public string Failure { get; private set; }
@@ -72,7 +72,7 @@ namespace OurTaiko
         }
         void InitializeOutput(AudioOptions options, bool allowFallback)
         {
-            Backend = AudioBackend.Bass; Failure = null; Silent = false; Available = false;
+            Backend = AudioBackend.BassSimple; Failure = null; Silent = false; Available = false;
             var backend = options.Backend;
             try
             {
@@ -81,8 +81,8 @@ namespace OurTaiko
 #endif
                 Bass.Configure(Configuration.UpdatePeriod, Math.Clamp(options.updatePeriodMs, 5, 100));
                 Bass.Configure(Configuration.PlaybackBufferLength, Math.Clamp(options.playbackBufferMs, Math.Clamp(options.updatePeriodMs, 5, 100) + 1, 5000));
-                Bass.Configure(Configuration.DevicePeriod, options.Period(Application.isMobilePlatform));
-                Bass.Configure(Configuration.DeviceBufferLength, options.Buffer(Application.isMobilePlatform));
+                Bass.Configure(Configuration.DevicePeriod, options.Period(SoundSettings.Platform));
+                Bass.Configure(Configuration.DeviceBufferLength, options.Buffer(SoundSettings.Platform));
                 Bass.Configure(Configuration.DevNonStop, true);
             }
             catch (Exception error)
@@ -95,11 +95,11 @@ namespace OurTaiko
                 return;
             }
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
-            if (backend != AudioBackend.Bass)
+            if (backend != AudioBackend.BassSimple)
             {
                 try
                 {
-                    if (backend == AudioBackend.Asio) InitAsio(options);
+                    if (backend == AudioBackend.BassASIO) InitAsio(options);
                     else InitWasapi(options);
                 }
                 catch (Exception error)
@@ -110,7 +110,7 @@ namespace OurTaiko
                 }
             }
 #else
-            if (!allowFallback && (backend == AudioBackend.Wasapi || backend == AudioBackend.Asio))
+            if (!allowFallback && (backend == AudioBackend.BassWASAPI || backend == AudioBackend.BassASIO))
                 throw new PlatformNotSupportedException("This audio backend requires Windows");
 #endif
             if (Mixer == 0)
@@ -135,7 +135,7 @@ namespace OurTaiko
                 UnityEngine.Debug.LogError("[Audio] " + Diagnostics);
                 return;
             }
-            Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + $"; {options.Rate} Hz requested; device period {options.Period(Application.isMobilePlatform)} ms requested; buffer {options.Buffer(Application.isMobilePlatform)} ms requested; stream buffering disabled";
+            Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + $"; {options.Rate} Hz requested; device period {options.Period(SoundSettings.Platform)} ms requested; buffer {options.Buffer(SoundSettings.Platform)} ms requested; stream buffering disabled";
             if (Failure != null) Diagnostics += "; fallback: " + Failure;
             if (Silent) UnityEngine.Debug.LogWarning("[Audio] " + Diagnostics);
             else UnityEngine.Debug.Log("[Audio] " + Diagnostics);
@@ -149,7 +149,7 @@ namespace OurTaiko
             if (SimulateDeviceFailure && device != Bass.NoSoundDevice) throw new InvalidOperationException("BASS device initialization: simulated failure");
             Check(Bass.Init(device, options.Rate), "BASS device initialization");
             nativeInitialized = true;
-            Backend = AudioBackend.Bass;
+            Backend = AudioBackend.BassSimple;
             Available = true;
         }
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
@@ -185,7 +185,7 @@ namespace OurTaiko
             MixingMatrix = CreateMixingMatrix(Bass.ChannelGetInfo(Mixer).Channels);
             System.Threading.Volatile.Write(ref callbackMixer, Mixer);
             Check(BassWasapi.Start(), "Start WASAPI");
-            Backend = AudioBackend.Wasapi;
+            Backend = AudioBackend.BassWASAPI;
             Available = true;
         }
         void InitAsio(AudioOptions options)
@@ -207,7 +207,7 @@ namespace OurTaiko
             BassAsio.ChannelSetFormat(false, 1, AsioSampleFormat.Float);
             if (!BassAsio.Start(Math.Max(0, options.asioBufferSamples)))
                 throw new InvalidOperationException("ASIO stereo output: " + BassAsio.LastError);
-            Backend = AudioBackend.Asio;
+            Backend = AudioBackend.BassASIO;
             Available = true;
         }
 #endif

@@ -33,7 +33,7 @@ namespace OurTaiko.Tests
             var engine = AudioEngine.Instance;
             Assert.That(engine.Available, Is.True, engine.Diagnostics);
             Assert.That(engine.Silent, Is.True, engine.Diagnostics);
-            Assert.That(engine.Backend, Is.EqualTo(AudioBackend.Bass));
+            Assert.That(engine.Backend, Is.EqualTo(AudioBackend.BassSimple));
             Assert.That(engine.Failure, Does.Contain("simulated failure"));
 
             root = new GameObject("Silent output test");

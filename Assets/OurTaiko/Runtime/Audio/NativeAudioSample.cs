@@ -58,7 +58,7 @@ namespace OurTaiko
                 if ((generation.HasValue && generation != engine.Generation) || !engine.Available)
                     throw new OperationCanceledException("Audio output changed during preparation");
                 if (encoded == null || encoded.Length == 0) throw new ArgumentException("Empty audio file");
-                mixed = engine.Backend == AudioBackend.Wasapi || engine.Backend == AudioBackend.Asio;
+                mixed = engine.Backend == AudioBackend.BassWASAPI || engine.Backend == AudioBackend.BassASIO;
                 this.speedChange = speedChange;
                 EncodedBytes = encoded.Length;
                 data = GCHandle.Alloc(encoded, GCHandleType.Pinned);

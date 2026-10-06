@@ -29,9 +29,12 @@ namespace OurTaiko.Tests
             }));
             var backend = rows[6];
             Assert.That(backend.Label, Is.EqualTo("Output Backend"));
-            Assert.That(backend.Choices.Contains("ASIO"), Is.EqualTo(platform == SoundPlatform.Windows));
-            Assert.That(backend.Choices.Contains("WASAPI"), Is.EqualTo(platform == SoundPlatform.Windows));
+            Assert.That(backend.Choices.Contains("BassASIO"), Is.EqualTo(platform == SoundPlatform.Windows));
+            Assert.That(backend.Choices.Contains("BassWASAPI"), Is.EqualTo(platform == SoundPlatform.Windows));
             Assert.That(backend.Choices.Contains("Unity"), Is.False);
+            // The cross-platform BassSimple output is always the last choice.
+            Assert.That(backend.Choices, Is.EqualTo(platform == SoundPlatform.Windows
+                ? new[] { "Automatic", "BassWASAPI", "BassASIO", "BassSimple" } : new[] { "Automatic", "BassSimple" }));
         }
         [Test]
         public void BackendChangesPreserveAdvancedConfiguration()
@@ -40,7 +43,7 @@ namespace OurTaiko.Tests
             s.audio.deviceBufferMs = 73; s.audio.asioDevice = 2; s.audio.volume.master = .35f;
             SoundSettings.Catalog(SoundPlatform.Desktop)[6].Set(s, 1);
             var saved = GameSettings.FromJson(s.ToJson());
-            Assert.That(saved.audio.backend, Is.EqualTo(AudioBackend.Bass));
+            Assert.That(saved.audio.backend, Is.EqualTo(AudioBackend.BassSimple));
             Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
             Assert.That(saved.audio.asioDevice, Is.EqualTo(2));
             Assert.That(saved.audio.volume.master, Is.EqualTo(.35f));

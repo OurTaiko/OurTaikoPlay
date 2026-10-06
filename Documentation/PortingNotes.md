@@ -468,7 +468,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 
 用户决定：Unity 音频（FMOD，项目 DSP 缓冲 1024）延迟过高，删除该后端及只能用它的 WebGL 构建目标。
 
-- `AudioBackend` 只剩 Automatic／BASS／WASAPI／ASIO（整数值不变）；旧配置中的 4（Unity）由 `AudioOptions.Backend` 与 `GameSettings.FromJson` 读为 Automatic。
+- `AudioBackend` 只剩 Automatic／BassSimple／BassWASAPI／BassASIO（2026-10-06 由 Bass／Wasapi／Asio 改名，整数值不变）；旧配置中的 4（Unity）由 `AudioOptions.Backend` 与 `GameSettings.FromJson` 读为 Automatic。
 - 初始化顺序：Windows 上 WASAPI／ASIO → BASS 默认设备 → BASS **No Sound** 设备。No Sound 设备没有声音，但流照常播放、`ChannelGetPosition` 照常推进，谱面时钟、开头 2 秒同步、试听与加载流程不需要特殊分支。`AudioEngine.Silent`／`Failure` 记录原因，设置页 Sound 的输出状态显示「No output device (silent)」及原因。BASS 库本身无法初始化时 `Available` 为 false，`AudioBus` 的准备／播放为空操作，加载场景跳过音频解码，游戏静音继续。设置中显式切换后端失败仍回滚到上次配置。
 - `GameTimeline.AudioNow`／`AudioFrameTime` 不再使用 `AudioSettings.dspTime`，与 Stopwatch 帧时间同源。SongLoadingScene 与选曲试听不再用 `UnityWebRequestMultimedia`／`LoadAudioData`；在线下载只保存音源路径交给 BASS。
 - 删除 `PlayerBuilds` 的 Web 菜单、`BuildWeb`、`ConfigureWeb` 与 `Assets/WebGLTemplates`；`AudioAssetBuild` 对所有构建都生成原始音频字节。联网代码中的 `UNITY_WEBGL` 分支与 OurTaikoView_Web 逐字相同，未改动。
@@ -477,9 +477,9 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 
 ## Sound 设置（2026-10-03）
 
-Entry「ゲーム設定」→ Sound，沿用咔移动／咚确认、触控选择及遮罩取消。用户最新决定：**界面显示六个音量组（Master／BGM／Track／Drum／Effects／Voice）、Output Backend 和 Return**。音量以 0–200%、5% 一档显示，确认后立即保存并生效；鼓音／语音确认时试听。详细设备参数留在 `settings.json` 的 `audio` 中，不在设置场景显示。所有平台提供 Automatic／BASS，Windows 增加 WASAPI／ASIO（2026-10-06 删除 Unity 选项与 WebGL）。修改后端不会覆盖其他配置。
+Entry「ゲーム設定」→ Sound，沿用咔移动／咚确认、触控选择及遮罩取消。用户最新决定：**界面显示六个音量组（Master／BGM／Track／Drum／Effects／Voice）、Output Backend 和 Return**。音量以 0–200%、5% 一档显示，确认后立即保存并生效；鼓音／语音确认时试听。详细设备参数留在 `settings.json` 的 `audio` 中，不在设置场景显示。所有平台提供 Automatic／BassSimple，Windows 为 Automatic／BassWASAPI／BassASIO／BassSimple，跨平台的 BassSimple 放在最后（2026-10-06 删除 Unity 选项与 WebGL，并改名、调整顺序）。修改后端不会覆盖其他配置。
 
-配置文件保留 `audio.volume` 的 master、bgm、track（歌曲及预览）、drum、effects、voice；值为倍率（1=100%，支持 0–2），总音量与组音量相乘，旧配置缺失字段取 1。Unity 最终单源音量仍受 0–1 上限约束。设备字段保留 BASS devicePeriodMs/deviceBufferMs/updatePeriodMs/playbackBufferMs、Windows WASAPI／ASIO 参数及 Android androidAAudio。手工修改配置文件后重新启动读取；不监听文件变化。
+配置文件保留 `audio.volume` 的 master、bgm、track（歌曲及预览）、drum、effects、voice；值为倍率（1=100%，支持 0–2），总音量与组音量相乘，旧配置缺失字段取 1。Unity 最终单源音量仍受 0–1 上限约束。设备字段保留 BASS devicePeriodMs/deviceBufferMs/updatePeriodMs/playbackBufferMs（0 为平台默认：设备缓冲 Android 16 ms、iOS 32 ms、桌面 64 ms）、Windows WASAPI／ASIO 参数及 Android androidAAudio。手工修改配置文件后重新启动读取；不监听文件变化。
 
 确认后端时即时写盘，退出设置时再次保存，并通过 `SceneSwitcher.SwitchSceneAfterFadeAsync` 在画面淡黑后应用，随后进入 Entry；无须重启游戏。页面显示实际后端及 Applies on exit，改回已应用的值会清除提示。没有设备变化时不重建输出。
 

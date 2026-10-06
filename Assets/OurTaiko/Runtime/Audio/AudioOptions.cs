@@ -3,7 +3,9 @@ using System;
 namespace OurTaiko
 {
     // Values are persisted as integers; 4 was the removed Unity output and now reads as Automatic.
-    public enum AudioBackend { Automatic, Bass, Wasapi, Asio }
+    // Every backend decodes and mixes with BASS; the name says how it outputs. BassSimple is BASS's own
+    // cross-platform output (through the system mixer); BassWASAPI and BassASIO are Windows-only.
+    public enum AudioBackend { Automatic, BassSimple, BassWASAPI, BassASIO }
 
     [Serializable]
     public sealed class AudioOptions
@@ -12,7 +14,8 @@ namespace OurTaiko
         public int sampleRate = 44100;
         public SoundVolumes volume = new SoundVolumes();
         public int updatePeriodMs = 100, playbackBufferMs = 1000;
-        // MajdataPlay's mobile defaults. Desktop uses a 16 ms device period / 64 ms buffer.
+        // 0 = platform default: MajdataPlay's 8 ms period on mobile (16 ms on desktop); buffer 16 ms on
+        // Android (MajdataPlay's recommended setting), 32 ms on iOS and 64 ms on desktop.
         public int devicePeriodMs = 0;
         public int deviceBufferMs = 0;
         public bool androidAAudio = true;
@@ -34,7 +37,9 @@ namespace OurTaiko
 
         public AudioBackend Backend => Enum.IsDefined(typeof(AudioBackend), backend) ? backend : AudioBackend.Automatic;
         public int Rate => sampleRate >= 8000 && sampleRate <= 192000 ? sampleRate : 44100;
-        public int Period(bool mobile) => Math.Clamp(devicePeriodMs == 0 ? (mobile ? 8 : 16) : devicePeriodMs, 1, 100);
-        public int Buffer(bool mobile) => Math.Clamp(deviceBufferMs == 0 ? (mobile ? 32 : 64) : deviceBufferMs, Period(mobile) * 2, 1000);
+        static bool Mobile(SoundPlatform platform) => platform == SoundPlatform.Android || platform == SoundPlatform.IOS;
+        public int Period(SoundPlatform platform) => Math.Clamp(devicePeriodMs == 0 ? (Mobile(platform) ? 8 : 16) : devicePeriodMs, 1, 100);
+        public int Buffer(SoundPlatform platform) => Math.Clamp(deviceBufferMs == 0
+            ? (platform == SoundPlatform.Android ? 16 : Mobile(platform) ? 32 : 64) : deviceBufferMs, Period(platform) * 2, 1000);
     }
 }
