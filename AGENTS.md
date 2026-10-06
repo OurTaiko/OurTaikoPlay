@@ -42,7 +42,7 @@
 
 - 练习菜单对有分支的谱面增加首页「谱面分支」（普通／玄人／達人譜面，咔切换、两端停住、咚进入小节进度），之后为小节进度、播放速度；无分支谱面没有此页。练习不评估任何分支条件，全部分支走所选路线；切换路线就地重建本次练习与小节列表，再次暂停回到分支页并保留路线。
 - **解析与游玩分离（用户决定）**：`TjaParser.Parse(text, course)` 对所有模式完全相同，不接收分支参数；`s` 条件记为 `BranchCondition.Score`，缺 `#E` 用 `#N`、缺 `#M` 用 `#E`（`ChartBranch.Routes`／`ResolveRoute`，`#N` 仍必需）。路线选择只在 `PlaySession(chart, judgeOffset, forcedBranch)`／`PracticeAt(..., forcedBranch)`：有值时每个分支取 `ResolveRoute(路线)`、不计算条件；无值（单人游玩）时遇到 `Score` 或缺路线在构造时抛 `NotSupportedException`，不猜测行为。谱面对象不保存分支选择（已删除 `TaikoChart.ForcedBranch`）。`ChartStatistics` 的达人统计按 `ResolveRoute(Master)`。
-- View_Web 宿主传入的 branch 只作 `SongDefinition.practiceBranch`（练习菜单初始路线），Bridge 用同样的固定路线 PlaySession 验证谱面。共享文件（TaikoChart、TjaParser、SongDefinition、PlaySession、ChartStatistics、LaneWindow、PracticeProgress、PracticeView、PlayScene.Practice）两边逐字相同，修改时同步。
+- 路线只在游戏内练习菜单选择（用户决定）：练习始终从普通譜面开始。View_Web 宿主不再传 branch，点「开始」只关闭遮罩、停在游戏内菜单（无分支谱面为小节进度页），与 Play 进入练习一致；Bridge 用普通譜面固定路线的 PlaySession 验证谱面，`getState` 增加 `stage`。共享文件（TaikoChart、TjaParser、SongDefinition、PlaySession、ChartStatistics、LaneWindow、PracticeProgress、PracticeView、PlayScene.Practice）两边逐字相同，修改时同步。
 - 测试：`BranchRouteTests`、`PracticeTests.PracticeForcesTheChosenBranch`、`PracticeFlowTests.BranchPageComesFirstAndFixesTheRoute`／`PracticeOpensScoreBranchesWithOmittedRoutes`。`BranchTests` 中「缺 #M 解析报错」「s 解析报错」两例已移到 session 层。
 
 #### 音符可见区间与判定游标（2026-10-05）
