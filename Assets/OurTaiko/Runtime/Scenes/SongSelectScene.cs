@@ -22,10 +22,8 @@ namespace OurTaiko
         public enum State { Browsing, CourseSelect, Decided }
 
         [Header("Songs")]
-        // Local songs ahead of the online folders. None ship with the game; tests list their charts
-        // through SongsOverride, copied in when the scene wakes with an empty list.
-        public SongDefinition[] songs;
-        public static SongDefinition[] SongsOverride;
+        // The local songs (LocalSongLibrary) ahead of the folders, read when the scene wakes.
+        [NonSerialized] public SongDefinition[] songs = Array.Empty<SongDefinition>();
 
         [Header("Stage")]
         public RectTransform wheel, coursePanel;
@@ -89,7 +87,7 @@ namespace OurTaiko
         public BoardKind FocusedKind => wheelBoards[Focused].Kind;
         // The open folder's OnlineManager key, or null.
         public string OpenFolder => openFolder >= 0 ? folders[openFolder].Key : null;
-        public IReadOnlyList<Online.OnlineFolder> Folders => folders;
+        public IReadOnlyList<SongFolder> Folders => folders;
         public enum BoardKind { Song, Folder, Back }
         public BoardKind KindAt(int index) => wheelBoards[index].Kind;
         public SongDefinition SongAt(int index) => wheelBoards[index].Song;
@@ -119,7 +117,7 @@ namespace OurTaiko
             public int Folder = -1;  // folders[] index of a folder or もどる board (-1: the root もどる), or of the folder a song is in
             // A song wears its folder's genre (the box.def it was loaded from), else its own.
             public int Genre => Folder >= 0 ? folders[Folder].Genre : Song != null ? Song.genre : 0;
-            public Online.OnlineFolder[] folders;
+            public SongFolder[] folders;
             public FolderSlot FolderSlot;
             public Slot Slot;
             public SongBoardView View;
@@ -148,7 +146,7 @@ namespace OurTaiko
         readonly List<Board> wheelBoards = new List<Board>();
         readonly Stack<Slot> boardPool = new Stack<Slot>();
         readonly Stack<FolderSlot> folderPool = new Stack<FolderSlot>();
-        Online.OnlineFolder[] folders = Array.Empty<Online.OnlineFolder>();
+        SongFolder[] folders = Array.Empty<SongFolder>();
         // The open folder, its もどる board's index and how many boards follow it.
         int openFolder = -1, openAt = -1, openCount;
         LumenClip folderClip;
@@ -181,8 +179,10 @@ namespace OurTaiko
             if (view == null) throw new InvalidOperationException("SongSelect requires a saved layout. Run OurTaiko/Apply Song Select Layout in the Editor.");
             wheel.gameObject.SetActive(true);
             var online = Online.OnlineManager.EnsureInstance();
-            folders = online.Folders.ToArray();
-            if ((songs == null || songs.Length == 0) && SongsOverride != null) songs = (SongDefinition[])SongsOverride.Clone();
+            // Local box.def folders come before the server categories.
+            var library = LocalSongLibrary.EnsureInstance();
+            songs = library.Songs.ToArray();
+            folders = library.Folders.Concat(online.Folders).ToArray();
             BindBoards();
             backgroundPositions = backgroundTiles.Select(tile => tile.rectTransform.anchoredPosition).ToArray();
             // Coming back from a song in a folder reopens that folder on the song (reopen_folder_path).

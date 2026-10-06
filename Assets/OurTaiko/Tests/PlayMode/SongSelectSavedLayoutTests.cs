@@ -40,7 +40,7 @@ namespace OurTaiko.Tests
                 var view = select.view;
                 var board = view.songBoards[0];
                 Assert.That(view.transform.IsChildOf(copy.transform), Is.True, "Cloning remaps the saved view.");
-                Assert.That(view.songBoards.Length, Is.EqualTo(select.songs.Length));
+                Assert.That(view.songBoards.Length, Is.EqualTo(LocalSongLibrary.Instance.Songs.Count));
                 Assert.That(select.wheel.GetComponentsInChildren<SongBoardView>(true).Length, Is.EqualTo(3));
 
                 var titlePosition = new Vector2(23, -17);
@@ -64,10 +64,15 @@ namespace OurTaiko.Tests
                 var title = board.title;
                 var options = view.options;
                 var cards = view.cards.Select(card => card.board).ToArray();
-                // Replace the saved one-course song with a song that has all four columns.
-                // Previously hidden plates must return to their correct content layout.
-                select.songs[1] = select.songs[0];
-                view.songBoards[1].song = select.songs[0]; // Also exercise a chart updated under the same asset reference.
+                // Rewrite the one-course song on disk as a song with all four columns: the rescan keeps
+                // its SongDefinition and updates the chart under it, and previously hidden plates must
+                // return to their correct content layout.
+                var library = LocalSongLibrary.Instance;
+                var calibration = TestSongs.Load(TestSongs.Calibration);
+                System.IO.File.Copy(TestSongs.ChartPath(TestSongs.TripleHelix), TestSongs.ChartPath(TestSongs.Calibration), true);
+                library.Refresh();
+                Assert.That(TestSongs.Load(TestSongs.Calibration), Is.SameAs(calibration));
+                Assert.That(calibration.ReadInfo().Has(Difficulty.Easy), Is.True);
 
                 copy.SetActive(true);
                 yield return new WaitForSecondsRealtime(0.4f);
@@ -122,6 +127,7 @@ namespace OurTaiko.Tests
                 if (copy != null) Object.Destroy(copy);
                 if (original != null) Object.Destroy(original);
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                TestSongs.Install();  // Restores the rewritten chart for later tests.
             }
         }
 

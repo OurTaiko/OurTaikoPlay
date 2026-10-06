@@ -32,14 +32,14 @@ namespace OurTaiko.Tests
         [Test]
         public void SongInfoListsCoursesLevelsAndBranches()
         {
-            var triple = SongInfo.Read(AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/OurTaiko/Tests/Shared/Songs/TripleHelix.txt").text);
+            var triple = SongInfo.Read(File.ReadAllText("Assets/OurTaiko/Tests/Shared/Songs~/1 TripleHelix.tja"));
             Assert.That(triple.Title, Is.EqualTo("TRIPLE HELIX"));
             Assert.That(triple.Subtitle, Is.EqualTo("Yonokid"));
             Assert.That(triple.DemoStart, Is.EqualTo(120.001));
             Assert.That(triple.Courses.Select(c => (c.Difficulty, c.Level)),
                 Is.EqualTo(new[] { (Difficulty.Easy, 2), (Difficulty.Normal, 4), (Difficulty.Hard, 6), (Difficulty.Oni, 9), (Difficulty.Ura, 10) }));
             Assert.That(triple.Course(Difficulty.Ura).Course, Is.EqualTo("Edit"));
-            var branch = SongInfo.Read(AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/OurTaiko/Tests/Shared/Songs/BranchTraining.txt").text);
+            var branch = SongInfo.Read(File.ReadAllText("Assets/OurTaiko/Tests/Shared/Songs~/3 BranchTraining.tja"));
             Assert.That(branch.Course(Difficulty.Oni).IsBranching, Is.True);
             Assert.That(SongInfo.Read("TITLE:x\nCOURSE:3\nLEVEL:7\n#START\n1,\n#END").Course(Difficulty.Oni).Level, Is.EqualTo(7));
         }

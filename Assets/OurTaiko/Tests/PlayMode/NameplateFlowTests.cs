@@ -184,7 +184,7 @@ namespace OurTaiko.Tests
 
                 var run = new PlayResult
                 {
-                    ChartKey = "Calibration", Title = "Input Calibration", Course = "Hard", Difficulty = Difficulty.Hard, Level = 1,
+                    ChartKey = TestSongs.Calibration, Title = "Input Calibration", Course = "Hard", Difficulty = Difficulty.Hard, Level = 1,
                     Score = 123450, Good = 40, Ok = 12, Bad = 30, MaxCombo = 17, Rolls = 3, GaugePoints = 2500,
                 };
                 SceneSwitcher.Instance.ShowResult(run);

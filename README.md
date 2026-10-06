@@ -34,10 +34,15 @@ git submodule update --init --recursive
 1. 用 Unity Hub 打开项目，等待包解析与资源导入完成。
 2. 打开 `Assets/Scenes/Entry.unity`，点击 Play。
 3. 敲咚或点击画面加入，选择「演奏ゲーム」。
-4. 在服务器页面登录或以游客进入。
+4. 在服务器页面登录、以游客进入，或跳过服务器只玩本地歌曲。
 5. 选择歌曲和难度，开始演奏。
 
-游戏不自带歌曲，曲目全部来自在线服务器的分类文件夹。Entry 的「ゲーム設定」可进入系统设置。
+游戏不自带歌曲。本地歌曲放在 `Application.persistentDataPath/Songs`（首次启动自动创建；macOS 为 `~/Library/Application Support/OurTaiko/OurTaikoPlay/Songs`），每次经过服务器页面都会重新扫描：
+
+- 读取 `.tja`（BOM 决定编码，无 BOM 时为 UTF-8，解码失败按 Shift-JIS），音频为同目录下 `WAVE:` 指定的文件；至少有一个 Easy～Edit 课程才列出。
+- 含 `box.def`（自身或子目录）的顶层目录成为文件夹，标题与类别取 `#TITLE`／`#TITLE<语言>`、`#GENRE`，其下所有谱面按标题排序；其余谱面直接列在选曲列表，按文件名排序。本地文件夹排在服务器分类之前。
+
+Entry 的「ゲーム設定」可进入系统设置。
 
 ## 操作
 

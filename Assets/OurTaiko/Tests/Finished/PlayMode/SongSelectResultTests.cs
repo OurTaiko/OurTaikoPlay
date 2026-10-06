@@ -23,21 +23,21 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
             Assert.That(select.songs.Length, Is.EqualTo(3));
-            Assert.That(select.FocusedSong.name, Is.EqualTo("TripleHelix"));
+            Assert.That(select.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
             Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.Browsing));
             yield return new WaitForSecondsRealtime(0.5f);
             Assert.That(select.IsPreviewPlaying, Is.True, "The focused song previews from DEMOSTART once its board is open.");
             Capture("SongSelectBrowse.png");
 
             select.Right();
-            Assert.That(select.FocusedSong.name, Is.EqualTo("Calibration"));
+            Assert.That(select.FocusedSong.name, Is.EqualTo(TestSongs.Calibration));
             Assert.That(select.IsPreviewPlaying, Is.False);
             yield return new WaitForSecondsRealtime(0.3f);
             Capture("SongSelectMoving.png");
             yield return new WaitForSecondsRealtime(0.6f);
             select.Left();
             yield return new WaitForSecondsRealtime(0.9f);
-            Assert.That(select.FocusedSong.name, Is.EqualTo("TripleHelix"));
+            Assert.That(select.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
 
             select.Confirm();
             Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.CourseSelect));
@@ -103,7 +103,7 @@ namespace OurTaiko.Tests
             var result = Object.FindFirstObjectByType<ResultScene>();
             Assert.That(result.Result.Bad == 0 && result.Result.Ok == 0, Is.True);
             Assert.That(result.Result.GaugeState, Is.EqualTo(GaugeState.Full));
-            Assert.That(ScoreStore.Shared.Get("TripleHelix", Difficulty.Oni), Is.Null, "Auto play is never saved.");
+            Assert.That(ScoreStore.Shared.Get(TestSongs.TripleHelix, Difficulty.Oni), Is.Null, "Auto play is never saved.");
             yield return WaitUntil(() => result.Sequence.GaugeShown >= 30);
             Capture("ResultGaugeFilling.png");
             yield return WaitUntil(() => result.Sequence.RowsLanded >= 3);
@@ -119,7 +119,7 @@ namespace OurTaiko.Tests
             yield return WaitUntil(() => result.Sequence.CanAdvance, 15);
             result.Don();
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            Assert.That(Object.FindFirstObjectByType<SongSelectScene>().FocusedSong.name, Is.EqualTo("TripleHelix"));
+            Assert.That(Object.FindFirstObjectByType<SongSelectScene>().FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
             Object.Destroy(switcher.gameObject);
         }
 
@@ -132,7 +132,7 @@ namespace OurTaiko.Tests
             yield return null;
             var failed = new PlayResult
             {
-                ChartKey = "Calibration", Title = "Input Calibration", Course = "Hard", Difficulty = Difficulty.Hard, Level = 1,
+                ChartKey = TestSongs.Calibration, Title = "Input Calibration", Course = "Hard", Difficulty = Difficulty.Hard, Level = 1,
                 Score = 123450, Good = 40, Ok = 12, Bad = 30, MaxCombo = 17, Rolls = 3, GaugePoints = 2500,
             };
             Assert.That(failed.Message, Is.EqualTo(ResultMessage.Miss));

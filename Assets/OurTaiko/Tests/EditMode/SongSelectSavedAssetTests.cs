@@ -23,8 +23,7 @@ namespace OurTaiko.Tests
                 Assert.That(view, Is.Not.Null, "The scene stores its view rather than constructing it in Awake.");
                 Assert.That(view.gameObject.scene, Is.EqualTo(scene));
                 Assert.That(view.songBoards.Length, Is.EqualTo(3));
-                // No local songs ship; the saved boards are layout templates the test songs bind to.
-                Assert.That(select.songs, Is.Empty);
+                // No songs ship; the saved boards are layout templates the local songs bind to.
                 Assert.That(view.songBoards.Select(board => board.song), Has.All.Null);
                 Assert.That(view.songBoards.Distinct().Count(), Is.EqualTo(3));
                 foreach (var board in view.songBoards)

@@ -7783,7 +7783,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71e49d00c685a46159a03e96e088c0e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.SongSelectScene
-  songs: []
   wheel: {fileID: 937354437}
   coursePanel: {fileID: 2051997581}
   view: {fileID: 1860933928}

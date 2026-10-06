@@ -1,33 +1,46 @@
+using System.IO;
 using System.Linq;
 using UnityEngine;
 
 namespace OurTaiko.Tests
 {
-    // The test charts (TRIPLE HELIX with its music, the silent Input Calibration and Branch Training).
-    // The game ships no local songs: TestData.Use lists these as SongSelect's local songs, and tests
-    // that load a play scene directly Select one first.
+    // The test charts (TRIPLE HELIX with its music, the silent Input Calibration and Branch Training)
+    // live in Songs~, which Unity does not import. TestData.Use copies them to a temporary songs
+    // folder that LocalSongLibrary reads like the player's own; the number prefixes keep the file
+    // name order TRIPLE HELIX, Calibration, Branch Training. Tests that load a play scene directly
+    // Select a song first.
     public static class TestSongs
     {
-        public const string Folder = "Assets/OurTaiko/Tests/Shared/Songs/";
-        public static readonly string[] Names = { "TripleHelix", "Calibration", "BranchTraining" };
+        public const string TripleHelix = "1 TripleHelix", Calibration = "2 Calibration", BranchTraining = "3 BranchTraining";
 
-        public static SongDefinition Load(string name)
+        public static string Source => Path.Combine(Application.dataPath, "OurTaiko", "Tests", "Shared", "Songs~");
+        public static string Root => Path.Combine(Application.temporaryCachePath, "playmode-songs");
+        public static string ChartPath(string key) => Path.Combine(Root, key + ".tja");
+
+        // A fresh copy, so tests may edit the charts in Root.
+        public static void Install()
         {
-#if UNITY_EDITOR
-            var song = UnityEditor.AssetDatabase.LoadAssetAtPath<SongDefinition>(Folder + name + ".asset");
-            if (song == null) throw new System.IO.FileNotFoundException("Missing test song " + name, Folder + name + ".asset");
-            return song;
-#else
-            throw new System.NotSupportedException("Test songs load through the AssetDatabase.");
-#endif
+            if (Directory.Exists(Root)) Directory.Delete(Root, true);
+            Directory.CreateDirectory(Root);
+            foreach (string file in Directory.GetFiles(Source))
+                File.Copy(file, Path.Combine(Root, Path.GetFileName(file)));
+            LocalSongLibrary.EnsureInstance().UseRoot(Root);
         }
 
-        public static SongDefinition[] All => Names.Select(Load).ToArray();
+        public static void Uninstall()
+        {
+            if (LocalSongLibrary.Instance != null) LocalSongLibrary.Instance.UseRoot(LocalSongLibrary.DefaultRoot);
+            if (Directory.Exists(Root)) Directory.Delete(Root, true);
+        }
+
+        public static SongDefinition Load(string key) =>
+            LocalSongLibrary.EnsureInstance().Songs.FirstOrDefault(song => song.name == key)
+            ?? throw new FileNotFoundException("Missing test song " + key, ChartPath(key));
 
         // What a direct run of SinglePlayScene used to play: TRIPLE HELIX on its own course, not auto.
-        public static SongDefinition Select(string name = "TripleHelix", string course = null, bool autoPlay = false)
+        public static SongDefinition Select(string key = TripleHelix, string course = null, bool autoPlay = false)
         {
-            var song = Load(name);
+            var song = Load(key);
             SceneSwitcher.EnsureInstance().Select(song, course, autoPlay);
             return song;
         }

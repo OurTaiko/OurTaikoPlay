@@ -4,7 +4,8 @@ using UnityEngine;
 namespace OurTaiko.Tests
 {
     // Keeps PlayMode tests away from the player's real scores.sqlite3, options.json, player.json, settings.json,
-    // servers.json and online cache; tests start with no online server (ServerLogin passes straight through).
+    // servers.json, online cache and songs folder; tests start with no online server (ServerLogin passes straight
+    // through) and the test songs (TestSongs) as the only local songs.
     // Each test assembly calls this from its own [SetUpFixture].
     public static class TestData
     {
@@ -19,7 +20,7 @@ namespace OurTaiko.Tests
             PlayerInfoController.EnsureInstance().UseUnsaved(new PlayerInfo());
             SettingManager.EnsureInstance().UseUnsaved(new GameSettings());
             UseServers(new Online.ServerList());
-            SongSelectScene.SongsOverride = TestSongs.All;
+            TestSongs.Install();
         }
 
         // Unsaved servers over a fresh temporary cache.
@@ -35,7 +36,7 @@ namespace OurTaiko.Tests
         {
             ScoreStore.Shared = null;
             PlayOptions.Shared = null;
-            SongSelectScene.SongsOverride = null;
+            TestSongs.Uninstall();
             if (File.Exists(ScorePath)) File.Delete(ScorePath);
             if (Directory.Exists(OnlineCache)) Directory.Delete(OnlineCache, true);
         }

@@ -116,11 +116,11 @@ namespace OurTaiko.Tests
             session.Hit(false, 0.2); session.Hit(false, 0.2); session.Hit(false, 0.2);
             Assert.That(session.Rolls, Is.EqualTo(2)); Assert.That(session.Score, Is.EqualTo(200)); Assert.That(session.Resolved[0], Is.True);
         }
-        [TestCase("TripleHelix", "Oni")]
-        [TestCase("Calibration", "Hard")]
+        [TestCase("1 TripleHelix", "Oni")]
+        [TestCase("2 Calibration", "Hard")]
         public void ImportedChartParsesAndAutoPlayCompletesWithoutMisses(string name, string course)
         {
-            var chart = TjaParser.Parse(File.ReadAllText("Assets/OurTaiko/Tests/Shared/Songs/" + name + ".txt"), course);
+            var chart = TjaParser.Parse(File.ReadAllText("Assets/OurTaiko/Tests/Shared/Songs~/" + name + ".tja"), course);
             Assert.That(chart.Notes.Count, Is.GreaterThan(50));
             var session = new PlaySession(chart);
             for (double t = -2; t < chart.Duration + 2; t += 1.0 / 60) session.Advance(t, true);

@@ -92,7 +92,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
             var menu = Object.FindFirstObjectByType<SongSelectScene>();
-            var song = menu.songs.Single(s => s.name == "BranchTraining");
+            var song = menu.songs.Single(s => s.name == TestSongs.BranchTraining);
             SceneSwitcher.Instance.Play(song, expected == BranchRoute.Master);
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindFirstObjectByType<PlayScene>();
@@ -214,7 +214,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
             var menu = Object.FindFirstObjectByType<SongSelectScene>();
-            SceneSwitcher.Instance.Play(menu.songs.Single(s => s.name == "BranchTraining"), true);
+            SceneSwitcher.Instance.Play(menu.songs.Single(s => s.name == TestSongs.BranchTraining), true);
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindFirstObjectByType<PlayScene>();
             if (!play.IsPaused) play.TogglePause();

@@ -24,8 +24,7 @@ namespace OurTaiko.Editor
                     throw new InvalidOperationException("Save the current scene edits first.");
             ImportSongSelectResultArt();
             font = UiFont();
-            // No local songs ship with the game; the list holds the online folders.
-            if (!File.Exists(SongSelectPath)) CreateSongSelectScene(Array.Empty<SongDefinition>());
+            if (!File.Exists(SongSelectPath)) CreateSongSelectScene();
             if (!File.Exists(ResultPath)) CreateResultScene();
             UpgradeStage(SongSelectPath); UpgradeStage(ResultPath);
             ApplyResultLayout();
@@ -120,11 +119,10 @@ namespace OurTaiko.Editor
             EditorSceneManager.SaveScene(scene);
         }
 
-        static void CreateSongSelectScene(SongDefinition[] songs)
+        static void CreateSongSelectScene()
         {
             var root = NewStage();
             var controller = new GameObject("SongSelect").AddComponent<SongSelectScene>();
-            controller.songs = songs;
             controller.nameplatePrefab = AssetDatabase.LoadAssetAtPath<NameplateView>(NameplatePrefabPath);
             var background = Rect("Background", root, 0, 0, 1920, 1080);
             controller.backgroundTiles = new UnityEngine.UI.Image[4];

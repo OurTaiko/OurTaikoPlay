@@ -7,13 +7,6 @@ using UnityEngine;
 namespace OurTaiko.Online
 {
     // A server category as a song-select folder: its songs in API order (shared SongDefinitions).
-    public sealed class OnlineFolder
-    {
-        public string Key = "", Title = "", ServerName = "";
-        public int Genre;
-        public SongDefinition[] Songs = Array.Empty<SongDefinition>();
-    }
-
     // Global holder of the online servers, created before the first scene and kept across loads
     // (like SettingManager). It reads servers.json, owns the FanmadeClient, pumps its score
     // uploads every frame and turns the connected catalog into SongDefinitions and category
@@ -29,12 +22,12 @@ namespace OurTaiko.Online
         // The connected catalog as playable songs; the same instance for a chart until Reset.
         public IReadOnlyList<SongDefinition> Songs => songs;
         // One folder per server category, in server then bootstrap order.
-        public IReadOnlyList<OnlineFolder> Folders => folders;
+        public IReadOnlyList<SongFolder> Folders => folders;
         // The folder song select had open, reopened when it comes back from a song; reset by ServerLogin.
         public string OpenFolderKey { get; set; }
 
         readonly List<SongDefinition> songs = new List<SongDefinition>();
-        readonly List<OnlineFolder> folders = new List<OnlineFolder>();
+        readonly List<SongFolder> folders = new List<SongFolder>();
         readonly Dictionary<string, (SongDefinition Song, FanmadeChart Chart)> byKey = new Dictionary<string, (SongDefinition, FanmadeChart)>();
         readonly Dictionary<SongDefinition, FanmadeChart> charts = new Dictionary<SongDefinition, FanmadeChart>();
         readonly List<UnityEngine.Object> owned = new List<UnityEngine.Object>();
@@ -157,7 +150,7 @@ namespace OurTaiko.Online
             foreach (string key in byKey.Keys.Where(k => !keep.Contains(k)).ToList()) byKey.Remove(key);
             folders.Clear();
             foreach (var category in Client.Categories)
-                folders.Add(new OnlineFolder
+                folders.Add(new SongFolder
                 {
                     Key = category.Server + "/" + category.Id, Title = category.Title, ServerName = category.ServerName,
                     Genre = GenreFrame(category.Genre),
