@@ -38,6 +38,21 @@
 
 ### 当前完成状态与交接边界
 
+#### 音符可见区间与判定游标（2026-10-05）
+
+- 起因：长谱面每帧遍历全部音符／小节线（显示与判定），练习暂停静止时也照算；iPad Safari Web 播放器约 80 FPS（Web 帧调度与 2 倍像素密度另待实测，可能才是主因）。
+- **渲染**：`Core/LaneWindow.cs`。`LaneCull.ForNotes`／`ForBars` 按 x(t)=判定点+(T−t)·速度 的线性关系，为每个音符（含文字）与小节线预算可能接触轨道的时间区间；外扩 3×max(音符,文字宽)+连打长度。负速交换两端，零速／非有限速度视为全时段，气球 t≥T 停在判定点故区间不结束。区间**只做候选筛选**，`RenderNotes` 对候选仍走原精确 `InLane(Reach)` 与 alive 判断；离开区间的对象归还池，`Restack` 只排候选。前进时按起点游标增量更新，时间倒退（跳小节、回滚、重开）整组重建；轨道宽度变化重建区间并清空画面。时间、Session 引用、`Session.Version`、气球计数、预览模式都未变时整帧跳过（暂停静止），舞者同一时刻不重复采样。
+- **判定**：`PlaySession` 依赖 `Chart.Notes` 按时间排序（`TjaParser` 排序）：`head` 游标＋`pending`（已到达未结算，按索引升序）。未决定分支的音符保留在 pending（防御性，现有谱面分支总在路线音符前决定），`NextInLane`／连打查找只看 pending 和 head 之后；事件顺序与原全谱扫描一致。未排序谱面退回全扫描。
+- **状态只读**：`Resolved`／`Missed`／`LongHits` 对外为只读视图，只有 PlaySession 写入并递增 `Version`；不要恢复为公开数组，否则跳帧会漏重绘。测试用真实 `Hit`／超时制造状态。
+- 验证：`Tests/EditMode/ChartCursorTests.cs` 与逐字保留的 `ReferencePlaySession.cs`（`0e4fb7c` 的全扫描实现）逐帧对比事件／状态／分数，并对每帧用精确裁切检查候选覆盖；谱面含 `Tests/EditMode/Charts/Donkama2000.txt`（用户提供）。变异检查：外扩改 0、`NextInLane` 忽略 pending 均被抓到。Donkama Oni 765 音符每帧候选 ≤40；16000 音符判定 0.04 vs 29.4 µs/帧（Editor）。提交 `3f93225`、`c3a30c4`。
+- 待办：同步 View_Web 后在 iPad 实测；渲染部分的毫秒收益尚未单独计时。
+
+#### 已知测试问题：iOS 构建平台下 BassMix 失效（2026-10-05）
+
+- `NativeDecoderTests.MixedOutputResamplesPausesAndRoutesWithoutDeviceSpecificDrivers` 在 **Editor 构建平台为 iOS** 时稳定报 `EntryPointNotFoundException: BASS_Mixer_StreamCreate`。原因：`3e5d299` 为 iOS 静态链接设置 Player Settings iOS 定义 `__STATIC_LINKING__`（`AudioBuildSettings.Configure` 自动补），ManagedBass `BassMix.cs` 仅按该符号选 `"__Internal"`、不排除 Editor（核心 `Bass.cs` 用 `UNITY_IOS && !UNITY_EDITOR`）；Editor 用 iOS 定义编译，就去 Editor 进程找 bassmix 符号。`libbassmix.dylib` 有该导出，测试、子模块与原生库自 `3e5d299` 未变。与代码版本无关，切回 macOS 平台预计通过（尚未实测）。
+- 影响：iOS 平台下的 Editor 中，BASS 后端凡用混音器之处（`AudioEngine` WASAPI／ASIO 混音、`NativeAudioSample` 重采样）同样失败；真机 iOS 不受影响。修复方向（未做，需用户确认）：不改子模块，仅在 iOS 构建期间临时加符号，或把测试限定非 iOS 平台。
+- 其余整组 PlayMode 偶发失败（2026-10-05 在 `0e4fb7c` 与新代码上对照）：`OnlinePreviewFlowTests.FailedPreviewKeepsBgmPlaying`、`SongBestScoreTests.SavedWindowShows…` 整组失败、单独通过（疑似前序测试残留状态）；`OffsetFlowTests`、`PracticeFlowTests` 中毫秒级时序断言时过时不过。均早于本次优化，未修。
+
 #### 跨平台产品名称与图标（2026-10-04）
 
 - `PlayerBranding.Configure()` 统一应用 OurTaikoPlay 产品名及 OurTaikoPlayer 原图 `assets/branding/icon.png`（无修改复制到 `Assets/OurTaiko/Branding/AppIcon.png`）。桌面与 iOS 全尺寸图标均绑定；Android Adaptive 沿用原项目白底／20% 内缩。Unity Build Profiles 与 OurTaiko 构建入口均自动应用。
