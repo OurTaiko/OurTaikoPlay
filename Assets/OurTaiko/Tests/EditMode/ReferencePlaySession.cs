@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OurTaiko
+namespace OurTaiko.Tests
 {
     // Pure C#: independent of frame rate, rendering and audio, and testable without a scene.
-    public sealed class PlaySession
+    // Verbatim copy of PlaySession before the cursor optimisation (0e4fb7c): the full-scan reference.
+    public sealed class ReferencePlaySession
     {
         public const double GoodWindow = 0.0250250015258789, OkWindow = 0.0750750045776367, BadWindow = 0.108441665649414;
         public readonly TaikoChart Chart;
@@ -31,8 +32,6 @@ namespace OurTaiko
         public BranchRoute CurrentBranch { get; private set; } = BranchRoute.Normal;
         public IReadOnlyList<BranchRoute> BranchHistory => branchHistory;
         public double LastBranchValue { get; private set; }
-        // Changes whenever a note's result or a branch choice changes, so a frame can skip an unchanged redraw.
-        public int Version { get; private set; }
         public event Action<int, Judgment> Judged;
         public event Action<ChartBranch, BranchRoute> BranchSelected;
         readonly ShinuchiScore scoring;
@@ -42,12 +41,6 @@ namespace OurTaiko
         readonly List<BranchRoute> branchHistory = new List<BranchRoute>();
         readonly List<TimelineEvent> timeline = new List<TimelineEvent>();
         int nextEvent, branchNotes, branchRolls;
-        // Notes are sorted by time (TjaParser), so only two groups can still owe a result: the
-        // unresolved notes already reached (pending, ascending index) and the notes from head on.
-        // Every note before head and not pending is resolved or on a decided unselected route.
-        readonly bool timeSorted;
-        int head;
-        List<int> pending = new List<int>(), revisit = new List<int>();
         double branchPoints;
         double practiceStart = double.NegativeInfinity;
 
@@ -59,7 +52,7 @@ namespace OurTaiko
             public int Priority => Branch != null ? 1 : Section.BranchId < 0 ? 0 : 2;
         }
 
-        public PlaySession(TaikoChart chart, double judgeOffset = 0)
+        public ReferencePlaySession(TaikoChart chart, double judgeOffset = 0)
         {
             JudgeOffset = judgeOffset;
             Chart = chart; Resolved = new bool[chart.Notes.Count]; Missed = new bool[chart.Notes.Count]; LongHits = new int[chart.Notes.Count];
@@ -71,9 +64,6 @@ namespace OurTaiko
             okWindow = easy ? 0.108441665649414 : OkWindow;
             badWindow = easy ? 0.125125 : BadWindow;
             selectedRoutes = Enumerable.Repeat(-1, chart.Branches.Count).ToArray();
-            timeSorted = true;
-            for (int i = 0; i < chart.Notes.Count; i++)
-                if (double.IsNaN(chart.Notes[i].Time) || i > 0 && chart.Notes[i].Time < chart.Notes[i - 1].Time) timeSorted = false;
             foreach (var branch in chart.Branches) timeline.Add(new TimelineEvent { Time = branch.DecisionTime, Branch = branch });
             foreach (var section in chart.Sections) timeline.Add(new TimelineEvent { Time = section.Time, Section = section });
             // Stable order preserves authored checkpoint order when several become ready together.
@@ -84,9 +74,9 @@ namespace OurTaiko
 
         // Start a fresh practice attempt without replaying judgments, sounds or missed-note penalties.
         // Preserve already chosen branches before the cursor, and recalculate future checkpoints.
-        public static PlaySession PracticeAt(TaikoChart chart, double time, PlaySession previous = null)
+        public static ReferencePlaySession PracticeAt(TaikoChart chart, double time, ReferencePlaySession previous = null)
         {
-            var session = new PlaySession(chart, previous?.JudgeOffset ?? 0) { practiceStart = time };
+            var session = new ReferencePlaySession(chart, previous?.JudgeOffset ?? 0) { practiceStart = time };
             while (session.nextEvent < session.timeline.Count && session.timeline[session.nextEvent].Time <= time)
             {
                 var item = session.timeline[session.nextEvent++];
@@ -147,7 +137,7 @@ namespace OurTaiko
             var chosen = value >= branch.ExpertThreshold && value < branch.MasterThreshold && branch.ExpertThreshold >= 0
                 ? BranchRoute.Expert : value >= branch.MasterThreshold ? BranchRoute.Master : BranchRoute.Normal;
             selectedRoutes[branch.Id] = (int)chosen;
-            CurrentBranch = chosen; LastBranchValue = value; branchHistory.Add(chosen); Version++;
+            CurrentBranch = chosen; LastBranchValue = value; branchHistory.Add(chosen);
             ResetBranchStats();
             BranchSelected?.Invoke(branch, chosen);
         }
@@ -156,39 +146,23 @@ namespace OurTaiko
         {
             // B changes manual judgment and timeout together; chart events and autoplay stay on A.
             if (!auto) time -= JudgeOffset;
-            if (!timeSorted)
+            for (int i = 0; i < Chart.Notes.Count; i++)
             {
-                for (int i = 0; i < Chart.Notes.Count; i++) AdvanceNote(i, time, auto);
-                return;
-            }
-            // Same index order as a full scan: every pending note is before head.
-            revisit.Clear();
-            foreach (int i in pending) if (AdvanceNote(i, time, auto)) revisit.Add(i);
-            for (; head < Chart.Notes.Count && Chart.Notes[head].Time <= time; head++)
-                if (AdvanceNote(head, time, auto)) revisit.Add(head);
-            (pending, revisit) = (revisit, pending);
-        }
-
-        // Returns whether the note may still need a later visit: unresolved and active, or on
-        // a branch not decided yet (it may become active once the branch is chosen).
-        bool AdvanceNote(int i, double time, bool auto)
-        {
-            var note = Chart.Notes[i];
-            if (Resolved[i]) return false;
-            if (!IsActive(note)) return selectedRoutes[note.BranchId] < 0;
-            if (note.Time > time) return true;
-            if (note.IsLong)
-            {
-                if (auto && time >= practiceStart)
+                if (Resolved[i] || !IsActive(Chart.Notes[i])) continue;
+                var note = Chart.Notes[i];
+                if (note.Time > time) continue;
+                if (note.IsLong)
                 {
-                    int expected = (int)(Math.Max(0, Math.Min(time, note.EndTime) - Math.Max(note.Time, practiceStart)) * 15) + 1;
-                    while (!Resolved[i] && LongHits[i] < expected) HitLong(i);
+                    if (auto && time >= practiceStart)
+                    {
+                        int expected = (int)(Math.Max(0, Math.Min(time, note.EndTime) - Math.Max(note.Time, practiceStart)) * 15) + 1;
+                        while (!Resolved[i] && LongHits[i] < expected) HitLong(i);
+                    }
+                    if (time > note.EndTime) Resolved[i] = true;
                 }
-                if (time > note.EndTime && !Resolved[i]) { Resolved[i] = true; Version++; }
+                else if (auto) Resolve(i, Judgment.Good);
+                else if (time - note.Time > badWindow) { Missed[i] = true; Resolve(i, Judgment.Bad); }
             }
-            else if (auto) Resolve(i, Judgment.Good);
-            else if (time - note.Time > badWindow) { Missed[i] = true; Resolve(i, Judgment.Bad); }
-            return !Resolved[i];
         }
 
         public Judgment Hit(bool ka, double time)
@@ -214,46 +188,24 @@ namespace OurTaiko
                     Resolve(target, result); return result;
                 }
             }
-            int roll = HittableLong(ka, time);
-            if (roll >= 0) { HitLong(roll); return Judgment.Roll; }
+            for (int i = 0; i < Chart.Notes.Count; i++)
+            {
+                var n = Chart.Notes[i];
+                if (!Resolved[i] && IsActive(n) && n.IsLong && time >= Math.Max(n.Time, practiceStart) && time <= n.EndTime && (!n.IsBalloon || !ka))
+                { HitLong(i); return Judgment.Roll; }
+            }
             return Judgment.None;
         }
 
         bool Pending(int i) => !Resolved[i] && IsActive(Chart.Notes[i]);
-        bool CanHitLong(int i, bool ka, double time)
-        {
-            var n = Chart.Notes[i];
-            return Pending(i) && n.IsLong && time >= Math.Max(n.Time, practiceStart) && time <= n.EndTime && (!n.IsBalloon || !ka);
-        }
-
-        // Earliest long note this press can count for. A hittable one has started, so it is
-        // pending or among the started notes from head.
-        int HittableLong(bool ka, double time)
-        {
-            int from = 0;
-            if (timeSorted)
-            {
-                foreach (int i in pending) if (CanHitLong(i, ka, time)) return i;
-                from = head;
-            }
-            for (int i = from; i < Chart.Notes.Count && (!timeSorted || Chart.Notes[i].Time <= time); i++)
-                if (CanHitLong(i, ka, time)) return i;
-            return -1;
-        }
 
         // Earliest pending don (ka = false) or ka note from index start; big notes share the lane.
         int NextInLane(bool ka, int start)
         {
-            if (timeSorted)
-            {
-                foreach (int i in pending) if (i >= start && IsLaneNote(i, ka)) return i;
-                start = Math.Max(start, head);
-            }
             for (int i = start; i < Chart.Notes.Count; i++)
-                if (IsLaneNote(i, ka)) return i;
+                if (Pending(i) && !Chart.Notes[i].IsLong && Chart.Notes[i].IsKa == ka) return i;
             return -1;
         }
-        bool IsLaneNote(int i, bool ka) => Pending(i) && !Chart.Notes[i].IsLong && Chart.Notes[i].IsKa == ka;
 
         bool PendingBetween(int first, int last)
         {
@@ -264,7 +216,7 @@ namespace OurTaiko
 
         void HitLong(int i)
         {
-            var n = Chart.Notes[i]; LongHits[i]++; Rolls++; scoring.AddLongHit(); Version++;
+            var n = Chart.Notes[i]; LongHits[i]++; Rolls++; scoring.AddLongHit();
             if (!n.IsBalloon) branchRolls++;
             if (n.IsBalloon && LongHits[i] == n.BalloonHits) Resolved[i] = true;
             Judged?.Invoke(i, Judgment.Roll);
@@ -272,7 +224,7 @@ namespace OurTaiko
 
         void Resolve(int i, Judgment result)
         {
-            Resolved[i] = true; Version++;
+            Resolved[i] = true;
             branchNotes++;
             branchPoints += result == Judgment.Good ? 1 : result == Judgment.Ok ? 0.5 : 0;
             if (result == Judgment.Bad) { Bad++; Combo = 0; }

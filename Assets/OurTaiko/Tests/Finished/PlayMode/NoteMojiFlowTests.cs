@@ -9,6 +9,10 @@ namespace OurTaiko.Tests
 {
     public sealed class NoteMojiFlowTests
     {
+        // These tests write the session's arrays directly, which PlaySession.Version does not see;
+        // clear the still-frame skip so the next RenderNotes redraws from them.
+        static void ForceRedraw(PlayScene play) => typeof(PlayScene).GetField("rendered",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(play, false);
         static readonly System.Reflection.MethodInfo Render =
             typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 
@@ -62,9 +66,11 @@ namespace OurTaiko.Tests
 
                 // A hit note takes its text with it; a missed one keeps both scrolling.
                 play.Session.Resolved[0] = true;
+                ForceRedraw(play);
                 Render.Invoke(play, new object[] { 0.1 });
                 Assert.That(play.NoteRoot(0) == null && play.MojiRoot(0) == null, Is.True);
                 play.Session.Missed[0] = true;
+                ForceRedraw(play);
                 Render.Invoke(play, new object[] { 0.1 });
                 Assert.That(play.NoteRoot(0) != null && play.MojiRoot(0) != null, Is.True);
 

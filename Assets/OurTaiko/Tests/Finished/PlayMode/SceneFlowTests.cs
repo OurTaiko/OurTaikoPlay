@@ -10,6 +10,10 @@ namespace OurTaiko.Tests
 {
     public sealed class SceneFlowTests
     {
+        // These tests write the session's arrays directly, which PlaySession.Version does not see;
+        // clear the still-frame skip so the next RenderNotes redraws from them.
+        static void ForceRedraw(PlayScene play) => typeof(PlayScene).GetField("rendered",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(play, false);
         [UnityTest] public IEnumerator BranchNormalCanBePlayed() => PlayBranch(BranchRoute.Normal);
         [UnityTest] public IEnumerator BranchExpertCanBePlayed() => PlayBranch(BranchRoute.Expert);
         [UnityTest] public IEnumerator BranchMasterAutoPlayCompletes() => PlayBranch(BranchRoute.Master);
@@ -339,6 +343,7 @@ namespace OurTaiko.Tests
                 // Original keeps the roll in draw_note_buffer until the tail's unload_ms,
                 // regardless of the roll having been judged at its end time.
                 play.Session.Resolved[0] = true;
+                ForceRedraw(play);
                 render.Invoke(play, new object[] { note.EndTime + 0.1 });
                 Assert.That(play.NoteRoot(0), Is.SameAs(root.transform), "A finished roll must flow past the judge instead of vanishing.");
                 Assert.That(play.noteLayer.InverseTransformPoint(tail.position).x, Is.EqualTo(120 - 0.1 * speed).Within(0.01));
@@ -348,9 +353,11 @@ namespace OurTaiko.Tests
                 // A missed normal note flows on as well; a hit one is removed.
                 var donNote = play.Session.Chart.Notes[1];
                 play.Session.Resolved[1] = true;
+                ForceRedraw(play);
                 render.Invoke(play, new object[] { donNote.Time + 0.2 });
                 Assert.That(play.NoteRoot(1), Is.Null, "A hit note leaves the lane at once.");
                 play.Session.Missed[1] = true;
+                ForceRedraw(play);
                 render.Invoke(play, new object[] { donNote.Time + 0.2 });
                 Assert.That(play.NoteRoot(1), Is.Not.Null, "A missed note must flow past the judge.");
                 var don = play.NoteRoot(1).gameObject;
