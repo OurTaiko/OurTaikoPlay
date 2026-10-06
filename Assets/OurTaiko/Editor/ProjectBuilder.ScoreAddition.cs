@@ -47,20 +47,23 @@ namespace OurTaiko.Editor
             AssetDatabase.SaveAssets();
         }
 
-        // Nijiiro Graphics/game/animation.json 35-39. No '+' glyph in ScoreCounterAnimation.
+        // Nijiiro Graphics/game/animation.json 35-39 and 40. No '+' glyph in ScoreCounterAnimation.
+        // User decision: each addition slides in from the right at its final height (no y255 start
+        // and 146 ms jump to y219), stays one level row (no per-digit (i + 1) * 5 px fan) and rises
+        // 15 px while fading out (the timing of the source's otherwise unused animation 40).
         // score_number's y=-272 is already included in ScoreCounterLayout.DigitTop.
         static AnimationClip ScoreAdditionClip() => SaveClip("ScoreAddition", 1000, false, clip =>
         {
-            const float end = .44674f, fanAt = .146f;
+            const float end = .44674f, fadeOut = .36674f;
             var type = typeof(ScoreAdditionView);
-            LinearCurve(clip, "", typeof(CanvasGroup), "m_Alpha", (0, 0), (.05f, 1), (.36674f, 1), (end, 0));
+            LinearCurve(clip, "", typeof(CanvasGroup), "m_Alpha", (0, 0), (.05f, 1), (fadeOut, 1), (end, 0));
             LinearCurve(clip, "", type, "horizontalOffset", (0, 30), (.08f, 0), (end, 0));
-            // At 146 ms the source switches from y=255 to the per-digit fan at y=219.
+            // y=219 throughout, the 3 px lift at 279.36-345.36 ms, then 15 px up during the fade out.
             HermiteCurve(clip, "", type, "verticalOffset",
-                new Keyframe(0, -22.5f, 0, 0), new Keyframe(fanAt, -58.5f, float.PositiveInfinity, 0),
+                new Keyframe(0, -58.5f, 0, 0),
                 new Keyframe(.27936f, -58.5f, 0, -3 / .066f),
-                new Keyframe(.34536f, -61.5f, -3 / .066f, 0), new Keyframe(end, -61.5f, 0, 0));
-            SteppedCurve(clip, "", type, "fanStep", (0, 0), (fanAt, 5), (end, 5));
+                new Keyframe(.34536f, -61.5f, -3 / .066f, 0),
+                new Keyframe(fadeOut, -61.5f, 0, -15 / .08f), new Keyframe(end, -76.5f, -15 / .08f, 0));
         });
     }
 }

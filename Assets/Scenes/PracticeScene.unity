@@ -12820,7 +12820,6 @@ MonoBehaviour:
   - {fileID: 1128954237}
   horizontalOffset: 0
   verticalOffset: 0
-  fanStep: 0
 --- !u!114 &1648563409
 MonoBehaviour:
   m_ObjectHideFlags: 0

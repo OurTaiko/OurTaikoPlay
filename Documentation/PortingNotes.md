@@ -578,7 +578,7 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 
 ## 总分上方的单次加分数字（2026-10-04）
 
-参考 OurTaikoPlayer `score_counter_animation.cpp`、`player.cpp` 的 `base_score_list` 与 Nijiiro `Graphics/game/animation.json` 35–39。加分数字复用总分的 `score_number` 0–9（56×64，间距 30），1P 为橙色 (254,102,0)，只显示本次增加的数字，没有加号。50 ms 淡入；前 80 ms 右端由 x285 移到 x255；y255 保持至 146 ms 后切至 y219＋(位序＋1)×5，279.36–345.36 ms 再上移 3；366.74–446.74 ms 淡出。纹理 y=-272 与总分基线统一换算，不改原总分位置和即时计分规则。
+参考 OurTaikoPlayer `score_counter_animation.cpp`、`player.cpp` 的 `base_score_list` 与 Nijiiro `Graphics/game/animation.json` 35–39。加分数字复用总分的 `score_number` 0–9（56×64，间距 30），1P 为橙色 (254,102,0)，只显示本次增加的数字，没有加号。50 ms 淡入；前 80 ms 右端由 x285 移到 x255；y255 保持至 146 ms 后切至 y219，原版此时还按 (位序＋1)×5 逐位下移成斜阶梯（2026-10-06 用户决定：从一开始就在 y219 横向滑入、数字始终平齐、淡出时上移 15 px，见 AGENTS「有意的偏离」），279.36–345.36 ms 再上移 3；366.74–446.74 ms 淡出。纹理 y=-272 与总分基线统一换算，不改原总分位置和即时计分规则。
 
 `ScoreCounterView.Show` 读取相邻两次实际分数的正增量，生成独立 `ScoreAdditionView`；良、可、大音符以及 5／6／7／9 号每次长音符击打均使用真实增量，不可／初始赋值／相同分数不触发。为满足每次加分都显示，不沿用参考代码对普通击打／连打同时 5 条后的丢弃逻辑；行对象按需扩充、过期复用，不覆盖上一条。动画与现有总分弹动共用 FrameTime。降分／练习清零时清除旧行。
 
