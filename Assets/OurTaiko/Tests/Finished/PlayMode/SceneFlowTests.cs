@@ -596,7 +596,8 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
         }
 
-        [UnityTest]
+        // Checks real audio output timing; CI containers have no audio device.
+        [UnityTest, Category("AudioDevice")]
         public IEnumerator SongSelectPlayPauseResumeRestartAndReturn()
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);

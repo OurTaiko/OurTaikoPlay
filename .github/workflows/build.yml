@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  checks: write # unity-test-runner posts the test results as a check run
 
 concurrency:
   group: build-${{ github.ref }}
@@ -83,11 +84,12 @@ jobs:
             Library-test-
 
       # Only the Finished assemblies gate releases; in-progress tests are still being written.
+      # AudioDevice tests measure real playback, which the container cannot provide; run them locally.
       - uses: game-ci/unity-test-runner@v4
         id: tests
         with:
           testMode: ${{ matrix.mode }}
-          customParameters: -assemblyNames ${{ matrix.assembly }}
+          customParameters: -assemblyNames ${{ matrix.assembly }} -testCategory !AudioDevice
           artifactsPath: test-results
 
       - uses: actions/upload-artifact@v4

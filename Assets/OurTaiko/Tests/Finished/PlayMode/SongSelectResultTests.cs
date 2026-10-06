@@ -9,7 +9,8 @@ namespace OurTaiko.Tests
 {
     public sealed class SongSelectResultTests
     {
-        [UnityTest]
+        // Checks real audio output timing; CI containers have no audio device.
+        [UnityTest, Category("AudioDevice")]
         public IEnumerator SongListCourseSelectPlayResultAndBack()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
