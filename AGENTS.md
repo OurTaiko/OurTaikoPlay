@@ -58,7 +58,7 @@
 
 - `NativeDecoderTests.MixedOutputResamplesPausesAndRoutesWithoutDeviceSpecificDrivers` 在 **Editor 构建平台为 iOS** 时稳定报 `EntryPointNotFoundException: BASS_Mixer_StreamCreate`。原因：`3e5d299` 为 iOS 静态链接设置 Player Settings iOS 定义 `__STATIC_LINKING__`（`AudioBuildSettings.Configure` 自动补），ManagedBass `BassMix.cs` 仅按该符号选 `"__Internal"`、不排除 Editor（核心 `Bass.cs` 用 `UNITY_IOS && !UNITY_EDITOR`）；Editor 用 iOS 定义编译，就去 Editor 进程找 bassmix 符号。`libbassmix.dylib` 有该导出，测试、子模块与原生库自 `3e5d299` 未变。与代码版本无关，切回 macOS 平台预计通过（尚未实测）。
 - 影响：iOS 平台下的 Editor 中，BASS 后端凡用混音器之处（`AudioEngine` WASAPI／ASIO 混音、`NativeAudioSample` 重采样）同样失败；真机 iOS 不受影响。修复方向（未做，需用户确认）：不改子模块，仅在 iOS 构建期间临时加符号，或把测试限定非 iOS 平台。
-- 其余整组 PlayMode 偶发失败（2026-10-05 在 `0e4fb7c` 与新代码上对照）：`OnlinePreviewFlowTests.FailedPreviewKeepsBgmPlaying`、`SongBestScoreTests.SavedWindowShows…` 整组失败、单独通过（疑似前序测试残留状态）；`OffsetFlowTests`、`PracticeFlowTests` 中毫秒级时序断言时过时不过。均早于本次优化，未修。
+- 其余整组 PlayMode 偶发失败（2026-10-05 在 `0e4fb7c` 与新代码上对照）：`SongBestScoreTests.SavedWindowShows…` 整组失败、单独通过（疑似前序测试残留状态）；`OnlinePreviewFlowTests.FailedPreviewKeepsBgmPlaying` 的整组失败来自前一个 `OniLongPressTests` 停在「已决定」后未卸载 SongSelect，其加载幕布在下一测试中解析 TRIPLE HELIX Edit 报错——2026-10-06 用户决定删除 `OniLongPressTests`（裏长按为小功能且已验证），此后整组通过；`OffsetFlowTests`、`PracticeFlowTests` 中毫秒级时序断言时过时不过。均早于本次优化，未修。
 
 #### 跨平台产品名称与图标（2026-10-04）
 
