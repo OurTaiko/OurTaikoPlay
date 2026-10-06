@@ -10,10 +10,13 @@ namespace OurTaiko
         public const double GoodWindow = 0.0250250015258789, OkWindow = 0.0750750045776367, BadWindow = 0.108441665649414;
         public readonly TaikoChart Chart;
         public double JudgeOffset { get; }
-        public readonly bool[] Resolved;
+        // Results are written only here, so every change also moves Version.
+        public IReadOnlyList<bool> Resolved => resolved;
         // Normal notes judged 不可 because the window passed without a hit.
-        public readonly bool[] Missed;
-        public readonly int[] LongHits;
+        public IReadOnlyList<bool> Missed => missed;
+        public IReadOnlyList<int> LongHits => longHits;
+        readonly bool[] resolved, missed;
+        readonly int[] longHits;
         public int Score => scoring.Total;
         public int BaseScore => scoring.BaseScore;
         public int Combo { get; private set; }
@@ -62,7 +65,7 @@ namespace OurTaiko
         public PlaySession(TaikoChart chart, double judgeOffset = 0)
         {
             JudgeOffset = judgeOffset;
-            Chart = chart; Resolved = new bool[chart.Notes.Count]; Missed = new bool[chart.Notes.Count]; LongHits = new int[chart.Notes.Count];
+            Chart = chart; resolved = new bool[chart.Notes.Count]; missed = new bool[chart.Notes.Count]; longHits = new int[chart.Notes.Count];
             var statistics = new ChartStatistics(chart);
             scoring = new ShinuchiScore(statistics);
             gauge = new SoulGauge(statistics.JudgeableNotes, chart.Course, chart.Level);
@@ -100,9 +103,9 @@ namespace OurTaiko
             {
                 var note = chart.Notes[i];
                 bool past = (note.IsLong ? note.EndTime : note.Time) < time - session.JudgeOffset - 1e-7;
-                session.Resolved[i] = past;
+                session.resolved[i] = past;
                 // Past notes still scroll out naturally when browsing backwards/forwards.
-                session.Missed[i] = past && !note.IsLong;
+                session.missed[i] = past && !note.IsLong;
             }
             return session;
         }
@@ -140,7 +143,7 @@ namespace OurTaiko
                 {
                     var note = Chart.Notes[i];
                     if (IsActive(note) && note.IsLong && !note.IsBalloon && note.Time <= branch.DecisionTime && branch.DecisionTime < note.EndTime)
-                        activeRollHits = Math.Max(activeRollHits, LongHits[i]);
+                        activeRollHits = Math.Max(activeRollHits, longHits[i]);
                 }
                 value = Math.Max(branchRolls, activeRollHits);
             }
@@ -174,7 +177,7 @@ namespace OurTaiko
         bool AdvanceNote(int i, double time, bool auto)
         {
             var note = Chart.Notes[i];
-            if (Resolved[i]) return false;
+            if (resolved[i]) return false;
             if (!IsActive(note)) return selectedRoutes[note.BranchId] < 0;
             if (note.Time > time) return true;
             if (note.IsLong)
@@ -182,13 +185,13 @@ namespace OurTaiko
                 if (auto && time >= practiceStart)
                 {
                     int expected = (int)(Math.Max(0, Math.Min(time, note.EndTime) - Math.Max(note.Time, practiceStart)) * 15) + 1;
-                    while (!Resolved[i] && LongHits[i] < expected) HitLong(i);
+                    while (!resolved[i] && longHits[i] < expected) HitLong(i);
                 }
-                if (time > note.EndTime && !Resolved[i]) { Resolved[i] = true; Version++; }
+                if (time > note.EndTime && !resolved[i]) { resolved[i] = true; Version++; }
             }
             else if (auto) Resolve(i, Judgment.Good);
-            else if (time - note.Time > badWindow) { Missed[i] = true; Resolve(i, Judgment.Bad); }
-            return !Resolved[i];
+            else if (time - note.Time > badWindow) { missed[i] = true; Resolve(i, Judgment.Bad); }
+            return !resolved[i];
         }
 
         public Judgment Hit(bool ka, double time)
@@ -219,7 +222,7 @@ namespace OurTaiko
             return Judgment.None;
         }
 
-        bool Pending(int i) => !Resolved[i] && IsActive(Chart.Notes[i]);
+        bool Pending(int i) => !resolved[i] && IsActive(Chart.Notes[i]);
         bool CanHitLong(int i, bool ka, double time)
         {
             var n = Chart.Notes[i];
@@ -264,15 +267,15 @@ namespace OurTaiko
 
         void HitLong(int i)
         {
-            var n = Chart.Notes[i]; LongHits[i]++; Rolls++; scoring.AddLongHit(); Version++;
+            var n = Chart.Notes[i]; longHits[i]++; Rolls++; scoring.AddLongHit(); Version++;
             if (!n.IsBalloon) branchRolls++;
-            if (n.IsBalloon && LongHits[i] == n.BalloonHits) Resolved[i] = true;
+            if (n.IsBalloon && longHits[i] == n.BalloonHits) resolved[i] = true;
             Judged?.Invoke(i, Judgment.Roll);
         }
 
         void Resolve(int i, Judgment result)
         {
-            Resolved[i] = true; Version++;
+            resolved[i] = true; Version++;
             branchNotes++;
             branchPoints += result == Judgment.Good ? 1 : result == Judgment.Ok ? 0.5 : 0;
             if (result == Judgment.Bad) { Bad++; Combo = 0; }

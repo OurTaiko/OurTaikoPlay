@@ -10,10 +10,6 @@ namespace OurTaiko.Tests
 {
     public sealed class SceneFlowTests
     {
-        // These tests write the session's arrays directly, which PlaySession.Version does not see;
-        // clear the still-frame skip so the next RenderNotes redraws from them.
-        static void ForceRedraw(PlayScene play) => typeof(PlayScene).GetField("rendered",
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(play, false);
         [UnityTest] public IEnumerator BranchNormalCanBePlayed() => PlayBranch(BranchRoute.Normal);
         [UnityTest] public IEnumerator BranchExpertCanBePlayed() => PlayBranch(BranchRoute.Expert);
         [UnityTest] public IEnumerator BranchMasterAutoPlayCompletes() => PlayBranch(BranchRoute.Master);
@@ -323,7 +319,7 @@ namespace OurTaiko.Tests
         public IEnumerator FinishedRollsAndMissedNotesKeepScrollingPastJudge()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
-            song.chart = new TextAsset("TITLE:Drumroll Exit\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n5008,\n1,\n0,\n#END");
+            song.chart = new TextAsset("TITLE:Drumroll Exit\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n5008,\n11,\n0,\n#END");
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
@@ -342,8 +338,8 @@ namespace OurTaiko.Tests
                 double speed = note.Bpm / 240 * note.ScrollX * (1920 - 618);
                 // Original keeps the roll in draw_note_buffer until the tail's unload_ms,
                 // regardless of the roll having been judged at its end time.
-                play.Session.Resolved[0] = true;
-                ForceRedraw(play);
+                play.Session.Advance(note.EndTime + 0.1, false);
+                Assert.That(play.Session.Resolved[0], Is.True);
                 render.Invoke(play, new object[] { note.EndTime + 0.1 });
                 Assert.That(play.NoteRoot(0), Is.SameAs(root.transform), "A finished roll must flow past the judge instead of vanishing.");
                 Assert.That(play.noteLayer.InverseTransformPoint(tail.position).x, Is.EqualTo(120 - 0.1 * speed).Within(0.01));
@@ -351,25 +347,25 @@ namespace OurTaiko.Tests
                 Assert.That(play.NoteRoot(0), Is.Null, "The roll unloads once its tail has left the lane.");
                 Assert.That(root.activeSelf, Is.False, "An unloaded view returns to the pool inactive.");
                 // A missed normal note flows on as well; a hit one is removed.
-                var donNote = play.Session.Chart.Notes[1];
-                play.Session.Resolved[1] = true;
-                ForceRedraw(play);
-                render.Invoke(play, new object[] { donNote.Time + 0.2 });
+                var hitNote = play.Session.Chart.Notes[1];
+                Assert.That(play.Session.Hit(false, hitNote.Time), Is.EqualTo(Judgment.Good));
+                render.Invoke(play, new object[] { hitNote.Time + 0.2 });
                 Assert.That(play.NoteRoot(1), Is.Null, "A hit note leaves the lane at once.");
-                play.Session.Missed[1] = true;
-                ForceRedraw(play);
+                var donNote = play.Session.Chart.Notes[2];
+                play.Session.Advance(donNote.Time + 0.2, false);
+                Assert.That(play.Session.Missed[2], Is.True);
                 render.Invoke(play, new object[] { donNote.Time + 0.2 });
-                Assert.That(play.NoteRoot(1), Is.Not.Null, "A missed note must flow past the judge.");
-                var don = play.NoteRoot(1).gameObject;
+                Assert.That(play.NoteRoot(2), Is.Not.Null, "A missed note must flow past the judge.");
+                var don = play.NoteRoot(2).gameObject;
                 Assert.That(((RectTransform)don.transform).anchoredPosition.x, Is.EqualTo(120 - 0.2 * speed).Within(0.01));
                 // Culling follows the live lane clip and note size, not fixed pixels:
                 // the note stays until its right edge passes the lane's left edge.
                 float halfWidth = ((RectTransform)don.transform).rect.width / 2;
                 double exit = donNote.Time + (120 + halfWidth) / speed;
                 render.Invoke(play, new object[] { exit - 0.005 });
-                Assert.That(play.NoteRoot(1), Is.Not.Null);
+                Assert.That(play.NoteRoot(2), Is.Not.Null);
                 render.Invoke(play, new object[] { exit + 0.005 });
-                Assert.That(play.NoteRoot(1), Is.Null);
+                Assert.That(play.NoteRoot(2), Is.Null);
                 play.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
             finally
