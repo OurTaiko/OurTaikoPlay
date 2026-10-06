@@ -17,9 +17,9 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(.6f);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
-            var song = select.FocusedSong;
+            var song = select.Manager.FocusedSong;
             // Saved board i shows local song i.
-            var board = select.view.songBoards[System.Array.IndexOf(select.songs, song)];
+            var board = select.view.songBoards[System.Array.IndexOf(select.Manager.Songs, song)];
             Assert.That(board.scoreRank.DisplayedRank, Is.Zero);
             ScoreStore.Shared.Save(new PlayResult { ChartKey = song.name, Difficulty = Difficulty.Oni,
                 Score = 960000, IsClear = true, Good = 890, Ok = 15, Bad = 0 });
@@ -28,12 +28,12 @@ namespace OurTaiko.Tests
             Assert.That(board.scoreRank.image.sprite.name, Is.EqualTo("s84"));
             Assert.That(board.scoreRank.image.raycastTarget, Is.False);
             TestCapture.Capture("ScoreRankSongBoard.png");
-            select.Right();
+            select.Manager.Right();
             yield return new WaitForSecondsRealtime(.6f);
-            Assert.That(select.view.songBoards[System.Array.IndexOf(select.songs, select.FocusedSong)].scoreRank.DisplayedRank, Is.Zero);
-            select.Left();
+            Assert.That(select.view.songBoards[System.Array.IndexOf(select.Manager.Songs, select.Manager.FocusedSong)].scoreRank.DisplayedRank, Is.Zero);
+            select.Manager.Left();
             yield return new WaitForSecondsRealtime(.6f);
-            select.Confirm();
+            select.Manager.Confirm();
             yield return new WaitForSecondsRealtime(1.4f);
             var card = select.view.cards[(int)Difficulty.Oni].scoreRank;
             Assert.That(card.DisplayedRank, Is.EqualTo(6));

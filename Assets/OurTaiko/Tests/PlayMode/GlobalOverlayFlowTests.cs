@@ -31,7 +31,7 @@ namespace OurTaiko.Tests
             Assert.That(select.TimerView.Seconds, Is.EqualTo(100));
             Assert.That(select.Coins.BubbleAlpha, Is.GreaterThan(0), "The 2P invite shows while songs played < 2.");
             TestCapture.Capture("OverlaySongSelect.png");
-            select.Confirm();
+            select.Manager.Confirm();
             yield return WaitUntil(() => select.CourseFade >= 1);
             Assert.That(select.TimerView.Seconds, Is.EqualTo(60));
             Assert.That(select.view.overlays.timerThreeDigits[2].enabled, Is.False);

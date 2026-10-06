@@ -14,6 +14,9 @@ namespace OurTaiko.Editor
 {
     public static partial class ProjectBuilder
     {
+        // Songs are loaded at runtime (LocalSongLibrary, servers); none exist while authoring the layout.
+        static readonly SongDefinition[] BundledSongs = Array.Empty<SongDefinition>();
+
         public const string SongBoardPrefabPath = Root + "Generated/SongBoard.prefab";
         public const string PlayOptionsPrefabPath = Root + "Generated/PlayOptions.prefab";
         static readonly string[] SavedCourseNames = { "かんたん", "ふつう", "むずかしい", "おに", "おに(裏)" };
@@ -41,15 +44,15 @@ namespace OurTaiko.Editor
             var view = stage.gameObject.AddComponent<SongSelectView>();
             select.view = view;
             view.boardPrefab = CreateSavedSongBoardPrefab(select);
-            view.songBoards = new SongBoardView[select.songs.Length];
-            for (int i = 0; i < select.songs.Length; i++)
+            view.songBoards = new SongBoardView[BundledSongs.Length];
+            for (int i = 0; i < BundledSongs.Length; i++)
             {
                 var board = ((GameObject)PrefabUtility.InstantiatePrefab(view.boardPrefab.gameObject, select.wheel)).GetComponent<SongBoardView>();
-                board.name = select.songs[i].name;
-                board.song = select.songs[i];
+                board.name = BundledSongs[i].name;
+                board.song = BundledSongs[i];
                 PopulateSavedSongBoard(select, board);
                 float offset = i;
-                if (offset > select.songs.Length / 2f) offset -= select.songs.Length;
+                if (offset > BundledSongs.Length / 2f) offset -= BundledSongs.Length;
                 board.Root.Center(view.wheelCentre.x + offset * view.rowCurve,
                     view.wheelCentre.y + offset * view.rowPitch + Math.Sign(offset) * view.expandGap);
                 board.authoredWheelPosition = board.Root.anchoredPosition;
@@ -246,8 +249,8 @@ namespace OurTaiko.Editor
 
         static void FillSavedCoursePreview(SongSelectScene select)
         {
-            if (select.songs.Length == 0) return;
-            var song = select.songs[0];
+            if (BundledSongs.Length == 0) return;
+            var song = BundledSongs[0];
             var info = song.ReadInfo();
             var view = select.view;
             view.backboard.sprite = select.backboards[song.genre];

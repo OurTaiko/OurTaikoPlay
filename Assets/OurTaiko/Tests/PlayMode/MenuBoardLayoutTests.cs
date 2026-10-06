@@ -69,7 +69,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(2);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
-            var back = select.wheel.GetComponentsInChildren<FolderBoardView>().Single(b => b.title.text == SongSelectScene.BackLabel);
+            var back = select.wheel.GetComponentsInChildren<FolderBoardView>().Single(b => b.title.text == SongSelectManager.BackLabel);
             var song = select.view.songBoards[0];
             Assert.That(back.panelClosed.type, Is.EqualTo(UnityEngine.UI.Image.Type.Sliced));
             Assert.That(back.panelClosed.sprite.rect, Is.EqualTo(song.panel.sprite.rect));
@@ -78,7 +78,7 @@ namespace OurTaiko.Tests
             Vector2 openSongSize = song.panel.rectTransform.rect.size;
             TestCapture.Capture("ReturnBoardClosed.png");
             back.click.Clicked(); yield return new WaitForSecondsRealtime(1.2f);
-            Assert.That(select.FocusedKind, Is.EqualTo(SongSelectScene.BoardKind.Back));
+            Assert.That(select.Manager.FocusedKind, Is.EqualTo(SongSelectManager.ItemKind.Back));
             Assert.That(back.panelClosed.rectTransform.rect.size, Is.EqualTo(openSongSize));
             AssertTopHit(back.panelClosed.gameObject, back.panelClosed.rectTransform);
             TestCapture.Capture("ReturnBoardOpen.png");

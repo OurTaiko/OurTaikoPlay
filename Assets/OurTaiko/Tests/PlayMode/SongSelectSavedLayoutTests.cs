@@ -91,35 +91,35 @@ namespace OurTaiko.Tests
                 Assert.That(addedEasy.group.gameObject.activeSelf, Is.True);
                 Assert.That(((RectTransform)addedEasy.group.transform).anchoredPosition.x, Is.EqualTo(-273));
 
-                select.Confirm();
+                select.Manager.Confirm();
                 yield return WaitUntil(() => select.CourseFade >= 1);
-                select.Right();
-                Assert.That(select.Cursor.Selected, Is.EqualTo(Difficulty.Modifier));
-                select.Confirm();
+                select.Manager.Right();
+                Assert.That(select.Manager.Cursor.Selected, Is.EqualTo(Difficulty.Modifier));
+                select.Manager.Confirm();
                 yield return new WaitForSecondsRealtime(0.4f);
                 Assert.That(options.board.anchoredPosition, Is.EqualTo(optionsPosition));
                 Assert.That(options.title.fontSize, Is.EqualTo(29));
                 Assert.That(options.rows[0].rightArrow.rectTransform.anchoredPosition, Is.EqualTo(arrowPosition));
                 // Click the saved touch zone, then close through the saved outside hit area.
                 options.rows[0].next.Clicked.Invoke();
-                Assert.That(select.AutoPlay, Is.True);
+                Assert.That(select.Manager.AutoPlay, Is.True);
                 yield return new WaitForSecondsRealtime(0.3f);
                 Assert.That(Vector2.Distance(options.rows[0].rightArrow.rectTransform.anchoredPosition, arrowPosition), Is.LessThan(0.01f));
                 int descendants = copy.GetComponentsInChildren<Transform>(true).Length;
                 options.outsideClick.Clicked.Invoke();
-                yield return WaitUntil(() => !select.IsOptionPanelOpen);
+                yield return WaitUntil(() => !select.Manager.IsOptionPanelOpen);
 
-                select.Confirm();
+                select.Manager.Confirm();
                 yield return new WaitForSecondsRealtime(0.4f);
-                Assert.That(select.IsOptionPanelOpen, Is.True);
+                Assert.That(select.Manager.IsOptionPanelOpen, Is.True);
                 Assert.That(view.options, Is.SameAs(options));
-                Assert.That(select.AutoPlay, Is.True, "Reopening binds the same saved option state.");
+                Assert.That(select.Manager.AutoPlay, Is.True, "Reopening binds the same saved option state.");
                 Assert.That(options.board.anchoredPosition, Is.EqualTo(optionsPosition));
                 Assert.That(copy.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(descendants), "Reopening must not rebuild the hierarchy.");
                 Assert.That(select.wheel.GetComponentsInChildren<SongBoardView>(true).Length, Is.EqualTo(3));
                 Assert.That(view.cards.Select(card => card.board), Is.EqualTo(cards));
                 options.outsideClick.Clicked.Invoke();
-                yield return WaitUntil(() => !select.IsOptionPanelOpen);
+                yield return WaitUntil(() => !select.Manager.IsOptionPanelOpen);
             }
             finally
             {

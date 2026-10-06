@@ -17,7 +17,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(.5f);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
-            var song = select.FocusedSong;
+            var song = select.Manager.FocusedSong;
             var info = song.ReadInfo();
             var courses = new[] { new CourseInfo { Difficulty = Difficulty.Oni }, new CourseInfo { Difficulty = Difficulty.Ura } };
             var view = select.view.bestScore;
@@ -34,13 +34,13 @@ namespace OurTaiko.Tests
             Assert.That(view.judgments.Text(2), Is.EqualTo("2"));
             Assert.That(view.judgments.Text(3), Is.EqualTo("35"));
             TestCapture.Capture("SongSelectBestScoreList.png");
-            select.Right();
+            select.Manager.Right();
             yield return new WaitForSecondsRealtime(.5f);
             Assert.That(view.group.alpha, Is.Zero, "Changing to an unplayed song clears the previous record.");
-            select.Left();
+            select.Manager.Left();
             yield return new WaitForSecondsRealtime(.5f);
             Assert.That(view.group.alpha, Is.EqualTo(1));
-            select.Confirm();
+            select.Manager.Confirm();
             for (int i = 0; i < 120 && select.CourseFade < 1; i++) yield return null;
             yield return null;
             Assert.That(view.group.alpha, Is.EqualTo(1).Within(.01));

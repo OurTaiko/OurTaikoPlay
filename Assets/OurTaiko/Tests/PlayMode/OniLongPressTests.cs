@@ -21,9 +21,9 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(.5f);
             select = Object.FindFirstObjectByType<SongSelectScene>();
             SceneSwitcher.Instance.LastDifficulty = -1;
-            select.Confirm();
+            select.Manager.Confirm();
             yield return new WaitForSecondsRealtime(1f);
-            Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.CourseSelect));
+            Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
             Assert.That(select.CourseFade, Is.EqualTo(1));
             Assert.That(Oni.CanLongPress(), Is.True);
         }
@@ -77,12 +77,12 @@ namespace OurTaiko.Tests
             foreach (int index in new[] { 0, 1, 2, 3, 0, 3 })
             {
                 TapCourse(index, index % 2 == 0 ? -1 : 42);
-                Assert.That(select.Cursor.Selected, Is.EqualTo((Difficulty)index));
-                Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.CourseSelect));
+                Assert.That(select.Manager.Cursor.Selected, Is.EqualTo((Difficulty)index));
+                Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
                 yield return null;
             }
             TapCourse(3, -1);
-            Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.Decided));
+            Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.Decided));
             Assert.That(SceneSwitcher.Instance.LastDifficulty, Is.EqualTo((int)Difficulty.Oni));
         }
 
@@ -95,12 +95,12 @@ namespace OurTaiko.Tests
             Release(touch);
             yield return new WaitForSecondsRealtime(1.6f);
             TapCourse(2, -1);
-            Assert.That(select.Cursor.Selected, Is.EqualTo(Difficulty.Hard));
+            Assert.That(select.Manager.Cursor.Selected, Is.EqualTo(Difficulty.Hard));
             TapCourse(3, 42);
-            Assert.That(select.Cursor.Selected, Is.EqualTo(Difficulty.Ura));
-            Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.CourseSelect));
+            Assert.That(select.Manager.Cursor.Selected, Is.EqualTo(Difficulty.Ura));
+            Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
             TapCourse(3, 42);
-            Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.Decided));
+            Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.Decided));
             Assert.That(SceneSwitcher.Instance.LastDifficulty, Is.EqualTo((int)Difficulty.Ura));
         }
 
@@ -110,28 +110,28 @@ namespace OurTaiko.Tests
             var mouse = Pointer(-1);
             Down(mouse);
             yield return new WaitForSecondsRealtime(.6f);
-            Assert.That(select.Cursor.IsUra, Is.False, "Less than one second must not toggle.");
+            Assert.That(select.Manager.Cursor.IsUra, Is.False, "Less than one second must not toggle.");
             yield return new WaitForSecondsRealtime(.55f);
-            Assert.That(select.Cursor.Selected, Is.EqualTo(Difficulty.Ura));
+            Assert.That(select.Manager.Cursor.Selected, Is.EqualTo(Difficulty.Ura));
             Assert.That(select.view.uraChange.enabled, Is.True, "Uses the existing flip animation.");
             yield return new WaitForSecondsRealtime(1.1f);
-            Assert.That(select.Cursor.IsUra, Is.True, "Holding longer must not repeat.");
+            Assert.That(select.Manager.Cursor.IsUra, Is.True, "Holding longer must not repeat.");
             Release(mouse);
-            Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.CourseSelect));
+            Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
             yield return new WaitForSecondsRealtime(.5f);
 
             var touch = Pointer(42);
             Down(touch);
             yield return new WaitForSecondsRealtime(1.15f);
-            Assert.That(select.Cursor.Selected, Is.EqualTo(Difficulty.Oni));
+            Assert.That(select.Manager.Cursor.Selected, Is.EqualTo(Difficulty.Oni));
             Release(touch);
-            Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.CourseSelect));
+            Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
             yield return new WaitForSecondsRealtime(1.6f);
             var tap = Pointer(-1);
             Down(tap);
             yield return null;
             Release(tap);
-            Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.Decided), "A subsequent short tap still confirms.");
+            Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.Decided), "A subsequent short tap still confirms.");
         }
 
         [UnityTest]
@@ -143,18 +143,18 @@ namespace OurTaiko.Tests
             ExecuteEvents.Execute(Oni.gameObject, touch, ExecuteEvents.pointerExitHandler);
             yield return new WaitForSecondsRealtime(1.05f);
             Release(touch);
-            Assert.That(select.Cursor.IsUra, Is.False);
-            Assert.That(select.Phase, Is.EqualTo(SongSelectScene.State.CourseSelect));
+            Assert.That(select.Manager.Cursor.IsUra, Is.False);
+            Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
 
             var mouse = Pointer(-1);
             Down(mouse);
-            select.Right(); // Back -> options.
-            select.Confirm();
+            select.Manager.Right(); // Back -> options.
+            select.Manager.Confirm();
             yield return new WaitForSecondsRealtime(1.15f);
             Release(mouse);
-            Assert.That(select.Cursor.IsUra, Is.False);
-            Assert.That(select.IsOptionPanelOpen, Is.True);
-            Assert.That(select.OptionMenu.Index, Is.Zero, "The stale release must not confirm an option either.");
+            Assert.That(select.Manager.Cursor.IsUra, Is.False);
+            Assert.That(select.Manager.IsOptionPanelOpen, Is.True);
+            Assert.That(select.Manager.OptionMenu.Index, Is.Zero, "The stale release must not confirm an option either.");
         }
 
         [Test]

@@ -19,7 +19,7 @@ namespace OurTaiko.Tests
             var curtain = switcher.Curtain;
             Assert.That(curtain, Is.Not.Null, "The SceneSwitcher prefab carries the song loading curtain.");
             Assert.That(curtain.IsVisible, Is.False);
-            var song = Object.FindFirstObjectByType<SongSelectScene>().songs.Single(s => s.name == TestSongs.TripleHelix);
+            var song = Object.FindFirstObjectByType<SongSelectScene>().Manager.Songs.Single(s => s.name == TestSongs.TripleHelix);
             // A local song plays its WAVE file; drop any decode left by an earlier test.
             Assert.That(song.audioPath, Does.EndWith("TRIPLE HELIX.ogg"));
             song.SetPreparedAudio(null);

@@ -68,16 +68,16 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(1);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
             int folder = -1;
-            for (int i = 0; i < select.BoardCount; i++) if (select.KindAt(i) == SongSelectScene.BoardKind.Folder) { folder = i; break; }
+            for (int i = 0; i < select.Manager.BoardCount; i++) if (select.Manager.KindAt(i) == SongSelectManager.ItemKind.Folder) { folder = i; break; }
             Assert.That(folder, Is.GreaterThanOrEqualTo(0));
-            for (int i = 0; i < select.BoardCount && select.Focused != folder; i++) { select.Right(); yield return new WaitForSecondsRealtime(.3f); }
-            Assert.That(select.Focused, Is.EqualTo(folder));
-            yield return new WaitForSecondsRealtime(.8f); select.Confirm();
-            yield return new WaitForSecondsRealtime(.5f); select.Right();
+            for (int i = 0; i < select.Manager.BoardCount && select.Manager.Focused != folder; i++) { select.Manager.Right(); yield return new WaitForSecondsRealtime(.3f); }
+            Assert.That(select.Manager.Focused, Is.EqualTo(folder));
+            yield return new WaitForSecondsRealtime(.8f); select.Manager.Confirm();
+            yield return new WaitForSecondsRealtime(.5f); select.Manager.Right();
             double deadline = Time.realtimeSinceStartupAsDouble + 10;
             while (requests == 0 && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
             Assert.That(requests, Is.GreaterThan(0)); Assert.That(select.IsPreviewPlaying, Is.False);
-            select.Left(); int atCancel = requests;
+            select.Manager.Left(); int atCancel = requests;
             yield return new WaitForSecondsRealtime(1.2f);
             Assert.That(select.IsPreviewPlaying, Is.False); Assert.That(requests, Is.EqualTo(atCancel));
             Assert.That(select.bgm.IsAudioPlaying(), Is.True);
@@ -102,12 +102,12 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(1);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
             int folder = -1;
-            for (int i = 0; i < select.BoardCount; i++) if (select.KindAt(i) == SongSelectScene.BoardKind.Folder) { folder = i; break; }
+            for (int i = 0; i < select.Manager.BoardCount; i++) if (select.Manager.KindAt(i) == SongSelectManager.ItemKind.Folder) { folder = i; break; }
             Assert.That(folder, Is.GreaterThanOrEqualTo(0));
-            for (int i = 0; i < select.BoardCount && select.Focused != folder; i++) { select.Right(); yield return new WaitForSecondsRealtime(.3f); }
-            Assert.That(select.Focused, Is.EqualTo(folder));
-            yield return new WaitForSecondsRealtime(.8f); select.Confirm();
-            yield return new WaitForSecondsRealtime(.5f); select.Right();
+            for (int i = 0; i < select.Manager.BoardCount && select.Manager.Focused != folder; i++) { select.Manager.Right(); yield return new WaitForSecondsRealtime(.3f); }
+            Assert.That(select.Manager.Focused, Is.EqualTo(folder));
+            yield return new WaitForSecondsRealtime(.8f); select.Manager.Confirm();
+            yield return new WaitForSecondsRealtime(.5f); select.Manager.Right();
             double deadline = Time.realtimeSinceStartupAsDouble + 30;
             if (failDownload) {
                 while (requests < 2 && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
@@ -116,10 +116,10 @@ namespace OurTaiko.Tests
                 Assert.That(select.bgm.IsAudioPlaying(), Is.True); yield break;
             }
             while (!select.IsPreviewPlaying && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
-            Assert.That(select.IsPreviewPlaying, Is.True); Assert.That(online.IsOnline(select.FocusedSong), Is.True);
+            Assert.That(select.IsPreviewPlaying, Is.True); Assert.That(online.IsOnline(select.Manager.FocusedSong), Is.True);
             Assert.That(select.preview.AudioPosition(), Is.LessThan(5), "Must start the excerpt at zero, not DEMOSTART=15");
             Assert.That(select.bgm.IsAudioPlaying(), Is.True);
-            select.Left(); yield return new WaitForSecondsRealtime(.3f);
+            select.Manager.Left(); yield return new WaitForSecondsRealtime(.3f);
             Assert.That(select.IsPreviewPlaying, Is.False);
             int atStop = requests; yield return new WaitForSecondsRealtime(.3f); Assert.That(requests, Is.EqualTo(atStop));
             Assert.That(wrongMethod, Is.Zero);
