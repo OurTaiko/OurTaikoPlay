@@ -214,6 +214,22 @@ namespace OurTaiko.Tests
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
             Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
         }
+        // A normal play refuses an s branch and an omitted #M; practice plays them on the menu's route.
+        [UnityTest]
+        public IEnumerator PracticeOpensScoreBranchesWithOmittedRoutes()
+        {
+            yield return StartPractice(AudioBackend.Unity, false,
+                "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n#BRANCHSTART s,100,200\n#N\n1111,\n#E\n2222,\n#BRANCHEND\n1111,\n#END");
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
+            yield return Press(Key.K); yield return Press(Key.K);
+            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Master));
+            var notes = play.Session.Chart.Notes;
+            Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Session.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True,
+                "達人 falls back to the authored 玄人 notes.");
+            yield return Press(Key.F); yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => play.Session.BranchHistory.Count == 1);
+            Assert.That(play.Session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
+        }
         IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain)
         {
             var settings = new GameSettings(); settings.audio.backend = backend;

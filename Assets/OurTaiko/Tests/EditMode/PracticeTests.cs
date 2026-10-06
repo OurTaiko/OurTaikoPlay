@@ -114,8 +114,7 @@ namespace OurTaiko.Tests
         public void PracticeForcesTheChosenBranch(BranchRoute route, bool perfect)
         {
             var chart = TjaParser.Parse("BPM:240\nCOURSE:Oni\n#START\n1111,\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n3333,\n#BRANCHEND\n#BRANCHSTART r,1,2\n#N\n1000,\n#E\n2000,\n#M\n3000,\n#BRANCHEND\n#END");
-            chart.ForcedBranch = route;
-            var session = PlaySession.PracticeAt(chart, 0);
+            var session = PlaySession.PracticeAt(chart, 0, null, route);
             for (double t = 0; t < 4; t += 1 / 120.0)
             {
                 session.Advance(t, perfect);
