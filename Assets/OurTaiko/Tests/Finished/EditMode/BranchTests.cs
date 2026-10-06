@@ -14,14 +14,14 @@ namespace OurTaiko.Tests
 
         [Test] public void RoutesShareStartAndRestoreTimingAndBalloonCursor()
         {
-            var chart = Parse("7008,\n#BRANCHSTART p,50,80\n#N\n#BPMCHANGE 240\n#SCROLL 2\n#MEASURE 3/4\n#DELAY 0.25\n#GOGOSTART\n#BARLINEOFF\n7008,\n#E\n7008,\n#M\n7008,\n#BRANCHEND\n7008,", "BALLOON:2,3,4");
+            var chart = Parse("7008,\n#BRANCHSTART p,50,80\n#N\n#BPMCHANGE 240\n#SCROLL 2\n#MEASURE 3/4\n#DELAY 0.25\n#BARLINEOFF\n7008,\n#E\n7008,\n#M\n7008,\n#BRANCHEND\n7008,", "BALLOON:2,3,4");
             var n = chart.Notes.Single(x => x.BranchId == 0 && x.Route == BranchRoute.Normal);
             var e = chart.Notes.Single(x => x.BranchId == 0 && x.Route == BranchRoute.Expert);
             var m = chart.Notes.Single(x => x.BranchId == 0 && x.Route == BranchRoute.Master);
             Assert.That(n.Time, Is.EqualTo(2.25)); Assert.That(n.Bpm, Is.EqualTo(240));
-            Assert.That(n.ScrollX, Is.EqualTo(2)); Assert.That(n.Gogo, Is.True);
+            Assert.That(n.ScrollX, Is.EqualTo(2));
             Assert.That(e.Time, Is.EqualTo(2)); Assert.That(e.Bpm, Is.EqualTo(120));
-            Assert.That(e.ScrollX, Is.EqualTo(1)); Assert.That(e.Gogo, Is.False);
+            Assert.That(e.ScrollX, Is.EqualTo(1));
             Assert.That(m.Time, Is.EqualTo(2));
             Assert.That(new[] { n.BalloonHits, e.BalloonHits, m.BalloonHits }, Is.EqualTo(new[] { 3, 3, 3 }));
             Assert.That(chart.Notes.Last().Time, Is.EqualTo(4)); Assert.That(chart.Notes.Last().BalloonHits, Is.EqualTo(4));

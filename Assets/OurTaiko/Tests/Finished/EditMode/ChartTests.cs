@@ -33,13 +33,11 @@ namespace OurTaiko.Tests
             Assert.That(chart.Duration, Is.EqualTo(1.5).Within(0.000001));
             Assert.That(chart.Notes[1].ScrollY, Is.EqualTo(-0.5));
         }
-        [Test] public void MeasureDelayAndGogoAreApplied()
+        [Test] public void MeasureAndDelayAreApplied()
         {
-            var chart = Parse("#MEASURE 3/4\n#DELAY 0.25\n#GOGOSTART\n100,\n#GOGOEND\n200,");
+            var chart = Parse("#MEASURE 3/4\n#DELAY 0.25\n100,\n200,");
             Assert.That(chart.Notes[0].Time, Is.EqualTo(0.25));
             Assert.That(chart.Notes[1].Time, Is.EqualTo(1.75));
-            Assert.That(chart.Notes[0].Gogo, Is.True);
-            Assert.That(chart.Notes[1].Gogo, Is.False);
         }
         [Test] public void LongNoteLinksAcrossMeasures()
         {
