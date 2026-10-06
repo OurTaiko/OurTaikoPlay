@@ -2,7 +2,8 @@ using System;
 
 namespace OurTaiko
 {
-    public enum AudioBackend { Automatic, Bass, Wasapi, Asio, Unity }
+    // Values are persisted as integers; 4 was the removed Unity output and now reads as Automatic.
+    public enum AudioBackend { Automatic, Bass, Wasapi, Asio }
 
     [Serializable]
     public sealed class AudioOptions
@@ -18,8 +19,9 @@ namespace OurTaiko
         public bool wasapiExclusive = true;
         public bool wasapiRaw = true;
         public bool wasapiAsync = true;
-        public float wasapiBufferSeconds = 0.02f;
-        public float wasapiPeriodSeconds = 0.005f;
+        public float wasapiBufferSeconds = 0.006f;
+        // 0 lets the driver choose its default period.
+        public float wasapiPeriodSeconds = 0;
         public int asioDevice;
         public int asioBufferSamples;
 
@@ -30,6 +32,7 @@ namespace OurTaiko
             && wasapiBufferSeconds == b.wasapiBufferSeconds && wasapiPeriodSeconds == b.wasapiPeriodSeconds
             && asioDevice == b.asioDevice && asioBufferSamples == b.asioBufferSamples;
 
+        public AudioBackend Backend => Enum.IsDefined(typeof(AudioBackend), backend) ? backend : AudioBackend.Automatic;
         public int Rate => sampleRate >= 8000 && sampleRate <= 192000 ? sampleRate : 44100;
         public int Period(bool mobile) => Math.Clamp(devicePeriodMs == 0 ? (mobile ? 8 : 16) : devicePeriodMs, 1, 100);
         public int Buffer(bool mobile) => Math.Clamp(deviceBufferMs == 0 ? (mobile ? 32 : 64) : deviceBufferMs, Period(mobile) * 2, 1000);

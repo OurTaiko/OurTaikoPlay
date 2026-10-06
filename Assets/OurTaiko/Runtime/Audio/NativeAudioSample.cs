@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS
 using ManagedBass;
 using ManagedBass.Aac;
 using ManagedBass.Opus;
 using ManagedBass.Fx;
 using ManagedBass.Mix;
-#endif
 
 namespace OurTaiko
 {
@@ -28,7 +26,6 @@ namespace OurTaiko
         public double Length { get; private set; }
         public float Gain { get; private set; } = 1;
         public string Format { get; private set; }
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS
         GCHandle data;
         int stream, decode, resampler;
         readonly bool mixed;
@@ -58,7 +55,7 @@ namespace OurTaiko
         {
             lock (AudioEngine.DeviceLock)
             {
-                if ((generation.HasValue && generation != engine.Generation) || !engine.Native)
+                if ((generation.HasValue && generation != engine.Generation) || !engine.Available)
                     throw new OperationCanceledException("Audio output changed during preparation");
                 if (encoded == null || encoded.Length == 0) throw new ArgumentException("Empty audio file");
                 mixed = engine.Backend == AudioBackend.Wasapi || engine.Backend == AudioBackend.Asio;
@@ -160,15 +157,5 @@ namespace OurTaiko
                 if (data.IsAllocated) data.Free();
             }
         }
-#else
-        public float OutputVolume => 0;
-        public void SetVolume(float volume) { }
-        public bool Playing => false;
-        public double Position => 0;
-        public NativeAudioSample(byte[] encoded, AudioEngine engine, bool normalize = true, bool speedChange = false, int? generation = null) => throw new PlatformNotSupportedException();
-        public void Play(float volume, bool loop, double position = 0, float speed = 1) { }
-        public void Stop() { }
-        public void Dispose() { }
-#endif
     }
 }

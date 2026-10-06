@@ -83,7 +83,7 @@ namespace OurTaiko.Tests
             var apply = AudioEngine.EnsureInstance().ApplyPendingSettingsAsync();
             while (!apply.IsCompleted) yield return null;
             Assert.That(apply.IsFaulted, Is.False);
-            Assert.That(AudioEngine.Instance.Native, Is.True);
+            Assert.That(AudioEngine.Instance.Available, Is.True);
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);

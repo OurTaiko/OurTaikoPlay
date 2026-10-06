@@ -2,10 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS
 using ManagedBass;
 using ManagedBass.Mix;
-#endif
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
 using System.Runtime.InteropServices;
 using ManagedBass.Wasapi;
@@ -15,14 +13,21 @@ using AOT;
 
 namespace OurTaiko
 {
-    // One native output for the application. Scene AudioSources retain their authored clip/volume,
-    // but all playback goes through AudioBus; Unity only outputs when the fallback is selected.
+    // One BASS output for the application. Scene AudioSources only keep their authored clip/volume;
+    // all playback goes through AudioBus. When no device opens, BASS's "No Sound" device keeps
+    // streams and positions running silently.
     public sealed class AudioEngine : MonoBehaviour
     {
         public static AudioEngine Instance { get; private set; }
-        public AudioBackend Backend { get; private set; } = AudioBackend.Unity;
+        public AudioBackend Backend { get; private set; } = AudioBackend.Bass;
         public string Diagnostics { get; private set; }
-        public bool Native => Backend != AudioBackend.Unity;
+        // Why the requested output could not open; null while it plays through a device.
+        public string Failure { get; private set; }
+        public bool Silent { get; private set; }
+        // False only when the BASS library itself cannot initialize; playback calls then do nothing.
+        public bool Available { get; private set; }
+        // Test seam: makes every device fail so the silent output is exercised without hardware.
+        public static bool SimulateDeviceFailure { get; set; }
         public int Mixer { get; private set; }
         public float[,] MixingMatrix { get; private set; }
         AudioOptions appliedOptions;
@@ -67,82 +72,90 @@ namespace OurTaiko
         }
         void InitializeOutput(AudioOptions options, bool allowFallback)
         {
-            Backend = AudioBackend.Unity;
-            string failure = null;
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS
-            if (options.backend != AudioBackend.Unity)
+            Backend = AudioBackend.Bass; Failure = null; Silent = false; Available = false;
+            var backend = options.Backend;
+            try
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                Bass.Configure(Configuration.AndroidAAudio, options.androidAAudio);
+#endif
+                Bass.Configure(Configuration.UpdatePeriod, Math.Clamp(options.updatePeriodMs, 5, 100));
+                Bass.Configure(Configuration.PlaybackBufferLength, Math.Clamp(options.playbackBufferMs, Math.Clamp(options.updatePeriodMs, 5, 100) + 1, 5000));
+                Bass.Configure(Configuration.DevicePeriod, options.Period(Application.isMobilePlatform));
+                Bass.Configure(Configuration.DeviceBufferLength, options.Buffer(Application.isMobilePlatform));
+                Bass.Configure(Configuration.DevNonStop, true);
+            }
+            catch (Exception error)
+            {
+                // DllNotFoundException and friends: there is no BASS at all.
+                if (!allowFallback) throw;
+                Failure = error.Message;
+                Diagnostics = "No audio output: " + Failure;
+                UnityEngine.Debug.LogError("[Audio] " + Diagnostics);
+                return;
+            }
+#if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
+            if (backend != AudioBackend.Bass)
             {
                 try
                 {
-#if UNITY_ANDROID && !UNITY_EDITOR
-                    Bass.Configure(Configuration.AndroidAAudio, options.androidAAudio);
-#endif
-                    Bass.Configure(Configuration.UpdatePeriod, Math.Clamp(options.updatePeriodMs, 5, 100));
-                    Bass.Configure(Configuration.PlaybackBufferLength, Math.Clamp(options.playbackBufferMs, Math.Clamp(options.updatePeriodMs, 5, 100) + 1, 5000));
-                    Bass.Configure(Configuration.DevicePeriod, options.Period(Application.isMobilePlatform));
-                    Bass.Configure(Configuration.DeviceBufferLength, options.Buffer(Application.isMobilePlatform));
-                    Bass.Configure(Configuration.DevNonStop, true);
-#if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
-                    if (options.backend != AudioBackend.Bass)
-                    {
-                        try
-                        {
-                            if (options.backend == AudioBackend.Asio) InitAsio(options);
-                            else InitWasapi(options);
-                        }
-                        catch (Exception error)
-                        {
-                            FreeNative();
-                            if (!allowFallback && options.backend != AudioBackend.Automatic) throw;
-                            failure = error.Message;
-                        }
-                    }
-#endif
-#if !UNITY_EDITOR_WIN && !(UNITY_STANDALONE_WIN && !UNITY_EDITOR)
-                    if (!allowFallback && (options.backend == AudioBackend.Wasapi || options.backend == AudioBackend.Asio))
-                        throw new PlatformNotSupportedException("This audio backend requires Windows");
-#endif
-                    if (Mixer == 0) InitBass(options);
-                    Diagnostics = $"{Backend}; {options.Rate} Hz requested; device period {options.Period(Application.isMobilePlatform)} ms requested; buffer {options.Buffer(Application.isMobilePlatform)} ms requested; stream buffering disabled";
-                    if (failure != null) Diagnostics += "; fallback: " + failure;
+                    if (backend == AudioBackend.Asio) InitAsio(options);
+                    else InitWasapi(options);
                 }
                 catch (Exception error)
                 {
-                    failure = error.Message;
                     FreeNative();
-                    Backend = AudioBackend.Unity;
-                    if (!allowFallback) throw;
+                    if (!allowFallback && backend != AudioBackend.Automatic) throw;
+                    Failure = error.Message;
                 }
             }
 #else
-            if (options.backend != AudioBackend.Unity)
-            {
-                failure = "Native BASS is unavailable on this platform";
-                if (!allowFallback) throw new PlatformNotSupportedException(failure);
-            }
+            if (!allowFallback && (backend == AudioBackend.Wasapi || backend == AudioBackend.Asio))
+                throw new PlatformNotSupportedException("This audio backend requires Windows");
 #endif
-            if (!Native)
+            if (Mixer == 0)
             {
-                Diagnostics = "Unity audio" + (failure == null ? " (selected)" : "; fallback: " + failure);
-                if (failure != null) UnityEngine.Debug.LogWarning("[Audio] " + Diagnostics);
+                try { InitBass(options, -1); }
+                catch (Exception error)
+                {
+                    FreeNative();
+                    if (!allowFallback) throw;
+                    Failure = Failure == null ? error.Message : Failure + "; " + error.Message;
+                    try { InitBass(options, Bass.NoSoundDevice); Silent = true; }
+                    catch (Exception silent)
+                    {
+                        FreeNative();
+                        Failure += "; " + silent.Message;
+                    }
+                }
             }
-            UnityEngine.Debug.Log("[Audio] " + Diagnostics);
+            if (!Available)
+            {
+                Diagnostics = "No audio output: " + Failure;
+                UnityEngine.Debug.LogError("[Audio] " + Diagnostics);
+                return;
+            }
+            Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + $"; {options.Rate} Hz requested; device period {options.Period(Application.isMobilePlatform)} ms requested; buffer {options.Buffer(Application.isMobilePlatform)} ms requested; stream buffering disabled";
+            if (Failure != null) Diagnostics += "; fallback: " + Failure;
+            if (Silent) UnityEngine.Debug.LogWarning("[Audio] " + Diagnostics);
+            else UnityEngine.Debug.Log("[Audio] " + Diagnostics);
         }
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS
         static void Check(bool success, string operation)
         {
             if (!success) throw new InvalidOperationException(operation + ": " + Bass.LastError);
         }
-        void InitBass(AudioOptions options)
+        void InitBass(AudioOptions options, int device)
         {
-            Check(Bass.Init(), "BASS device initialization");
+            if (SimulateDeviceFailure && device != Bass.NoSoundDevice) throw new InvalidOperationException("BASS device initialization: simulated failure");
+            Check(Bass.Init(device, options.Rate), "BASS device initialization");
             nativeInitialized = true;
             Backend = AudioBackend.Bass;
+            Available = true;
         }
-#endif
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
         void InitWasapi(AudioOptions options)
         {
+            if (SimulateDeviceFailure) throw new InvalidOperationException("WASAPI initialization: simulated failure");
             Check(Bass.Init(Bass.NoSoundDevice, options.Rate), "BASS decode device");
             nativeInitialized = true;
             var combinations = new[] { (true, true), (true, false), (false, true), (false, false) };
@@ -156,7 +169,7 @@ namespace OurTaiko
                 if (pair.Item2) flags |= WasapiInitFlags.Raw;
                 if (BassWasapi.Init(-1, 0, 0, flags,
                     pair.Item1 ? Mathf.Clamp(options.wasapiBufferSeconds, 0.005f, 0.5f) : 0,
-                    pair.Item1 ? Mathf.Clamp(options.wasapiPeriodSeconds, 0.001f, 0.1f) : 0, WasapiCallback))
+                    pair.Item1 && options.wasapiPeriodSeconds > 0 ? Mathf.Clamp(options.wasapiPeriodSeconds, 0.001f, 0.1f) : 0, WasapiCallback))
                 {
                     wasapiInitialized = true;
                     break;
@@ -173,9 +186,11 @@ namespace OurTaiko
             System.Threading.Volatile.Write(ref callbackMixer, Mixer);
             Check(BassWasapi.Start(), "Start WASAPI");
             Backend = AudioBackend.Wasapi;
+            Available = true;
         }
         void InitAsio(AudioOptions options)
         {
+            if (SimulateDeviceFailure) throw new InvalidOperationException("ASIO initialization: simulated failure");
             Check(Bass.Init(Bass.NoSoundDevice, options.Rate), "BASS decode device");
             nativeInitialized = true;
             if (!BassAsio.Init(options.asioDevice, AsioInitFlags.Thread)) throw new InvalidOperationException("ASIO initialization: " + BassAsio.LastError);
@@ -193,6 +208,7 @@ namespace OurTaiko
             if (!BassAsio.Start(Math.Max(0, options.asioBufferSamples)))
                 throw new InvalidOperationException("ASIO stereo output: " + BassAsio.LastError);
             Backend = AudioBackend.Asio;
+            Available = true;
         }
 #endif
         // Called under the settings scene's closed transition, before the next scene loads.
@@ -249,7 +265,7 @@ namespace OurTaiko
         void OnApplicationPause(bool paused)
         {
 #if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-            if (!Native) return;
+            if (!Available) return;
             Bass.GlobalMusicVolume = paused ? 0 : 10000;
             Bass.GlobalSampleVolume = paused ? 0 : 10000;
             Bass.GlobalStreamVolume = paused ? 0 : 10000;
@@ -257,7 +273,7 @@ namespace OurTaiko
         }
         void FreeNative()
         {
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS
+            Available = false;
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
             if (wasapiInitialized) { BassWasapi.Stop(); BassWasapi.Free(); wasapiInitialized = false; }
             if (asioInitialized) { BassAsio.Stop(); BassAsio.Free(); asioInitialized = false; }
@@ -265,7 +281,6 @@ namespace OurTaiko
 #endif
             if (Mixer != 0) { Bass.StreamFree(Mixer); Mixer = 0; }
             if (nativeInitialized) { Bass.Free(); nativeInitialized = false; }
-#endif
         }
         void OnDestroy()
         {

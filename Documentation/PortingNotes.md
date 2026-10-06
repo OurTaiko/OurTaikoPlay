@@ -448,7 +448,7 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - 同一音效重复触发时把原有采样归零重播，不新建声音实例或八路池。不同音效各持一个采样。
 - 歌曲采用参考实现的峰值扫描归一化，场景音效/语音/BGM 不归一化；静音输入保留增益 1。正式歌曲启用 FX tempo，预览关闭（同 SongDetail）；不新增游戏演奏选项。
 - 原生开始由单调时钟到点触发；BassSimple 在开始/恢复后两秒按参考工程的 0.8 系数修正音频与谱面时钟。暂停/离场取消待开始的播放并停止音效。实际输出延迟必须在设备上测量。
-- 保留显式 Unity 后端和原生初始化失败时的 Unity 后备；只有该后端使用 Unity 解码和混音。
+- ~~保留显式 Unity 后端和原生初始化失败时的 Unity 后备~~：2026-10-06 已删除，见「删除 Unity 音频后端」。
 
 ### 资源与场景衔接
 
@@ -464,15 +464,26 @@ Unity Editor 内 PlayMode **7/7** 通过，覆盖三路线实际选择后的精�
 - Windows、Android、iOS、Linux、WebGL 条件编译通过；原生库来源的 60 个文件 SHA-256 与清单一致，Android ARM64 五个音频库均为 16 KB ELF LOAD 对齐。
 - 独立构建与链接结果见 `Documentation/Building.md`。平台编译/构建不等于 Windows 声卡或 Android/iOS 真机输出、延迟验收。
 
+## 删除 Unity 音频后端（2026-10-06）
+
+用户决定：Unity 音频（FMOD，项目 DSP 缓冲 1024）延迟过高，删除该后端及只能用它的 WebGL 构建目标。
+
+- `AudioBackend` 只剩 Automatic／BASS／WASAPI／ASIO（整数值不变）；旧配置中的 4（Unity）由 `AudioOptions.Backend` 与 `GameSettings.FromJson` 读为 Automatic。
+- 初始化顺序：Windows 上 WASAPI／ASIO → BASS 默认设备 → BASS **No Sound** 设备。No Sound 设备没有声音，但流照常播放、`ChannelGetPosition` 照常推进，谱面时钟、开头 2 秒同步、试听与加载流程不需要特殊分支。`AudioEngine.Silent`／`Failure` 记录原因，设置页 Sound 的输出状态显示「No output device (silent)」及原因。BASS 库本身无法初始化时 `Available` 为 false，`AudioBus` 的准备／播放为空操作，加载场景跳过音频解码，游戏静音继续。设置中显式切换后端失败仍回滚到上次配置。
+- `GameTimeline.AudioNow`／`AudioFrameTime` 不再使用 `AudioSettings.dspTime`，与 Stopwatch 帧时间同源。SongLoadingScene 与选曲试听不再用 `UnityWebRequestMultimedia`／`LoadAudioData`；在线下载只保存音源路径交给 BASS。
+- 删除 `PlayerBuilds` 的 Web 菜单、`BuildWeb`、`ConfigureWeb` 与 `Assets/WebGLTemplates`；`AudioAssetBuild` 对所有构建都生成原始音频字节。联网代码中的 `UNITY_WEBGL` 分支与 OurTaikoView_Web 逐字相同，未改动。
+- WASAPI 默认值（用户指定）：独占模式 buffer **0.006 s**、period **0**（≤0 表示交给驱动默认周期，不再被钳到 1 ms）；已有 `settings.json` 保留各自的值。共享模式仍传 0／0，未启用 IAudioClient3 低延迟共享。
+- 测试：`AudioFallbackTests` 改为用 `AudioEngine.SimulateDeviceFailure` 验证静音回退（播放位置、音量组、取消待播放）；原 Unity 后端用例改用 BASS 或删除。验证（macOS Editor）：进行中 EditMode 166/166、PlayMode 63 项中 61 通过，失败的 `OnlinePreviewFlowTests.FailedPreviewKeepsBgmPlaying` 与 `SongBestScoreTests` 为已知整组偶发问题，单独运行 3/3、1/1 通过；已完成 EditMode 141/141、PlayMode 34/34。Windows 设备与真机未验证。
+
 ## Sound 设置（2026-10-03）
 
-Entry「ゲーム設定」→ Sound，沿用咔移动／咚确认、触控选择及遮罩取消。用户最新决定：**界面显示六个音量组（Master／BGM／Track／Drum／Effects／Voice）、Output Backend 和 Return**。音量以 0–200%、5% 一档显示，确认后立即保存并生效；鼓音／语音确认时试听。详细设备参数留在 `settings.json` 的 `audio` 中，不在设置场景显示。所有原生平台提供 Automatic／BASS／Unity，Windows 增加 WASAPI／ASIO；WebGL 只提供 Unity。修改后端不会覆盖其他配置。
+Entry「ゲーム設定」→ Sound，沿用咔移动／咚确认、触控选择及遮罩取消。用户最新决定：**界面显示六个音量组（Master／BGM／Track／Drum／Effects／Voice）、Output Backend 和 Return**。音量以 0–200%、5% 一档显示，确认后立即保存并生效；鼓音／语音确认时试听。详细设备参数留在 `settings.json` 的 `audio` 中，不在设置场景显示。所有平台提供 Automatic／BASS，Windows 增加 WASAPI／ASIO（2026-10-06 删除 Unity 选项与 WebGL）。修改后端不会覆盖其他配置。
 
 配置文件保留 `audio.volume` 的 master、bgm、track（歌曲及预览）、drum、effects、voice；值为倍率（1=100%，支持 0–2），总音量与组音量相乘，旧配置缺失字段取 1。Unity 最终单源音量仍受 0–1 上限约束。设备字段保留 BASS devicePeriodMs/deviceBufferMs/updatePeriodMs/playbackBufferMs、Windows WASAPI／ASIO 参数及 Android androidAAudio。手工修改配置文件后重新启动读取；不监听文件变化。
 
 确认后端时即时写盘，退出设置时再次保存，并通过 `SceneSwitcher.SwitchSceneAfterFadeAsync` 在画面淡黑后应用，随后进入 Entry；无须重启游戏。页面显示实际后端及 Applies on exit，改回已应用的值会清除提示。没有设备变化时不重建输出。
 
-切换先等待后台原生解码完成（逐帧等待生命周期锁），停止并释放所有 AudioBus 和未领取的 NativeAudioSample，再关闭设备与混音器并重建。异步加载捕获 generation，旧任务迟到时不能向新设备创建流；SongDefinition 不会领取已失效样本。显式后端初始化失败时恢复上次配置（保留新音量）、重新保存并留在设置界面显示原因、恢复 BGM；恢复设备也不可用时沿用启动流程的 Unity 兜底。WASAPI 仍保留 exclusive/raw 到 shared 的兼容尝试，Automatic 仍可选用 BASS。
+切换先等待后台原生解码完成（逐帧等待生命周期锁），停止并释放所有 AudioBus 和未领取的 NativeAudioSample，再关闭设备与混音器并重建。异步加载捕获 generation，旧任务迟到时不能向新设备创建流；SongDefinition 不会领取已失效样本。显式后端初始化失败时恢复上次配置（保留新音量）、重新保存并留在设置界面显示原因、恢复 BGM；恢复设备也不可用时沿用启动流程的兜底（2026-10-06 起为 BASS No Sound 静音设备）。WASAPI 仍保留 exclusive/raw 到 shared 的兼容尝试，Automatic 仍可选用 BASS。
 
 Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、滚轮；选项弹窗最多显示相邻 3 项，左右按钮供 Windows 的 5 种后端选择，点选项或咚确认后才保存。新增控件保存在 `GlobalSettingScene.unity`，迁移 `ProjectBuilder.ApplySoundSettings()`（菜单 OurTaiko/Apply Sound Settings）；重复执行场景内容不变。音量试听使用 Drum／Voice 分组。
 
@@ -550,7 +561,7 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 
 - 首次进入停在第一小节，显示「小节进度」。播放中第一次按暂停会停止音频、冻结歌曲时钟，清空 JudgeCounter、分数、魂槽、连击和反馈特效。咔控制前后小节，咚进入「播放速度」，再咚从选定位置继续。顶部左右／决定按钮提供同样操作；触控鼓遵循原设置。
 - 小节取解析后的 `Chart.Bars`，包含隐藏小节线及真实 BPM／拍号／DELAY／OFFSET。分支采用已经选中的路线，尚未判定的分支预览普通路线；不会把三条路线同时列成小节。`PracticeProgress` 在 200 ms 内插值谱面时间，交给原 `RenderNotes`，小节线与音符、连打头尾均通过原位移公式滚动。
-- 播放速度使用整数十分位，默认 1.0x、每次 ±0.1x、范围 0.1x–3.0x（兼容 Unity AudioSource 的上限），独立于 HS，不修改演奏设置。`SongClock.Rate` 同时影响谱面时间、负时间预备段、音乐 seek 与调度提前量。原生 BASS FX 使用 Tempo 保持音高；Unity 后备使用 AudioSource.pitch，因此 Unity 后备变速也会改变音高。鼓音和提示音不变速。
+- 播放速度使用整数十分位，默认 1.0x、每次 ±0.1x、范围 0.1x–3.0x（兼容 Unity AudioSource 的上限），独立于 HS，不修改演奏设置。`SongClock.Rate` 同时影响谱面时间、负时间预备段、音乐 seek 与调度提前量。原生 BASS FX 使用 Tempo 保持音高（原 Unity 后备的 pitch 变调方案已随后端删除）。鼓音和提示音不变速。
 - `PlaySession.PracticeAt` 新建练习计数并直接定位事件游标，保留游标之前已经选择的分支、不执行历史判定或漏音惩罚；后退后未来分支重新判定。长音符中途开始可继续击打，自动演奏不会补算跳过部分的连打。画面偏移换算包含音画偏移，使选择的小节线对齐判定点。
 - 练习暂停中再次按暂停打开原 SinglePlay 暂停菜单。Resume 回到练习调整层；Restart 回到第一小节并停在调整层；只有菜单 Back to Song Select 返回选曲。Esc／Space 只操作暂停层，快捷 Restart 在练习中禁用。失焦先进入练习暂停，不会退出。
 - 播放结束直接回到第一小节并打开调整层，保留当前播放速度；不进入 Result、不累计 SongsPlayed、不保存本地最佳成绩、不调用在线上传。

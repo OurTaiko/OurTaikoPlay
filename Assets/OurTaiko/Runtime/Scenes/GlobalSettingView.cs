@@ -139,7 +139,9 @@ namespace OurTaiko
             {
                 var engine = AudioEngine.Instance;
                 outputStatus.text = menu.CurrentType?.Label == "Sound" && engine != null
-                    ? $"Current output: {engine.Backend}" + (engine.HasPendingDeviceChanges ? "   •   Applies on exit" : "") : "";
+                    ? (!engine.Available ? "No audio output: " + engine.Failure
+                        : engine.Silent ? "No output device (silent): " + engine.Failure
+                        : $"Current output: {engine.Backend}") + (engine.HasPendingDeviceChanges ? "   •   Applies on exit" : "") : "";
             }
             bool inItems = menu.Focus != SettingsFocus.Types;
             for (int i = 0; i < itemRows.Count; i++)

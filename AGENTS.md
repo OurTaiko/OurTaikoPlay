@@ -11,7 +11,7 @@
 ## 2. 当前已知事实/约束条件
 
 - 工作项目：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayerUnity`；玩法参考源码：`/Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayer`；全局场景切换架构参照相邻 MajdataPlay 的 `Assets/Scripts/Global/SceneSwitcher.cs`。两个参考项目都只读，不修改。
-- 技术栈：Unity **6000.3.25f1**、Universal 2D／URP **17.3.0**、uGUI、TextMeshPro、Input System。运行逻辑和 Editor 工具全部使用 **C#**，不引入 C++、Lua 或原模拟器的原生插件。**音频例外（用户要求，2026-10-03）**：采用 MajdataPlay 的原文件字节直接解码流程（BASS→Opus→AAC）、BassSimple 直接输出及 Windows WASAPI／ASIO 混音；同一音效重播已有采样，歌曲峰值归一化。ManagedBass 使用未修改的 TeamMajdata Git 子模块，克隆后 `git submodule update --init --recursive`；原生库包括 BASS／BASSmix／FX／Opus／AAC／WASAPI／ASIO，C# 管理层在 `Runtime/Audio/`；保留 AudioSource 作为场景资源引用，运行时统一调用 `AudioPlayback`，不能直接 Play／PlayOneShot 绕过后端。详见 `PortingNotes.md`「跨平台原生音频」。
+- 技术栈：Unity **6000.3.25f1**、Universal 2D／URP **17.3.0**、uGUI、TextMeshPro、Input System。运行逻辑和 Editor 工具全部使用 **C#**，不引入 C++、Lua 或原模拟器的原生插件。**音频例外（用户要求，2026-10-03）**：采用 MajdataPlay 的原文件字节直接解码流程（BASS→Opus→AAC）、BassSimple 直接输出及 Windows WASAPI／ASIO 混音；同一音效重播已有采样，歌曲峰值归一化。ManagedBass 使用未修改的 TeamMajdata Git 子模块，克隆后 `git submodule update --init --recursive`；原生库包括 BASS／BASSmix／FX／Opus／AAC／WASAPI／ASIO，C# 管理层在 `Runtime/Audio/`；保留 AudioSource 作为场景资源引用，运行时统一调用 `AudioPlayback`，不能直接 Play／PlayOneShot 绕过后端。**Unity 音频后端与 WebGL 构建目标已删除（用户决定，2026-10-06，延迟过高）**：没有输出设备时 BASS 改用 No Sound 设备静音继续（播放位置照常推进，设置页显示原因），BASS 库本身不可用时所有播放调用为空操作；不要恢复 Unity 后备。浏览器播放由独立的 OurTaikoView_Web 负责，它的音频文件是 Unity 音频副本，与本项目已不同。WASAPI 默认 buffer 0.006 s、period 0（驱动默认）。详见 `PortingNotes.md`「跨平台原生音频」「删除 Unity 音频后端」。
 - 所有场景设计画布与默认窗口均为 **1920×1080**（SongSelect／Result 的 Viewport 带 RectMask2D）；宽高比变化时保持设计区域比例并居中留边。贴图对齐与局部偏移使用相对锚点或尺寸比例，不能写成固定屏幕像素补丁。
 - 当前只做 **Nijiiro**。素材主要来自 `Skins/YataiDONNijiiro`；缺少的资源已从 Green 直接复制补齐并打平。不实现皮肤继承、运行时回退或 Green 皮肤切换。图片保持原文件，使用 Sprite 切片；来源见 `Documentation/ImportedAssets.json`，保留 LICENSE／NOTICE 与资源权利归属。
 - 默认目标 **120 FPS**：关闭 VSync，`renderFrameInterval = 1`，`targetFrameRate = 120`；可在设置 Display › Target Frame Rate 改为 60 FPS 或 Unlimited，Display › VSync（默认关）开启后 `vSyncCount = 1`，桌面端由刷新率取代目标帧率，移动端忽略 VSync（`DisplaySettings.Apply`，由 `SceneSwitcher` 启动时及设置变化时应用）。FPS 计数器每 **0.5 秒**显示实际平均帧率，暂停时仍更新；目标帧率不保证显示器实际达到 120 Hz。
@@ -80,7 +80,7 @@
 
 - Entry 模式顺序为演奏ゲーム／練習モード／ゲーム設定；普通与练习入口都先经过 ServerLogin，再进入 SongSelect，以连接服务器、下载歌曲和显示历史成绩。`SceneSwitcher.PracticeMode` 由 Entry 决定模式时设置并保留经过登录；SongLoadingScene 用 `SelectedPlayScene` 路由，练习返回选曲后仍选练习，普通入口重新置 false。
 - PracticeScene 是通过 Editor API 完整复制 SinglePlayScene 后添加顶部 `PracticeView` 的独立场景；共享 `PlayScene` 的音符显示、输入和动画，练习逻辑在 `PlayScene.Practice.cs`。迁移 `ProjectBuilder.ApplyPracticeMode()`（OurTaiko/Apply Practice Mode）只在缺少时复制场景／添加入口，已有布局保留。
-- 初始及结束后停在第一小节。播放中第一次暂停：冻结音频和谱面、清空判定计数与本轮成绩；第一项「小节进度」，左／右咔按实际小节时间前后移动（200 ms 滚动，隐藏小节线也计入）。咚进入「播放速度」，每次咔 ±0.1x，默认 1.0x、范围 0.1x–3.0x；再咚从当前位置开始。速度独立于 HS；BASS FX Tempo 保持音高，Unity 后备 pitch 随变速改变音高。鼠标／触控按钮也可操作。
+- 初始及结束后停在第一小节。播放中第一次暂停：冻结音频和谱面、清空判定计数与本轮成绩；第一项「小节进度」，左／右咔按实际小节时间前后移动（200 ms 滚动，隐藏小节线也计入）。咚进入「播放速度」，每次咔 ±0.1x，默认 1.0x、范围 0.1x–3.0x；再咚从当前位置开始。速度独立于 HS；BASS FX Tempo 保持音高。鼠标／触控按钮也可操作。
 - 调整层再次按暂停才打开原 SinglePlay 菜单：Resume 回到调整层，Restart 回到第一小节暂停，只有 Back 返回 SongSelect。Esc／Space 不直接退出、快捷 Restart 禁用。结束不显示 Result、不保存或上传成绩、不增加 SongsPlayed。
 - **成绩处理在 ResultScene（用户决定）**：PlayScene 只生成普通游玩的 `PlayResult`，连同歌曲和回放经 SceneSwitcher 交接；ResultScene 在初始化演出前一次性领取并保存本地成绩／提交在线上传队列。练习结束直接回到第一小节暂停，不进入 ResultScene，所以不会提交。重载结算与独立预览不重复保存／上传；自动演奏仍不保存。
 - 跳转用 `PlaySession.PracticeAt` 跳过历史判定、重置计数，保留游标前分支并让游标后分支重算；进入长音符中途不会补算此前的自动连打。`SongClock.Rate` 统一控制谱面进度和音乐调度／seek，保持普通游玩 Rate=1 和每帧同一判定时刻。
@@ -107,11 +107,11 @@
 
 #### 最新完成：Sound 设置（2026-10-03）
 
-- 用户最新决定：GlobalSettingScene 的 Sound 显示 **Master／BGM／Track／Drum／Effects／Voice 音量组＋Output Backend**（及 Return）；音量范围 0–200%、5% 一档，确认后即时保存并生效，鼓音／语音确认时试听。设备、采样率与缓冲等高级参数仅保留在 `settings.json` 的 `audio` 中，不放回菜单。后端按平台显示 Automatic／BASS／Unity，Windows 另有 WASAPI／ASIO，WebGL 仅 Unity。
+- 用户最新决定：GlobalSettingScene 的 Sound 显示 **Master／BGM／Track／Drum／Effects／Voice 音量组＋Output Backend**（及 Return）；音量范围 0–200%、5% 一档，确认后即时保存并生效，鼓音／语音确认时试听。设备、采样率与缓冲等高级参数仅保留在 `settings.json` 的 `audio` 中，不放回菜单。后端按平台显示 Automatic／BASS，Windows 另有 WASAPI／ASIO；旧配置中的 Unity（值 4）读取为 Automatic。
 - 确认后端后保存，退出设置时通过 SceneSwitcher 淡黑后热切换，进入 Entry 前完成。未改设备参数不重建输出；切换失败恢复之前配置并留在设置显示原因。原生加载与释放共用生命周期锁，旧异步任务按 generation 失效，未领取样本统一释放。切换后端保留配置文件中的其他音频参数。
 - Sound 共 8 行（含 Return），每页 4 行，支持分页／滑动／滚轮；选项弹窗仍最多显示 3 项并支持左右切换，供 Windows 的 5 种后端使用。场景控件通过 `ProjectBuilder.ApplySoundSettings()` 保存。实现 `SoundSettings.cs`、`AudioBus` 音量分组；详情与验证报告见 `PortingNotes.md`「Sound 设置」。
 - **语言设置（2026-10-03）**：General › Language 保存到 `settings.json` 的 `general.language`（en／ja／zh／zh_tw／ko，默认 en）。当前只影响歌名和副标题，不翻译菜单、登录提示、类别或皮肤。名称按所选语言 → 日文（TITLEJA／TITLEJP）回退；两者都缺失才保留基础 TITLE／SUBTITLE。`SongDefinition.ReadDisplayInfo()` 供选曲、加载幕布与游玩使用，结算沿用本局显示标题；原始谱面、成绩键与上传标识不改。General 在类型列表首位，类型行距 142，使五行含 Return 均在 footer 上方；语言弹窗沿用三项可视选择与左右翻页。
-- **统一时钟（2026-10-03）**：`Core/GameTimeline.cs` 集中提供每帧稳定的 `FrameTime`／`AudioFrameTime` 与音频调度用 `AudioNow`；原生后端用 Stopwatch／Frequency，Unity 后端歌曲时间保留 DSP 时钟。`GameLoop` 在输入及场景更新前采样；UI、幕布、暂停菜单统一用 FrameTime，暂停演奏不会停止 UI。`Core/SongClock.cs` 管理歌曲倒计时、暂停恢复、播放调度和 BASS 启动后 2 秒同步校正，`PlayScene` 只使用发布的 SongTime。FPS 测量用实时 Realtime；网络重试的 UTC 时间仍归网络模块。
+- **统一时钟（2026-10-03）**：`Core/GameTimeline.cs` 集中提供每帧稳定的 `FrameTime`／`AudioFrameTime` 与音频调度用 `AudioNow`；音频时钟与帧时间同为 Stopwatch／Frequency（BASS 没有预约播放，`AudioBus` 到点触发）。`GameLoop` 在输入及场景更新前采样；UI、幕布、暂停菜单统一用 FrameTime，暂停演奏不会停止 UI。`Core/SongClock.cs` 管理歌曲倒计时、暂停恢复、播放调度和 BASS 启动后 2 秒同步校正，`PlayScene` 只使用发布的 SongTime。FPS 测量用实时 Realtime；网络重试的 UTC 时间仍归网络模块。
 - **HitFace／HitRing 原生时钟修复**：BASS 的 Stopwatch 时钟在同一帧内仍递增；原 Update 先取时间，再在 OnJudged 取较晚时间，ShowTime 用旧时间导致 elapsed<0，刚生成的效果立即被取消。当前由 `SongClock` 每帧发布一次歌曲时间，判定、分支回调与动画共用，直到下次更新；暂停时冻结。已删除 PlayScene 原来的临时快照和重复计时字段。真实自动演奏帧回归 `HitFeedbackClockTests` 修复前失败；旧的暂停后手动采样测试未覆盖此路径。
 
 #### 最新完成：在线服务器与 ServerLogin（2026-10-03）

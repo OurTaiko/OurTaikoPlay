@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using OurTaiko.Online;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace OurTaiko
 {
@@ -57,7 +56,8 @@ namespace OurTaiko
             try { switcher.SetPreparedChart(song, course, PlayScene.PrepareChart(song, course)); }
             catch (Exception error) { Debug.LogException(error, this); }  // SinglePlayScene parses again and shows it.
             var engine = AudioEngine.EnsureInstance();
-            if (engine.Native && song != null && (song.music != null || !string.IsNullOrEmpty(song.audioPath)))
+            // Without BASS the song plays silently; the chart clock does not need the audio.
+            if (engine.Available && song != null && (song.music != null || !string.IsNullOrEmpty(song.audioPath)))
             {
                 byte[] encoded = null;
                 try { if (string.IsNullOrEmpty(song.audioPath)) encoded = AudioAssetCatalog.Read(song.music); }
@@ -80,13 +80,6 @@ namespace OurTaiko
                         if (!claimed) _ = preparation.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
                     }
                 }
-            }
-            else
-            {
-                var clip = song != null ? song.music : null;
-                if (clip != null && clip.loadState != AudioDataLoadState.Loaded) clip.LoadAudioData();
-                while (clip != null && clip.loadState == AudioDataLoadState.Loading) yield return null;
-                if (clip != null && clip.loadState == AudioDataLoadState.Failed) Error = "AUDIO_DECODE_FAILED";
             }
             if (Error != null)
             {
@@ -131,34 +124,8 @@ namespace OurTaiko
             string text;
             try { text = System.IO.File.ReadAllText(path); }
             catch (Exception error) { Error = "CACHE_READ_FAILED"; Debug.LogException(error); yield break; }
-            if (AudioEngine.EnsureInstance().Native)
-            {
-                online.SetPrepared(song, chart, text, null);
-                song.audioPath = audio;
-            }
-            else
-            {
-                string audioUrl = new Uri(audio).AbsoluteUri;
-#if UNITY_WEBGL && !UNITY_EDITOR
-                // Browser fetch cannot open the virtual filesystem through file://.
-                string extension = System.IO.Path.GetExtension(audio).ToLowerInvariant();
-                string mime = extension == ".mp3" ? "audio/mpeg" : extension == ".wav" ? "audio/wav" : "audio/ogg";
-                audioUrl = "data:" + mime + ";base64," + Convert.ToBase64String(System.IO.File.ReadAllBytes(audio));
-#endif
-                using var request = UnityWebRequestMultimedia.GetAudioClip(audioUrl, AudioType.UNKNOWN);
-                ((DownloadHandlerAudioClip)request.downloadHandler).streamAudio = false;
-                yield return request.SendWebRequest();
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    Error = "AUDIO_DECODE_FAILED";
-                    Debug.LogWarning("Could not decode " + audio + ": " + request.error);
-                    yield break;
-                }
-                var clip = DownloadHandlerAudioClip.GetContent(request);
-                clip.name = song.name;
-                online.SetPrepared(song, chart, text, clip);
-                song.audioPath = audio;
-            }
+            online.SetPrepared(song, chart, text, null);
+            song.audioPath = audio;
             switcher.ShowSongOnCurtain(song);
             switcher.Curtain?.SetStatus("");
         }

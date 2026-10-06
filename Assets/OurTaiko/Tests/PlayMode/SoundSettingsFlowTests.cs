@@ -60,7 +60,7 @@ namespace OurTaiko.Tests
                 scene.Ka(1);
                 Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Output Backend"));
                 scene.Don();
-                scene.Ka(scene.Menu.CurrentItem.Choices.Count - 1); // Unity
+                scene.Ka(scene.Menu.CurrentItem.Choices.Count - 1); // BASS (ASIO on Windows)
                 TestCapture.Capture("SoundBackendChoice.png");
                 int slot = scene.Menu.ChoiceIndex - view.FirstChoice;
                 AssertRaycast(view.choiceRows[slot].click);
@@ -70,7 +70,7 @@ namespace OurTaiko.Tests
                 Assert.That(engine.HasPendingDeviceChanges, Is.True);
                 Assert.That(view.outputStatus.text, Does.Contain("Applies on exit"));
                 var saved = GameSettings.FromJson(File.ReadAllText(settings.FilePath));
-                Assert.That(saved.audio.backend, Is.EqualTo(AudioBackend.Unity));
+                Assert.That(saved.audio.backend, Is.EqualTo(SoundSettings.Platform == SoundPlatform.Windows ? AudioBackend.Asio : AudioBackend.Bass));
                 Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
                 Assert.That(saved.audio.volume.master, Is.EqualTo(.5f));
                 Assert.That(scene.bgm.IsAudioPlaying(), Is.True);
@@ -103,8 +103,8 @@ namespace OurTaiko.Tests
             yield return WaitFor(engine.ApplyPendingSettingsAsync());
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
-            // Repeat native -> Unity -> native, then leave with volume-only changes.
-            foreach (var backend in new[] { AudioBackend.Unity, AudioBackend.Bass, AudioBackend.Bass })
+            // Automatic -> BASS -> Automatic reopens the device each time, then leave with volume-only changes.
+            foreach (var backend in new[] { AudioBackend.Bass, AudioBackend.Automatic, AudioBackend.Automatic })
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
                 yield return null;
@@ -121,7 +121,8 @@ namespace OurTaiko.Tests
                 float deadline = Time.realtimeSinceStartup + 15;
                 while ((scene != null || SceneSwitcher.Instance.IsInputBlocked) && Time.realtimeSinceStartup < deadline) yield return null;
                 Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.EntryScene));
-                Assert.That(engine.Backend, Is.EqualTo(backend));
+                Assert.That(engine.Backend, Is.EqualTo(backend == AudioBackend.Automatic && SoundSettings.Platform == SoundPlatform.Windows ? AudioBackend.Wasapi : AudioBackend.Bass));
+                Assert.That(engine.Silent, Is.False, engine.Diagnostics);
                 Assert.That(engine.Generation, Is.EqualTo(before + (changed ? 1 : 0)));
                 Assert.That(engine.HasPendingDeviceChanges, Is.False);
                 // Entry and later scenes can decode and play through the newly initialized output.
@@ -163,7 +164,7 @@ namespace OurTaiko.Tests
                 float deadline = Time.realtimeSinceStartup + 5;
                 while (!entered.IsSet && !worker.IsCompleted && Time.realtimeSinceStartup < deadline) yield return null;
                 Assert.That(entered.IsSet, Is.True);
-                var next = settings.Settings.Clone(); next.audio.backend = AudioBackend.Unity; settings.Set(next);
+                var next = settings.Settings.Clone(); next.audio.backend = AudioBackend.Bass; settings.Set(next);
                 var applying = engine.ApplyPendingSettingsAsync();
                 yield return null; yield return null;
                 Assert.That(applying.IsCompleted, Is.False);
@@ -173,7 +174,7 @@ namespace OurTaiko.Tests
                 yield return WaitFor(applying);
                 Assert.That(sample.IsDisposed, Is.True);
                 Assert.That(NativeAudioSample.LiveStreams, Is.Zero);
-                Assert.That(engine.Backend, Is.EqualTo(AudioBackend.Unity));
+                Assert.That(engine.Backend, Is.EqualTo(AudioBackend.Bass));
             }
             finally { release.Set(); }
             settings.UseUnsaved(new GameSettings());
@@ -192,7 +193,7 @@ namespace OurTaiko.Tests
             var sample = new NativeAudioSample(bytes, engine, false);
             song.SetPreparedAudio(sample);
             int oldGeneration = engine.Generation;
-            var changed = settings.Settings.Clone(); changed.audio.backend = AudioBackend.Unity;
+            var changed = settings.Settings.Clone(); changed.audio.backend = AudioBackend.Bass;
             settings.Set(changed);
             yield return WaitFor(engine.ApplyPendingSettingsAsync());
             Assert.That(sample.IsDisposed, Is.True);
@@ -200,7 +201,7 @@ namespace OurTaiko.Tests
             Assert.That(song.TakePreparedAudio(), Is.Null);
             Assert.That(NativeAudioSample.LiveStreams, Is.Zero);
             sample.Dispose(); // late cancelled task completion is harmless
-            changed.audio.backend = AudioBackend.Bass; settings.Set(changed);
+            changed.audio.backend = AudioBackend.Automatic; settings.Set(changed);
             yield return WaitFor(engine.ApplyPendingSettingsAsync());
             Assert.Throws<System.OperationCanceledException>(() => new NativeAudioSample(bytes, engine, false, false, oldGeneration));
             Object.Destroy(song);
@@ -217,8 +218,8 @@ namespace OurTaiko.Tests
             while (scene.HasLeft && Time.realtimeSinceStartup < deadline) yield return null;
             Assert.That(scene.HasLeft, Is.False);
             Assert.That(SceneSwitcher.Instance.IsInputBlocked, Is.False);
-            Assert.That(engine.Backend, Is.EqualTo(AudioBackend.Bass));
-            Assert.That(settings.Settings.audio.backend, Is.EqualTo(AudioBackend.Bass));
+            Assert.That(engine.Available, Is.True);
+            Assert.That(settings.Settings.audio.backend, Is.EqualTo(AudioBackend.Automatic));
             Assert.That(settings.Settings.audio.volume.master, Is.EqualTo(.6f));
             Assert.That(scene.view.outputStatus.text, Does.Contain("Could not apply audio settings"));
             Assert.That(scene.bgm.IsAudioPlaying(), Is.True);

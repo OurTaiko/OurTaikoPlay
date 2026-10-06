@@ -16,7 +16,7 @@ namespace OurTaiko.Tests
             var bytes = File.ReadAllBytes(path);
             int before = NativeAudioSample.LiveStreams;
             var engine = AudioEngine.EnsureInstance();
-            Assert.That(engine.Native, Is.True, engine.Diagnostics);
+            Assert.That(engine.Available, Is.True, engine.Diagnostics);
             using (var sample = new NativeAudioSample(bytes, engine))
             {
                 Assert.That(sample.Length, Is.InRange(1.9, 2.2), sample.Format);

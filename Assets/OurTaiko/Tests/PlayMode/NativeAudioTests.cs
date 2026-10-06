@@ -39,7 +39,7 @@ namespace OurTaiko.Tests
         public IEnumerator NativeOutputSchedulesSeeksStopsAndReplaysWithoutUnityMixer()
         {
 #if UNITY_EDITOR_OSX || UNITY_EDITOR_WIN || UNITY_EDITOR_LINUX
-            Assert.That(AudioEngine.Instance.Native, Is.True, AudioEngine.Instance.Diagnostics);
+            Assert.That(AudioEngine.Instance.Available, Is.True, AudioEngine.Instance.Diagnostics);
 #endif
             source.PlayAudioScheduled(GameTimeline.AudioNow + 0.3);
             yield return new WaitForSecondsRealtime(0.1f);
@@ -47,7 +47,7 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.5f);
             Assert.That(source.IsAudioPlaying(), Is.True);
             Assert.That(source.AudioPosition(), Is.InRange(0.15, 0.5));
-            if (AudioEngine.Instance.Native) Assert.That(source.isPlaying, Is.False, "Native audio must bypass Unity's mixer.");
+            if (AudioEngine.Instance.Available) Assert.That(source.isPlaying, Is.False, "Native audio must bypass Unity's mixer.");
             source.StopAudio();
             Assert.That(source.IsAudioPlaying(), Is.False);
             Assert.That(source.AudioPosition(), Is.Zero);
@@ -66,7 +66,7 @@ namespace OurTaiko.Tests
         {
             for (int i = 0; i < 12; i++) { source.PlayAudioOneShot(clip); yield return null; }
             Assert.That(source.IsAudioPlaying(), Is.True);
-            if (AudioEngine.Instance.Native) Assert.That(source.GetComponent<AudioBus>().ActiveVoices, Is.EqualTo(1), "Like MajdataPlay, repeated hits restart the same sample.");
+            if (AudioEngine.Instance.Available) Assert.That(source.GetComponent<AudioBus>().ActiveVoices, Is.EqualTo(1), "Like MajdataPlay, repeated hits restart the same sample.");
             source.StopAudio();
             source.loop = true;
             source.SeekAudio(source.AudioLength() - 0.1);

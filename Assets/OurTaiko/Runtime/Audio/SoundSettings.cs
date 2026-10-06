@@ -5,7 +5,7 @@ using UnityEngine;
 namespace OurTaiko
 {
     public enum AudioGroup { Effects, Bgm, Track, Drum, Voice }
-    public enum SoundPlatform { Desktop, Windows, Android, IOS, Web }
+    public enum SoundPlatform { Desktop, Windows, Android, IOS }
 
     [Serializable]
     public sealed class SoundVolumes
@@ -32,8 +32,6 @@ namespace OurTaiko
                 return SoundPlatform.Android;
 #elif UNITY_IOS && !UNITY_EDITOR
                 return SoundPlatform.IOS;
-#elif UNITY_WEBGL && !UNITY_EDITOR
-                return SoundPlatform.Web;
 #else
                 return SoundPlatform.Desktop;
 #endif
@@ -51,9 +49,8 @@ namespace OurTaiko
         public static IReadOnlyList<SettingItem> Catalog(SoundPlatform platform)
         {
             var backends = platform == SoundPlatform.Windows
-                ? new[] { AudioBackend.Automatic, AudioBackend.Bass, AudioBackend.Wasapi, AudioBackend.Asio, AudioBackend.Unity }
-                : platform == SoundPlatform.Web ? new[] { AudioBackend.Unity }
-                : new[] { AudioBackend.Automatic, AudioBackend.Bass, AudioBackend.Unity };
+                ? new[] { AudioBackend.Automatic, AudioBackend.Bass, AudioBackend.Wasapi, AudioBackend.Asio }
+                : new[] { AudioBackend.Automatic, AudioBackend.Bass };
             return new[]
             {
                 Volume("Master Volume", "Overall volume.", v => v.master, (v, n) => v.master = n),

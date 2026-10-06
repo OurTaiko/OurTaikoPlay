@@ -82,14 +82,13 @@ namespace OurTaiko.Tests
             Assert.That(select.IsPreviewPlaying, Is.False); Assert.That(requests, Is.EqualTo(atCancel));
             Assert.That(select.bgm.IsAudioPlaying(), Is.True);
         }
-        [UnityTest] public IEnumerator NativeSelectionPlaysPreview() { yield return PlaySelection(false); }
-        [UnityTest] public IEnumerator UnitySelectionPlaysPreview() { yield return PlaySelection(true); }
-        [UnityTest] public IEnumerator FailedPreviewKeepsBgmPlaying() { failDownload = true; yield return PlaySelection(true); }
-        IEnumerator PlaySelection(bool unity)
+        [UnityTest] public IEnumerator NativeSelectionPlaysPreview() { yield return PlaySelection(); }
+        [UnityTest] public IEnumerator FailedPreviewKeepsBgmPlaying() { failDownload = true; yield return PlaySelection(); }
+        IEnumerator PlaySelection()
         {
             var settings = SettingManager.EnsureInstance();
             var saved = settings.Settings.Clone();
-            var options = saved.Clone(); options.audio.backend = unity ? AudioBackend.Unity : AudioBackend.Bass;
+            var options = saved.Clone(); options.audio.backend = AudioBackend.Bass;
             settings.UseUnsaved(options);
             if (AudioEngine.Instance != null) Object.Destroy(AudioEngine.Instance.gameObject);
             yield return null;
@@ -124,7 +123,7 @@ namespace OurTaiko.Tests
             Assert.That(select.IsPreviewPlaying, Is.False);
             int atStop = requests; yield return new WaitForSecondsRealtime(.3f); Assert.That(requests, Is.EqualTo(atStop));
             Assert.That(wrongMethod, Is.Zero);
-            Assert.That(AudioEngine.Instance.Native, Is.EqualTo(!unity));
+            Assert.That(AudioEngine.Instance.Available, Is.True);
             } finally { settings.UseUnsaved(saved); if (AudioEngine.Instance != null) Object.Destroy(AudioEngine.Instance.gameObject); }
         }
     }

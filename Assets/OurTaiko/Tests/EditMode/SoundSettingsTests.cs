@@ -21,7 +21,6 @@ namespace OurTaiko.Tests
         [TestCase(SoundPlatform.Android)]
         [TestCase(SoundPlatform.IOS)]
         [TestCase(SoundPlatform.Desktop)]
-        [TestCase(SoundPlatform.Web)]
         public void SoundMenuOffersVolumesAndPlatformSupportedBackends(SoundPlatform platform)
         {
             var rows = SoundSettings.Catalog(platform);
@@ -32,16 +31,16 @@ namespace OurTaiko.Tests
             Assert.That(backend.Label, Is.EqualTo("Output Backend"));
             Assert.That(backend.Choices.Contains("ASIO"), Is.EqualTo(platform == SoundPlatform.Windows));
             Assert.That(backend.Choices.Contains("WASAPI"), Is.EqualTo(platform == SoundPlatform.Windows));
-            if (platform == SoundPlatform.Web) Assert.That(backend.Choices, Is.EqualTo(new[] { "Unity" }));
+            Assert.That(backend.Choices.Contains("Unity"), Is.False);
         }
         [Test]
         public void BackendChangesPreserveAdvancedConfiguration()
         {
             var s = new GameSettings();
             s.audio.deviceBufferMs = 73; s.audio.asioDevice = 2; s.audio.volume.master = .35f;
-            SoundSettings.Catalog(SoundPlatform.Desktop)[6].Set(s, 2);
+            SoundSettings.Catalog(SoundPlatform.Desktop)[6].Set(s, 1);
             var saved = GameSettings.FromJson(s.ToJson());
-            Assert.That(saved.audio.backend, Is.EqualTo(AudioBackend.Unity));
+            Assert.That(saved.audio.backend, Is.EqualTo(AudioBackend.Bass));
             Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
             Assert.That(saved.audio.asioDevice, Is.EqualTo(2));
             Assert.That(saved.audio.volume.master, Is.EqualTo(.35f));

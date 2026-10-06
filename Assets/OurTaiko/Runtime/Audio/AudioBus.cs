@@ -14,24 +14,15 @@ namespace OurTaiko
         float authoredVolume;
         public AudioGroup Group { get; private set; } = AudioGroup.Effects;
         readonly Dictionary<AudioClip, AudioGroup> effectGroups = new();
-        readonly Dictionary<AudioGroup, AudioSource> unityEffects = new();
-        public float MainOutputVolume => engine != null && engine.Native ? main?.OutputVolume ?? 0 : source != null ? source.volume : 0;
+        public float MainOutputVolume => main?.OutputVolume ?? 0;
         float Volume(AudioGroup group) => source.mute ? 0 : authoredVolume * settings.Settings.audio.volume.Gain(group);
         public void SetGroup(AudioGroup group) { Group = group; ApplyVolumes(settings.Settings); }
         void ApplyVolumes(GameSettings unused)
         {
             if (engine == null || source == null) return;
-            if (engine.Native)
-            {
-                main?.SetVolume(Volume(Group));
-                foreach (var pair in tracks) pair.Value.SetVolume(Volume(Group));
-                foreach (var pair in effects) pair.Value.SetVolume(Volume(effectGroups.TryGetValue(pair.Key, out var group) ? group : Group));
-            }
-            else
-            {
-                source.volume = Mathf.Clamp01(Volume(Group));
-                foreach (var pair in unityEffects) pair.Value.volume = Mathf.Clamp01(Volume(pair.Key));
-            }
+            main?.SetVolume(Volume(Group));
+            foreach (var pair in tracks) pair.Value.SetVolume(Volume(Group));
+            foreach (var pair in effects) pair.Value.SetVolume(Volume(effectGroups.TryGetValue(pair.Key, out var group) ? group : Group));
         }
         readonly Dictionary<AudioClip, NativeAudioSample> tracks = new();
         readonly Dictionary<AudioClip, NativeAudioSample> effects = new();
@@ -42,17 +33,13 @@ namespace OurTaiko
         bool pending;
         public int PreparedEffects => effects.Count;
         public static int LiveNativeStreams => NativeAudioSample.LiveStreams;
-        public double Length => engine != null && engine.Native ? main?.Length ?? 0 : source.clip != null ? source.clip.length : 0;
+        public double Length => main?.Length ?? 0;
         public int ActiveVoices
         {
             get { int n = pending || main?.Playing == true ? 1 : 0; foreach (var sample in effects.Values) if (sample.Playing) n++; return n; }
         }
-        public bool IsPlaying => engine != null && engine.Native ? ActiveVoices > 0 : UnityPlaying;
-        bool UnityPlaying
-        {
-            get { if (source != null && source.isPlaying) return true; foreach (var output in unityEffects.Values) if (output != null && output.isPlaying) return true; return false; }
-        }
-        public double Position => engine != null && engine.Native ? pending ? seek : main?.Position ?? seek : source != null ? source.time : 0;
+        public bool IsPlaying => ActiveVoices > 0;
+        public double Position => pending ? seek : main?.Position ?? seek;
         internal static AudioBus Get(AudioSource source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -77,7 +64,7 @@ namespace OurTaiko
         public void SetSong(SongDefinition value, bool gameplay = true)
         {
             ReleaseMain(); song = value; source.clip = value.music; SetGroup(AudioGroup.Track);
-            if (!engine.Native) return;
+            if (!engine.Available) return;
             main = value.TakePreparedAudio();
             if (main == null)
             {
@@ -88,32 +75,24 @@ namespace OurTaiko
         }
         public void PrepareMain()
         {
-            if (!engine.Native || song != null || source.clip == null || mainClip == source.clip) return;
+            if (!engine.Available || song != null || source.clip == null || mainClip == source.clip) return;
             ReleaseMain(); mainClip = source.clip;
             if (!tracks.TryGetValue(mainClip, out main)) main = new NativeAudioSample(AudioAssetCatalog.Read(mainClip), engine, false);
         }
         public void PrepareTracks(params AudioClip[] clips)
         {
-            if (!engine.Native || clips == null) return;
+            if (!engine.Available || clips == null) return;
             foreach (var clip in clips)
                 if (clip != null && !tracks.ContainsKey(clip)) tracks.Add(clip, new NativeAudioSample(AudioAssetCatalog.Read(clip), engine, false));
         }
         public void PrepareEffects(params AudioClip[] clips)
         {
-            if (!engine.Native || clips == null) return;
+            if (!engine.Available || clips == null) return;
             foreach (var clip in clips)
                 if (clip != null && !effects.ContainsKey(clip)) effects.Add(clip, new NativeAudioSample(AudioAssetCatalog.Read(clip), engine, false));
         }
         public void Play(double? at = null)
         {
-            if (!engine.Native)
-            {
-                if (source.clip == null) return;
-                ApplyVolumes(settings.Settings);
-                source.time = (float)seek;
-                if (at.HasValue) source.PlayScheduled(at.Value); else source.Play();
-                return;
-            }
             PrepareMain();
             if (main == null) return;
             scheduledAt = at ?? GameTimeline.AudioNow; pending = true;
@@ -130,18 +109,8 @@ namespace OurTaiko
         {
             if (clip == null) return;
             var selected = group ?? Group;
-            if (!engine.Native)
-            {
-                if (!unityEffects.TryGetValue(selected, out var output))
-                {
-                    output = source.gameObject.AddComponent<AudioSource>();
-                    output.playOnAwake = false; output.outputAudioMixerGroup = source.outputAudioMixerGroup;
-                    unityEffects.Add(selected, output);
-                }
-                output.pitch = source.pitch; output.volume = Mathf.Clamp01(Volume(selected));
-                output.PlayOneShot(clip); return;
-            }
             PrepareEffects(clip);
+            if (!effects.ContainsKey(clip)) return;
             // MajdataPlay rewinds the existing sample; it does not allocate overlapping voices.
             effectGroups[clip] = selected;
             effects[clip].Play(Volume(selected), false);
@@ -149,13 +118,11 @@ namespace OurTaiko
         public void Seek(double seconds)
         {
             seek = Math.Max(0, seconds);
-            if (!engine.Native && source.clip != null) source.time = (float)seek;
         }
         public void Stop()
         {
             pending = false; seek = 0; source?.Stop(); main?.Stop();
             foreach (var sample in effects.Values) sample.Stop();
-            foreach (var output in unityEffects.Values) output.Stop();
         }
         public void Release()
         {
@@ -163,8 +130,6 @@ namespace OurTaiko
             foreach (var sample in effects.Values) sample.Dispose();
             foreach (var sample in tracks.Values) sample.Dispose();
             effects.Clear(); tracks.Clear(); effectGroups.Clear();
-            foreach (var output in unityEffects.Values) if (output != null) Destroy(output);
-            unityEffects.Clear();
         }
         void OnDisable() => Stop();
         void OnDestroy()

@@ -40,6 +40,8 @@ namespace OurTaiko.Tests
             Assert.That(options.Buffer(false), Is.GreaterThanOrEqualTo(options.Period(false) * 2));
             Assert.That(options.Rate, Is.EqualTo(44100));
             Assert.That(GameSettings.FromJson("{\"audio\":null}").audio, Is.Not.Null);
+            // 4 was the removed Unity output.
+            Assert.That(GameSettings.FromJson("{\"audio\":{\"backend\":4}}").audio.backend, Is.EqualTo(AudioBackend.Automatic));
         }
     }
 }

@@ -6,7 +6,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Networking;
 
 namespace OurTaiko
 {
@@ -579,7 +578,6 @@ namespace OurTaiko
             if (onlinePreviewSong == null) return;
             if (preview != null) preview.GetComponent<AudioBus>()?.Release();
             if (preview != null) preview.clip = null;
-            if (onlinePreviewSong.music != null) Destroy(onlinePreviewSong.music);
             Destroy(onlinePreviewSong); onlinePreviewSong = null;
         }
         IEnumerator LoadOnlinePreview(SongDefinition song, int generation)
@@ -587,7 +585,6 @@ namespace OurTaiko
             var online = Online.OnlineManager.Instance;
             var cancellation = previewCancellation = new System.Threading.CancellationTokenSource();
             NativeAudioSample sample = null;
-            AudioClip clip = null;
             Task<NativeAudioSample> decode = null;
             bool claimed = false;
             bool Stale() => generation != previewGeneration || cancellation.IsCancellationRequested;
@@ -604,34 +601,17 @@ namespace OurTaiko
                 var engine = AudioEngine.EnsureInstance();
                 int audioGeneration = engine.Generation;
                 string path = task.Result;
-                if (engine.Native)
-                {
-                    decode = Task.Run(() => new NativeAudioSample(System.IO.File.ReadAllBytes(path), engine, true, false, audioGeneration), cancellation.Token);
-                    while (!decode.IsCompleted) yield return null;
-                    if (Stale()) yield break;
-                    if (!decode.IsCompletedSuccessfully) { Debug.LogWarning("Preview audio decode failed"); yield break; }
-                    sample = decode.Result;
-                }
-                else
-                {
-                    string url = new Uri(path).AbsoluteUri;
-#if UNITY_WEBGL && !UNITY_EDITOR
-                    string mime = System.IO.Path.GetExtension(path).ToLowerInvariant() == ".mp3" ? "audio/mpeg" : "audio/ogg";
-                    url = "data:" + mime + ";base64," + Convert.ToBase64String(System.IO.File.ReadAllBytes(path));
-#endif
-                    using var request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.UNKNOWN);
-                    ((DownloadHandlerAudioClip)request.downloadHandler).streamAudio = false;
-                    var operation = request.SendWebRequest();
-                    while (!operation.isDone) { if (Stale()) { request.Abort(); yield break; } yield return null; }
-                    if (request.result != UnityWebRequest.Result.Success) { Debug.LogWarning("Preview audio decode failed"); yield break; }
-                    clip = DownloadHandlerAudioClip.GetContent(request);
-                }
+                if (!engine.Available) yield break;
+                decode = Task.Run(() => new NativeAudioSample(System.IO.File.ReadAllBytes(path), engine, true, false, audioGeneration), cancellation.Token);
+                while (!decode.IsCompleted) yield return null;
+                if (Stale()) yield break;
+                if (!decode.IsCompletedSuccessfully) { Debug.LogWarning("Preview audio decode failed"); yield break; }
+                sample = decode.Result;
                 if (Stale() || engine.Generation != audioGeneration) yield break;
                 ReleaseOnlinePreview();
                 onlinePreviewSong = ScriptableObject.CreateInstance<SongDefinition>();
                 onlinePreviewSong.hideFlags = HideFlags.DontSave;
-                onlinePreviewSong.music = clip;
-                if (sample != null) onlinePreviewSong.SetPreparedAudio(sample);
+                onlinePreviewSong.SetPreparedAudio(sample);
                 claimed = true;
                 preview.SetAudioSong(onlinePreviewSong, false);
                 preview.SeekAudio(0);
@@ -641,11 +621,7 @@ namespace OurTaiko
             {
                 cancellation.Cancel();
                 if (previewCancellation == cancellation) previewCancellation = null;
-                if (!claimed)
-                {
-                    if (clip != null) Destroy(clip);
-                    if (decode != null) _ = decode.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
-                }
+                if (!claimed && decode != null) _ = decode.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
                 cancellation.Dispose();
             }
         }
@@ -658,32 +634,30 @@ namespace OurTaiko
                 yield return LoadOnlinePreview(song, generation);
                 yield break;
             }
-            if (engine.Native)
+            if (!engine.Available) yield break;
+            byte[] bytes = null;
+            Exception readError = null;
+            try { if (string.IsNullOrEmpty(song.audioPath)) bytes = AudioAssetCatalog.Read(song.music); }
+            catch (Exception error) { readError = error; }
+            if (readError != null) { Debug.LogWarning("Preview audio: " + readError.Message); StopPreview(); yield break; }
+            string path = song.audioPath;
+            int audioGeneration = engine.Generation;
+            var task = Task.Run(() => new NativeAudioSample(bytes ?? System.IO.File.ReadAllBytes(path), engine, true, false, audioGeneration));
+            bool claimed = false;
+            try
             {
-                byte[] bytes = null;
-                Exception readError = null;
-                try { if (string.IsNullOrEmpty(song.audioPath)) bytes = AudioAssetCatalog.Read(song.music); }
-                catch (Exception error) { readError = error; }
-                if (readError != null) { Debug.LogWarning("Preview audio: " + readError.Message); StopPreview(); yield break; }
-                string path = song.audioPath;
-                int audioGeneration = engine.Generation;
-                var task = Task.Run(() => new NativeAudioSample(bytes ?? System.IO.File.ReadAllBytes(path), engine, true, false, audioGeneration));
-                bool claimed = false;
-                try
+                while (!task.IsCompleted) yield return null;
+                if (generation != previewGeneration) yield break;
+                if (!task.IsCompletedSuccessfully)
                 {
-                    while (!task.IsCompleted) yield return null;
-                    if (generation != previewGeneration) yield break;
-                    if (!task.IsCompletedSuccessfully)
-                    {
-                        Debug.LogWarning("Preview audio: " + task.Exception?.GetBaseException().Message);
-                        StopPreview(); yield break;
-                    }
-                    song.SetPreparedAudio(task.Result); claimed = true;
+                    Debug.LogWarning("Preview audio: " + task.Exception?.GetBaseException().Message);
+                    StopPreview(); yield break;
                 }
-                finally
-                {
-                    if (!claimed) _ = task.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
-                }
+                song.SetPreparedAudio(task.Result); claimed = true;
+            }
+            finally
+            {
+                if (!claimed) _ = task.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
             }
             if (generation != previewGeneration) yield break;
             preview.SetAudioSong(song, false);

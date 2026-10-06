@@ -25,6 +25,7 @@ namespace OurTaiko
             settings.display ??= new DisplaySettings();
             settings.audio ??= new AudioOptions();
             settings.audio.volume ??= new SoundVolumes();
+            settings.audio.backend = settings.audio.Backend;
             return settings;
         }
     }

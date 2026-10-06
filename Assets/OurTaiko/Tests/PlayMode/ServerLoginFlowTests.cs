@@ -137,7 +137,7 @@ namespace OurTaiko.Tests
             Assert.That(play.Session.Chart.Title, Is.EqualTo("Fixture Song"));
             Assert.That(song.audioPath, Is.Not.Null.And.Not.Empty);
             Assert.That(play.music.AudioLength(), Is.GreaterThan(0));
-            if (AudioEngine.Instance.Native) Assert.That(song.music, Is.Null, "Online audio must bypass Unity decoding.");
+            if (AudioEngine.Instance.Available) Assert.That(song.music, Is.Null, "Online audio must bypass Unity decoding.");
             Assert.That(fixture.Downloads, Is.EqualTo(2));
             int pendingBeforeResult = -1;
             bool uploadedBeforeResult = true;

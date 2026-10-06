@@ -43,7 +43,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator FirstAndSelectedMeasureBothHavePreparation()
         {
-            yield return StartPractice(AudioBackend.Unity, true);
+            yield return StartPractice(AudioBackend.Bass, true);
             yield return Click(play.practiceView.confirm);
             yield return Click(play.practiceView.confirm);
             Assert.That(play.SongTime, Is.LessThan(-1.8));
@@ -64,7 +64,6 @@ namespace OurTaiko.Tests
             Assert.That(play.Session.Bad, Is.Zero, "Preparation must not count skipped notes as misses.");
         }
         [UnityTest] public IEnumerator NativePlaybackAndTwoLayerPause() => ExercisePlayback(AudioBackend.Bass);
-        [UnityTest] public IEnumerator UnityPlaybackAndTwoLayerPause() => ExercisePlayback(AudioBackend.Unity);
 
         IEnumerator ExercisePlayback(AudioBackend backend)
         {
@@ -147,7 +146,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator FinishReturnsToFirstMeasureWithoutResultAndEntryHasIndependentRoute()
         {
-            yield return StartPractice(AudioBackend.Unity, false);
+            yield return StartPractice(AudioBackend.Bass, false);
             // Jump near the end, then run the complete end-of-chart path.
             play.MovePractice(1); yield return null; play.MovePractice(1);
             yield return new WaitForSecondsRealtime(0.25f);
@@ -180,7 +179,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator BranchPageComesFirstAndFixesTheRoute()
         {
-            yield return StartPractice(AudioBackend.Unity, false, Branched);
+            yield return StartPractice(AudioBackend.Bass, false, Branched);
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
             Assert.That(play.practiceView.heading.text, Is.EqualTo("谱面分支"));
             Assert.That(play.practiceView.value.text, Is.EqualTo("普通譜面"));
@@ -218,7 +217,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator PracticeOpensScoreBranchesWithOmittedRoutes()
         {
-            yield return StartPractice(AudioBackend.Unity, false,
+            yield return StartPractice(AudioBackend.Bass, false,
                 "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n#BRANCHSTART s,100,200\n#N\n1111,\n#E\n2222,\n#BRANCHEND\n1111,\n#END");
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
             yield return Press(Key.K); yield return Press(Key.K);
