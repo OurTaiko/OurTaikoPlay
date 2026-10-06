@@ -148,6 +148,7 @@ namespace OurTaiko.Editor
                 throw new BuildFailedException("Select " + target + " first. In batch mode pass -buildTarget; in the Editor use OurTaiko/Build.");
             ConfigurePlatforms();
             if (target == BuildTarget.WebGL) ConfigureWeb();
+            ApplyCommandLine(target);
 #if UNITY_STANDALONE_OSX
             // This API lives in the macOS module; other Editor hosts need not install it.
             if (target == BuildTarget.StandaloneOSX)
@@ -161,7 +162,8 @@ namespace OurTaiko.Editor
             var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
             if (scenes.Length == 0 || scenes[0] != "Assets/Scenes/Entry.unity")
                 throw new BuildFailedException("Enabled scenes must start with Entry.");
-            string output = Path.GetFullPath(OutputPath(target));
+            string customPath = Argument("-customBuildPath");
+            string output = Path.GetFullPath(customPath ?? OutputPath(target));
             Directory.CreateDirectory(Path.GetDirectoryName(output));
             WriteStatus(new Result { status = "Building", platform = target.ToString(), output = output });
             var preloaded = PlayerSettings.GetPreloadedAssets();
@@ -198,6 +200,34 @@ namespace OurTaiko.Editor
                 PlayerSettings.SetPreloadedAssets(preloaded);
                 AssetDatabase.SaveAssets();
             }
+        }
+
+        // CI (game-ci unity-builder) passes version and signing values; local menu builds keep Player Settings.
+        static void ApplyCommandLine(BuildTarget target)
+        {
+            string version = Argument("-buildVersion");
+            if (version != null && version != "none") PlayerSettings.bundleVersion = version;
+            if (target == BuildTarget.Android)
+            {
+                if (int.TryParse(Argument("-androidVersionCode"), out int code) && code > 0)
+                    PlayerSettings.Android.bundleVersionCode = code;
+                string keystore = Argument("-androidKeystoreName");
+                if (keystore != null && File.Exists(keystore))
+                {
+                    PlayerSettings.Android.useCustomKeystore = true;
+                    PlayerSettings.Android.keystoreName = Path.GetFullPath(keystore);
+                    PlayerSettings.Android.keystorePass = Argument("-androidKeystorePass") ?? "";
+                    PlayerSettings.Android.keyaliasName = Argument("-androidKeyaliasName") ?? "";
+                    PlayerSettings.Android.keyaliasPass = Argument("-androidKeyaliasPass") ?? "";
+                }
+            }
+        }
+
+        static string Argument(string name)
+        {
+            var args = Environment.GetCommandLineArgs();
+            int i = Array.IndexOf(args, name);
+            return i >= 0 && i + 1 < args.Length && args[i + 1] != "" ? args[i + 1] : null;
         }
 
         static void WriteStatus(Result result)

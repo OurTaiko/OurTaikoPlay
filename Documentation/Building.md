@@ -58,6 +58,23 @@ xcodebuild -project Builds/iOS/OurTaikoPlay.xcodeproj \
 
 Unity 平台切换与批处理规则参考：[Build a player from the command line](https://docs.unity.com/en-us/engine/6000.0/manual/building-and-publishing/build-customize-build-pipeline/build-command-line)。
 
+## GitHub Actions 构建发布
+
+工作流 `.github/workflows/build.yml`，参照 MajdataPlay 的 nightly 流程，按本项目做了以下调整：
+
+- 触发：push 到 `main` 时全部成功后替换滚动的 `nightly` 预发布；推送 `v1.2` 或 `v1.2.3` 格式的 tag 时发布正式 Release，版本号取自 tag。也可手动 workflow_dispatch（只构建不发布）。
+- 先跑 Finished 两组测试（`OurTaiko.FinishedTests`、`OurTaiko.FinishedPlayModeTests`，game-ci unity-test-runner，Linux 容器），通过后才构建；进行中的测试不阻挡构建。
+- 平台：只在 ubuntu 上构建 Windows x64 与 Android ARM64 APK。CI 不构建 macOS、iOS（用户决定，2026-10-05，不配置 Apple 签名）、Web 与 Linux；这些仍用本地 OurTaiko/Build 菜单或命令行构建。构建通过 `buildMethod` 调用 `PlayerBuilds.BuildXxx`，保留名称／图标、原生音频检查与音频字节打包；产物路径由 game-ci 传入的 `-customBuildPath` 决定，本地菜单构建仍输出到 `Builds/`。
+- 版本：nightly 为 `bundleVersion-日期-短SHA`，tag 为 tag 中的版本；Android versionCode 为提交数。CI 通过 `-buildVersion`、`-androidVersionCode` 与 keystore 参数传入（`PlayerBuilds.ApplyCommandLine`）；不带这些参数的本地构建不改 Player Settings。
+- Git LFS：checkout 不直接拉 LFS，由 `.github/actions/lfs-pull` 按 LFS 文件列表哈希缓存 `.git/lfs` 后再 `git lfs pull`，避免每次构建消耗 GitHub LFS 流量额度（约 75 MB／次）。
+
+Secrets 用 `.github/scripts/set-ci-secrets.sh [unity|android]` 在本机终端上传（读取本地文件或隐藏输入，直接交给 `gh secret set`）：
+
+| 名称 | 来源 |
+| --- | --- |
+| `UNITY_LICENSE`、`UNITY_EMAIL`、`UNITY_PASSWORD` | Unity Hub → 设置 → 许可证 → 添加 → 获取免费个人版许可证后生成的 `/Library/Application Support/Unity/Unity_lic.ulf`（只有 `UnityEntitlementLicense.xml` 不够）及 Unity 账号 |
+| `ANDROID_KEYSTORE_BASE64`、`ANDROID_KEYSTORE_PASS`、`ANDROID_KEYALIAS_NAME`、`ANDROID_KEYALIAS_PASS` | OurTaiko 组织发布 keystore（别名 `ourtaiko`，与 Fanmade APK 同一把）；缺失时 APK 使用 Unity 调试签名 |
+
 ## 2026-10-03 首次构建验证（音频重做前）
 
 - 四个平台 Unity BuildReport 均为 Succeeded、0 errors。每个报告的 1 条警告来自开发用 Pipeline 插件缺少 RuntimePipelineConfig；没有音频库构建错误。
