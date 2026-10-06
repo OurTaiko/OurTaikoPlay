@@ -6,7 +6,7 @@ namespace OurTaiko
     public enum NoteKind { Don = 1, Ka, BigDon, BigKa, Roll, BigRoll, Balloon = 7, Kusudama = 9 }
     public enum Judgment { None, Good, Ok, Bad, Roll }
     public enum BranchRoute { Normal, Expert, Master }
-    public enum BranchCondition { Accuracy, Drumroll }
+    public enum BranchCondition { Accuracy, Drumroll, Score }
 
     public sealed class ChartNote
     {
@@ -42,6 +42,8 @@ namespace OurTaiko
         public double Time, EndTime, ArmTime, DecisionTime, ExpertThreshold, MasterThreshold;
         public BranchCondition Condition;
         public readonly ChartNote[] FirstEntries = new ChartNote[3];
+        public readonly BranchRoute[] Routes = { BranchRoute.Normal, BranchRoute.Expert, BranchRoute.Master };
+        public BranchRoute ResolveRoute(BranchRoute requested) => Routes[(int)requested];
     }
 
     public sealed class ChartSection
@@ -53,6 +55,7 @@ namespace OurTaiko
 
     public sealed class TaikoChart
     {
+        public BranchRoute? ForcedBranch;
         public string Title = "Untitled", Subtitle = "", Course = "Oni";
         public int Level;
         public double Bpm = 120, Offset, Duration;

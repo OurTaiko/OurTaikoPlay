@@ -69,6 +69,7 @@ namespace OurTaiko.Tests
         IEnumerator ExercisePlayback(AudioBackend backend)
         {
             yield return StartPractice(backend, true);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure), "A chart without branches has no branch page.");
             Assert.That(play.practiceView.heading.text, Is.EqualTo("小节进度"));
             Assert.That(play.BarRoot(0).anchoredPosition.x, Is.EqualTo(120).Within(0.1));
             double before = play.RenderedTime;
@@ -173,7 +174,47 @@ namespace OurTaiko.Tests
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
             Assert.That(SceneSwitcher.Instance.SelectedPlayScene, Is.EqualTo(SceneSwitcher.PracticeScene));
         }
-        IEnumerator StartPractice(AudioBackend backend, bool withAudio)
+        const string Plain = "TITLE:Practice Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n1111,\n#END";
+        // Misses would select 普通 at both branches; practice must keep the menu's route instead.
+        const string Branched = "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n3333,\n#BRANCHEND\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n#MEASURE 2/4\n33,\n33,\n#MEASURE 4/4\n#BRANCHEND\n1111,\n#END";
+        [UnityTest]
+        public IEnumerator BranchPageComesFirstAndFixesTheRoute()
+        {
+            yield return StartPractice(AudioBackend.Unity, false, Branched);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
+            Assert.That(play.practiceView.heading.text, Is.EqualTo("谱面分支"));
+            Assert.That(play.practiceView.value.text, Is.EqualTo("普通譜面"));
+            int bars = play.Practice.Count;
+            yield return Press(Key.D);
+            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Normal), "The route list stops at 普通.");
+            yield return Press(Key.K); yield return Press(Key.K); yield return Press(Key.K);
+            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Master), "The route list stops at 達人.");
+            Assert.That(play.practiceView.value.text, Is.EqualTo("達人譜面"));
+            Assert.That(play.Practice.Count, Is.EqualTo(bars + 1), "達人's two half measures replace one bar line list entry.");
+            yield return Click(play.practiceView.previous);
+            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
+            Assert.That(play.Practice.Count, Is.EqualTo(bars));
+            var notes = play.Session.Chart.Notes;
+            Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Session.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True);
+            yield return Press(Key.F);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure));
+            Assert.That(play.practiceView.heading.text, Is.EqualTo("小节进度"));
+            yield return Press(Key.K);
+            Assert.That(play.Practice.Target, Is.EqualTo(1));
+            yield return new WaitForSecondsRealtime(0.25f);
+            yield return Press(Key.F);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
+            yield return Press(Key.F);
+            Assert.That(play.IsPaused, Is.False);
+            yield return Wait(() => play.Session.BranchHistory.Count == 2);
+            Assert.That(play.Session.BranchHistory, Is.EqualTo(new[] { BranchRoute.Expert, BranchRoute.Expert }));
+            Assert.That(play.Session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
+            // A new pause starts again on the branch page and keeps the chosen route.
+            play.TogglePause(); yield return null;
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
+            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
+        }
+        IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain)
         {
             var settings = new GameSettings(); settings.audio.backend = backend;
             SettingManager.EnsureInstance().UseUnsaved(settings);
@@ -193,7 +234,7 @@ namespace OurTaiko.Tests
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
             song = ScriptableObject.CreateInstance<SongDefinition>(); song.name = "Practice Test";
-            song.chart = new TextAsset("TITLE:Practice Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n1111,\n#END");
+            song.chart = new TextAsset(chart);
             if (withAudio) song.music = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/OurTaiko/Audio/entry/bgm.ogg");
             SceneSwitcher.Instance.Play(song, "Oni", false);
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !SceneSwitcher.Instance.IsInputBlocked);

@@ -94,7 +94,8 @@ namespace OurTaiko
             {
                 var item = session.timeline[session.nextEvent++];
                 if (item.Branch == null) continue;
-                var route = previous?.SelectedRoute(item.Branch.Id) ?? BranchRoute.Normal;
+                var route = chart.ForcedBranch.HasValue ? item.Branch.ResolveRoute(chart.ForcedBranch.Value)
+                    : previous?.SelectedRoute(item.Branch.Id) ?? BranchRoute.Normal;
                 session.selectedRoutes[item.Branch.Id] = (int)route;
                 session.CurrentBranch = route;
                 session.branchHistory.Add(route);
@@ -111,7 +112,8 @@ namespace OurTaiko
         }
 
         public bool IsPracticePreviewActive(ChartNote note) => note.BranchId < 0
-            || note.Route == (SelectedRoute(note.BranchId) ?? BranchRoute.Normal);
+            || note.Route == (Chart.ForcedBranch.HasValue ? Chart.Branches[note.BranchId].ResolveRoute(Chart.ForcedBranch.Value)
+                : SelectedRoute(note.BranchId) ?? BranchRoute.Normal);
         bool IsActive(int branchId, BranchRoute route) => branchId < 0 || selectedRoutes[branchId] == (int)route;
         public BranchRoute? SelectedRoute(int branchId) => selectedRoutes[branchId] < 0 ? (BranchRoute?)null : (BranchRoute)selectedRoutes[branchId];
 
@@ -134,7 +136,8 @@ namespace OurTaiko
         void SelectBranch(ChartBranch branch)
         {
             double value;
-            if (branch.Condition == BranchCondition.Accuracy)
+            if (Chart.ForcedBranch.HasValue) value = 0;
+            else if (branch.Condition == BranchCondition.Accuracy)
                 value = branchNotes == 0 ? 0 : Math.Max(0, Math.Min(100, (int)(branchPoints / branchNotes * 100)));
             else
             {
@@ -149,6 +152,7 @@ namespace OurTaiko
             }
             var chosen = value >= branch.ExpertThreshold && value < branch.MasterThreshold && branch.ExpertThreshold >= 0
                 ? BranchRoute.Expert : value >= branch.MasterThreshold ? BranchRoute.Master : BranchRoute.Normal;
+            chosen = branch.ResolveRoute(Chart.ForcedBranch ?? chosen);
             selectedRoutes[branch.Id] = (int)chosen;
             CurrentBranch = chosen; LastBranchValue = value; branchHistory.Add(chosen); Version++;
             ResetBranchStats();

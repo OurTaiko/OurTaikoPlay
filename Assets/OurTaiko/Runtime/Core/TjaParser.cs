@@ -17,10 +17,10 @@ namespace OurTaiko
             return int.TryParse(value, out int n) && n >= 0 && n < names.Length ? names[n] : value;
         }
 
-        public static TaikoChart Parse(string text, string requestedCourse = "Oni")
+        public static TaikoChart Parse(string text, string requestedCourse = "Oni", BranchRoute? forcedBranch = null)
         {
             if (string.IsNullOrWhiteSpace(text)) throw new FormatException("The TJA chart is empty.");
-            var chart = new TaikoChart();
+            var chart = new TaikoChart { ForcedBranch = forcedBranch };
             var tokens = new List<string>();
             var balloons = new List<int>();
             string course = "Oni";
@@ -150,7 +150,14 @@ namespace OurTaiko
             void EndBranch()
             {
                 CheckLongNote();
-                if (!routesSeen.All(x => x)) throw new FormatException("A branch must define #N, #E and #M exactly once.");
+                if (!routesSeen.All(x => x))
+                {
+                    if (!chart.ForcedBranch.HasValue || !routesSeen[0])
+                        throw new FormatException("A branch must define #N, #E and #M exactly once.");
+                    // Match Fanmade's image renderer: omitted E uses N; omitted M uses E.
+                    if (!routesSeen[1]) branch.Routes[1] = BranchRoute.Normal;
+                    if (!routesSeen[2]) branch.Routes[2] = branch.Routes[1];
+                }
                 branch.EndTime = state.Time;
                 // As in OurTaikoPlayer, common notes continue from the final authored route.
                 branch = null; hasRoute = false; branchBar = false;
@@ -163,7 +170,7 @@ namespace OurTaiko
                 string[] parts = arg.Split(',');
                 if (parts.Length != 3) throw new FormatException("#BRANCHSTART requires condition, expert threshold, master threshold.");
                 string condition = parts[0].Trim().ToLowerInvariant();
-                if (condition != "p" && condition != "r")
+                if (condition != "p" && condition != "r" && !(condition == "s" && chart.ForcedBranch.HasValue))
                     throw new NotSupportedException("Only p (accuracy) and r (drumroll) branches are implemented by the reference player.");
                 double expert = Number(parts[1]), master = Number(parts[2]);
                 if (double.IsNaN(expert) || double.IsInfinity(expert) || double.IsNaN(master) || double.IsInfinity(master))
@@ -171,7 +178,7 @@ namespace OurTaiko
                 branchStart = state.Copy();
                 branch = new ChartBranch { Id = chart.Branches.Count, Time = state.Time,
                     ArmTime = (sectionBarTime ?? state.Time) - 480.0 / state.Bpm,
-                    Condition = condition == "p" ? BranchCondition.Accuracy : BranchCondition.Drumroll,
+                    Condition = condition == "p" ? BranchCondition.Accuracy : condition == "r" ? BranchCondition.Drumroll : BranchCondition.Score,
                     ExpertThreshold = expert, MasterThreshold = master };
                 chart.Branches.Add(branch);
                 routeLists = new[] { new List<ChartEntry>(), new List<ChartEntry>(), new List<ChartEntry>() };

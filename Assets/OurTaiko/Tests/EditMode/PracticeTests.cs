@@ -105,5 +105,25 @@ namespace OurTaiko.Tests
             var rewind = PlaySession.PracticeAt(chart, -5, sought);
             Assert.That(rewind.SelectedRoute(0), Is.Null);
         }
+        // Practice fixes every branch to the menu's route: misses that would select 普通 and a perfect
+        // run that would select 達人 both keep the chosen route.
+        [TestCase(BranchRoute.Normal, false)]
+        [TestCase(BranchRoute.Expert, false)]
+        [TestCase(BranchRoute.Expert, true)]
+        [TestCase(BranchRoute.Master, false)]
+        public void PracticeForcesTheChosenBranch(BranchRoute route, bool perfect)
+        {
+            var chart = TjaParser.Parse("BPM:240\nCOURSE:Oni\n#START\n1111,\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n3333,\n#BRANCHEND\n#BRANCHSTART r,1,2\n#N\n1000,\n#E\n2000,\n#M\n3000,\n#BRANCHEND\n#END");
+            chart.ForcedBranch = route;
+            var session = PlaySession.PracticeAt(chart, 0);
+            for (double t = 0; t < 4; t += 1 / 120.0)
+            {
+                session.Advance(t, perfect);
+            }
+            Assert.That(session.BranchHistory, Is.EqualTo(new[] { route, route }));
+            Assert.That(chart.Notes.Where(n => n.BranchId >= 0).All(n => session.IsPracticePreviewActive(n) == (n.Route == route)), Is.True);
+            Assert.That(chart.Notes.Where(n => n.BranchId >= 0 && n.Route != route).All(n => !session.Resolved[chart.Notes.IndexOf(n)]), Is.True,
+                "Notes of the other routes are never judged.");
+        }
     }
 }
