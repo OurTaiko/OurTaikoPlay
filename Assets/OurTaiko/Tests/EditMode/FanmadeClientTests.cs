@@ -248,7 +248,6 @@ namespace OurTaiko.Tests
             Assert.That(body.ContainsKey("versionId"), Is.False);
         }
 
-        [TestCase("songIdOnly")]
         [TestCase("courseKeyedDifficulties")]
         [TestCase("resourceDownloadVersion")]
         [TestCase("scoreReplayVersion")]

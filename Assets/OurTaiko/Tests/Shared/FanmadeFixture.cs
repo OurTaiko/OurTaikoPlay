@@ -57,7 +57,7 @@ namespace OurTaiko.Tests
         // Bootstrap capability fields; a test drops one to play an outdated server.
         public readonly JObject Protocol = new JObject
         {
-            ["songIdOnly"] = true, ["courseKeyedDifficulties"] = true, ["resourceDownloadVersion"] = 1,
+            ["courseKeyedDifficulties"] = true, ["resourceDownloadVersion"] = 1,
             ["scoreReplayVersion"] = 1, ["audioPreviewVersion"] = 1,
         };
         public Func<Chart, JObject> Manifest;

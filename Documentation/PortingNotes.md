@@ -610,7 +610,7 @@ Entry 原先沿用 Nijiiro `Scripts/entry/box.lua` 的相邻项可见规则（`a
 
 ## Fanmade 歌曲 ID 与资源直连（2026-10-05）
 
-接入契约：相邻后端 `docs/GAME_CLIENT_RESOURCE_DOWNLOAD.md`。每个 endpoint 重连后读取 `songIdOnly`、`resourceDownloadVersion`、`courseKeyedDifficulties`，旧服务器保持版本路由；未知下载协议号明确拒绝。base URL 路径前缀仍保留。
+接入契约：相邻后端 `docs/GAME_CLIENT_RESOURCE_DOWNLOAD.md`。每个 endpoint 重连后读取 `resourceDownloadVersion`、`courseKeyedDifficulties`（`songIdOnly` 已于 2026-10-07 从协议删除），旧服务器保持版本路由；未知下载协议号明确拒绝。base URL 路径前缀仍保留。
 
 资源清单校验歌曲 ID、HTTPS URL、SHA-256、64 位大小及到期时间；音频扩展名来自 contentType。独立资源请求不带 API token、Cookie、幂等键，不重定向，也不会触发游戏重新登录。准备操作最多重新获取一轮详情/清单，处理详情竞态、即将过期、403/404 和暂时错误；禁止失败后退回代理下载。WebGL 使用独立无 token 请求，仍需源站 CORS，未验证浏览器直连。
 
