@@ -154,7 +154,7 @@ namespace OurTaiko.Editor
             controller.noteSprites[9] = Slice("Note9", "game/notes/notes_atlas", 0, 1160, 128, 128);
             Picture(lane, "PlayerCover", "game/lane/1p_lane_cover", 0, 0);
             Picture(lane, "PlayerIcon", "game/lane/1p_icon", 0, 41);
-            var diff = Picture(lane, "Difficulty", "game/lane/lane_difficulty", 50, 38, 88, 64); diff.sprite = Slice("OniDifficulty", "game/lane/lane_difficulty", 0, 192, 88, 64);
+            var diff = Picture(lane, "Difficulty", "game/lane/lane_difficulty", 50, 38, 88, 64); diff.sprite = LaneDifficultySprites()[(int)Difficulty.Oni];
             Picture(lane, "Drum", "game/lane/drum", 211, 22);
             string[] drumNames = { "drum_don_l", "drum_don_r", "drum_kat_l", "drum_kat_r" };
             controller.drumFlashes = drumNames.Select(n => Picture(lane, n, "game/lane/" + n, 211, 22)).ToArray();

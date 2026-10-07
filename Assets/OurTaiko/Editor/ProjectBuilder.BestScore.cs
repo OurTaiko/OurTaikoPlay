@@ -16,8 +16,7 @@ namespace OurTaiko.Editor
             for (int i = 0; i < EditorSceneManager.sceneCount; i++)
                 if (EditorSceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save the current scene first.");
             // Reuse the opaque gameplay sheet, not the 60%-alpha course-select watermark.
-            var icons = SliceSheet("game/lane/lane_difficulty", Enumerable.Range(0, 5)
-                .Select(i => ("BestScoreDifficulty" + i, 0, i * 96, 132, 96)).ToArray());
+            var icons = LaneDifficultySprites();
             var scene = EditorSceneManager.OpenScene(SongSelectPath);
             var select = UnityEngine.Object.FindFirstObjectByType<SongSelectScene>();
             if (select.view.bestScore != null && select.view.bestScore.judgments != null)

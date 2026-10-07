@@ -6866,11 +6866,11 @@ MonoBehaviour:
   group: {fileID: 1095032742}
   difficulty: {fileID: 2055777785}
   difficultySprites:
-  - {fileID: -164008391, guid: afc21b14a938040be93225af4c3983cf, type: 3}
-  - {fileID: 309027140, guid: afc21b14a938040be93225af4c3983cf, type: 3}
-  - {fileID: -531916825, guid: afc21b14a938040be93225af4c3983cf, type: 3}
-  - {fileID: -1795082308, guid: afc21b14a938040be93225af4c3983cf, type: 3}
-  - {fileID: -609447608, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: -455977207, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: -1335733205, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: -834173487, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: 1702319767, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: 1511858840, guid: afc21b14a938040be93225af4c3983cf, type: 3}
   digits:
   - {fileID: 1414049770}
   - {fileID: 1425310363}
@@ -14141,7 +14141,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1795082308, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  m_Sprite: {fileID: 1702319767, guid: afc21b14a938040be93225af4c3983cf, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
