@@ -41,7 +41,7 @@
 
 #### 游玩轨道难度图标（2026-10-06）
 
-- 修复：SinglePlayScene／PracticeScene 左侧 `NoteLane/Difficulty` 曾在生成时固定为鬼。现按原 `Player::draw` 的 `frame = difficulty`，`PlayScene.Start` 依谱面 COURSE 从 `laneDifficultySprites`（`lane_difficulty` 切片 `LaneDifficulty0–4`＝简单→里鬼）选图，场景保存值仍为鬼预览。迁移 `ProjectBuilder.ApplyLaneDifficulty()`（菜单 OurTaiko/Apply Lane Difficulty，重复执行哈希不变）；测试 `LaneDifficultyFlowTests`（进行中 PlayMode，5/5）。
+- 修复：SinglePlayScene／PracticeScene 左侧 `NoteLane/Difficulty` 曾在生成时固定为鬼。现按原 `Player::draw` 的 `frame = difficulty`，`PlayScene.Start` 依谱面 COURSE 从 `laneDifficultySprites`（`lane_difficulty` 切片 `LaneDifficulty0–4`＝简单→里鬼）选图，场景保存值仍为鬼预览。迁移 `ProjectBuilder.ApplyLaneDifficulty()`（菜单 OurTaiko/Apply Lane Difficulty，重复执行哈希不变）；测试 `LaneDifficultyFlowTests`（已完成 PlayMode，5/5；2026-10-06 用户确认后移入 Finished）。
 
 #### 练习分支：固定路线（2026-10-05）
 
