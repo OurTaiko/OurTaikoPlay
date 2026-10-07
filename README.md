@@ -10,7 +10,7 @@ OurTaikoPlay 是使用 Unity 与 C# 从零编写的太鼓节奏游戏，开发�
 
 - **完整单人流程**：Entry → 服务器登录／游客模式 → 选曲 → 加载 → 演奏 → 结算，支持暂停、重开和返回选曲。
 - **Nijiiro 界面**：曲目板、难度卡、名牌、魂槽、舞者、皇冠，以及包含「粋／雅／極」的七种 ScoreRank 图标和结算演出。
-- **TJA 演奏**：支持常用音符、连打、气球、BPM／滚动速度变化和普通／玄人／达人分支。详细判定与支持范围见[判定说明](Documentation/JudgingSystem.md)和[开发记录](Documentation/PortingNotes.md)。
+- **TJA 演奏**：支持常用音符、连打、气球、BPM／滚动速度变化和普通／玄人／达人分支。
 - **在线曲库与成绩**：内置 Fanmade、ESE 服务器配置，支持账号登录、游客浏览、分类文件夹、谱面与音频下载、最高分拉取，以及带重试队列的成绩上传。
 - **成绩展示**：本地成绩存入 SQLite；在线历史成绩来自服务器。选曲显示最佳成绩、皇冠和 ScoreRank，在线皇冠读取 `ClearStatus`。
 - **演奏与系统设置**：自动演奏、速度、ドロン、あべこべ、随机、鼓音，以及音量分组、音频后端、帧率和触控鼓开关。
@@ -89,15 +89,12 @@ General → Language 当前只影响歌名和副标题，缺失翻译时显示�
 | Android | `Builds/Android/OurTaikoPlay.apk` | ARM64 |
 | iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 真机 |
 
-iOS 构建需要 macOS 和 Xcode；项目默认开启 Hoshino Network LLC 团队的自动签名，Xcode 需登录有该团队权限的开发者账号；使用其他团队时请在 Unity Player Settings 中修改。移动端包名为 `org.ourtaiko.play`，仅使用横屏。完整工具链、命令行构建与验证记录见[构建说明](Documentation/Building.md)。
+iOS 构建需要 macOS 和 Xcode；项目默认开启 Hoshino Network LLC 团队的自动签名，Xcode 需登录有该团队权限的开发者账号；使用其他团队时请在 Unity Player Settings 中修改。移动端包名为 `org.ourtaiko.play`，仅使用横屏。
 
 ## 开发状态与文档
 
 目前专注于单人、Nijiiro 皮肤。双人演奏、段位模式、搜索／排序和完整回放播放尚未实现，也不保证兼容所有 TJA 扩展。运行逻辑与 Editor 工具使用 C#；原生音频库作为平台依赖提供，导入的动画表只作为数据读取，不执行 Lua。
 
-- [构建说明](Documentation/Building.md)：各平台工具链、产物与验证边界。
-- [判定说明](Documentation/JudgingSystem.md)：计时、判定与玩法细节。
-- [开发记录](Documentation/PortingNotes.md)：设计思路、实现细节与已知限制。
 - [素材清单](Documentation/ImportedAssets.json)：美术与音频的导入来源。
 - 测试位于 `Assets/OurTaiko/Tests/`，可在 Unity Test Runner 中运行 EditMode 与 PlayMode 测试；`Finished/` 保留已完成功能的回归测试。
 

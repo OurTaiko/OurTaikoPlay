@@ -10,7 +10,7 @@ OurTaikoPlay is a taiko rhythm game written from scratch in Unity and C#, drawin
 
 - **A complete single-player flow**: Entry → server login / guest access → song selection → loading → gameplay → results, with pause, restart, and return to song selection.
 - **Nijiiro presentation**: song boards, difficulty cards, nameplates, soul gauge, dancers, crowns, and seven ScoreRank icons—including 粋, 雅, and 極—with a results animation.
-- **TJA gameplay**: common note types, drumrolls, balloons, BPM and scroll changes, and Normal / Expert / Master branches. See the [judgment guide](Documentation/JudgingSystem.md) and [development notes](Documentation/PortingNotes.md) for supported behavior.
+- **TJA gameplay**: common note types, drumrolls, balloons, BPM and scroll changes, and Normal / Expert / Master branches.
 - **Online catalogs and scores**: built-in Fanmade and ESE server configurations, account login, guest browsing, category folders, chart and audio downloads, best-score retrieval, and queued score uploads with retries.
 - **Score display**: local records stored in SQLite; online history supplied by the server. Song selection shows best scores, crowns, and ScoreRank. Online crowns use `ClearStatus`.
 - **Play and system settings**: autoplay, speed, Doron, swapped note colors, randomization, drum sounds, volume groups, audio backend, frame rate, and an on-screen drum toggle.
@@ -84,19 +84,16 @@ Use **OurTaiko → Build** in Unity. Install the appropriate platform modules th
 | Android | `Builds/Android/OurTaikoPlay.apk` | ARM64 |
 | iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 devices |
 
-iOS builds require macOS and Xcode. Automatic signing defaults to the Hoshino Network LLC team; sign in to Xcode with a developer account that has access to that team, or change the team in Unity Player Settings. Mobile builds use `org.ourtaiko.play` and landscape orientation. Toolchain requirements, command-line builds, and validation records are in the [build guide](Documentation/Building.md).
+iOS builds require macOS and Xcode. Automatic signing defaults to the Hoshino Network LLC team; sign in to Xcode with a developer account that has access to that team, or change the team in Unity Player Settings. Mobile builds use `org.ourtaiko.play` and landscape orientation.
 
 ## Development status and documentation
 
 The current focus is single-player gameplay with the Nijiiro skin. Two-player play, Dan courses, search / sorting, and full replay playback are not implemented, and not every TJA extension is supported. Runtime logic and Editor tools use C#; native audio libraries are platform dependencies. Imported animation tables are read as data, without executing Lua.
 
-- [Build guide](Documentation/Building.md): platform toolchains, outputs, and validation limits.
-- [Judgment guide](Documentation/JudgingSystem.md): timing, judgment, and gameplay details.
-- [Development notes](Documentation/PortingNotes.md): design ideas, implementation details, and known limitations.
 - [Asset manifest](Documentation/ImportedAssets.json): imported artwork and audio sources.
 - Tests are in `Assets/OurTaiko/Tests/`. Run EditMode and PlayMode tests with Unity Test Runner; `Finished/` retains regression tests for completed features.
 
-The detailed guides are currently in Simplified Chinese. Bug reports through [Issues](https://github.com/OurTaiko/OurTaikoPlay/issues) and Pull Requests are welcome. For gameplay, audio, or touch issues, include your platform, device, reproduction steps, and relevant logs.
+Bug reports through [Issues](https://github.com/OurTaiko/OurTaikoPlay/issues) and Pull Requests are welcome. For gameplay, audio, or touch issues, include your platform, device, reproduction steps, and relevant logs.
 
 ## Acknowledgments
 

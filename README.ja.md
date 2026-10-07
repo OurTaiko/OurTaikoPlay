@@ -10,7 +10,7 @@ OurTaikoPlay は、Unity と C# でゼロから開発している太鼓リズム
 
 - **1 人プレイの一連の流れ**：Entry → サーバーログイン／ゲスト参加 → 選曲 → ロード → 演奏 → リザルト。一時停止、やり直し、選曲への復帰に対応しています。
 - **ニジイロ風の演出**：楽曲ボード、難易度カード、ネームプレート、魂ゲージ、踊り子、王冠、「粋／雅／極」を含む 7 種類の ScoreRank アイコンとリザルト演出。
-- **TJA 譜面の演奏**：基本的な音符、連打、風船、BPM・スクロール速度の変更、普通／玄人／達人譜面への分岐。対応範囲は[判定ガイド](Documentation/JudgingSystem.md)と[開発記録](Documentation/PortingNotes.md)を参照してください。
+- **TJA 譜面の演奏**：基本的な音符、連打、風船、BPM・スクロール速度の変更、普通／玄人／達人譜面への分岐。
 - **オンライン楽曲と成績**：Fanmade・ESE のサーバー設定を同梱。ログイン、ゲスト閲覧、カテゴリフォルダー、譜面・音源のダウンロード、自己ベストの取得、再試行キュー付きの成績送信に対応しています。
 - **成績表示**：ローカル成績は SQLite に保存し、オンラインの成績履歴はサーバーから取得します。選曲では自己ベスト、王冠、ScoreRank を表示し、オンラインの王冠には `ClearStatus` を使用します。
 - **演奏・システム設定**：オート、はやさ、ドロン、あべこべ、ランダム、音色のほか、音量グループ、音声バックエンド、フレームレート、画面上の太鼓の表示を設定できます。
@@ -84,19 +84,16 @@ Unity の **OurTaiko → Build** を使用します。先に Unity Hub で対象
 | Android | `Builds/Android/OurTaikoPlay.apk` | ARM64 |
 | iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 実機 |
 
-iOS のビルドには macOS と Xcode が必要です。自動署名は Hoshino Network LLC チームに設定済みです。Xcode には同チームの権限を持つ開発者アカウントでログインしてください。別のチームを使う場合は Unity Player Settings で変更します。モバイル版のパッケージ名は `org.ourtaiko.play` で、横画面専用です。必要なツール、コマンドラインでのビルド方法、検証記録は[ビルドガイド](Documentation/Building.md)を参照してください。
+iOS のビルドには macOS と Xcode が必要です。自動署名は Hoshino Network LLC チームに設定済みです。Xcode には同チームの権限を持つ開発者アカウントでログインしてください。別のチームを使う場合は Unity Player Settings で変更します。モバイル版のパッケージ名は `org.ourtaiko.play` で、横画面専用です。
 
 ## 開発状況とドキュメント
 
 現在は 1 人プレイとニジイロスキンを中心に開発しています。2 人プレイ、段位モード、検索・並べ替え、完全なリプレイ再生は未実装で、すべての TJA 拡張への対応も保証していません。実行時のロジックと Editor ツールは C# で実装し、ネイティブ音声ライブラリをプラットフォーム依存のライブラリとして使用します。インポートしたアニメーション表はデータとして読み込み、Lua は実行しません。
 
-- [ビルドガイド](Documentation/Building.md)：各プラットフォームのツール、出力先、検証範囲。
-- [判定ガイド](Documentation/JudgingSystem.md)：時刻、判定、ゲームプレイの詳細。
-- [開発記録](Documentation/PortingNotes.md)：設計思想、実装の詳細、既知の制限。
 - [素材一覧](Documentation/ImportedAssets.json)：インポートした画像・音声の出典。
 - テストは `Assets/OurTaiko/Tests/` にあります。Unity Test Runner で EditMode・PlayMode テストを実行できます。`Finished/` には完成済み機能の回帰テストを保存しています。
 
-詳細ガイドは現在、簡体字中国語で記載しています。[Issues](https://github.com/OurTaiko/OurTaikoPlay/issues) での不具合報告や Pull Request を歓迎します。演奏・音声・タッチ操作に関する報告には、プラットフォーム、端末、再現手順、関連ログを添えてください。
+[Issues](https://github.com/OurTaiko/OurTaikoPlay/issues) での不具合報告や Pull Request を歓迎します。演奏・音声・タッチ操作に関する報告には、プラットフォーム、端末、再現手順、関連ログを添えてください。
 
 ## 謝辞
 
