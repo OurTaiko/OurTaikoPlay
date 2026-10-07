@@ -65,7 +65,7 @@ namespace OurTaiko.Tests
             Assert.That(client.Categories[0].ChartIds, Is.EqualTo(new[] { first.Id }));
             Assert.That(client.Categories[1].ChartIds, Is.EqualTo(new[] { first.Id, second.Id }));
             Assert.That(client.Categories[1].ServerName, Is.EqualTo("Fixture"));
-            var info = SongInfo.Read(client.Charts[0].CatalogTja());
+            var info = client.Charts[0].ToSongInfo("en");
             Assert.That(info.Title, Is.EqualTo("First"));
             Assert.That(info.Course(Difficulty.Oni).Level, Is.EqualTo(8));
         }
@@ -266,6 +266,35 @@ namespace OurTaiko.Tests
             Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nSTYLE:Double\nBPM:150\n#START P1\n3,\n#END\n"));
             Assert.That(play, Does.Contain("#START P2\n4,\n#END\n"));
             Assert.Throws<FanmadeException>(() => PlayableTja.Build("COURSE:Hard\n#START\n1,\n#END\n", chart), "TJA_BLOCK_MISMATCH");
+        }
+
+        [Test]
+        public void SongInfoComesStraightFromTheApiMetadata()
+        {
+            var json = new FanmadeFixture.Chart
+            {
+                Title = "Meta", Subtitle = "--Sub", Bpm = 180, DemoStart = 12.5,
+                Difficulties = new System.Collections.Generic.List<(string, int, int, bool, string)>
+                    { ("Hard", 4, 1, true, ""), ("Edit", 10, 2, true, "") },
+            }.ToJson();
+            json["subtitleTranslations"] = new JObject { ["ja"] = "++副題" };
+            var info = FanmadeChart.From(json, "server").ToSongInfo("ja");
+            Assert.That((info.Title, info.Subtitle, info.Bpm, info.DemoStart), Is.EqualTo(("Meta JA", "副題", 180.0, 12.5)));
+            Assert.That(info.Courses.Select(c => (c.Difficulty, c.Course, c.Level)),
+                Is.EqualTo(new[] { (Difficulty.Hard, "Hard", 4), (Difficulty.Ura, "Edit", 10) }));
+            Assert.That(info.Courses.Any(c => c.IsBranching), Is.False, "The API does not report branches yet.");
+            Assert.That(FanmadeChart.From(json, "server").ToSongInfo("ko").Title, Is.EqualTo("Meta"), "Missing translations show the original.");
+
+            var keyed = new FanmadeFixture.Chart
+            {
+                Title = "Double", Difficulties = new System.Collections.Generic.List<(string, int, int, bool, string)>
+                    { ("Oni", 9, 0, true, "P1"), ("Oni", 8, 1, true, "P2") },
+            }.ToJson();
+            keyed["isSingle"] = false;
+            keyed["difficulties"] = new JArray(new JObject { ["course"] = "Oni_1p", ["level"] = 9 }, new JObject { ["course"] = "Oni_2p", ["level"] = 8 });
+            var p2 = FanmadeChart.From(keyed, "server", courseKeyed: true).ForPlayer("P2").ToSongInfo("en");
+            Assert.That(p2.Title, Is.EqualTo("Double P2"));
+            Assert.That(p2.Courses.Select(c => (c.Difficulty, c.Course, c.Level)), Is.EqualTo(new[] { (Difficulty.Oni, "Oni_2p", 8) }));
         }
 
         [Test]

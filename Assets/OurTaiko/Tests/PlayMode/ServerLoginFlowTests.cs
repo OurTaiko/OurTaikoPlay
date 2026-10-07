@@ -109,7 +109,8 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.KindAt(3), Is.EqualTo(SongSelectManager.ItemKind.Back));
             var song = select.Manager.SongAt(4);
             Assert.That(online.IsOnline(song), Is.True);
-            Assert.That(song.ReadInfo().Title, Is.EqualTo("Fixture Song"));
+            Assert.That(song.ReadDisplayInfo().Title, Is.EqualTo("Fixture Song"));
+            Assert.That(song.chart, Is.Null, "Online songs list from metadata; the chart is downloaded to play.");
             Assert.That(select.Manager.KindAt(5), Is.EqualTo(SongSelectManager.ItemKind.Folder), "Pop stays closed after it.");
             yield return new WaitForSecondsRealtime(0.5f);
             select.Manager.Right();
@@ -379,9 +380,9 @@ namespace OurTaiko.Tests
             // Pop holds the 1500 odd charts: もどる, then one more もどる after every ten songs.
             Assert.That(select.Manager.BoardCount, Is.EqualTo(4 + 1 + 1500 + 149 + 1));
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Back));
-            Assert.That(select.Manager.SongAt(5).ReadInfo().Title, Is.EqualTo("Bulk 1"));
+            Assert.That(select.Manager.SongAt(5).ReadDisplayInfo().Title, Is.EqualTo("Bulk 1"));
             Assert.That(select.Manager.KindAt(15), Is.EqualTo(SongSelectManager.ItemKind.Back));
-            Assert.That(select.Manager.SongAt(16).ReadInfo().Title, Is.EqualTo("Bulk 21"));
+            Assert.That(select.Manager.SongAt(16).ReadDisplayInfo().Title, Is.EqualTo("Bulk 21"));
             float started = Time.realtimeSinceStartup;
             int frames = 0;
             while (Time.realtimeSinceStartup - started < 1) { frames++; yield return null; }
@@ -389,7 +390,7 @@ namespace OurTaiko.Tests
             // Step through the open folder: views are reused, not added per song.
             for (int i = 0; i < 12; i++) { select.Manager.Right(); yield return new WaitForSecondsRealtime(0.2f); }
             yield return new WaitForSecondsRealtime(0.5f);
-            Assert.That(select.Manager.FocusedSong.ReadInfo().Title, Is.EqualTo("Bulk 21"));
+            Assert.That(select.Manager.FocusedSong.ReadDisplayInfo().Title, Is.EqualTo("Bulk 21"));
             int views = select.wheel.GetComponentsInChildren<SongBoardView>(true).Length
                 + select.wheel.GetComponentsInChildren<FolderBoardView>(true).Length;
             Assert.That(views, Is.LessThan(30), "Board views are pooled.");

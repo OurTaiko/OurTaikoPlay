@@ -518,7 +518,7 @@ Sound 共 8 行（含 Return），每页显示 4 行，支持分页、滑动、�
 
 `settings.json` 新增 `general.language`，默认 `en`；旧配置缺少该分区时使用默认。General › Language 提供 English、日本語、简体中文、繁體中文、Korean（现有 DDFont 没有韩文字形，选项用英文避免方框）。仅选择歌曲主标题／副标题的语言，菜单文字、类别、皮肤与玩法均不受影响。
 
-`SongInfo.Read(text, language)` 读取 TJA 的 TITLE／SUBTITLE 及语言后缀，支持 JA／JP、ZH／CN／ZH_CN、TW／ZH_TW、KO、EN。在线目录与下载后的谱面沿用现有 API 元数据（en／ja／zh／ko）；API 不提供繁体中文，不扩展接口字段，选择繁体时回退到日文。每个字段独立按 **所选语言 → 日文** 回退；都缺失时保留基础 TITLE／SUBTITLE。空译名视为缺失。`ReadInfo()` 仍读取基础元数据，显示入口单独使用 `ReadDisplayInfo()`，覆盖选曲板、难度页、加载幕布、游玩和结算；不修改谱面判定数据或成绩标识。
+`SongInfo.Read(text, language)` 读取 TJA 的 TITLE／SUBTITLE 及语言后缀，支持 JA／JP、ZH／CN／ZH_CN、TW／ZH_TW、KO、EN。在线目录与下载后的谱面沿用现有 API 元数据（en／ja／zh／ko）；API 不提供繁体中文，不扩展接口字段，选择繁体时显示原文。每个字段独立按 **所选语言 → 谱面原文（基础 TITLE／SUBTITLE）** 回退（2026-10-07 用户决定，原为所选语言 → 日文 → 基础值；在线元数据同一规则，共用 `SongInfo.Translated`）。空译名视为缺失。`ReadInfo()` 仍读取基础元数据，显示入口单独使用 `ReadDisplayInfo()`，覆盖选曲板、难度页、加载幕布、游玩和结算；不修改谱面判定数据或成绩标识。
 
 五个类型行（含 Return）使用 142 行距，保留原有行尺寸，在 footer 之前放下；语言选项使用现有三项可视区域及左右切换。
 
@@ -618,7 +618,7 @@ Entry 原先沿用 Nijiiro `Scripts/entry/box.lua` 的相邻项可见规则（`a
 
 新版成绩请求完全移除 versionId，在线最佳成绩键为 songId/course，bootstrap 完整替换快照。SQLite outbox 保存本局两份哈希；上传前核对当前详情和清单，文件变化或旧记录缺少可信哈希时保留记录并停止自动上传。可信旧记录转换只更新原记录的 body，保持幂等键。409/404 等永久拒绝维持 rejected，不自动换 key。
 
-翻译字典完整保留在 DTO，显示按所选语言→en→原文，zh-Hans 映射 zh；本地 TJA 的既有语言回退不变。双人资源按 COURSE + #START P1/P2 匹配，与数组顺序无关。当前单人玩法用两个标有 P1/P2 的歌曲条目分别选择谱面，成绩使用完整 Oni_1p/Oni_2p 等 course，未增加同时双人游玩。
+翻译字典完整保留在 DTO，显示按所选语言→原文（2026-10-07 用户决定，原为所选语言→en→原文），zh-Hans 映射 zh；本地 TJA 的既有语言回退不变。双人资源按 COURSE + #START P1/P2 匹配，与数组顺序无关。当前单人玩法用两个标有 P1/P2 的歌曲条目分别选择谱面，成绩使用完整 Oni_1p/Oni_2p 等 course，未增加同时双人游玩。
 
 自动测试与现场验证结果见本次交付记录；在线分块试听按用户要求在本次协议提交之后另行接入。
 

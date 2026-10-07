@@ -39,6 +39,14 @@
 
 ### 当前完成状态与交接边界
 
+#### 在线歌曲选曲信息直接取自元数据（2026-10-07）
+
+- 删除 `FanmadeChart.CatalogTja()`（为选曲拼接只有头信息的假 TJA）和 `DisplayTitle`。在线歌曲的 `SongDefinition.ReadDisplayInfo()` 直接返回 `onlineChart.ToSongInfo(language)`：标题和副标题按**所选语言 → 谱面原文**（API 的 `title`／`subtitle`），不经过英文或日文（用户决定，2026-10-07；本地 TJA 同一规则，共用 `SongInfo.Translated`；`zh-Hans` 视为 `zh`；双人谱面的 P1／P2 后缀保留），BPM、DemoStart、类别照搬 API，每个非空 `Difficulties[i]` 生成一个 `CourseInfo`。
+- 在线歌曲下载前 `song.chart` 为 null。`RefreshSongs` 每次都会清掉谱面（旧下载可能是旧版本），只有 SongLoadingScene 下载完成后经 `SetPrepared` 写入可游玩的 TJA。下载后选曲、加载幕布和游玩标题仍使用元数据。`ReadInfo()` 只用于本地谱面与 Editor 工具。
+- 行为变化：在线标题回退原为 所选语言 → en → 原文（`dd15d6c`，旧协议的 en 即原文），本地 TJA 原为 所选语言 → 日文 → TITLE，现在都是 所选语言 → 原文（TJA 没有 TITLE 时显示 Untitled，不再借用 TITLEJA）；下载过的在线歌曲以前读真实 TJA 能显示分歧图标，现在不再显示。
+- **待办（用户决定以后再做）**：后端 `difficulties[]` 增加是否分歧的字段（Fanmade 与 ESE），客户端 `FanmadeDifficulty` 读取后在 `ToSongInfo` 填入 `CourseInfo.IsBranching`，字段缺失时按 false。
+- 测试：`FanmadeClientTests.SongInfoComesStraightFromTheApiMetadata`（新增）、`ResourceDownloadTests`／`SongLanguageTests` 改测 `ToSongInfo`、`ServerLoginFlowTests` 断言下载前 `chart` 为 null，`SongLanguageTests`／`SongLanguageFlowTests` 改为原文回退；进行中 EditMode 228/228，PlayMode `ServerLoginFlowTests` 6/6、`SongLanguageFlowTests` 1/1、`OnlinePreviewFlowTests` 3/3（后者在改回退规则前跑过）。OurTaikoView_Web 已同步 `FanmadeModels`（逐字相同）、`OnlineManager`、`SongDefinition`、`SongInfo.Translated`，未编译验证。
+
 #### 分支条件接口与 s 分数分支（2026-10-06）
 
 - p／r／s 统一为 `Core/BranchConditions.cs` 的 `IBranchCondition`（`Value(ChartBranch)`），实现为 `AccuracyCondition`／`DrumrollCondition`／`ScoreCondition`，由 `BranchConditions.Create` 按 `BranchCondition` 下标创建。计数不再写死在 PlaySession：`BranchFeed` 的委托事件 `NoteJudged(判定, 得分)`／`LongHit(音符, 得分)`／`Reset` 由 PlaySession 在 `Resolve`／`HitLong` 结算当时、`#SECTION` 与每次决定后触发（同一次 `Advance`／`Hit`，主线程游戏循环内），三个条件同时订阅、一起清零。r 的「跨越决定时刻的连打取累计数」通过 `HeldRollHits` 委托注入。
@@ -122,7 +130,7 @@
 - 用户最新决定：GlobalSettingScene 的 Sound 显示 **Master／BGM／Track／Drum／Effects／Voice 音量组＋Output Backend**（及 Return）；音量范围 0–200%、5% 一档，确认后即时保存并生效，鼓音／语音确认时试听。设备、采样率与缓冲等高级参数仅保留在 `settings.json` 的 `audio` 中，不放回菜单。后端按平台显示 Automatic／BassSimple，Windows 为 Automatic／BassWASAPI／BassASIO／BassSimple（跨平台的 BassSimple 固定放最后）；旧配置中的 Unity（值 4）读取为 Automatic。**命名（用户决定，2026-10-06）**：三个后端都用 BASS 解码混音，名字表示出声通道——`BassSimple`（原 Bass，BASS 自带输出、经系统混音，同 MajdataPlay BassSimple）、`BassWASAPI`（原 Wasapi）、`BassASIO`（原 Asio）；整数值不变，旧 settings.json 兼容。设备缓冲默认值按平台：Android 16 ms（MajdataPlay 推荐，用户决定 2026-10-06）、iOS 32 ms、桌面 64 ms，周期移动端 8 ms／桌面 16 ms（`AudioOptions.Period/Buffer(SoundPlatform)`）。
 - 确认后端后保存，退出设置时通过 SceneSwitcher 淡黑后热切换，进入 Entry 前完成。未改设备参数不重建输出；切换失败恢复之前配置并留在设置显示原因。原生加载与释放共用生命周期锁，旧异步任务按 generation 失效，未领取样本统一释放。切换后端保留配置文件中的其他音频参数。
 - Sound 共 8 行（含 Return），每页 4 行，支持分页／滑动／滚轮；选项弹窗仍最多显示 3 项并支持左右切换，供 Windows 的 5 种后端使用。场景控件通过 `ProjectBuilder.ApplySoundSettings()` 保存。实现 `SoundSettings.cs`、`AudioBus` 音量分组；详情与验证报告见 `PortingNotes.md`「Sound 设置」。
-- **语言设置（2026-10-03）**：General › Language 保存到 `settings.json` 的 `general.language`（en／ja／zh／zh_tw／ko，默认 en）。当前只影响歌名和副标题，不翻译菜单、登录提示、类别或皮肤。名称按所选语言 → 日文（TITLEJA／TITLEJP）回退；两者都缺失才保留基础 TITLE／SUBTITLE。`SongDefinition.ReadDisplayInfo()` 供选曲、加载幕布与游玩使用，结算沿用本局显示标题；原始谱面、成绩键与上传标识不改。General 在类型列表首位，类型行距 142，使五行含 Return 均在 footer 上方；语言弹窗沿用三项可视选择与左右翻页。
+- **语言设置（2026-10-03）**：General › Language 保存到 `settings.json` 的 `general.language`（en／ja／zh／zh_tw／ko，默认 en）。当前只影响歌名和副标题，不翻译菜单、登录提示、类别或皮肤。名称按所选语言 → 谱面原文（基础 TITLE／SUBTITLE）回退，不经过日文（2026-10-07 用户决定，原为先回退 TITLEJA／TITLEJP；在线歌曲同一规则）。`SongDefinition.ReadDisplayInfo()` 供选曲、加载幕布与游玩使用，结算沿用本局显示标题；原始谱面、成绩键与上传标识不改。General 在类型列表首位，类型行距 142，使五行含 Return 均在 footer 上方；语言弹窗沿用三项可视选择与左右翻页。
 - **统一时钟（2026-10-03）**：`Core/GameTimeline.cs` 集中提供每帧稳定的 `FrameTime`／`AudioFrameTime` 与音频调度用 `AudioNow`；音频时钟与帧时间同为 Stopwatch／Frequency（BASS 没有预约播放，`AudioBus` 到点触发）。`GameLoop` 在输入及场景更新前采样；UI、幕布、暂停菜单统一用 FrameTime，暂停演奏不会停止 UI。`Core/SongClock.cs` 管理歌曲倒计时、暂停恢复、播放调度和 BASS 启动后 2 秒同步校正，`PlayScene` 只使用发布的 SongTime。FPS 测量用实时 Realtime；网络重试的 UTC 时间仍归网络模块。
 - **HitFace／HitRing 原生时钟修复**：BASS 的 Stopwatch 时钟在同一帧内仍递增；原 Update 先取时间，再在 OnJudged 取较晚时间，ShowTime 用旧时间导致 elapsed<0，刚生成的效果立即被取消。当前由 `SongClock` 每帧发布一次歌曲时间，判定、分支回调与动画共用，直到下次更新；暂停时冻结。已删除 PlayScene 原来的临时快照和重复计时字段。真实自动演奏帧回归 `HitFeedbackClockTests` 修复前失败；旧的暂停后手动采样测试未覆盖此路径。
 

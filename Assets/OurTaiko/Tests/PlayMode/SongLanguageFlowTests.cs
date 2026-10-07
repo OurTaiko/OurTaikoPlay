@@ -10,14 +10,14 @@ namespace OurTaiko.Tests
     public sealed class SongLanguageFlowTests
     {
         [UnityTest]
-        public IEnumerator LanguageMenuPersistsAndSongNamesUseJapaneseFallbackThroughoutPlay()
+        public IEnumerator LanguageMenuPersistsAndSongNamesUseTheChosenTranslationThroughoutPlay()
         {
             var settings = SettingManager.EnsureInstance();
             var previous = settings.Settings.Clone();
             string path = Path.Combine(Application.temporaryCachePath, "language-" + System.Guid.NewGuid() + ".json");
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.name = "LanguageTestSong";
-            song.chart = new TextAsset("TITLE:Base\nTITLEJA:日本語の曲名\nSUBTITLEJA:--日本語の副題\nTITLEZH:中文歌名\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1000,\n#END");
+            song.chart = new TextAsset("TITLE:Base\nSUBTITLE:--Base subtitle\nTITLEJA:日本語の曲名\nSUBTITLEJA:--日本語の副題\nTITLEZH:中文歌名\nTITLEKO:Korean title\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1000,\n#END");
             try
             {
                 settings.Load(path);
@@ -36,16 +36,17 @@ namespace OurTaiko.Tests
                 Assert.That(settings.Settings.general.language, Is.EqualTo("ko"));
                 Assert.That(GameSettings.FromJson(File.ReadAllText(path)).general.language, Is.EqualTo("ko"));
                 Assert.That(scene.view.itemRows[0].label.text, Is.EqualTo("Language"), "The interface is not translated.");
-                Assert.That(song.ReadDisplayInfo().Title, Is.EqualTo("日本語の曲名"));
+                Assert.That(song.ReadDisplayInfo().Title, Is.EqualTo("Korean title"));
+                Assert.That(song.ReadDisplayInfo().Subtitle, Is.EqualTo("Base subtitle"), "Missing translations use the original, not Japanese.");
                 Assert.That(song.ReadInfo().Title, Is.EqualTo("Base"));
 
                 SceneSwitcher.Instance.Play(song, "Oni", true);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindFirstObjectByType<PlayScene>();
-                Assert.That(play.title.text, Is.EqualTo("日本語の曲名"));
-                Assert.That(play.subtitle.text, Does.StartWith("日本語の副題"));
+                Assert.That(play.title.text, Is.EqualTo("Korean title"));
+                Assert.That(play.subtitle.text, Does.StartWith("Base subtitle"));
                 Assert.That(play.Session.Chart.Title, Is.EqualTo("Base"));
-                Assert.That(SceneSwitcher.Instance.Curtain.title.text, Is.EqualTo("日本語の曲名"));
+                Assert.That(SceneSwitcher.Instance.Curtain.title.text, Is.EqualTo("Korean title"));
                 float deadline = Time.realtimeSinceStartup + 15;
                 while (SceneManager.GetActiveScene().name != SceneSwitcher.ResultScene)
                 {
@@ -55,7 +56,7 @@ namespace OurTaiko.Tests
                 }
                 yield return null;
                 var result = Object.FindFirstObjectByType<ResultScene>();
-                Assert.That(result.view.songTitle.text, Is.EqualTo("日本語の曲名"));
+                Assert.That(result.view.songTitle.text, Is.EqualTo("Korean title"));
                 Assert.That(result.Result.ChartKey, Is.EqualTo(song.name));
             }
             finally

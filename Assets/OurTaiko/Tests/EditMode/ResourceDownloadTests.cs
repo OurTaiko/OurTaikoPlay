@@ -94,11 +94,11 @@ namespace OurTaiko.Tests
             Assert.Throws<OperationCanceledException>(() => Run(() => client.PrepareAsync(client.Charts[0], cancel.Token)));
             Assert.That(tjaGets + audioGets, Is.Zero);
         }
-        [Test] public void TranslationSelectionPreservesOriginalAndFallsBackToEnglish()
+        [Test] public void TranslationSelectionPreservesOriginalAndFallsBackToIt()
         {
             var c = client.Charts[0]; c.Titles["en"] = "English"; c.Titles["zh"] = "中文"; c.Titles["ko"] = " ";
-            Assert.That(c.DisplayTitle("zh-Hans"), Is.EqualTo("中文"));
-            Assert.That(c.DisplayTitle("ko"), Is.EqualTo("English"));
+            Assert.That(c.ToSongInfo("zh-Hans").Title, Is.EqualTo("中文"));
+            Assert.That(c.ToSongInfo("ko").Title, Is.EqualTo(chart.Title), "A blank translation falls back to the original, not to en or ja.");
             Assert.That(c.Title, Is.EqualTo(chart.Title));
             Assert.That(c.TitleHeaders(), Does.Contain("TITLEEN:English"));
         }
