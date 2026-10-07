@@ -27,13 +27,20 @@ namespace OurTaiko.Tests
 
         [TestCase(NoMaster)]
         [TestCase(OnlyNormal)]
-        [TestCase(Score)]
         public void NormalPlayRefusesWhatItCannotEvaluate(string body)
         {
             var chart = Parse(body);
             Assert.Throws<NotSupportedException>(() => new PlaySession(chart));
             Assert.Throws<NotSupportedException>(() => PlaySession.PracticeAt(chart, 0));
             Assert.DoesNotThrow(() => new PlaySession(chart, 0, BranchRoute.Master));
+        }
+
+        [Test]
+        public void NormalPlayEvaluatesScoreBranches()
+        {
+            var chart = Parse(Score);
+            Assert.DoesNotThrow(() => new PlaySession(chart));
+            Assert.DoesNotThrow(() => PlaySession.PracticeAt(chart, 0));
         }
 
         [TestCase(BranchRoute.Normal, BranchRoute.Normal)]
