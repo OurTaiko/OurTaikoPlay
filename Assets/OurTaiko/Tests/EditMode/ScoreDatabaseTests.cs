@@ -31,17 +31,5 @@ namespace OurTaiko.Tests
             Assert.That(new PendingScoreQueue(path).Pending("server/account-a"), Is.Empty);
             Assert.That(new ScoreStore(path).Get("Local", Difficulty.Oni).score, Is.EqualTo(123456));
         }
-
-        [Test] public void LegacyScoresMigrateOnceWithoutOnlineRecords()
-        {
-            string legacy = Path.Combine(root, "scores.json");
-            File.WriteAllText(legacy, "{\"records\":[{\"key\":\"Local/Oni\",\"score\":123,\"crown\":2},{\"key\":\"fanmade/server/song/Oni\",\"score\":999}]}");
-            var store = new ScoreStore(path, legacy);
-            Assert.That(store.Get("Local", Difficulty.Oni).score, Is.EqualTo(123));
-            Assert.That(store.Get("fanmade/server/song", Difficulty.Oni), Is.Null);
-            store.Save(new PlayResult { ChartKey = "Local", Difficulty = Difficulty.Oni, Score = 456 });
-            Assert.That(new ScoreStore(path, legacy).Get("Local", Difficulty.Oni).score, Is.EqualTo(456));
-            Assert.That(File.Exists(legacy), Is.True, "Original JSON remains available for recovery.");
-        }
     }
 }

@@ -103,15 +103,6 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void LegacyScoresWithoutClearStatusDefaultToNoCrown()
-        {
-            fixture.AddAccountScore("don", first, "Oni", 700000, 3);
-            fixture.AccountScores[0].Remove("ClearStatus");
-            Connect(guest: false);
-            Assert.That(client.Best(client.Charts[0], (int)Difficulty.Oni).ClearStatus, Is.Zero);
-        }
-
-        [Test]
         public void RejectedCredentialsThrowAndAGuestRetryStillConnects()
         {
             var endpoint = client.Add(fixture.Server("don", "wrong"));
@@ -311,15 +302,18 @@ namespace OurTaiko.Tests
             Assert.That((info.Title, info.Subtitle, info.Bpm, info.DemoStart), Is.EqualTo(("Meta JA", "副題", 180.0, 12.5)));
             Assert.That(info.Courses.Select(c => (c.Difficulty, c.Course, c.Level)),
                 Is.EqualTo(new[] { (Difficulty.Hard, "Hard", 4), (Difficulty.Ura, "Edit", 10) }));
-            Assert.That(info.Courses.Select(c => c.IsBranching), Is.EqualTo(new[] { false, true }), "A missing field is not branching.");
+            Assert.That(info.Courses.Select(c => c.IsBranching), Is.EqualTo(new[] { false, true }));
+            ((JObject)json["difficulties"][0]).Remove("branching");
+            Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(json, "server")).Message, Is.EqualTo("API_DIFFICULTY_INVALID"), "branching is required.");
+            json["difficulties"][0]["branching"] = false;
             Assert.That(FanmadeChart.From(json, "server").ToSongInfo("ko").Title, Is.EqualTo("Meta"), "Missing translations show the original.");
 
             var keyed = new FanmadeFixture.Chart
             {
                 Title = "Double", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") },
             }.ToJson();
-            keyed["difficulties"] = new JArray(new JObject { ["course"] = "Oni_1p", ["level"] = 9, ["branching"] = false },
-                new JObject { ["course"] = "Oni_2p", ["level"] = 8, ["branching"] = true });
+            keyed["difficulties"] = new JArray(new JObject { ["course"] = "Oni_1p", ["level"] = 9, ["maker"] = "", ["branching"] = false },
+                new JObject { ["course"] = "Oni_2p", ["level"] = 8, ["maker"] = "", ["branching"] = true });
             var p2 = FanmadeChart.From(keyed, "server").ForPlayer("P2").ToSongInfo("en");
             Assert.That(p2.Title, Is.EqualTo("Double P2"));
             Assert.That(p2.Courses.Select(c => (c.Difficulty, c.Course, c.Level, c.IsBranching)), Is.EqualTo(new[] { (Difficulty.Oni, "Oni_2p", 8, true) }));

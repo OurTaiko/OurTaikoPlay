@@ -29,7 +29,7 @@ namespace OurTaiko.Tests
             public List<(string Course, int Level, string Player)> Difficulties =
                 new List<(string, int, string)> { ("Oni", 8, "") };
             public double Bpm = 120, DemoStart;
-            // Courses (as the API names them) reported with "branching": true; the rest omit the field.
+            // Courses (as the API names them) reported with "branching": true; the rest are false.
             public readonly HashSet<string> Branching = new HashSet<string>();
 
             public JObject ToJson() => new JObject
@@ -42,9 +42,7 @@ namespace OurTaiko.Tests
                 ["difficulties"] = new JArray(Difficulties.Select(d =>
                 {
                     string course = d.Course + (d.Player == "P1" ? "_1p" : d.Player == "P2" ? "_2p" : "");
-                    var value = new JObject { ["course"] = course, ["level"] = d.Level, ["maker"] = Maker };
-                    if (Branching.Contains(course)) value["branching"] = true;
-                    return value;
+                    return new JObject { ["course"] = course, ["level"] = d.Level, ["maker"] = Maker, ["branching"] = Branching.Contains(course) };
                 })),
             };
         }
