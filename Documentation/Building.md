@@ -9,7 +9,7 @@ Unity **6000.3.25f1**。打开项目后使用 **OurTaiko → Build**，可以单
 | Android ARM64 APK | `Builds/Android/OurTaikoPlay.apk` | ARM64／IL2CPP |
 | iOS Xcode Project | `Builds/iOS/OurTaikoPlay.xcodeproj` | 设备 ARM64／IL2CPP |
 
-两个移动平台的 application identifier 均为 **`org.ourtaiko.play`**。移动端仅允许左右横屏，Android 声明联网权限。版本沿用 Player Settings 的 Bundle Version、Android Version Code 和 iOS Build Number。`Configure Platforms` 可单独应用设置。桌面不需要 C++ 构建工具；Android／iOS 的 IL2CPP 是 Unity 构建后端，不引入手写原生玩法代码。
+两个移动平台的 application identifier 均为 **`org.ourtaiko.play`**。移动端仅允许左右横屏，Android 声明联网权限。版本沿用 Player Settings 的 Bundle Version 与 Android Version Code；iOS Build Number 每次构建取当前 Git 提交数（`git rev-list HEAD --count`），只用于这次导出并写入 Xcode 工程的 Info.plist（`CFBundleVersion`，追加导出时也更新），构建后恢复 Player Settings 原值，不产生 ProjectSettings 改动。取不到提交数（没有 git 或不在仓库中）时构建失败；浅克隆只会得到 1。`Configure Platforms` 可单独应用设置。桌面不需要 C++ 构建工具；Android／iOS 的 IL2CPP 是 Unity 构建后端，不引入手写原生玩法代码。
 
 所有平台的产品名称和图标由 `PlayerBranding.Configure()` 统一设置，也会在 Unity 原生 Build Profiles 构建前应用。原始图标直接复制自 OurTaikoPlayer 的 `assets/branding/icon.png`，保存在 `Assets/OurTaiko/Branding/AppIcon.png`；桌面全部尺寸与 iOS App／Spotlight／Settings／Notifications／Marketing 图标共用原图。Android Legacy／Round 使用原图，Adaptive 沿用参考项目的白色背景与 20% 内缩前景，避免启动器遮罩裁掉文字。菜单 **OurTaiko → Build → Configure Name and Icons** 可重新应用。
 

@@ -162,8 +162,12 @@ namespace OurTaiko.Editor
             Directory.CreateDirectory(Path.GetDirectoryName(output));
             WriteStatus(new Result { status = "Building", platform = target.ToString(), output = output });
             var preloaded = PlayerSettings.GetPreloadedAssets();
+            string savedBuildNumber = PlayerSettings.iOS.buildNumber;
             try
             {
+                // The iOS build number is the commit count; it applies to this export only.
+                string buildNumber = target == BuildTarget.iOS ? CommitCount() : null;
+                if (buildNumber != null) PlayerSettings.iOS.buildNumber = buildNumber;
                 var options = BuildOptions.CompressWithLz4HC;
 #if UNITY_IOS
                 if (target == BuildTarget.iOS && IosProjectBranding.PrepareForExport(output))
@@ -187,12 +191,17 @@ namespace OurTaiko.Editor
                 Directory.CreateDirectory("Builds/Reports");
                 File.WriteAllText("Builds/Reports/" + target + ".json", JsonUtility.ToJson(result, true));
                 if (summary.result != BuildResult.Succeeded) throw new BuildFailedException(result.message);
+#if UNITY_IOS
+                // An appended Xcode project keeps its Info.plist, so write the number there as well.
+                if (buildNumber != null) SetPlistBuildNumber(Path.Combine(output, "Info.plist"), buildNumber);
+#endif
                 Debug.Log("OurTaiko " + target + " build: " + output);
             }
             finally
             {
                 // Input System's build hook temporarily adds its settings to this project list.
                 PlayerSettings.SetPreloadedAssets(preloaded);
+                PlayerSettings.iOS.buildNumber = savedBuildNumber;
                 AssetDatabase.SaveAssets();
             }
         }
@@ -217,6 +226,43 @@ namespace OurTaiko.Editor
                 }
             }
         }
+
+        // Number of commits reachable from HEAD, as CI uses for the Android version code.
+        static string CommitCount()
+        {
+            var info = new System.Diagnostics.ProcessStartInfo("git", "rev-list HEAD --count")
+            {
+                WorkingDirectory = Path.GetFullPath("."), UseShellExecute = false,
+                RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true,
+            };
+            // Editors launched from the Dock do not inherit the shell PATH.
+            info.EnvironmentVariables["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:" + Environment.GetEnvironmentVariable("PATH");
+            try
+            {
+                using (var git = System.Diagnostics.Process.Start(info))
+                {
+                    string output = git.StandardOutput.ReadToEnd().Trim();
+                    string error = git.StandardError.ReadToEnd().Trim();
+                    git.WaitForExit();
+                    if (git.ExitCode == 0 && int.TryParse(output, out int count) && count > 0) return count.ToString();
+                    throw new BuildFailedException("git rev-list HEAD --count failed: " + (error != "" ? error : output));
+                }
+            }
+            catch (System.ComponentModel.Win32Exception error)
+            {
+                throw new BuildFailedException("git is required for the iOS build number: " + error.Message);
+            }
+        }
+
+#if UNITY_IOS
+        static void SetPlistBuildNumber(string path, string buildNumber)
+        {
+            var plist = new UnityEditor.iOS.Xcode.PlistDocument();
+            plist.ReadFromFile(path);
+            plist.root.SetString("CFBundleVersion", buildNumber);
+            plist.WriteToFile(path);
+        }
+#endif
 
         static string Argument(string name)
         {
