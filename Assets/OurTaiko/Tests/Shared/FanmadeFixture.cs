@@ -28,6 +28,8 @@ namespace OurTaiko.Tests
             public List<(string Course, int Level, int Block, bool Cloud, string Player)> Difficulties =
                 new List<(string, int, int, bool, string)> { ("Oni", 8, 0, true, "") };
             public double Bpm = 120, DemoStart;
+            // Courses (as the API names them) reported with "branching": true; the rest omit the field.
+            public readonly HashSet<string> Branching = new HashSet<string>();
 
             public JObject ToJson() => new JObject
             {
@@ -40,6 +42,12 @@ namespace OurTaiko.Tests
                     ["course"] = d.Course, ["level"] = d.Level, ["blockIndex"] = d.Block, ["cloudScoreEligible"] = d.Cloud, ["player"] = d.Player,
                 })),
             };
+
+            public void MarkBranching(JArray difficulties)
+            {
+                foreach (var d in difficulties)
+                    if (Branching.Contains((string)d["course"])) d["branching"] = true;
+            }
         }
 
         public readonly string BaseUrl;
@@ -64,6 +72,7 @@ namespace OurTaiko.Tests
                 value["difficulties"] = new JArray(chart.Difficulties.Select(d => new JObject
                 { ["course"] = d.Course + (d.Player == "P1" ? "_1p" : d.Player == "P2" ? "_2p" : ""), ["level"] = d.Level, ["maker"] = "Tester" }));
             }
+            chart.MarkBranching((JArray)value["difficulties"]);
             return value;
         }
         // Status codes returned (and consumed) before the next score submissions succeed.

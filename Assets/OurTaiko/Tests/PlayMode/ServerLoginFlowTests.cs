@@ -29,6 +29,7 @@ namespace OurTaiko.Tests
                 Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Oni", 1, 240)),
                 Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),
             };
+            chart.Branching.Add("Oni");
             fixture.Charts.Add(chart);
         }
 
@@ -118,6 +119,8 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.FocusedSong, Is.SameAs(song));
             var board = select.wheel.GetComponentsInChildren<SongBoardView>().Single(v => v.title.text == "Fixture Song");
             Assert.That(board.crown.enabled, Is.True, "A server clear with misses still shows a silver crown.");
+            Assert.That(board.plates.Single(p => p.difficulty == Difficulty.Oni).branch.enabled, Is.True,
+                "The server's branching flag marks the plate before the chart is downloaded.");
             Assert.That(board.crown.sprite, Is.SameAs(select.crownClear[(int)Difficulty.Oni]));
             TestCapture.Capture("SongSelectOnline.png");
 
