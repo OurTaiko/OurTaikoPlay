@@ -123,12 +123,8 @@ namespace OurTaiko
                 Error = error is FanmadeException ? error.Message : "DOWNLOAD_FAILED";
                 yield break;
             }
-            var (path, chart) = task.Result;
+            var (text, audio, chart) = task.Result;
             switcher.Curtain?.SetStatus("音源を読み込み中…");
-            string audio = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path), chart.CachedAudioName);
-            string text;
-            try { text = System.IO.File.ReadAllText(path); }
-            catch (Exception error) { Error = "CACHE_READ_FAILED"; Debug.LogException(error); yield break; }
             online.SetPrepared(song, chart, text, null);
             song.audioPath = audio;
             switcher.ShowSongOnCurtain(song);

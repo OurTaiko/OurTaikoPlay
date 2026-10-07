@@ -133,12 +133,10 @@ namespace OurTaiko.Tests
         {
             Connect(guest: true);
             var chart = client.Charts[0];
-            var (path, prepared) = Run(() => client.PrepareAsync(chart));
+            var (play, audio, prepared) = Run(() => client.PrepareAsync(chart));
             Assert.That(fixture.Downloads, Is.EqualTo(2));
-            string dir = Path.GetDirectoryName(path);
-            Assert.That(File.ReadAllBytes(Path.Combine(dir, "audio.ogg")), Is.EqualTo(first.Audio));
+            Assert.That(File.ReadAllBytes(audio), Is.EqualTo(first.Audio));
             Assert.That(fixture.Requests.Where(r => r.StartsWith("GET /files/")).ToArray(), Has.Length.EqualTo(2), "Files come from the signed links.");
-            string play = File.ReadAllText(path);
             Assert.That(play, Does.Contain("TITLE:First\n"));
             Assert.That(play, Does.Contain("TITLEJA:First JA\n"));
             Assert.That(play, Does.Contain("WAVE:audio.ogg\n"));
@@ -146,19 +144,27 @@ namespace OurTaiko.Tests
             Assert.That(play, Does.Not.Contain("Original Title"));
             Assert.That(TjaParser.Parse(play, "Oni").Title, Is.EqualTo("First"));
 
-            // A cache hit downloads nothing; a damaged playable copy is restored from the verified
-            // object, and a damaged object is fetched again.
+            // Objects are keyed by content hash alone, with short paths (Windows' MAX_PATH), and
+            // the playable TJA never reaches the disk.
+            string hash = FanmadeFixture.Sha(first.Audio);
+            Assert.That(audio, Is.EqualTo(Path.Combine(Path.GetFullPath(cache), "objects", hash.Substring(0, 2), hash)));
+            Assert.That(Directory.GetFiles(cache, "*", SearchOption.AllDirectories).Select(f => f.Substring(cache.Length)).Max(f => f.Length), Is.LessThanOrEqualTo(80));
+            Assert.That(Directory.GetFiles(Path.Combine(cache, "objects"), "*", SearchOption.AllDirectories), Has.Length.EqualTo(2));
+
+            // A cache hit downloads nothing; a damaged object is fetched again.
             Run(() => client.PrepareAsync(chart));
             Assert.That(fixture.Downloads, Is.EqualTo(2));
-            File.WriteAllBytes(Path.Combine(dir, "audio.ogg"), new byte[] { 9 });
-            Run(() => client.PrepareAsync(chart));
-            Assert.That(fixture.Downloads, Is.EqualTo(2));
-            Assert.That(File.ReadAllBytes(Path.Combine(dir, "audio.ogg")), Is.EqualTo(first.Audio));
-            string stored = Directory.GetFiles(cache, "audio.ogg", SearchOption.AllDirectories).Single(f => !f.StartsWith(dir));
-            File.WriteAllBytes(stored, new byte[] { 9 });
+            File.WriteAllBytes(audio, new byte[] { 9 });
             Run(() => client.PrepareAsync(chart));
             Assert.That(fixture.Downloads, Is.EqualTo(3));
-            Assert.That(File.ReadAllBytes(stored), Is.EqualTo(first.Audio));
+            Assert.That(File.ReadAllBytes(audio), Is.EqualTo(first.Audio));
+
+            // Another account on the same server reuses the verified objects.
+            using var other = new FanmadeClient(cache, Path.Combine(cache, "other.sqlite3"));
+            var guest = other.Add(fixture.Server(name: "Guest"));
+            Run(() => other.ConnectAsync(guest, true));
+            Assert.That(Run(() => other.PrepareAsync(other.Charts[0])).AudioPath, Is.EqualTo(audio));
+            Assert.That(fixture.Downloads, Is.EqualTo(3));
         }
 
         [Test]
@@ -170,11 +176,11 @@ namespace OurTaiko.Tests
             first.Title = "First v2";
             DownloadProgress last = null;
             int updates = 0;
-            var (path, prepared) = Run(() => client.PrepareAsync(listed, progress: p => { last = p; updates++; }));
+            var (play, _, prepared) = Run(() => client.PrepareAsync(listed, progress: p => { last = p; updates++; }));
             Assert.That(prepared.TjaHash, Is.EqualTo(FanmadeFixture.Sha(first.Tja)));
             Assert.That(prepared.Title, Is.EqualTo("First v2"));
             Assert.That(client.Charts[0].TjaHash, Is.EqualTo(prepared.TjaHash), "The catalog entry follows the replaced files.");
-            Assert.That(TjaParser.Parse(File.ReadAllText(path), "Oni").Notes.Count, Is.EqualTo(8));
+            Assert.That(TjaParser.Parse(play, "Oni").Notes.Count, Is.EqualTo(8));
             Assert.That(last.Step, Is.EqualTo(DownloadProgress.Stage.Ready));
             Assert.That(last.Audio.Status, Is.EqualTo(FileProgress.State.Complete));
             Assert.That(updates, Is.GreaterThan(4));
