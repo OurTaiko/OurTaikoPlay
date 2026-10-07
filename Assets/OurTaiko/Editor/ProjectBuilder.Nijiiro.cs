@@ -88,7 +88,9 @@ namespace OurTaiko.Editor
             foreach (var name in new[] { "drum", "drum_don_l", "drum_don_r", "drum_kat_l", "drum_kat_r" })
                 PlacePicture(lane, name == "drum" ? "Drum" : name, "game/lane/" + name, 262, -18);
             var difficulty = PlacePicture(lane, "Difficulty", "game/lane/lane_difficulty", 29, 70, 132, 96);
-            difficulty.sprite = Slice("OniDifficulty", "game/lane/lane_difficulty", 0, 288, 132, 96);
+            play.laneDifficulty = difficulty;
+            play.laneDifficultySprites = LaneDifficultySprites();
+            difficulty.sprite = play.laneDifficultySprites[(int)Difficulty.Oni];
             for (int i = 1; i <= 7; i++) play.noteSprites[i] = Slice("Note" + i, "game/notes/notes_atlas", 0, 200 + (i - 1) * 192, 192, 192);
             play.noteSprites[9] = Slice("Note9", "game/notes/notes_atlas", 0, 1736, 192, 192);
             ConfigureDrumrollSprites(play);

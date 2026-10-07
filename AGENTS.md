@@ -39,6 +39,10 @@
 
 ### 当前完成状态与交接边界
 
+#### 游玩轨道难度图标（2026-10-06）
+
+- 修复：SinglePlayScene／PracticeScene 左侧 `NoteLane/Difficulty` 曾在生成时固定为鬼。现按原 `Player::draw` 的 `frame = difficulty`，`PlayScene.Start` 依谱面 COURSE 从 `laneDifficultySprites`（`lane_difficulty` 切片 `LaneDifficulty0–4`＝简单→里鬼）选图，场景保存值仍为鬼预览。迁移 `ProjectBuilder.ApplyLaneDifficulty()`（菜单 OurTaiko/Apply Lane Difficulty，重复执行哈希不变）；测试 `LaneDifficultyFlowTests`（进行中 PlayMode，5/5）。
+
 #### 练习分支：固定路线（2026-10-05）
 
 - 练习菜单对有分支的谱面增加首页「谱面分支」（普通／玄人／達人譜面，咔切换、两端停住、咚进入小节进度），之后为小节进度、播放速度；无分支谱面没有此页。练习不评估任何分支条件，全部分支走所选路线；切换路线就地重建本次练习与小节列表，再次暂停回到分支页并保留路线。
