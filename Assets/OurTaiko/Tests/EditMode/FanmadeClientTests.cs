@@ -23,7 +23,7 @@ namespace OurTaiko.Tests
             fixture = new FanmadeFixture();
             first = new FanmadeFixture.Chart { Title = "First", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3, 4 }, Categories = new[] { "game", "pop" } };
             second = new FanmadeFixture.Chart { Title = "Second", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Hard")), Audio = new byte[] { 5, 6 }, Categories = new[] { "pop" } };
-            second.Difficulties[0] = ("Hard", 5, 0, true, "");
+            second.Difficulties[0] = ("Hard", 5, "");
             fixture.Charts.Add(first); fixture.Charts.Add(second);
             cache = Path.Combine(Path.GetTempPath(), "ourtaiko-fanmade-" + Guid.NewGuid().ToString("N"));
             client = new FanmadeClient(cache);
@@ -146,6 +146,7 @@ namespace OurTaiko.Tests
             Assert.That(fixture.Downloads, Is.EqualTo(2));
             string dir = Path.GetDirectoryName(path);
             Assert.That(File.ReadAllBytes(Path.Combine(dir, "audio.ogg")), Is.EqualTo(first.Audio));
+            Assert.That(fixture.Requests.Where(r => r.StartsWith("GET /files/")).ToArray(), Has.Length.EqualTo(2), "Files come from the signed links.");
             string play = File.ReadAllText(path);
             Assert.That(play, Does.Contain("TITLE:First\n"));
             Assert.That(play, Does.Contain("TITLEJA:First JA\n"));
@@ -154,28 +155,35 @@ namespace OurTaiko.Tests
             Assert.That(play, Does.Not.Contain("Original Title"));
             Assert.That(TjaParser.Parse(play, "Oni").Title, Is.EqualTo("First"));
 
-            // A cache hit downloads nothing; a damaged file is fetched again.
+            // A cache hit downloads nothing; a damaged playable copy is restored from the verified
+            // object, and a damaged object is fetched again.
             Run(() => client.PrepareAsync(chart));
             Assert.That(fixture.Downloads, Is.EqualTo(2));
             File.WriteAllBytes(Path.Combine(dir, "audio.ogg"), new byte[] { 9 });
             Run(() => client.PrepareAsync(chart));
-            Assert.That(fixture.Downloads, Is.EqualTo(3));
+            Assert.That(fixture.Downloads, Is.EqualTo(2));
             Assert.That(File.ReadAllBytes(Path.Combine(dir, "audio.ogg")), Is.EqualTo(first.Audio));
+            string stored = Directory.GetFiles(cache, "audio.ogg", SearchOption.AllDirectories).Single(f => !f.StartsWith(dir));
+            File.WriteAllBytes(stored, new byte[] { 9 });
+            Run(() => client.PrepareAsync(chart));
+            Assert.That(fixture.Downloads, Is.EqualTo(3));
+            Assert.That(File.ReadAllBytes(stored), Is.EqualTo(first.Audio));
         }
 
         [Test]
-        public void PrepareTakesTheAuthorsNewVersionAndReportsProgress()
+        public void PrepareTakesTheAuthorsReplacedFilesAndReportsProgress()
         {
             Connect(guest: true);
             var listed = client.Charts[0];
-            first.Version = new string('a', 32);
+            first.Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Oni", 2));
             first.Title = "First v2";
             DownloadProgress last = null;
             int updates = 0;
-            var (_, prepared) = Run(() => client.PrepareAsync(listed, progress: p => { last = p; updates++; }));
-            Assert.That(prepared.Version, Is.EqualTo(first.Version));
+            var (path, prepared) = Run(() => client.PrepareAsync(listed, progress: p => { last = p; updates++; }));
+            Assert.That(prepared.TjaHash, Is.EqualTo(FanmadeFixture.Sha(first.Tja)));
             Assert.That(prepared.Title, Is.EqualTo("First v2"));
-            Assert.That(client.Charts[0].Version, Is.EqualTo(first.Version), "The catalog entry follows the new version.");
+            Assert.That(client.Charts[0].TjaHash, Is.EqualTo(prepared.TjaHash), "The catalog entry follows the replaced files.");
+            Assert.That(TjaParser.Parse(File.ReadAllText(path), "Oni").Notes.Count, Is.EqualTo(8));
             Assert.That(last.Step, Is.EqualTo(DownloadProgress.Stage.Ready));
             Assert.That(last.Audio.Status, Is.EqualTo(FileProgress.State.Complete));
             Assert.That(updates, Is.GreaterThan(4));
@@ -230,42 +238,63 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void GuestsDoubleOnlyCoursesAndOldServersFollowTheOriginalRules()
+        public void GuestsNeverQueueAndDoubleCoursesUploadPerPlayer()
         {
             Connect(guest: true);
             Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new FanmadeScore()), Is.False, "Guests never queue scores.");
-            Assert.That(Directory.Exists(Path.Combine(cache, "pending")), Is.False);
 
             client.Reset();
-            fixture.ScoreReplayVersion = 0;
-            first.Difficulties[0] = ("Oni", 8, 0, false, "P1");
-            first.Difficulties.Add(("Oni", 8, 1, false, "P2"));
+            first.Difficulties[0] = ("Oni", 8, "P1");
+            first.Difficulties.Add(("Oni", 7, "P2"));
+            first.Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P1\n1,\n#END\n#START P2\n2,\n#END\n");
             Connect(guest: false);
-            Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new FanmadeScore()), Is.False, "DOUBLE-only courses are not uploaded.");
-            client.Submit(client.Charts[1], (int)Difficulty.Hard, new FanmadeScore { Score = 5 }, new PlayRecord());
+            var player1 = client.Charts[0].ForPlayer("P1");
+            Assert.That(client.Submit(player1, (int)Difficulty.Oni, new FanmadeScore { Score = 5 }), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
-            Assert.That(body.ContainsKey("replay_data"), Is.False, "Servers without scoreReplayVersion 1 get the original format.");
+            Assert.That((string)body["difficulty"], Is.EqualTo("Oni_1p"));
+            Assert.That(body["replay_data"].Type, Is.EqualTo(JTokenType.Null), "Every score carries replay_data.");
+            Assert.That(body.ContainsKey("versionId"), Is.False);
+        }
+
+        [TestCase("songIdOnly")]
+        [TestCase("courseKeyedDifficulties")]
+        [TestCase("resourceDownloadVersion")]
+        [TestCase("scoreReplayVersion")]
+        public void AServerWithoutTheCurrentProtocolIsRefused(string capability)
+        {
+            fixture.Protocol.Remove(capability);
+            var endpoint = client.Add(fixture.Server());
+            var error = Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(endpoint, guest: true)));
+            Assert.That(error.Message, Is.EqualTo("SERVER_PROTOCOL_UNSUPPORTED"));
+            Assert.That(endpoint.IsConnected, Is.False);
+            Assert.That(client.Charts, Is.Empty);
         }
 
         [Test]
-        public void PlayableTjaKeepsTheApiBlocks()
+        public void PlayableTjaKeepsTheApiCourses()
         {
             var chart = FanmadeChart.From(new FanmadeFixture.Chart
             {
                 Title = "Blocks", AudioName = "x.MP3",
-                Difficulties = new System.Collections.Generic.List<(string, int, int, bool, string)>
-                    { ("Hard", 4, 1, true, ""), ("Oni", 9, 2, false, "P1"), ("Oni", 9, 3, false, "P2") },
+                Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Hard", 4, ""), ("Oni", 9, "") },
             }.ToJson(), "server");
             string original = "TITLE:Old\nBPM:150\nCOURSE:Easy\nLEVEL:1\n#START\n1,\n#END\nCOURSE:Hard\nLEVEL:2\nSCOREINIT:1000\n#START\n2,\n#END\n"
-                + "COURSE:Oni\nSTYLE:Double\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n";
+                + "COURSE:Oni\n#START\n3,\n#END\n";
             string play = PlayableTja.Build(original, chart);
-            Assert.That(play, Does.StartWith("MAKER:Tester\nTITLE:Blocks\nTITLEJA:Blocks JA\nSUBTITLE:\nWAVE:audio.mp3\n"));
+            Assert.That(play, Does.StartWith("MAKER:Tester\nTITLE:Blocks\nSUBTITLE:\nTITLEJA:Blocks JA\nWAVE:audio.mp3\n"));
             Assert.That(play, Does.Not.Contain("COURSE:Easy"));
             Assert.That(play, Does.Contain("COURSE:Hard\nLEVEL:4\nSTYLE:Single\nBPM:150\nSCOREINIT:1000\n#START\n2,\n#END\n"));
-            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nSTYLE:Double\nBPM:150\n#START P1\n3,\n#END\n"));
-            Assert.That(play, Does.Contain("#START P2\n4,\n#END\n"));
+            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nSTYLE:Single\nBPM:150\n#START\n3,\n#END\n"));
             Assert.Throws<FanmadeException>(() => PlayableTja.Build("COURSE:Hard\n#START\n1,\n#END\n", chart), "TJA_BLOCK_MISMATCH");
+
+            var pair = FanmadeChart.From(new FanmadeFixture.Chart
+            {
+                Title = "Pair", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") },
+            }.ToJson(), "server");
+            play = PlayableTja.Build("BPM:150\nCOURSE:Oni\nSTYLE:Double\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n", pair);
+            Assert.That(play, Does.Contain("COURSE:Oni_1p\nLEVEL:9\nSTYLE:Double\nBPM:150\n#START P1\n3,\n#END\n"));
+            Assert.That(play, Does.Contain("COURSE:Oni_2p\nLEVEL:8\nSTYLE:Double\nBPM:150\n#START P2\n4,\n#END\n"));
         }
 
         [Test]
@@ -274,8 +303,7 @@ namespace OurTaiko.Tests
             var json = new FanmadeFixture.Chart
             {
                 Title = "Meta", Subtitle = "--Sub", Bpm = 180, DemoStart = 12.5,
-                Difficulties = new System.Collections.Generic.List<(string, int, int, bool, string)>
-                    { ("Hard", 4, 1, true, ""), ("Edit", 10, 2, true, "") },
+                Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Hard", 4, ""), ("Edit", 10, "") },
             }.ToJson();
             json["subtitleTranslations"] = new JObject { ["ja"] = "++副題" };
             json["difficulties"][1]["branching"] = true;
@@ -288,16 +316,14 @@ namespace OurTaiko.Tests
 
             var keyed = new FanmadeFixture.Chart
             {
-                Title = "Double", Difficulties = new System.Collections.Generic.List<(string, int, int, bool, string)>
-                    { ("Oni", 9, 0, true, "P1"), ("Oni", 8, 1, true, "P2") },
+                Title = "Double", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") },
             }.ToJson();
-            keyed["isSingle"] = false;
             keyed["difficulties"] = new JArray(new JObject { ["course"] = "Oni_1p", ["level"] = 9, ["branching"] = false },
                 new JObject { ["course"] = "Oni_2p", ["level"] = 8, ["branching"] = true });
-            var p2 = FanmadeChart.From(keyed, "server", courseKeyed: true).ForPlayer("P2").ToSongInfo("en");
+            var p2 = FanmadeChart.From(keyed, "server").ForPlayer("P2").ToSongInfo("en");
             Assert.That(p2.Title, Is.EqualTo("Double P2"));
             Assert.That(p2.Courses.Select(c => (c.Difficulty, c.Course, c.Level, c.IsBranching)), Is.EqualTo(new[] { (Difficulty.Oni, "Oni_2p", 8, true) }));
-            Assert.That(FanmadeChart.From(keyed, "server", courseKeyed: true).ForPlayer("P1").ToSongInfo("en").Course(Difficulty.Oni).IsBranching, Is.False);
+            Assert.That(FanmadeChart.From(keyed, "server").ForPlayer("P1").ToSongInfo("en").Course(Difficulty.Oni).IsBranching, Is.False);
         }
 
         [Test]

@@ -39,12 +39,20 @@
 
 ### 当前完成状态与交接边界
 
+#### 在线协议只支持新版后端（2026-10-07）
+
+- 用户更新 ESE 后端后，Fanmade 与 ESE 的 `/api/v1/game/bootstrap` 都声明 `songIdOnly`、`courseKeyedDifficulties`、`resourceDownloadVersion: 1`、`scoreReplayVersion: 1`、`audioPreviewVersion: 1`。按用户要求删除全部旧协议处理：`FanmadeClient.ConnectAsync` 要求前四项（`SupportsProtocol`），缺任一项抛 `SERVER_PROTOCOL_UNSUPPORTED`，不再退回旧格式。
+- 已删除：谱面版本号（`FanmadeChart.Version`、`FanmadeScore.Version`、成绩键中的版本、`/versions/` 与 `/tja`、`/audio` 代理下载及其 120 秒超时识别）、旧难度字段 `blockIndex`／`cloudScoreEligible`／`player`（`FanmadeDifficulty.BlockIndex`／`Cloud`）和「双人谱面不上传成绩」规则（双人课程如 `Oni_1p` 现在也上传）、以 `en` 充当原文 TITLE 的处理（可玩 TJA 始终 `TITLE`=原文、翻译为 `TITLEEN`／`TITLEJA` 等）、旧按版本目录缓存的迁移与 MP3 存成 `.ogg` 的迁移、`PendingScoreQueue` 导入旧 JSON 待上传目录与 `UpdateBody`（旧请求体没有文件哈希，上传前一律搁置为 rejected）、`SongIdOnly`／`CourseKeyedDifficulties`／`ResourceDownloadVersion`／`ScoreReplayV1` 属性。`ScoreStore` 迁移旧本地成绩 JSON 属于本地存储，保留。
+- 下载只走资源清单（`FanmadeClient.Resources.cs` 的 `PrepareAsync`）；可玩 TJA 按 COURSE 与 `#START` 玩家匹配 API 课程，必须与 API 课程一一对应，`STYLE` 按是否双人写 Single／Double（`TjaParser` 不读 STYLE）。每次成绩都带 `replay_data`。
+- 测试：`FanmadeFixture` 只模拟新协议，默认资源清单指向夹具自身的 `/files/<chart>/<kind>`（拒绝带 API 凭据的请求），`Protocol` 可删项模拟旧服务器；`AllowLoopbackResourcesForTests` 已删除，改为测试编译下 API 地址本身是本机时允许本机 http 资源链接。EditMode 进行中 231/231（含新增 `AServerWithoutTheCurrentProtocolIsRefused`×4、`GuestsNeverQueueAndDoubleCoursesUploadPerPlayer`、`PlayableTjaKeepsTheApiCourses` 等），PlayMode `ServerLoginFlowTests` 6/6、`OnlinePreviewFlowTests` 3/3、`SongLanguageFlowTests` 1/1；删除 `ScoreDatabaseTests.LegacyOutboxKeepsKeysBodiesAndRejectionStateWithoutReimporting`。真实服务器游客只读实测：Fanmade 44 首、ESE 2958 首（5 首双人）均连接成功，各下载一首（ESE 为双人 P1）通过哈希校验、生成并解析可玩 TJA、下载试听。未用真实账号登录或上传。
+- OurTaikoView_Web 已同步全部在线文件（`OnlineManager.cs` 只改双人展开条件），用其 `OurTaiko.Runtime.csproj` 经 `dotnet build -p:LangVersion=10` 编译通过，未在 Unity 中运行。
+
 #### 在线歌曲选曲信息直接取自元数据（2026-10-07）
 
 - 删除 `FanmadeChart.CatalogTja()`（为选曲拼接只有头信息的假 TJA）和 `DisplayTitle`。在线歌曲的 `SongDefinition.ReadDisplayInfo()` 直接返回 `onlineChart.ToSongInfo(language)`：标题和副标题按**所选语言 → 谱面原文**（API 的 `title`／`subtitle`），不经过英文或日文（用户决定，2026-10-07；本地 TJA 同一规则，共用 `SongInfo.Translated`；`zh-Hans` 视为 `zh`；双人谱面的 P1／P2 后缀保留），BPM、DemoStart、类别照搬 API，每个非空 `Difficulties[i]` 生成一个 `CourseInfo`。
 - 在线歌曲下载前 `song.chart` 为 null。`RefreshSongs` 每次都会清掉谱面（旧下载可能是旧版本），只有 SongLoadingScene 下载完成后经 `SetPrepared` 写入可游玩的 TJA。下载后选曲、加载幕布和游玩标题仍使用元数据。`ReadInfo()` 只用于本地谱面与 Editor 工具。
 - 行为变化：在线标题回退原为 所选语言 → en → 原文（`dd15d6c`，旧协议的 en 即原文），本地 TJA 原为 所选语言 → 日文 → TITLE，现在都是 所选语言 → 原文（TJA 没有 TITLE 时显示 Untitled，不再借用 TITLEJA）；下载过的在线歌曲以前读真实 TJA 能显示分歧图标，现在不再显示。
-- **在线分歧标识（2026-10-07）**：Fanmade 后端迁移 031 给 `difficulties[]` 增加布尔 `branching`（该谱面块含 `#BRANCHSTART`；旧作品由后台任务读取存储的 TJA 补齐，见后端 `docs/API.md`「难度分歧标记（031）」）。客户端 `FanmadeDifficulty.Branching` 读取该字段（缺失或非布尔按 false），`ToSongInfo` 填入 `CourseInfo.IsBranching`，选曲歌曲板与难度卡的分歧图标在下载前即显示。ESE 后端未加此字段，按 false。后端已部署（`775d5d2`，schema 31，2026-10-07；生产目前只有「霜降」Oni 为分歧）。测试：`FanmadeClientTests.SongInfoComesStraightFromTheApiMetadata`、`ServerLoginFlowTests`（测试服务器给 Oni 标 branching，断言歌曲板 Oni 牌分歧图标显示）。
+- **在线分歧标识（2026-10-07）**：Fanmade 后端迁移 031 给 `difficulties[]` 增加布尔 `branching`（该谱面块含 `#BRANCHSTART`；旧作品由后台任务读取存储的 TJA 补齐，见后端 `docs/API.md`「难度分歧标记（031）」）。客户端 `FanmadeDifficulty.Branching` 读取该字段（缺失或非布尔按 false），`ToSongInfo` 填入 `CourseInfo.IsBranching`，选曲歌曲板与难度卡的分歧图标在下载前即显示。ESE 后端现在也提供该字段（2026-10-07 实测 2958 首中 216 首有分歧）。后端已部署（`775d5d2`，schema 31，2026-10-07；生产目前只有「霜降」Oni 为分歧）。测试：`FanmadeClientTests.SongInfoComesStraightFromTheApiMetadata`、`ServerLoginFlowTests`（测试服务器给 Oni 标 branching，断言歌曲板 Oni 牌分歧图标显示）。
 - 测试：`FanmadeClientTests.SongInfoComesStraightFromTheApiMetadata`（新增）、`ResourceDownloadTests`／`SongLanguageTests` 改测 `ToSongInfo`、`ServerLoginFlowTests` 断言下载前 `chart` 为 null，`SongLanguageTests`／`SongLanguageFlowTests` 改为原文回退；进行中 EditMode 228/228，PlayMode `ServerLoginFlowTests` 6/6、`SongLanguageFlowTests` 1/1、`OnlinePreviewFlowTests` 3/3（后者在改回退规则前跑过）。OurTaikoView_Web 已同步 `FanmadeModels`（逐字相同）、`OnlineManager`、`SongDefinition`、`SongInfo.Translated`，未编译验证。
 
 #### 分支条件接口与 s 分数分支（2026-10-06）

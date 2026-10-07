@@ -44,7 +44,8 @@ namespace OurTaiko.Tests
             Assert.That(selected.Subtitle, Is.EqualTo("原副題"), "No Japanese fallback for online songs.");
             Assert.That(chart.ToSongInfo("zh_tw").Title, Is.EqualTo("原題"));
             Assert.That(chart.ToSongInfo("ja").Subtitle, Is.EqualTo("日本語副題"));
-            Assert.That(SongInfo.Read(chart.TitleHeaders(), "zh_tw").Title, Is.EqualTo("Base"));
+            Assert.That(SongInfo.Read(chart.TitleHeaders(), "zh_tw").Title, Is.EqualTo("原題"), "The playable copy keeps the original as TITLE.");
+            Assert.That(SongInfo.Read(chart.TitleHeaders(), "en").Title, Is.EqualTo("Base"));
         }
 
         [Test]

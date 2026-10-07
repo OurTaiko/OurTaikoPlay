@@ -21,7 +21,7 @@ namespace OurTaiko.Tests
         [SetUp] public void Setup()
         {
             gets = forbidden = failures = manifests = 0; missing = corrupt = false;
-            api = new FanmadeFixture { SongIdOnly = true, CourseKeyed = true, ResourceDownloadVersion = 1 };
+            api = new FanmadeFixture();
             origin = new FanmadeFixture();
             preview = Enumerable.Range(0, 4096).Select(i => (byte)(i % 251)).ToArray();
             api.Charts.Add(new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[10000] });
@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
             };
             cache = Path.Combine(Path.GetTempPath(), "preview-test-" + Guid.NewGuid().ToString("N"));
             client = new FanmadeClient(cache);
-            var endpoint = client.Add(api.Server("don","katsu")); endpoint.AllowLoopbackResourcesForTests = true;
+            var endpoint = client.Add(api.Server("don","katsu"));
             Run(() => client.ConnectAsync(endpoint,false));
         }
         static T Run<T>(Func<Task<T>> work) => Task.Run(work).GetAwaiter().GetResult();

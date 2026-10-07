@@ -43,19 +43,5 @@ namespace OurTaiko.Tests
             Assert.That(new ScoreStore(path, legacy).Get("Local", Difficulty.Oni).score, Is.EqualTo(456));
             Assert.That(File.Exists(legacy), Is.True, "Original JSON remains available for recovery.");
         }
-
-        [Test] public void LegacyOutboxKeepsKeysBodiesAndRejectionStateWithoutReimporting()
-        {
-            string legacy = Path.Combine(root, "pending"), folder = Path.Combine(legacy, "endpoint");
-            Directory.CreateDirectory(folder);
-            File.WriteAllText(Path.Combine(folder, "key.json"), "{\"score\":3}");
-            File.WriteAllText(Path.Combine(folder, "refused.rejected"), "{}");
-            var queue = new PendingScoreQueue(path, legacy);
-            Assert.That(queue.Pending("endpoint")[0].Key, Is.EqualTo("key"));
-            Assert.That(queue.Pending("endpoint")[0].Body, Is.EqualTo("{\"score\":3}"));
-            Assert.That(queue.RejectedCount("endpoint"), Is.EqualTo(1));
-            queue.Remove("key");
-            Assert.That(new PendingScoreQueue(path, legacy).Pending("endpoint"), Is.Empty);
-        }
     }
 }

@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
         {
             manifests = tjaGets = audioGets = forbidden = ResourceStatus = 0;
             corrupt = expired = mismatch = false;
-            api = new FanmadeFixture { SongIdOnly = true, CourseKeyed = true, ResourceDownloadVersion = 1 };
+            api = new FanmadeFixture();
             origin = new FanmadeFixture();
             chart = new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3 } };
             api.Charts.Add(chart);
@@ -57,7 +57,6 @@ namespace OurTaiko.Tests
             cache = Path.Combine(Path.GetTempPath(), "ourtaiko-resources-" + Guid.NewGuid().ToString("N"));
             client = new FanmadeClient(cache);
             endpoint = client.Add(api.Server("don", "katsu"));
-            endpoint.AllowLoopbackResourcesForTests = true;
             Run(() => client.ConnectAsync(endpoint, false));
         }
         [TearDown] public void Cleanup() { client.Dispose(); api.Dispose(); origin.Dispose(); Directory.Delete(cache, true); }
@@ -138,7 +137,7 @@ namespace OurTaiko.Tests
             Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("CHART_UPDATING"));
             Assert.That(manifests, Is.EqualTo(2)); Assert.That(tjaGets + audioGets, Is.Zero);
         }
-        [Test] public void ScoresHaveNoVersionAndChangedFilesStopOldUploads()
+        [Test] public void ChangedFilesStopOldUploads()
         {
             var c = client.Charts[0]; api.ScoreFailures.Enqueue(503);
             client.Submit(c, 3, new FanmadeScore { Score = 99, ClearStatus = 1 }); Run(() => client.WaitForUploadsAsync());
@@ -149,25 +148,23 @@ namespace OurTaiko.Tests
             Assert.That(client.PendingCount(endpoint), Is.Zero); Assert.That(client.UploadQueue.RejectedCount(endpoint.Id), Is.EqualTo(1));
             Assert.That(api.AcceptedScores, Is.Empty);
         }
-        [Test] public void SongIdOnlyProxyCompatibilityAndScoreSnapshotDeletion()
+        [Test] public void BestScoresFollowTheLatestBootstrap()
         {
-            api.ResourceDownloadVersion = 0;
             api.AddAccountScore("don", chart, "Oni", 500, 3);
             Run(() => client.ConnectAsync(endpoint, false));
             Assert.That(client.Best(client.Charts[0], 3).ClearStatus, Is.EqualTo(3));
-            Run(() => client.PrepareAsync(client.Charts[0])); Assert.That(api.Downloads, Is.EqualTo(2));
             api.AccountScores.Clear(); Run(() => client.ConnectAsync(endpoint, false));
             Assert.That(client.Best(client.Charts[0], 3), Is.Null);
         }
-        [Test] public void LegacyQueueWithoutTrustedHashesIsPreservedAsRejected()
+        [Test] public void QueuedScoresWithoutFileHashesAreKeptAsRejected()
         {
-            client.UploadQueue.Enqueue(endpoint.Id, new string('c', 64), "{\"songId\":\"" + chart.Id + "\",\"versionId\":\"" + chart.Version + "\"}");
+            client.UploadQueue.Enqueue(endpoint.Id, new string('c', 64), "{\"songId\":\"" + chart.Id + "\"}");
             client.RetryNow(); Run(() => client.WaitForUploadsAsync());
             Assert.That(client.UploadQueue.RejectedCount(endpoint.Id), Is.EqualTo(1)); Assert.That(api.AcceptedScores, Is.Empty);
         }
         [Test] public void CoursesMatchStartPlayerInsteadOfArrayPosition()
         {
-            chart.Difficulties.Clear(); chart.Difficulties.Add(("Oni", 9, 99, true, "P2")); chart.Difficulties.Add(("Oni", 8, 100, true, "P1"));
+            chart.Difficulties.Clear(); chart.Difficulties.Add(("Oni", 9, "P2")); chart.Difficulties.Add(("Oni", 8, "P1"));
             chart.Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P1\n1,\n#END\n#START P2\n2,\n#END\n");
             Run(() => client.ConnectAsync(endpoint, false));
             var result = Run(() => client.PrepareAsync(client.Charts[0]));

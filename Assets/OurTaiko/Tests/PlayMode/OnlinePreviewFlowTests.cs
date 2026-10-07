@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
         [SetUp] public void Setup()
         {
             downloaded = requests = wrongMethod = delayMs = 0; failDownload = false;
-            api = new FanmadeFixture { SongIdOnly = true, CourseKeyed = true, ResourceDownloadVersion = 1 };
+            api = new FanmadeFixture();
             origin = new FanmadeFixture();
             audio = File.ReadAllBytes("Assets/OurTaiko/Audio/song_select/bgm.ogg");
             api.Charts.Add(new FanmadeFixture.Chart { Title = "Streaming preview", Audio = audio, DemoStart = 15,
@@ -48,7 +48,7 @@ namespace OurTaiko.Tests
                 Interlocked.Add(ref downloaded, audio.Length); return true;
             };
             TestData.UseServers(new ServerList());
-            endpoint = OnlineManager.Instance.Client.Add(api.Server()); endpoint.AllowLoopbackResourcesForTests = true;
+            endpoint = OnlineManager.Instance.Client.Add(api.Server());
         }
         [UnityTearDown] public IEnumerator Cleanup()
         {
