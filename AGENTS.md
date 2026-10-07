@@ -39,6 +39,13 @@
 
 ### 当前完成状态与交接边界
 
+#### 分支条件接口与 s 分数分支（2026-10-06）
+
+- p／r／s 统一为 `Core/BranchConditions.cs` 的 `IBranchCondition`（`Value(ChartBranch)`），实现为 `AccuracyCondition`／`DrumrollCondition`／`ScoreCondition`，由 `BranchConditions.Create` 按 `BranchCondition` 下标创建。计数不再写死在 PlaySession：`BranchFeed` 的委托事件 `NoteJudged(判定, 得分)`／`LongHit(音符, 得分)`／`Reset` 由 PlaySession 在 `Resolve`／`HitLong` 结算当时、`#SECTION` 与每次决定后触发（同一次 `Advance`／`Hit`，主线程游戏循环内），三个条件同时订阅、一起清零。r 的「跨越决定时刻的连打取累计数」通过 `HeldRollHits` 委托注入。
+- **s（用户决定）**：`branchScores` = 上次重置后的 Shinuchi 得分（普通音符、连打、气球每次击打的 100 分都计入），与门槛比较规则同 p／r。单人游玩不再拒绝 s；缺 `#E`／`#M` 仍拒绝。`ShinuchiScore.AddLongHit` 改为返回得分。
+- **待定：重置边界的归属（2026-10-07，用户未定，遇到问题再改）**：`#SECTION` 与分支决定按**判定发生的时间**切分统计，不按音符时间。重置前不远的音符若在重置后才判定（晚打，最多 108 ms 判定窗口；或超时漏音），结果计入新区间。实测：SECTION 前 62.5 ms 的音符晚 70 ms 打成可，被算进下一个分支（p 100→90，达人→玄人）。备选做法是按音符时间归属（`Resolve` 中丢弃早于最近一次重置的音符的结果）。原版 OurTaikoPlayer 源码不在本机，未对照确认。r 的持续连打例外不受 SECTION 影响（累计数含 SECTION 前的击打），这是对照原版的既有行为，由 `BranchTests.SectionResetsAccuracyButActiveRollFallbackMatchesReference` 锁定。
+- 测试（进行中 EditMode）：按条件分开的 `AccuracyBranchTests`（p）、`DrumrollBranchTests`（r）、`ScoreBranchTests`（s），以及 `MixedBranchTests`（同一谱面 p→r→s 链式选线、同一游玩各条件读各自统计、#SECTION 清空全部、固定路线忽略条件），另有 `BranchRouteTests.NormalPlayEvaluatesScoreBranches`；原 p／r 的 `BranchTests` 未改且通过。共享文件 PlaySession／TjaParser 有改动，新增 BranchConditions.cs，OurTaikoView_Web 尚未同步。
+
 #### 游玩轨道难度图标（2026-10-06）
 
 - 修复：SinglePlayScene／PracticeScene 左侧 `NoteLane/Difficulty` 曾在生成时固定为鬼。现按原 `Player::draw` 的 `frame = difficulty`，`PlayScene.Start` 依谱面 COURSE 从 `laneDifficultySprites`（`lane_difficulty` 切片 `LaneDifficulty0–4`＝简单→里鬼）选图，场景保存值仍为鬼预览。迁移 `ProjectBuilder.ApplyLaneDifficulty()`（菜单 OurTaiko/Apply Lane Difficulty，重复执行哈希不变）；测试 `LaneDifficultyFlowTests`（已完成 PlayMode，5/5；2026-10-06 用户确认后移入 Finished）。
@@ -46,7 +53,7 @@
 #### 练习分支：固定路线（2026-10-05）
 
 - 练习菜单对有分支的谱面增加首页「谱面分支」（普通／玄人／達人譜面，咔切换、两端停住、咚进入小节进度），之后为小节进度、播放速度；无分支谱面没有此页。练习不评估任何分支条件，全部分支走所选路线；切换路线就地重建本次练习与小节列表，再次暂停回到分支页并保留路线。
-- **解析与游玩分离（用户决定）**：`TjaParser.Parse(text, course)` 对所有模式完全相同，不接收分支参数；`s` 条件记为 `BranchCondition.Score`，缺 `#E` 用 `#N`、缺 `#M` 用 `#E`（`ChartBranch.Routes`／`ResolveRoute`，`#N` 仍必需）。路线选择只在 `PlaySession(chart, judgeOffset, forcedBranch)`／`PracticeAt(..., forcedBranch)`：有值时每个分支取 `ResolveRoute(路线)`、不计算条件；无值（单人游玩）时遇到 `Score` 或缺路线在构造时抛 `NotSupportedException`，不猜测行为。谱面对象不保存分支选择（已删除 `TaikoChart.ForcedBranch`）。`ChartStatistics` 的达人统计按 `ResolveRoute(Master)`。
+- **解析与游玩分离（用户决定）**：`TjaParser.Parse(text, course)` 对所有模式完全相同，不接收分支参数；`s` 条件记为 `BranchCondition.Score`，缺 `#E` 用 `#N`、缺 `#M` 用 `#E`（`ChartBranch.Routes`／`ResolveRoute`，`#N` 仍必需）。路线选择只在 `PlaySession(chart, judgeOffset, forcedBranch)`／`PracticeAt(..., forcedBranch)`：有值时每个分支取 `ResolveRoute(路线)`、不计算条件；无值（单人游玩）时缺路线在构造时抛 `NotSupportedException`，不猜测行为；`s` 条件已可在单人游玩中判定（见「分支条件接口与 s 分数分支」）。谱面对象不保存分支选择（已删除 `TaikoChart.ForcedBranch`）。`ChartStatistics` 的达人统计按 `ResolveRoute(Master)`。
 - 路线只在游戏内练习菜单选择（用户决定）：练习始终从普通譜面开始。View_Web 宿主不再传 branch，点「开始」只关闭遮罩、停在游戏内菜单（无分支谱面为小节进度页），与 Play 进入练习一致；Bridge 用普通譜面固定路线的 PlaySession 验证谱面，`getState` 增加 `stage`。共享文件（TaikoChart、TjaParser、SongDefinition、PlaySession、ChartStatistics、LaneWindow、PracticeProgress、PracticeView、PlayScene.Practice）两边逐字相同，修改时同步。
 - 测试：`BranchRouteTests`、`PracticeTests.PracticeForcesTheChosenBranch`、`PracticeFlowTests.BranchPageComesFirstAndFixesTheRoute`／`PracticeOpensScoreBranchesWithOmittedRoutes`。`BranchTests` 中「缺 #M 解析报错」「s 解析报错」两例已移到 session 层。
 
@@ -326,4 +333,4 @@
 - **名牌待办**：原版段位选择（`dan_select.cpp`）与段位结算（`dan_result.cpp`／`dan_result_draw.lua` 的 `nameplate_pos`）场景也显示名牌。将来移植这些场景时须同样复用 `Generated/Nameplate.prefab` 与 `PlayerInfoController`；2P／AI 名牌（`2p.png`／`ai.png`）与名牌编辑界面同样未做。
 - **可选：判定点效果叠加**（用户 2026-10-02 记为选项，暂不做，需用户确认后再动）：原版 `player.cpp` 每次判定向 `draw_judge_list` 加入一个独立 `Judgment`（笑脸、外圈与判定文字各自计时），每帧按旧→新全部更新绘制，笑脸动画结束（约 350 ms）后移除；密集连段时多个效果在不同动画阶段重叠。上限只在加入良时检查（`size() < 7`），可与不可不检查；不可条目只有文字、无笑脸／外圈，但同样占名额。本项目目前笑脸、外圈与判定文字各只有一个，新判定替换旧的。移植做法：用现有 `HitFace`／`HitRing` 预制体建小型实例池，每次判定取一个独立计时，旧的先画、新的在上，按原版规则限 7 个；判定文字也需同样改为叠加。
 
-当前不是整个原模拟器的等价移植。游玩中气球吹爆的彩虹拖尾、选曲中的文件夹／类别、搜索与排序、独立音色面板、演奏スキップ功能（及加载幕布上的演奏スキップON 徽章）、歌曲自定义 `Loading.png` 加载图、段位加载画面、2P、曲目板飞入、难度决定标记弹出，结算中的成绩等级（粋／雅／極）演出、3D 咚、皇冠光芒加算混合、游玩中的「+分数」飞出动画尚未移植；TRIPLE HELIX 的 Edit 谱面含字母扩展音符，无法游玩。联网／成绩上传、双人、段位、3D 咚角色、全部皮肤特效、逐帧回放尚未实现（大音符单侧击打即可，属有意设计，见上方约束）；计分固定使用 Shinuchi，单人魂槽数值已按原源码还原，GEN3 计分及段位魂槽不在当前范围。自动连打仍为 **15 次／秒**，未移植原版随 BPM 变化的自动连打节奏。`s` 分数分支（单人游玩拒绝；练习固定路线可显示，见「练习分支」）、`#LEVELHOLD`、BMSCROLL／HBSCROLL、字母扩展音符明确不支持；不要静默猜测其行为，也不要将这些范围自动当作用户已授权的新开发任务。
+当前不是整个原模拟器的等价移植。游玩中气球吹爆的彩虹拖尾、选曲中的文件夹／类别、搜索与排序、独立音色面板、演奏スキップ功能（及加载幕布上的演奏スキップON 徽章）、歌曲自定义 `Loading.png` 加载图、段位加载画面、2P、曲目板飞入、难度决定标记弹出，结算中的成绩等级（粋／雅／極）演出、3D 咚、皇冠光芒加算混合、游玩中的「+分数」飞出动画尚未移植；TRIPLE HELIX 的 Edit 谱面含字母扩展音符，无法游玩。联网／成绩上传、双人、段位、3D 咚角色、全部皮肤特效、逐帧回放尚未实现（大音符单侧击打即可，属有意设计，见上方约束）；计分固定使用 Shinuchi，单人魂槽数值已按原源码还原，GEN3 计分及段位魂槽不在当前范围。自动连打仍为 **15 次／秒**，未移植原版随 BPM 变化的自动连打节奏。`#LEVELHOLD`、BMSCROLL／HBSCROLL、字母扩展音符明确不支持；不要静默猜测其行为，也不要将这些范围自动当作用户已授权的新开发任务。
