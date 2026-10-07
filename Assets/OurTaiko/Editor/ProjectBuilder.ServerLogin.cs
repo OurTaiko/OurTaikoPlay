@@ -29,7 +29,7 @@ namespace OurTaiko.Editor
                 if (EditorSceneManager.GetSceneAt(i).isDirty)
                     throw new InvalidOperationException("Save the current scene edits first.");
             ImportSettingArt();
-            font = UiFont();
+            UiFont();
             if (!File.Exists(ServerLoginPath))
             {
                 var root = NewStage();

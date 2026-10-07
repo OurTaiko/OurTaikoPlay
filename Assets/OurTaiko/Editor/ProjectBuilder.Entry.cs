@@ -26,7 +26,7 @@ namespace OurTaiko.Editor
                 if (EditorSceneManager.GetSceneAt(i).isDirty)
                     throw new InvalidOperationException("Save the current scene edits first.");
             ImportEntryArt();
-            font = UiFont();
+            UiFont();
             if (!File.Exists(EntryPath))
             {
                 var root = NewStage();

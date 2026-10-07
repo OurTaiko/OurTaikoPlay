@@ -26,11 +26,11 @@
   - **计时器不倒数**（用户决定：模拟器不限制玩家时间）：原版 Entry 60 秒、选曲列表 100 秒、难度选择 60 秒倒数，归零替玩家决定（难度选择停在もどる／选项时还会把无效难度传给游戏）；本项目三处都只显示 60／100／60 作占位，不倒数、无 blip 与语音、不自动决定。计时器音效未导入，倒数与 10 秒内红色弹动的代码已删除（`ArcadeTimerView` 只显示固定数字）；如需恢复，参照原版 `Scripts/global/timer.lua` 与 `PortingNotes.md`「Entry 场景」中的记录。
   - **单次加分数字动画**（用户决定，2026-10-06）：每条加分在最终高度（y219）从右侧横向滑入淡入，全程平齐一行，淡出时上移 15 px（取原版定义但未使用的 animation 40 的 366.74 ms 起 80 ms）。去掉了原版的两处：开头 146 ms 停在 y255 再跳到 y219（看起来像从下方冒出），以及 `score_counter_animation.cpp:45` 按 (位序＋1)×5 px 逐位下移的斜阶梯（`ScoreAdditionView` 无 `fanStep`）。淡入淡出时间、横向 30 px 滑入与 279–345 ms 的 3 px 上移保留。
   - **名牌与自动演奏**（用户决定）：原版自动演奏时在名牌位置画 `lane/auto_icon` 取代名牌；本项目名牌始终显示，自动演奏只在演奏オプション徽章区第一位加入选曲的 `song_select/modifier/mod_auto`，没有其他视觉差别。名牌彩虹称号带按 6 帧／50 ms／300 ms 循环；原版从未 `start()` 该动画（停在第 0 帧），属被修正的缺陷。
-- **单一字体与黑色描边**（用户决定，2026-10-03）：全部 TMP 文字只用一个 SDF 资产 `Resources/Nijiiro UI SDF.asset`（源 `Art/DDFont.ttf`，64 采样字号／32 padding），只有两种共享材质：浅色文字用 `Resources/Nijiiro UI SDF Outline.mat`（不透明纯黑描边），**本身为黑色／近黑色的文字不加描边**，用字体自带材质（`SkinUi.IsDark`：文字颜色亮度 0.2126R+0.7152G+0.0722B < 0.3，如名牌称号、暂停按钮、设置详情、Entry「１人プレイ」）。不要再加第二个 SDF、按用途的材质或文字实例材质。描边宽度为 TMP 归一化宽度 `SkinUi.OutlineWidth`（0.125，`_FaceDilate` 同值使描边在字面之外），只随各文字的字号与缩放变化，不写死像素。不按背景亮度或 alpha 混合调整（2026-10-03 试过后由用户撤回），不使用类别色、模式色或硬编码描边表。新文字用 `SkinUi.Text(name, parent, size)`，改变文字深浅后调用 `text.UseUiFont()` 重新选材质；迁移入口 `ProjectBuilder.ApplyUnifiedUiFont()`（菜单 OurTaiko/Apply Unified UI Font，按颜色选材质，重复执行不改动）。
+- **单一字体与黑色描边**（用户决定，2026-10-03）：全部 TMP 文字只用一个 SDF 资产 `Resources/Nijiiro UI SDF.asset`（源 `Art/DDFont.ttf`，64 采样字号／32 padding），只有两种共享材质：浅色文字用 `Resources/Nijiiro UI SDF Outline.mat`（不透明纯黑描边），**本身为黑色／近黑色的文字不加描边**，用字体自带材质（`SkinUi.IsDark`：文字颜色亮度 0.2126R+0.7152G+0.0722B < 0.3，如名牌称号、暂停按钮、设置详情、Entry「１人プレイ」）。不要再加第二个 SDF、按用途的材质或文字实例材质。描边宽度为 TMP 归一化宽度 `SkinUi.OutlineWidth`（0.125，`_FaceDilate` 同值使描边在字面之外），只随各文字的字号与缩放变化，不写死像素。不按背景亮度或 alpha 混合调整（2026-10-03 试过后由用户撤回），不使用类别色、模式色或硬编码描边表。新文字用 `SkinUi.Text(name, parent, size)`，改变文字深浅后调用 `text.UseUiFont()` 重新选材质。
 - **名牌网格初始化**：不要在 `NameplateView.SetText`／`OnEnable` 中提前 `ForceMeshUpdate`。静态游玩名牌会因 CanvasScaler 尚未稳定导致 SDF 缩放重复计入，出现浅灰字。仅在 `willRenderCanvases` 中首次或 Canvas 比例变化后刷新；验证应读实时 CanvasRenderer 网格与 Game 截图，旧 `TestCapture` 切换渲染模式会掩盖此错误。详见 `PortingNotes.md`「游玩名牌首次渲染灰字修复」。
 - 跨平台构建（2026-10-03）：统一入口 `Editor/PlayerBuilds.cs`，菜单 **OurTaiko/Build**，覆盖 macOS Universal（Mono）、Windows x64（Mono）、Android ARM64 APK（IL2CPP）、iOS Xcode 工程（IL2CPP）。移动端包名固定 **`org.ourtaiko.play`**、仅左右横屏；构建产物与报告在被 Git 忽略的 `Builds/`。命令行必须在启动 Editor 时传匹配的 `-buildTarget`，不要在同一次批处理内切平台后立即构建。操作与签名边界见 `Documentation/Building.md`。GitHub Actions（2026-10-05，`.github/workflows/build.yml`）：不跑测试，直接经 game-ci `buildMethod` 调 `PlayerBuilds` 构建 Windows x64 与 Android APK（不构建 Apple 平台），main 滚动 nightly、`v*` tag 正式 Release；LFS 走缓存。Secrets 已配置（Unity＋Android），测试为手动 workflow `test.yml`（2026-10-06 用户决定，可选 finished／in-progress／all 与 mode），规则见 `Building.md`「GitHub Actions 构建发布」。
 - Git 已初始化，当前直接在 `main` 上提交（线性历史，无合并提交）；提交使用 **Conventional Commits**。保留用户已有改动，不把无关资源混入提交。新建分支默认使用 `kirisamevanilla/` 前缀。
-- 场景、Sprite 资源、导入设置等持久化内容通过 Unity Editor API 修改并保存；避免手工改 Unity YAML／GUID。现有场景可直接编辑，不要随意执行生成初始场景的工具覆盖布局。
+- 场景、Sprite 资源、导入设置等持久化内容通过 Unity Editor API 修改并保存；避免手工改 Unity YAML／GUID。现有场景可直接编辑。最初生成 1280×720 SinglePlayScene 的 Generate Initial Scenes 与 Apply Nijiiro Layout，以及各项已完成的一次性迁移（Move Slices Into Sheets、Apply Frame Sheets、Apply Source Font、Apply Outlined／Unified UI Font、Apply Dancer Clip、Apply Circular Pause Button）已于 2026-10-07 删除（用户决定）；保存的场景、预制体与剪辑才是来源，其余 `Apply*`／`Create*` 菜单只补缺失对象或重建生成的剪辑。
 - 后续交流以中文为主；能根据原代码确定的常规实现直接完成并验证，无需重复询问已经确定的约束。
 
 - **A/B 全局延迟（2026-10-04）**：Settings › Play 的 Offset A (Audio)／Offset B (Judgment)，默认 0 ms、每次 1 ms。A 移动整张谱面相对音乐的位置，B 只移动手动判定窗口（含漏判和长音符），不移动显示或自动演奏；正值推迟、负值提前。两种游玩模式共用，练习跳小节只根据视觉时间定位，重置保留 B；偏移采用谱面时间单位，随练习速度缩放。不增加单曲延迟设置。新增数值设置用 `SettingItem.Number(defaultValue, step, unit, get, set)`，咔／触控箭头调整，咚／点数值保存，Esc／遮罩取消。详情见 `PortingNotes.md`「A/B 全局延迟与数值设置」。
@@ -125,7 +125,7 @@
 
 #### 游玩暂停按钮（2026-10-03）
 
-- SinglePlay 左上角改为本地 Material Symbols `pause_circle` 圆形图标按钮（设计尺寸 48×48，位置 24,0），FPS 面板移至 x82/y2；圆内可点击，四角不响应，原暂停／恢复逻辑保持。迁移 `ProjectBuilder.ApplyCircularPauseButton()`，图标源与许可证位于 `Documentation/ThirdParty/MaterialSymbols/`。
+- SinglePlay 左上角改为本地 Material Symbols `pause_circle` 圆形图标按钮（设计尺寸 48×48，位置 24,0），FPS 面板移至 x82/y2；圆内可点击，四角不响应，原暂停／恢复逻辑保持。图标源与许可证位于 `Documentation/ThirdParty/MaterialSymbols/`。
 
 #### SongSelect 最佳成绩与 SQLite（2026-10-03）
 
@@ -212,9 +212,9 @@
 ### 动画剪辑（Generated/Clips，2026-10-02）
 
 固定时间轴、与游戏状态无关的表现存为 `.anim`，由 `Runtime/Scenes/ClipSampler.cs` 播放：Animator＋手动求值的 Playables 图（`AnimationClip.SampleAnimation` 不会应用 sprite 关键帧），各视图仍持有自己的时钟（歌曲时钟、真实时间、重新开始）并每帧调用 `Sample`／`SampleLoop`／`Play`（切换变体）。剪辑由 Editor 构建（`ProjectBuilder.Clips.cs` 的 `SaveClip` 原地重写，GUID 不变），各项迁移菜单可重复执行。测试 `AnimationClipTests`（进行中）直接采样资产。
-剪辑帧不再是 `Generated` 中的独立 sprite 资产：操作指引、判定外圈（`outer_*`）、魂槽彩虹（`game/gauge/rainbow_*`）、名牌彩虹带（`frame_top_rainbow`）与魂徽章光圈（`game/gauge/hit_effect`）的帧都在各自 PNG 的导入设置中切片（Multiple 模式，`ProjectBuilder.SliceSheet`，按名称保留 spriteID，名称沿用旧资产名）。2026-10-02 由 `ProjectBuilder.ApplyFrameSheets()` 迁移并删除 49 个旧切片资产；随后 `ProjectBuilder.MoveSlicesIntoSheets()` 把其余 210 个 `Slice()` 生成的 sprite 资产（音符图集、文字、各类数字、段位、星级、结算彩虹等，共 21 张图）同样移入 PNG 导入设置并删除，`Generated` 中不再有 sprite 资产；`Slice()` 现在直接在图的导入设置中切片，各导入步骤不会把 Multiple 模式的图改回 Single。原 PNG 必须保留（剪辑只引用 sprite，不含图像数据）。同日删除无人引用的 `game/gauge/hit_effect_circle(_big).png`（Nijiiro 透明占位图）与 `game/hit_effect/outer_effect_good/ok.png`（按「从 Green 补齐」规则复制、原版代码从未加载），并从 `ImportedAssets.json` 移除。
+剪辑帧不再是 `Generated` 中的独立 sprite 资产：操作指引、判定外圈（`outer_*`）、魂槽彩虹（`game/gauge/rainbow_*`）、名牌彩虹带（`frame_top_rainbow`）与魂徽章光圈（`game/gauge/hit_effect`）的帧都在各自 PNG 的导入设置中切片（Multiple 模式，`ProjectBuilder.SliceSheet`，按名称保留 spriteID，名称沿用旧资产名）。2026-10-02 已迁移并删除 49 个旧切片资产；随后把其余 210 个 `Slice()` 生成的 sprite 资产（音符图集、文字、各类数字、段位、星级、结算彩虹等，共 21 张图）同样移入 PNG 导入设置并删除，`Generated` 中不再有 sprite 资产；`Slice()` 现在直接在图的导入设置中切片，各导入步骤不会把 Multiple 模式的图改回 Single。原 PNG 必须保留（剪辑只引用 sprite，不含图像数据）。同日删除无人引用的 `game/gauge/hit_effect_circle(_big).png`（Nijiiro 透明占位图）与 `game/hit_effect/outer_effect_good/ok.png`（按「从 Green 补齐」规则复制、原版代码从未加载），并从 `ImportedAssets.json` 移除。
 - `ControlGuide.anim`：操作指引决定循环，见「Entry」。
-- `Dancer.anim`：游玩舞者 `0_loop` 19 帧、8 fps 循环、歌曲时钟（取代已删除的 `SpriteFlipbook`）；`PlayScene.dancers` 为 `ClipSampler[]`。迁移 `ProjectBuilder.ApplyDancerClip()`。
+- `Dancer.anim`：游玩舞者 `0_loop` 19 帧、8 fps 循环、歌曲时钟（取代已删除的 `SpriteFlipbook`）；`PlayScene.dancers` 为 `ClipSampler[]`。
 - `DrumFlash.anim`：鼓面闪光（`m_Enabled` 亮 0.12 s），四个鼓面各自从自己的击打计时（原为最后一次击打后统一熄灭；原版每次击打也是独立的 `DrumHitEffect`），真实时间。迁移 `ProjectBuilder.ApplyDrumFlashClip()`。
 - `JudgmentFade.anim`：判定文字（良／可／不可）0.25 s 线性淡出（只写 `m_Color.a`，图片 RGB 为白），真实时间，每次判定（含连打击打）重新开始。迁移 `ProjectBuilder.ApplyJudgmentFadeClip()`。
 - `GogoPulse.anim`：GOGO 轨道着色 `CanvasGroup.m_Alpha` = 0.18 + 0.05 sin(12t)，一个周期（2π/12 s）循环，24 段 Hermite 键带精确斜率（误差 < 1e-6），歌曲时钟（负时间按周期取模）；非 GOGO 时由代码置 0。迁移 `ProjectBuilder.ApplyGogoPulseClip()`。
@@ -340,7 +340,7 @@
 /Users/kirisamevanilla/.unity/bin/unity command --caller plugin --skill unity-cli --project-path /Users/kirisamevanilla/Repos/OurTaiko/OurTaikoPlayerUnity --format json run_tests --mode playmode --filter OurTaiko.PlayModeTests --filter_type assembly --async_tests true
 ```
 
-已完成程序集把上面的 `--filter` 换成 `OurTaiko.FinishedTests`／`OurTaiko.FinishedPlayModeTests`。只跑单个测试类时用 `--filter OurTaiko.Tests.<类名> --filter_type testName`（两组的命名空间都是 `OurTaiko.Tests`）（`filter_type` 只接受 testName／assembly／category，`class` 会报错且结果为 0 个测试）。测试状态原件为 `Temp/pipeline_test_status.json`，每次运行会覆盖。如需新 macOS 播放器，使用 `OurTaiko.Editor.ProjectBuilder.BuildMac()`，另行确认构建成功；不要把旧构建作为最新验证证据。
+已完成程序集把上面的 `--filter` 换成 `OurTaiko.FinishedTests`／`OurTaiko.FinishedPlayModeTests`。只跑单个测试类时用 `--filter OurTaiko.Tests.<类名> --filter_type testName`（两组的命名空间都是 `OurTaiko.Tests`）（`filter_type` 只接受 testName／assembly／category，`class` 会报错且结果为 0 个测试）。测试状态原件为 `Temp/pipeline_test_status.json`，每次运行会覆盖。如需新 macOS 播放器，使用 `OurTaiko.Editor.PlayerBuilds.BuildMacOS()`，另行确认构建成功；不要把旧构建作为最新验证证据。
 
 ### 明确尚未实现的范围
 

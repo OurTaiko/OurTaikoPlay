@@ -36,7 +36,7 @@ namespace OurTaiko.Editor
                     throw new InvalidOperationException("Save the current scene edits first.");
             ImportSettingArt();
             // AddStageFps's label uses the shared Nijiiro font like the other scenes.
-            font = UiFont();
+            UiFont();
             if (!File.Exists(SettingPath))
             {
                 var root = NewStage();

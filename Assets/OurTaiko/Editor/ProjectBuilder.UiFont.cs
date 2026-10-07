@@ -1,8 +1,6 @@
 using System;
-using System.Linq;
 using TMPro;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TextCore.LowLevel;
 
@@ -69,104 +67,6 @@ namespace OurTaiko.Editor
             EditorUtility.SetDirty(uiFont);
             AssetDatabase.SaveAssetIfDirty(uiFont);
             Debug.Log("OurTaiko: Created outlined UI font with 64-point sampling and 32-pixel SDF padding.");
-        }
-
-        [MenuItem("OurTaiko/Apply Outlined UI Font")]
-        public static void ApplyUiFont()
-        {
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
-                throw new InvalidOperationException("Exit Play mode before applying the outlined UI font.");
-
-            var uiFont = UiFont();
-            var nameplate = PrefabUtility.LoadPrefabContents(NameplatePrefabPath);
-            try
-            {
-                var view = nameplate.GetComponent<NameplateView>();
-                SetOutlinedUiText(view.title, uiFont, uiFont.material, Color.black);
-                SetOutlinedUiText(view.playerName, uiFont, UiOutlineMaterial(), Color.white);
-                PrefabUtility.SaveAsPrefabAsset(nameplate, NameplatePrefabPath);
-            }
-            finally { PrefabUtility.UnloadPrefabContents(nameplate); }
-
-            var switcher = PrefabUtility.LoadPrefabContents(SwitcherPrefab);
-            try
-            {
-                var curtain = switcher.GetComponentInChildren<SongTransition>(true);
-                SetOutlinedUiText(curtain.title, uiFont, UiOutlineMaterial(), Color.white);
-                SetOutlinedUiText(curtain.subtitle, uiFont, UiOutlineMaterial(), Color.white);
-                PrefabUtility.SaveAsPrefabAsset(switcher, SwitcherPrefab);
-            }
-            finally { PrefabUtility.UnloadPrefabContents(switcher); }
-            Debug.Log("OurTaiko: applied the outlined UI font to the nameplate and loading curtain prefabs.");
-        }
-
-        // Moves every saved text (prefabs first, then scenes) onto the single UI font: the outline
-        // material for light text, the font's plain material for dark text (SkinUi.IsDark).
-        // Repeating it changes nothing.
-        [MenuItem("OurTaiko/Apply Unified UI Font")]
-        public static void ApplyUnifiedUiFont()
-        {
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
-                throw new InvalidOperationException("Exit Play mode before applying the UI font.");
-            for (int i = 0; i < EditorSceneManager.sceneCount; i++)
-                if (EditorSceneManager.GetSceneAt(i).isDirty)
-                    throw new InvalidOperationException("Save the current scene edits first.");
-            var uiFont = UiFont();
-            var outline = UiOutlineMaterial();
-            var plain = uiFont.material;
-            if (plain.GetFloat(ShaderUtilities.ID_OutlineWidth) != 0 || plain.GetFloat(ShaderUtilities.ID_FaceDilate) != 0)
-            {
-                plain.SetFloat(ShaderUtilities.ID_FaceDilate, 0);
-                plain.SetFloat(ShaderUtilities.ID_OutlineWidth, 0);
-                EditorUtility.SetDirty(plain);
-            }
-            int changed = 0;
-
-            foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/OurTaiko" }))
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                var root = PrefabUtility.LoadPrefabContents(path);
-                try
-                {
-                    int count = root.GetComponentsInChildren<TMP_Text>(true).Count(t => UseUiFont(t, uiFont, SkinUi.IsDark(t.color) ? plain : outline));
-                    if (count > 0) PrefabUtility.SaveAsPrefabAsset(root, path);
-                    changed += count;
-                }
-                finally { PrefabUtility.UnloadPrefabContents(root); }
-            }
-
-            string active = EditorSceneManager.GetActiveScene().path;
-            foreach (var guid in AssetDatabase.FindAssets("t:Scene", new[] { "Assets/Scenes" }))
-            {
-                var scene = EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(guid));
-                int count = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<TMP_Text>(true))
-                    .Count(t => UseUiFont(t, uiFont, SkinUi.IsDark(t.color) ? plain : outline));
-                if (count > 0) EditorSceneManager.SaveScene(scene);
-                changed += count;
-            }
-            if (!string.IsNullOrEmpty(active)) EditorSceneManager.OpenScene(active);
-            AssetDatabase.SaveAssets();
-            Debug.Log("OurTaiko: moved " + changed + " texts onto " + uiFont.name + ".");
-        }
-
-        static bool UseUiFont(TMP_Text text, TMP_FontAsset uiFont, Material material)
-        {
-            var current = text.fontSharedMaterial;
-            var serialized = new SerializedObject(text);
-            bool cached = serialized.FindProperty("m_fontMaterial").objectReferenceValue != null
-                || serialized.FindProperty("m_fontSharedMaterials").arraySize > 0
-                || serialized.FindProperty("m_fontMaterials").arraySize > 0;
-            if (text.font == uiFont && current == material && !cached) return false;
-            text.font = uiFont;
-            text.fontSharedMaterial = material;
-            serialized.Update();
-            serialized.FindProperty("m_fontMaterial").objectReferenceValue = null;
-            serialized.FindProperty("m_fontSharedMaterials").ClearArray();
-            serialized.FindProperty("m_fontMaterials").ClearArray();
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-            text.UpdateMeshPadding();
-            EditorUtility.SetDirty(text);
-            return true;
         }
 
         const string UiFontSeed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 /:.,!?+-()★２人プレイ太鼓をたたいてスタート！";

@@ -35,7 +35,6 @@ namespace OurTaiko.Editor
                     EditorSceneManager.MarkSceneDirty(scene);
                     EditorSceneManager.SaveScene(scene);
                 }
-                AssetDatabase.DeleteAsset(Root + "Art/song_select/best_score");
                 return;
             }
             var playScene = EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity", OpenSceneMode.Additive);
@@ -107,7 +106,6 @@ namespace OurTaiko.Editor
                 AssetDatabase.SaveAssets();
             }
             finally { EditorSceneManager.CloseScene(playScene, true); }
-            AssetDatabase.DeleteAsset(Root + "Art/song_select/best_score");
         }
         // Editor-only sample content: no globals, player files, or runtime score lookup.
         public static void PreviewBestScore(SongBestScoreView view)

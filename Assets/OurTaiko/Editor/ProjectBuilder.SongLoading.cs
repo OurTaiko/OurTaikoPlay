@@ -10,6 +10,7 @@ namespace OurTaiko.Editor
 {
     public static partial class ProjectBuilder
     {
+        const string SwitcherPrefab = Root + "Resources/SceneSwitcher.prefab";
         const string SongLoadingPath = "Assets/Scenes/SongLoadingScene.unity";
         const string RainbowArt = "global/rainbow_transition/";
 

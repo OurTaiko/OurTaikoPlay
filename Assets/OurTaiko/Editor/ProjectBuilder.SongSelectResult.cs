@@ -23,7 +23,7 @@ namespace OurTaiko.Editor
                 if (EditorSceneManager.GetSceneAt(i).isDirty)
                     throw new InvalidOperationException("Save the current scene edits first.");
             ImportSongSelectResultArt();
-            font = UiFont();
+            UiFont();
             if (!File.Exists(SongSelectPath)) CreateSongSelectScene();
             if (!File.Exists(ResultPath)) CreateResultScene();
             UpgradeStage(SongSelectPath); UpgradeStage(ResultPath);

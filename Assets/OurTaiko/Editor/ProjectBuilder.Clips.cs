@@ -36,23 +36,15 @@ namespace OurTaiko.Editor
             return clip;
         }
 
-        // Moves the clip frames that were separate sprite assets in Generated (hit rings, soul
-        // rainbows, nameplate rainbow, gauge hit burst) into their sheets' importers, rebuilds the
-        // clips and the images that showed a first frame, then deletes the old sprite assets.
-        [MenuItem("OurTaiko/Apply Frame Sheets")]
-        public static void ApplyFrameSheets()
+        // Adds (or reuses) the Animator and ClipSampler that play a clip on this object.
+        static ClipSampler AttachClip(GameObject target, AnimationClip clip)
         {
-            ApplyHitEffects();
-            ApplySoulRainbowClips();
-            ApplyNameplateRainbowClip();
-            ApplyNoteArcs();
-            var old = new[] { "outer_good", "outer_ok", "outer_good_big", "outer_ok_big" }
-                .SelectMany(strip => Enumerable.Range(0, 4).Select(i => "HitRing_" + strip + i))
-                .Concat(new[] { "easy", "normal", "hard" }.SelectMany(tier => Enumerable.Range(0, 8).Select(i => "Rainbow" + tier + i)))
-                .Concat(Enumerable.Range(0, 6).Select(i => "NameplateRainbow" + i))
-                .Concat(Enumerable.Range(0, 3).Select(i => "GaugeHitEffect" + i));
-            foreach (var name in old) AssetDatabase.DeleteAsset(Root + "Generated/" + name + ".asset");
-            AssetDatabase.SaveAssets();
+            if (target.GetComponent<Animator>() == null) target.AddComponent<Animator>();
+            var sampler = target.GetComponent<ClipSampler>();
+            if (sampler == null) sampler = target.AddComponent<ClipSampler>();
+            sampler.clip = clip;
+            EditorUtility.SetDirty(sampler);
+            return sampler;
         }
 
         // Cuts frames out of a sheet in the sheet's own importer (Multiple sprite mode), so they live in
@@ -143,14 +135,6 @@ namespace OurTaiko.Editor
                 AnimationUtility.SetKeyRightTangentMode(curve, i, AnimationUtility.TangentMode.Free);
             }
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(path, type, property), curve);
-        }
-
-        // Ease-out (p(2 - p)) from a to b over [t0, t1] as two Hermite keys: the cubic through these
-        // values and slopes is that quadratic exactly. Constant before t0 and after t1.
-        static Keyframe[] EaseOutKeys(float t0, float t1, float a, float b)
-        {
-            float slope = 2 * (b - a) / (t1 - t0);
-            return new[] { new Keyframe(t0, a, 0, slope), new Keyframe(t1, b, 0, 0) };
         }
     }
 }

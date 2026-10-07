@@ -31,9 +31,6 @@ namespace OurTaiko.Editor
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
             }
-            // The old per-frame assets are no longer referenced.
-            for (int cell = GuideFirstDecide; cell < GuideCells; cell++)
-                AssetDatabase.DeleteAsset($"{Root}Generated/ControlGuide{cell:000}.asset");
             AssetDatabase.SaveAssets();
         }
 
