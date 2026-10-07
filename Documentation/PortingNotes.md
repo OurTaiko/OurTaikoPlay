@@ -614,7 +614,7 @@ Entry 原先沿用 Nijiiro `Scripts/entry/box.lua` 的相邻项可见规则（`a
 
 资源清单校验歌曲 ID、HTTPS URL、SHA-256、64 位大小及到期时间；音频扩展名来自 contentType。独立资源请求不带 API token、Cookie、幂等键，不重定向，也不会触发游戏重新登录。准备操作最多重新获取一轮详情/清单，处理详情竞态、即将过期、403/404 和暂时错误；禁止失败后退回代理下载。WebGL 使用独立无 token 请求，仍需源站 CORS，未验证浏览器直连。
 
-缓存按 endpoint（服务器+账号）、歌曲、资源种类、哈希保存，实际读盘校验大小和内容；旧版本目录仅在实际内容验证后导入。两份资源验证完成才发布可播放组合，翻译变化仍重建 play.tja；不持久保存签名 URL。临时写入使用原子替换，取消或失败保留旧组合。
+缓存按 endpoint（服务器+账号）、歌曲、资源种类、哈希保存，实际读盘校验大小和内容；旧版本目录仅在实际内容验证后导入。两份资源验证完成才发布可播放组合，翻译变化仍重建 play.tja；不持久保存签名 URL。临时写入使用原子替换，取消或失败保留旧组合。（2026-10-07 起改为纯内容寻址，见「在线缓存按内容哈希寻址」。）
 
 新版成绩请求完全移除 versionId，在线最佳成绩键为 songId/course，bootstrap 完整替换快照。SQLite outbox 保存本局两份哈希；上传前核对当前详情和清单，文件变化或旧记录缺少可信哈希时保留记录并停止自动上传。可信旧记录转换只更新原记录的 body，保持幂等键。409/404 等永久拒绝维持 rejected，不自动换 key。
 
@@ -647,3 +647,16 @@ BASS（含共用流程的 WASAPI/ASIO）、Unity 后备与 WebGL 均走此流程
 删除 PreviewRangeStream、OnlinePreviewDecoder 和 FanmadeEndpoint.Preview 的旧 HEAD/Range 流。切歌取消下载，generation 防止旧任务播放，临时原生样本和 AudioClip 按所有权释放。
 
 验证：OnlinePreviewTests 8/8，覆盖完整下载、缓存复用/更新/损坏、签名刷新、失败不回退与取消；OnlinePreviewFlowTests 4/4，覆盖 BASS 和 Unity 实际试听、下载途中切歌、下载失败及 BGM 持续播放。ResourceDownloadTests 19/19 回归通过。测试环境为 macOS Unity Editor；未进行 WebGL 浏览器和其他平台实机验证。
+
+## 在线缓存按内容哈希寻址（2026-10-07）
+
+起因：Windows 11 上 CI 构建下载在线谱面与试听全部失败，报 `Could not find a part of the path ...\original.tja.<GUID>.part`。旧布局 `objects/<endpoint 64 位>/<谱面 32 位>/<种类>/<sha256>/<文件名>.<GUID>.part` 在 `%LocalLow%\OurTaiko\OurTaikoPlay\cache\fanmade` 下达 293 字符，超过 Win32 `MAX_PATH`（260）；Mono 不加 `\\?\` 前缀，Player 也未声明 longPathAware。`plays/<tja>-<audio>/play.tja` 即使不算 `.part` 也约 318 字符。macOS／Android 无此限制，所以 Editor 与真实服务器实测都未发现。
+
+用户决定：缓存只按文件自身的 SHA-256 索引，不含服务器、账号或谱面。
+
+- 布局 `cache/fanmade/objects/<sha256 前 2 位>/<sha256>`，无扩展名（BASS 按字节解码），TJA、音频、试听共用，跨服务器与账号去重。最长相对路径 76 字符。
+- `PrepareAsync` 返回 `(Tja, AudioPath, Chart)`：可玩 TJA 每次由 `PlayableTja.Build` 按 API 元数据在内存中生成（结果依赖元数据，不只依赖文件哈希），不再写 `play.tja`，也不再把音频复制到 plays 目录；`SongLoadingScene` 直接使用返回的文本和音频对象路径。这是在线谱面专有逻辑，本地 TJA 不受影响。
+- `StoreObject`（原 `WriteAtomic`）：同一对象可能被并发写入（同一首歌的试听被快速重复请求，或同一文件存在于两台服务器），`File.Move`／`File.Replace` 抛 `IOException` 时若已有文件校验通过则直接使用；临时后缀缩短为 8 位。
+- 旧缓存不迁移、不读取、不自动删除，所有在线歌曲需重新下载一次。
+- 测试：`FanmadeClientTests.PrepareDownloadsVerifiesCachesAndRepairsFiles`（对象路径、相对路径 ≤ 80、无 play.tja、换账号复用对象）、`ResourceDownloadTests` 改用返回的文本与音频路径。本次在无 Unity 的环境中修改，未编译、未跑测试，需在本机 Editor 与 Windows 构建验证。并发写入分支没有自动化测试。OurTaikoView_Web 未同步。
+

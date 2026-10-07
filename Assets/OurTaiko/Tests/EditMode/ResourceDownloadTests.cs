@@ -104,17 +104,18 @@ namespace OurTaiko.Tests
         [Test] public void DirectDownloadCacheRepairAndIndependentHashUpdates()
         {
             var first = Run(() => client.PrepareAsync(client.Charts[0]));
-            Assert.That(File.Exists(first.Path), Is.True);
+            Assert.That(File.Exists(first.AudioPath), Is.True);
             Run(() => client.PrepareAsync(client.Charts[0]));
             Assert.That((tjaGets, audioGets, manifests, forbidden, api.Downloads), Is.EqualTo((1, 1, 2, 0, 0)));
-            string audioObject = Directory.GetFiles(cache, "audio.ogg", SearchOption.AllDirectories).Single(p => p.Contains("/audio/"));
-            File.WriteAllBytes(audioObject, new byte[] { 9, 9, 9 });
+            File.WriteAllBytes(first.AudioPath, new byte[] { 9, 9, 9 });
             Run(() => client.PrepareAsync(client.Charts[0]));
             Assert.That(audioGets, Is.EqualTo(2));
             chart.Audio = new byte[] { 4, 5, 6 };
-            Run(() => client.PrepareAsync(client.Charts[0]));
+            var updated = Run(() => client.PrepareAsync(client.Charts[0]));
             Assert.That((tjaGets, audioGets), Is.EqualTo((1, 3)));
-            Assert.That(File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(first.Path), "audio.ogg")), Is.EqualTo(new byte[] { 1, 2, 3 }));
+            Assert.That(updated.AudioPath, Is.Not.EqualTo(first.AudioPath));
+            Assert.That(File.ReadAllBytes(updated.AudioPath), Is.EqualTo(new byte[] { 4, 5, 6 }));
+            Assert.That(File.ReadAllBytes(first.AudioPath), Is.EqualTo(new byte[] { 1, 2, 3 }));
         }
         [Test] public void ExpiredLinksRefreshOnce() { expired = true; Run(() => client.PrepareAsync(client.Charts[0])); Assert.That(manifests, Is.EqualTo(2)); }
         [TestCase(403)] [TestCase(404)] [TestCase(503)]
@@ -129,7 +130,8 @@ namespace OurTaiko.Tests
         {
             corrupt = true;
             Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
-            Assert.That(Directory.GetFiles(cache, "play.tja", SearchOption.AllDirectories), Is.Empty);
+            string objects = Path.Combine(cache, "objects");
+            Assert.That(Directory.Exists(objects) ? Directory.GetFiles(objects, "*", SearchOption.AllDirectories) : new string[0], Is.Empty);
         }
         [Test] public void DetailManifestRaceIsBounded()
         {
@@ -168,7 +170,7 @@ namespace OurTaiko.Tests
             chart.Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P1\n1,\n#END\n#START P2\n2,\n#END\n");
             Run(() => client.ConnectAsync(endpoint, false));
             var result = Run(() => client.PrepareAsync(client.Charts[0]));
-            string text = File.ReadAllText(result.Path);
+            string text = result.Tja;
             Assert.That(TjaParser.Parse(text, "Oni_1p").Level, Is.EqualTo(8));
             Assert.That(TjaParser.Parse(text, "Oni_2p").Level, Is.EqualTo(9));
             var player2 = result.Chart.ForPlayer("P2");
