@@ -57,7 +57,7 @@ namespace OurTaiko.Tests
             Assert.That(current,Is.Not.EqualTo(old)); Assert.That(gets,Is.EqualTo(2));
         }
         [Test] public void CorruptCacheIsDownloadedAgain() { string path=Download(); File.WriteAllBytes(path,new byte[preview.Length]); Download(); Assert.That(gets,Is.EqualTo(2)); }
-        [Test] public void CorruptDownloadNeverEntersCache() { corrupt=true; Assert.That(Assert.Throws<FanmadeException>(()=>Download()).Message,Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED")); Assert.That(Directory.Exists(cache) ? Directory.GetFiles(cache,"*.ogg",SearchOption.AllDirectories).Length : 0,Is.Zero); }
+        [Test] public void CorruptDownloadNeverEntersCache() { corrupt=true; Assert.That(Assert.Throws<FanmadeException>(()=>Download()).Message,Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED")); string objects = Path.Combine(cache, "objects"); Assert.That(Directory.Exists(objects) ? Directory.GetFiles(objects,"*",SearchOption.AllDirectories).Length : 0,Is.Zero); }
         [Test] public void ExpiredSignatureRefreshesOnce() { failures=1; Download(); Assert.That(manifests,Is.EqualTo(2)); Assert.That(gets,Is.EqualTo(2)); }
         [Test] public void RepeatedForbiddenDoesNotDownloadFullSong() { failures=10; Assert.Throws<HttpStatusException>(()=>Download()); Assert.That(gets,Is.EqualTo(2)); }
         [Test] public void MissingPreviewDoesNotDownloadFullSong() { missing=true; Assert.That(Assert.Throws<FanmadeException>(()=>Download()).Message,Is.EqualTo("PREVIEW_UNAVAILABLE")); Assert.That(gets,Is.Zero); }

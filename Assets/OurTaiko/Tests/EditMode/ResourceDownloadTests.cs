@@ -117,6 +117,68 @@ namespace OurTaiko.Tests
             Assert.That(File.ReadAllBytes(updated.AudioPath), Is.EqualTo(new byte[] { 4, 5, 6 }));
             Assert.That(File.ReadAllBytes(first.AudioPath), Is.EqualTo(new byte[] { 1, 2, 3 }));
         }
+        [Test] public void MetadataOnlyChangesRebuildTjaWithoutDownloadingObjects()
+        {
+            var first = Run(() => client.PrepareAsync(client.Charts[0]));
+            chart.Title = "Metadata only";
+            chart.Difficulties[0] = ("Oni", 10, "");
+            var second = Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That(second.AudioPath, Is.EqualTo(first.AudioPath));
+            Assert.That(second.Tja, Does.Contain("TITLE:Metadata only\n"));
+            Assert.That(second.Tja, Does.Contain("LEVEL:10\n"));
+            Assert.That((tjaGets, audioGets), Is.EqualTo((1, 1)));
+            Assert.That(Directory.GetFiles(Path.Combine(cache, "objects"), "*", SearchOption.AllDirectories), Has.Length.EqualTo(2));
+        }
+
+        [Test] public void DifferentServersShareBytesButKeepTheirOwnMetadata()
+        {
+            var first = Run(() => client.PrepareAsync(client.Charts[0]));
+            using var otherApi = new FanmadeFixture();
+            otherApi.Charts.Add(new FanmadeFixture.Chart { Tja = chart.Tja, Audio = chart.Audio, Title = "Other server" });
+            var other = client.Add(otherApi.Server());
+            Run(() => client.ConnectAsync(other, true));
+            var second = Run(() => client.PrepareAsync(client.Charts.Single(c => c.Server == other.Id)));
+            Assert.That(second.AudioPath, Is.EqualTo(first.AudioPath));
+            Assert.That(second.Tja, Does.Contain("TITLE:Other server\n"));
+            Assert.That(otherApi.Downloads, Is.Zero);
+        }
+
+        [Test] public void CancelAfterTjaPublicationLeavesReusableObjectAndNoTemporaryFiles()
+        {
+            using var cancel = new System.Threading.CancellationTokenSource();
+            Assert.Catch<OperationCanceledException>(() => Run(() => client.PrepareAsync(client.Charts[0], cancel.Token,
+                progress => { if (progress.Chart.Status == FileProgress.State.Complete) cancel.Cancel(); })));
+            Assert.That((tjaGets, audioGets), Is.EqualTo((1, 0)));
+            Assert.That(Directory.GetFiles(cache, "*.part", SearchOption.AllDirectories), Is.Empty);
+            Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That((tjaGets, audioGets), Is.EqualTo((1, 1)));
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void ConcurrentServersPublishTheSameObjects(bool repair)
+        {
+            if (repair)
+            {
+                var first = Run(() => client.PrepareAsync(client.Charts[0]));
+                File.WriteAllBytes(first.AudioPath, new byte[] { 9, 9, 9 });
+            }
+            using var otherApi = new FanmadeFixture();
+            otherApi.Charts.Add(new FanmadeFixture.Chart { Tja = chart.Tja, Audio = chart.Audio });
+            var other = client.Add(otherApi.Server());
+            Run(() => client.ConnectAsync(other, true));
+            var selected = client.Charts.ToArray();
+            // Both requests finish verifying the same missing/damaged object before either publishes.
+            using var ready = new System.Threading.Barrier(2);
+            Action<DownloadProgress> progress = p => {
+                if (p.Audio.Status == FileProgress.State.Downloading && p.Audio.Received == 0 &&
+                    !ready.SignalAndWait(TimeSpan.FromSeconds(10))) throw new TimeoutException("Download barrier");
+            };
+            var results = Run(() => Task.WhenAll(selected.Select(c => client.PrepareAsync(c, progress: progress))));
+            Assert.That(results[0].AudioPath, Is.EqualTo(results[1].AudioPath));
+            Assert.That(File.ReadAllBytes(results[0].AudioPath), Is.EqualTo(chart.Audio));
+            Assert.That(Directory.GetFiles(cache, "*.part", SearchOption.AllDirectories), Is.Empty);
+        }
+
         [Test] public void ExpiredLinksRefreshOnce() { expired = true; Run(() => client.PrepareAsync(client.Charts[0])); Assert.That(manifests, Is.EqualTo(2)); }
         [TestCase(403)] [TestCase(404)] [TestCase(503)]
         public void ResourceErrorsAreBoundedAndNeverLoginOrProxy(int status)
