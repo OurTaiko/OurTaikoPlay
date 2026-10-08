@@ -637,5 +637,19 @@
     "box_highlight.png",
     "arrow/0.png -> arrow_left.png",
     "arrow/1.png -> arrow_right.png"
-  ]
+  ],
+  "endingAnimations": {
+    "source": "../YataiDONNijiiro",
+    "graphics": "Graphics/game/ending_{fail,clear,fullcombo,donderful}_anim/*.png",
+    "destination": "Assets/OurTaiko/Art/game/ending",
+    "notes": "Original PNG bytes preserved; identical images shared across variants by SHA-256. Shape mapping and exported 60 Hz frame tables converted to JSON under Editor/EndingTimelines. ProjectBuilder.ApplyEndingAnimations bakes native AnimationClips; runtime uses ClipSampler, with no Lua or JSON loading. Origin (1209,109.5) is anchored relative to the 1920x264 NoteLane. Each ending plays once before the Result curtain. Import as Single/FullRect with transparent margins retained; automatic tight slicing distorts the authored shape dimensions.",
+    "sounds": [
+      "Sounds/game/fail.ogg",
+      "Sounds/game/clear.ogg",
+      "Sounds/game/full_combo.ogg",
+      "Sounds/game/donderful_combo.ogg",
+      "Sounds/game/full_combo_voice.ogg",
+      "Sounds/game/donderful_combo_voice.ogg"
+    ]
+  }
 }
