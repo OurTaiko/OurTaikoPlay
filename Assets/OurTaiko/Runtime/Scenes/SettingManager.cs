@@ -80,6 +80,7 @@ namespace OurTaiko
         void Apply(GameSettings settings)
         {
             Settings = settings;
+            Settings.general.keyboard.Apply();
             Changed?.Invoke(Settings);
         }
 
