@@ -68,8 +68,8 @@ namespace OurTaiko
         public string Format(InputKey action) => Get(action).Count == 0 ? "Unbound" : string.Join(" / ", Get(action));
         public static string Label(InputKey action) => action switch
         {
-            InputKey.LeftDon => "Left Don", InputKey.RightDon => "Right Don",
-            InputKey.LeftKa => "Left Ka", InputKey.RightKa => "Right Ka",
+            InputKey.LeftDon => "1P Left Don", InputKey.RightDon => "1P Right Don",
+            InputKey.LeftKa => "1P Left Ka", InputKey.RightKa => "1P Right Ka",
             InputKey.MenuLeft => "Menu Left", InputKey.MenuRight => "Menu Right",
             InputKey.MenuUp => "Menu Up", InputKey.MenuDown => "Menu Down",
             _ => action.ToString(),
