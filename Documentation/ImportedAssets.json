@@ -1,5 +1,11 @@
 {
   "source": "../OurTaikoPlayer",
+  "drumrollCounter": {
+    "source": "../../YataiDON/Skins/YataiDONNijiiro/Graphics/game/drumroll_counter",
+    "graphics": ["bubble.png", "counter.png"],
+    "destination": "Assets/OurTaiko/Art/game/drumroll_counter",
+    "notes": "Original PNG bytes preserved. Counter uses ten 96x112 slices with 80-unit advance; placement and animation IDs 8/9 follow the Nijiiro skin."
+  },
   "skin": "YataiDONNijiiro",
   "graphics": [
     "Skins/PyTaikoGreen/Graphics/background/donbg/0_1/footer/1.png",
