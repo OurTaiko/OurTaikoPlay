@@ -9,6 +9,7 @@ namespace OurTaiko
     {
         public AnimationClip fail, clear, fullCombo, donderful;
         public AudioClip failSound, clearSound, fullComboSound, donderfulSound;
+        public AudioClip fullComboVoice, donderfulVoice;
         public AudioSource audioSource;
         ClipSampler sampler;
         public double Duration => sampler != null && sampler.clip != null ? sampler.clip.length : 0;
@@ -23,6 +24,8 @@ namespace OurTaiko
             var sound = crown == Crown.DonderfulCombo ? donderfulSound : crown == Crown.FullCombo ? fullComboSound
                 : crown == Crown.Clear ? clearSound : failSound;
             if (audioSource != null && sound != null) audioSource.PlayAudioOneShot(sound);
+            var voice = crown == Crown.DonderfulCombo ? donderfulVoice : crown == Crown.FullCombo ? fullComboVoice : null;
+            if (audioSource != null && voice != null) audioSource.PlayAudioOneShot(voice, AudioGroup.Voice);
         }
 
         public void ShowTime(double seconds) => sampler.Sample(Math.Min(Math.Max(0, seconds), Duration));

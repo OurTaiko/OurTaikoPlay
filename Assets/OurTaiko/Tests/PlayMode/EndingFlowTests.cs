@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -103,6 +104,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.pauseButton.interactable, Is.False);
                 Assert.That(play.drumPad.enabled, Is.False);
                 Assert.That(switcher.IsSwitching, Is.False, "The curtain must wait for the ending.");
+                AssertEndingAudio(play.ending, kind);
                 double started = GameTimeline.FrameTime;
                 var record = play.Record;
                 int inputs = record.Inputs.Count;
@@ -146,6 +148,24 @@ namespace OurTaiko.Tests
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
             while (SceneSwitcher.Instance.IsInputBlocked || SceneManager.GetActiveScene().name != scene);
             yield return null;
+        }
+
+        static void AssertEndingAudio(EndingView ending, int kind)
+        {
+            Assert.That(ending.fullComboVoice, Is.Not.Null);
+            Assert.That(ending.donderfulVoice, Is.Not.Null);
+            Assert.That(AudioEngine.Instance.Available, Is.True, AudioEngine.Instance.Diagnostics);
+            var bus = ending.audioSource.GetComponent<AudioBus>();
+            var groups = (Dictionary<AudioClip, AudioGroup>)typeof(AudioBus)
+                .GetField("effectGroups", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(bus);
+            var sound = kind == 3 ? ending.donderfulSound : kind == 2 ? ending.fullComboSound
+                : kind == 1 ? ending.clearSound : ending.failSound;
+            Assert.That(groups[sound], Is.EqualTo(AudioGroup.Effects));
+            Assert.That(bus.ActiveVoices, Is.EqualTo(kind >= 2 ? 2 : 1),
+                "Ending sound and the matching combo voice must play together through native audio.");
+            Assert.That(groups.Count, Is.EqualTo(kind >= 2 ? 2 : 1));
+            if (kind >= 2)
+                Assert.That(groups[kind == 3 ? ending.donderfulVoice : ending.fullComboVoice], Is.EqualTo(AudioGroup.Voice));
         }
     }
 }

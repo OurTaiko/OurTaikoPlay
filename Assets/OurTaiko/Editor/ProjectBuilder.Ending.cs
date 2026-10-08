@@ -91,6 +91,7 @@ namespace OurTaiko.Editor
                     view.audioSource.playOnAwake = false;
                     view.failSound = Clip("game/fail"); view.clearSound = Clip("game/clear");
                     view.fullComboSound = Clip("game/full_combo"); view.donderfulSound = Clip("game/donderful_combo");
+                    view.fullComboVoice = Clip("game/full_combo_voice"); view.donderfulVoice = Clip("game/donderful_combo_voice");
                     root.SetActive(false);
                     PrefabUtility.SaveAsPrefabAsset(root, EndingPrefab);
                 }

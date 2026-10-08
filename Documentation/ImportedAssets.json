@@ -639,7 +639,9 @@
       "Sounds/game/fail.ogg",
       "Sounds/game/clear.ogg",
       "Sounds/game/full_combo.ogg",
-      "Sounds/game/donderful_combo.ogg"
+      "Sounds/game/donderful_combo.ogg",
+      "Sounds/game/full_combo_voice.ogg",
+      "Sounds/game/donderful_combo_voice.ogg"
     ]
   }
 }

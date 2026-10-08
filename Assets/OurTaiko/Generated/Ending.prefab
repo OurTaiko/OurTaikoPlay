@@ -1695,6 +1695,8 @@ MonoBehaviour:
   clearSound: {fileID: 8300000, guid: 910f390d08fe0486591de7db5a62f796, type: 3}
   fullComboSound: {fileID: 8300000, guid: 04d9246c118244851b1a2cefb80a4677, type: 3}
   donderfulSound: {fileID: 8300000, guid: 0016aa87a5e034a76a0b1ac1d9f158c8, type: 3}
+  fullComboVoice: {fileID: 8300000, guid: 9db1860278e0d49f39406abe2125b145, type: 3}
+  donderfulVoice: {fileID: 8300000, guid: 60476f4b81ff142309fdba1992355240, type: 3}
   audioSource: {fileID: 6239939717234024512}
 --- !u!82 &6239939717234024512
 AudioSource:
