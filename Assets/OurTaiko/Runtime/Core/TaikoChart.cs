@@ -64,6 +64,14 @@ namespace OurTaiko
         public BranchRoute Route;
     }
 
+    // A tempo command can occur between notes or inside an empty measure.
+    public sealed class ChartTempo
+    {
+        public double Time, Bpm;
+        public int BranchId = -1;
+        public BranchRoute Route;
+    }
+
     public sealed class TaikoChart
     {
         public string Title = "Untitled", Subtitle = "", Course = "Oni";
@@ -75,6 +83,7 @@ namespace OurTaiko
         public readonly List<ChartSection> Sections = new List<ChartSection>();
         // Sorted by time; events at the same time keep their source order.
         public readonly List<ChartGogo> Gogos = new List<ChartGogo>();
+        public readonly List<ChartTempo> Tempos = new List<ChartTempo>();
         // OurTaikoPlayer's NoteLists: the common part, then one per route of each branch,
         // each with its bar lines and long-note tails in place.
         public readonly List<List<ChartEntry>> NoteLists = new List<List<ChartEntry>>();

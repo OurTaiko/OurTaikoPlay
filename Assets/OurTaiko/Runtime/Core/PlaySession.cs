@@ -139,6 +139,26 @@ namespace OurTaiko
             }
             return on;
         }
+        // Latest reached tempo on this route. Querying by chart time also supports practice
+        // seeking backwards; neither future notes' BPM nor their SCROLL affects expressions.
+        public double BpmAt(double time, bool preview = false)
+        {
+            int low = 0, high = Chart.Tempos.Count;
+            while (low < high)
+            {
+                int mid = low + (high - low) / 2;
+                if (Chart.Tempos[mid].Time <= time) low = mid + 1;
+                else high = mid;
+            }
+            for (int i = low - 1; i >= 0; i--)
+            {
+                var tempo = Chart.Tempos[i];
+                if (preview ? IsPracticePreviewActive(tempo.BranchId, tempo.Route) : IsActive(tempo.BranchId, tempo.Route))
+                    return tempo.Bpm;
+            }
+            return Chart.Bpm;
+        }
+
         bool IsActive(int branchId, BranchRoute route) => branchId < 0 || selectedRoutes[branchId] == (int)route;
         public BranchRoute? SelectedRoute(int branchId) => selectedRoutes[branchId] < 0 ? (BranchRoute?)null : (BranchRoute)selectedRoutes[branchId];
 
