@@ -44,6 +44,7 @@ namespace OurTaiko
         [Tooltip("Dancer.anim on each dancer: the 0_loop frames at 8 fps on the song clock.")]
         public ClipSampler[] dancers;
         public CanvasGroup gogoTint;
+        public EndingView ending;
 
         public PlaySession Session { get; private set; }
         public bool IsPaused { get; private set; }
@@ -213,6 +214,7 @@ namespace OurTaiko
         void Update()
         {
             if (switcher == null || switcher.IsInputBlocked || !songClock.Started) return;
+            if (IsFinished) return;
             // Keep the intentional frame-based judgment; input event timestamps only sort hits.
             double? playback = AudioEngine.EnsureInstance().Backend == AudioBackend.BassSimple && music.IsAudioPlaying()
                 ? music.AudioPosition() : null;
@@ -232,6 +234,13 @@ namespace OurTaiko
             Session.Advance(time, autoPlay);
             if (branchLane != null) branchLane.ShowTime(time);
             if (!autoPlay) HitFirstDrumPress();
+            UpdatePlayVisuals(time);
+            if (time > Session.Chart.Duration + Math.Max(0, judgeOffset) + 1 && SongTime > music.AudioLength() + 1) Finish();
+        }
+
+        // Presentation can keep running after the result is captured, without advancing judgment.
+        void UpdatePlayVisuals(double time)
+        {
             balloonCounter.ShowTime(time);
             RenderNotes(time - visualOffset);
             soulGauge.ShowTime(time);
@@ -244,7 +253,6 @@ namespace OurTaiko
             hitFace.ShowTime(time);
             hitRing.ShowTime(time);
             for (int i = 0; i < drumFlashes.Length; i++) ShowFlash(i);
-            if (time > Session.Chart.Duration + Math.Max(0, judgeOffset) + 1 && SongTime > music.AudioLength() + 1) Finish();
         }
 
         // Input mutex: a frame judges only its earliest drum press; later ones in the same frame are dropped.
@@ -413,6 +421,32 @@ namespace OurTaiko
             Result = PlayResult.From(Session, song.name, autoPlay);
             Result.Title = displayInfo.Title;
             Result.Subtitle = displayInfo.Subtitle;
+            DisableDrumPads();
+            pauseButton.interactable = false;
+            StartCoroutine(ShowEnding());
+        }
+
+        IEnumerator ShowEnding()
+        {
+            if (ending != null)
+            {
+                ending.Begin(Result);
+                double started = GameTimeline.FrameTime;
+                double chartTime = ChartTime;
+                while (GameTimeline.FrameTime - started < ending.Duration)
+                {
+                    double elapsed = GameTimeline.FrameTime - started;
+                    // Continue from the last song frame on the ending's real-time clock. The
+                    // stopped SongClock and Session remain untouched; dancers, gauge loops and
+                    // existing hit effects keep playing while input and scoring stay disabled.
+                    UpdatePlayVisuals(chartTime + elapsed);
+                    if (branchLane != null) branchLane.ShowTime(chartTime + elapsed);
+                    ending.ShowTime(elapsed);
+                    yield return null;
+                }
+                UpdatePlayVisuals(chartTime + ending.Duration);
+                ending.ShowTime(ending.Duration);
+            }
             switcher.ShowResult(Result, song, Record);
         }
         public void Restart()
