@@ -339,8 +339,8 @@ namespace OurTaiko
             scoreCounter.Show(Session.Score);
             judgeCounter.Show(Session.Good, Session.Ok, Session.Bad, Session.Rolls);
             combo.Show(Session.Combo);
-            // Player::check_note: each 100th combo starts a ComboAnnounce and its voice.
-            if (Session.Combo != lastCombo && Session.Combo > 0 && Session.Combo % 100 == 0)
+            // Announce at 50, then at each 100th combo, once per combo change.
+            if (Session.Combo != lastCombo && (Session.Combo == 50 || Session.Combo > 0 && Session.Combo % 100 == 0))
             {
                 var voice = comboAnnounce.Announce(Session.Combo, ChartTime);
                 if (voice != null) hitAudio.PlayAudioOneShot(voice, AudioGroup.Voice);

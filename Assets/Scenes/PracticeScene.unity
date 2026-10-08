@@ -10843,6 +10843,7 @@ MonoBehaviour:
   - {fileID: 1274982036}
   - {fileID: 859119830}
   gogoTint: {fileID: 270388919}
+  ending: {fileID: 0}
 --- !u!4 &1415223208
 Transform:
   m_ObjectHideFlags: 0
@@ -14885,6 +14886,7 @@ MonoBehaviour:
   number: {fileID: 1197382233}
   text: {fileID: 859641817}
   voices:
+  - {fileID: 8300000, guid: da15fb597aff44642916ba75cb8cf49e, type: 3}
   - {fileID: 8300000, guid: 2d6d4bbf0fb37451184f0b0f74186dbb, type: 3}
   - {fileID: 8300000, guid: 69cce2da59da54c0c9c1e3fc0cfeef4b, type: 3}
   - {fileID: 8300000, guid: e9992b164793a4d83803720f74bc7098, type: 3}

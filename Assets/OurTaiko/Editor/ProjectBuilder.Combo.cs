@@ -123,7 +123,7 @@ namespace OurTaiko.Editor
             SkinUi.Image("Background", root, Sprite(ComboArt + "announce_bg_1p")).rectTransform.TopLeft(362, -264);
             view.number = Rect("Number", root, 362, -196, 0, 0);
             view.text = SkinUi.Image("Text", view.number, Sprite(ComboArt + "announce_text"));
-            // A 300 previews the scroll in the editor; play hides it until the 100th combo.
+            // A 300 previews the scroll in the editor; play hides it until the 50th combo.
             view.Layout("300");
             return view;
         }
@@ -134,8 +134,8 @@ namespace OurTaiko.Editor
             // announce_digit_1p: ten 104x104 digits stacked vertically.
             view.digits = SliceSheet(ComboArt + "announce_digit_1p",
                 Enumerable.Range(0, 10).Select(i => ("ComboAnnounce" + i, 0, i * 104, 104, 104)).ToArray());
-            view.voices = Enumerable.Range(1, 50)
-                .Select(i => AssetDatabase.LoadAssetAtPath<AudioClip>($"{Root}Audio/combo/{i * 100}_1p.ogg") ?? throw new System.IO.FileNotFoundException($"combo voice {i * 100}"))
+            view.voices = new[] { 50 }.Concat(Enumerable.Range(1, 50).Select(i => i * 100))
+                .Select(count => AssetDatabase.LoadAssetAtPath<AudioClip>($"{Root}Audio/combo/{count}_1p.ogg") ?? throw new System.IO.FileNotFoundException($"combo voice {count}"))
                 .ToArray();
             AttachClip(view.gameObject, ComboAnnounceClip());
             EditorUtility.SetDirty(view);

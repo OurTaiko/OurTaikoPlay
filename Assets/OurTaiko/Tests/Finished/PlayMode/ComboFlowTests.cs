@@ -10,7 +10,7 @@ namespace OurTaiko.Tests
     public sealed class ComboFlowTests
     {
         [UnityTest]
-        public IEnumerator ComboShowsFromTenWithWhiteSilverAndGoldDigitsAndAnnouncesEachHundred()
+        public IEnumerator ComboShowsFromTenWithWhiteSilverAndGoldDigitsAndAnnouncesFiftyAndEachHundred()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:Combo\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#START\n"
@@ -64,19 +64,30 @@ namespace OurTaiko.Tests
 
                 HitTo(49);
                 Assert.That(combo.Digit(0).sprite, Is.SameAs(combo.whiteDigits[4]));
+                Assert.That(announce.IsShowing, Is.False);
                 HitTo(50);
+                Assert.That(announce.IsShowing, Is.True);
+                Assert.That(announce.Combo, Is.EqualTo(50));
+                Assert.That(announce.voices.Length, Is.EqualTo(51));
+                Assert.That(announce.voices[0].name, Is.EqualTo("50_1p"));
+                Assert.That(announce.Announce(50, play.SongTime), Is.SameAs(announce.voices[0]));
+                Assert.That(announce.number.GetComponentsInChildren<UnityEngine.UI.Image>().Where(i => i != announce.text)
+                    .Select(i => i.sprite), Is.EqualTo(new[] { announce.digits[5], announce.digits[0] }));
                 Assert.That(combo.Digit(0).sprite, Is.SameAs(combo.silverDigits[5]));
                 Assert.That(combo.captionImage.sprite, Is.SameAs(combo.caption));
                 Assert.That(combo.glimmer.gameObject.activeSelf, Is.False);
                 TestCapture.Capture("Combo50.png");
+                announce.ShowTime(play.SongTime + 1.8);
+                Assert.That(announce.IsShowing, Is.False);
 
                 HitTo(99);
                 Assert.That(announce.IsShowing, Is.False);
                 HitTo(100);
                 Assert.That(announce.IsShowing, Is.True);
                 Assert.That(announce.Combo, Is.EqualTo(100));
-                Assert.That(announce.voices[0].name, Is.EqualTo("100_1p"));
-                Assert.That(announce.voices[49].name, Is.EqualTo("5000_1p"));
+                Assert.That(announce.voices[1].name, Is.EqualTo("100_1p"));
+                Assert.That(announce.voices[50].name, Is.EqualTo("5000_1p"));
+                Assert.That(announce.Announce(100, play.SongTime), Is.SameAs(announce.voices[1]));
                 // ComboAnnounce: 100 ms fade in, hold to 1666.67 ms, 100 ms fade out.
                 double t0 = play.SongTime;
                 var group = announce.GetComponent<CanvasGroup>();
@@ -105,6 +116,8 @@ namespace OurTaiko.Tests
                     .Select(i => i.sprite), Is.EqualTo(new[] { announce.digits[2], announce.digits[0], announce.digits[0] }));
 
                 // A missed note breaks the combo and hides it again.
+                Assert.That(announce.Announce(5000, play.SongTime), Is.SameAs(announce.voices[50]));
+                Assert.That(announce.Announce(5100, play.SongTime), Is.Null);
                 session.Advance(session.Chart.Notes[hit].Time + 0.5, false);
                 Assert.That(session.Combo, Is.Zero);
                 Assert.That(combo.gameObject.activeSelf, Is.False);
