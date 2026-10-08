@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 namespace OurTaiko
 {
     // Saved uGUI dialog; the manager owns results so a played song returns to the same search.
-    public sealed class SongSearchView : MonoBehaviour
+    public sealed class SongSearchView : MonoBehaviour, IPointerClickHandler
     {
         public GameObject panel;
         public TMP_InputField keyword;
@@ -19,13 +19,15 @@ namespace OurTaiko
         public RectTransform cursor;
         SongSelectManager manager;
         CancellationTokenSource request;
-        int difficulty, level, order, row, closedFrame = -1, fieldSubmitFrame = -1, openedFrame = -1;
-        bool busy;
+        int difficulty, level, order, row, closedFrame = -1, fieldSubmitFrame = -1, openedFrame = -1, editingFrame = -1, compositionFrame = -1;
+        bool busy, editingKeyword;
         string composition = "";
         Keyboard keyboard;
         void OnEnable() { keyboard = Keyboard.current; if (keyboard != null) keyboard.onIMECompositionChange += OnComposition; }
-        void OnComposition(UnityEngine.InputSystem.LowLevel.IMECompositionString value) => composition = value.ToString();
+        void OnComposition(UnityEngine.InputSystem.LowLevel.IMECompositionString value) { composition = value.ToString(); compositionFrame = Time.frameCount; }
         public bool IsOpen => panel.activeSelf;
+        public bool EditingKeyword => editingKeyword;
+        public int FocusedRow => row;
         public bool BlocksInput => IsOpen || Time.frameCount == closedFrame;
         string Language => SettingManager.Instance?.Settings.general.Language ?? "en";
         string Words(string en, string ja, string zh) => Language == "ja" ? ja : Language.StartsWith("zh") ? zh : en;
@@ -42,37 +44,67 @@ namespace OurTaiko
                 previous[i].onClick.AddListener(() => Change(index, -1));
                 next[i].onClick.AddListener(() => Change(index, 1));
             }
-            keyword.onSubmit.AddListener(_ => { fieldSubmitFrame = Time.frameCount; if (string.IsNullOrEmpty(composition)) Submit(); });
+            keyword.onSubmit.AddListener(_ => FinishKeyword());
             keyword.onValueChanged.AddListener(_ => { if (busy) { Cancel(); status.text = ""; Draw(); } });
-            keyword.onSelect.AddListener(_ => { row = 3; Draw(); });
+            keyword.shouldActivateOnSelect = false;
+            keyword.enabled = false;
             panel.SetActive(false);
             RefreshSummary();
         }
-        void OnDisable() { if (keyboard != null) keyboard.onIMECompositionChange -= OnComposition; Cancel(); if (manager != null) manager.SearchDialogOpen = false; }
+        void OnDisable() { editingKeyword = false; if (keyboard != null) keyboard.onIMECompositionChange -= OnComposition; Cancel(); if (manager != null) manager.SearchDialogOpen = false; }
         void Cancel() { manager?.CancelSearch(); request?.Cancel(); request?.Dispose(); request = null; busy = false; }
         public void Open()
         {
             if (manager == null || manager.Phase != SongSelectManager.State.Browsing || SceneSwitcher.EnsureInstance().IsInputBlocked) return;
             var query = manager.SearchQuery;
             difficulty = query.Difficulty.HasValue ? (int)query.Difficulty.Value + 1 : 0;
-            level = query.Level; order = (int)query.Order; row = 3;
+            level = query.Level; order = (int)query.Order; row = 0;
+            editingKeyword = false; composition = ""; keyword.enabled = false;
+            EventSystem.current?.SetSelectedGameObject(null);
             keyword.SetTextWithoutNotify(query.Keyword);
             openedFrame = Time.frameCount;
             manager.SearchDialogOpen = true;
             panel.SetActive(true);
             status.text = "";
-            Draw(); keyword.Select(); keyword.ActivateInputField();
+            Draw();
         }
         public void Close()
         {
+            if (editingKeyword || Time.frameCount == fieldSubmitFrame) return;
             Cancel(); keyword.DeactivateInputField();
             EventSystem.current?.SetSelectedGameObject(null);
             panel.SetActive(false); manager.SearchDialogOpen = false; closedFrame = Time.frameCount;
             RefreshSummary();
         }
-        public void Clear() { Cancel(); manager.ClearSearch(); Close(); }
+        public void Clear() { if (editingKeyword || Time.frameCount == fieldSubmitFrame) return; Cancel(); manager.ClearSearch(); Close(); }
+        // The disabled TMP field lets its pointer clicks bubble to this saved parent view.
+        // Selecting a row and activating text entry are deliberately separate gestures.
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            var hit = eventData.pointerPressRaycast.gameObject;
+            if (!IsOpen || editingKeyword || Time.frameCount == fieldSubmitFrame || eventData.button != PointerEventData.InputButton.Left
+                || hit == null || !hit.transform.IsChildOf(keyword.transform)) return;
+            if (row == 3) BeginKeyword();
+            else { row = 3; Draw(); }
+        }
+        void BeginKeyword()
+        {
+            Cancel(); status.text = ""; editingKeyword = true; editingFrame = Time.frameCount;
+            keyword.enabled = true;
+            keyword.Select(); keyword.ActivateInputField(); Draw();
+        }
+        void FinishKeyword()
+        {
+            if (!editingKeyword || Time.frameCount == editingFrame || !string.IsNullOrEmpty(composition) || Time.frameCount == compositionFrame) return;
+            fieldSubmitFrame = Time.frameCount;
+            editingKeyword = false;
+            keyword.DeactivateInputField(); keyword.enabled = false;
+            EventSystem.current?.SetSelectedGameObject(null);
+            Draw();
+        }
         void Change(int index, int delta)
         {
+            if (editingKeyword || Time.frameCount == fieldSubmitFrame) return;
             Cancel(); row = index;
             keyword.DeactivateInputField(); EventSystem.current?.SetSelectedGameObject(null);
             if (index == 0) difficulty = (difficulty + delta + 6) % 6;
@@ -82,7 +114,7 @@ namespace OurTaiko
         }
         public async void Submit()
         {
-            if (!IsOpen || busy || Time.frameCount == openedFrame) return;
+            if (!IsOpen || busy || editingKeyword || Time.frameCount == fieldSubmitFrame || Time.frameCount == openedFrame) return;
             SongSearchQuery query;
             try { query = new SongSearchQuery(keyword.text, difficulty == 0 ? (Difficulty?)null : (Difficulty)(difficulty - 1), level, (SongSearchOrder)order); }
             catch (ArgumentException) { status.text = Words("Keyword is too long (200 bytes).", "Keyword が長すぎます（200バイト）。", "Keyword 过长（最多 200 字节）。"); return; }
@@ -103,25 +135,31 @@ namespace OurTaiko
             summary.gameObject.SetActive(manager.Phase == SongSelectManager.State.Browsing && !IsOpen);
             if (SceneSwitcher.EnsureInstance().IsInputBlocked) return;
             if (!IsOpen || Time.frameCount == openedFrame) return;
-            if (InputManager.GetKeyDown(InputKey.Back)) { Close(); return; }
             if (Time.frameCount == fieldSubmitFrame) return;
+            // Only confirmation releases text entry. TMP owns typing, arrows and IME;
+            // escape, Tab, drum bindings and outside clicks never operate the menu here.
+            if (editingKeyword)
+            {
+                if (InputManager.GetKeyDown(InputKey.Confirm)) FinishKeyword();
+                if (editingKeyword && !keyword.isFocused) { keyword.Select(); keyword.ActivateInputField(); }
+                return;
+            }
+            if (InputManager.GetKeyDown(InputKey.Back)) { Close(); return; }
             if (Keyboard.current?.tabKey.wasPressedThisFrame == true)
             {
                 keyword.DeactivateInputField(); EventSystem.current?.SetSelectedGameObject(null);
                 row = (row + (Keyboard.current.shiftKey.isPressed ? 6 : 1)) % 7; Draw(); return;
             }
-            // TMP owns printable letters, arrows and IME composition while editing.
-            if (keyword.isFocused) return;
             if (InputManager.GetKeyDown(InputKey.MenuUp)) row = (row + 6) % 7;
             else if (InputManager.GetKeyDown(InputKey.MenuDown)) row = (row + 1) % 7;
+            else if (row == 3 && (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.RightKa))) BeginKeyword();
             else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft))
             { if (row < 3) Change(row, -1); else row = (row + 6) % 7; }
             else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight))
             { if (row < 3) Change(row, 1); else row = (row + 1) % 7; }
             else if (InputManager.GetKeyDown(InputKey.Confirm) || InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon))
             {
-                if (row < 3) row++;
-                else if (row == 3) { keyword.Select(); keyword.ActivateInputField(); }
+                if (row < 4) row++;
                 else if (row == 4) Submit(); else if (row == 5) Clear(); else Close();
             }
             Draw();
@@ -138,10 +176,15 @@ namespace OurTaiko
             apply.GetComponentInChildren<TMP_Text>().text = busy ? Words("Searching…", "検索中…", "搜索中…") : Words("Search", "検索", "搜索");
             clear.GetComponentInChildren<TMP_Text>().text = Words("Clear filters", "解除", "清除筛选");
             close.GetComponentInChildren<TMP_Text>().text = Words("Back", "もどる", "返回");
-            hint.text = Words("All local folders + connected servers  ·  Tab / ↑↓ Select · ←→ Change · Enter Search", "ローカル全曲＋接続中のサーバー  ·  Tab / ↑↓ 選択 · ←→ 変更 · Enter 検索", "本地所有文件夹＋已连接服务器  ·  Tab / ↑↓ 选择 · ←→ 调整 · Enter 搜索");
+            hint.text = editingKeyword
+                ? Words("Enter / keyboard Done: finish typing", "Enter／キーボードの完了：入力を終了", "回车／键盘完成：结束输入")
+                : Words("Don / Tab / ↑↓ Select · Ka Change / type Keyword · Enter Confirm", "ドン / Tab / ↑↓ 選択 · カッ 変更／Keyword入力 · Enter 決定", "咚 / Tab / ↑↓ 选择 · 咔 调整／输入 Keyword · 回车 确认");
             cursor.gameObject.SetActive(row < 4);
             if (row < 4) cursor.Center(960, new[] { 400, 541, 682, 813 }[row]);
-            apply.interactable = !busy;
+            apply.interactable = !busy && !editingKeyword;
+            clear.interactable = close.interactable = !editingKeyword;
+            foreach (var button in previous) button.interactable = !editingKeyword;
+            foreach (var button in next) button.interactable = !editingKeyword;
             foreach (var pair in new[] { (apply, 4), (clear, 5), (close, 6) })
                 pair.Item1.targetGraphic.color = row == pair.Item2 ? new Color(1, .85f, .35f) : Color.white;
         }

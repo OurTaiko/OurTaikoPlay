@@ -59,6 +59,8 @@ namespace OurTaiko.Tests
             TestCapture.Capture("SongSearchFolderEntry.png");
             manager.SelectItem(searchEntry); yield return null;
             Assert.That(manager.SearchDialogOpen, Is.True);
+            Assert.That(view.FocusedRow, Is.Zero);
+            Assert.That(view.keyword.isFocused, Is.False);
             var oldFocus = manager.Focused; manager.Right(); Assert.That(manager.Focused, Is.EqualTo(oldFocus));
             Canvas.ForceUpdateCanvases();
             foreach (var control in new Component[] { view.keyword, view.next[0], view.apply, view.close })
@@ -131,14 +133,26 @@ namespace OurTaiko.Tests
                 manager.SelectItem(entry);
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Enter)); yield return null;
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
-                Assert.That(view.IsOpen, Is.True); Assert.That(view.keyword.isFocused, Is.True);
+                Assert.That(view.IsOpen, Is.True); Assert.That(view.keyword.isFocused, Is.False);
+                Assert.That(view.FocusedRow, Is.Zero, "Opening search selects Difficulty without activating the keyboard.");
+                for (int i = 0; i < 3; i++) yield return Press(keyboard, Key.F);
+                Assert.That(view.FocusedRow, Is.EqualTo(3)); Assert.That(view.EditingKeyword, Is.False);
+                yield return Press(keyboard, Key.K);
+                Assert.That(view.EditingKeyword, Is.True); Assert.That(view.keyword.isFocused, Is.True);
                 int focus = manager.Focused;
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F, Key.D)); yield return null;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F, Key.D, Key.J, Key.K)); yield return null;
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
                 Assert.That(manager.Focused, Is.EqualTo(focus)); Assert.That(manager.Phase, Is.EqualTo(SongSelectManager.State.Browsing));
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Tab)); yield return null;
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
-                Assert.That(view.keyword.isFocused, Is.False, "Tab must let keyboard users leave the Keyword field.");
+                foreach (var key in new[] { Key.Tab, Key.UpArrow, Key.DownArrow, Key.Escape }) yield return Press(keyboard, key);
+                view.next[0].onClick.Invoke(); view.apply.onClick.Invoke(); view.close.onClick.Invoke(); view.clear.onClick.Invoke();
+                Assert.That(view.IsOpen, Is.True); Assert.That(view.EditingKeyword, Is.True);
+                Assert.That(view.FocusedRow, Is.EqualTo(3)); Assert.That(view.keyword.isFocused, Is.True);
+                Assert.That(manager.SearchActive, Is.False);
+                view.keyword.text = "Typed keyword";
+                yield return Press(keyboard, Key.Enter);
+                Assert.That(view.EditingKeyword, Is.False); Assert.That(view.keyword.isFocused, Is.False);
+                Assert.That(view.IsOpen, Is.True); Assert.That(view.FocusedRow, Is.EqualTo(3));
+                Assert.That(view.keyword.text, Is.EqualTo("Typed keyword")); Assert.That(manager.SearchActive, Is.False, "Enter finishes typing without searching.");
                 first.CustomRequest = context =>
                 {
                     if (context.Request.Url.AbsolutePath == "/api/v1/game/search" && context.Request.QueryString["q"] == "Old")
@@ -162,6 +176,54 @@ namespace OurTaiko.Tests
                 InputSystem.settings.backgroundBehavior = originalBackground;
                 InputSystem.settings.editorInputBehaviorInPlayMode = originalEditor;
             }
+        }
+
+        [UnityTest]
+        public IEnumerator KeywordNeedsASecondPointerClickAndDoneKeepsTheDialogOpen()
+        {
+            TestData.UseServers(new ServerList()); TestSongs.Install();
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
+            var scene = Object.FindFirstObjectByType<SongSelectScene>(); var view = scene.view.search;
+            view.Open(); yield return null;
+            ClickKeyword(view); yield return null;
+            Assert.That(view.FocusedRow, Is.EqualTo(3)); Assert.That(view.EditingKeyword, Is.False);
+            Assert.That(view.keyword.isFocused, Is.False, "The first touch only selects Keyword.");
+            ClickKeyword(view); yield return null;
+            Assert.That(view.EditingKeyword, Is.True); Assert.That(view.keyword.isFocused, Is.True);
+            view.keyword.text = "Keep this";
+            // Touch keyboards dispatch TMP submit when their Done key is pressed.
+            view.keyword.onSubmit.Invoke(view.keyword.text); yield return null;
+            Assert.That(view.EditingKeyword, Is.False); Assert.That(view.IsOpen, Is.True);
+            Assert.That(scene.Manager.SearchActive, Is.False); Assert.That(view.keyword.text, Is.EqualTo("Keep this"));
+            ClickKeyword(view); yield return null;
+            Assert.That(view.EditingKeyword, Is.True, "A selected Keyword row can be touched to edit again.");
+            // Deselecting the field is not confirmation; keep input mode until Done.
+            EventSystem.current.SetSelectedGameObject(null); yield return null; yield return null;
+            Assert.That(view.EditingKeyword, Is.True); Assert.That(view.keyword.isFocused, Is.True);
+            view.keyword.onSubmit.Invoke(view.keyword.text); yield return null;
+            view.Close(); yield return null;
+            view.Open(); yield return null;
+            Assert.That(view.FocusedRow, Is.Zero); Assert.That(view.EditingKeyword, Is.False);
+        }
+
+        static IEnumerator Press(Keyboard keyboard, Key key)
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(key)); yield return null;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+        }
+
+        static void ClickKeyword(SongSearchView view)
+        {
+            Canvas.ForceUpdateCanvases();
+            var rect = (RectTransform)view.keyword.transform;
+            var data = new PointerEventData(EventSystem.current)
+            {
+                button = PointerEventData.InputButton.Left,
+                position = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center))
+            };
+            var hits = new List<RaycastResult>(); EventSystem.current.RaycastAll(data, hits);
+            Assert.That(hits.Count, Is.GreaterThan(0)); data.pointerPressRaycast = hits[0];
+            ExecuteEvents.ExecuteHierarchy(hits[0].gameObject, data, ExecuteEvents.pointerClickHandler);
         }
 
         static IEnumerator Await(System.Threading.Tasks.Task task)
