@@ -8946,16 +8946,17 @@ MonoBehaviour:
   number: {fileID: 943389295}
   visuals: {fileID: 1261287491}
   digitSprites:
-  - {fileID: -606678764, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
-  - {fileID: 507676332, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
-  - {fileID: -1276456664, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
-  - {fileID: 1671752173, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
-  - {fileID: -954350882, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
-  - {fileID: -898977327, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
-  - {fileID: -605495014, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
-  - {fileID: -13103753, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
-  - {fileID: 488412830, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
-  - {fileID: 723707657, guid: f6ce04595b43f403abfb0cfca8400542, type: 3}
+  - {fileID: -880366329, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  - {fileID: -277533763, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  - {fileID: -184956164, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  - {fileID: -1907735984, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  - {fileID: -465621317, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  - {fileID: -1457434377, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  - {fileID: -972056716, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  - {fileID: 261320285, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  - {fileID: -696443609, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  - {fileID: -1952743785, guid: ec1fb8dac745c4e459114bfa56d5d9c1, type: 3}
+  digitSize: {x: 96, y: 112}
 --- !u!1 &1270191545
 GameObject:
   m_ObjectHideFlags: 0

@@ -16,12 +16,11 @@ namespace OurTaiko.Editor
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode first.");
             for (int i = 0; i < EditorSceneManager.sceneCount; i++)
                 if (EditorSceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save current scene edits first.");
-            foreach (string name in new[] { "bubble", "counter" })
+            // The fan keeps its original transparent margins; digits reuse the balloon sheet.
             {
-                var importer = (TextureImporter)AssetImporter.GetAtPath(Root + "Art/" + DrumrollCounterArt + name + ".png");
+                var importer = (TextureImporter)AssetImporter.GetAtPath(Root + "Art/" + DrumrollCounterArt + "bubble.png");
                 importer.textureType = TextureImporterType.Sprite;
-                if (name == "bubble" || importer.spriteImportMode != SpriteImportMode.Multiple)
-                    importer.spriteImportMode = SpriteImportMode.Single;
+                importer.spriteImportMode = SpriteImportMode.Single;
                 var settings = new TextureImporterSettings();
                 importer.ReadTextureSettings(settings);
                 settings.spriteMeshType = SpriteMeshType.FullRect;
@@ -31,11 +30,12 @@ namespace OurTaiko.Editor
                 importer.alphaIsTransparency = true;
                 importer.textureCompression = TextureImporterCompression.Uncompressed;
                 importer.maxTextureSize = 2048;
-                importer.filterMode = name == "counter" ? FilterMode.Point : FilterMode.Bilinear;
+                importer.filterMode = FilterMode.Bilinear;
                 importer.SaveAndReimport();
             }
-            var digits = SliceSheet(DrumrollCounterArt + "counter", Enumerable.Range(0, 10)
-                .Select(i => ("DrumrollDigit" + i, i * 96, 0, 96, 112)).ToArray());
+            var balloonDigits = AssetDatabase.LoadAllAssetsAtPath(Root + "Art/game/balloon/counter.png")
+                .OfType<Sprite>().ToDictionary(sprite => sprite.name);
+            var digits = Enumerable.Range(0, 10).Select(i => balloonDigits["BalloonDigit" + i]).ToArray();
             // Nijiiro animation IDs 8/9: stretch on every hit, hold 2532 ms, fade for 166 ms.
             var clip = SaveClip("DrumrollCounter", 1000, false, animation =>
             {
@@ -69,6 +69,7 @@ namespace OurTaiko.Editor
                     view.number = rig.Find("Number") as RectTransform;
                     if (view.number == null) view.number = Rect("Number", rig, 520, -215, 0, 0);
                     view.digitSprites = digits;
+                    view.digitSize = new Vector2(96, 112);
                     AttachClip(rig.gameObject, clip);
                     view.ResetDisplay();
                     play.drumrollCounter = view;

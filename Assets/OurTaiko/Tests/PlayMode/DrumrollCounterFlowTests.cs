@@ -34,6 +34,8 @@ namespace OurTaiko.Tests
             yield return WaitForPlay(practice);
             play = Object.FindFirstObjectByType<PlayScene>();
             Assert.That(play.drumrollCounter, Is.Not.Null);
+            Assert.That(play.drumrollCounter.digitSprites, Is.EqualTo(play.balloonCounter.digitSprites),
+                "The fan must reuse the existing balloon digit sprites.");
             Assert.That(play.drumrollCounter.IsVisible, Is.False);
             Assert.That(play.drumrollCounter.gameObject.activeSelf, Is.False);
         }
@@ -157,8 +159,8 @@ namespace OurTaiko.Tests
         static void AssertDigits(DrumrollCounterView view, string expected)
         {
             var digits = view.number.GetComponentsInChildren<UnityEngine.UI.Image>();
-            Assert.That(digits.Select(d => d.sprite.name),
-                Is.EqualTo(expected.Select(c => "DrumrollDigit" + c)));
+            Assert.That(digits.Select(d => d.sprite),
+                Is.EqualTo(expected.Select(c => view.digitSprites[c - '0'])));
             Assert.That(digits.All(d => !d.raycastTarget), Is.True);
             Assert.That(view.bubble.raycastTarget || view.visuals.blocksRaycasts, Is.False);
         }

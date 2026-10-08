@@ -12,6 +12,7 @@ namespace OurTaiko
         public RectTransform number;
         public CanvasGroup visuals;
         public Sprite[] digitSprites;
+        public Vector2 digitSize = new Vector2(96, 112);
 
         public int NoteIndex { get; private set; } = -1;
         public int Count { get; private set; }
@@ -52,8 +53,8 @@ namespace OurTaiko
                 image.raycastTarget = false;
                 digits.Add(image);
             }
-            // Nijiiro's 96 x 112 glyphs advance by 80 units around the saved number origin.
-            float advance = digitSprites[0].rect.width * (80f / 96f);
+            // Preserve the fan's layout independently of the shared sheet's source resolution.
+            float advance = digitSize.x * (80f / 96f);
             for (int i = 0; i < digits.Count; i++)
             {
                 digits[i].gameObject.SetActive(i < digitCount);
@@ -78,7 +79,7 @@ namespace OurTaiko
             for (int i = 0; i < digitCount; i++)
             {
                 var rect = digits[i].rectTransform;
-                Vector2 size = digits[i].sprite.rect.size;
+                Vector2 size = digitSize;
                 float offset = stretch * size.y / 112f;
                 rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, offset);
                 rect.sizeDelta = new Vector2(size.x, size.y + offset);
