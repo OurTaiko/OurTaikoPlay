@@ -19,7 +19,7 @@ namespace OurTaiko
     // its songs follow with a もどる every ten songs, and opening another folder closes it first.
     // A root もどる ends the list (the wheel wraps, so it sits above the first song) and leaves for
     // Entry like the back key.
-    // Search, sorting, nested folders, the standalone neiro panel, dan boards and 2P are not ported.
+    // Nested folders, the standalone neiro panel, dan boards and 2P are not ported.
     //
     // This is the view: SongSelectManager holds the wheel, focus, phase, cursor and options and runs
     // every command; this component draws it from the saved layout, animates its events (board
@@ -169,6 +169,8 @@ namespace OurTaiko
             Manager.SoundRequested += OnSound;
             Manager.VoiceRequested += OnVoice;
             Manager.FolderChanged += OnFolderChanged;
+            Manager.WheelRebuilt += OnWheelRebuilt;
+            Manager.SearchRequested += OnSearchRequested;
             Manager.FocusChanged += OnFocusChanged;
             Manager.PhaseChanged += OnPhaseChanged;
             Manager.UraToggled += OnUraToggled;
@@ -189,6 +191,7 @@ namespace OurTaiko
             OpenFocused(holdMs: 0);
             coursePanel.gameObject.SetActive(false);
             DrawOverlays(0);
+            if (view.search != null) view.search.Bind(Manager);
         }
 
         void Start()
@@ -214,6 +217,8 @@ namespace OurTaiko
             Manager.SoundRequested -= OnSound;
             Manager.VoiceRequested -= OnVoice;
             Manager.FolderChanged -= OnFolderChanged;
+            Manager.WheelRebuilt -= OnWheelRebuilt;
+            Manager.SearchRequested -= OnSearchRequested;
             Manager.FocusChanged -= OnFocusChanged;
             Manager.PhaseChanged -= OnPhaseChanged;
             Manager.UraToggled -= OnUraToggled;
@@ -235,7 +240,8 @@ namespace OurTaiko
         {
             if (!started) return;
             double now = Now;
-            Manager.HandleInput();
+            if (view.search != null) view.search.Tick();
+            if (view.search == null || !view.search.BlocksInput) Manager.HandleInput();
             if (Manager.Phase == State.Decided && !voice.IsAudioPlaying() && !switcher.IsSwitching) Manager.StartSong();
             UpdatePreview(now);
             DrawBackground(now);
@@ -284,6 +290,18 @@ namespace OurTaiko
                     FadeFrom = fadeFrom, FadeTo = 1, FadeStart = fadeFrom < 1 ? Now : -1,
                 };
             }
+        }
+
+        void OnSearchRequested() => view.search?.Open();
+
+        void OnWheelRebuilt()
+        {
+            StopPreview();
+            foreach (var board in visuals.Values) ReleaseView(board);
+            visuals.Clear();
+            foreach (var item in Manager.Items) visuals[item] = new Board { Item = item };
+            SetPositions(true, 0); OpenFocused(0); ChangeGenre(Manager.FocusedItem.Genre);
+            if (view.search != null) view.search.RefreshSummary();
         }
 
         void OnFocusChanged(WheelItem previous, SongSelectManager.FocusReason reason)
@@ -866,19 +884,19 @@ namespace OurTaiko
             restackBoards = true;
             board.FolderSlot = slot; board.Root = item.Root; board.Group = item.group; board.RootOffset = Vector2.zero;
             item.click.Clicked = () => Manager.SelectItem(board.Item);
-            bool back = board.Kind == ItemKind.Back;
+            bool back = board.Kind == ItemKind.Back, search = board.Kind == ItemKind.Search;
             var folder = board.Folder >= 0 ? Manager.Folders[board.Folder] : null;
-            item.panelClosed.sprite = back ? backBoard : boards[folder.Genre];
+            item.panelClosed.sprite = back ? backBoard : boards[board.Genre];
             item.panelClosed.Alpha(1);
             item.panelOpen.enabled = false;
             item.charaLeft.enabled = item.charaRight.enabled = false;
-            item.title.text = back ? SongSelectManager.BackLabel : folder.Title;
+            item.title.text = back ? SongSelectManager.BackLabel : search ? Manager.SearchFolderTitle : folder.Title;
             item.title.Squeeze(860);
-            item.count.text = back ? "" : $"{folder.Songs.Length} songs　{folder.ServerName}";
+            item.count.text = back ? "" : search ? Manager.SearchFolderDescription : $"{folder.Songs.Length} songs　{folder.ServerName}";
             if (!back)
             {
-                item.panelOpen.sprite = folderBoards[folder.Genre];
-                int chara = Mathf.Clamp(folder.Genre, 0, charaLeft.Length - 1);
+                item.panelOpen.sprite = folderBoards[board.Genre];
+                int chara = Mathf.Clamp(board.Genre, 0, charaLeft.Length - 1);
                 item.charaLeft.sprite = charaLeft[chara];
                 item.charaRight.sprite = charaRight[chara];
             }

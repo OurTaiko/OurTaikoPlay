@@ -159,6 +159,16 @@ namespace OurTaiko.Tests
                 var parts = path.Trim('/').Split('/');
                 if (request.HttpMethod == "POST" && path == "/api/v1/game/login") { Login(context, JObject.Parse(body)); return; }
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/bootstrap") { Bootstrap(context, user); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v1/game/search")
+                {
+                    var q = new SongSearchQuery(request.QueryString["q"]);
+                    string course = request.QueryString["course"];
+                    int.TryParse(request.QueryString["level"], out int level);
+                    var matches = Charts.Where(c => (q.MatchesText(c.Title) || q.MatchesText(c.Title + " JA") || q.MatchesText(c.Subtitle) || q.MatchesText(c.Maker))
+                        && c.Difficulties.Any(d => (string.IsNullOrEmpty(course) || d.Course + (d.Player == "P1" ? "_1p" : d.Player == "P2" ? "_2p" : "") == course) && (level == 0 || d.Level == level)))
+                        .Select(c => c.ToJson()).ToArray();
+                    Reply(context, 200, new JObject { ["items"] = new JArray(matches), ["total"] = matches.Length }); return;
+                }
                 if (request.HttpMethod == "GET" && parts.Length == 6 && parts[3] == "categories" && parts[5] == "charts")
                 {
                     var charts = Charts.Where(c => c.Categories.Contains(parts[4])).Select(c => c.ToJson());
