@@ -79,7 +79,7 @@ namespace OurTaiko.Editor
                     if (created) rig = Rect("DrumrollCounter", lane, 0, 0, 0, 0);
                     rig.anchorMin = Vector2.zero; rig.anchorMax = Vector2.one;
                     rig.offsetMin = rig.offsetMax = Vector2.zero;
-                    PlaceBefore(rig, play.balloonCounter.transform);
+                    PlaceBefore(rig, play.scoreCounter.transform);
                     var view = rig.GetComponent<DrumrollCounterView>();
                     if (view == null) view = rig.gameObject.AddComponent<DrumrollCounterView>();
                     view.visuals = rig.GetComponent<CanvasGroup>();
