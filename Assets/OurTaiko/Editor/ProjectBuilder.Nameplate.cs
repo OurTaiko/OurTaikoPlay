@@ -150,7 +150,7 @@ namespace OurTaiko.Editor
             plate.name = "Nameplate";
             // skin_config game_nameplate_1p, relative to the lane's y.
             plate.Place(-44, 161);
-            plate.transform.SetSiblingIndex(play.balloonCounter.transform.GetSiblingIndex());
+            PlaceBefore(plate.transform, lane.Find("DrumrollCounter") ?? play.scoreCounter.transform);
         }
 
         // ScoreCounter::draw is the last thing Player::draw paints in the lane.

@@ -77,7 +77,8 @@ namespace OurTaiko.Tests
                 Assert.That(plate.RectTransform.anchoredPosition, Is.EqualTo(new Vector2(-44, -161)));
                 Assert.That(plate.RectTransform.sizeDelta, Is.EqualTo(new Vector2(408, 96)));
                 Assert.That(plate.transform.GetSiblingIndex(), Is.GreaterThan(lane.Find("Drum").GetSiblingIndex()));
-                Assert.That(plate.transform.GetSiblingIndex(), Is.LessThan(play.balloonCounter.transform.GetSiblingIndex()));
+                Assert.That(lane.GetSiblingIndex(), Is.LessThan(play.balloonCounter.transform.GetSiblingIndex()),
+                    "The balloon overlay draws above the lane containing the nameplate.");
 
                 // Title and dan: the band family with the gold 達人 chip and the *_dani name box.
                 Assert.That(plate.band.enabled && plate.outline.enabled && plate.badge.enabled, Is.True);
@@ -101,7 +102,9 @@ namespace OurTaiko.Tests
 
                 // ScoreCounter: the grey cover, then right-aligned digits that start at a plain 0.
                 var counter = play.scoreCounter;
-                Assert.That(counter.transform.GetSiblingIndex(), Is.EqualTo(lane.childCount - 1));
+                Assert.That(counter.transform.GetSiblingIndex(), Is.GreaterThan(plate.transform.GetSiblingIndex()));
+                Assert.That(counter.transform.GetSiblingIndex(), Is.LessThan(lane.Find("Ending").GetSiblingIndex()),
+                    "The ending overlay remains above the lane's score counter.");
                 Assert.That(counter.cover.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(0, -12)));
                 Assert.That(counter.Text, Is.EqualTo("0"));
                 Assert.That(counter.Stretch, Is.Zero);

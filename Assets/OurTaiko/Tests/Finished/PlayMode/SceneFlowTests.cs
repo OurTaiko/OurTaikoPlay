@@ -409,8 +409,8 @@ namespace OurTaiko.Tests
                 play.Hit(false, false); play.Hit(false, true);
                 Assert.That(counter.Remaining, Is.EqualTo(10));
                 Assert.That(counter.IsVisible, Is.True);
-                Assert.That(counter.number.GetChild(0).GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo("BalloonDigit1"));
-                Assert.That(counter.number.GetChild(1).GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo("BalloonDigit0"));
+                Assert.That(counter.number.GetChild(0).GetComponent<UnityEngine.UI.Image>().sprite, Is.SameAs(counter.digitSprites[1]));
+                Assert.That(counter.number.GetChild(1).GetComponent<UnityEngine.UI.Image>().sprite, Is.SameAs(counter.digitSprites[0]));
                 play.TogglePause(); play.pausePanel.SetActive(false);
                 Capture("BalloonCounter10.png");
                 var frozenSize = ((RectTransform)counter.number.GetChild(0)).sizeDelta;
