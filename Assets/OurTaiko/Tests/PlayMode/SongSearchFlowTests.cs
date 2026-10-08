@@ -226,6 +226,41 @@ namespace OurTaiko.Tests
             Assert.That(view.FocusedRow, Is.Zero); Assert.That(view.EditingKeyword, Is.False);
         }
 
+        [UnityTest]
+        public IEnumerator DismissingTheTouchKeyboardKeepsTextAndDoesNotReactivateIt()
+        {
+            TestData.UseServers(new ServerList()); TestSongs.Install();
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
+            var scene = Object.FindFirstObjectByType<SongSelectScene>(); var view = scene.view.search;
+            view.Open(); yield return null;
+            ClickKeyword(view); yield return null;
+            foreach (var status in new[] { TouchScreenKeyboard.Status.Canceled, TouchScreenKeyboard.Status.LostFocus, TouchScreenKeyboard.Status.Done })
+            {
+                ClickKeyword(view); yield return null; yield return null;
+                Assert.That(view.EditingKeyword, Is.True, "Explicitly tapping Keyword should start a new input session.");
+                view.keyword.text = "保留关键词";
+                view.keyword.onTouchScreenKeyboardStatusChanged.Invoke(TouchScreenKeyboard.Status.Visible);
+                Assert.That(view.EditingKeyword, Is.True);
+                // Emulate the native status event; desktop Editor cannot open a mobile keyboard.
+                view.keyword.onTouchScreenKeyboardStatusChanged.Invoke(status);
+                view.Close(); view.Submit(); view.clear.onClick.Invoke();
+                Assert.That(view.IsOpen, Is.True, "The dismissal gesture must not also operate the menu.");
+                yield return null; yield return null;
+                Assert.That(view.EditingKeyword, Is.False, status.ToString());
+                Assert.That(view.keyword.isFocused, Is.False, "Subsequent ticks must not reopen the keyboard.");
+                Assert.That(view.keyword.enabled, Is.False);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.Null);
+                Assert.That(view.keyword.text, Is.EqualTo("保留关键词"));
+                Assert.That(view.apply.interactable && view.clear.interactable && view.close.interactable, Is.True);
+                Assert.That(scene.Manager.SearchActive, Is.False);
+            }
+            view.Submit();
+            float end = Time.realtimeSinceStartup + 15;
+            while (view.IsOpen && Time.realtimeSinceStartup < end) yield return null;
+            Assert.That(view.IsOpen, Is.False);
+            Assert.That(scene.Manager.SearchQuery.Keyword, Is.EqualTo("保留关键词"));
+        }
+
         static IEnumerator Press(Keyboard keyboard, Key key)
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(key)); yield return null;

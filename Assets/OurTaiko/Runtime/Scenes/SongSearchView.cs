@@ -45,6 +45,7 @@ namespace OurTaiko
                 next[i].onClick.AddListener(() => Change(index, 1));
             }
             keyword.onSubmit.AddListener(_ => FinishKeyword());
+            keyword.onTouchScreenKeyboardStatusChanged.AddListener(OnTouchKeyboardStatusChanged);
             keyword.onValueChanged.AddListener(_ => { if (busy) { Cancel(); status.text = ""; Draw(); } });
             keyword.shouldActivateOnSelect = false;
             keyword.enabled = false;
@@ -104,6 +105,18 @@ namespace OurTaiko
         void FinishKeyword()
         {
             if (!editingKeyword || Time.frameCount == editingFrame || !string.IsNullOrEmpty(composition) || Time.frameCount == compositionFrame) return;
+            EndKeywordEditing();
+        }
+        void OnTouchKeyboardStatusChanged(TouchScreenKeyboard.Status status)
+        {
+            if (!editingKeyword || status == TouchScreenKeyboard.Status.Visible) return;
+            // TMP has copied the native keyboard text before reporting dismissal.
+            // Done, Cancel and LostFocus all end this session, even during IME composition.
+            composition = ""; compositionFrame = -1;
+            EndKeywordEditing();
+        }
+        void EndKeywordEditing()
+        {
             fieldSubmitFrame = Time.frameCount;
             editingKeyword = false;
             keyword.DeactivateInputField(); keyword.enabled = false;
@@ -151,7 +164,7 @@ namespace OurTaiko
             if (SceneSwitcher.EnsureInstance().IsInputBlocked) return;
             if (!IsOpen || Time.frameCount == openedFrame) return;
             if (Time.frameCount == fieldSubmitFrame) return;
-            // Only confirmation releases text entry. TMP owns typing, arrows and IME;
+            // Confirmation or native keyboard dismissal releases text entry. TMP owns typing, arrows and IME;
             // escape, Tab, drum bindings and outside clicks never operate the menu here.
             if (editingKeyword)
             {
