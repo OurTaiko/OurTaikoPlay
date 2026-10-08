@@ -12,10 +12,10 @@ namespace OurTaiko
     // touch reach. SongSelectScene draws it: it follows the events below with its own animations,
     // sounds and preview, and reports back only what the screen decides (CourseReady, OptionsHidden).
     // A global singleton like OnlineManager; Load rebuilds the wheel each time song select opens.
-    public sealed class SongSelectManager : MonoBehaviour
+    public sealed partial class SongSelectManager : MonoBehaviour
     {
         public enum State { Browsing, CourseSelect, Decided }
-        public enum ItemKind { Song, Folder, Back }
+        public enum ItemKind { Song, Folder, Back, Search }
         public enum Sound { Don, Ka, UraSwitch }
         public enum Voice { StartSong, Options }
         public enum FocusReason { Navigate, FolderOpened, FolderClosed }
@@ -120,7 +120,7 @@ namespace OurTaiko
         }
 
         // ServerLogin: the next song select starts with every folder closed.
-        public void Reset() => OpenFolderKey = null;
+        public void Reset() { OpenFolderKey = null; ClearSearchState(); }
 
         // ---------------------------------------------------------------- loading
 
@@ -141,6 +141,7 @@ namespace OurTaiko
             openFolder = -1; openAt = -1; openCount = 0;
             foreach (var song in Songs) items.Add(SongItem(song, -1));
             for (int f = 0; f < folders.Length; f++) items.Add(new WheelItem { Kind = ItemKind.Folder, Folder = f, Genre = folders[f].Genre });
+            items.Add(NewSearchItem());
             // The root もどる, which returns to Entry.
             items.Add(new WheelItem { Kind = ItemKind.Back });
 
@@ -154,6 +155,7 @@ namespace OurTaiko
                 remembered = inside >= 0 ? inside : openAt;
             }
             Focused = remembered >= 0 ? remembered : 0;
+            if (SearchActive) BuildSearchWheel(selected);
         }
 
         WheelItem SongItem(SongDefinition song, int folder) => new WheelItem
@@ -167,7 +169,7 @@ namespace OurTaiko
         // Reads this frame's keys (the view calls it first in its Update).
         public void HandleInput()
         {
-            if (Switcher.IsInputBlocked) return;
+            if (Switcher.IsInputBlocked || SearchDialogOpen) return;
             // song_select.cpp: the back key leaves for Entry from any state (an open option panel closes first).
             if (InputManager.GetKeyDown(InputKey.Back)) { Back(); return; }
             bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft);
@@ -180,13 +182,15 @@ namespace OurTaiko
 
         public bool AcceptsInput()
         {
-            if (Switcher.IsInputBlocked || Phase == State.Decided) return false;
+            if (Switcher.IsInputBlocked || SearchDialogOpen || Phase == State.Decided) return false;
             // The course panel ignores input while it is still fading in.
             return Phase != State.CourseSelect || CourseReady == null || CourseReady();
         }
 
         public void Back()
         {
+            if (SearchDialogOpen) return;
+            if (Phase == State.Browsing && SearchActive) { ClearSearch(); return; }
             if (IsOptionPanelOpen) CloseOptions();
             else if (Phase == State.Browsing && openFolder >= 0) { if (AcceptsInput()) { Play(Sound.Don); CloseFolder(); } }
             else Switcher.SwitchScene(SceneSwitcher.EntryScene);
@@ -218,7 +222,9 @@ namespace OurTaiko
             if (Phase == State.Browsing)
             {
                 var focused = items[Focused];
-                if (focused.Kind == ItemKind.Folder) OpenFolderAt(Focused);
+                if (focused.Kind == ItemKind.Search) SearchRequested?.Invoke();
+                else if (focused.Kind == ItemKind.Folder) OpenFolderAt(Focused);
+                else if (focused.Kind == ItemKind.Back && SearchActive) ClearSearch();
                 else if (focused.Kind == ItemKind.Back && focused.Folder < 0) Switcher.SwitchScene(SceneSwitcher.EntryScene);
                 else if (focused.Kind == ItemKind.Back) CloseFolder();
                 else EnterCourseSelect();
@@ -388,7 +394,13 @@ namespace OurTaiko
         void EnterCourseSelect()
         {
             var courses = items[Focused].Info.Courses.Select(c => c.Difficulty).ToList();
-            Cursor = new DifficultyCursor(courses, Cursor != null && Cursor.IsUra, Switcher.LastDifficulty);
+            int preferred = Switcher.LastDifficulty;
+            if (SearchActive)
+            {
+                var matching = items[Focused].Info.Courses.Where(SearchQuery.Matches).Select(c => c.Difficulty).ToList();
+                if (matching.Count > 0 && !matching.Contains((Difficulty)preferred)) preferred = (int)matching[0];
+            }
+            Cursor = new DifficultyCursor(courses, SearchActive ? preferred == (int)Difficulty.Ura : Cursor != null && Cursor.IsUra, preferred);
             SetPhase(State.CourseSelect);
         }
 

@@ -156,6 +156,25 @@ namespace OurTaiko.Online
                 });
         }
 
+        // Search can discover songs not present in any category. Register them for preview,
+        // download and score lookup without rebuilding or replacing the browsing catalog.
+        public SongDefinition SearchSong(FanmadeChart chart)
+        {
+            string key = SongKey(chart);
+            if (!byKey.TryGetValue(key, out var entry))
+            {
+                var song = ScriptableObject.CreateInstance<SongDefinition>();
+                song.name = key; song.hideFlags = HideFlags.DontSave;
+                owned.Add(song); entry = (song, chart);
+            }
+            entry.Chart = chart;
+            entry.Song.onlineChart = chart;
+            entry.Song.genre = GenreFrame(chart.Genre);
+            entry.Song.course = chart.Difficulties.First(d => d != null).Course;
+            byKey[key] = entry; charts[entry.Song] = chart;
+            return entry.Song;
+        }
+
         public static string SongKey(FanmadeChart chart) => "fanmade/" + chart.Server + "/" + chart.Id + (chart.SelectedPlayer.Length > 0 ? "/" + chart.SelectedPlayer : "");
 
         public bool IsOnline(SongDefinition song) => song != null && charts.ContainsKey(song);

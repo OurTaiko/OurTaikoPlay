@@ -1,0 +1,176 @@
+using System;
+using System.Collections;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using NUnit.Framework;
+using OurTaiko.Online;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using System.Collections.Generic;
+using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
+
+namespace OurTaiko.Tests
+{
+    public sealed class SongSearchFlowTests
+    {
+        FanmadeFixture first, second;
+        string root;
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            var previous = SceneManager.GetActiveScene();
+            SceneManager.SetActiveScene(SceneManager.CreateScene("SearchTearDown"));
+            yield return SceneManager.UnloadSceneAsync(previous);
+            first?.Dispose(); second?.Dispose(); TestData.UseServers(new ServerList());
+            TestSongs.Install();
+            if (root != null) Directory.Delete(root, true);
+        }
+
+        [UnityTest]
+        public IEnumerator SearchesLocalFoldersAndAllServersThenRestoresBrowsing()
+        {
+            first = new FanmadeFixture(); second = new FanmadeFixture();
+            first.Charts.Add(new FanmadeFixture.Chart { Title = "Keyword online A" });
+            // Uncategorized songs are absent from bootstrap's categories but still searchable/playable.
+            second.Charts.Add(new FanmadeFixture.Chart { Title = "Keyword online B", Categories = Array.Empty<string>() });
+            TestData.UseServers(new ServerList { servers = { first.Server(), second.Server() } });
+            var online = OnlineManager.Instance;
+            var connect = System.Threading.Tasks.Task.WhenAll(online.Client.ConnectAsync(online.Client.Add(first.Server()), true), online.Client.ConnectAsync(online.Client.Add(second.Server()), true));
+            yield return Await(connect); online.RefreshSongs();
+            root = Path.Combine(Application.temporaryCachePath, "search-songs-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Path.Combine(root, "Folder"));
+            File.WriteAllText(Path.Combine(root, "Folder", "box.def"), "#TITLE:Folder\n#GENRE:GAME\n");
+            File.WriteAllText(Path.Combine(root, "Folder", "song.tja"), "TITLE:Keyword local\nBPM:120\nCOURSE:Oni\nLEVEL:8\n#START\n1000,\n#END");
+            LocalSongLibrary.EnsureInstance().UseRoot(root);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
+            var scene = Object.FindFirstObjectByType<SongSelectScene>(); var manager = scene.Manager; var view = scene.view.search;
+            Assert.That(view, Is.Not.Null); int initial = manager.BoardCount;
+            Assert.That(view.transform.Find("OpenSearch"), Is.Null, "The standalone entry button has been removed.");
+            var searchEntry = manager.Items.Single(i => i.Kind == SongSelectManager.ItemKind.Search);
+            manager.SelectItem(searchEntry); yield return new WaitForSeconds(.85f);
+            Assert.That(manager.FocusedItem, Is.SameAs(searchEntry));
+            TestCapture.Capture("SongSearchFolderEntry.png");
+            manager.SelectItem(searchEntry); yield return null;
+            Assert.That(manager.SearchDialogOpen, Is.True);
+            var oldFocus = manager.Focused; manager.Right(); Assert.That(manager.Focused, Is.EqualTo(oldFocus));
+            Canvas.ForceUpdateCanvases();
+            foreach (var control in new Component[] { view.keyword, view.next[0], view.apply, view.close })
+            {
+                var rect = (RectTransform)control.transform;
+                var point = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
+                var hits = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = point }, hits);
+                Assert.That(hits.Count, Is.GreaterThan(0));
+                Assert.That(hits[0].gameObject.transform.IsChildOf(control.transform), Is.True, control.name + " must receive pointer input.");
+            }
+            TestCapture.Capture("SongSearchPlaceholder.png");
+            view.keyword.text = "Keyword";
+            TestCapture.Capture("SongSearchDialog.png");
+            view.Submit();
+            float end = Time.realtimeSinceStartup + 15;
+            while (view.IsOpen && Time.realtimeSinceStartup < end) yield return null;
+            Assert.That(view.IsOpen, Is.False); Assert.That(manager.SearchCount, Is.EqualTo(3));
+            Assert.That(manager.Items.Count(i => i.Kind == SongSelectManager.ItemKind.Song), Is.EqualTo(3));
+            Assert.That(manager.Items.Where(i => i.Song != null && i.Song.onlineChart != null).All(i => online.IsOnline(i.Song)), Is.True);
+            yield return new WaitForSeconds(.5f);
+            TestCapture.Capture("SongSearchResults.png");
+            var selected = manager.FocusedSong;
+            manager.Confirm(); Assert.That(manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
+            // A scene reload represents returning from play and keeps the result selection.
+            SceneSwitcher.Instance.Select(selected);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
+            scene = Object.FindFirstObjectByType<SongSelectScene>(); manager = scene.Manager; view = scene.view.search;
+            Assert.That(manager.SearchActive, Is.True); Assert.That(manager.FocusedSong, Is.SameAs(selected));
+            searchEntry = manager.Items.Single(i => i.Kind == SongSelectManager.ItemKind.Search);
+            manager.SelectItem(searchEntry); manager.SelectItem(searchEntry); yield return null;
+            Assert.That(view.IsOpen, Is.True, "Results also contain the search folder for editing the query.");
+            view.Clear(); yield return null;
+            Assert.That(manager.FocusedKind, Is.EqualTo(SongSelectManager.ItemKind.Search));
+            Assert.That(manager.SearchActive, Is.False); Assert.That(manager.BoardCount, Is.EqualTo(initial));
+            Assert.That(manager.SearchDialogOpen, Is.False);
+            yield return Await(manager.SearchAsync(new SongSearchQuery("nothing matches"), CancellationToken.None));
+            Assert.That(manager.SearchCount, Is.Zero); Assert.That(manager.BoardCount, Is.EqualTo(2));
+            manager.Navigate(1); manager.Confirm(); Assert.That(manager.SearchActive, Is.False);
+            File.AppendAllText(Path.Combine(root, "Folder", "song.tja"), "\nCOURSE:Edit\nLEVEL:8\n#START\n1000,\n#END\n");
+            LocalSongLibrary.Instance.Refresh();
+            yield return Await(manager.SearchAsync(new SongSearchQuery("Keyword", Difficulty.Ura, 8), CancellationToken.None));
+            Assert.That(manager.SearchCount, Is.EqualTo(1));
+            manager.Confirm();
+            Assert.That(manager.Cursor.Selected, Is.EqualTo(Difficulty.Ura), "A Ura search must open the Ura side of the Oni card.");
+        }
+        [UnityTest]
+        public IEnumerator EditingCancelsAnOldRequestAndKeyboardFocusDoesNotMoveTheWheel()
+        {
+            first = new FanmadeFixture();
+            first.Charts.Add(new FanmadeFixture.Chart { Title = "Fresh song" });
+            TestData.UseServers(new ServerList { servers = { first.Server() } });
+            var online = OnlineManager.Instance;
+            yield return Await(online.Client.ConnectAsync(online.Client.Add(first.Server()), true));
+            online.RefreshSongs();
+            var originalBackground = InputSystem.settings.backgroundBehavior;
+            var originalEditor = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            var keyboard = InputSystem.AddDevice<Keyboard>("SearchKeyboard"); keyboard.MakeCurrent();
+            using var pending = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
+                var scene = Object.FindFirstObjectByType<SongSelectScene>(); var view = scene.view.search; var manager = scene.Manager;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Tab)); yield return null;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+                Assert.That(view.IsOpen, Is.False, "Tab no longer opens search from the wheel.");
+                var entry = manager.Items.Single(i => i.Kind == SongSelectManager.ItemKind.Search);
+                manager.SelectItem(entry);
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Enter)); yield return null;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+                Assert.That(view.IsOpen, Is.True); Assert.That(view.keyword.isFocused, Is.True);
+                int focus = manager.Focused;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F, Key.D)); yield return null;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+                Assert.That(manager.Focused, Is.EqualTo(focus)); Assert.That(manager.Phase, Is.EqualTo(SongSelectManager.State.Browsing));
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Tab)); yield return null;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+                Assert.That(view.keyword.isFocused, Is.False, "Tab must let keyboard users leave the Keyword field.");
+                first.CustomRequest = context =>
+                {
+                    if (context.Request.Url.AbsolutePath == "/api/v1/game/search" && context.Request.QueryString["q"] == "Old")
+                    { pending.Set(); release.Wait(5000); }
+                    return false;
+                };
+                view.keyword.text = "Old"; view.Submit();
+                float end = Time.realtimeSinceStartup + 10;
+                while (!pending.IsSet && Time.realtimeSinceStartup < end) yield return null;
+                Assert.That(pending.IsSet, Is.True);
+                view.keyword.text = "Fresh"; view.Submit();
+                end = Time.realtimeSinceStartup + 10;
+                while (view.IsOpen && Time.realtimeSinceStartup < end) yield return null;
+                Assert.That(view.IsOpen, Is.False); Assert.That(manager.SearchCount, Is.EqualTo(1));
+                release.Set(); yield return null; yield return null;
+                Assert.That(manager.SearchQuery.Keyword, Is.EqualTo("Fresh")); Assert.That(manager.SearchCount, Is.EqualTo(1));
+            }
+            finally
+            {
+                release.Set(); InputSystem.RemoveDevice(keyboard);
+                InputSystem.settings.backgroundBehavior = originalBackground;
+                InputSystem.settings.editorInputBehaviorInPlayMode = originalEditor;
+            }
+        }
+
+        static IEnumerator Await(System.Threading.Tasks.Task task)
+        {
+            float end = Time.realtimeSinceStartup + 15;
+            while (!task.IsCompleted && Time.realtimeSinceStartup < end) yield return null;
+            Assert.That(task.IsCompleted, Is.True, "Request timed out.");
+            if (task.IsFaulted) throw task.Exception;
+            Assert.That(task.IsCanceled, Is.False);
+        }
+    }
+}
