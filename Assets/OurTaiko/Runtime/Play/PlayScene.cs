@@ -302,7 +302,7 @@ namespace OurTaiko
             hitRing.Play(result, big, judgedAt);
             if (result != Judgment.Roll)
             {
-                // Long-note hits must not restart the previous normal judgment's text fade.
+                // Long-note hits must not restart the previous normal judgment's text animation.
                 feedbackTime = GameTimeline.FrameTime;
                 judgment.sprite = judgmentSprites[(int)result - 1];
             }

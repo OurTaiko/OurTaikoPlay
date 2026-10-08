@@ -77,16 +77,60 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void JudgmentTextFadesOutOver250Ms()
+        public void JudgmentTextStaysOpaqueFor250MsThenHides()
         {
             var clip = Clip("JudgmentFade");
-            foreach (var (t, alpha) in new[] { (0.0, 1f), (0.125, 0.5f), (0.25, 0f), (1.0, 0f) })
+            foreach (var (t, alpha) in new[] { (0.0, 1f), (0.125, 1f), (0.249, 1f), (0.25, 0f), (1.0, 0f) })
                 Assert.That(Sampled(clip, t, go => go.GetComponent<UnityEngine.UI.Image>().color.a), Is.EqualTo(alpha).Within(1e-4), $"{t} s");
             WithPlayScene(play =>
             {
                 Assert.That(play.judgment.GetComponent<ClipSampler>().clip, Is.SameAs(clip));
-                Assert.That((Vector3)(Vector4)play.judgment.color, Is.EqualTo(Vector3.one), "The clip only drives alpha.");
+                Assert.That((Vector3)(Vector4)play.judgment.color, Is.EqualTo(Vector3.one), "Judgment text stays untinted.");
             });
+        }
+
+        [TestCase(PlayScenePath)]
+        [TestCase("Assets/Scenes/PracticeScene.unity")]
+        public void JudgmentTextStretchesUpwardsLikeComboWithoutMovingItsBaseline(string path)
+        {
+            var scene = EditorSceneManager.OpenPreviewScene(path);
+            try
+            {
+                var play = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<PlayScene>(true)).Single();
+                var image = play.judgment;
+                var rect = image.rectTransform;
+                var sampler = image.GetComponent<ClipSampler>();
+                var comboSampler = play.combo.GetComponent<ClipSampler>();
+                var corners = new Vector3[4];
+                void ReadCorners()
+                {
+                    // Preview scenes have no initialized CanvasScaler; compare in the lane's space.
+                    rect.GetLocalCorners(corners);
+                    var matrix = Matrix4x4.TRS(rect.localPosition, rect.localRotation, rect.localScale);
+                    for (int i = 0; i < corners.Length; i++) corners[i] = matrix.MultiplyPoint3x4(corners[i]);
+                }
+                sampler.Sample(0.25);
+                ReadCorners();
+                var bottom = corners[0];
+                float height = corners[1].y - bottom.y;
+                float width = corners[3].x - bottom.x;
+                foreach (var sprite in play.judgmentSprites)
+                {
+                    image.sprite = sprite;
+                    // Include overshoot, completion and a new hit restarting the same clip.
+                    foreach (double t in new[] { 0, .025, .05, .07, .10, .15, .167, .25, .0 })
+                    {
+                        comboSampler.Sample(Math.Min(t, comboSampler.clip.length));
+                        float stretch = play.combo.GetComponent<AnimatedFloat>().value;
+                        sampler.Sample(t);
+                        ReadCorners();
+                        Assert.That(Vector3.Distance(corners[0], bottom), Is.LessThan(.001f), "The bottom edge must not jump.");
+                        Assert.That(corners[3].x - bottom.x, Is.EqualTo(width).Within(.001f), "No horizontal stretching.");
+                        Assert.That((corners[1].y - bottom.y) / height, Is.EqualTo(1 + stretch / 80).Within(.0001f), $"{sprite.name} at {t}s");
+                    }
+                }
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
         }
 
         [Test]

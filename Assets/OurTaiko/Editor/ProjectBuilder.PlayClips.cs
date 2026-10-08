@@ -21,17 +21,40 @@ namespace OurTaiko.Editor
             SteppedCurve(clip, "", typeof(UnityEngine.UI.Image), "m_Enabled", (0, 1), (0.12f, 0)));
 
         [MenuItem("OurTaiko/Apply Judgment Fade Clip")]
-        public static void ApplyJudgmentFadeClip() => EditPlayScene(play =>
+        public static void ApplyJudgmentFadeClip()
         {
-            // The clip owns only alpha; the text is drawn untinted.
-            play.judgment.color = new Color(1, 1, 1, 0);
-            EditorUtility.SetDirty(play.judgment);
-            AttachClip(play.judgment.gameObject, JudgmentFadeClip());
-        });
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode first.");
+            for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+                if (EditorSceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save current scene edits first.");
+            var setup = EditorSceneManager.GetSceneManagerSetup();
+            try
+            {
+                var clip = JudgmentFadeClip();
+                foreach (var path in new[] { "Assets/Scenes/SinglePlayScene.unity", "Assets/Scenes/PracticeScene.unity" })
+                {
+                    var scene = EditorSceneManager.OpenScene(path);
+                    var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
+                    var rect = play.judgment.rectTransform;
+                    // Stretch upwards from the saved bottom edge without moving the resting text.
+                    var pivot = new Vector2(rect.pivot.x, 0);
+                    rect.anchoredPosition += Vector2.Scale(pivot - rect.pivot, Vector2.Scale(rect.rect.size, rect.localScale));
+                    rect.pivot = pivot;
+                    play.judgment.color = new Color(1, 1, 1, 0);
+                    AttachClip(play.judgment.gameObject, clip);
+                    EditorSceneManager.MarkSceneDirty(scene);
+                    EditorSceneManager.SaveScene(scene);
+                }
+            }
+            finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
+        }
 
-        // JudgmentFade.anim: the 良／可／不可 text fades out linearly over 0.25 s.
-        static AnimationClip JudgmentFadeClip() => SaveClip("JudgmentFade", 60, false, clip =>
-            LinearCurve(clip, "", typeof(UnityEngine.UI.Image), "m_Color.a", (0, 1), (0.25f, 0)));
+        // Same upward stretch as the 80px combo digits; stay opaque, then hide after 250ms.
+        static AnimationClip JudgmentFadeClip() => SaveClip("JudgmentFade", 1000, false, clip =>
+        {
+            SteppedCurve(clip, "", typeof(UnityEngine.UI.Image), "m_Color.a", (0, 1), (0.25f, 0));
+            SteppedCurve(clip, "", typeof(Transform), "m_LocalScale.y",
+                TextStretchFrames().Select(key => (key.time, 1 + key.value / 80f)).Append((0.25f, 1f)).ToArray());
+        });
 
         [MenuItem("OurTaiko/Apply Gogo Pulse Clip")]
         public static void ApplyGogoPulseClip() => EditPlayScene(play => AttachClip(play.gogoTint.gameObject, GogoPulseClip()));
@@ -108,13 +131,16 @@ namespace OurTaiko.Editor
         static AnimationClip TextStretchClip() => SaveClip("TextStretch", 1000, false, TextStretchKeys);
 
         static void TextStretchKeys(AnimationClip clip)
+            => SteppedCurve(clip, "", typeof(AnimatedFloat), "value", TextStretchFrames());
+
+        static (float time, float value)[] TextStretchFrames()
         {
             const float after = 0.00001f;
             var keys = Enumerable.Range(0, 51).Select(ms => (ms / 1000f, 2 + 0.2f * ms)).ToList();
             keys.Add((0.05f + after, 10));
             for (int k = 1; k <= 7; k++) keys.Add((0.05f + 0.01657f * k, 10 - 2 * k));
             keys.Add((0.166f + after, 0));
-            SteppedCurve(clip, "", typeof(AnimatedFloat), "value", keys.ToArray());
+            return keys.ToArray();
         }
 
         // BalloonCounter after the popping hit: the digits' stretch, and the whole counter fading
