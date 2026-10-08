@@ -16,7 +16,7 @@ namespace OurTaiko.Editor
         const string UnityName = "Unity-iPhone";
         const string AppName = PlayerBranding.ProductName;
 
-        // Unity's incremental exporter expects its original project and target names.
+        // Unity's incremental exporter expects its original project, target and resource paths.
         // Restore these just for export, then brand again after all other build callbacks.
         public static bool PrepareForExport(string root)
         {
@@ -41,18 +41,28 @@ namespace OurTaiko.Editor
             string destination = Path.Combine(root, to + ".xcodeproj");
             if (!Directory.Exists(source))
             {
-                if (Directory.Exists(destination)) return;
-                throw new BuildFailedException("Missing Xcode project: " + source);
+                // Upgrade exports produced by the old, main-target-only branding pass too.
+                if (!Directory.Exists(destination)) throw new BuildFailedException("Missing Xcode project: " + source);
+                source = destination;
             }
-            if (Directory.Exists(destination)) throw new BuildFailedException("Xcode project already exists: " + destination);
+            if (source != destination && Directory.Exists(destination))
+                throw new BuildFailedException("Xcode project already exists: " + destination);
+            foreach (string suffix in new[] { "", " Tests" })
+                ValidateDirectoryRename(Path.Combine(root, from + suffix), from, to);
             string file = Path.Combine(source, "project.pbxproj");
             var project = new PBXProject(); project.ReadFromFile(file);
-            string main = from == UnityName ? project.GetUnityMainTargetGuid() : project.TargetGuidByName(from);
+            string main = project.TargetGuidByName(AppName);
+            if (string.IsNullOrEmpty(main)) main = project.GetUnityMainTargetGuid();
             if (string.IsNullOrEmpty(main)) throw new BuildFailedException("Missing app target: " + from);
             project.SetBuildProperty(main, "PRODUCT_NAME", AppName);
-            string text = project.WriteToString();
-            // PBXProject exposes build settings but no target rename API. Change only the
-            // verified main target's name; preserve file paths, UnityFramework and native libraries.
+            string text = RenameText(project.WriteToString(), from, to);
+            // Rename the generated app and test names everywhere they are referenced, including
+            // groups, products, build settings and file paths. UnityFramework keeps its identity.
+            project.ReadFromString(text);
+            project.SetBuildProperty(main, "PRODUCT_NAME", AppName);
+            text = project.WriteToString();
+            // PBXProject's serializer hardcodes this comment even for a renamed project.
+            text = text.Replace("PBXProject \"" + UnityName + "\"", "PBXProject \"" + to + "\"");
             var target = new Regex(@"(?m)^(\s*" + Regex.Escape(main) + @" /\* [^\r\n]* \*/ = \{\r?\n)(.*?)(^\s*\};)", RegexOptions.Singleline | RegexOptions.Multiline);
             var match = target.Match(text);
             if (!match.Success) throw new BuildFailedException("Cannot locate app target in Xcode project.");
@@ -64,17 +74,15 @@ namespace OurTaiko.Editor
             text = product.Replace(text, m => m.Groups[1].Value
                 + Regex.Replace(m.Groups[2].Value, @"\bpath = [^;]+;", "path = " + AppName + ".app;") + m.Groups[3].Value, 1);
             text = text.Replace(productGuid + " /* Unity-Target-New.app */", productGuid + " /* " + AppName + ".app */");
-            text = text.Replace("/* " + from + " */", "/* " + to + " */")
-                .Replace("remoteInfo = \"" + from + "\";", "remoteInfo = \"" + to + "\";");
             File.WriteAllText(file, text);
 
             foreach (string schemePath in Directory.GetFiles(source, "*.xcscheme", SearchOption.AllDirectories))
             {
                 var scheme = XDocument.Load(schemePath);
+                foreach (var attribute in scheme.Descendants().Attributes())
+                    attribute.Value = RenameText(attribute.Value, from, to);
                 foreach (var reference in scheme.Descendants("BuildableReference"))
                 {
-                    if ((string)reference.Attribute("ReferencedContainer") == "container:" + from + ".xcodeproj")
-                        reference.SetAttributeValue("ReferencedContainer", "container:" + to + ".xcodeproj");
                     if ((string)reference.Attribute("BlueprintIdentifier") == main)
                     {
                         reference.SetAttributeValue("BlueprintName", to);
@@ -82,8 +90,8 @@ namespace OurTaiko.Editor
                     }
                 }
                 scheme.Save(schemePath);
-                if (Path.GetFileNameWithoutExtension(schemePath) == from)
-                    File.Move(schemePath, Path.Combine(Path.GetDirectoryName(schemePath), to + ".xcscheme"));
+                string renamedScheme = Path.Combine(Path.GetDirectoryName(schemePath), RenameText(Path.GetFileName(schemePath), from, to));
+                if (schemePath != renamedScheme) File.Move(schemePath, renamedScheme);
             }
             foreach (string managementPath in Directory.GetFiles(source, "xcschememanagement.plist", SearchOption.AllDirectories))
             {
@@ -91,12 +99,48 @@ namespace OurTaiko.Editor
                 if (plist.root.values.TryGetValue("SchemeUserState", out var state))
                 {
                     var entries = state.AsDict().values;
-                    foreach (string key in entries.Keys.Where(k => k == from + ".xcscheme" || k == from + ".xcscheme_^#shared#^_").ToArray())
-                    { var value = entries[key]; entries.Remove(key); entries[to + key.Substring(from.Length)] = value; }
+                    foreach (string key in entries.Keys.Where(k => RenameText(k, from, to) != k).ToArray())
+                    { var value = entries[key]; entries.Remove(key); entries[RenameText(key, from, to)] = value; }
                     plist.WriteToFile(managementPath);
                 }
             }
-            Directory.Move(source, destination);
+            foreach (string workspace in Directory.GetFiles(source, "contents.xcworkspacedata", SearchOption.AllDirectories))
+                File.WriteAllText(workspace, RenameText(File.ReadAllText(workspace), from, to));
+            foreach (string suffix in new[] { "", " Tests" })
+                RenameDirectory(Path.Combine(root, from + suffix), from, to);
+            if (source != destination) Directory.Move(source, destination);
+        }
+
+        static string RenameText(string text, string from, string to) => text
+            .Replace(from.Replace('-', '_') + "_Tests", to.Replace('-', '_') + "_Tests")
+            .Replace(from, to);
+
+        static void ValidateDirectoryRename(string path, string from, string to)
+        {
+            if (!Directory.Exists(path)) return;
+            string destination = Path.Combine(Path.GetDirectoryName(path), RenameText(Path.GetFileName(path), from, to));
+            if (path != destination && (Directory.Exists(destination) || File.Exists(destination)))
+                throw new BuildFailedException("Cannot rename export directory; destination already exists: " + destination);
+            foreach (string child in Directory.GetDirectories(path)) ValidateDirectoryRename(child, from, to);
+            foreach (string file in Directory.GetFiles(path))
+            {
+                string renamed = Path.Combine(path, RenameText(Path.GetFileName(file), from, to));
+                if (file != renamed && (File.Exists(renamed) || Directory.Exists(renamed)))
+                    throw new BuildFailedException("Cannot rename export file; destination already exists: " + renamed);
+            }
+        }
+
+        static void RenameDirectory(string path, string from, string to)
+        {
+            if (!Directory.Exists(path)) return;
+            foreach (string child in Directory.GetDirectories(path)) RenameDirectory(child, from, to);
+            foreach (string file in Directory.GetFiles(path))
+            {
+                string renamed = Path.Combine(path, RenameText(Path.GetFileName(file), from, to));
+                if (file != renamed) File.Move(file, renamed);
+            }
+            string destination = Path.Combine(Path.GetDirectoryName(path), RenameText(Path.GetFileName(path), from, to));
+            if (path != destination) Directory.Move(path, destination);
         }
     }
 }
