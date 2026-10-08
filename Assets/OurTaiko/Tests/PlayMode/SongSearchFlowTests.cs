@@ -122,6 +122,8 @@ namespace OurTaiko.Tests
             InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
             var keyboard = InputSystem.AddDevice<Keyboard>("SearchKeyboard"); keyboard.MakeCurrent();
             using var pending = new ManualResetEventSlim(); using var release = new ManualResetEventSlim();
+            SongSelectManager observedManager = null;
+            var sounds = new List<SongSelectManager.Sound>();
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
@@ -135,9 +137,17 @@ namespace OurTaiko.Tests
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
                 Assert.That(view.IsOpen, Is.True); Assert.That(view.keyword.isFocused, Is.False);
                 Assert.That(view.FocusedRow, Is.Zero, "Opening search selects Difficulty without activating the keyboard.");
-                for (int i = 0; i < 3; i++) yield return Press(keyboard, Key.F);
-                Assert.That(view.FocusedRow, Is.EqualTo(3)); Assert.That(view.EditingKeyword, Is.False);
+                observedManager = manager; manager.SoundRequested += sounds.Add;
+                yield return Press(keyboard, Key.D);
                 yield return Press(keyboard, Key.K);
+                Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Ka, SongSelectManager.Sound.Ka }));
+                sounds.Clear();
+                for (int i = 0; i < 3; i++) yield return Press(keyboard, Key.F);
+                Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Don, SongSelectManager.Sound.Don, SongSelectManager.Sound.Don }));
+                Assert.That(view.FocusedRow, Is.EqualTo(3)); Assert.That(view.EditingKeyword, Is.False);
+                sounds.Clear();
+                yield return Press(keyboard, Key.K);
+                Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Ka }), "Entering text mode plays one Ka."); sounds.Clear();
                 Assert.That(view.EditingKeyword, Is.True); Assert.That(view.keyword.isFocused, Is.True);
                 int focus = manager.Focused;
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F, Key.D, Key.J, Key.K)); yield return null;
@@ -153,6 +163,7 @@ namespace OurTaiko.Tests
                 Assert.That(view.EditingKeyword, Is.False); Assert.That(view.keyword.isFocused, Is.False);
                 Assert.That(view.IsOpen, Is.True); Assert.That(view.FocusedRow, Is.EqualTo(3));
                 Assert.That(view.keyword.text, Is.EqualTo("Typed keyword")); Assert.That(manager.SearchActive, Is.False, "Enter finishes typing without searching.");
+                Assert.That(sounds, Is.Empty, "Typing drum keys and confirming text must not play menu sounds.");
                 first.CustomRequest = context =>
                 {
                     if (context.Request.Url.AbsolutePath == "/api/v1/game/search" && context.Request.QueryString["q"] == "Old")
@@ -169,10 +180,19 @@ namespace OurTaiko.Tests
                 Assert.That(view.IsOpen, Is.False); Assert.That(manager.SearchCount, Is.EqualTo(1));
                 release.Set(); yield return null; yield return null;
                 Assert.That(manager.SearchQuery.Keyword, Is.EqualTo("Fresh")); Assert.That(manager.SearchCount, Is.EqualTo(1));
+                Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Don, SongSelectManager.Sound.Don }), "Each submitted search plays once; completion must not play another Don.");
+                sounds.Clear(); view.Open(); yield return null;
+                view.next[0].onClick.Invoke();
+                Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Ka })); sounds.Clear();
+                view.clear.onClick.Invoke(); yield return null;
+                Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Don }), "Clear and close play only one Don together.");
+                sounds.Clear(); view.Open(); yield return null; view.close.onClick.Invoke();
+                Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Don }));
             }
             finally
             {
                 release.Set(); InputSystem.RemoveDevice(keyboard);
+                if (observedManager != null) observedManager.SoundRequested -= sounds.Add;
                 InputSystem.settings.backgroundBehavior = originalBackground;
                 InputSystem.settings.editorInputBehaviorInPlayMode = originalEditor;
             }

@@ -10,6 +10,10 @@ namespace OurTaiko
     public sealed partial class SongSelectManager
     {
         public bool SearchDialogOpen { get; set; }
+        internal void PlaySearchSound(Sound sound)
+        {
+            if (SearchDialogOpen && !Switcher.IsInputBlocked) Play(sound);
+        }
         public bool SearchActive { get; private set; }
         public SongSearchQuery SearchQuery { get; private set; } = new SongSearchQuery();
         public string SearchStatus { get; private set; } = "";

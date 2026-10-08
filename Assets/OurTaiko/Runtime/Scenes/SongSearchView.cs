@@ -68,15 +68,22 @@ namespace OurTaiko
             status.text = "";
             Draw();
         }
-        public void Close()
+        public void Close() => CloseDialog(true);
+        void CloseDialog(bool playSound)
         {
             if (editingKeyword || Time.frameCount == fieldSubmitFrame) return;
+            if (playSound) manager.PlaySearchSound(SongSelectManager.Sound.Don);
             Cancel(); keyword.DeactivateInputField();
             EventSystem.current?.SetSelectedGameObject(null);
             panel.SetActive(false); manager.SearchDialogOpen = false; closedFrame = Time.frameCount;
             RefreshSummary();
         }
-        public void Clear() { if (editingKeyword || Time.frameCount == fieldSubmitFrame) return; Cancel(); manager.ClearSearch(); Close(); }
+        public void Clear()
+        {
+            if (editingKeyword || Time.frameCount == fieldSubmitFrame) return;
+            manager.PlaySearchSound(SongSelectManager.Sound.Don);
+            Cancel(); manager.ClearSearch(); CloseDialog(false);
+        }
         // The disabled TMP field lets its pointer clicks bubble to this saved parent view.
         // Selecting a row and activating text entry are deliberately separate gestures.
         public void OnPointerClick(PointerEventData eventData)
@@ -85,10 +92,11 @@ namespace OurTaiko
             if (!IsOpen || editingKeyword || Time.frameCount == fieldSubmitFrame || eventData.button != PointerEventData.InputButton.Left
                 || hit == null || !hit.transform.IsChildOf(keyword.transform)) return;
             if (row == 3) BeginKeyword();
-            else { row = 3; Draw(); }
+            else { MoveRow(3 - row, SongSelectManager.Sound.Ka); Draw(); }
         }
         void BeginKeyword()
         {
+            manager.PlaySearchSound(SongSelectManager.Sound.Ka);
             Cancel(); status.text = ""; editingKeyword = true; editingFrame = Time.frameCount;
             keyword.enabled = true;
             keyword.Select(); keyword.ActivateInputField(); Draw();
@@ -105,6 +113,7 @@ namespace OurTaiko
         void Change(int index, int delta)
         {
             if (editingKeyword || Time.frameCount == fieldSubmitFrame) return;
+            manager.PlaySearchSound(SongSelectManager.Sound.Ka);
             Cancel(); row = index;
             keyword.DeactivateInputField(); EventSystem.current?.SetSelectedGameObject(null);
             if (index == 0) difficulty = (difficulty + delta + 6) % 6;
@@ -118,17 +127,23 @@ namespace OurTaiko
             SongSearchQuery query;
             try { query = new SongSearchQuery(keyword.text, difficulty == 0 ? (Difficulty?)null : (Difficulty)(difficulty - 1), level, (SongSearchOrder)order); }
             catch (ArgumentException) { status.text = Words("Keyword is too long (200 bytes).", "Keyword が長すぎます（200バイト）。", "Keyword 过长（最多 200 字节）。"); return; }
+            manager.PlaySearchSound(SongSelectManager.Sound.Don);
             Cancel(); request = new CancellationTokenSource(); var current = request;
             busy = true; Draw(); status.text = Words("Searching…", "検索中…", "搜索中…");
             try
             {
                 await manager.SearchAsync(query, current.Token);
                 if (request != current || !IsOpen) return;
-                Close();
+                CloseDialog(false);
             }
             catch (OperationCanceledException) { }
             catch (Exception error) { if (request == current) status.text = Words("Search failed: ", "検索失敗: ", "搜索失败：") + error.Message; }
             finally { if (request == current) { busy = false; request.Dispose(); request = null; Draw(); } }
+        }
+        void MoveRow(int delta, SongSelectManager.Sound sound)
+        {
+            row = (row + delta + 7) % 7;
+            manager.PlaySearchSound(sound);
         }
         public void Tick()
         {
@@ -148,18 +163,18 @@ namespace OurTaiko
             if (Keyboard.current?.tabKey.wasPressedThisFrame == true)
             {
                 keyword.DeactivateInputField(); EventSystem.current?.SetSelectedGameObject(null);
-                row = (row + (Keyboard.current.shiftKey.isPressed ? 6 : 1)) % 7; Draw(); return;
+                MoveRow(Keyboard.current.shiftKey.isPressed ? -1 : 1, SongSelectManager.Sound.Ka); Draw(); return;
             }
-            if (InputManager.GetKeyDown(InputKey.MenuUp)) row = (row + 6) % 7;
-            else if (InputManager.GetKeyDown(InputKey.MenuDown)) row = (row + 1) % 7;
+            if (InputManager.GetKeyDown(InputKey.MenuUp)) MoveRow(-1, SongSelectManager.Sound.Ka);
+            else if (InputManager.GetKeyDown(InputKey.MenuDown)) MoveRow(1, SongSelectManager.Sound.Ka);
             else if (row == 3 && (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.RightKa))) BeginKeyword();
             else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft))
-            { if (row < 3) Change(row, -1); else row = (row + 6) % 7; }
+            { if (row < 3) Change(row, -1); else MoveRow(-1, SongSelectManager.Sound.Ka); }
             else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight))
-            { if (row < 3) Change(row, 1); else row = (row + 1) % 7; }
+            { if (row < 3) Change(row, 1); else MoveRow(1, SongSelectManager.Sound.Ka); }
             else if (InputManager.GetKeyDown(InputKey.Confirm) || InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon))
             {
-                if (row < 4) row++;
+                if (row < 4) MoveRow(1, SongSelectManager.Sound.Don);
                 else if (row == 4) Submit(); else if (row == 5) Clear(); else Close();
             }
             Draw();
