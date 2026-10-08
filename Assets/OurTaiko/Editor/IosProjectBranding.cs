@@ -32,7 +32,17 @@ namespace OurTaiko.Editor
         [PostProcessBuild(999)]
         public static void OnPostprocessBuild(BuildTarget target, string root)
         {
-            if (target == BuildTarget.iOS) Rename(root, UnityName, AppName);
+            if (target != BuildTarget.iOS) return;
+
+            // Declare no non-exempt encryption on every export, including Append builds
+            // where Unity preserves the existing Info.plist.
+            string plistPath = Path.Combine(root, "Info.plist");
+            var plist = new PlistDocument();
+            plist.ReadFromFile(plistPath);
+            plist.root.SetBoolean("ITSAppUsesNonExemptEncryption", false);
+            plist.WriteToFile(plistPath);
+
+            Rename(root, UnityName, AppName);
         }
 
         public static void Rename(string root, string from, string to)
