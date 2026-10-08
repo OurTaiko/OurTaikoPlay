@@ -35,7 +35,11 @@ namespace OurTaiko.Tests
             play = Object.FindFirstObjectByType<PlayScene>();
             Assert.That(play.drumrollCounter, Is.Not.Null);
             Assert.That(play.drumrollCounter.digitSprites, Is.EqualTo(play.balloonCounter.digitSprites),
-                "The fan must reuse the existing balloon digit sprites.");
+                "The fan and balloon must share the same digit sprites.");
+            var digit = play.drumrollCounter.digitSprites[0];
+            Assert.That(digit.rect.size, Is.EqualTo(new Vector2(96, 112)));
+            Assert.That(digit.texture.mipmapCount, Is.GreaterThan(1));
+            Assert.That(digit.texture.filterMode, Is.EqualTo(FilterMode.Trilinear));
             Assert.That(play.drumrollCounter.IsVisible, Is.False);
             Assert.That(play.drumrollCounter.gameObject.activeSelf, Is.False);
         }
@@ -98,6 +102,10 @@ namespace OurTaiko.Tests
             AssertDigits(view, "1");
             // Balloons, kusudama and regular notes must never replace the roll's count.
             session.Hit(false, 6.1);
+            var balloonDigit = play.balloonCounter.number.GetChild(0).GetComponent<RectTransform>();
+            play.balloonCounter.ShowTime(now + .2);
+            Assert.That(balloonDigit.sizeDelta, Is.EqualTo(new Vector2(77, 90)),
+                "Sharing a higher-resolution sheet must not enlarge balloon digits.");
             session.Hit(false, 8.1);
             session.Hit(false, 10);
             Assert.That(view.NoteIndex, Is.EqualTo(2));

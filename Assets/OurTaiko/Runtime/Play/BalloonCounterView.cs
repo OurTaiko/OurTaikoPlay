@@ -12,6 +12,7 @@ namespace OurTaiko
         public RectTransform number;
         public CanvasGroup visuals;
         public Sprite[] digitSprites, bodyFrames;
+        public Vector2 digitSize = new Vector2(77, 90);
         [Tooltip("TextStretch.anim while inflating; BalloonPop.anim (the same stretch plus the 166 ms fade) once popped.")]
         public AnimationClip stretchClip, popClip;
 
@@ -59,14 +60,14 @@ namespace OurTaiko
                 image.raycastTarget = false;
                 digits.Add(image);
             }
-            // Nijiiro uses 64 units of advance for its 77-unit-wide glyphs.
-            float advance = digitSprites[0].rect.width * (64f / 77f);
+            // Keep the balloon's original layout while sharing the larger drumroll sheet.
+            float advance = digitSize.x * (64f / 77f);
             for (int i = 0; i < digits.Count; i++)
             {
                 digits[i].gameObject.SetActive(i < digitCount);
                 if (i >= digitCount) continue;
                 digits[i].sprite = digitSprites[text[i] - '0'];
-                digits[i].rectTransform.sizeDelta = digits[i].sprite.rect.size;
+                digits[i].rectTransform.sizeDelta = digitSize;
                 digits[i].rectTransform.anchoredPosition = new Vector2(-digitCount * advance / 2 + i * advance, 0);
             }
         }
@@ -90,7 +91,7 @@ namespace OurTaiko
             for (int i = 0; i < digitCount; i++)
             {
                 var rect = digits[i].rectTransform;
-                Vector2 size = digits[i].sprite.rect.size;
+                Vector2 size = digitSize;
                 float offset = stretch * size.y / 90f;
                 rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, offset);
                 rect.sizeDelta = new Vector2(size.x, size.y + offset);

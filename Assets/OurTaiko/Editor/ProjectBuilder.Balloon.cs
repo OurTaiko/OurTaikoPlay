@@ -50,8 +50,8 @@ namespace OurTaiko.Editor
             view.visuals.interactable = view.visuals.blocksRaycasts = false;
             view.bodyFrames = Enumerable.Range(0, 8).Select(i => Slice("BalloonInflation" + i,
                 "game/balloon/pop", i % 3 * 384, i / 3 * 360, 384, 360)).ToArray();
-            view.digitSprites = Enumerable.Range(0, 10).Select(i => Slice("BalloonDigit" + i,
-                "game/balloon/counter", i * 77, 0, 77, 90)).ToArray();
+            view.digitSprites = SharedCounterDigits();
+            view.digitSize = new Vector2(77, 90);
             // Nijiiro's native 1920x1080 layout, scaled together by the Canvas.
             view.body = PlacePicture(rig, "Body", "game/balloon/pop", 645, -81, 384, 360);
             view.body.sprite = view.bodyFrames[0];
