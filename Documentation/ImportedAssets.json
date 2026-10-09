@@ -638,7 +638,7 @@
   },
   "songSearchGraphicsSource": "../YataiDONNijiiro/Graphics/song_select/diff_sort",
   "songSearchGraphics": [
-    "background.png",
+    "background.png -> background_search.png (edited from the original: removed fixed row strips and the top-right box)",
     "level_box.png",
     "box_highlight.png",
     "arrow/0.png -> arrow_left.png",

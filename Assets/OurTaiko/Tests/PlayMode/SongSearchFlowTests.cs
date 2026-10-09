@@ -59,8 +59,18 @@ namespace OurTaiko.Tests
             TestCapture.Capture("SongSearchFolderEntry.png");
             manager.SelectItem(searchEntry); yield return null;
             Assert.That(manager.SearchDialogOpen, Is.True);
-            Assert.That(view.FocusedRow, Is.Zero);
+            Assert.That(view.FocusedRow, Is.EqualTo(1));
             Assert.That(view.keyword.isFocused, Is.False);
+            Assert.That(view.panel.transform.Find("ClearSearch"), Is.Null);
+            var bounds = view.panel.transform.Find("NijiiroPanel").GetComponent<RectTransform>();
+            foreach (var control in new Component[] { view.keyword, view.labels[0], view.labels[1], view.labels[2], view.apply, view.close, view.hint })
+            {
+                var corners = new Vector3[4]; ((RectTransform)control.transform).GetWorldCorners(corners);
+                foreach (var corner in corners)
+                    Assert.That(bounds.rect.Contains(bounds.InverseTransformPoint(corner)), Is.True, control.name + " must fit inside the panel.");
+            }
+            Assert.That(view.keyword.transform.position.y, Is.GreaterThan(view.values[0].transform.position.y));
+            Assert.That(view.apply.transform.position.x, Is.LessThan(view.close.transform.position.x));
             var oldFocus = manager.Focused; manager.Right(); Assert.That(manager.Focused, Is.EqualTo(oldFocus));
             Canvas.ForceUpdateCanvases();
             foreach (var control in new Component[] { view.keyword, view.next[0], view.apply, view.close })
@@ -75,6 +85,23 @@ namespace OurTaiko.Tests
             TestCapture.Capture("SongSearchPlaceholder.png");
             view.keyword.text = "Keyword";
             TestCapture.Capture("SongSearchDialog.png");
+            var settings = SettingManager.EnsureInstance();
+            string language = settings.Settings.general.language;
+            try
+            {
+                foreach (string locale in new[] { "en", "ja", "zh" })
+                {
+                    settings.Settings.general.language = locale; view.Tick();
+                    TestCapture.Capture("SongSearchLayout-" + locale + ".png", 1280, 720, _ =>
+                    {
+                        foreach (var text in view.labels.Concat(view.values).Concat(new[] { view.title, view.hint }))
+                            Assert.That(text.isTextOverflowing, Is.False, locale + ": " + text.name);
+                    });
+                }
+                TestCapture.Capture("SongSearchLayout-wide.png", 2340, 1080);
+                TestCapture.Capture("SongSearchLayout-tablet.png", 1440, 1080);
+            }
+            finally { settings.Settings.general.language = language; view.Tick(); }
             view.Submit();
             float end = Time.realtimeSinceStartup + 15;
             while (view.IsOpen && Time.realtimeSinceStartup < end) yield return null;
@@ -93,7 +120,9 @@ namespace OurTaiko.Tests
             searchEntry = manager.Items.Single(i => i.Kind == SongSelectManager.ItemKind.Search);
             manager.SelectItem(searchEntry); manager.SelectItem(searchEntry); yield return null;
             Assert.That(view.IsOpen, Is.True, "Results also contain the search folder for editing the query.");
-            view.Clear(); yield return null;
+            view.Close(); yield return null;
+            var back = manager.Items.Single(i => i.Kind == SongSelectManager.ItemKind.Back);
+            manager.SelectItem(back); manager.SelectItem(back); yield return null;
             Assert.That(manager.FocusedKind, Is.EqualTo(SongSelectManager.ItemKind.Search));
             Assert.That(manager.SearchActive, Is.False); Assert.That(manager.BoardCount, Is.EqualTo(initial));
             Assert.That(manager.SearchDialogOpen, Is.False);
@@ -136,7 +165,7 @@ namespace OurTaiko.Tests
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Enter)); yield return null;
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
                 Assert.That(view.IsOpen, Is.True); Assert.That(view.keyword.isFocused, Is.False);
-                Assert.That(view.FocusedRow, Is.Zero, "Opening search selects Difficulty without activating the keyboard.");
+                Assert.That(view.FocusedRow, Is.EqualTo(1), "Opening search skips Keyword and selects Difficulty.");
                 observedManager = manager; manager.SoundRequested += sounds.Add;
                 yield return Press(keyboard, Key.D);
                 yield return Press(keyboard, Key.K);
@@ -144,9 +173,24 @@ namespace OurTaiko.Tests
                 sounds.Clear();
                 for (int i = 0; i < 3; i++) yield return Press(keyboard, Key.F);
                 Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Don, SongSelectManager.Sound.Don, SongSelectManager.Sound.Don }));
-                Assert.That(view.FocusedRow, Is.EqualTo(3)); Assert.That(view.EditingKeyword, Is.False);
+                Assert.That(view.FocusedRow, Is.EqualTo(4)); Assert.That(view.EditingKeyword, Is.False);
+                yield return Press(keyboard, Key.Tab);
+                Assert.That(view.FocusedRow, Is.EqualTo(5), "Back immediately follows Search; there is no Clear row.");
+                yield return Press(keyboard, Key.Tab);
+                Assert.That(view.FocusedRow, Is.Zero, "The six menu rows wrap back to Keyword.");
+                Assert.That(view.EditingKeyword, Is.False);
+                Assert.That(view.keyword.isFocused, Is.False, "Moving onto Keyword must not start typing.");
+                foreach (var key in new[] { Key.D, Key.K, Key.F, Key.J })
+                {
+                    yield return Press(keyboard, key);
+                    Assert.That(view.EditingKeyword, Is.False, key + " must not activate Keyword.");
+                    Assert.That(view.keyword.isFocused, Is.False);
+                    yield return Press(keyboard, key == Key.D ? Key.DownArrow : Key.UpArrow);
+                    Assert.That(view.FocusedRow, Is.Zero);
+                    Assert.That(view.EditingKeyword, Is.False, "Arrow navigation only selects Keyword.");
+                }
                 sounds.Clear();
-                yield return Press(keyboard, Key.K);
+                yield return Press(keyboard, Key.Enter);
                 Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Ka }), "Entering text mode plays one Ka."); sounds.Clear();
                 Assert.That(view.EditingKeyword, Is.True); Assert.That(view.keyword.isFocused, Is.True);
                 int focus = manager.Focused;
@@ -154,14 +198,14 @@ namespace OurTaiko.Tests
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
                 Assert.That(manager.Focused, Is.EqualTo(focus)); Assert.That(manager.Phase, Is.EqualTo(SongSelectManager.State.Browsing));
                 foreach (var key in new[] { Key.Tab, Key.UpArrow, Key.DownArrow, Key.Escape }) yield return Press(keyboard, key);
-                view.next[0].onClick.Invoke(); view.apply.onClick.Invoke(); view.close.onClick.Invoke(); view.clear.onClick.Invoke();
+                view.next[0].onClick.Invoke(); view.apply.onClick.Invoke(); view.close.onClick.Invoke();
                 Assert.That(view.IsOpen, Is.True); Assert.That(view.EditingKeyword, Is.True);
-                Assert.That(view.FocusedRow, Is.EqualTo(3)); Assert.That(view.keyword.isFocused, Is.True);
+                Assert.That(view.FocusedRow, Is.Zero); Assert.That(view.keyword.isFocused, Is.True);
                 Assert.That(manager.SearchActive, Is.False);
                 view.keyword.text = "Typed keyword";
                 yield return Press(keyboard, Key.Enter);
                 Assert.That(view.EditingKeyword, Is.False); Assert.That(view.keyword.isFocused, Is.False);
-                Assert.That(view.IsOpen, Is.True); Assert.That(view.FocusedRow, Is.EqualTo(3));
+                Assert.That(view.IsOpen, Is.True); Assert.That(view.FocusedRow, Is.Zero);
                 Assert.That(view.keyword.text, Is.EqualTo("Typed keyword")); Assert.That(manager.SearchActive, Is.False, "Enter finishes typing without searching.");
                 Assert.That(sounds, Is.Empty, "Typing drum keys and confirming text must not play menu sounds.");
                 first.CustomRequest = context =>
@@ -184,9 +228,7 @@ namespace OurTaiko.Tests
                 sounds.Clear(); view.Open(); yield return null;
                 view.next[0].onClick.Invoke();
                 Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Ka })); sounds.Clear();
-                view.clear.onClick.Invoke(); yield return null;
-                Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Don }), "Clear and close play only one Don together.");
-                sounds.Clear(); view.Open(); yield return null; view.close.onClick.Invoke();
+                view.close.onClick.Invoke(); yield return null;
                 Assert.That(sounds, Is.EqualTo(new[] { SongSelectManager.Sound.Don }));
             }
             finally
@@ -205,8 +247,9 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
             var scene = Object.FindFirstObjectByType<SongSelectScene>(); var view = scene.view.search;
             view.Open(); yield return null;
+            Assert.That(view.FocusedRow, Is.EqualTo(1));
             ClickKeyword(view); yield return null;
-            Assert.That(view.FocusedRow, Is.EqualTo(3)); Assert.That(view.EditingKeyword, Is.False);
+            Assert.That(view.FocusedRow, Is.Zero); Assert.That(view.EditingKeyword, Is.False);
             Assert.That(view.keyword.isFocused, Is.False, "The first touch only selects Keyword.");
             ClickKeyword(view); yield return null;
             Assert.That(view.EditingKeyword, Is.True); Assert.That(view.keyword.isFocused, Is.True);
@@ -223,7 +266,43 @@ namespace OurTaiko.Tests
             view.keyword.onSubmit.Invoke(view.keyword.text); yield return null;
             view.Close(); yield return null;
             view.Open(); yield return null;
+            Assert.That(view.FocusedRow, Is.EqualTo(1)); Assert.That(view.EditingKeyword, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator DismissingTheTouchKeyboardKeepsTextAndDoesNotReactivateIt()
+        {
+            TestData.UseServers(new ServerList()); TestSongs.Install();
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
+            var scene = Object.FindFirstObjectByType<SongSelectScene>(); var view = scene.view.search;
+            view.Open(); yield return null;
+            ClickKeyword(view); yield return null;
             Assert.That(view.FocusedRow, Is.Zero); Assert.That(view.EditingKeyword, Is.False);
+            foreach (var status in new[] { TouchScreenKeyboard.Status.Canceled, TouchScreenKeyboard.Status.LostFocus, TouchScreenKeyboard.Status.Done })
+            {
+                ClickKeyword(view); yield return null; yield return null;
+                Assert.That(view.EditingKeyword, Is.True, "Explicitly tapping Keyword should start a new input session.");
+                view.keyword.text = "保留关键词";
+                view.keyword.onTouchScreenKeyboardStatusChanged.Invoke(TouchScreenKeyboard.Status.Visible);
+                Assert.That(view.EditingKeyword, Is.True);
+                // Emulate the native status event; desktop Editor cannot open a mobile keyboard.
+                view.keyword.onTouchScreenKeyboardStatusChanged.Invoke(status);
+                view.Close(); view.Submit();
+                Assert.That(view.IsOpen, Is.True, "The dismissal gesture must not also operate the menu.");
+                yield return null; yield return null;
+                Assert.That(view.EditingKeyword, Is.False, status.ToString());
+                Assert.That(view.keyword.isFocused, Is.False, "Subsequent ticks must not reopen the keyboard.");
+                Assert.That(view.keyword.enabled, Is.False);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.Null);
+                Assert.That(view.keyword.text, Is.EqualTo("保留关键词"));
+                Assert.That(view.apply.interactable && view.close.interactable, Is.True);
+                Assert.That(scene.Manager.SearchActive, Is.False);
+            }
+            view.Submit();
+            float end = Time.realtimeSinceStartup + 15;
+            while (view.IsOpen && Time.realtimeSinceStartup < end) yield return null;
+            Assert.That(view.IsOpen, Is.False);
+            Assert.That(scene.Manager.SearchQuery.Keyword, Is.EqualTo("保留关键词"));
         }
 
         static IEnumerator Press(Keyboard keyboard, Key key)
