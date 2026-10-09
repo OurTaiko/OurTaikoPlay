@@ -22,6 +22,7 @@ namespace OurTaiko.Editor
             if (select.view.search != null)
             {
                 UpdateSearchLayout(select.view.search);
+                select.view.search.panel.SetActive(false);
                 EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
                 return;
             }
@@ -93,7 +94,6 @@ namespace OurTaiko.Editor
             }
             view.hint = Text("Hint", panel, "", 960, 900, 1400, 26);
             view.apply = Button("ApplySearch", panel, "Search", 620, 973, 300);
-            view.clear = Button("ClearSearch", panel, "Clear filters", 960, 973, 300);
             view.close = Button("CloseSearch", panel, "Back", 1300, 973, 300);
             UpdateSearchLayout(view);
             panel.gameObject.SetActive(false);
@@ -102,16 +102,73 @@ namespace OurTaiko.Editor
         }
         static void UpdateSearchLayout(SongSearchView view)
         {
+            const string art = Root + "Art/song_select/diff_sort/";
             var oldEntry = view.transform.Find("OpenSearch");
             if (oldEntry != null) UnityEngine.Object.DestroyImmediate(oldEntry.gameObject);
+            var oldClear = view.panel.transform.Find("ClearSearch");
+            if (oldClear != null) UnityEngine.Object.DestroyImmediate(oldClear.gameObject);
             view.summary.rectTransform.Center(1650, 430);
             view.summary.rectTransform.sizeDelta = new Vector2(440, 175);
+            var background = view.panel.transform.Find("NijiiroPanel").GetComponent<UnityEngine.UI.Image>();
+            background.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(art + "background_search.png");
+            background.rectTransform.sizeDelta = new Vector2(1360, 930);
+            background.rectTransform.TopLeft(280, 75);
+            view.panel.transform.Find("Shade").GetComponent<UnityEngine.UI.Image>().color = new Color(0, 0, 0, .78f);
+
+            void PlaceText(TextMeshProUGUI text, float x, float y, float width, float height, float size)
+            {
+                text.rectTransform.Center(x, y);
+                text.rectTransform.sizeDelta = new Vector2(width, height);
+                text.fontSize = text.fontSizeMax = size; text.fontSizeMin = size * .8f;
+                text.enableAutoSizing = true;
+            }
+            PlaceText(view.title, 960, 208, 1100, 76, 48);
+            view.title.alignment = TextAlignmentOptions.MidlineLeft;
+            PlaceText(view.status, 960, 263, 1100, 48, 24);
+            view.status.alignment = TextAlignmentOptions.MidlineLeft;
+            view.cursor.sizeDelta = new Vector2(1180, 112);
+            view.cursor.Center(960, 458);
+            // Arrays retain their difficulty / stars / sort / keyword bindings;
+            // their authored positions and runtime navigation put Keyword first.
+            float[] ys = { 458, 576, 694, 340 };
+            for (int i = 0; i < 4; i++)
+            {
+                PlaceText(view.labels[i], 560, ys[i], 300, 72, 36);
+                var pill = view.panel.transform.Find("Value" + i).GetComponent<RectTransform>();
+                pill.Center(1120, ys[i]); pill.sizeDelta = new Vector2(760, 94);
+                if (i < 3)
+                {
+                    PlaceText(view.values[i], 1120, ys[i], 540, 68, 36);
+                    ((RectTransform)view.previous[i].transform).Center(795, ys[i]);
+                    ((RectTransform)view.next[i].transform).Center(1445, ys[i]);
+                }
+            }
+            view.keyword.textViewport.sizeDelta = new Vector2(680, 64);
+            view.keyword.textViewport.Center(380, 47);
+            var fieldText = (TextMeshProUGUI)view.keyword.textComponent;
+            PlaceText(fieldText, 340, 32, 680, 64, 36);
+            fieldText.enableAutoSizing = false;
+            fieldText.alignment = TextAlignmentOptions.MidlineLeft;
+            var placeholder = (TextMeshProUGUI)view.keyword.placeholder;
+            PlaceText(placeholder, 340, 32, 680, 64, 30);
+            placeholder.color = new Color(.3f, .3f, .3f); placeholder.UseUiFont();
+            placeholder.alignment = TextAlignmentOptions.MidlineLeft;
+
+            foreach (var pair in new[] { (view.apply, 665f), (view.close, 1255f) })
+            {
+                var rect = (RectTransform)pair.Item1.transform;
+                rect.Center(pair.Item2, 820); rect.sizeDelta = new Vector2(510, 88);
+                PlaceText(pair.Item1.GetComponentInChildren<TextMeshProUGUI>(), 255, 44, 460, 70, 36);
+            }
+            view.apply.targetGraphic.color = new Color(1, .92f, .45f);
+            view.close.targetGraphic.color = Color.white;
+            PlaceText(view.hint, 960, 899, 1100, 40, 24);
             for (int i = 0; i < 3; i++)
                 foreach (var pair in new[] { (view.previous[i], "arrow_left"), (view.next[i], "arrow_right") })
                 {
                     var image = (UnityEngine.UI.Image)pair.Item1.targetGraphic;
-                    image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(Root + "Art/song_select/diff_sort/" + pair.Item2 + ".png");
-                    image.preserveAspect = true; image.rectTransform.sizeDelta = new Vector2(50, 68);
+                    image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(art + pair.Item2 + ".png");
+                    image.preserveAspect = true; image.rectTransform.sizeDelta = new Vector2(64, 80);
                     pair.Item1.GetComponentInChildren<TMP_Text>(true).gameObject.SetActive(false);
                 }
         }
