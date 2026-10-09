@@ -166,7 +166,6 @@ namespace OurTaiko
                 soulGauge.Initialize(Session.ClearThreshold);
                 foreach (string warning in Session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
                 Session.Judged += OnJudged;
-                Session.BranchSelected += OnBranchSelected;
                 if (branchLane != null) branchLane.Initialize(Session.Chart.Branches.Count > 0);
                 displayInfo = song.ReadDisplayInfo();
                 title.text = displayInfo.Title;
@@ -236,7 +235,7 @@ namespace OurTaiko
             if (Session == null || IsFinished) return;
             double time = ChartTime;
             Session.Advance(time, autoPlay);
-            if (branchLane != null) branchLane.ShowTime(time);
+            UpdateBranchLane(time);
             if (!autoPlay) HitFirstDrumPress();
             UpdatePlayVisuals(time);
             if (time > Session.Chart.Duration + Math.Max(0, judgeOffset) + 1 && SongTime > music.AudioLength() + 1) Finish();
@@ -359,9 +358,11 @@ namespace OurTaiko
             }
             lastCombo = Session.Combo;
         }
-        void OnBranchSelected(ChartBranch branch, BranchRoute route)
+        void UpdateBranchLane(double time)
         {
-            if (branchLane != null) branchLane.Select(route, ChartTime);
+            if (branchLane == null) return;
+            branchLane.Select(Session.DisplayBranchAt(time), time);
+            branchLane.ShowTime(time);
         }
         public void TogglePause()
         {
@@ -492,7 +493,7 @@ namespace OurTaiko
         void OnDestroy()
         {
             if (switcher != null) switcher.SceneChanging -= PrepareToLeave;
-            if (Session != null) { Session.Judged -= OnJudged; Session.BranchSelected -= OnBranchSelected; }
+            if (Session != null) Session.Judged -= OnJudged;
         }
 
         static RectTransform Rect(string name, Transform parent, float width, float height)

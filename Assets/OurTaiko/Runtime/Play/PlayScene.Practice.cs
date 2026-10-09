@@ -47,7 +47,7 @@ namespace OurTaiko
             PracticeStage = FirstPracticeStage;
             if (first)
             {
-                Session.Judged -= OnJudged; Session.BranchSelected -= OnBranchSelected;
+                Session.Judged -= OnJudged;
                 Session = new PlaySession(Session.Chart, judgeOffset, practiceBranch);
             }
             RefreshPracticeBars();
@@ -63,9 +63,9 @@ namespace OurTaiko
         void ResetPracticeAttempt(double position)
         {
             var previous = Session;
-            previous.Judged -= OnJudged; previous.BranchSelected -= OnBranchSelected;
+            previous.Judged -= OnJudged;
             Session = PlaySession.PracticeAt(previous.Chart, position + VisualOffset, previous, practiceBranch);
-            Session.Judged += OnJudged; Session.BranchSelected += OnBranchSelected;
+            Session.Judged += OnJudged;
             Record.Inputs.Clear();
             nextAutoRight = true;
             lastCombo = 0;
@@ -81,7 +81,7 @@ namespace OurTaiko
             if (branchLane != null)
             {
                 branchLane.Initialize(Session.Chart.Branches.Count > 0);
-                branchLane.Select(Session.CurrentBranch, position - 1);
+                branchLane.Select(Session.DisplayBranchAt(position + VisualOffset), position - 1);
                 branchLane.ShowTime(position);
             }
             UpdateHud();
