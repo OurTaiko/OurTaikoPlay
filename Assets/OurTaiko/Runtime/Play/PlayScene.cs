@@ -66,7 +66,7 @@ namespace OurTaiko
         double audioOffset, visualOffset, judgeOffset;
         double ChartTime => SongTime - audioOffset;
         SongInfo displayInfo;
-        bool autoPlay, hitKa;
+        bool autoPlay, hitKa, nextAutoRight = true;
         SceneSwitcher switcher;
         double feedbackTime = -10;
         readonly double[] flashedAt = { -10, -10, -10, -10 };
@@ -298,7 +298,12 @@ namespace OurTaiko
         {
             if (result != Judgment.Roll)
                 soulGauge.SetPoints(Session.GaugePoints, ChartTime);
-            if (autoPlay) Feedback(Session.Chart.Notes[index].IsKa, (index & 1) != 0);
+            if (autoPlay)
+            {
+                // Alternate actual strikes, including every hit within the same long note.
+                Feedback(Session.Chart.Notes[index].IsKa, nextAutoRight);
+                nextAutoRight = !nextAutoRight;
+            }
             SpawnArc(index, result);
             var judged = Session.Chart.Notes[index];
             bool big = judged.Kind == NoteKind.BigDon || judged.Kind == NoteKind.BigKa;

@@ -9,6 +9,92 @@ namespace OurTaiko.Tests
     public sealed class HitFeedbackClockTests
     {
         [UnityTest]
+        public IEnumerator AutoStrikesAlternateAcrossAllLongNotes() => CheckAutoHands(false);
+
+        [UnityTest]
+        public IEnumerator PracticeAutoStrikesAlternateAndResetOnSeek() => CheckAutoHands(true);
+
+        static IEnumerator CheckAutoHands(bool practice)
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Auto Hands\nBPM:120\nCOURSE:Oni\nLEVEL:1\nBALLOON:3,4\n#START\n"
+                + "0000,\n1508,\n2608,\n3708,\n4908,\n2000,\n#END");
+            try
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                yield return null;
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                yield return null;
+                var switcher = SceneSwitcher.Instance;
+                switcher.PracticeMode = practice;
+                switcher.Play(song, "Oni", true);
+                float deadline = Time.realtimeSinceStartup + 30;
+                string target = practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene;
+                while (switcher.IsInputBlocked || SceneManager.GetActiveScene().name != target)
+                {
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                    yield return null;
+                }
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                if (!play.IsPaused) play.TogglePause();
+                yield return null;
+
+                void ClearFlashes()
+                {
+                    foreach (var flash in play.drumFlashes)
+                    {
+                        var sampler = flash.GetComponent<ClipSampler>();
+                        sampler.Sample(sampler.clip.length);
+                    }
+                }
+
+                int strikes = 0;
+                var longKinds = new System.Collections.Generic.HashSet<NoteKind>();
+                void Observe(int index, Judgment result)
+                {
+                    var note = play.Session.Chart.Notes[index];
+                    int expectedFlash = (note.IsKa ? 2 : 0) + (strikes % 2 == 0 ? 1 : 0);
+                    for (int i = 0; i < play.drumFlashes.Length; i++)
+                        Assert.That(play.drumFlashes[i].enabled, Is.EqualTo(i == expectedFlash),
+                            $"Strike {strikes + 1}, {note.Kind}: expected drum flash {expectedFlash}.");
+                    if (result == Judgment.Roll) longKinds.Add(note.Kind);
+                    strikes++;
+                    ClearFlashes();
+                }
+
+                ClearFlashes();
+                play.Session.Judged += Observe;
+                play.Session.Advance(2, true);
+                Assert.That(strikes, Is.EqualTo(1));
+                if (practice)
+                {
+                    // Seeking after an odd number of strikes must start the next attempt on the right.
+                    play.MovePractice(0);
+                    strikes = 0;
+                    play.Session.Judged += Observe;
+                    play.Session.Advance(2, true);
+                    Assert.That(strikes, Is.EqualTo(1));
+                }
+                // Several hits are caught up in one frame, spanning normal notes and all long kinds.
+                play.Session.Advance(11, true);
+                Assert.That(longKinds, Is.EquivalentTo(new[]
+                    { NoteKind.Roll, NoteKind.BigRoll, NoteKind.Balloon, NoteKind.Kusudama }));
+                Assert.That(play.Session.LongHits[1], Is.EqualTo(16));
+                Assert.That(play.Session.LongHits[3], Is.EqualTo(16));
+                Assert.That(play.Session.LongHits[5], Is.EqualTo(3));
+                Assert.That(play.Session.LongHits[7], Is.EqualTo(4));
+                Assert.That(strikes, Is.EqualTo(44));
+                play.Session.Advance(11, true);
+                Assert.That(strikes, Is.EqualTo(44), "Advancing without a new hit must not strike again.");
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator LongHitsDoNotRestartJudgmentTextInSinglePlay() => CheckLongHitText(false);
 
         [UnityTest]

@@ -67,6 +67,7 @@ namespace OurTaiko
             Session = PlaySession.PracticeAt(previous.Chart, position + VisualOffset, previous, practiceBranch);
             Session.Judged += OnJudged; Session.BranchSelected += OnBranchSelected;
             Record.Inputs.Clear();
+            nextAutoRight = true;
             lastCombo = 0;
             balloonCounter.ResetDisplay(); comboAnnounce.Hide();
             drumrollCounter.ResetDisplay();
