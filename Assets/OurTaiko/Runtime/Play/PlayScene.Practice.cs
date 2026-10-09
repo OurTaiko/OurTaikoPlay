@@ -78,13 +78,14 @@ namespace OurTaiko
             judgmentFade ??= judgment.GetComponent<ClipSampler>();
             judgmentFade.Sample(judgmentFade.clip.length);
             for (int i = 0; i < flashedAt.Length; i++) { flashedAt[i] = double.NegativeInfinity; ShowFlash(i); }
-            if (branchLane != null)
-            {
-                branchLane.Initialize(Session.Chart.Branches.Count > 0);
-                branchLane.Select(Session.DisplayBranchAt(position + VisualOffset), position - 1);
-                branchLane.ShowTime(position);
-            }
+            ResetPracticeBranchLane(position + VisualOffset);
             UpdateHud();
+        }
+        void ResetPracticeBranchLane(double time)
+        {
+            if (branchLane == null) return;
+            branchLane.Initialize(Session.Chart.Branches.Count > 0);
+            branchLane.SetImmediate(Session.DisplayBranchAt(time));
         }
         void ShowPracticePause()
         {
@@ -127,6 +128,8 @@ namespace OurTaiko
             ResetPracticeAttempt(Practice.Target);
             music.pitch = (float)Practice.Speed;
             songClock.Seek(Practice.PlaybackStart(AudioOffset, VisualOffset, judgeOffset), Practice.Speed);
+            // The preparation lead-in may start in a different section than the practice target.
+            ResetPracticeBranchLane(ChartTime);
             songClock.Resume(GameTimeline.AudioNow);
             IsPaused = false;
             practiceView.panel.SetActive(false);
