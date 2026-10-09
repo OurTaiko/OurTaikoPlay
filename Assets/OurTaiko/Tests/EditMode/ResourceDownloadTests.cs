@@ -60,6 +60,19 @@ namespace OurTaiko.Tests
             Run(() => client.ConnectAsync(endpoint, false));
         }
         [TearDown] public void Cleanup() { client.Dispose(); api.Dispose(); origin.Dispose(); Directory.Delete(cache, true); }
+        [TestCase(null)] [TestCase("shift-jis")] [TestCase("invalid")]
+        public void Utf8DownloadIgnoresEncodingMetadataAndAcceptsBom(string encoding)
+        {
+            chart.Encoding = encoding;
+            chart.Tja = Encoding.UTF8.GetBytes("\uFEFF" + FanmadeFixture.SimpleTja());
+            Run(() => client.ConnectAsync(endpoint, false));
+            var prepared = Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That(prepared.Tja, Does.Contain("TITLE:" + chart.Title));
+            Assert.That(prepared.Tja.IndexOf('\uFEFF'), Is.EqualTo(-1));
+            Assert.That(prepared.Tja, Does.Contain("#START"));
+            Assert.That(tjaGets, Is.EqualTo(1));
+            Assert.That(forbidden, Is.Zero);
+        }
         [TestCase("chartId")] [TestCase("sha256")] [TestCase("size")] [TestCase("url")] [TestCase("missing")]
         public void InvalidManifestIsRejectedBeforeDownload(string field)
         {
