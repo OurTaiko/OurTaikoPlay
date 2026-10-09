@@ -47,19 +47,19 @@ namespace OurTaiko.Tests
             void Draw(double time) => Render.Invoke(play, new object[] { time });
             Sprite Head(int index) => play.NoteRoot(index).Find("Head").GetComponent<Image>().sprite;
 
-            Draw(2.25);
+            Draw(2.0);
             Assert.That(Head(50), Is.SameAs(play.noteSprites[1]), "Before 50 combo the face stays neutral.");
             for (int i = 0; i < 50; i++) Assert.That(play.Session.Hit(false, notes[i].Time), Is.EqualTo(Judgment.Good));
             Assert.That(play.Session.Combo, Is.EqualTo(50));
             // The same render time must update after a judgment changes the combo.
-            Draw(2.25);
+            Draw(2.0);
             Assert.That(Head(50), Is.SameAs(play.alternateNoteSprites[1]));
             for (int i = 50; i < 58; i++)
             {
                 int kind = (int)notes[i].Kind;
-                Draw(notes[i].Time + 0.125);
-                Assert.That(Head(i), Is.SameAs(play.noteSprites[kind]));
                 Draw(notes[i].Time + 0.25);
+                Assert.That(Head(i), Is.SameAs(play.noteSprites[kind]));
+                Draw(notes[i].Time + 0.125);
                 Assert.That(Head(i), Is.SameAs(play.alternateNoteSprites[kind]));
                 if (kind != 9) Assert.That(play.alternateNoteSprites[kind], Is.Not.SameAs(play.noteSprites[kind]));
                 else Assert.That(play.alternateNoteSprites[kind], Is.SameAs(play.noteSprites[kind]), "Nijiiro kusudama repeats the same crop.");
@@ -69,14 +69,14 @@ namespace OurTaiko.Tests
                     Assert.That(play.NoteRoot(i).Find("RollTail").GetComponent<Image>().sprite, Is.SameAs(play.rollTailSprites[kind - 5]));
                 }
             }
-            Draw(notes[58].Time + 0.125);
+            Draw(notes[58].Time + 0.05);
             Assert.That(Head(58), Is.SameAs(play.alternateNoteSprites[1]), "The new BPM applies at its command.");
             // Seek back and reuse a pooled view: phase depends only on chart time.
             Draw(2.25);
             var pausedSprite = Head(50);
             Draw(2.25);
             Assert.That(Head(50), Is.SameAs(pausedSprite), "Repeated sampling at a frozen chart time holds the frame.");
-            Draw(2.1);
+            Draw(1.99);
             Assert.That(Head(50), Is.SameAs(play.noteSprites[1]));
             play.Session.Advance(2.2, false);
             Assert.That(play.Session.Combo, Is.Zero);

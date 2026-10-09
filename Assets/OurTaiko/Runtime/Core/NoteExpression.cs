@@ -4,14 +4,19 @@ namespace OurTaiko
 {
     public static class NoteExpression
     {
-        // YataiDON Player::draw_notes: at 50 combo, alternate frames every eighth note.
-        // Use absolute chart time at the current BPM, not accumulated beats or a per-note
-        // clock. Tempo changes therefore re-evaluate the phase exactly as in the source.
-        public static int Frame(double time, double bpm, int combo)
+        const double BeatTolerance = 1e-7;
+
+        public static double StartBeat(double noteBeat) => Math.Ceiling(noteBeat - BeatTolerance);
+
+        // The first change is on the threshold note's beat, rounded up to a whole beat.
+        // Until the faster tier starts, keep the eighth-note animation running.
+        public static int Frame(double beat, int combo, double eighthStart, double sixteenthStart)
         {
-            if (combo < 50 || !(bpm > 0) || double.IsInfinity(bpm) || double.IsNaN(time) || double.IsInfinity(time)) return 0;
-            double eighth = Math.Truncate(time / (30.0 / bpm));
-            return (int)((eighth % 2 + 2) % 2);
+            if (combo < 50 || double.IsNaN(beat) || double.IsInfinity(beat) || beat + BeatTolerance < eighthStart) return 0;
+            bool fast = combo >= 150 && beat + BeatTolerance >= sixteenthStart;
+            double start = fast ? sixteenthStart : eighthStart;
+            double step = Math.Max(0, Math.Floor((beat - start + BeatTolerance) * (fast ? 4 : 2)));
+            return 1 - (int)(step % 2);
         }
     }
 }

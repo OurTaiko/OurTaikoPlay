@@ -690,7 +690,7 @@ namespace OurTaiko
             rendered = true; renderedSession = Session; renderedVersion = Session.Version;
             renderedBalloon = balloonCounter.NoteIndex; renderedPreview = preview;
             RenderedTime = time;
-            int expression = NoteExpression.Frame(time, Session.BpmAt(time, preview), Session.Combo);
+            int expression = Session.NoteExpressionFrame(time, preview);
             bool notesEntered = false, mojiEntered = false;
             var chartNotes = Session.Chart.Notes;
             // Outside its interval a note is off the lane, exactly as the full cull would find it.

@@ -11,7 +11,7 @@ namespace OurTaiko
     public sealed class ChartNote
     {
         public NoteKind Kind;
-        public double Time, EndTime, Bpm, ScrollX = 1, ScrollY, TailBpm;
+        public double Time, EndTime, Beat, Bpm, ScrollX = 1, ScrollY, TailBpm;
         public int BalloonHits;
         // Frame of notes/moji drawn under the note; assigned by NoteMoji.Assign.
         public int Moji;
@@ -64,10 +64,11 @@ namespace OurTaiko
         public BranchRoute Route;
     }
 
-    // A tempo command can occur between notes or inside an empty measure.
+    // Beat/tempo anchor, including delays between notes or inside an empty measure.
+    // Beat stays fixed from Time until ResumeTime; tempo changes resume immediately.
     public sealed class ChartTempo
     {
-        public double Time, Bpm;
+        public double Time, Bpm, Beat, ResumeTime;
         public int BranchId = -1;
         public BranchRoute Route;
     }
