@@ -53,7 +53,7 @@ namespace OurTaiko.Editor
             view.summary.textWrappingMode = TextWrappingModes.Normal;
             var panel = SkinUi.Rect("SearchDialog", root, 1920, 1080); panel.TopLeft(0, 0); view.panel = panel.gameObject;
             var shade = SkinUi.Image("Shade", panel, null, 1920, 1080); shade.rectTransform.TopLeft(0, 0); shade.color = new Color(0, 0, 0, .65f); shade.raycastTarget = true;
-            var background = SkinUi.Image("NijiiroPanel", panel, Art("background")); background.rectTransform.TopLeft(300, 150);
+            var background = SkinUi.Image("NijiiroPanel", panel, Art("background_search")); background.rectTransform.TopLeft(300, 150);
             view.title = Text("Title", panel, "Song search", 690, 275, 580, 48);
             view.status = Text("Status", panel, "", 1360, 278, 330, 26);
             view.status.textWrappingMode = TextWrappingModes.Normal; view.status.rectTransform.sizeDelta = new Vector2(330, 85);
