@@ -30,7 +30,7 @@ namespace OurTaiko.Tests
                 JObject R(byte[] bytes, string type) => new JObject { ["url"] = origin.BaseUrl + "/preview?signature=get", ["headUrl"] = origin.BaseUrl + "/preview?signature=head", ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
                 var resources = new JObject { ["tja"] = R(c.Tja,"application/octet-stream"), ["audio"] = R(c.Audio,"audio/ogg") };
                 if (!missing) resources["preview"] = R(preview,"audio/ogg");
-                return new JObject { ["chartId"] = c.Id, ["expiresAt"] = DateTime.UtcNow.AddMinutes(15).ToString("o"), ["resources"] = resources };
+                return new JObject { ["chartId"] = c.Id, ["resources"] = resources };
             };
             origin.CustomRequest = ctx => {
                 gets++;
@@ -48,7 +48,7 @@ namespace OurTaiko.Tests
         static void Run(Func<Task> work) => Task.Run(work).GetAwaiter().GetResult();
         string Download() => Run(() => client.PreparePreviewAsync(client.Charts[0]));
         [TearDown] public void Cleanup() { client.Dispose(); api.Dispose(); origin.Dispose(); if (Directory.Exists(cache)) Directory.Delete(cache,true); }
-        [Test] public void DownloadsOnlyPreviewAndReusesVerifiedCache() {
+        [Test] public void ManifestWithoutExpiryDownloadsOnlyPreviewAndReusesVerifiedCache() {
             string path=Download(); Assert.That(File.ReadAllBytes(path),Is.EqualTo(preview));
             Assert.That(Download(),Is.EqualTo(path)); Assert.That(gets,Is.EqualTo(1)); Assert.That(forbidden,Is.Zero);
         }
@@ -58,7 +58,7 @@ namespace OurTaiko.Tests
         }
         [Test] public void CorruptCacheIsDownloadedAgain() { string path=Download(); File.WriteAllBytes(path,new byte[preview.Length]); Download(); Assert.That(gets,Is.EqualTo(2)); }
         [Test] public void CorruptDownloadNeverEntersCache() { corrupt=true; Assert.That(Assert.Throws<FanmadeException>(()=>Download()).Message,Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED")); string objects = Path.Combine(cache, "objects"); Assert.That(Directory.Exists(objects) ? Directory.GetFiles(objects,"*",SearchOption.AllDirectories).Length : 0,Is.Zero); }
-        [Test] public void ExpiredSignatureRefreshesOnce() { failures=1; Download(); Assert.That(manifests,Is.EqualTo(2)); Assert.That(gets,Is.EqualTo(2)); }
+        [Test] public void FirstForbiddenRefreshesOnce() { failures=1; Download(); Assert.That(manifests,Is.EqualTo(2)); Assert.That(gets,Is.EqualTo(2)); }
         [Test] public void RepeatedForbiddenDoesNotDownloadFullSong() { failures=10; Assert.Throws<HttpStatusException>(()=>Download()); Assert.That(gets,Is.EqualTo(2)); }
         [Test] public void MissingPreviewDoesNotDownloadFullSong() { missing=true; Assert.That(Assert.Throws<FanmadeException>(()=>Download()).Message,Is.EqualTo("PREVIEW_UNAVAILABLE")); Assert.That(gets,Is.Zero); }
         [Test] public void CancellationStartsNoDownload() { using var c=new CancellationTokenSource(); c.Cancel(); Assert.Catch<OperationCanceledException>(()=>Run(()=>client.PreparePreviewAsync(client.Charts[0],c.Token))); Assert.That(gets,Is.Zero); }

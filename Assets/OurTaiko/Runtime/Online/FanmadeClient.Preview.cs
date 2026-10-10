@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,7 +5,7 @@ namespace OurTaiko.Online
 {
     public sealed partial class FanmadeClient
     {
-        // Signed links are refreshed on each selection; only verified content is cached.
+        // Resource manifests are fetched on each selection; only verified content is cached.
         // Never construct a URL from the catalog's bucket key or forward API credentials.
         public async Task<string> PreparePreviewAsync(FanmadeChart selected, CancellationToken cancel = default)
         {
@@ -25,7 +24,6 @@ namespace OurTaiko.Online
                     {
                         bool valid = await CacheWork(() => Matches(path, resource), cancel);
                         if (valid) { cancel.ThrowIfCancellationRequested(); return path; }
-                        if (manifest.ExpiresAt <= DateTimeOffset.UtcNow.AddSeconds(45)) throw new FanmadeException("RESOURCE_LINK_EXPIRED");
                         var bytes = await endpoint.ResourceBytesAsync(resource, cancel);
                         if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
                             throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
@@ -34,7 +32,6 @@ namespace OurTaiko.Online
                         return path;
                     }
                     catch (HttpStatusException e) when (attempt == 0 && (e.Status == 403 || e.Status == 404)) { }
-                    catch (FanmadeException e) when (attempt == 0 && e.Message == "RESOURCE_LINK_EXPIRED") { }
                 }
             }
             finally { endpoint.Transport.Release(); }

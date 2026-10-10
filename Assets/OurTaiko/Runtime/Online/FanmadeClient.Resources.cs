@@ -8,7 +8,7 @@ namespace OurTaiko.Online
     public sealed partial class FanmadeClient
     {
         // Refreshes the chart's details (the author may have replaced its files), then makes sure
-        // the TJA and audio from the signed resource links are cached with matching size and
+        // the TJA and audio from the resource URLs are cached with matching size and
         // SHA-256. Returns the playable TJA (built from the API metadata, kept in memory only) and
         // the audio object's path. `progress` runs on worker threads.
         public async Task<(string Tja, string AudioPath, FanmadeChart Chart)> PrepareAsync(FanmadeChart selected, CancellationToken cancel = default,
@@ -21,7 +21,7 @@ namespace OurTaiko.Online
             await e.Transport.WaitAsync(cancel);
             try
             {
-                // One shared restart budget: mismatch, expiring link, 403/404 and transient failure.
+                // One shared restart budget: mismatch, 403/404 and transient failure.
                 for (int attempt = 0; attempt < 2; attempt++)
                 {
                     cancel.ThrowIfCancellationRequested();
@@ -39,7 +39,6 @@ namespace OurTaiko.Online
                         transfer.Status = FileProgress.State.Verifying; Publish();
                         if (await CacheWork(() => Matches(file, resource), cancel))
                         { transfer.Status = FileProgress.State.Cached; transfer.Received = transfer.Total = resource.Size; Publish(); return file; }
-                        if (manifest.ExpiresAt <= DateTimeOffset.UtcNow.AddSeconds(45)) throw new FanmadeException("RESOURCE_LINK_EXPIRED");
                         transfer.Status = FileProgress.State.Downloading; transfer.Total = resource.Size; transfer.Received = 0; Publish();
                         var bytes = await e.ResourceBytesAsync(resource, cancel, (received, total) => { transfer.Received = received; transfer.Total = total; Publish(); });
                         transfer.Status = FileProgress.State.Verifying; Publish();
@@ -70,7 +69,7 @@ namespace OurTaiko.Online
                         return (text, audio, selected.SelectedPlayer.Length > 0 ? c.ForPlayer(selected.SelectedPlayer) : c);
                     }
                     catch (HttpStatusException error) when (attempt == 0 && (error.Status == 403 || error.Status == 404 || error.Status >= 500)) { }
-                    catch (FanmadeException error) when (attempt == 0 && (error.Message == "RESOURCE_LINK_EXPIRED" || error.Message == "NETWORK_TIMEOUT")) { }
+                    catch (FanmadeException error) when (attempt == 0 && error.Message == "NETWORK_TIMEOUT") { }
                 }
                 throw new FanmadeException("RESOURCE_UNAVAILABLE");
             }

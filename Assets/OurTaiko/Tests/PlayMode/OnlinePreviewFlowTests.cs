@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.IO;
 using System.Text;
@@ -34,7 +33,7 @@ namespace OurTaiko.Tests
             {
                 JObject R(byte[] bytes, string type) => new JObject { ["url"] = origin.BaseUrl + "/audio?get", ["headUrl"] = origin.BaseUrl + "/audio?head",
                     ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
-                return new JObject { ["chartId"] = c.Id, ["expiresAt"] = DateTime.UtcNow.AddMinutes(15).ToString("o"),
+                return new JObject { ["chartId"] = c.Id,
                     ["resources"] = new JObject { ["tja"] = R(c.Tja, "application/octet-stream"), ["audio"] = R(c.Audio, "audio/ogg"), ["preview"] = R(audio, "audio/ogg") } };
             };
             origin.CustomRequest = ctx =>

@@ -104,7 +104,7 @@ namespace OurTaiko.Tests
             string audioType = chart.AudioName.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase) ? "audio/mpeg" : "audio/ogg";
             return new JObject
             {
-                ["chartId"] = chart.Id, ["expiresAt"] = DateTime.UtcNow.AddMinutes(15).ToString("o"),
+                ["chartId"] = chart.Id,
                 ["resources"] = new JObject { ["tja"] = Resource("tja", chart.Tja, "application/octet-stream"), ["audio"] = Resource("audio", chart.Audio, audioType) },
             };
         }

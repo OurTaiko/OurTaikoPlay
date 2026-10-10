@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -14,13 +13,10 @@ namespace OurTaiko.Online
 
     public sealed class FanmadeResources
     {
-        public DateTimeOffset ExpiresAt;
         public FanmadeResource Tja, Audio, Preview;
         public static FanmadeResources Parse(JObject value, string chartId, Action<string> validateUrl)
         {
             if (Json.Str(value, "chartId") != chartId) throw new FanmadeException("RESOURCE_CHART_MISMATCH");
-            if (!DateTimeOffset.TryParse(Json.Str(value, "expiresAt"), CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal, out var expires)) throw new FanmadeException("RESOURCE_EXPIRY_INVALID");
             if (!(value["resources"] is JObject resources)) throw new FanmadeException("RESOURCE_MANIFEST_INVALID");
             FanmadeResource Read(string kind, long limit)
             {
@@ -31,7 +27,7 @@ namespace OurTaiko.Online
                 validateUrl(r.Url); validateUrl(r.HeadUrl);
                 return r;
             }
-            var result = new FanmadeResources { ExpiresAt = expires, Tja = Read("tja", 4L * 1024 * 1024), Audio = Read("audio", 256L * 1024 * 1024) };
+            var result = new FanmadeResources { Tja = Read("tja", 4L * 1024 * 1024), Audio = Read("audio", 256L * 1024 * 1024) };
             if (result.Audio.ContentType != "audio/ogg" && result.Audio.ContentType != "audio/mpeg") throw new FanmadeException("API_AUDIO_FORMAT_UNSUPPORTED");
             if (resources["preview"] != null) {
                 result.Preview = Read("preview", 32L * 1024 * 1024);

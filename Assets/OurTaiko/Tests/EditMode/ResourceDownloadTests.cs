@@ -18,13 +18,13 @@ namespace OurTaiko.Tests
         string cache;
         int manifests, tjaGets, audioGets, forbidden;
         public int ResourceStatus;
-        bool corrupt, expired, mismatch;
+        bool corrupt, mismatch;
         static void Run(Func<Task> action) => Task.Run(action).GetAwaiter().GetResult();
         static T Run<T>(Func<Task<T>> action) => Task.Run(action).GetAwaiter().GetResult();
         [SetUp] public void Setup()
         {
             manifests = tjaGets = audioGets = forbidden = ResourceStatus = 0;
-            corrupt = expired = mismatch = false;
+            corrupt = mismatch = false;
             api = new FanmadeFixture();
             origin = new FanmadeFixture();
             chart = new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3 } };
@@ -37,7 +37,7 @@ namespace OurTaiko.Tests
                     ["url"] = origin.BaseUrl + "/" + kind + "?signature=a%2Fb&mode=get", ["headUrl"] = origin.BaseUrl + "/" + kind + "?signature=head",
                     ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
                 };
-                return new JObject { ["chartId"] = c.Id, ["expiresAt"] = DateTime.UtcNow.AddMinutes(expired && manifests == 1 ? -1 : 15).ToString("o"),
+                return new JObject { ["chartId"] = c.Id,
                     ["resources"] = new JObject { ["tja"] = Resource("tja", c.Tja, "application/octet-stream"),
                         ["audio"] = Resource("audio", mismatch ? new byte[] { 9 } : c.Audio, "audio/ogg") } };
             };
@@ -192,7 +192,13 @@ namespace OurTaiko.Tests
             Assert.That(Directory.GetFiles(cache, "*.part", SearchOption.AllDirectories), Is.Empty);
         }
 
-        [Test] public void ExpiredLinksRefreshOnce() { expired = true; Run(() => client.PrepareAsync(client.Charts[0])); Assert.That(manifests, Is.EqualTo(2)); }
+        [Test] public void ManifestWithoutExpiryDownloadsWithoutRefresh()
+        {
+            var result = Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That(result.Tja, Does.Contain("#START"));
+            Assert.That(File.ReadAllBytes(result.AudioPath), Is.EqualTo(chart.Audio));
+            Assert.That((manifests, tjaGets, audioGets, forbidden), Is.EqualTo((1, 1, 1, 0)));
+        }
         [TestCase(403)] [TestCase(404)] [TestCase(503)]
         public void ResourceErrorsAreBoundedAndNeverLoginOrProxy(int status)
         {
