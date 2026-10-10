@@ -46,15 +46,16 @@ jobs:
               echo "::error::Release tags must look like v1.2 or v1.2.3, got $GITHUB_REF_NAME"
               exit 1
             fi
-            DISPLAY="$VERSION"
           else
             VERSION=$(grep -m1 'bundleVersion:' ProjectSettings/ProjectSettings.asset | awk '{print $2}')
-            DISPLAY="${VERSION}-$(date -u +%Y%m%d)-${GITHUB_SHA::7}"
           fi
+          # Count the full history of the checked-out commit, never the CI run number.
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          DISPLAY="${VERSION}-${BUILD_NUMBER}"
           {
             echo "version=$VERSION"
             echo "display=$DISPLAY"
-            echo "android_code=$(git rev-list HEAD --count)"
+            echo "android_code=$BUILD_NUMBER"
           } >> "$GITHUB_OUTPUT"
           echo "Version $VERSION, display $DISPLAY"
 
