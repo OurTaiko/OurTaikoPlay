@@ -16,7 +16,7 @@ namespace OurTaiko.Tests
         public IEnumerator HitNotesFlyToSoulBadgeAndBurst()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
-            song.chart = new TextAsset("TITLE:Arc\nBPM:120\nCOURSE:Oni\nLEVEL:1\nBALLOON:2,2\n#START\n1234,\n5008,\n7008,\n9008,\n#END");
+            song.chart = new TextAsset("TITLE:Arc\nBPM:120\nCOURSE:Oni\nLEVEL:1\nBALLOON:2,2\n#START\n1234,\n5008,\n7008,\n9008,\n6008,\n#END");
             try
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -40,7 +40,7 @@ namespace OurTaiko.Tests
                 Assert.That(session.Hit(false, -0.09), Is.EqualTo(Judgment.Bad));
                 Assert.That(arcs.ActiveCount, Is.Zero);
                 session.Hit(true, 0.5); session.Hit(false, 1.0); session.Hit(true, 1.55);
-                // Drumroll hits fly a small note of the drum that was hit.
+                // Small drumroll hits fly a small note of the drum that was hit.
                 HitKa.SetValue(play, true); session.Hit(true, 2.5);
                 HitKa.SetValue(play, false); session.Hit(false, 2.6);
                 // A balloon flies once, when it pops; a kusudama never does.
@@ -96,6 +96,22 @@ namespace OurTaiko.Tests
                 Assert.That(effect.burst.color.a, Is.EqualTo(effect.note.color.a).Within(0.003f));
                 arcs.ShowTime(landed + effect.GetComponent<ClipSampler>().clip.length);
                 Assert.That(effect.IsPlaying || effect.burst.enabled || effect.note.enabled, Is.False);
+
+                // Big drumroll hits fly large don/ka sprites and retain that size at the soul badge.
+                foreach (bool isKa in new[] { false, true })
+                {
+                    arcs.ResetDisplay();
+                    HitKa.SetValue(play, isKa);
+                    Assert.That(session.Hit(isKa, isKa ? 8.2 : 8.1), Is.EqualTo(Judgment.Roll));
+                    Assert.That(arcs.ActiveCount, Is.EqualTo(1));
+                    var expected = play.noteSprites[isKa ? 4 : 3];
+                    Assert.That(arcs.ArcRoot(0).GetComponent<UnityEngine.UI.Image>().sprite, Is.SameAs(expected));
+                    arcs.ShowTime(landed);
+                    Assert.That(arcs.ActiveCount, Is.Zero);
+                    Assert.That(effect.IsPlaying && effect.IsBig, Is.True);
+                    Assert.That(effect.note.sprite, Is.SameAs(expected));
+                }
+                arcs.ResetDisplay();
 
                 // A stream in flight over a burst 200 ms old, for the record.
                 arcs.Spawn(play.noteSprites[3], true, start - NoteArcPath.Duration - 0.2);
