@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Linq;
 
@@ -7,7 +8,7 @@ namespace OurTaiko.Online
 {
     // fanmade.cpp playable_tja/to_utf8: the downloaded original stays byte-for-byte intact for the hash
     // check; the playable copy is UTF-8, keeps exactly the API's courses (matched by COURSE and the
-    // #START player, so Oni_1p is the Oni block started with P1) and takes its titles from the API.
+    // #START player, so Oni_1p is the Oni block started with P1) and takes its titles and offset from the API.
     public static class PlayableTja
     {
         public static string ToUtf8(byte[] bytes)
@@ -20,6 +21,7 @@ namespace OurTaiko.Online
         {
             if (utf8.StartsWith("﻿", StringComparison.Ordinal)) utf8 = utf8.Substring(1);
             var output = new StringBuilder(chart.TitleHeaders() + "WAVE:" + chart.CachedAudioName + "\n");
+            output.Append("OFFSET:").Append(chart.Offset.ToString("R", CultureInfo.InvariantCulture)).Append('\n');
             var globals = new List<string>();
             var headers = new List<string>();
             var body = new StringBuilder();
@@ -83,12 +85,12 @@ namespace OurTaiko.Online
             return Trim(colon >= 0 ? line.Substring(0, colon) : line).ToUpperInvariant();
         }
 
-        // Titles, audio, images/video and the course fields come from the API, not the original.
+        // API metadata replaces these headers; retain no original OFFSET, even inside course headers.
         static bool KeptHeader(string line)
         {
             string key = Key(line);
             return !key.StartsWith("TITLE", StringComparison.Ordinal) && !key.StartsWith("SUBTITLE", StringComparison.Ordinal)
-                && key != "MAKER" && key != "WAVE" && key != "BGMOVIE" && key != "PREIMAGE" && key != "COURSE" && key != "LEVEL" && key != "STYLE";
+                && key != "OFFSET" && key != "MAKER" && key != "WAVE" && key != "BGMOVIE" && key != "PREIMAGE" && key != "COURSE" && key != "LEVEL" && key != "STYLE";
         }
     }
 }

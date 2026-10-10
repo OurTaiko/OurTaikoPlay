@@ -38,7 +38,7 @@ namespace OurTaiko.Online
         public string Category = "", Genre = "";
         public bool IsSingle = true;
         public readonly Dictionary<string, string> Titles = new Dictionary<string, string>(), Subtitles = new Dictionary<string, string>();
-        public double Bpm = 120, DemoStart;
+        public double Bpm = 120, DemoStart, Offset;
         // One slot per Easy..Edit; a DOUBLE chart fills them per player through ForPlayer.
         public FanmadeDifficulty[] Difficulties = new FanmadeDifficulty[5];
         public readonly List<FanmadeDifficulty> Blocks = new List<FanmadeDifficulty>();
@@ -63,8 +63,10 @@ namespace OurTaiko.Online
                 foreach (var pair in translations)
                     if (pair.Value.Type == JTokenType.String) target[pair.Key] = (string)pair.Value;
             }
-            if (!Json.IsNumber(v["bpm"]) || !Json.IsNumber(v["demoStart"])) throw new FanmadeException("API_METADATA_INVALID");
-            c.Bpm = (double)v["bpm"]; c.DemoStart = (double)v["demoStart"];
+            if (!Json.IsNumber(v["bpm"]) || !Json.IsNumber(v["demoStart"]) || !Json.IsNumber(v["offset"]))
+                throw new FanmadeException("API_METADATA_INVALID");
+            c.Bpm = (double)v["bpm"]; c.DemoStart = (double)v["demoStart"]; c.Offset = (double)v["offset"];
+            if (double.IsNaN(c.Offset) || double.IsInfinity(c.Offset)) throw new FanmadeException("API_METADATA_INVALID");
             if (!(v["difficulties"] is JArray difficulties)) throw new FanmadeException("API_DIFFICULTIES_INVALID");
             foreach (var d in difficulties)
             {

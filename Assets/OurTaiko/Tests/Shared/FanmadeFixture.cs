@@ -28,7 +28,7 @@ namespace OurTaiko.Tests
             // Base course, level and #START player ("", "P1" or "P2"); a chart with players is DOUBLE.
             public List<(string Course, int Level, string Player)> Difficulties =
                 new List<(string, int, string)> { ("Oni", 8, "") };
-            public double Bpm = 120, DemoStart;
+            public double Bpm = 120, DemoStart, Offset;
             // Courses (as the API names them) reported with "branching": true; the rest are false.
             public readonly HashSet<string> Branching = new HashSet<string>();
 
@@ -39,7 +39,7 @@ namespace OurTaiko.Tests
                     ["id"] = Id, ["title"] = Title, ["subtitle"] = Subtitle, ["maker"] = Maker,
                     ["tjaHash"] = Sha(Tja), ["audioHash"] = Sha(Audio), ["audioName"] = AudioName,
                     ["titleTranslations"] = new JObject { ["ja"] = Title + " JA" }, ["subtitleTranslations"] = new JObject(),
-                    ["bpm"] = Bpm, ["demoStart"] = DemoStart,
+                    ["bpm"] = Bpm, ["demoStart"] = DemoStart, ["offset"] = Offset,
                     ["isSingle"] = Difficulties.All(d => string.IsNullOrEmpty(d.Player)),
                     ["difficulties"] = new JArray(Difficulties.Select(d =>
                     {

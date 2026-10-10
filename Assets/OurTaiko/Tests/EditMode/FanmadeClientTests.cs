@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -165,6 +166,74 @@ namespace OurTaiko.Tests
             Run(() => other.ConnectAsync(guest, true));
             Assert.That(Run(() => other.PrepareAsync(other.Charts[0])).AudioPath, Is.EqualTo(audio));
             Assert.That(fixture.Downloads, Is.EqualTo(3));
+        }
+
+        [TestCase(0.375)]
+        [TestCase(-0.625)]
+        [TestCase(0.0)]
+        public void PrepareUsesLatestApiOffsetWithoutChangingCachedFiles(double offset)
+        {
+            first.Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja().Replace("OFFSET:0", "OFFSET:1.25"));
+            first.Offset = 0.125;
+            Connect(guest: true);
+            var listed = client.Charts[0];
+            var initial = Run(() => client.PrepareAsync(listed));
+            Assert.That(TjaParser.Parse(initial.Tja, "Oni").Notes[0].Time, Is.EqualTo(-0.125).Within(1e-9));
+
+            // Only the database metadata changes: the file bytes and hashes stay the same.
+            first.Offset = offset;
+            var prepared = Run(() => client.PrepareAsync(listed));
+            var parsed = TjaParser.Parse(prepared.Tja, "Oni");
+            Assert.That(prepared.Chart.Offset, Is.EqualTo(offset));
+            Assert.That(parsed.Offset, Is.EqualTo(offset));
+            Assert.That(parsed.Notes[0].Time, Is.EqualTo(-offset).Within(1e-9));
+            Assert.That(fixture.Downloads, Is.EqualTo(2), "Metadata changes must reuse verified file objects.");
+            string hash = FanmadeFixture.Sha(first.Tja);
+            string original = Path.Combine(cache, "objects", hash.Substring(0, 2), hash);
+            Assert.That(File.ReadAllBytes(original), Is.EqualTo(first.Tja), "The hash-verified TJA stays intact.");
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ApiOffsetOverridesGlobalAndCourseHeadersForEveryPlayer(bool paired)
+        {
+            var value = new FanmadeFixture.Chart { Offset = -0.375 };
+            value.Difficulties = paired
+                ? new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") }
+                : new System.Collections.Generic.List<(string, int, string)> { ("Hard", 4, ""), ("Oni", 9, "") };
+            var chart = FanmadeChart.From(value.ToJson(), "server");
+            string original = paired
+                ? "BPM:150\nOFFSET:2\nCOURSE:Oni\noffset:3\n#START P1\n1,\n#END\nOFFSET:4\n#START P2\n2,\n#END\n"
+                : "BPM:150\nOFFSET:2\nCOURSE:Hard\noffset:3\n#START\n1,\n#END\nCOURSE:Oni\nOFFSET:4\n#START\n2,\n#END\n";
+            var previous = CultureInfo.CurrentCulture;
+            try
+            {
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+                string play = PlayableTja.Build(original, chart);
+                Assert.That(play, Does.Contain("OFFSET:-0.375\n"));
+                Assert.That(play.Split('\n').Count(line => line.StartsWith("OFFSET:", StringComparison.OrdinalIgnoreCase)), Is.EqualTo(1));
+                foreach (var block in chart.Blocks)
+                {
+                    var parsed = TjaParser.Parse(play, block.Course);
+                    Assert.That(parsed.Offset, Is.EqualTo(-0.375));
+                    Assert.That(parsed.Notes[0].Time, Is.EqualTo(0.375).Within(1e-9));
+                }
+            }
+            finally { CultureInfo.CurrentCulture = previous; }
+        }
+
+        [Test]
+        public void ApiOffsetMustBePresentAndFinite()
+        {
+            var value = first.ToJson();
+            foreach (var invalid in new JToken[] { JValue.CreateNull(), new JValue("0.5"), new JValue(true),
+                new JValue(double.NaN), new JValue(double.PositiveInfinity), new JValue(double.NegativeInfinity) })
+            {
+                value["offset"] = invalid;
+                Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(value, "server")).Message, Is.EqualTo("API_METADATA_INVALID"));
+            }
+            value.Remove("offset");
+            Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(value, "server")).Message, Is.EqualTo("API_METADATA_INVALID"));
         }
 
         [Test]
