@@ -203,16 +203,34 @@ namespace OurTaiko.Editor
             // Images draw whole quads, so frames are packed as rectangles, upright.
             var packing = new SpriteAtlasPackingSettings { enableRotation = false, enableTightPacking = false, enableAlphaDilation = false, padding = 4, blockOffset = 1 };
             var texture = new SpriteAtlasTextureSettings { generateMipMaps = false, filterMode = FilterMode.Bilinear, sRGB = true, readable = false, anisoLevel = 1 };
-            var platform = importer.GetPlatformSettings("DefaultTexturePlatform");
-            bool current = importer.includeInBuild && importer.packingSettings.Equals(packing) && importer.textureSettings.Equals(texture)
-                && platform.maxTextureSize == 2048 && platform.textureCompression == TextureImporterCompression.Uncompressed;
-            if (current) return;
+            // The dancers are the only art stored compressed: flat colours under thick outlines hold
+            // up, and three uncompressed pages would be 48 MB.
+            var formats = new[]
+            {
+                ("DefaultTexturePlatform", TextureImporterFormat.Automatic),
+                ("Standalone", TextureImporterFormat.BC7),
+                ("Android", TextureImporterFormat.ASTC_6x6),
+                ("iPhone", TextureImporterFormat.ASTC_6x6),
+            };
+            bool Current(TextureImporterPlatformSettings platform, TextureImporterFormat format)
+                => platform.maxTextureSize == 2048 && platform.format == format
+                    && (format == TextureImporterFormat.Automatic
+                        ? platform.textureCompression == TextureImporterCompression.CompressedHQ
+                        : platform.overridden && platform.compressionQuality == 100);
+            if (importer.includeInBuild && importer.packingSettings.Equals(packing) && importer.textureSettings.Equals(texture)
+                && formats.All(f => Current(importer.GetPlatformSettings(f.Item1), f.Item2))) return;
             importer.includeInBuild = true;
             importer.packingSettings = packing;
             importer.textureSettings = texture;
-            platform.maxTextureSize = 2048;
-            platform.textureCompression = TextureImporterCompression.Uncompressed;
-            importer.SetPlatformSettings(platform);
+            foreach (var (name, format) in formats)
+            {
+                var platform = importer.GetPlatformSettings(name);
+                platform.maxTextureSize = 2048;
+                platform.format = format;
+                if (format == TextureImporterFormat.Automatic) platform.textureCompression = TextureImporterCompression.CompressedHQ;
+                else { platform.overridden = true; platform.compressionQuality = 100; }
+                importer.SetPlatformSettings(platform);
+            }
             importer.SaveAndReimport();
         }
 
