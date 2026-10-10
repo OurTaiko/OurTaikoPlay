@@ -211,6 +211,9 @@ namespace OurTaiko.Editor
                 ("Standalone", TextureImporterFormat.BC7),
                 ("Android", TextureImporterFormat.ASTC_6x6),
                 ("iPhone", TextureImporterFormat.ASTC_6x6),
+                // This project has no web build; OurTaikoView_Web copies the atlas and needs one
+                // format for every browser: DXT5 where the GPU has it, unpacked by Unity elsewhere.
+                ("WebGL", TextureImporterFormat.DXT5),
             };
             bool Current(TextureImporterPlatformSettings platform, TextureImporterFormat format)
                 => platform.maxTextureSize == 2048 && platform.format == format
