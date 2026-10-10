@@ -10,8 +10,11 @@ namespace OurTaiko.Tests
         static int[] Moji(TaikoChart chart) => chart.Notes.Select(n => n.Moji).ToArray();
 
         [TestCase("1111,", new[] { 0, 0, 0, 0 })]                          // quarters each stand alone
-        [TestCase("11111111,", new[] { 1, 1, 1, 1, 1, 1, 1, 0 })]           // eighths: ド…ドン, never コ
-        [TestCase("11101110,", new[] { 1, 1, 0, 1, 1, 0 })]
+        [TestCase("11111111,", new[] { 1, 1, 1, 1, 1, 1, 1, 0 })]           // eighths: ド…ドン
+        [TestCase("11101110,", new[] { 1, 2, 0, 1, 2, 0 })]                 // an eighth triple is ドコドン…
+        [TestCase("1120101010000000,", new[] { 1, 1, 3, 1, 2, 0 })]         // …also with an eighth on one side only
+        [TestCase("11110000,", new[] { 1, 1, 1, 0 })]
+        [TestCase("11300000,", new[] { 1, 1, 5 })]
         [TestCase("1110111000000000,", new[] { 1, 2, 0, 1, 2, 0 })]         // ドコドン twice
         [TestCase("2220000000000000,", new[] { 4, 4, 3 })]
         [TestCase("12120000,", new[] { 1, 4, 1, 3 })]
@@ -30,12 +33,13 @@ namespace OurTaiko.Tests
         [TestCase("1111111111117008,", new[] { 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 9 })]
         [TestCase("1111111111500008,", new[] { 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 7 })]
         [TestCase("1111111115000008,", new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 7 })]             // 9 before a roll
+        [TestCase("1111111111150008,", new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 7 })]       // odd runs before a roll have none
         [TestCase("1170000800000000,", new[] { 1, 1, 9 })]                  // ドド ふうせん
         [TestCase("11500008,", new[] { 1, 1, 7 })]                          // a roll head ends an eighth stream too
         [TestCase("50080011,", new[] { 7, 1, 0 })]                          // and nothing joins after it
         [TestCase("60000008,\n70000008,\n90000008,", new[] { 8, 9, 11 })]
         [TestCase("#BPMCHANGE 60\n1110000000000000,", new[] { 1, 2, 0 })]  // gaps are in beats
-        // The examples of the rule document, in sixteenths.
+        // The examples of the rule document, in sixteenths. Their eighth triples touch both neighbours: ドドドン.
         [TestCase("1000100010001011,\n1010101011101000,", new[] { 0, 0, 0, 0, 1, 2, 0, 1, 1, 0, 1, 2, 0, 0 })]
         [TestCase("1022102212221010,\n1010221110101010,\n1000,",
             new[] { 0, 4, 4, 0, 4, 4, 1, 4, 4, 4, 0, 1, 1, 0, 4, 4, 1, 1, 0, 1, 1, 1, 0 })]

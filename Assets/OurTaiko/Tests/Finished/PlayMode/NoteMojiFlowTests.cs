@@ -31,11 +31,11 @@ namespace OurTaiko.Tests
                 var notes = play.Session.Chart.Notes;
                 string Frame(Transform part) => part.GetComponent<UnityEngine.UI.Image>().sprite.name;
 
-                // ドドドン, ドドカッ (eighths), then 連打ー … ーっ!! and a lone ドン.
+                // ドコドン, ドドカッ (eighths), then 連打ー … ーっ!! and a lone ドン.
                 // Only notes on the lane own pooled text views; show each one at its judge time.
                 string FrameAt(int i) { Render.Invoke(play, new object[] { notes[i].Time }); return Frame(play.MojiRoot(i).Find("Head")); }
                 Assert.That(Enumerable.Range(0, notes.Count).Select(FrameAt),
-                    Is.EqualTo(new[] { "Moji1", "Moji1", "Moji0", "Moji1", "Moji1", "Moji3", "Moji7", "Moji0" }));
+                    Is.EqualTo(new[] { "Moji1", "Moji2", "Moji0", "Moji1", "Moji1", "Moji3", "Moji7", "Moji0" }));
                 Render.Invoke(play, new object[] { 0.0 });
                 Canvas.ForceUpdateCanvases();
                 var roll = play.MojiRoot(6);
