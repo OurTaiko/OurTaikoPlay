@@ -43,14 +43,14 @@ namespace OurTaiko.Tests
                 // Small drumroll hits fly a small note of the drum that was hit.
                 HitKa.SetValue(play, true); session.Hit(true, 2.5);
                 HitKa.SetValue(play, false); session.Hit(false, 2.6);
-                // A balloon flies once, when it pops; a kusudama never does.
+                // A balloon flies once as a big don when it pops; a kusudama never does.
                 session.Hit(false, 4.1);
                 Assert.That(arcs.ActiveCount, Is.EqualTo(5));
                 session.Hit(false, 4.2);
                 session.Hit(false, 6.1); session.Hit(false, 6.2);
                 Assert.That(session.Resolved[6], Is.True);
                 Assert.That(Enumerable.Range(0, arcs.ActiveCount).Select(Sprite),
-                    Is.EqualTo(new[] { 2, 3, 4, 2, 1, 7 }.Select(k => play.noteSprites[k].name)));
+                    Is.EqualTo(new[] { 2, 3, 4, 2, 1, 3 }.Select(k => play.noteSprites[k].name)));
                 // Later arcs draw over earlier ones.
                 for (int i = 1; i < arcs.ActiveCount; i++)
                     Assert.That(arcs.ArcRoot(i).GetSiblingIndex(), Is.GreaterThan(arcs.ArcRoot(i - 1).GetSiblingIndex()));
@@ -79,7 +79,7 @@ namespace OurTaiko.Tests
                 // GaugeHitEffect: the last note to land replaces the burst, above the arcs.
                 Assert.That(effect.transform.GetSiblingIndex(), Is.EqualTo(arcs.transform.GetSiblingIndex() + 1));
                 Assert.That(effect.IsPlaying && effect.IsBig, Is.True);
-                Assert.That(effect.note.sprite, Is.SameAs(play.noteSprites[7]));
+                Assert.That(effect.note.sprite, Is.SameAs(play.noteSprites[3]));
                 Assert.That(effect.burst.transform.GetSiblingIndex(), Is.LessThan(effect.note.transform.GetSiblingIndex()));
                 Assert.That(Vector2.Distance(Centre(effect.burst.rectTransform), Centre(soul)), Is.LessThan(0.1f));
                 Assert.That(Vector2.Distance(Centre(effect.note.rectTransform), Centre(soul)), Is.LessThan(0.1f));
