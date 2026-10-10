@@ -41,16 +41,15 @@ namespace OurTaiko.Tests
                 Assert.That(play.Result.ResultCrown, Is.EqualTo(Crown.DonderfulCombo));
                 Assert.That(play.ending.gameObject.activeSelf, Is.True);
                 Assert.That(switcher.IsSwitching, Is.False);
-                var dancerFrames = new HashSet<Sprite>();
+                var dancerFrames = new HashSet<int>();
                 var fireFrames = new HashSet<Sprite>();
                 var rainbowFrames = new HashSet<Sprite>();
-                var dancerImage = play.dancers[0].GetComponent<UnityEngine.UI.Image>();
                 double songTime = play.SongTime;
                 int version = play.Session.Version;
                 double observeUntil = GameTimeline.FrameTime + .45;
                 while (GameTimeline.FrameTime < observeUntil)
                 {
-                    dancerFrames.Add(dancerImage.sprite);
+                    dancerFrames.Add(play.dancers.dancers[0].Frame);
                     fireFrames.Add(play.soulGauge.fire.sprite);
                     rainbowFrames.Add(play.soulGauge.rainbowA.sprite);
                     Assert.That(play.Session.Version, Is.EqualTo(version), "Presentation must not advance judgment after the result is captured.");
