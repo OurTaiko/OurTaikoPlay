@@ -3,30 +3,51 @@ using NUnit.Framework;
 
 namespace OurTaiko.Tests
 {
-    // tja.cpp modifier_moji: text frames under the notes. BPM 120: a measure is 2 s, an eighth 0.25 s.
+    // Text frames under the notes: ドン0 ド1 コ2 カッ3 カ4 ドン(大)5 カッ(大)6 連打7 連打(大)8 ふうせん9 くすだま11.
     public sealed class NoteMojiTests
     {
         static TaikoChart Parse(string body) => TjaParser.Parse("TITLE:Test\nBPM:120\nCOURSE:Oni\n#START\n" + body + "\n#END");
         static int[] Moji(TaikoChart chart) => chart.Notes.Select(n => n.Moji).ToArray();
 
-        [TestCase("1111,", new[] { 0, 0, 0, 0 })]                          // quarters are no stream
-        [TestCase("11111111,", new[] { 1, 1, 1, 1, 1, 1, 1, 0 })]           // ド…ドン
-        [TestCase("11101110,", new[] { 1, 2, 0, 1, 2, 0 })]                 // ドコドン twice
-        [TestCase("12120000,", new[] { 1, 4, 1, 3 })]                       // カ only before the last
+        [TestCase("1111,", new[] { 0, 0, 0, 0 })]                          // quarters each stand alone
+        [TestCase("11111111,", new[] { 1, 1, 1, 1, 1, 1, 1, 0 })]           // eighths: ド…ドン, never コ
+        [TestCase("11101110,", new[] { 1, 1, 0, 1, 1, 0 })]
+        [TestCase("1110111000000000,", new[] { 1, 2, 0, 1, 2, 0 })]         // ドコドン twice
+        [TestCase("2220000000000000,", new[] { 4, 4, 3 })]
+        [TestCase("12120000,", new[] { 1, 4, 1, 3 })]
         [TestCase("33440000,", new[] { 5, 5, 6, 6 })]                       // big notes keep their text
-        [TestCase("1111111100000000,", new[] { 1, 1, 1, 1, 1, 1, 1, 0 })]   // sixteenths
-        [TestCase("11500008,", new[] { 1, 0, 7 })]                          // a roll head ends the stream
+        [TestCase("1310000000000000,", new[] { 1, 5, 0 })]                  // a big note in the stream: no コ
+        [TestCase("1130000000000000,", new[] { 1, 1, 5 })]
+        [TestCase("1100000000000000,", new[] { 1, 0 })]
+        [TestCase("110000000000000000000000,", new[] { 1, 1 })]             // last within a 24th stays ド
+        [TestCase("101100000000000000000000,", new[] { 1, 2, 1 })]          // ド コド
+        [TestCase("1111100000000000,", new[] { 1, 1, 1, 1, 0 })]            // 5 and 9: too short for コ
+        [TestCase("1111111110000000,", new[] { 1, 1, 1, 1, 1, 1, 1, 1, 0 })]
+        [TestCase("1111111111100000,", new[] { 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 0 })]
+        [TestCase("1111111111110000,", new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 })]   // even runs have none
+        [TestCase("1111111111111111,\n1000,", new[] { 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 0 })]
+        [TestCase("1111111111115008,", new[] { 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 7 })]   // ドコ… 連打
+        [TestCase("1111111111117008,", new[] { 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 9 })]
+        [TestCase("1111111111500008,", new[] { 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 7 })]
+        [TestCase("1111111115000008,", new[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 7 })]             // 9 before a roll
+        [TestCase("1170000800000000,", new[] { 1, 1, 9 })]                  // ドド ふうせん
+        [TestCase("11500008,", new[] { 1, 1, 7 })]                          // a roll head ends an eighth stream too
+        [TestCase("50080011,", new[] { 7, 1, 0 })]                          // and nothing joins after it
         [TestCase("60000008,\n70000008,\n90000008,", new[] { 8, 9, 11 })]
-        public void AssignsOriginalFrames(string body, int[] expected)
+        [TestCase("#BPMCHANGE 60\n1110000000000000,", new[] { 1, 2, 0 })]  // gaps are in beats
+        // The examples of the rule document, in sixteenths.
+        [TestCase("1000100010001011,\n1010101011101000,", new[] { 0, 0, 0, 0, 1, 2, 0, 1, 1, 0, 1, 2, 0, 0 })]
+        [TestCase("1022102212221010,\n1010221110101010,\n1000,",
+            new[] { 0, 4, 4, 0, 4, 4, 1, 4, 4, 4, 0, 1, 1, 0, 4, 4, 1, 1, 0, 1, 1, 1, 0 })]
+        [TestCase("1120101010111000,", new[] { 1, 1, 3, 1, 1, 0, 1, 2, 0 })]
+        public void AssignsFrames(string body, int[] expected)
         {
             Assert.That(Moji(Parse(body)), Is.EqualTo(expected));
         }
 
-        [Test] public void BarLinesTakePartInStreams()
+        [Test] public void BarLinesDoNotBreakStreams()
         {
-            // find_streams walks the bar line too: the stream ends on it, so the note
-            // before it is ド, and a new stream starts after it (bar → note is 0 ms).
-            Assert.That(Moji(Parse("00000011,\n11000000,")), Is.EqualTo(new[] { 1, 1, 1, 0 }));
+            Assert.That(Moji(Parse("0000000000000011,\n1000,")), Is.EqualTo(new[] { 1, 2, 0 }));
         }
 
         [Test] public void BranchRoutesAreSeparateLists()
@@ -42,9 +63,9 @@ namespace OurTaiko.Tests
 
         [Test] public void ModifiersReassignAfterSwappingColours()
         {
-            var chart = Parse("11120000,");
+            var chart = Parse("1110000000000000,");
             ChartModifiers.Apply(chart, new PlayOptions { inverse = true }, new System.Random(1));
-            Assert.That(Moji(chart), Is.EqualTo(new[] { 4, 4, 4, 0 }));
+            Assert.That(Moji(chart), Is.EqualTo(new[] { 4, 4, 3 }));
         }
     }
 }
