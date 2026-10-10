@@ -6,7 +6,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.U2D;
 using UnityEngine;
+using UnityEngine.U2D;
 using UnityEngine.UI;
 
 namespace OurTaiko.Editor
@@ -19,6 +21,7 @@ namespace OurTaiko.Editor
         const string DancerArt = "background/dancer/dancer_0/";
         const string DancerSkin = "../../YataiDON/Skins/YataiDONNijiiro/";
         const string DancerPrefabFolder = Root + "Generated/Dancers";
+        const string DancerAtlasPath = DancerPrefabFolder + "/Dancer0.spriteatlasv2";
         // Transparent pixels kept around the frames' shared bounds.
         const int DancerMargin = 2;
 
@@ -88,7 +91,8 @@ namespace OurTaiko.Editor
         // Redraws every variant's frames from the skin onto one canvas per variant, with the rig
         // origin at the same pixel in each, so the frames line up without per-frame offsets. The
         // canvas is the frames' shared opaque bounds around that origin; the origin becomes the
-        // sprite pivot.
+        // sprite pivot. The canvases are mostly empty, so the frames are drawn from an atlas that
+        // keeps only each frame's opaque part (see DancerAtlas).
         [MenuItem("OurTaiko/Import Dancer Frames")]
         public static void ImportDancerFrames()
         {
@@ -161,7 +165,7 @@ namespace OurTaiko.Editor
                     importer.ReadTextureSettings(settings);
                     bool current = importer.textureType == TextureImporterType.Sprite && settings.spriteMode == (int)SpriteImportMode.Single
                         && settings.spriteAlignment == (int)SpriteAlignment.Custom && settings.spritePivot == pivots[v]
-                        && settings.spriteMeshType == SpriteMeshType.FullRect && !settings.mipmapEnabled
+                        && settings.spriteMeshType == SpriteMeshType.Tight && !settings.mipmapEnabled
                         && importer.textureCompression == TextureImporterCompression.Uncompressed;
                     if (current) continue;
                     importer.textureType = TextureImporterType.Sprite;
@@ -169,7 +173,8 @@ namespace OurTaiko.Editor
                     settings.spriteMode = (int)SpriteImportMode.Single;
                     settings.spriteAlignment = (int)SpriteAlignment.Custom;
                     settings.spritePivot = pivots[v];
-                    settings.spriteMeshType = SpriteMeshType.FullRect;
+                    // The atlas trims a frame to its tight mesh; a full rect would pack the whole canvas.
+                    settings.spriteMeshType = SpriteMeshType.Tight;
                     settings.mipmapEnabled = false;
                     settings.alphaIsTransparency = true;
                     settings.wrapMode = TextureWrapMode.Clamp;
@@ -178,6 +183,37 @@ namespace OurTaiko.Editor
                     importer.textureCompression = TextureImporterCompression.Uncompressed;
                     importer.SaveAndReimport();
                 }
+            DancerAtlas();
+        }
+
+        // Generated/Dancers/Dancer0.spriteatlasv2: every dancer frame, each trimmed to its opaque
+        // part. A sprite keeps its canvas size and pivot, and the Images draw the trimmed part
+        // where it sat on the canvas, so nothing that uses the frames changes.
+        static void DancerAtlas()
+        {
+            if (!AssetDatabase.IsValidFolder(DancerPrefabFolder)) AssetDatabase.CreateFolder(Root + "Generated", "Dancers");
+            if (AssetImporter.GetAtPath(DancerAtlasPath) == null)
+            {
+                var asset = new SpriteAtlasAsset();
+                asset.Add(new[] { AssetDatabase.LoadAssetAtPath<UnityEngine.Object>((Root + "Art/" + DancerArt).TrimEnd('/')) });
+                SpriteAtlasAsset.Save(asset, DancerAtlasPath);
+                AssetDatabase.ImportAsset(DancerAtlasPath);
+            }
+            var importer = (SpriteAtlasImporter)AssetImporter.GetAtPath(DancerAtlasPath);
+            // Images draw whole quads, so frames are packed as rectangles, upright.
+            var packing = new SpriteAtlasPackingSettings { enableRotation = false, enableTightPacking = false, enableAlphaDilation = false, padding = 4, blockOffset = 1 };
+            var texture = new SpriteAtlasTextureSettings { generateMipMaps = false, filterMode = FilterMode.Bilinear, sRGB = true, readable = false, anisoLevel = 1 };
+            var platform = importer.GetPlatformSettings("DefaultTexturePlatform");
+            bool current = importer.includeInBuild && importer.packingSettings.Equals(packing) && importer.textureSettings.Equals(texture)
+                && platform.maxTextureSize == 2048 && platform.textureCompression == TextureImporterCompression.Uncompressed;
+            if (current) return;
+            importer.includeInBuild = true;
+            importer.packingSettings = packing;
+            importer.textureSettings = texture;
+            platform.maxTextureSize = 2048;
+            platform.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.SetPlatformSettings(platform);
+            importer.SaveAndReimport();
         }
 
         static Sprite[] DancerSprites(int variant, int count) => Enumerable.Range(0, count).Select(i =>

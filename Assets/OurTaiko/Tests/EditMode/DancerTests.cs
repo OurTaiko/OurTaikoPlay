@@ -126,7 +126,12 @@ namespace OurTaiko.Tests
                 Assert.That(sprites, Has.None.Null, "variant " + v);
                 Assert.That(sprites.Select(s => s.rect.size).Distinct().Count(), Is.EqualTo(1), "canvas of variant " + v);
                 Assert.That(sprites.Select(s => s.pivot).Distinct().Count(), Is.EqualTo(1), "pivot of variant " + v);
-                Assert.That(sprites.All(s => s.rect.size == new Vector2(s.texture.width, s.texture.height)), Is.True);
+                // Each sprite is its whole file; the atlas it is drawn from does not change that.
+                foreach (var sprite in sprites)
+                {
+                    ((TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(sprite))).GetSourceTextureWidthAndHeight(out int width, out int height);
+                    Assert.That(sprite.rect.size, Is.EqualTo(new Vector2(width, height)), sprite.name);
+                }
             }
         }
 
@@ -161,6 +166,14 @@ namespace OurTaiko.Tests
                 check(dancer.GetComponentsInChildren<Image>(true).Select(i => i.rectTransform).ToArray());
             }
             finally { Object.DestroyImmediate(dancer); }
+        }
+
+        [Test]
+        public void OneAtlasHoldsEveryFrame()
+        {
+            var atlas = AssetDatabase.LoadAssetAtPath<UnityEngine.U2D.SpriteAtlas>(Prefabs + "Dancer0.spriteatlasv2");
+            Assert.That(atlas, Is.Not.Null);
+            Assert.That(atlas.spriteCount, Is.EqualTo(FrameCounts.Sum()));
         }
 
         static string SpriteOf(RectTransform layer) => layer.GetComponent<Image>().sprite.name;
