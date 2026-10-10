@@ -127,7 +127,7 @@ namespace OurTaiko.Tests
                 {
                     yield return null;
                     play.ConfirmPractice(); yield return null; play.ConfirmPractice();
-                    Assert.That(play.IsPaused, Is.False);
+                    while (play.IsPaused) yield return null;
                 }
                 double lastNormal = double.NegativeInfinity;
                 int normalHits = 0;

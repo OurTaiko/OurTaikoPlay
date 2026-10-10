@@ -240,7 +240,7 @@ namespace OurTaiko.Tests
             play.ConfirmPractice();
             yield return null;
             play.ConfirmPractice();
-            Assert.That(play.IsPaused, Is.False);
+            yield return WaitUntil(() => !play.IsPaused, 5);
             yield return WaitUntil(() => play.IsPaused, 20);
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.PracticeScene));
             Assert.That(fixture.AcceptedScores.IsEmpty, Is.True);

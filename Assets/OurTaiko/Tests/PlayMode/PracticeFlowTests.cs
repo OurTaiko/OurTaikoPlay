@@ -46,6 +46,7 @@ namespace OurTaiko.Tests
             yield return StartPractice(AudioBackend.BassSimple, true);
             yield return Click(play.practiceView.confirm);
             yield return Click(play.practiceView.confirm);
+            yield return Wait(() => !play.IsPaused);
             Assert.That(play.SongTime, Is.LessThan(-1.8));
             Assert.That(play.Session.Good + play.Session.Bad + play.Session.Rolls, Is.Zero);
             yield return Wait(() => play.SongTime >= 0);
@@ -58,6 +59,7 @@ namespace OurTaiko.Tests
             yield return Press(Key.D); yield return Press(Key.D);
             Assert.That(play.Practice.Speed, Is.EqualTo(0.8));
             yield return Click(play.practiceView.confirm);
+            yield return Wait(() => !play.IsPaused);
             Assert.That(play.SongTime, Is.LessThan(target - 1.4));
             yield return new WaitForSecondsRealtime(1);
             Assert.That(play.SongTime, Is.LessThan(target));
@@ -93,7 +95,17 @@ namespace OurTaiko.Tests
             Assert.That(play.Practice.Speed, Is.EqualTo(0.8));
             TestCapture.Capture("PracticeSpeed-" + backend + ".png");
             yield return Press(Key.J);
-            Assert.That(play.IsPaused, Is.False);
+            Assert.That(play.practiceView.panel.activeSelf, Is.False);
+            Assert.That(play.IsPaused, Is.True, "The lane scrolls back to the preparation start before playback.");
+            Assert.That(play.RenderedTime, Is.InRange(0.4, 2), "Starting must animate like a measure skip, not teleport.");
+            play.MovePractice(-1); play.ConfirmPractice();
+            Assert.That(play.Practice.Target, Is.EqualTo(2), "The scroll back accepts no menu input.");
+            yield return Wait(() => !play.IsPaused);
+            Assert.That(play.RenderedTime, Is.EqualTo(0.4).Within(0.05));
+            yield return null;
+            for (int i = 0; i < 4; i++)
+                Assert.That(play.NoteRoot(i), Is.Null, "Notes before the chosen measure stay hidden during the preparation.");
+            Assert.That(play.NoteRoot(4), Is.Not.Null);
             yield return new WaitForSecondsRealtime(0.3f);
             Assert.That(play.music.IsAudioPlaying(), Is.True);
             double songStart = play.SongTime, audioStart = play.music.AudioPosition();
@@ -152,6 +164,7 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.25f);
             play.ConfirmPractice(); yield return null;
             play.ConfirmPractice();
+            yield return Wait(() => !play.IsPaused);
             yield return Wait(() => play.IsPaused);
             Assert.That(play.Practice.Target, Is.EqualTo(0));
             Assert.That(play.IsFinished, Is.False);
@@ -205,7 +218,7 @@ namespace OurTaiko.Tests
             yield return Press(Key.F);
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
             yield return Press(Key.F);
-            Assert.That(play.IsPaused, Is.False);
+            yield return Wait(() => !play.IsPaused);
             yield return Wait(() => play.Session.BranchHistory.Count == 2);
             Assert.That(play.Session.BranchHistory, Is.EqualTo(new[] { BranchRoute.Expert, BranchRoute.Expert }));
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));

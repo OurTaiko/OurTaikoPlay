@@ -39,7 +39,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.Practice.Target, Is.EqualTo(targetMeasure).Within(1e-6));
                 play.ConfirmPractice(); yield return null;
                 play.ConfirmPractice();
-                Assert.That(play.IsPaused, Is.False);
+                while (play.IsPaused) yield return null;
                 Assert.That(play.SongTime, Is.EqualTo(targetMeasure - 2).Within(.01));
                 var lane = play.branchLane;
                 bool startsInBranch = targetMeasure > 2;
@@ -116,7 +116,7 @@ namespace OurTaiko.Tests
                     play.MovePractice(-1); Check(BranchRoute.Normal);
                     play.ConfirmPractice(); yield return null;
                     play.ConfirmPractice();
-                    Assert.That(play.IsPaused, Is.False);
+                    while (play.IsPaused) yield return null;
                 }
                 double[] checkpoints = { .1, 1.1, 2.1, 3.9, 4.1, 5.1 };
                 BranchRoute[] expected = { BranchRoute.Normal, BranchRoute.Master, BranchRoute.Normal,

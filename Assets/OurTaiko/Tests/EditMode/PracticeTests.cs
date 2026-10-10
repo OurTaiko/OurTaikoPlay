@@ -23,6 +23,7 @@ namespace OurTaiko.Tests
             var session = PlaySession.PracticeAt(chart, 2);
             session.Advance(0, true); session.Advance(1.9, true);
             Assert.That(session.Good + session.Bad, Is.Zero);
+            Assert.That(session.Skipped, Is.EqualTo(new[] { true, true, true, true, false, false, false, false }));
             Assert.That(session.Hit(false, 2), Is.EqualTo(Judgment.Good));
         }
         [Test]
@@ -50,6 +51,22 @@ namespace OurTaiko.Tests
             Assert.That(clock.Schedule(210, 20).Value.At, Is.EqualTo(212).Within(1e-8));
             clock.Update(213);
             Assert.That(clock.Time, Is.EqualTo(0.5).Within(1e-8));
+        }
+        [Test]
+        public void StartScrollsBackToThePreparationWithoutMovingTheCursor()
+        {
+            var progress = new PracticeProgress(); progress.SetBars(new[] { 0.0, 10.0 });
+            progress.PauseAt(10, 0);
+            progress.Rewind(progress.PlaybackStart(0, 0, 0), 1);
+            Assert.That(progress.Scrolling, Is.True);
+            progress.Update(1 + PracticeProgress.ScrollSeconds / 2);
+            Assert.That(progress.Position, Is.EqualTo(9).Within(1e-8));
+            Assert.That(progress.Scrolling, Is.True);
+            progress.Update(2);
+            Assert.That(progress.Position, Is.EqualTo(8));
+            Assert.That(progress.Scrolling, Is.False);
+            Assert.That(progress.Target, Is.EqualTo(10));
+            Assert.That(progress.Measure, Is.EqualTo(1));
         }
         [Test]
         public void CursorUsesRealBarsAndAnimatesBothDirections()
