@@ -34,12 +34,14 @@ namespace OurTaiko.Editor
         {
             if (target != BuildTarget.iOS) return;
 
-            // Declare no non-exempt encryption on every export, including Append builds
-            // where Unity preserves the existing Info.plist.
+            // Apply encryption and ProMotion declarations on every export, including Append
+            // builds where Unity preserves the existing Info.plist.
             string plistPath = Path.Combine(root, "Info.plist");
             var plist = new PlistDocument();
             plist.ReadFromFile(plistPath);
             plist.root.SetBoolean("ITSAppUsesNonExemptEncryption", false);
+            plist.root.SetBoolean("CADisableMinimumFrameDuration", true);
+            plist.root.SetBoolean("CADisableMinimumFrameDurationOnPhone", true);
             plist.WriteToFile(plistPath);
 
             Rename(root, UnityName, AppName);
