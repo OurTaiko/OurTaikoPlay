@@ -66,6 +66,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: macOS
+            platform: StandaloneOSX
+            method: OurTaiko.Editor.PlayerBuilds.BuildMacOS
           - name: Windows
             platform: StandaloneWindows64
             method: OurTaiko.Editor.PlayerBuilds.BuildWindows
@@ -113,6 +116,9 @@ jobs:
           DIR="$BUILDS_PATH/${{ matrix.platform }}"
           if [[ "${{ matrix.platform }}" == Android ]]; then
             cp "$DIR/$BUILD_NAME.apk" "out/$BUILD_NAME-$DISPLAY_VERSION-Android-arm64.apk"
+          elif [[ "${{ matrix.platform }}" == StandaloneOSX ]]; then
+            # Keep the app bundle's executable permissions and symbolic links in the archive.
+            (cd "$DIR" && zip -qry "$GITHUB_WORKSPACE/out/$BUILD_NAME-$DISPLAY_VERSION-macOS-universal.zip" "$BUILD_NAME.app")
           else
             # Ship the whole folder: the exe needs its _Data directory and the BASS DLLs.
             (cd "$DIR" && zip -qry "$GITHUB_WORKSPACE/out/$BUILD_NAME-$DISPLAY_VERSION-Windows-x64.zip" . \
