@@ -34,7 +34,7 @@ namespace OurTaiko.Editor
             var lane = (RectTransform)play.noteLayer.parent.parent;
             var rig = (RectTransform)play.balloonCounter.transform;
             // Match the lane's coordinate space without inheriting its lower draw order.
-            rig.SetParent(lane.parent, false);
+            rig.SetParent(PlayHud(lane.parent), false);
             rig.anchorMin = lane.anchorMin;
             rig.anchorMax = lane.anchorMax;
             rig.pivot = lane.pivot;

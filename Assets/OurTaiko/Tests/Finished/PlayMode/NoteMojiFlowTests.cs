@@ -12,7 +12,7 @@ namespace OurTaiko.Tests
         static readonly System.Reflection.MethodInfo Render =
             typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator MojiFollowsItsNoteAboveTheNoteLayer()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
@@ -29,7 +29,7 @@ namespace OurTaiko.Tests
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 var notes = play.Session.Chart.Notes;
-                string Frame(Transform part) => part.GetComponent<UnityEngine.UI.Image>().sprite.name;
+                string Frame(Transform part) => part.GetComponent<LaneSprite>().sprite.name;
 
                 // ドコドン, ドドカッ (eighths), then 連打ー … ーっ!! and a lone ドン.
                 // Only notes on the lane own pooled text views; show each one at its judge time.

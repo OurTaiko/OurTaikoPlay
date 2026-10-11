@@ -38,11 +38,7 @@ namespace OurTaiko.Editor
                     }
                     // Keep the source's full-size badge in front of JudgeCounter and
                     // the floating score additions, without moving the existing HUD.
-                    var canvas = view.GetComponent<Canvas>();
-                    if (canvas == null) canvas = view.gameObject.AddComponent<Canvas>();
-                    canvas.overrideSorting = true;
-                    canvas.sortingOrder = counter.GetComponentInParent<Canvas>().sortingOrder + 2;
-                    EditorUtility.SetDirty(canvas);
+                    Layer(view.transform, PlayRankOrder);
                     EditorUtility.SetDirty(counter);
                     EditorSceneManager.MarkSceneDirty(scene);
                     EditorSceneManager.SaveScene(scene);

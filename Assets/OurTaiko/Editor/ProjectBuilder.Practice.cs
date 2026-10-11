@@ -24,7 +24,7 @@ namespace OurTaiko.Editor
             var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
             if (play.practiceView == null)
             {
-                var parent = play.noteLayer.GetComponentInParent<Canvas>().transform.Find("Viewport1920x1080");
+                var parent = PlayHud(play.noteLayer.GetComponentInParent<Canvas>().rootCanvas.transform.Find("Viewport1920x1080"));
                 if (parent == null) parent = play.title.transform.parent;
                 var root = SkinUi.Rect("PracticeControls", parent);
                 root.anchorMin = root.anchorMax = root.pivot = new Vector2(0.5f, 1);

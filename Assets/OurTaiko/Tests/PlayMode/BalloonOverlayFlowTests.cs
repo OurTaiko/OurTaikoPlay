@@ -9,10 +9,10 @@ namespace OurTaiko.Tests
 {
     public sealed class BalloonOverlayFlowTests
     {
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator InflatedBalloonDrawsAboveGaugeInSinglePlay() => CheckOverlay(false);
 
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator InflatedBalloonDrawsAboveGaugeInPractice() => CheckOverlay(true);
 
         static IEnumerator CheckOverlay(bool practice)
@@ -44,7 +44,7 @@ namespace OurTaiko.Tests
                 view.RecordHit(0, 100, 99, 10, 0);
                 view.ShowTime(.2);
                 Assert.That(view.body.sprite, Is.SameAs(view.bodyFrames[6]));
-                Assert.That(view.transform.parent, Is.SameAs(lane.parent));
+                Assert.That(view.transform.parent, Is.SameAs(play.pauseButton.transform.parent));
                 Assert.That(view.transform.GetSiblingIndex(), Is.LessThan(play.pauseButton.transform.GetSiblingIndex()));
                 Assert.That(lane.parent.GetSiblingIndex(), Is.LessThan(play.pausePanel.transform.GetSiblingIndex()),
                     "The pause menu must remain above the gameplay viewport.");

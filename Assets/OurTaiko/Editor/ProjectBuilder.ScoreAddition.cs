@@ -25,9 +25,7 @@ namespace OurTaiko.Editor
                 group.alpha = 0; group.interactable = false; group.blocksRaycasts = false;
                 // The custom JudgeCounter overlaps the source animation's upper edge. Keep the
                 // original position, but draw these transient digits above the gameplay HUD.
-                var canvas = root.gameObject.AddComponent<Canvas>();
-                canvas.overrideSorting = true;
-                canvas.sortingOrder = counter.GetComponentInParent<Canvas>().sortingOrder + 1;
+                Layer(root, PlayFeedbackOrder);
                 var row = root.gameObject.AddComponent<ScoreAdditionView>();
                 AttachClip(root.gameObject, clip);
                 row.digits = new UnityEngine.UI.Image[10];

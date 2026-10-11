@@ -66,10 +66,10 @@ namespace OurTaiko.Tests
             }
         }
 
-        [UnityTest] public IEnumerator SinglePlayPositiveOffsets() => CheckPlay(false, 120, 200);
-        [UnityTest] public IEnumerator SinglePlayNegativeOffsets() => CheckPlay(false, -120, -200);
-        [UnityTest] public IEnumerator PracticePositiveOffsets() => CheckPlay(true, 120, 200);
-        [UnityTest] public IEnumerator PracticeNegativeOffsets() => CheckPlay(true, -120, -200);
+        [UnityTest, Category("SpriteRendering")] public IEnumerator SinglePlayPositiveOffsets() => CheckPlay(false, 120, 200);
+        [UnityTest, Category("SpriteRendering")] public IEnumerator SinglePlayNegativeOffsets() => CheckPlay(false, -120, -200);
+        [UnityTest, Category("SpriteRendering")] public IEnumerator PracticePositiveOffsets() => CheckPlay(true, 120, 200);
+        [UnityTest, Category("SpriteRendering")] public IEnumerator PracticeNegativeOffsets() => CheckPlay(true, -120, -200);
 
         static IEnumerator CheckPlay(bool practice, int a, int b)
         {
@@ -140,7 +140,7 @@ namespace OurTaiko.Tests
         {
             Canvas.ForceUpdateCanvases();
             var rect = (RectTransform)target.transform;
-            var point = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
+            var point = RectTransformUtility.WorldToScreenPoint(rect.GetComponentInParent<Canvas>().rootCanvas.worldCamera, rect.TransformPoint(rect.rect.center));
             var hits = new System.Collections.Generic.List<RaycastResult>();
             EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = point }, hits);
             Assert.That(hits.Count, Is.GreaterThan(0));

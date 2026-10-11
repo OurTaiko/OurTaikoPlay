@@ -22,7 +22,10 @@ namespace OurTaiko.Tests
             try
             {
                 camera.targetTexture = target; canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 1;
-                scaler.SendMessage("Handle"); Canvas.ForceUpdateCanvases(); camera.Render();
+                scaler.SendMessage("Handle"); Canvas.ForceUpdateCanvases();
+                // Manual camera renders bypass the normal late-frame SortingGroup update.
+                UnityEngine.Rendering.SortingGroup.UpdateAllSortingGroups();
+                camera.Render();
                 verify?.Invoke(camera);
                 RenderTexture.active = target;
                 texture.ReadPixels(new Rect(0, 0, width, height), 0, 0); texture.Apply();

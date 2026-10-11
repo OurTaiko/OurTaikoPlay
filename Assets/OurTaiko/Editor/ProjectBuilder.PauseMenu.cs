@@ -34,7 +34,7 @@ namespace OurTaiko.Editor
         {
             if (play == null || play.pausePanel == null)
                 throw new InvalidOperationException("SinglePlayScene must have its PlayScene and pause panel first.");
-            var canvas = play.pausePanel.GetComponentInParent<Canvas>();
+            var canvas = play.pausePanel.GetComponentInParent<Canvas>()?.rootCanvas;
             if (canvas == null) throw new InvalidOperationException("The pause panel must belong to a Canvas.");
             ImportPauseMenuArt();
 
@@ -42,6 +42,8 @@ namespace OurTaiko.Editor
             root.SetParent(canvas.transform, false);
             PauseStretch(root);
             root.SetAsLastSibling();
+            // A last sibling alone cannot cover gameplay canvases with overrideSorting.
+            Layer(root, PlayPauseOrder);
             var shade = root.GetComponent<UnityEngine.UI.Image>();
             if (shade == null) shade = root.gameObject.AddComponent<UnityEngine.UI.Image>();
             shade.sprite = null;

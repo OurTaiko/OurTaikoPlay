@@ -22,7 +22,7 @@ namespace OurTaiko.Editor
         [MenuItem("OurTaiko/Apply Nijiiro Combo")]
         public static void ApplyCombo() => EditPlayScene(play =>
         {
-            var lane = play.hitFace.transform.parent;
+            var lane = PlayForeground(play);
             var existing = lane.Find("Combo");
             var view = existing != null ? existing.GetComponent<ComboView>() : null;
             if (view == null)
@@ -96,8 +96,8 @@ namespace OurTaiko.Editor
         [MenuItem("OurTaiko/Apply Nijiiro Combo Announce")]
         public static void ApplyComboAnnounce() => EditPlayScene(play =>
         {
-            var lane = (RectTransform)play.combo.transform.parent;
-            var viewport = lane.parent;
+            var lane = (RectTransform)play.noteLayer.parent.parent;
+            var viewport = PlayHud(lane.parent);
             var existing = viewport.Find("ComboAnnounce");
             var view = existing != null ? existing.GetComponent<ComboAnnounceView>() : null;
             if (view == null)
@@ -112,7 +112,7 @@ namespace OurTaiko.Editor
 
         static ComboAnnounceView BuildComboAnnounce(RectTransform lane)
         {
-            var root = Rect("ComboAnnounce", lane.parent, 0, 0, 0, 0);
+            var root = Rect("ComboAnnounce", PlayHud(lane.parent), 0, 0, 0, 0);
             root.anchorMin = lane.anchorMin; root.anchorMax = lane.anchorMax; root.pivot = lane.pivot;
             root.anchoredPosition = lane.anchoredPosition; root.sizeDelta = lane.sizeDelta;
             root.gameObject.AddComponent<CanvasGroup>().blocksRaycasts = false;

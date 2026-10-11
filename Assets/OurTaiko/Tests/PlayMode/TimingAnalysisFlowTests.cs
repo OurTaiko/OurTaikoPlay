@@ -97,8 +97,8 @@ namespace OurTaiko.Tests
             }
         }
 
-        [UnityTest] public IEnumerator SinglePlayShowsSignedTiming() => CheckFeedback(false);
-        [UnityTest] public IEnumerator PracticeShowsTimingAndClearsOnSeek() => CheckFeedback(true);
+        [UnityTest, Category("DrawOrder")] public IEnumerator SinglePlayShowsSignedTiming() => CheckFeedback(false);
+        [UnityTest, Category("DrawOrder")] public IEnumerator PracticeShowsTimingAndClearsOnSeek() => CheckFeedback(true);
         [UnityTest]
         public IEnumerator EarlyPageSwitchSettlesRevealAndEmptyStatesRemainReadable()
         {
@@ -166,6 +166,8 @@ namespace OurTaiko.Tests
                 play.pausePanel.SetActive(false);
                 var feedback = play.timingFeedback;
                 Assert.That(feedback, Is.Not.Null);
+                Assert.That(feedback.GetComponent<Canvas>().sortingOrder,
+                    Is.GreaterThan(play.judgeCounter.GetComponentInParent<Canvas>().sortingOrder));
                 var notes = play.Session.Chart.Notes;
                 play.Session.Hit(false, notes[0].Time + play.Session.JudgeOffset - .02);
                 Assert.That(feedback.label.text, Is.EqualTo("-20ms"));

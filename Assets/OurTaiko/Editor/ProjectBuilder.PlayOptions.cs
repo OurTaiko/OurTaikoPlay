@@ -50,7 +50,7 @@ namespace OurTaiko.Editor
 
             scene = EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
             var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
-            var lane = UnityEngine.Object.FindFirstObjectByType<Canvas>().transform.GetChild(0).Find("NoteLane");
+            var lane = PlayForeground(UnityEngine.Object.FindFirstObjectByType<PlayScene>());
             var badges = lane.Find("ModifierBadges") as RectTransform;
             if (badges == null) badges = Rect("ModifierBadges", lane, 0, 0, 0, 0);
             // Above the lane cover and difficulty tab, like draw_modifiers after draw_lane_cover.

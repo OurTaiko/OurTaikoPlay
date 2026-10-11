@@ -9,8 +9,8 @@ namespace OurTaiko.Tests
 {
     public sealed class ScoreAdditionFlowTests
     {
-        [UnityTest] public IEnumerator SinglePlayShowsActualScoreIncreases() => Check(false);
-        [UnityTest] public IEnumerator PracticeShowsIncreasesAndClearsThemOnSeek() => Check(true);
+        [UnityTest, Category("DrawOrder")] public IEnumerator SinglePlayShowsActualScoreIncreases() => Check(false);
+        [UnityTest, Category("DrawOrder")] public IEnumerator PracticeShowsIncreasesAndClearsThemOnSeek() => Check(true);
 
         static IEnumerator Check(bool practice)
         {
@@ -61,6 +61,10 @@ namespace OurTaiko.Tests
                 yield return new WaitForSecondsRealtime(.2f);
                 var visible = counter.Additions.First(a => a.gameObject.activeSelf);
                 Assert.That(visible.GetComponent<Canvas>().overrideSorting, Is.True, "Floating digits must render above JudgeCounter.");
+                Assert.That(visible.GetComponent<Canvas>().sortingOrder,
+                    Is.GreaterThan(play.judgeCounter.GetComponentInParent<Canvas>().sortingOrder));
+                Assert.That(visible.GetComponent<Canvas>().sortingOrder,
+                    Is.LessThan(play.scoreCounter.scoreRank.GetComponent<Canvas>().sortingOrder));
                 Assert.That(visible.GetComponent<CanvasGroup>().alpha, Is.GreaterThan(.99f));
                 Assert.That(visible.digits[0].color, Is.EqualTo((Color)new Color32(254, 102, 0, 255)));
                 if (practice)
@@ -77,6 +81,9 @@ namespace OurTaiko.Tests
                 int pooled = counter.Additions.Count;
                 counter.Show(play.Session.Score + 100);
                 Assert.That(counter.Additions.Count, Is.EqualTo(pooled), "Expired rows are reused.");
+                Assert.That(counter.Additions.Where(a => a.gameObject.activeSelf).All(a =>
+                    a.GetComponent<Canvas>().sortingOrder == counter.additionTemplate.GetComponent<Canvas>().sortingOrder),
+                    Is.True, "Pool reuse must retain the authored overlay order.");
             }
             finally
             {

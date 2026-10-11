@@ -8,8 +8,8 @@ namespace OurTaiko.Tests
 {
     public sealed class PlayScoreRankFlowTests
     {
-        [UnityTest] public IEnumerator SinglePlayShowsRankOnScoringAndClearsOnRestart() => Check(false);
-        [UnityTest] public IEnumerator PracticeShowsRankOnScoringAndClearsOnSeek() => Check(true);
+        [UnityTest, Category("DrawOrder")] public IEnumerator SinglePlayShowsRankOnScoringAndClearsOnRestart() => Check(false);
+        [UnityTest, Category("DrawOrder")] public IEnumerator PracticeShowsRankOnScoringAndClearsOnSeek() => Check(true);
 
         static IEnumerator Check(bool practice)
         {
@@ -41,6 +41,10 @@ namespace OurTaiko.Tests
                 Assert.That(badge.GetComponent<Canvas>().overrideSorting, Is.True);
                 Assert.That(badge.GetComponent<Canvas>().sortingOrder,
                     Is.GreaterThan(play.judgeCounter.GetComponentInParent<Canvas>().sortingOrder));
+                Assert.That(badge.GetComponent<Canvas>().sortingOrder,
+                    Is.GreaterThan(play.timingFeedback.GetComponent<Canvas>().sortingOrder));
+                Assert.That(badge.GetComponent<Canvas>().sortingOrder,
+                    Is.LessThan(play.pausePanel.GetComponent<Canvas>().sortingOrder));
                 Assert.That((int)badge.rank.DisplayedRank, Is.Zero);
                 Assert.That(badge.rank.image.enabled, Is.False);
                 Assert.That(play.Session.BaseScore, Is.EqualTo(47620));

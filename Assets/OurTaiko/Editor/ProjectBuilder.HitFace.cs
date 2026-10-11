@@ -20,12 +20,13 @@ namespace OurTaiko.Editor
             var scene = EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
             var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
             var lane = play.judgment.transform.parent;
-            var old = lane.Find("HitFlash") as RectTransform;
-            var face = lane.Find("HitFace") as RectTransform;
+            var background = play.noteLayer.parent.parent;
+            var old = background.Find("HitFlash") as RectTransform;
+            var face = background.Find("HitFace") as RectTransform;
             // Nijiiro hit_effect_* sits at skin x=510, y=2 on the lane.
             Vector2 facePosition = face != null ? face.anchoredPosition : old != null ? old.anchoredPosition : new Vector2(510, -2);
             if (old != null) UnityEngine.Object.DestroyImmediate(old.gameObject);
-            play.hitFace = PlaceHitFace(lane, facePosition.x, -facePosition.y);
+            play.hitFace = PlaceHitFace(background, facePosition.x, -facePosition.y);
             AttachHitFaceClip();
             AttachHitRingClips();
             var ring = lane.Find("HitRing") as RectTransform;

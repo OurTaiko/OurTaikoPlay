@@ -64,7 +64,7 @@ namespace OurTaiko.Tests
             InputSystem.settings.editorInputBehaviorInPlayMode = originalEditorBehavior;
         }
 
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator PauseFreezesAudioAndNotesAndBlocksDrumsUntilFadeOutCompletes()
         {
             yield return StartPlay();
@@ -120,7 +120,7 @@ namespace OurTaiko.Tests
             Assert.That(play.Session.Rolls, Is.EqualTo(1), "The first new drum press after resume must be playable.");
         }
 
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator TopmostMenuOwnsAllThreeActionsAndKeyboardNavigation()
         {
             yield return StartPlay();
@@ -162,7 +162,7 @@ namespace OurTaiko.Tests
             Assert.That(play.Session.Rolls, Is.Zero, "The confirm press must not leak into gameplay.");
         }
 
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator MouseAndTouchCanOpenAndResumeTheMenu()
         {
             yield return StartPlay();
@@ -283,7 +283,37 @@ namespace OurTaiko.Tests
             Assert.That(play.Session.Rolls, Is.Zero);
         }
 
-        IEnumerator StartPlay()
+        [UnityTest, Category("DrawOrder")]
+        public IEnumerator PauseDrawsAboveSplitCanvasesAndSprites() => VerifyPauseDrawOrder(false);
+
+        [UnityTest, Category("DrawOrder")]
+        public IEnumerator PracticePauseDrawsAboveSplitCanvasesAndSprites() => VerifyPauseDrawOrder(true);
+
+        IEnumerator VerifyPauseDrawOrder(bool practice)
+        {
+            yield return StartPlay(practice, waitForPlayback: false);
+            if (!play.pausePanel.activeSelf) play.TogglePause();
+            yield return WaitForOpen();
+            var menuCanvas = play.pausePanel.GetComponent<Canvas>();
+            Assert.That(menuCanvas, Is.Not.Null, "Pause needs an independently sorted Canvas.");
+            Assert.That(menuCanvas.overrideSorting, Is.True);
+            Assert.That(menuCanvas.GetComponent<GraphicRaycaster>(), Is.Not.Null);
+            foreach (var canvas in menuCanvas.rootCanvas.GetComponentsInChildren<Canvas>(true))
+            {
+                if (canvas.transform.IsChildOf(menuCanvas.transform)) continue;
+                Assert.That(menuCanvas.sortingOrder, Is.GreaterThan(canvas.sortingOrder), canvas.name);
+            }
+            foreach (var layer in menuCanvas.rootCanvas.GetComponentsInChildren<LaneSpriteLayer>(true))
+                Assert.That(menuCanvas.sortingOrder,
+                    Is.GreaterThan(layer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
+            AssertMenuReceivesPointer(ScreenPoint((RectTransform)play.resumeButton.transform), play.resumeButton);
+            TestCapture.Capture(practice ? "PracticePauseFront.png" : "SinglePlayPauseFront.png");
+            yield return Click(ScreenPoint((RectTransform)play.resumeButton.transform));
+            yield return WaitUntil(() => !play.pausePanel.activeSelf, "Pause menu did not close.");
+            Assert.That(play.IsPaused, Is.EqualTo(practice), "Practice returns to its adjustment pause.");
+        }
+
+        IEnumerator StartPlay(bool practice = false, bool waitForPlayback = true)
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
@@ -295,13 +325,16 @@ namespace OurTaiko.Tests
             PlayOptions.Shared = new PlayOptions();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
-            SceneSwitcher.EnsureInstance().Play(song);
-            yield return WaitForScene(SceneSwitcher.GameScene);
+            var switcher = SceneSwitcher.EnsureInstance();
+            switcher.PracticeMode = practice;
+            switcher.Play(song);
+            yield return WaitForScene(practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene);
             play = Object.FindFirstObjectByType<PlayScene>();
             pad = Object.FindFirstObjectByType<DrumPad>();
             Assert.That(play.pauseMenu, Is.Not.Null, "The saved play scene must contain the pause menu.");
             Assert.That(pad, Is.Not.Null);
-            yield return WaitUntil(() => play.SongTime >= 0.2, "Gameplay did not start.", 10);
+            if (!practice && waitForPlayback)
+                yield return WaitUntil(() => play.SongTime >= 0.2, "Gameplay did not start.", 10);
             Assert.That(play.Session.Rolls, Is.Zero);
         }
 

@@ -46,7 +46,7 @@ namespace OurTaiko.Tests
                 Assert.That(PrefabUtility.GetCorrespondingObjectFromSource(face.gameObject),
                     Is.SameAs(AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath)));
                 var rect = (RectTransform)face.transform;
-                Assert.That(rect.parent, Is.SameAs(play.judgment.transform.parent));
+                Assert.That(rect.parent, Is.SameAs(play.noteLayer.parent.parent));
                 Assert.That(rect.anchoredPosition, Is.EqualTo(new Vector2(510, -2)));
                 Assert.That(rect.sizeDelta, Is.EqualTo(new Vector2(216, 216)));
                 Assert.That(rect.parent.Find("HitFlash"), Is.Null);
@@ -55,11 +55,11 @@ namespace OurTaiko.Tests
                 var ring = (RectTransform)play.hitRing.transform;
                 Assert.That(PrefabUtility.GetCorrespondingObjectFromSource(ring.gameObject),
                     Is.SameAs(AssetDatabase.LoadAssetAtPath<GameObject>(RingPrefabPath)));
-                Assert.That(ring.parent, Is.SameAs(rect.parent));
+                Assert.That(ring.parent, Is.SameAs(play.judgment.transform.parent));
                 Assert.That(ring.anchoredPosition, Is.EqualTo(new Vector2(450, 58)));
-                Assert.That(ring.GetSiblingIndex(), Is.GreaterThan(rect.parent.Find("MojiClip").GetSiblingIndex()));
-                Assert.That(ring.GetSiblingIndex(), Is.GreaterThan(rect.parent.Find("PlayerCover").GetSiblingIndex()));
-                Assert.That(ring.GetSiblingIndex() + 1, Is.EqualTo(rect.parent.Find("Drum").GetSiblingIndex()));
+                Assert.That(ring.GetComponentInParent<Canvas>().sortingOrder, Is.GreaterThan(play.mojiLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
+                Assert.That(ring.GetSiblingIndex(), Is.GreaterThan(ring.parent.Find("PlayerCover").GetSiblingIndex()));
+                Assert.That(ring.GetSiblingIndex() + 1, Is.EqualTo(ring.parent.Find("Drum").GetSiblingIndex()));
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }

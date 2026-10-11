@@ -23,8 +23,8 @@ namespace OurTaiko.Tests
             if (song != null) { Object.Destroy(song.chart); Object.Destroy(song); }
         }
 
-        [UnityTest] public IEnumerator SinglePlayExpressions() => Check(false);
-        [UnityTest] public IEnumerator PracticeExpressions() => Check(true);
+        [UnityTest, Category("SpriteRendering")] public IEnumerator SinglePlayExpressions() => Check(false);
+        [UnityTest, Category("SpriteRendering")] public IEnumerator PracticeExpressions() => Check(true);
 
         IEnumerator Check(bool practice)
         {
@@ -45,7 +45,7 @@ namespace OurTaiko.Tests
             play.pausePanel.SetActive(false);
             var notes = play.Session.Chart.Notes;
             void Draw(double time) => Render.Invoke(play, new object[] { time });
-            Sprite Head(int index) => play.NoteRoot(index).Find("Head").GetComponent<Image>().sprite;
+            Sprite Head(int index) => play.NoteRoot(index).Find("Head").GetComponent<LaneSprite>().sprite;
 
             Draw(2.0);
             Assert.That(Head(50), Is.SameAs(play.noteSprites[1]), "Before 50 combo the face stays neutral.");
@@ -65,8 +65,8 @@ namespace OurTaiko.Tests
                 else Assert.That(play.alternateNoteSprites[kind], Is.SameAs(play.noteSprites[kind]), "Nijiiro kusudama repeats the same crop.");
                 if (kind == 5 || kind == 6)
                 {
-                    Assert.That(play.NoteRoot(i).Find("RollBody").GetComponent<Image>().sprite, Is.SameAs(play.rollBodySprites[kind - 5]));
-                    Assert.That(play.NoteRoot(i).Find("RollTail").GetComponent<Image>().sprite, Is.SameAs(play.rollTailSprites[kind - 5]));
+                    Assert.That(play.NoteRoot(i).Find("RollBody").GetComponent<LaneSprite>().sprite, Is.SameAs(play.rollBodySprites[kind - 5]));
+                    Assert.That(play.NoteRoot(i).Find("RollTail").GetComponent<LaneSprite>().sprite, Is.SameAs(play.rollTailSprites[kind - 5]));
                 }
             }
             Draw(notes[58].Time + 0.05);

@@ -65,7 +65,7 @@ namespace OurTaiko.Tests
             Assert.That(play.SongTime, Is.LessThan(target));
             Assert.That(play.Session.Bad, Is.Zero, "Preparation must not count skipped notes as misses.");
         }
-        [UnityTest] public IEnumerator NativePlaybackAndTwoLayerPause() => ExercisePlayback(AudioBackend.BassSimple);
+        [UnityTest, Category("SpriteRendering")] public IEnumerator NativePlaybackAndTwoLayerPause() => ExercisePlayback(AudioBackend.BassSimple);
 
         IEnumerator ExercisePlayback(AudioBackend backend)
         {
@@ -279,7 +279,7 @@ namespace OurTaiko.Tests
         IEnumerator Click(UnityEngine.UI.Button button)
         {
             var rect = (RectTransform)button.transform;
-            var screen = RectTransformUtility.WorldToScreenPoint(null, rect.TransformPoint(rect.rect.center));
+            var screen = RectTransformUtility.WorldToScreenPoint(rect.GetComponentInParent<Canvas>().rootCanvas.worldCamera, rect.TransformPoint(rect.rect.center));
             InputSystem.QueueStateEvent(mouse, new MouseState { position = screen }); yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = screen }.WithButton(MouseButton.Left)); yield return null;
             InputSystem.QueueStateEvent(mouse, new MouseState { position = screen }); yield return null;

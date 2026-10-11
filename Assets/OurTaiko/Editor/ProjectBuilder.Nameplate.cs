@@ -28,7 +28,7 @@ namespace OurTaiko.Editor
 
             var scene = EditorSceneManager.OpenScene("Assets/Scenes/SinglePlayScene.unity");
             var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
-            var lane = (RectTransform)play.noteLayer.parent.parent;
+            var lane = PlayForeground(play);
             foreach (string label in new[] { "PlayerName", "PlayState" })
             {
                 var debug = lane.parent.Find(label);

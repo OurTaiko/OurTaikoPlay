@@ -42,9 +42,7 @@ namespace OurTaiko.Editor
                     view.label.rectTransform.sizeDelta = new Vector2(260, 60);
                     view.label.rectTransform.Center(130, 30);
                     view.label.text = "+0ms"; view.label.alpha = 0;
-                    var canvas = root.gameObject.AddComponent<Canvas>();
-                    canvas.overrideSorting = true;
-                    canvas.sortingOrder = play.scoreCounter.GetComponentInParent<Canvas>().sortingOrder + 1;
+                    Layer(root, PlayFeedbackOrder);
                     play.timingFeedback = view;
                     EditorUtility.SetDirty(play);
                     EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene);

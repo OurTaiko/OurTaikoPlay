@@ -102,14 +102,14 @@ namespace OurTaiko
         {
             public int Shape;
             public RectTransform Root, Body, Tail;
-            public UnityEngine.UI.Image Head, BodyImage, TailImage, BalloonTail;
+            public LaneSprite Head, BodyImage, TailImage, BalloonTail;
             public float TailAspect;
         }
         sealed class MojiView
         {
             public int Shape;
             public RectTransform Root, Mid, Tail;
-            public UnityEngine.UI.Image Head;
+            public LaneSprite Head;
             public float MidAspect;
         }
 
@@ -512,9 +512,11 @@ namespace OurTaiko
             r.SetParent(parent, false); r.anchorMin = r.anchorMax = new Vector2(0, 1);
             r.pivot = new Vector2(0.5f, 0.5f); r.sizeDelta = new Vector2(width, height); return r;
         }
-        static UnityEngine.UI.Image Image(RectTransform r, Sprite sprite)
+        static LaneSprite Image(RectTransform r, Sprite sprite)
         {
-            var image = r.gameObject.AddComponent<UnityEngine.UI.Image>(); image.sprite = sprite; image.raycastTarget = false; return image;
+            var image = r.gameObject.AddComponent<LaneSprite>();
+            image.Initialize(r.GetComponentInParent<LaneSpriteLayer>(), sprite, r.GetSiblingIndex());
+            return image;
         }
         static int ShapeOf(ChartNote note) => note.Kind == NoteKind.Balloon ? BalloonShape : note.IsLong && !note.IsBalloon ? RollShape : PlainShape;
         static int MojiShapeOf(ChartNote note) => ShapeOf(note) == RollShape ? RollShape - 1 : PlainShape;
@@ -538,6 +540,7 @@ namespace OurTaiko
         NoteView NewNote(int shape)
         {
             var root = Rect("Note", noteLayer, NoteSize, NoteSize);
+            root.gameObject.AddComponent<UnityEngine.Rendering.SortingGroup>();
             var view = new NoteView { Shape = shape, Root = root };
             if (shape == RollShape)
             {
@@ -575,6 +578,7 @@ namespace OurTaiko
         MojiView NewMoji(int shape)
         {
             var root = Rect("Moji", mojiLayer, MojiWidth, MojiHeight);
+            root.gameObject.AddComponent<UnityEngine.Rendering.SortingGroup>();
             var view = new MojiView { Shape = shape, Root = root };
             if (shape == 1)
             {
@@ -654,13 +658,18 @@ namespace OurTaiko
         }
 
         // draw_notes walks draw_note_buffer in reverse, so earlier notes paint over
-        // later ones; uGUI draws later siblings on top. Pooled views are re-stacked
+        // later ones. SortingGroups keep each note's parts together. Pooled views are re-stacked
         // whenever a note enters, since a reused view keeps its old sibling slot.
         // Only candidates hold views, so walking them in descending index order is enough.
         static void Restack<T>(T[] shown, List<int> order, Func<T, Transform> root) where T : class
         {
             for (int k = order.Count - 1; k >= 0; k--)
-                if (shown[order[k]] != null) root(shown[order[k]]).SetAsLastSibling();
+                if (shown[order[k]] != null)
+                {
+                    var transform = root(shown[order[k]]);
+                    transform.SetAsLastSibling();
+                    transform.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder = order.Count - k;
+                }
         }
         void SortCandidates(LaneWindow window)
         {
@@ -783,7 +792,7 @@ namespace OurTaiko
                 {
                     root = shownBars[i] = barPool.Count > 0 ? barPool.Pop() : NewBar();
                     root.sizeDelta = new Vector2(bar.IsBranchStart ? 6 : 3, 200);
-                    root.GetComponent<UnityEngine.UI.Image>().color = bar.IsBranchStart ? new Color(1, 0.8f, 0.2f, 0.8f) : new Color(1, 1, 1, 0.35f);
+                    root.GetComponent<LaneSprite>().color = bar.IsBranchStart ? new Color(1, 0.8f, 0.2f, 0.8f) : new Color(1, 1, 1, 0.35f);
                     root.gameObject.SetActive(true);
                 }
                 root.anchoredPosition = pos;

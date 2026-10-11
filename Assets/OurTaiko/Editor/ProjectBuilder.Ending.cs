@@ -100,7 +100,7 @@ namespace OurTaiko.Editor
                 var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
                 if (play.ending == null)
                 {
-                    var lane = play.noteLayer.parent.parent;
+                    var lane = PlayForeground(play);
                     var instance = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(EndingPrefab), lane);
                     instance.name = "Ending";
                     play.ending = instance.GetComponent<EndingView>();

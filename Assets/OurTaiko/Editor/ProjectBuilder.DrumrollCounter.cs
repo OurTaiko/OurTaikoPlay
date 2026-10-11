@@ -73,7 +73,7 @@ namespace OurTaiko.Editor
                 {
                     var scene = EditorSceneManager.OpenScene(path);
                     var play = UnityEngine.Object.FindFirstObjectByType<PlayScene>();
-                    var lane = play.noteLayer.parent.parent;
+                    var lane = PlayForeground(play);
                     var rig = lane.Find("DrumrollCounter") as RectTransform;
                     bool created = rig == null;
                     if (created) rig = Rect("DrumrollCounter", lane, 0, 0, 0, 0);

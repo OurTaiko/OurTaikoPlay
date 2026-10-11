@@ -15,7 +15,7 @@ namespace OurTaiko.Tests
         [TearDown]
         public void RestoreDefaultPlayer() => Controller.UseUnsaved(new PlayerInfo());
 
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator SavedPlayNameplateKeepsItsSdfScaleOnFirstRenderAndResize()
         {
             Controller.UseUnsaved(new PlayerInfo { name = "Don-chan" });
@@ -31,9 +31,8 @@ namespace OurTaiko.Tests
                 var text = plate.playerName;
                 AssertRenderedSdfScale(text);
 
-                // Inspect the live Overlay mesh. TestCapture switches render mode and regenerates
-                // the mesh, which used to hide the bad scale produced by OnEnable/ForceMeshUpdate.
-                var scaler = text.canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
+                // Inspect the live mesh before capture can trigger another mesh rebuild.
+                var scaler = text.canvas.rootCanvas.GetComponent<UnityEngine.UI.CanvasScaler>();
                 scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ConstantPixelSize;
                 foreach (float scale in new[] { 0.5f, 1.25f })
                 {
@@ -50,7 +49,7 @@ namespace OurTaiko.Tests
             }
         }
 
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator PlaySceneShowsNameplateScoreCounterAndAutoBadge()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
@@ -67,7 +66,7 @@ namespace OurTaiko.Tests
                 var play = Object.FindFirstObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
-                var lane = (RectTransform)play.noteLayer.parent.parent;
+                var lane = (RectTransform)play.scoreCounter.transform.parent;
                 Assert.That(lane.parent.Find("PlayerName"), Is.Null, "The debug player label is gone.");
                 Assert.That(lane.parent.Find("PlayState"), Is.Null, "No AUTO PLAY / READY debug label.");
 
@@ -77,7 +76,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.RectTransform.anchoredPosition, Is.EqualTo(new Vector2(-44, -161)));
                 Assert.That(plate.RectTransform.sizeDelta, Is.EqualTo(new Vector2(408, 96)));
                 Assert.That(plate.transform.GetSiblingIndex(), Is.GreaterThan(lane.Find("Drum").GetSiblingIndex()));
-                Assert.That(lane.GetSiblingIndex(), Is.LessThan(play.balloonCounter.transform.GetSiblingIndex()),
+                Assert.That(lane.GetComponent<Canvas>().sortingOrder, Is.LessThan(play.balloonCounter.GetComponentInParent<Canvas>().sortingOrder),
                     "The balloon overlay draws above the lane containing the nameplate.");
 
                 // Title and dan: the band family with the gold 達人 chip and the *_dani name box.
@@ -211,11 +210,16 @@ namespace OurTaiko.Tests
         static void AssertRenderedSdfScale(TMP_Text text)
         {
             var character = text.textInfo.characterInfo.First(c => c.isVisible);
-            float expected = character.scale * Mathf.Abs(text.rectTransform.lossyScale.y) / text.canvas.scaleFactor;
+            // TMP packs world scale for camera canvases; only Overlay cancels Canvas scale.
+            var canvas = text.canvas;
+            float expected = character.scale * Mathf.Abs(text.rectTransform.lossyScale.y);
+            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay) expected /= canvas.scaleFactor;
+            else if (canvas.renderMode == RenderMode.ScreenSpaceCamera && canvas.worldCamera == null)
+                expected = character.scale;
             var uv = new System.Collections.Generic.List<Vector4>();
             text.canvasRenderer.GetMesh().GetUVs(0, uv);
             Assert.That(uv[character.vertexIndex].w, Is.EqualTo(expected).Within(0.0001f),
-                "Overlay SDF scale must cancel the Canvas scale instead of multiplying it twice.");
+                "SDF scale must match the Canvas render mode on first render and after resizing.");
         }
 
         // Compare properties, not identity: TMP swaps in a per-page copy of the shared material when a

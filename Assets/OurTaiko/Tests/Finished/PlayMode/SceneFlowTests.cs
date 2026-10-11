@@ -11,8 +11,8 @@ namespace OurTaiko.Tests
     public sealed class SceneFlowTests
     {
         [UnityTest] public IEnumerator BranchNormalCanBePlayed() => PlayBranch(BranchRoute.Normal);
-        [UnityTest] public IEnumerator BranchExpertCanBePlayed() => PlayBranch(BranchRoute.Expert);
-        [UnityTest] public IEnumerator BranchMasterAutoPlayCompletes() => PlayBranch(BranchRoute.Master);
+        [UnityTest, Category("SpriteRendering")] public IEnumerator BranchExpertCanBePlayed() => PlayBranch(BranchRoute.Expert);
+        [UnityTest, Category("SpriteRendering")] public IEnumerator BranchMasterAutoPlayCompletes() => PlayBranch(BranchRoute.Master);
 
         [UnityTest]
         public IEnumerator NijiiroGaugeClearsFillsAndAnimates()
@@ -108,7 +108,14 @@ namespace OurTaiko.Tests
                 yield return null;
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
             }
-            yield return new WaitForSecondsRealtime(0.3f);
+            // Route decisions preload notes before the authored branch starts; the label
+            // intentionally remains Normal in the preceding common measure.
+            while (play.RenderedTime < play.Session.Chart.Branches[0].Time + .35)
+            {
+                if (play.IsPaused) play.TogglePause();
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                yield return null;
+            }
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(expected));
             var branch = play.branchLane;
             Assert.That(branch.gameObject.activeInHierarchy, Is.True);
@@ -157,7 +164,7 @@ namespace OurTaiko.Tests
             restarted.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
         }
 
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator TouchDrumMatchesOriginalZonesAndSqueeze()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -181,7 +188,7 @@ namespace OurTaiko.Tests
             Vector2 At(float x, float y)
             {
                 var area = zone.rect;
-                return RectTransformUtility.WorldToScreenPoint(null, zone.TransformPoint(new Vector3(area.xMin + area.width * x, area.yMin + area.height * y)));
+                return RectTransformUtility.WorldToScreenPoint(Camera.main, zone.TransformPoint(new Vector3(area.xMin + area.width * x, area.yMin + area.height * y)));
             }
             InputKey Hit(Vector2 point) { Assert.That(pad.TryHit(point, out var key), Is.True); return key; }
             Assert.That(Hit(At(0.25f, 0.75f)), Is.EqualTo(InputKey.LeftKa));
@@ -194,7 +201,7 @@ namespace OurTaiko.Tests
             Assert.That(Hit(At(0.5f + 0.01f, 0.242f * 1920 / 1080 - 0.01f)), Is.EqualTo(InputKey.RightDon));
             Assert.That(Hit(At(0.5f + 0.01f, 0.242f * 1920 / 1080 + 0.01f)), Is.EqualTo(InputKey.RightKa));
             var pause = (RectTransform)play.pauseButton.transform;
-            Assert.That(pad.TryHit(RectTransformUtility.WorldToScreenPoint(null, pause.TransformPoint(pause.rect.center)), out _), Is.False);
+            Assert.That(pad.TryHit(RectTransformUtility.WorldToScreenPoint(Camera.main, pause.TransformPoint(pause.rect.center)), out _), Is.False);
 
             Assert.That(pad.drum.localScale.x, Is.EqualTo(1f));
             pad.Press();
@@ -254,7 +261,7 @@ namespace OurTaiko.Tests
             play.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
         }
 
-        [UnityTest]
+        [UnityTest, Category("SpriteRendering")]
         public IEnumerator DrumrollBodiesAndTailsUseNijiiroGeometry()
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
@@ -280,9 +287,9 @@ namespace OurTaiko.Tests
                     var body = (RectTransform)root.Find("RollBody");
                     var tail = (RectTransform)root.Find("RollTail");
                     bool big = note.Kind == NoteKind.BigRoll;
-                    Assert.That(body.GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo(big ? "RollBodyBig" : "RollBodySmall"));
-                    Assert.That(body.GetComponent<UnityEngine.UI.Image>().sprite.texture.filterMode, Is.EqualTo(FilterMode.Point), "Atlas sampling must not bleed neighboring body frames into the join.");
-                    Assert.That(tail.GetComponent<UnityEngine.UI.Image>().sprite.name, Is.EqualTo(big ? "RollTailBig" : "RollTailSmall"));
+                    Assert.That(body.GetComponent<LaneSprite>().sprite.name, Is.EqualTo(big ? "RollBodyBig" : "RollBodySmall"));
+                    Assert.That(body.GetComponent<LaneSprite>().sprite.texture.filterMode, Is.EqualTo(FilterMode.Point), "Atlas sampling must not bleed neighboring body frames into the join.");
+                    Assert.That(tail.GetComponent<LaneSprite>().sprite.name, Is.EqualTo(big ? "RollTailBig" : "RollTailSmall"));
                     Assert.That(body.GetSiblingIndex(), Is.LessThan(tail.GetSiblingIndex()));
                     Assert.That(tail.GetSiblingIndex(), Is.LessThan(head.GetSiblingIndex()), "The head must cover the body join.");
                     double speed = note.Bpm / 240 * note.ScrollX * (1920 - 618);
