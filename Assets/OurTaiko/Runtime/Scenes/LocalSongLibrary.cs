@@ -7,7 +7,7 @@ using UnityEngine;
 namespace OurTaiko
 {
     // Global holder of the local songs (OurTaikoPlayer's tja_path), created before the first scene
-    // and kept across loads like OnlineManager. LocalSongScanner reads persistentDataPath/Songs on a
+    // and kept across loads like OnlineManager. LocalSongScanner reads the configured roots on a
     // worker thread; ServerLogin starts a rescan each time, and the first read waits for it. Each
     // chart keeps its SongDefinition across rescans, so the selected song survives a refresh.
     public sealed class LocalSongLibrary : MonoBehaviour
@@ -15,7 +15,7 @@ namespace OurTaiko
         public static LocalSongLibrary Instance { get; private set; }
         public static string DefaultRoot => Path.Combine(Application.persistentDataPath, "Songs");
 
-        public string Root { get; private set; }
+        public IReadOnlyList<string> Roots => roots;
         // Charts outside box.def folders, by file name; then one folder per top-level box.def folder.
         public IReadOnlyList<SongDefinition> Songs { get { Complete(); return songs; } }
         public IReadOnlyList<SongFolder> Folders { get { Complete(); return folders; } }
@@ -25,6 +25,9 @@ namespace OurTaiko
         readonly Dictionary<string, SongDefinition> byKey = new Dictionary<string, SongDefinition>();
         Task<LocalSongCatalog> scan;
         bool scanned;
+        SettingManager settings;
+        string[] configuredPaths, roots;
+        string testRoot;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() => Instance = null;
@@ -49,23 +52,39 @@ namespace OurTaiko
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            Root = DefaultRoot;
+            settings = SettingManager.EnsureInstance();
+            configuredPaths = (string[])settings.Settings.general.songLibraryPaths.Clone();
+            roots = SongLibraryPaths.Resolve(configuredPaths, DefaultRoot);
+            settings.Changed += SettingsChanged;
             // Created up front so players can find where to put their songs.
-            try { Directory.CreateDirectory(Root); }
+            try { Directory.CreateDirectory(DefaultRoot); }
             catch (System.Exception error) { Debug.LogWarning("Could not create the songs folder: " + error.Message); }
         }
 
         void OnDestroy()
         {
             if (Instance != this) return;
+            if (settings != null) settings.Changed -= SettingsChanged;
             Clear();
             Instance = null;
+        }
+
+        void SettingsChanged(GameSettings value)
+        {
+            if (configuredPaths.SequenceEqual(value.general.songLibraryPaths)) return;
+            configuredPaths = (string[])value.general.songLibraryPaths.Clone();
+            roots = SongLibraryPaths.Resolve(configuredPaths, DefaultRoot);
+            testRoot = null;
+            scan = null; scanned = false;
+            Clear();
+            Refresh();
         }
 
         // Reads another songs folder from the next access on (tests use a temporary copy).
         public void UseRoot(string root)
         {
-            Root = root;
+            testRoot = root;
+            roots = new[] { root };
             scan = null; scanned = false;
             Clear();
         }
@@ -73,9 +92,12 @@ namespace OurTaiko
         // Starts a rescan in the background; Songs and Folders wait for it.
         public void Refresh()
         {
-            string root = Root;
+            string root = testRoot;
+            string[] snapshot = (string[])roots.Clone();
+            string defaultRoot = DefaultRoot;
             string language = SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language : "en";
-            scan = Task.Run(() => LocalSongScanner.Scan(root, language));
+            scan = Task.Run(() => root != null ? LocalSongScanner.Scan(root, language)
+                : LocalSongScanner.ScanRoots(snapshot, defaultRoot, language));
         }
 
         void Complete()
@@ -132,6 +154,7 @@ namespace OurTaiko
                 song.chart = new TextAsset(chart.Text) { name = chart.Key, hideFlags = HideFlags.DontSave };
             }
             song.audioPath = chart.AudioPath;
+            song.localChartSha256 = chart.Sha256;
             song.genre = genre;
             var oni = chart.Info.Course(Difficulty.Oni);
             song.course = (oni ?? chart.Info.Courses[chart.Info.Courses.Count - 1]).Course;

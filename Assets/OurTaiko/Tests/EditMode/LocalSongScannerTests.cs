@@ -88,6 +88,27 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void ScoreHashUsesOriginalBytesAndSurvivesRenamingButNotContentOrEncodingChanges()
+        {
+            const string text = "TITLE:Hash Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1,\n#END\n";
+            Write("original.tja", text);
+            const string expected = "8cbb7fa324a28a36715ec28c3a8a87d00f81e32a1670eca054b7cb44882b079f";
+            Assert.That(LocalSongScanner.Scan(root).Songs.Single().Sha256, Is.EqualTo(expected));
+            Directory.CreateDirectory(Path.Combine(root, "Moved"));
+            File.Move(Path.Combine(root, "original.tja"), Path.Combine(root, "Moved/renamed.tja"));
+            Write("copy.tja", text);
+            Assert.That(LocalSongScanner.Scan(root).Songs.Select(s => s.Sha256), Is.All.EqualTo(expected));
+            Write("copy.tja", text.Replace("1,", "2,"));
+            Assert.That(LocalSongScanner.Scan(root).Songs.Select(s => s.Sha256), Is.Unique);
+            File.WriteAllBytes(Path.Combine(root, "copy.tja"), new UTF8Encoding(true).GetPreamble().Concat(Encoding.UTF8.GetBytes(text)).ToArray());
+            var catalog = LocalSongScanner.Scan(root);
+            Assert.That(catalog.Songs.Select(s => s.Text).Distinct().Count(), Is.EqualTo(1));
+            Assert.That(catalog.Songs.Select(s => s.Sha256), Is.Unique, "BOM is part of the file even when decoded text is identical.");
+            Write("copy.tja", text.Replace("\n", "\r\n"));
+            Assert.That(LocalSongScanner.Scan(root).Songs.Select(s => s.Sha256), Is.Unique);
+        }
+
+        [Test]
         public void MissingRootIsEmpty()
         {
             var catalog = LocalSongScanner.Scan(Path.Combine(root, "nowhere"));

@@ -8,6 +8,10 @@ namespace OurTaiko
         public TextAsset chart;
         public AudioClip music;
         [System.NonSerialized] public string audioPath;
+        [System.NonSerialized] public string localChartSha256;
+        // Online charts and authored assets keep their existing identity. Disk charts
+        // use their raw file hash; name remains the entry identity for navigation/audio.
+        public string ScoreKey => string.IsNullOrEmpty(localChartSha256) ? name : localChartSha256;
         NativeAudioSample preparedAudio;
         public bool HasPreparedAudio => preparedAudio != null && !preparedAudio.IsDisposed;
         public void SetPreparedAudio(NativeAudioSample audio) { preparedAudio?.Dispose(); preparedAudio = audio; }

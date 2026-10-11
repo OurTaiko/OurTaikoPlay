@@ -68,7 +68,7 @@ namespace OurTaiko.Tests
                 Assert.That((result.Good, result.Ok, result.Bad), Is.EqualTo((session.Good, session.Ok, 1)));
                 Assert.That(result.GaugeState, Is.EqualTo(GaugeState.Full));
                 Assert.That(result.ResultCrown, Is.EqualTo(Crown.Clear));
-                Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Easy).score, Is.EqualTo(990200));
+                Assert.That(ScoreStore.Shared.Get(song.ScoreKey, Difficulty.Easy).score, Is.EqualTo(990200));
 
                 SceneSwitcher.Instance.Restart();
                 yield return WaitForScene(SceneSwitcher.GameScene);

@@ -439,7 +439,7 @@ namespace OurTaiko
         {
             if (IsPractice) { PausePractice(true); return; }
             songClock.Pause(); IsFinished = true; music.StopAudio();
-            Result = PlayResult.From(Session, song.name, autoPlay);
+            Result = PlayResult.From(Session, song.ScoreKey, autoPlay);
             Result.Title = displayInfo.Title;
             Result.Subtitle = displayInfo.Subtitle;
             DisableDrumPads();

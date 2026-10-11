@@ -103,7 +103,7 @@ namespace OurTaiko.Tests
             var result = Object.FindFirstObjectByType<ResultScene>();
             Assert.That(result.Result.Bad == 0 && result.Result.Ok == 0, Is.True);
             Assert.That(result.Result.GaugeState, Is.EqualTo(GaugeState.Full));
-            Assert.That(ScoreStore.Shared.Get(TestSongs.TripleHelix, Difficulty.Oni), Is.Null, "Auto play is never saved.");
+            Assert.That(ScoreStore.Shared.Get(TestSongs.Load(TestSongs.TripleHelix).ScoreKey, Difficulty.Oni), Is.Null, "Auto play is never saved.");
             yield return WaitUntil(() => result.Sequence.GaugeShown >= 30);
             Capture("ResultGaugeFilling.png");
             yield return WaitUntil(() => result.Sequence.RowsLanded >= 3);

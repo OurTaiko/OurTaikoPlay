@@ -13,6 +13,7 @@ namespace OurTaiko.Tests
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.name = "Result Persistence Test";
+            song.localChartSha256 = new string('a', 64);
             song.chart = new TextAsset("TITLE:Result Persistence Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n#END");
             try
             {
@@ -29,11 +30,13 @@ namespace OurTaiko.Tests
                 play.Session.Advance(play.Session.Chart.Duration, true);
                 Assert.That(play.Session.Score, Is.GreaterThan(0));
                 play.SendMessage("Finish");
-                Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null,
+                Assert.That(ScoreStore.Shared.Get(song.ScoreKey, Difficulty.Oni), Is.Null,
                     "Finishing gameplay must not write a score while ResultScene is still loading.");
                 yield return WaitForScene(SceneSwitcher.ResultScene);
                 var result = switcher.LastResult;
-                Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni).score, Is.EqualTo(result.Score));
+                Assert.That(result.ChartKey, Is.EqualTo(song.ScoreKey));
+                Assert.That(ScoreStore.Shared.Get(song.ScoreKey, Difficulty.Oni).score, Is.EqualTo(result.Score));
+                Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null, "Entry names no longer key disk-chart scores.");
                 Assert.That(result.PreviousBest, Is.Zero);
                 int revision = ScoreStore.Shared.Revision;
 
@@ -42,7 +45,7 @@ namespace OurTaiko.Tests
                 Assert.That(ScoreStore.Shared.Revision, Is.EqualTo(revision));
                 Assert.That(result.PreviousBest, Is.Zero, "Reopening must not replace the pre-play best with this run.");
 
-                switcher.ShowResult(new PlayResult { ChartKey = song.name, Difficulty = Difficulty.Oni,
+                switcher.ShowResult(new PlayResult { ChartKey = song.ScoreKey, Difficulty = Difficulty.Oni,
                     Score = result.Score + 1, AutoPlay = true }, song);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
                 Assert.That(ScoreStore.Shared.Revision, Is.EqualTo(revision), "Auto play remains unsaved.");

@@ -2,15 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace OurTaiko
 {
     // One playable TJA found on disk. Key is its path under the songs root without the extension
-    // ('/' separated); it names the song and keys its scores.
+    // ('/' separated); it identifies the library entry. Sha256 keys scores independently
+    // of the entry's location and is calculated from the file's original bytes.
     public sealed class LocalChart
     {
-        public string Key, FilePath, Text, AudioPath;
+        public string Key, FilePath, Text, AudioPath, Sha256;
         public SongInfo Info;
     }
 
@@ -34,6 +36,59 @@ namespace OurTaiko
     public static class LocalSongScanner
     {
         const int MaxDepth = 32;  // Stands in for the canonical-path loop check on symlinked folders.
+
+        // Merge configured roots in order. Absolute file identities distinguish same-named
+        // charts and stay stable when roots are reordered or overlap. The default library
+        // retains its original relative entry keys. Scores use the separate content hash.
+        public static LocalSongCatalog ScanRoots(string[] roots, string defaultRoot, string language = "en")
+        {
+            var combined = new LocalSongCatalog();
+            var seen = new HashSet<string>(SongLibraryPaths.Comparer);
+            SongLibraryPaths.TryNormalize(defaultRoot, out string legacyRoot);
+            foreach (string root in roots)
+            {
+                try
+                {
+                    // Check each root independently; one unavailable drive must not hide others.
+                    using (var entries = Directory.EnumerateFileSystemEntries(root).GetEnumerator()) entries.MoveNext();
+                    var catalog = Scan(root, language);
+                    bool Keep(LocalChart chart)
+                    {
+                        if (!seen.Add(chart.FilePath)) return false;
+                        chart.Key = LibraryKey(chart.FilePath, legacyRoot, false);
+                        return true;
+                    }
+                    combined.Songs.AddRange(catalog.Songs.Where(Keep));
+                    foreach (var folder in catalog.Folders)
+                    {
+                        string relative = folder.Key.Substring("local/".Length);
+                        folder.Key = LibraryKey(Path.Combine(root, relative), legacyRoot, true);
+                        folder.Charts.RemoveAll(chart => !Keep(chart));
+                        if (folder.Charts.Count > 0) combined.Folders.Add(folder);
+                    }
+                }
+                catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
+                    error is System.Security.SecurityException)
+                {
+                    UnityEngine.Debug.LogWarning($"Skipping song library {root}: {error.Message}");
+                }
+            }
+            return combined;
+        }
+
+        static string LibraryKey(string path, string legacyRoot, bool folder)
+        {
+            string prefix = legacyRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            var comparison = Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            if (path.StartsWith(prefix, comparison))
+            {
+                string relative = Relative(legacyRoot, path);
+                return folder ? "local/" + relative : relative.Substring(0, relative.Length - Path.GetExtension(relative).Length);
+            }
+            if (Path.DirectorySeparatorChar == '\\') path = path.ToUpperInvariant();
+            using var hash = SHA256.Create();
+            return "local-path/" + BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(path))).Replace("-", "").ToLowerInvariant();
+        }
 
         public static LocalSongCatalog Scan(string root, string language = "en")
         {
@@ -67,14 +122,17 @@ namespace OurTaiko
         {
             try
             {
-                string text = ReadText(File.ReadAllBytes(file));
+                byte[] bytes = File.ReadAllBytes(file);
+                string text = ReadText(bytes);
                 var info = SongInfo.Read(text);
                 if (info.Courses.Count == 0) return;
                 string audio = string.IsNullOrWhiteSpace(info.Wave) ? null : Path.Combine(Path.GetDirectoryName(file), info.Wave.Trim());
                 string relative = Relative(root, file);
+                using var hash = SHA256.Create();
                 list.Add(new LocalChart
                 {
                     Key = relative.Substring(0, relative.Length - Path.GetExtension(relative).Length),
+                    Sha256 = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(),
                     FilePath = file, Text = text, Info = info,
                     AudioPath = audio != null && File.Exists(audio) ? audio : null,
                 });

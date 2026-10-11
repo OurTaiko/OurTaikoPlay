@@ -30,7 +30,7 @@ namespace OurTaiko.Tests
                 var session = new PlaySession(song.Parse("Oni"));
                 session.Advance(3, true);
                 Assert.That(session.Score, Is.EqualTo(1000020));
-                var resultData = PlayResult.From(session, song.name, false);
+                var resultData = PlayResult.From(session, song.ScoreKey, false);
                 Assert.That(resultData.KiwamiThreshold, Is.EqualTo(1000020));
                 resultData.Score = 1000000;
                 ScoreStore.Shared.Save(resultData);
@@ -86,7 +86,7 @@ namespace OurTaiko.Tests
             // Saved board i shows local song i.
             var board = select.view.songBoards[System.Array.IndexOf(select.Manager.Songs, song)];
             Assert.That((int)board.scoreRank.DisplayedRank, Is.Zero);
-            ScoreStore.Shared.Save(new PlayResult { ChartKey = song.name, Difficulty = Difficulty.Oni,
+            ScoreStore.Shared.Save(new PlayResult { ChartKey = song.ScoreKey, Difficulty = Difficulty.Oni,
                 Score = 960000, IsClear = true, Good = 890, Ok = 15, Bad = 0 });
             yield return null;
             Assert.That((int)board.scoreRank.DisplayedRank, Is.EqualTo(6));
@@ -106,7 +106,7 @@ namespace OurTaiko.Tests
             Assert.That(((RectTransform)card.transform).anchorMin, Is.EqualTo(new Vector2(0, 1)));
             Assert.That(((RectTransform)card.transform).anchoredPosition, Is.EqualTo(new Vector2(80, -42)));
             TestCapture.Capture("ScoreRankCourse.png");
-            var resultData = new PlayResult { Title = "SCORE RANK", ChartKey = song.name, Difficulty = Difficulty.Oni,
+            var resultData = new PlayResult { Title = "SCORE RANK", ChartKey = song.ScoreKey, Difficulty = Difficulty.Oni,
                 Score = 960000, Good = 890, Ok = 15, Rolls = 12, GaugePoints = 9000, IsClear = true };
             var switcher = SceneSwitcher.Instance;
             switcher.ShowResult(resultData);
