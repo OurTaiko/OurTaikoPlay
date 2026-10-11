@@ -65,6 +65,7 @@ namespace OurTaiko
         public RectTransform BarRoot(int index) => shownBars[index];
         SongDefinition song;
         double audioOffset, visualOffset, judgeOffset;
+        int playedAudioOffsetMs;
         double ChartTime => SongTime - audioOffset;
         SongInfo displayInfo;
         bool autoPlay, hitKa, nextAutoRight = true;
@@ -128,6 +129,7 @@ namespace OurTaiko
             }
             autoPlay = switcher.AutoPlay;
             var playSettings = SettingManager.EnsureInstance().Settings.play;
+            playedAudioOffsetMs = playSettings.audioOffsetMs;
             audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
             visualOffset = song.visualOffsetMs / 1000.0;
             judgeOffset = autoPlay ? 0 : playSettings.judgeOffsetMs / 1000.0;
@@ -439,7 +441,7 @@ namespace OurTaiko
         {
             if (IsPractice) { PausePractice(true); return; }
             songClock.Pause(); IsFinished = true; music.StopAudio();
-            Result = PlayResult.From(Session, song.ScoreKey, autoPlay);
+            Result = PlayResult.From(Session, song.ScoreKey, autoPlay, playedAudioOffsetMs);
             Result.Title = displayInfo.Title;
             Result.Subtitle = displayInfo.Subtitle;
             DisableDrumPads();

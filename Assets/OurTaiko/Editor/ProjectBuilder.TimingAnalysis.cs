@@ -23,9 +23,12 @@ namespace OurTaiko.Editor
                 if (result.view.analysis == null)
                 {
                     BuildTimingAnalysis(result);
-                    EditorSceneManager.MarkSceneDirty(scene);
-                    EditorSceneManager.SaveScene(scene);
                 }
+                StyleResultReturnBoard(result.view.analysis);
+                BuildTimingCalibration(result.view.analysis);
+                StyleTimingBoard(result.view.analysis);
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
                 foreach (string name in new[] { "SinglePlayScene", "PracticeScene" })
                 {
                     scene = EditorSceneManager.OpenScene("Assets/Scenes/" + name + ".unity");
@@ -126,13 +129,99 @@ namespace OurTaiko.Editor
             {
                 var dot = SkinUi.Image("Dot", control.transform, knob, 18, 18); dot.rectTransform.Center(25, 32); return dot;
             }).ToArray();
-            AnalysisBox("ActionBorder", navigation, 776, 990, 368, 76, dark);
             analysis.action = AnalysisControl("Continue", navigation, 782, 996, 356, 64, new Color32(236, 78, 33, 255));
             analysis.actionLabel = AnalysisText("Label", analysis.action.transform, "跳过演出", 34, 178, 32, 346, Color.white);
+            StyleResultReturnBoard(analysis);
+            BuildTimingCalibration(analysis);
+            StyleTimingBoard(analysis);
             view.freePlay.rectTransform.Center(1510, 1046);
             analysis.Bind(new PlayResult()); analysis.SetReady(false);
             PersistSongSelectTextMaterials(stage);
             EditorUtility.SetDirty(view);
+        }
+
+        static void StyleTimingBoard(ResultAnalysisView analysis)
+        {
+            const string art = "result/analysis_rounded";
+            if (Sprite(art) == null)
+                WriteRoundedRect(Root + "Art/" + art + ".png", 64, 64, 28, 0,
+                    Color.white, Color.white, new Vector4(30, 30, 30, 30));
+            var sprite = Sprite(art);
+            // Concentric corners preserve the existing 9-unit frame and 9-unit header inset.
+            foreach (var layer in new[] { ("Border", 28f), ("Paper", 19f), ("Header", 10f) })
+            {
+                var image = analysis.detailPage.transform.Find(layer.Item1).GetComponent<UnityEngine.UI.Image>();
+                image.sprite = sprite;
+                image.type = UnityEngine.UI.Image.Type.Sliced;
+                image.pixelsPerUnitMultiplier = 28f / layer.Item2;
+                EditorUtility.SetDirty(image);
+            }
+        }
+
+        static void StyleResultReturnBoard(ResultAnalysisView analysis)
+        {
+            var oldBorder = analysis.transform.Find("ActionBorder");
+            if (oldBorder != null) UnityEngine.Object.DestroyImmediate(oldBorder.gameObject);
+            var image = analysis.action.GetComponent<UnityEngine.UI.Image>();
+            image.sprite = Sprite("song_select/box/bar_genre_back");
+            image.type = UnityEngine.UI.Image.Type.Sliced;
+            image.color = Color.white;
+            // Match the song-select return board's closed 960 x 164 shape at 40% scale.
+            var rect = image.rectTransform;
+            rect.sizeDelta = new Vector2(960, 164);
+            rect.localScale = Vector3.one * .4f;
+            rect.Center(960, 1028);
+            // Keep the existing readable 34-unit caption after scaling the board.
+            analysis.actionLabel.fontSize = 85;
+            analysis.actionLabel.rectTransform.sizeDelta = new Vector2(860, 136);
+            analysis.actionLabel.rectTransform.Center(480, 82);
+            EditorUtility.SetDirty(image);
+            EditorUtility.SetDirty(analysis.actionLabel);
+        }
+
+        static void BuildTimingCalibration(ResultAnalysisView analysis)
+        {
+            var detail = analysis.detailPage.transform;
+            // Reserve two compact rows under the chart for calibration, within the existing board.
+            var graph = (RectTransform)analysis.histogram.transform;
+            graph.sizeDelta = new Vector2(744, 248); graph.TopLeft(135, 460);
+            for (int i = 0; i < analysis.yLabels.Length; i++) analysis.yLabels[i].rectTransform.Center(98, 708 - i * 62);
+            for (int i = -2; i <= 2; i++)
+            {
+                var tick = (RectTransform)detail.Find("X" + i);
+                tick.anchoredPosition = new Vector2(tick.anchoredPosition.x, -732);
+            }
+            ((RectTransform)detail.Find("AxisTitle")).Center(507, 774);
+            analysis.counts.rectTransform.Center(482, 815);
+            analysis.sides.rectTransform.Center(482, 850);
+            ((RectTransform)analysis.empty.transform).Center(507, 584);
+            if (analysis.offsetControls == null)
+            {
+                var root = SkinUi.Rect("TimingCalibration", analysis.transform, 1920, 1080); root.TopLeft(0, 0);
+                analysis.offsetControls = root.gameObject.AddComponent<CanvasGroup>();
+                var controls = new ResultPointerControl[2];
+                var values = new TextMeshProUGUI[2];
+                string[] captions = { "调整 A（音频偏移）", "调整 B（判定偏移）" };
+                for (int i = 0; i < 2; i++)
+                {
+                    var control = AnalysisControl(i == 0 ? "AdjustAudio" : "AdjustJudge", root, 80 + i * 420, 870, 384, 68, Color.white);
+                    var image = control.GetComponent<UnityEngine.UI.Image>();
+                    image.sprite = Sprite("song_select/box/bar_genre_back");
+                    image.type = UnityEngine.UI.Image.Type.Sliced;
+                    image.pixelsPerUnitMultiplier = 2.5f;
+                    control.gameObject.AddComponent<CanvasGroup>();
+                    AnalysisText("Title", control.transform, captions[i], 24, 192, 21, 372, Color.white);
+                    values[i] = AnalysisText("Recommendation", control.transform, "—", 23, 192, 48, 372, Color.white);
+                    controls[i] = control;
+                }
+                analysis.adjustAudio = controls[0]; analysis.adjustJudge = controls[1];
+                analysis.audioRecommendation = values[0]; analysis.judgeRecommendation = values[1];
+                analysis.calibrationStatus = AnalysisText("Status", root, "每次修正平均偏差的 ½ · 每项限本局一次", 20, 482, 952, 824, new Color32(44, 37, 31, 255));
+                analysis.offsetControls.gameObject.SetActive(false);
+            }
+            analysis.calibrationStatus.text = "每次修正平均偏差的 ½ · 每项限本局一次";
+            EditorUtility.SetDirty(analysis.calibrationStatus);
+            EditorUtility.SetDirty(analysis);
         }
 
         static UnityEngine.UI.Image AnalysisBox(string name, Transform parent, float x, float y, float width, float height, Color color)

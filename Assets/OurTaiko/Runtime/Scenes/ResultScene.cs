@@ -217,6 +217,13 @@ namespace OurTaiko
 
         public void ChangePage(int direction) => ShowPage(!(view.analysis?.Details ?? false), direction);
 
+        void AdjustTiming(bool audio)
+        {
+            if (!CanAct() || view.analysis == null || !view.analysis.ApplyOffset(audio)) return;
+            lastActionFrame = Time.frameCount;
+            sfx.PlayAudioOneShot(don);
+        }
+
         public void ShowPage(bool details, int direction = 1)
         {
             if (!CanAct() || view.analysis == null || view.analysis.IsTransitioning || view.analysis.Details == details) return;
@@ -510,6 +517,12 @@ namespace OurTaiko
                 analysis.scoreDot.Clicked = () => ShowPage(false, -1);
                 analysis.detailDot.Clicked = () => ShowPage(true, 1);
                 analysis.swipeArea.Swiped = ChangePage;
+                if (analysis.adjustAudio != null)
+                {
+                    analysis.adjustAudio.Clicked = () => AdjustTiming(true);
+                    analysis.adjustJudge.Clicked = () => AdjustTiming(false);
+                    analysis.adjustAudio.Swiped = analysis.adjustJudge.Swiped = ChangePage;
+                }
             }
         }
     }
