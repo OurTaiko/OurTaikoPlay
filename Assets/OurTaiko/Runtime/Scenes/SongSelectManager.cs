@@ -361,6 +361,14 @@ namespace OurTaiko
             int folder = folderItem.Folder;
             var change = new FolderChange { Anchor = folderItem };
             change.Removed.Add(folderItem);
+            // Entry is reachable only at the root; an open folder has its own back boards.
+            int rootBack = items.FindIndex(item => item.Kind == ItemKind.Back && item.Folder < 0);
+            if (rootBack >= 0)
+            {
+                change.Removed.Add(items[rootBack]);
+                items.RemoveAt(rootBack);
+                if (rootBack < index) index--;
+            }
             var back = NewBack(folder);
             change.Added.Add(back);
             var songsIn = folders[folder].Songs;
@@ -385,6 +393,9 @@ namespace OurTaiko
             change.Added.Add(folderItem);
             items.RemoveRange(openAt + 1, openCount);
             items[openAt] = folderItem;
+            var rootBack = new WheelItem { Kind = ItemKind.Back };
+            items.Add(rootBack);
+            change.Added.Add(rootBack);
             openFolder = -1; openAt = -1; openCount = 0;
             FolderChanged?.Invoke(change);
         }

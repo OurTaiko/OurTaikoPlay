@@ -190,6 +190,8 @@ namespace OurTaiko.Tests
             select = Object.FindFirstObjectByType<SongSelectScene>();
             Assert.That(select.Manager.KindAt(3), Is.EqualTo(SongSelectManager.ItemKind.Back));
             Assert.That(select.Manager.FocusedSong, Is.SameAs(song));
+            Assert.That(select.Manager.Items.Any(item => item.Kind == SongSelectManager.ItemKind.Back && item.Folder < 0), Is.False,
+                "Returning from a song reopens its folder without the Entry back board.");
         }
 
         [UnityTest]
@@ -331,7 +333,8 @@ namespace OurTaiko.Tests
             var select = Object.FindFirstObjectByType<SongSelectScene>();
             yield return Focus(select, 3);
             select.Manager.Confirm();
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(8));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(7));
+            Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).All(item => item.Folder == 0), Is.True);
             yield return Focus(select, 5);
             Assert.That(select.Manager.KindAt(5), Is.EqualTo(SongSelectManager.ItemKind.Folder));
             select.Manager.Confirm();
@@ -339,12 +342,16 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.KindAt(3), Is.EqualTo(SongSelectManager.ItemKind.Folder), "Game closed again.");
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Back), "The empty Pop folder holds only もどる.");
             Assert.That(select.Manager.Focused, Is.EqualTo(4));
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(7));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(6));
+            Assert.That(select.Manager.Items.Single(item => item.Kind == SongSelectManager.ItemKind.Back).Folder, Is.EqualTo(1));
             yield return new WaitForSecondsRealtime(0.4f);
             select.Manager.Confirm();
             Assert.That(select.Manager.OpenFolder, Is.Null);
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Folder));
             Assert.That(select.Manager.Focused, Is.EqualTo(4), "Closing focuses the folder board.");
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(7));
+            Assert.That(select.Manager.Items.Single(item => item.Kind == SongSelectManager.ItemKind.Back).Folder, Is.EqualTo(-1),
+                "Closing the folder restores exactly one Entry back board.");
 
             var song = online.Folders[0].Songs.Single();
             fixture.Fail["/api/v1/charts/" + chart.Id] = 500;
@@ -381,7 +388,7 @@ namespace OurTaiko.Tests
             yield return Focus(select, 4);
             select.Manager.Confirm();
             // Pop holds the 1500 odd charts: もどる, then one more もどる after every ten songs.
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(4 + 1 + 1500 + 149 + 2));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(4 + 1 + 1500 + 149 + 1));
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Back));
             Assert.That(select.Manager.SongAt(5).ReadDisplayInfo().Title, Is.EqualTo("Bulk 1"));
             Assert.That(select.Manager.KindAt(15), Is.EqualTo(SongSelectManager.ItemKind.Back));
