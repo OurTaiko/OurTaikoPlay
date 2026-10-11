@@ -3,8 +3,8 @@ using UnityEngine.Rendering;
 
 namespace OurTaiko
 {
-    // Each pass shares one clipped material. Clipping follows the original RectMask2D's
-    // rectangle after Canvas layout, including window resizing and offscreen test captures.
+    // Each pass shares one clipped material. Clipping follows its design rectangle
+    // after Canvas layout, including window resizing and offscreen test captures.
     [DisallowMultipleComponent, RequireComponent(typeof(SortingGroup))]
     public sealed class LaneSpriteLayer : MonoBehaviour
     {

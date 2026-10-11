@@ -145,6 +145,11 @@ namespace OurTaiko.Editor
             layer.sourceMaterial = material;
             layer.clipRect = (RectTransform)root.parent;
             root.GetComponent<SortingGroup>().sortingOrder = order;
+            // Sprite clipping uses the rectangle in the shader, with no uGUI children to mask.
+            var mask = root.parent.GetComponent<UnityEngine.UI.RectMask2D>();
+            if (mask != null && !root.parent.GetComponentsInChildren<UnityEngine.UI.Graphic>(true)
+                .Any(graphic => graphic.transform != root.parent))
+                UnityEngine.Object.DestroyImmediate(mask);
         }
     }
 }

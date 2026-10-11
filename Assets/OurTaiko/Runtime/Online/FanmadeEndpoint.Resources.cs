@@ -13,9 +13,6 @@ namespace OurTaiko.Online
             Action<long, long> progress = null)
         {
             ValidateResourceUrl(resource.Url);
-#if UNITY_WEBGL && !UNITY_EDITOR
-            return await RequestWebBytesAsync(resource.Url, "", "", resource.Size, cancel, progress, external: true);
-#else
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(120));
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
             using var request = new HttpRequestMessage(HttpMethod.Get, resource.Url);
@@ -42,7 +39,6 @@ namespace OurTaiko.Online
             // Do not retain transport exceptions: their messages may contain signed URLs.
             catch (HttpRequestException error) { throw new FanmadeException(NetworkCode(error)); }
             catch (IOException error) { throw new FanmadeException(NetworkCode(error)); }
-#endif
         }
     }
 }

@@ -32,14 +32,13 @@ namespace OurTaiko.Editor
             play.mojiRollSprite = Sprite("game/notes/moji_drumroll_mid");
 
             // draw_notes scissors only X, from the lane cover's right edge; the text row
-            // (skin moji.y=209, 48 high) lies below the note clip, so it gets its own mask.
+            // (skin moji.y=209, 48 high) lies below the note clip, so it gets its own clip rectangle.
             var noteClip = play.noteLayer.parent;
             var lane = noteClip.parent;
             var clip = lane.Find("MojiClip") as RectTransform;
             if (clip == null)
             {
                 clip = Rect("MojiClip", lane, 0, 0, 0, 0);
-                clip.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();
             }
             var noteRect = (RectTransform)noteClip;
             clip.anchoredPosition = noteRect.anchoredPosition;

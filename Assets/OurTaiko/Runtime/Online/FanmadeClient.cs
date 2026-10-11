@@ -81,9 +81,7 @@ namespace OurTaiko.Online
         // Drops every server and its catalog (uploads finish first). Pending scores stay on disk.
         public void Reset()
         {
-#if !UNITY_WEBGL || UNITY_EDITOR
             try { uploads?.Wait(); } catch (AggregateException) { }
-#endif
             uploads = null;
             lock (sync)
             {
@@ -257,11 +255,7 @@ namespace OurTaiko.Online
                 var now = DateTime.UtcNow;
                 if (endpoints.Count == 0 || now < retryAt) return;
                 retryAt = now + RetryInterval;
-#if UNITY_WEBGL && !UNITY_EDITOR
-                uploads = DrainAsync();
-#else
                 uploads = Task.Run(DrainAsync);
-#endif
             }
         }
 
@@ -335,12 +329,7 @@ namespace OurTaiko.Online
 
         static Task<T> CacheWork<T>(Func<T> work, CancellationToken cancel)
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            cancel.ThrowIfCancellationRequested();
-            return Task.FromResult(work());
-#else
             return Task.Run(work, cancel);
-#endif
         }
 
         // The cached file for a content hash (the manifest only accepts 64-digit hex hashes).
