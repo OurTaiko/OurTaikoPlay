@@ -37,6 +37,7 @@ namespace OurTaiko
         public ComboView combo;
         public ComboAnnounceView comboAnnounce;
         public JudgeCounterView judgeCounter;
+        public TimingFeedbackView timingFeedback;
         [Tooltip("The touch drum; Settings > Play > Enable Drumpad for Single Player Mode turns it on or off.")]
         public DrumPad drumPad;
         public TMP_Text title, subtitle, resultText;
@@ -310,6 +311,12 @@ namespace OurTaiko
             hitRing.Play(result, big, judgedAt);
             if (result != Judgment.Roll)
             {
+                double? offset = Session.TimingOffsetMs(index);
+                if (timingFeedback != null)
+                {
+                    if (!autoPlay && offset.HasValue) timingFeedback.Show(offset.Value);
+                    else timingFeedback.Clear();
+                }
                 // Long-note hits must not restart the previous normal judgment's text animation.
                 feedbackTime = GameTimeline.FrameTime;
                 judgment.sprite = judgmentSprites[(int)result - 1];

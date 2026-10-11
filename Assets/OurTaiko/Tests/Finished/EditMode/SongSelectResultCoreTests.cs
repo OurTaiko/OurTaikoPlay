@@ -120,8 +120,8 @@ namespace OurTaiko.Tests
         {
             var result = new PlayResult { Good = 9, GaugePoints = 10000, IsClear = true, IsGaugeFull = true, Score = 1000, PreviousBest = 10 };
             var sequence = new ResultSequence(result);
-            sequence.Update(ResultSequence.FadeInEndMs + 10);
-            Assert.That(sequence.Skip(), Is.False, "Skipping is enabled 100 frames after the fade-in.");
+            sequence.Update(ResultSequence.FadeInEndMs - 10);
+            Assert.That(sequence.Skip(), Is.False, "The fade-in still blocks input.");
             double now = ResultSequence.FadeInEndMs + ResultSequence.EnableSkipMs + 1;
             sequence.Update(now);
             Assert.That(sequence.Skip(), Is.True);

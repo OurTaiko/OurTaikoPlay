@@ -64,6 +64,7 @@ namespace OurTaiko
         LumenClip bgClip, successClip, crownClip, crownLoop, messageClip, judgePop, scorePop, fireClip, rainbowClip, highScoreClip;
         ResultBackground background, fadeIn;
         double sceneStart, revealStart = -1, successAt = -1;
+        int lastActionFrame = -1;
         int art;
         Image successImage, unfilledImage, barImage, transitionImage, topImage, bottomImage, overlayImage, captionImage, soulImage, fireImage, sheenImage;
         readonly Image[] rainbowImages = new Image[2];
@@ -162,7 +163,7 @@ namespace OurTaiko
             double now = Reveal;
             foreach (var (cue, row) in Sequence.Update(now)) Play(cue, row, clock);
             HandleInput();
-            if (!IsLeaving && Sequence.ShouldAutoAdvance) Leave();
+            if (view.analysis != null) view.analysis.SetReady(Sequence.CanAdvance);
 
             // result animation 15: the backdrop drawn on top, faded out after 100 ms over 316.67 ms.
             float cover = 1 - (float)Math.Min(1, Math.Max(0, (now - ResultSequence.FadeInDelayMs) / ResultSequence.FadeInMs));
@@ -183,25 +184,50 @@ namespace OurTaiko
 
         void HandleInput()
         {
-            bool don = InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
-            if (don) Don();
+            foreach (var press in InputManager.PressesThisFrame)
+            {
+                if (!press.Key.IsDrum()) continue;
+                if (press.Key.IsKa()) ChangePage(press.Key.IsRight() ? 1 : -1);
+                else Don();
+                return;
+            }
         }
 
         // ResultScreen::handle_input: a don press skips the reveal, or leaves once it has settled.
         public void Don()
         {
-            if (IsLeaving || switcher.IsInputBlocked || revealStart < 0) return;
+            if (!CanAct()) return;
+            lastActionFrame = Time.frameCount;
             if (Sequence.RevealEndMs <= 0)
             {
                 if (!Sequence.Skip()) return;
                 sfx.PlayAudioOneShot(this.don);
                 loop.StopAudio();
                 sfx.PlayAudioOneShot(donBig);
+                foreach (var (cue, row) in Sequence.Update(Reveal)) Play(cue, row, Clock);
                 return;
             }
             if (!Sequence.CanAdvance) return;
             sfx.PlayAudioOneShot(this.don);
             Leave();
+        }
+
+        bool CanAct() => !IsLeaving && !switcher.IsInputBlocked && revealStart >= 0
+            && Sequence.FadeInFinished && lastActionFrame != Time.frameCount;
+
+        public void ChangePage(int direction) => ShowPage(!(view.analysis?.Details ?? false), direction);
+
+        public void ShowPage(bool details, int direction = 1)
+        {
+            if (!CanAct() || view.analysis == null || view.analysis.IsTransitioning || view.analysis.Details == details) return;
+            lastActionFrame = Time.frameCount;
+            if (Sequence.RevealEndMs <= 0)
+            {
+                if (!Sequence.Skip()) return;
+                loop.StopAudio();
+                foreach (var (cue, row) in Sequence.Update(Reveal)) Play(cue, row, Clock);
+            }
+            view.analysis.SetPage(details, direction);
         }
 
         void Leave()
@@ -474,7 +500,17 @@ namespace OurTaiko
 
             // ResultScreen::draw_overlay: coin_overlay's credit line (result shows no chip or invite), over the wipe.
             if (overlay != null) Coins = new CoinOverlayView(overlay, view.freePlay, null, null, null, null);
-            view.touchRelay.Clicked = Don;
+            if (view.analysis != null)
+            {
+                var analysis = view.analysis;
+                analysis.Bind(Result);
+                analysis.action.Clicked = Don;
+                analysis.previous.Clicked = () => ChangePage(-1);
+                analysis.next.Clicked = () => ChangePage(1);
+                analysis.scoreDot.Clicked = () => ShowPage(false, -1);
+                analysis.detailDot.Clicked = () => ShowPage(true, 1);
+                analysis.swipeArea.Swiped = ChangePage;
+            }
         }
     }
 }
