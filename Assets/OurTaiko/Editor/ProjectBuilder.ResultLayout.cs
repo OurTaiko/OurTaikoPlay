@@ -242,7 +242,7 @@ namespace OurTaiko.Editor
             view.highScoreGroup.alpha = 1;
             PreviewDigits(view.highScoreDigits, result.highScoreDigits, 12340, 0);
 
-            if (view.scoreRank != null) view.scoreRank.Show(ScoreRank.FromScore(754320));
+            if (view.scoreRank != null) view.scoreRank.Show(ScoreRankUtil.FromScore(754320));
             view.crown.sprite = result.crowns[0];
             view.crown.Alpha(1);
             foreach (var image in new[] { view.crownFade, view.burstA, view.burstB, view.stars, view.shine }) image.Alpha(0);

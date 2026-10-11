@@ -24,7 +24,7 @@ namespace OurTaiko.Editor
             {
                 ImportScoreRanks();
                 EnsureRankFolder(ScoreRankFolder.TrimEnd('/'));
-                for (int rank = 1; rank <= ScoreRank.Count; rank++) BuildRankIcon(rank);
+                for (int rank = 1; rank <= ScoreRankUtil.Count; rank++) BuildRankIcon(rank);
                 string boardPath = Root + "Generated/SongBoard.prefab";
                 var boardRoot = PrefabUtility.LoadPrefabContents(boardPath);
                 try
@@ -81,7 +81,7 @@ namespace OurTaiko.Editor
                         layer.raycastTarget = false;
                         return layer;
                     }).ToArray();
-                    view.Show(6);
+                    view.Show(ScoreRank.PurpleMiyabi);
                     view.image.enabled = false;
                     EditorUtility.SetDirty(result.view);
                     changed = true;
@@ -160,7 +160,7 @@ namespace OurTaiko.Editor
             view.image = icon.GetComponent<UnityEngine.UI.Image>();
             view.image.rectTransform.sizeDelta = Vector2.one * size;
             view.image.rectTransform.anchorMin = view.image.rectTransform.anchorMax = new Vector2(0, 1);
-            view.icons = Enumerable.Range(1, ScoreRank.Count).Select(r => AssetDatabase.LoadAssetAtPath<GameObject>(RankPrefabPath(r))).ToArray();
+            view.icons = Enumerable.Range(1, ScoreRankUtil.Count).Select(r => AssetDatabase.LoadAssetAtPath<GameObject>(RankPrefabPath(r))).ToArray();
             view.group = icon.AddComponent<CanvasGroup>();
             view.group.blocksRaycasts = view.group.interactable = false;
             PrefabUtility.RecordPrefabInstancePropertyModifications(icon);
