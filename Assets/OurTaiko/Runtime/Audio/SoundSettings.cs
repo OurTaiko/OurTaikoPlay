@@ -52,7 +52,7 @@ namespace OurTaiko
                 // The cross-platform BassSimple output comes last.
                 ? new[] { AudioBackend.Automatic, AudioBackend.BassWASAPI, AudioBackend.BassASIO, AudioBackend.BassSimple }
                 : new[] { AudioBackend.Automatic, AudioBackend.BassSimple };
-            return new[]
+            var items = new List<SettingItem>
             {
                 Volume("Master Volume", "Overall volume.", v => v.master, (v, n) => v.master = n),
                 Volume("BGM Volume", "Music in menus and the result screen.", v => v.bgm, (v, n) => v.bgm = n),
@@ -64,6 +64,18 @@ namespace OurTaiko
                 Array.ConvertAll(backends, b => b.ToString()),
                 s => Math.Max(0, Array.IndexOf(backends, s.audio.backend)), (s,i) => s.audio.backend = backends[i]),
             };
+            // Windows output uses the system/ASIO driver's period instead.
+            if (platform != SoundPlatform.Windows)
+            {
+                var periods = new string[101];
+                periods[0] = $"Default ({new AudioOptions().Period(platform)} ms)";
+                for (int i = 1; i < periods.Length; i++) periods[i] = i + " ms";
+                items.Add(new SettingItem("Audio Output Period",
+                    "Shorter periods reduce audio delay but may cause crackling or dropouts. Try 4 ms; increase it if audio breaks up. The device may use a different period. Applies when leaving settings.",
+                    periods, s => Math.Clamp(s.audio.devicePeriodMs, 0, 100),
+                    (s, i) => s.audio.devicePeriodMs = Math.Clamp(i, 0, 100)));
+            }
+            return items;
         }
     }
 }

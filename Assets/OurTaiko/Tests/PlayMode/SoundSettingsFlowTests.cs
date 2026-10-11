@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
                 var view = scene.view;
                 scene.Ka(3); scene.Don();
                 Assert.That(scene.Menu.CurrentType.Label, Is.EqualTo("Sound"));
-                Assert.That(scene.Menu.ItemCount, Is.EqualTo(8)); // six volumes, backend, Return
+                Assert.That(scene.Menu.ItemCount, Is.EqualTo(SoundSettings.Platform == SoundPlatform.Windows ? 8 : 9));
                 Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Master Volume"));
                 Assert.That(view.nextItems.gameObject.activeInHierarchy, Is.True);
                 Assert.That(scene.previewVoice, Is.Not.Null);
@@ -74,6 +74,20 @@ namespace OurTaiko.Tests
                 Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
                 Assert.That(saved.audio.volume.master, Is.EqualTo(.5f));
                 Assert.That(scene.bgm.IsAudioPlaying(), Is.True);
+                if (SoundSettings.Platform != SoundPlatform.Windows)
+                {
+                    scene.Ka(1); scene.Don();
+                    Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Audio Output Period"));
+                    scene.Ka(4);
+                    TestCapture.Capture("AudioOutputPeriodChoice.png");
+                    int periodSlot = scene.Menu.ChoiceIndex - view.FirstChoice;
+                    AssertRaycast(view.choiceRows[periodSlot].click);
+                    view.choiceRows[periodSlot].click.Clicked();
+                    Assert.That(settings.Settings.audio.devicePeriodMs, Is.EqualTo(4));
+                    Assert.That(engine.Generation, Is.EqualTo(before), "Period changes also wait until exit");
+                    saved = GameSettings.FromJson(File.ReadAllText(settings.FilePath));
+                    Assert.That(saved.audio.devicePeriodMs, Is.EqualTo(4));
+                }
                 scene.Ka(1); scene.Don();
                 Assert.That(scene.Menu.Focus, Is.EqualTo(SettingsFocus.Types));
             }

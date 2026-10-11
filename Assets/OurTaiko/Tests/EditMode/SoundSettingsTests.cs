@@ -24,7 +24,7 @@ namespace OurTaiko.Tests
         public void SoundMenuOffersVolumesAndPlatformSupportedBackends(SoundPlatform platform)
         {
             var rows = SoundSettings.Catalog(platform);
-            Assert.That(rows.Select(r => r.Label), Is.EqualTo(new[] {
+            Assert.That(rows.Take(7).Select(r => r.Label), Is.EqualTo(new[] {
                 "Master Volume", "BGM Volume", "Track Volume", "Drum Volume", "Effects Volume", "Voice Volume", "Output Backend"
             }));
             var backend = rows[6];
