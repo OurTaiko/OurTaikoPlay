@@ -56,23 +56,6 @@ namespace OurTaiko.Editor
                 TextStretchFrames().Select(key => (key.time, 1 + key.value / 80f)).Append((0.25f, 1f)).ToArray());
         });
 
-        [MenuItem("OurTaiko/Apply Gogo Pulse Clip")]
-        public static void ApplyGogoPulseClip() => EditPlayScene(play => AttachClip(play.gogoTint.gameObject, GogoPulseClip()));
-
-        // GogoPulse.anim: the lane tint's alpha 0.18 + 0.05 sin(12 t), one period, looping. Keys carry
-        // the exact slope, so the Hermite segments follow the sine to within 1e-6.
-        static AnimationClip GogoPulseClip() => SaveClip("GogoPulse", 60, true, clip =>
-        {
-            const int keys = 24;
-            float period = 2 * Mathf.PI / 12;
-            HermiteCurve(clip, "", typeof(CanvasGroup), "m_Alpha", Enumerable.Range(0, keys + 1).Select(i =>
-            {
-                float t = period * i / keys;
-                float slope = 0.05f * 12 * Mathf.Cos(12 * t);
-                return new Keyframe(t, 0.18f + 0.05f * Mathf.Sin(12 * t), slope, slope);
-            }).ToArray());
-        });
-
         [MenuItem("OurTaiko/Apply Branch Change Clip")]
         public static void ApplyBranchChangeClip() => EditPlayScene(play => AttachClip(play.branchLane.gameObject, BranchChangeClip()));
 
