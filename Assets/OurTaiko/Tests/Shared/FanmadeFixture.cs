@@ -37,6 +37,7 @@ namespace OurTaiko.Tests
                 var value = new JObject
                 {
                     ["id"] = Id, ["title"] = Title, ["subtitle"] = Subtitle, ["maker"] = Maker,
+                    ["categoryIds"] = new JArray(Categories),
                     ["tjaHash"] = Sha(Tja), ["audioHash"] = Sha(Audio), ["audioName"] = AudioName,
                     ["titleTranslations"] = new JObject { ["ja"] = Title + " JA" }, ["subtitleTranslations"] = new JObject(),
                     ["bpm"] = Bpm, ["demoStart"] = DemoStart, ["offset"] = Offset,
@@ -66,6 +67,7 @@ namespace OurTaiko.Tests
             ["scoreReplayVersion"] = 1, ["audioPreviewVersion"] = 1,
         };
         public Func<Chart, JObject> Manifest;
+        public Action<JObject> ChangeBootstrap;
         public Func<HttpListenerContext, bool> CustomRequest;
         // Status codes returned (and consumed) before the next score submissions succeed.
         public readonly ConcurrentQueue<int> ScoreFailures = new ConcurrentQueue<int>();
@@ -235,8 +237,10 @@ namespace OurTaiko.Tests
             {
                 ["user"] = user == null ? null : new JObject { ["username"] = user },
                 ["categories"] = categories, ["chartCount"] = Charts.Count, ["scores"] = scores,
+                ["charts"] = new JArray(Charts.Select(c => c.ToJson())),
             };
             reply.Merge(Protocol);
+            ChangeBootstrap?.Invoke(reply);
             Reply(context, 200, reply);
         }
 

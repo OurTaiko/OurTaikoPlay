@@ -11,8 +11,8 @@ using Newtonsoft.Json.Linq;
 namespace OurTaiko.Online
 {
     // fanmade.cpp Client without rendering or Unity state, so it can be tested against a fixture
-    // server. Difference: every category is fetched when a server connects (OurTaikoPlayer waits
-    // for the server folder to open); song select shows each category as a folder.
+    // server. One bootstrap loads every category and chart when a server connects;
+    // song select shows each category as a folder without further catalog requests.
     //
     // Cache layout under the root: objects/<first two hex digits>/<sha256>, one verified file per
     // content hash (TJA, audio or preview), shared by every server, account and chart. Paths stay
@@ -25,7 +25,7 @@ namespace OurTaiko.Online
         public string Status { get { lock (sync) return status; } }
         // Bumped whenever charts or scores change, so views know to refresh.
         public long Revision => Interlocked.Read(ref revision);
-        // Categories loaded / total of the running ConnectAsync (a large server takes a while).
+        // Catalog snapshots loaded / total of the running ConnectAsync (one per server).
         public (int Done, int Total) CatalogProgress { get { lock (sync) return catalogProgress; } }
         public void ResetCatalogProgress() { lock (sync) catalogProgress = (0, 0); }
         public bool IsUploading => uploads != null && !uploads.IsCompleted;
@@ -110,7 +110,7 @@ namespace OurTaiko.Online
             return endpoint;
         }
 
-        // Logs in (unless `guest`), then loads the bootstrap and every category. A rejected login
+        // Logs in (unless `guest`), then loads the complete catalog in one bootstrap. A rejected login
         // throws HTTP_401/403 without touching the catalog; the caller may then retry as a guest.
         // Only servers declaring the current game protocol are accepted.
         public async Task ConnectAsync(FanmadeEndpoint e, bool guest, CancellationToken cancel = default)
@@ -123,44 +123,62 @@ namespace OurTaiko.Online
                 SetStatus(e.Config.DisplayName + ": loading catalog");
                 if (guest) e.BecomeGuest();
                 else await e.LoginAsync(cancel);
+                lock (sync) catalogProgress = (0, 1);
                 var snapshot = Json.Parse(await e.AuthorizedAsync("/api/v1/game/bootstrap", cancel: cancel));
                 if (!SupportsProtocol(snapshot)) throw new FanmadeException("SERVER_PROTOCOL_UNSUPPORTED");
-                if (!(snapshot["categories"] is JArray categoryList) || !(snapshot["scores"] is JArray scoreList))
+                if (!(snapshot["categories"] is JArray categoryList) || !(snapshot["scores"] is JArray scoreList)
+                    || !(snapshot["charts"] is JArray chartList) || Json.Number(snapshot, "chartCount") != chartList.Count)
                     throw new FanmadeException("API_BOOTSTRAP_INVALID");
-                var categories = new List<(string Id, string Title, string Genre)>();
+                var folders = new List<FanmadeCategory>();
+                var byCategory = new Dictionary<string, FanmadeCategory>();
+                var expectedCounts = new Dictionary<string, long>();
+                var actualCounts = new Dictionary<string, long>();
                 foreach (var v in categoryList)
                 {
-                    var category = (Json.Str(v, "id"), Json.Str(v, "title"), Json.Str(v, "genre"));
-                    if (!ValidCategory(category.Item1) || categories.Any(c => c.Id == category.Item1)) throw new FanmadeException("API_CATEGORY_INVALID");
-                    Json.Number(v, "chartCount");
-                    categories.Add(category);
+                    string id = Json.Str(v, "id");
+                    if (!ValidCategory(id) || byCategory.ContainsKey(id)) throw new FanmadeException("API_CATEGORY_INVALID");
+                    var folder = new FanmadeCategory { Server = e.Id, ServerName = e.Config.DisplayName,
+                        Id = id, Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre") };
+                    folders.Add(folder);
+                    byCategory.Add(id, folder);
+                    expectedCounts.Add(id, Json.Number(v, "chartCount"));
+                    actualCounts.Add(id, 0);
                 }
                 var scores = new List<FanmadeScore>();
                 if (e.IsAuthenticated) foreach (var v in scoreList) scores.Add(FanmadeScore.From(v));
 
-                var list = new List<FanmadeChart>();
-                var folders = new List<FanmadeCategory>();
-                var seen = new HashSet<string>();
-                lock (sync) catalogProgress = (0, categories.Count);
-                foreach (var category in categories)
+                var byId = new Dictionary<string, FanmadeChart>();
+                foreach (var value in chartList)
                 {
-                    SetStatus(e.Config.DisplayName + ": loading " + category.Title);
-                    var result = Json.Parse(await e.AuthorizedAsync("/api/v1/game/categories/" + category.Id + "/charts", cancel: cancel));
-                    if (Json.Str(result, "categoryId") != category.Id || !(result["charts"] is JArray categoryCharts))
+                    cancel.ThrowIfCancellationRequested();
+                    var chart = FanmadeChart.From(value, e.Id);
+                    if (byId.ContainsKey(chart.Id)) throw new FanmadeException("API_BOOTSTRAP_INVALID");
+                    byId.Add(chart.Id, chart);
+                    if (!(value["categoryIds"] is JArray memberships))
                         throw new FanmadeException("API_CATEGORY_INVALID");
-                    var folder = new FanmadeCategory { Server = e.Id, ServerName = e.Config.DisplayName, Id = category.Id, Title = category.Title, Genre = category.Genre };
-                    foreach (var value in categoryCharts)
+                    var seenCategories = new HashSet<string>();
+                    foreach (var membership in memberships)
                     {
-                        var chart = FanmadeChart.From(value, e.Id);
-                        if (!chart.IsPlayable || folder.ChartIds.Contains(chart.Id)) continue;
-                        folder.ChartIds.Add(chart.Id);
-                        if (!seen.Add(chart.Id)) continue;
-                        chart.Category = category.Title; chart.Genre = category.Genre;
+                        if (membership.Type != JTokenType.String || !byCategory.TryGetValue((string)membership, out var folder)
+                            || !seenCategories.Add((string)membership)) throw new FanmadeException("API_CATEGORY_INVALID");
+                        actualCounts[folder.Id]++;
+                        if (chart.IsPlayable) folder.ChartIds.Add(chart.Id);
+                    }
+                }
+                var list = new List<FanmadeChart>();
+                var seen = new HashSet<string>();
+                foreach (var folder in folders)
+                {
+                    if (actualCounts[folder.Id] != expectedCounts[folder.Id]) throw new FanmadeException("API_CATEGORY_INVALID");
+                    foreach (var id in folder.ChartIds)
+                    {
+                        if (!seen.Add(id)) continue;
+                        var chart = byId[id];
+                        chart.Category = folder.Title; chart.Genre = folder.Genre;
                         list.Add(chart);
                     }
-                    folders.Add(folder);
-                    lock (sync) catalogProgress = (catalogProgress.Item1 + 1, categories.Count);
                 }
+                cancel.ThrowIfCancellationRequested();
                 lock (sync)
                 {
                     e.Scores.Clear(); e.Best.Clear();
@@ -169,6 +187,7 @@ namespace OurTaiko.Online
                     categoryLists[e.Id] = folders;
                     e.ChartCount = list.Count;
                     e.IsConnected = true;
+                    catalogProgress = (1, 1);
                 }
                 Interlocked.Increment(ref revision);
                 SetStatus(e.Config.DisplayName + ": " + list.Count + " songs ready" + (e.IsAuthenticated ? "" : " (guest; scores disabled)"));

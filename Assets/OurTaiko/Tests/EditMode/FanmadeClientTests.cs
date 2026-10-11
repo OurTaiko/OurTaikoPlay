@@ -56,6 +56,9 @@ namespace OurTaiko.Tests
             Assert.That(endpoint.IsConnected, Is.True);
             Assert.That(endpoint.IsAuthenticated, Is.False);
             Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/bootstrap" }));
+            Assert.That(fixture.Downloads, Is.Zero);
+            Assert.That(client.CatalogProgress, Is.EqualTo((1, 1)));
             // First is in both categories but listed once, under the first category.
             Assert.That(client.Charts.Select(c => c.Title), Is.EqualTo(new[] { "First", "Second" }));
             Assert.That(client.Charts[0].Genre, Is.EqualTo("GAME"));
@@ -82,6 +85,64 @@ namespace OurTaiko.Tests
             Assert.That(endpoint.Nickname, Is.EqualTo("DON"));
             Assert.That(client.Best(client.Charts[0], (int)Difficulty.Oni).Score, Is.EqualTo(700000));
             Assert.That(client.Best(client.Charts[0], (int)Difficulty.Hard), Is.Null);
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "POST /api/v1/game/login", "GET /api/v1/game/bootstrap" }));
+        }
+
+        [Test]
+        public void SnapshotPreservesFolderOrderEmptyFoldersAndSongOrder()
+        {
+            fixture.Categories.Insert(0, ("empty", "Empty", "GAME"));
+            fixture.Charts.Reverse(); // Global API order differs from category order.
+            Connect(guest: true);
+            Assert.That(client.Categories.Select(c => c.Id), Is.EqualTo(new[] { "empty", "game", "pop" }));
+            Assert.That(client.Categories[0].ChartIds, Is.Empty);
+            Assert.That(client.Categories[2].ChartIds, Is.EqualTo(new[] { second.Id, first.Id }));
+            Assert.That(client.Charts.Select(c => c.Id), Is.EqualTo(new[] { first.Id, second.Id }));
+        }
+
+        [Test]
+        public void LargeCatalogStillUsesOneRequestWithoutDownloadingResources()
+        {
+            for (int i = 0; i < 3000; i++)
+                fixture.Charts.Add(new FanmadeFixture.Chart { Categories = new[] { "game", "pop" } });
+            Connect(guest: true);
+            Assert.That(client.Charts.Count, Is.EqualTo(3002));
+            Assert.That(client.Categories[0].ChartIds.Count, Is.EqualTo(3001));
+            Assert.That(client.Categories[1].ChartIds.Count, Is.EqualTo(3002));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/bootstrap" }));
+            Assert.That(fixture.Downloads, Is.Zero);
+        }
+
+        [TestCase("missing-charts", "API_BOOTSTRAP_INVALID")]
+        [TestCase("duplicate-chart", "API_BOOTSTRAP_INVALID")]
+        [TestCase("wrong-total", "API_BOOTSTRAP_INVALID")]
+        [TestCase("unknown-category", "API_CATEGORY_INVALID")]
+        [TestCase("duplicate-membership", "API_CATEGORY_INVALID")]
+        [TestCase("missing-membership", "API_CATEGORY_INVALID")]
+        [TestCase("wrong-category-count", "API_CATEGORY_INVALID")]
+        public void InvalidSnapshotIsNotPublishedOrRetriedThroughDeprecatedRoutes(string fault, string code)
+        {
+            fixture.ChangeBootstrap = snapshot =>
+            {
+                var charts = (JArray)snapshot["charts"];
+                switch (fault)
+                {
+                    case "missing-charts": snapshot.Remove("charts"); break;
+                    case "duplicate-chart": charts[1] = charts[0].DeepClone(); break;
+                    case "wrong-total": snapshot["chartCount"] = 999; break;
+                    case "unknown-category": charts[0]["categoryIds"] = new JArray("unknown"); break;
+                    case "duplicate-membership": charts[0]["categoryIds"] = new JArray("game", "game"); break;
+                    case "missing-membership": ((JObject)charts[0]).Remove("categoryIds"); break;
+                    case "wrong-category-count": snapshot["categories"][0]["chartCount"] = 999; break;
+                }
+            };
+            var endpoint = client.Add(fixture.Server());
+            var error = Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(endpoint, guest: true)));
+            Assert.That(error.Message, Is.EqualTo(code));
+            Assert.That(endpoint.IsConnected, Is.False);
+            Assert.That(client.Charts, Is.Empty);
+            Assert.That(client.Categories, Is.Empty);
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/bootstrap" }));
         }
 
         [TestCase(0)]
