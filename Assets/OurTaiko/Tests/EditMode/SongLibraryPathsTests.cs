@@ -57,15 +57,30 @@ namespace OurTaiko.Tests
         {
             Assert.That(SongLibraryPaths.TryNormalize(path, out _), Is.False);
             LogAssert.Expect(LogType.Warning, "Skipping song library path: an absolute folder path is required.");
-            Assert.That(SongLibraryPaths.Resolve(new[] { path }, defaultRoot), Is.Empty,
-                "An explicit invalid list must not fall back to an unrelated library.");
+            Assert.That(SongLibraryPaths.Resolve(new[] { path }, defaultRoot), Is.EqualTo(new[] { defaultRoot }),
+                "Invalid custom entries must not remove the default library.");
         }
 
         [Test]
         public void NormalizesDuplicatesAndRetainsConfiguredOrder()
         {
             Assert.That(SongLibraryPaths.Resolve(new[] { first, first + Path.DirectorySeparatorChar, Path.Combine(first, "."), second }, defaultRoot),
-                Is.EqualTo(new[] { first, second }));
+                Is.EqualTo(new[] { defaultRoot, first, second }));
+        }
+
+        [Test]
+        public void DefaultLibraryIsAlwaysFirstAndExplicitOrOverlappingEntriesDoNotDuplicateSongs()
+        {
+            WriteChart(defaultRoot, "Pack/default.tja", "Default song");
+            WriteChart(first, "custom.tja", "Custom song");
+            string child = Path.Combine(defaultRoot, "Pack");
+            var roots = SongLibraryPaths.Resolve(new[] { first, defaultRoot + Path.DirectorySeparatorChar,
+                Path.Combine(defaultRoot, "."), child }, defaultRoot + Path.DirectorySeparatorChar);
+            Assert.That(roots, Is.EqualTo(new[] { defaultRoot, first, child }));
+            var catalog = LocalSongScanner.ScanRoots(roots, defaultRoot);
+            Assert.That(catalog.Songs.Select(s => s.Info.Title), Is.EqualTo(new[] { "Default song", "Custom song" }));
+            Assert.That(LocalSongScanner.ScanRoots(SongLibraryPaths.Resolve(null, defaultRoot), defaultRoot)
+                .Songs.Single().Info.Title, Is.EqualTo("Default song"));
         }
 
         [Test]

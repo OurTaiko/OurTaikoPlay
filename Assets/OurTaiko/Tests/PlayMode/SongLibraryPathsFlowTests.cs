@@ -13,6 +13,11 @@ namespace OurTaiko.Tests
         GameSettings originalSettings;
         ScoreStore originalScores;
 
+        // The user's default Songs folder is always present; isolate assertions to this
+        // fixture's audio paths without modifying or relying on the contents of that folder.
+        SongDefinition[] CustomSongs(LocalSongLibrary library) => library.Songs
+            .Where(s => s.audioPath != null && s.audioPath.StartsWith(directory + Path.DirectorySeparatorChar, System.StringComparison.Ordinal)).ToArray();
+
         [SetUp]
         public void Setup()
         {
@@ -51,7 +56,7 @@ namespace OurTaiko.Tests
             configured.general.songLibraryPaths = new[] { first, second };
             SettingManager.EnsureInstance().UseUnsaved(configured);
             var library = LocalSongLibrary.EnsureInstance();
-            var songs = library.Songs.ToArray();
+            var songs = CustomSongs(library);
             Assert.That(songs.Length, Is.EqualTo(2));
             Assert.That(songs[0], Is.Not.SameAs(songs[1]), "Each entry keeps its own audio path.");
             Assert.That(songs[0].audioPath, Is.Not.EqualTo(songs[1].audioPath));
@@ -63,13 +68,13 @@ namespace OurTaiko.Tests
             Assert.That(SongScores.Get(songs[1], Difficulty.Hard), Is.Null);
             File.Move(file, Path.Combine(first, "renamed.tja"));
             library.Refresh();
-            Assert.That(library.Songs.Select(s => s.ScoreKey), Is.All.EqualTo(key));
+            Assert.That(CustomSongs(library).Select(s => s.ScoreKey), Is.All.EqualTo(key));
             File.AppendAllText(Path.Combine(first, "renamed.tja"), "// changed\n");
             library.Refresh();
-            var changed = library.Songs.First();
+            var changed = CustomSongs(library).First();
             Assert.That(changed.ScoreKey, Is.Not.EqualTo(key));
             Assert.That(SongScores.Get(changed, Difficulty.Oni), Is.Null);
-            Assert.That(SongScores.Get(library.Songs.Last(), Difficulty.Oni).score, Is.EqualTo(123456));
+            Assert.That(SongScores.Get(CustomSongs(library).Last(), Difficulty.Oni).score, Is.EqualTo(123456));
             Assert.That(new ScoreStore(Path.Combine(directory, "scores.sqlite3")).Get(key, Difficulty.Oni).score, Is.EqualTo(123456));
             yield return null;
         }
@@ -81,7 +86,8 @@ namespace OurTaiko.Tests
             foreach (string root in new[] { first, second })
             {
                 Directory.CreateDirectory(root);
-                File.WriteAllText(Path.Combine(root, "same.tja"), $"TITLE:{Path.GetFileName(root)}\nCOURSE:Oni\nLEVEL:5\n#START\n1,\n#END\n");
+                File.WriteAllText(Path.Combine(root, "same.tja"), $"TITLE:{Path.GetFileName(root)}\nWAVE:song.ogg\nCOURSE:Oni\nLEVEL:5\n#START\n1,\n#END\n");
+                File.WriteAllBytes(Path.Combine(root, "song.ogg"), new byte[] { 1 });
             }
             string file = Path.Combine(directory, "settings.json");
             var configured = new GameSettings();
@@ -90,9 +96,9 @@ namespace OurTaiko.Tests
             var manager = SettingManager.EnsureInstance();
             manager.Load(file);
             var library = LocalSongLibrary.EnsureInstance();
-            Assert.That(library.Roots, Is.EqualTo(new[] { first, second }));
-            Assert.That(library.Songs.Count, Is.EqualTo(2));
-            var keys = library.Songs.Select(s => s.name).ToArray();
+            Assert.That(library.Roots, Is.EqualTo(new[] { LocalSongLibrary.DefaultRoot, first, second }));
+            Assert.That(CustomSongs(library).Length, Is.EqualTo(2));
+            var keys = CustomSongs(library).Select(s => s.name).ToArray();
             Assert.That(keys, Is.Unique);
             var menu = new SettingsMenu(SettingsMenu.Catalog(), manager.Settings);
             menu.Settings.display.targetFrameRate = 60;
@@ -101,12 +107,14 @@ namespace OurTaiko.Tests
             Object.Destroy(library.gameObject);
             yield return null;
             library = LocalSongLibrary.EnsureInstance();
-            Assert.That(library.Songs.Select(s => s.name), Is.EqualTo(keys));
+            Assert.That(library.Roots, Is.EqualTo(new[] { LocalSongLibrary.DefaultRoot, first, second }));
+            Assert.That(CustomSongs(library).Select(s => s.name), Is.EqualTo(keys));
             configured.general.songLibraryPaths = new[] { second };
             File.WriteAllText(file, configured.ToJson());
             manager.Load(file);
-            Assert.That(library.Songs.Single().ReadDisplayInfo().Title, Is.EqualTo("Second"));
-            Assert.That(library.Songs.Single().name, Is.EqualTo(keys[1]));
+            Assert.That(library.Roots, Is.EqualTo(new[] { LocalSongLibrary.DefaultRoot, second }));
+            Assert.That(CustomSongs(library).Single().ReadDisplayInfo().Title, Is.EqualTo("Second"));
+            Assert.That(CustomSongs(library).Single().name, Is.EqualTo(keys[1]));
         }
     }
 }

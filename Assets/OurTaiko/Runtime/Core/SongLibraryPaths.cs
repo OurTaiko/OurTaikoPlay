@@ -29,10 +29,11 @@ namespace OurTaiko
 
         public static string[] Resolve(string[] configured, string defaultRoot)
         {
-            if (configured == null || configured.Length == 0) return new[] { Path.GetFullPath(defaultRoot) };
-            var paths = new List<string>();
-            var seen = new HashSet<string>(Comparer);
-            foreach (string path in configured)
+            if (!TryNormalize(defaultRoot, out string normalizedDefault))
+                throw new ArgumentException("The default song library path must be absolute.", nameof(defaultRoot));
+            var paths = new List<string> { normalizedDefault };
+            var seen = new HashSet<string>(Comparer) { normalizedDefault };
+            foreach (string path in configured ?? Array.Empty<string>())
             {
                 if (!TryNormalize(path, out string normalized))
                 {

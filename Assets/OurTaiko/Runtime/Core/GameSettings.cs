@@ -40,8 +40,8 @@ namespace OurTaiko
         public static readonly string[] LanguageNames = { "English", "日本語", "简体中文", "繁體中文", "Korean" };
         // Only song titles/subtitles use this setting until interface localization is added.
         public string language = "en";
-        // File-only option. An empty array uses the default Songs folder. Each custom
-        // folder must be an absolute path on the current platform.
+        // File-only option. Additional folders alongside the always-included default Songs
+        // folder. Each custom folder must be an absolute path on the current platform.
         public string[] songLibraryPaths = Array.Empty<string>();
         public KeyboardBindings keyboard = new KeyboardBindings();
         public string Language => Array.IndexOf(Languages, language) >= 0 ? language : "en";
