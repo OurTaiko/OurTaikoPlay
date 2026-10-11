@@ -23,6 +23,7 @@ namespace OurTaiko
         public ScoreRank Rank => ScoreRankUtil.FromScore(Score, KiwamiThreshold);
         public double GaugePoints;
         public bool IsClear, IsGaugeFull, AutoPlay;
+        public TimingStatistics Timing;
 
         public GaugeState GaugeState => IsGaugeFull ? GaugeState.Full : IsClear ? GaugeState.Cleared : GaugeState.Failed;
 
@@ -53,6 +54,7 @@ namespace OurTaiko
                 Good = session.Good, Ok = session.Ok, Bad = session.Bad,
                 MaxCombo = session.MaxCombo, Rolls = session.Rolls, GaugePoints = session.GaugePoints,
                 IsClear = session.IsClear, IsGaugeFull = session.IsGaugeFull, AutoPlay = autoPlay,
+                Timing = TimingStatistics.From(session),
             };
         }
     }

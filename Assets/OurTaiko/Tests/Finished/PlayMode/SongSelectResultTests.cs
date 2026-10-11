@@ -113,10 +113,7 @@ namespace OurTaiko.Tests
             yield return WaitUntil(() => result.Sequence.RevealEndMs > 0);
             yield return new WaitForSecondsRealtime(2.2f);
             Capture("ResultFullCombo.png");
-            Assert.That(result.Sequence.CanAdvance, Is.False);
-            result.Don();
-            Assert.That(result.IsLeaving, Is.False, "Advancing waits for WaitEffectEnd + WaitNextScene.");
-            yield return WaitUntil(() => result.Sequence.CanAdvance, 15);
+            Assert.That(result.Sequence.CanAdvance, Is.True, "A settled result has no extra exit delay.");
             result.Don();
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
             Assert.That(Object.FindFirstObjectByType<SongSelectScene>().Manager.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));

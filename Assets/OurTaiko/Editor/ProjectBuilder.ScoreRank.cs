@@ -61,7 +61,8 @@ namespace OurTaiko.Editor
                 changed = false;
                 if (result.view.scoreRank == null)
                 {
-                    var view = result.view.scoreRank = CreateRankView(result.stage, 208);
+                    var view = result.view.scoreRank = CreateRankView(result.view.analysis != null
+                        ? result.view.analysis.scorePage.transform : result.stage, 208);
                     ((RectTransform)view.transform).Center(181.1f, 500.7f);
                     PrefabUtility.RecordPrefabInstancePropertyModifications(view.transform);
                     view.transform.SetSiblingIndex(result.view.crown.transform.GetSiblingIndex());

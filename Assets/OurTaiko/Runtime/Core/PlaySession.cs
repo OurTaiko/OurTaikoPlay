@@ -21,6 +21,13 @@ namespace OurTaiko
         public IReadOnlyList<int> LongHits => longHits;
         readonly bool[] resolved, missed, skipped;
         readonly int[] longHits;
+        readonly double?[] timingOffsets;
+        readonly List<HitTiming> hitTimings = new List<HitTiming>();
+        public IReadOnlyList<HitTiming> HitTimings => hitTimings;
+        public double? TimingOffsetMs(int index) => timingOffsets[index];
+        public double GoodWindowMs => goodWindow * 1000;
+        public double OkWindowMs => okWindow * 1000;
+        public double BadWindowMs => badWindow * 1000;
         public int Score => scoring.Total;
         public int BaseScore => scoring.BaseScore;
         public int Combo { get; private set; }
@@ -80,6 +87,7 @@ namespace OurTaiko
             ForcedBranch = forcedBranch;
             JudgeOffset = judgeOffset;
             Chart = chart; resolved = new bool[chart.Notes.Count]; missed = new bool[chart.Notes.Count]; skipped = new bool[chart.Notes.Count]; longHits = new int[chart.Notes.Count];
+            timingOffsets = new double?[chart.Notes.Count];
             var statistics = new ChartStatistics(chart);
             scoring = new ShinuchiScore(statistics);
             gauge = new SoulGauge(statistics.JudgeableNotes, chart.Course, chart.Level);
@@ -290,6 +298,9 @@ namespace OurTaiko
                 if (delta <= badWindow)
                 {
                     Judgment result = delta <= goodWindow ? Judgment.Good : delta <= okWindow ? Judgment.Ok : Judgment.Bad;
+                    double offsetMs = (time - Chart.Notes[target].Time) * 1000;
+                    timingOffsets[target] = offsetMs;
+                    hitTimings.Add(new HitTiming(target, offsetMs, result));
                     Resolve(target, result); return result;
                 }
             }

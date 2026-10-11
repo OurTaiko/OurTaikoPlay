@@ -130,14 +130,10 @@ namespace OurTaiko.Editor
             view.freePlay.characterSpacing = 2 * 100f / 40;
             view.freePlay.text = "フリープレイ";
             view.freePlay.rectTransform.Center(960, 1046);
-            view.touchArea = SkinUi.Image("TouchArea", stage, null, 1920, 1080);
-            view.touchArea.rectTransform.TopLeft(0, 0);
-            view.touchArea.color = Color.clear;
-            view.touchArea.raycastTarget = true;
-            view.touchRelay = view.touchArea.gameObject.AddComponent<PointerRelay>();
 
             PersistSongSelectTextMaterials(stage);
             PreviewResultLayout(result, 0, false);
+            BuildTimingAnalysis(result);
             EditorUtility.SetDirty(result);
             EditorUtility.SetDirty(view);
         }

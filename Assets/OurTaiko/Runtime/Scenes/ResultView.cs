@@ -67,7 +67,6 @@ namespace OurTaiko
         [Header("Overlays")]
         public NameplateView nameplate;
         public TextMeshProUGUI freePlay;
-        public Image touchArea;
-        public PointerRelay touchRelay;
+        public ResultAnalysisView analysis;
     }
 }

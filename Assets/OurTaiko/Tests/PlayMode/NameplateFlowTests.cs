@@ -195,10 +195,10 @@ namespace OurTaiko.Tests
                 var result = Object.FindFirstObjectByType<ResultScene>();
                 plate = Object.FindFirstObjectByType<NameplateView>();
                 // result_player.lua nameplate_pos (2, 922), drawn after the board and before the fade-in wipe.
-                Assert.That(plate.transform.parent, Is.SameAs(result.stage));
+                Assert.That(plate.transform.parent, Is.SameAs(result.view.analysis.scorePage.transform));
                 Assert.That(plate.RectTransform.anchoredPosition, Is.EqualTo(new Vector2(2, -922)));
-                Assert.That(plate.transform.GetSiblingIndex(), Is.GreaterThan(result.stage.Find("SoulSheen").GetSiblingIndex()));
-                Assert.That(plate.transform.GetSiblingIndex(), Is.LessThan(result.stage.Find("FadeIn").GetSiblingIndex()));
+                Assert.That(plate.transform.GetSiblingIndex(), Is.GreaterThan(plate.transform.parent.Find("SoulSheen").GetSiblingIndex()));
+                Assert.That(plate.transform.parent.GetSiblingIndex(), Is.LessThan(result.stage.Find("FadeIn").GetSiblingIndex()));
                 yield return new WaitForSecondsRealtime(1.5f);
                 TestCapture.Capture("NameplateResult.png");
             }
