@@ -116,6 +116,7 @@ namespace OurTaiko
                 if (this == null) return;
                 HasLeft = false;
                 Menu.Settings.audio = SettingManager.EnsureInstance().Settings.Clone().audio;
+                Menu.RefreshItems();
                 view.Show(Menu);
                 if (view.outputStatus != null) view.outputStatus.text = error.Message;
                 Debug.LogWarning("[Audio] " + error.Message);

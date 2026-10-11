@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
                 var view = scene.view;
                 scene.Ka(3); scene.Don();
                 Assert.That(scene.Menu.CurrentType.Label, Is.EqualTo("Sound"));
-                Assert.That(scene.Menu.ItemCount, Is.EqualTo(SoundSettings.Platform == SoundPlatform.Windows ? 8 : 9));
+                Assert.That(scene.Menu.ItemCount, Is.EqualTo(SoundSettings.Catalog(SoundSettings.Platform).Count + 1));
                 Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Master Volume"));
                 Assert.That(view.nextItems.gameObject.activeInHierarchy, Is.True);
                 Assert.That(scene.previewVoice, Is.Not.Null);
@@ -80,7 +80,7 @@ namespace OurTaiko.Tests
                     Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Audio Output Period"));
                     scene.Ka(4);
                     TestCapture.Capture("AudioOutputPeriodChoice.png");
-                    int periodSlot = scene.Menu.ChoiceIndex - view.FirstChoice;
+                    int periodSlot = 0;
                     AssertRaycast(view.choiceRows[periodSlot].click);
                     view.choiceRows[periodSlot].click.Clicked();
                     Assert.That(settings.Settings.audio.devicePeriodMs, Is.EqualTo(4));
@@ -88,8 +88,24 @@ namespace OurTaiko.Tests
                     saved = GameSettings.FromJson(File.ReadAllText(settings.FilePath));
                     Assert.That(saved.audio.devicePeriodMs, Is.EqualTo(4));
                 }
-                scene.Ka(1); scene.Don();
+                scene.Ka(scene.Menu.ItemCount - 1 - scene.Menu.ItemIndex); scene.Don();
                 Assert.That(scene.Menu.Focus, Is.EqualTo(SettingsFocus.Types));
+                // Render Windows-only settings without opening a Windows audio device.
+                foreach (var backend in new[] { AudioBackend.BassSimple, AudioBackend.BassWASAPI, AudioBackend.BassASIO })
+                {
+                    var preview = new SettingsMenu(new[] { new SettingType("Sound", SoundSettings.Catalog(SoundPlatform.Windows, backend)) }, new GameSettings());
+                    preview.Don();
+                    for (int i = 7; i < preview.CurrentType.Items.Count; i++)
+                    {
+                        preview.TapItem(i); preview.Don();
+                        view.Show(preview);
+                        view.description.ForceMeshUpdate();
+                        Assert.That(view.description.isTextTruncated, Is.False, preview.CurrentItem.Label);
+                        preview.Back();
+                    }
+                    view.Show(preview);
+                    TestCapture.Capture("SoundSettings-" + backend + ".png");
+                }
             }
             finally
             {

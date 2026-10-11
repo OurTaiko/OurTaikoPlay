@@ -20,6 +20,8 @@ namespace OurTaiko
         public string Unit { get; private set; }
         readonly Func<GameSettings, int> get;
         readonly Action<GameSettings, int> set;
+        int minimum = int.MinValue, maximum = int.MaxValue;
+        Func<int, string> formatNumber;
 
         public SettingItem(string label, string description, IReadOnlyList<string> choices,
             Func<GameSettings, int> get, Action<GameSettings, int> set)
@@ -35,19 +37,24 @@ namespace OurTaiko
         public string Format(GameSettings settings) => BindingKey.HasValue
             ? settings.general.keyboard.Format(BindingKey.Value) : Format(Get(settings));
 
+        public string NumberHint => $"Default: {Format(DefaultValue)} / Step: {StepDisplay}"
+            + (formatNumber == null ? " / Ka: adjust / Don or tap: save" : "");
+        public string StepDisplay => formatNumber?.Invoke(Step) ?? $"{Step} {Unit}";
         public int Get(GameSettings settings) => get(settings);
         public void Set(GameSettings settings, int choice) => set(settings, choice);
-        public string Format(int value) => IsNumber ? $"{value:+0;-0;0} {Unit}" : Choices[value];
+        public string Format(int value) => IsNumber ? formatNumber?.Invoke(value) ?? $"{value:+0;-0;0} {Unit}" : Choices[value];
         public int Move(int value, int delta) => IsNumber
-            ? (int)Math.Max(int.MinValue, Math.Min(int.MaxValue, (long)value + (long)delta * Step))
+            ? (int)Math.Max(minimum, Math.Min(maximum, (long)value + (long)delta * Step))
             : ((value + delta) % Choices.Count + Choices.Count) % Choices.Count;
 
         public static SettingItem Number(string label, string description, int defaultValue, int step, string unit,
-            Func<GameSettings, int> get, Action<GameSettings, int> set)
+            Func<GameSettings, int> get, Action<GameSettings, int> set,
+            int minimum = int.MinValue, int maximum = int.MaxValue, Func<int, string> format = null)
         {
             if (step <= 0) throw new ArgumentOutOfRangeException(nameof(step));
             return new SettingItem(label, description, Array.Empty<string>(), get, set)
-                { IsNumber = true, DefaultValue = defaultValue, Step = step, Unit = unit };
+                { IsNumber = true, DefaultValue = defaultValue, Step = step, Unit = unit,
+                    minimum = minimum, maximum = maximum, formatNumber = format };
         }
 
         // settings_template's bool rows: "Enabled" for true, "Disabled" for false.
@@ -59,8 +66,18 @@ namespace OurTaiko
     public sealed class SettingType
     {
         public string Label { get; }
-        public IReadOnlyList<SettingItem> Items { get; }
+        public IReadOnlyList<SettingItem> Items { get; private set; }
+        readonly Func<GameSettings, IReadOnlyList<SettingItem>> buildItems;
         public SettingType(string label, IReadOnlyList<SettingItem> items) { Label = label; Items = items; }
+        public SettingType(string label, Func<GameSettings, IReadOnlyList<SettingItem>> buildItems)
+        { Label = label; this.buildItems = buildItems; Items = Array.Empty<SettingItem>(); }
+        internal SettingType ForSettings(GameSettings settings)
+        {
+            var copy = buildItems == null ? new SettingType(Label, Items) : new SettingType(Label, buildItems);
+            copy.Refresh(settings);
+            return copy;
+        }
+        internal void Refresh(GameSettings settings) { if (buildItems != null) Items = buildItems(settings); }
     }
 
     // The settings menu's navigation, drum-key first: the focus starts on the types (left list),
@@ -108,8 +125,14 @@ namespace OurTaiko
 
         public SettingsMenu(IReadOnlyList<SettingType> types, GameSettings settings)
         {
-            Types = types;
             Settings = settings?.Clone() ?? new GameSettings();
+            Types = types.Select(t => t.ForSettings(Settings)).ToArray();
+        }
+
+        public void RefreshItems()
+        {
+            foreach (var type in Types) type.Refresh(Settings);
+            ItemIndex = Math.Min(ItemIndex, ItemCount - 1);
         }
 
         public static IReadOnlyList<SettingType> Catalog() => new[]
@@ -147,7 +170,7 @@ namespace OurTaiko
                     "Wait for the display's refresh before each frame to prevent tearing. While enabled, the refresh rate replaces Target Frame Rate.",
                     s => s.display.vSync, (s, on) => s.display.vSync = on),
             }),
-            new SettingType("Sound", SoundSettings.Catalog(SoundSettings.Platform)),
+            new SettingType("Sound", s => SoundSettings.Catalog(SoundSettings.Platform, s.audio.Backend)),
         };
 
         public int TypeCount => Types.Count + 1;
@@ -191,6 +214,7 @@ namespace OurTaiko
                     var settings = Settings.Clone();
                     CurrentItem.Set(settings, ChoiceIndex);
                     Settings = settings;
+                    RefreshItems();
                     Focus = SettingsFocus.Items;
                     return Result.Changed;
             }

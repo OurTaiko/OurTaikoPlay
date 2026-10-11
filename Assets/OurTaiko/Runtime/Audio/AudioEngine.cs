@@ -169,7 +169,7 @@ namespace OurTaiko
                 if (pair.Item2) flags |= WasapiInitFlags.Raw;
                 if (BassWasapi.Init(-1, 0, 0, flags,
                     pair.Item1 ? Mathf.Clamp(options.wasapiBufferSeconds, 0.005f, 0.5f) : 0,
-                    pair.Item1 && options.wasapiPeriodSeconds > 0 ? Mathf.Clamp(options.wasapiPeriodSeconds, 0.001f, 0.1f) : 0, WasapiCallback))
+                    !pair.Item1 && options.wasapiPeriodSeconds > 0 ? Mathf.Clamp(options.wasapiPeriodSeconds, 0.001f, 0.1f) : 0, WasapiCallback))
                 {
                     wasapiInitialized = true;
                     break;

@@ -178,7 +178,7 @@ namespace OurTaiko
                     : shownItem.Description;
                 if (shownItem.BindingKey.HasValue && !menu.CapturingKey)
                     description.text += "\nBound: " + menu.Settings.general.keyboard.Format(shownItem.BindingKey.Value);
-                if (numeric) description.text += $"\nDefault: {shownItem.Format(shownItem.DefaultValue)}  /  Step: {shownItem.Step} {shownItem.Unit}  /  Ka: adjust  /  Don or tap: save";
+                if (numeric) description.text += "  " + shownItem.NumberHint;
                 int lit = numeric ? 0 : menu.ChoiceIndex;
                 FirstChoice = Mathf.Clamp(lit - 1, 0, Math.Max(0, choices - 3));
                 int count = Math.Min(3, choices);
