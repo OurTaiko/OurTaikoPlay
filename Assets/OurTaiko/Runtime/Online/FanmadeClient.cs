@@ -34,6 +34,7 @@ namespace OurTaiko.Online
         readonly List<FanmadeEndpoint> endpoints = new List<FanmadeEndpoint>();
         readonly Dictionary<string, List<FanmadeChart>> charts = new Dictionary<string, List<FanmadeChart>>();
         readonly Dictionary<string, List<FanmadeCategory>> categoryLists = new Dictionary<string, List<FanmadeCategory>>();
+        readonly Dictionary<string, List<FanmadePlaylist>> playlistLists = new Dictionary<string, List<FanmadePlaylist>>();
         string status = "";
         (int, int) catalogProgress;
         long revision;
@@ -69,6 +70,17 @@ namespace OurTaiko.Online
             }
         }
 
+        // Every playlist of every connected server, in server then bootstrap order. Servers without
+        // playlists have none; a playlist without a playable catalog chart is left out.
+        public IReadOnlyList<FanmadePlaylist> Playlists
+        {
+            get
+            {
+                lock (sync)
+                    return endpoints.Where(e => playlistLists.ContainsKey(e.Id)).SelectMany(e => playlistLists[e.Id]).ToArray();
+            }
+        }
+
         public FanmadeChart Chart(string server, string id)
         {
             lock (sync) return charts.TryGetValue(server, out var list) ? list.Find(c => c.Id == id) : null;
@@ -87,7 +99,7 @@ namespace OurTaiko.Online
             {
                 ResetRankThresholds();
                 foreach (var e in endpoints) e.Dispose();
-                endpoints.Clear(); charts.Clear(); categoryLists.Clear();
+                endpoints.Clear(); charts.Clear(); categoryLists.Clear(); playlistLists.Clear();
                 retryAt = DateTime.MinValue;
             }
             Interlocked.Increment(ref revision);
@@ -117,7 +129,7 @@ namespace OurTaiko.Online
             await e.Transport.WaitAsync(cancel);
             try
             {
-                lock (sync) { e.IsConnected = false; charts.Remove(e.Id); categoryLists.Remove(e.Id); }
+                lock (sync) { e.IsConnected = false; charts.Remove(e.Id); categoryLists.Remove(e.Id); playlistLists.Remove(e.Id); }
                 SetStatus(e.Config.DisplayName + ": loading catalog");
                 if (guest) e.BecomeGuest();
                 else await e.LoginAsync(cancel);
@@ -176,6 +188,38 @@ namespace OurTaiko.Online
                         list.Add(chart);
                     }
                 }
+                // Optional: servers without playlists omit the field. A playlist may name charts the
+                // catalog does not list (not playable here); those are skipped.
+                var playlists = new List<FanmadePlaylist>();
+                if (snapshot["playlists"] != null && snapshot["playlists"].Type != JTokenType.Null)
+                {
+                    if (!(snapshot["playlists"] is JArray playlistList)) throw new FanmadeException("API_PLAYLIST_INVALID");
+                    var playlistIds = new HashSet<string>();
+                    foreach (var v in playlistList)
+                    {
+                        string id = Json.Str(v, "id");
+                        if (id.Length == 0 || !playlistIds.Add(id) || !(v["chartIds"] is JArray members))
+                            throw new FanmadeException("API_PLAYLIST_INVALID");
+                        var playlist = new FanmadePlaylist { Server = e.Id, ServerName = e.Config.DisplayName, Id = id,
+                            Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre"), Kind = Json.Str(v, "kind"), Owner = Json.Str(v, "owner") };
+                        if (v["cover"] is JObject cover)
+                        {
+                            playlist.Cover = new FanmadeResource { Url = Json.Str(cover, "url"), HeadUrl = Json.Str(cover, "headUrl"),
+                                Hash = Json.Str(cover, "sha256"), ContentType = Json.Str(cover, "contentType"), Size = Json.Number(cover, "size") };
+                            if (!Json.HexId(playlist.Cover.Hash, 64) || playlist.Cover.Size <= 0 || playlist.Cover.Size > FanmadePlaylist.MaxCoverBytes
+                                || (playlist.Cover.ContentType != "image/jpeg" && playlist.Cover.ContentType != "image/png"))
+                                throw new FanmadeException("API_PLAYLIST_INVALID");
+                            e.ValidateResourceUrl(playlist.Cover.Url);
+                        }
+                        var listed = new HashSet<string>();
+                        foreach (var member in members)
+                        {
+                            if (member.Type != JTokenType.String) throw new FanmadeException("API_PLAYLIST_INVALID");
+                            if (seen.Contains((string)member) && listed.Add((string)member)) playlist.ChartIds.Add((string)member);
+                        }
+                        if (playlist.ChartIds.Count > 0) playlists.Add(playlist);
+                    }
+                }
                 cancel.ThrowIfCancellationRequested();
                 lock (sync)
                 {
@@ -183,6 +227,7 @@ namespace OurTaiko.Online
                     foreach (var score in scores) { e.Scores.Add(score); e.IndexScore(score); }
                     charts[e.Id] = list;
                     categoryLists[e.Id] = folders;
+                    playlistLists[e.Id] = playlists;
                     e.ChartCount = list.Count;
                     e.IsConnected = true;
                     catalogProgress = (1, 1);

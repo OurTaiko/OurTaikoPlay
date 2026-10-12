@@ -101,6 +101,81 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void PlaylistsListTheirPlayableCatalogChartsInOrder()
+        {
+            Connect(guest: true);
+            Assert.That(client.Playlists, Is.Empty); // A server without playlists omits the field.
+            fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray
+            {
+                new JObject { ["id"] = "mine", ["title"] = "Mine", ["genre"] = "VOCALOID", ["kind"] = "owned", ["owner"] = "DON",
+                    ["chartIds"] = new JArray(second.Id, "not-in-the-catalog", first.Id, second.Id) },
+                new JObject { ["id"] = "unplayable", ["title"] = "Unplayable", ["genre"] = "GAME", ["kind"] = "favorite", ["owner"] = "KATSU",
+                    ["chartIds"] = new JArray("not-in-the-catalog") },
+                new JObject { ["id"] = "daily", ["title"] = "Daily Challenge", ["genre"] = "VARIETY", ["kind"] = "system", ["owner"] = "",
+                    ["chartIds"] = new JArray(first.Id) },
+            };
+            Run(() => client.ConnectAsync(client.Endpoints[0], true));
+            Assert.That(client.Playlists.Select(p => (p.Id, p.Title, p.Genre, p.Kind, p.Owner, p.ServerName)), Is.EqualTo(new[]
+            {
+                ("mine", "Mine", "VOCALOID", "owned", "DON", "Fixture"), ("daily", "Daily Challenge", "VARIETY", "system", "", "Fixture"),
+            }));
+            Assert.That(client.Playlists[0].ChartIds, Is.EqualTo(new[] { second.Id, first.Id }));
+            Assert.That(client.Categories.Select(c => c.Title), Is.EqualTo(new[] { "Game", "Pop" }));
+            Assert.That(client.Playlists[0].Cover, Is.Null);
+
+            // A cover is a verified download kept in the object cache.
+            byte[] picture = { 1, 2, 3, 4, 5 };
+            int served = 0;
+            fixture.CustomRequest = context =>
+            {
+                if (context.Request.Url.AbsolutePath != "/files/cover") return false;
+                served++;
+                context.Response.ContentLength64 = picture.Length;
+                context.Response.OutputStream.Write(picture, 0, picture.Length);
+                context.Response.Close();
+                return true;
+            };
+            JObject Cover(string hash, long size, string type = "image/jpeg", string url = null) => new JObject
+            {
+                ["url"] = url ?? fixture.BaseUrl + "/files/cover", ["headUrl"] = fixture.BaseUrl + "/files/cover", ["sha256"] = hash, ["size"] = size, ["contentType"] = type,
+            };
+            JArray With(JObject cover) => new JArray(new JObject { ["id"] = "mine", ["title"] = "Mine", ["genre"] = "GAME", ["kind"] = "owned", ["owner"] = "",
+                ["chartIds"] = new JArray(first.Id), ["cover"] = cover });
+            fixture.ChangeBootstrap = reply => reply["playlists"] = With(Cover(FanmadeFixture.Sha(picture), picture.Length));
+            Run(() => client.ConnectAsync(client.Endpoints[0], true));
+            Assert.That(served, Is.Zero, "Connecting does not download pictures.");
+            Assert.That(Run(() => client.PlaylistCoverAsync(client.Playlists[0])), Is.EqualTo(picture));
+            Assert.That(Run(() => client.PlaylistCoverAsync(client.Playlists[0])), Is.EqualTo(picture));
+            Assert.That(served, Is.EqualTo(1));
+            fixture.ChangeBootstrap = reply => reply["playlists"] = With(Cover(new string('0', 64), picture.Length));
+            Run(() => client.ConnectAsync(client.Endpoints[0], true));
+            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PlaylistCoverAsync(client.Playlists[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
+            foreach (var bad in new[]
+            {
+                Cover("xyz", 5), Cover(FanmadeFixture.Sha(picture), 0), Cover(FanmadeFixture.Sha(picture), FanmadePlaylist.MaxCoverBytes + 1),
+                Cover(FanmadeFixture.Sha(picture), 5, "image/webp"),
+            })
+            {
+                fixture.ChangeBootstrap = reply => reply["playlists"] = With(bad);
+                Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(client.Endpoints[0], true))).Message, Is.EqualTo("API_PLAYLIST_INVALID"));
+            }
+            fixture.ChangeBootstrap = reply => reply["playlists"] = With(Cover(FanmadeFixture.Sha(picture), 5, url: "http://example.com/cover.jpg"));
+            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(client.Endpoints[0], true))).Message, Is.EqualTo("RESOURCE_URL_INVALID"));
+
+            foreach (var broken in new JToken[]
+            {
+                new JObject(),
+                new JArray(new JObject { ["id"] = "x", ["title"] = "X", ["genre"] = "", ["kind"] = "owned", ["owner"] = "" }),
+                new JArray(new JObject { ["id"] = "x", ["title"] = "X", ["genre"] = "", ["kind"] = "owned", ["owner"] = "", ["chartIds"] = new JArray(1) }),
+            })
+            {
+                fixture.ChangeBootstrap = reply => reply["playlists"] = broken;
+                var error = Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(client.Endpoints[0], true)));
+                Assert.That(error.Message, Is.EqualTo("API_PLAYLIST_INVALID"));
+            }
+        }
+
+        [Test]
         public void LargeCatalogStillUsesOneRequestWithoutDownloadingResources()
         {
             for (int i = 0; i < 3000; i++)

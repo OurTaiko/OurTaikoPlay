@@ -659,6 +659,17 @@ namespace OurTaiko
             item.title.rectTransform.anchoredPosition = slot.TitlePosition + item.titleOpenOffset * (float)pb;
             item.count.rectTransform.anchoredPosition = slot.CountPosition + item.countOpenOffset * (float)pb;
             item.count.Alpha((float)introAlpha);
+            // A playlist's picture fills the open board under the fading closed look, cropped to
+            // cover it whatever its proportions. It may finish loading while the board is on screen.
+            var picture = board.Folder >= 0 ? Manager.Folders[board.Folder].Cover : null;
+            bool pictured = picture != null && pb > 0;
+            item.coverMask.gameObject.SetActive(pictured);
+            if (!pictured) return;
+            var area = slot.PanelSize + expansion - item.coverInset;
+            float aspect = picture.rect.width / picture.rect.height;
+            item.coverMask.rectTransform.sizeDelta = area;
+            item.cover.sprite = picture;
+            item.cover.rectTransform.sizeDelta = area.x / area.y > aspect ? new Vector2(area.x, area.x / aspect) : new Vector2(area.y * aspect, area.y);
         }
 
         void DrawPlates(Board board, double now)
@@ -902,6 +913,7 @@ namespace OurTaiko
             }
             item.count.Squeeze(860);
             item.count.enabled = false;
+            item.coverMask.gameObject.SetActive(false);
         }
 
         void Bind(Board board, Slot slot)

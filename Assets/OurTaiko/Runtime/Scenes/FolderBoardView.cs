@@ -17,6 +17,10 @@ namespace OurTaiko
         public Image panelOpen, panelClosed;
         [Tooltip("box_chara left and right halves (960x480 each).")]
         public Image charaLeft, charaRight;
+        [Tooltip("A playlist's own picture: it fills the open board inside its frame, cropped to the board's shape by coverMask (folder_graphic, inset).")]
+        public Image coverMask, cover;
+        [Tooltip("How much smaller than the board the picture's mask is, leaving the frame visible.")]
+        public Vector2 coverInset = new Vector2(24, 24);
         public TextMeshProUGUI title, count;
         public PointerRelay click;
         [Tooltip("Additional height when the focused board opens (centre 52 -> 240).")]

@@ -163,6 +163,17 @@ namespace OurTaiko.Online
         public readonly List<string> ChartIds = new List<string>();
     }
 
+    // A playlist folder from bootstrap: the account's own ("owned") and favorite playlists and the
+    // server's "system" ones, with its playable catalog charts in playlist order. Genre selects the
+    // folder artwork like a category's; Cover is the optional JPEG or PNG shown on the open folder.
+    public sealed class FanmadePlaylist
+    {
+        public const long MaxCoverBytes = 2L * 1024 * 1024;
+        public string Server = "", ServerName = "", Id = "", Title = "", Genre = "", Kind = "", Owner = "";
+        public FanmadeResource Cover;
+        public readonly List<string> ChartIds = new List<string>();
+    }
+
     public sealed class FanmadeScore
     {
         public string Id = "", Song = "", Difficulty = "";

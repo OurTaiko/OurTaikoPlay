@@ -75,5 +75,20 @@ namespace OurTaiko.Online
             }
             finally { e.Transport.Release(); }
         }
+
+        // A playlist's folder cover from the object cache, downloading it first when it is not
+        // cached with the announced size and SHA-256.
+        public async Task<byte[]> PlaylistCoverAsync(FanmadePlaylist playlist, CancellationToken cancel = default)
+        {
+            var e = Endpoint(playlist.Server) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
+            var resource = playlist.Cover ?? throw new FanmadeException("RESOURCE_MISSING");
+            string file = ObjectPath(resource.Hash);
+            if (await CacheWork(() => Matches(file, resource), cancel)) return await CacheWork(() => File.ReadAllBytes(file), cancel);
+            var bytes = await e.ResourceBytesAsync(resource, cancel);
+            if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
+                throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
+            await CacheWork(() => { cancel.ThrowIfCancellationRequested(); StoreObject(file, bytes, resource); return true; }, cancel);
+            return bytes;
+        }
     }
 }

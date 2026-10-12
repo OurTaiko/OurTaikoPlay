@@ -8,5 +8,7 @@ namespace OurTaiko
         public string Key = "", Title = "", ServerName = "";
         public int Genre;
         public SongDefinition[] Songs = Array.Empty<SongDefinition>();
+        // A playlist's own picture for the open folder; null without one or until it has loaded.
+        public UnityEngine.Sprite Cover;
     }
 }

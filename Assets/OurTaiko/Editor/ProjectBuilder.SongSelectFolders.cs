@@ -54,13 +54,21 @@ namespace OurTaiko.Editor
             try
             {
                 var folderView = contents.GetComponent<FolderBoardView>();
+                bool boardChanged = folderView.coverMask == null;
+                // Prefabs made before playlists have no cover layer, or an early unmasked one.
+                if (boardChanged)
+                {
+                    if (folderView.cover != null) UnityEngine.Object.DestroyImmediate(folderView.cover.gameObject);
+                    AddFolderCover(folderView, folderBoards[0]);
+                }
                 if (folderView.panelOpen.sprite != folderBoards[0] || folderView.panelOpen.type != UnityEngine.UI.Image.Type.Sliced
                     || folderView.panelClosed.type != UnityEngine.UI.Image.Type.Sliced)
                 {
                     folderView.panelOpen.sprite = folderBoards[0];
                     folderView.panelOpen.type = folderView.panelClosed.type = UnityEngine.UI.Image.Type.Sliced;
-                    PrefabUtility.SaveAsPrefabAsset(contents, FolderBoardPrefabPath);
+                    boardChanged = true;
                 }
+                if (boardChanged) PrefabUtility.SaveAsPrefabAsset(contents, FolderBoardPrefabPath);
             }
             finally { PrefabUtility.UnloadPrefabContents(contents); }
             changed |= select.view.folderPrefab != prefab;
@@ -96,6 +104,20 @@ namespace OurTaiko.Editor
             importer.SaveAndReimport();
         }
 
+        // A playlist's picture fills the open board inside its frame: a mask in the board's own
+        // shape (folder_graphic, sized by the scene) between the open and the closed look, so the
+        // closed look fades out over it and the characters and texts stay in front.
+        static void AddFolderCover(FolderBoardView board, Sprite shape)
+        {
+            board.coverMask = SkinUi.Image("CoverMask", board.transform, shape, 960 - board.coverInset.x, 164 - board.coverInset.y);
+            board.coverMask.type = UnityEngine.UI.Image.Type.Sliced;
+            board.coverMask.gameObject.AddComponent<UnityEngine.UI.Mask>().showMaskGraphic = false;
+            board.coverMask.transform.SetSiblingIndex(board.panelClosed.transform.GetSiblingIndex());
+            board.cover = SkinUi.Image("Cover", board.coverMask.transform, null, 960, 164);
+            board.cover.rectTransform.anchorMin = board.cover.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            board.coverMask.gameObject.SetActive(false);
+        }
+
         // Same footprint as SongBoard.prefab (960x164 closed, +188 open): glow, folder_graphic under
         // bar_genre, the two characters, the title and the song count.
         static FolderBoardView CreateFolderBoardPrefab(SongSelectScene select)
@@ -115,6 +137,7 @@ namespace OurTaiko.Editor
             board.charaLeft = SkinUi.Image("CharacterLeft", root, select.charaLeft[0], 960, 480);
             board.charaRight = SkinUi.Image("CharacterRight", root, select.charaRight[0], 960, 480);
             board.charaLeft.enabled = board.charaRight.enabled = false;
+            AddFolderCover(board, select.folderBoards[0]);
             board.title = SkinUi.Text("Title", root, 42);
             board.title.text = "フォルダ";
             board.count = SkinUi.Text("Count", root, 32);

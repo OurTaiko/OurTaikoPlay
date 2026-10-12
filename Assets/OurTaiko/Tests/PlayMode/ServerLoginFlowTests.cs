@@ -366,6 +366,79 @@ namespace OurTaiko.Tests
             Assert.That(fixture.Downloads, Is.Zero);
         }
 
+        // A playlist is one more folder after the categories, in its own genre's colours; its cover
+        // is downloaded once, verified, and fills the open board inside its frame.
+        [UnityTest]
+        public IEnumerator PlaylistsFollowTheCategoriesWithTheirCover()
+        {
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            var picture = new Texture2D(320, 200, TextureFormat.RGB24, false);
+            for (int y = 0; y < 200; y++)
+                for (int x = 0; x < 320; x++) picture.SetPixel(x, y, (x / 40 + y / 40) % 2 == 0 ? new Color(0.9f, 0.2f, 0.3f) : new Color(1f, 0.85f, 0.2f));
+            byte[] cover = picture.EncodeToPNG();
+            Object.Destroy(picture);
+            int coverRequests = 0;
+            fixture.CustomRequest = context =>
+            {
+                if (context.Request.Url.AbsolutePath != "/files/playlist-cover") return false;
+                System.Threading.Interlocked.Increment(ref coverRequests);
+                context.Response.ContentLength64 = cover.Length;
+                context.Response.OutputStream.Write(cover, 0, cover.Length);
+                context.Response.Close();
+                return true;
+            };
+            string link = fixture.BaseUrl + "/files/playlist-cover";
+            fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray
+            {
+                new JObject { ["id"] = "mine", ["title"] = "Festival Set", ["genre"] = "VOCALOID", ["kind"] = "owned", ["owner"] = "DON",
+                    ["chartIds"] = new JArray(chart.Id),
+                    ["cover"] = new JObject { ["url"] = link, ["headUrl"] = link, ["sha256"] = FanmadeFixture.Sha(cover), ["size"] = cover.Length, ["contentType"] = "image/png" } },
+                new JObject { ["id"] = "daily", ["title"] = "Daily Challenge", ["genre"] = "VARIETY", ["kind"] = "system", ["owner"] = "", ["chartIds"] = new JArray(chart.Id) },
+            };
+            TestData.UseServers(new ServerList { servers = { fixture.Server() } });
+            var online = OnlineManager.Instance;
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
+            yield return null;
+            Object.FindFirstObjectByType<ServerLoginScene>().Activate(ServerLoginView.Item.Guest);
+            yield return WaitForScene(SceneSwitcher.SongSelectScene);
+
+            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            Assert.That(select.Manager.Folders.Select(f => (f.Title, f.Genre, f.Songs.Length)),
+                Is.EqualTo(new[] { ("Game", 3, 1), ("Pop", 1, 0), ("Festival Set", 8, 1), ("Daily Challenge", 6, 1) }));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(9), "3 songs, 2 categories, 2 playlists, search and the root もどる.");
+            yield return WaitUntil(() => online.Folders[2].Cover != null, 10);
+            Assert.That(online.Folders[2].Cover.rect.size, Is.EqualTo(new Vector2(320, 200)));
+            Assert.That(online.Folders[3].Cover, Is.Null);
+            yield return Focus(select, 5);
+            yield return new WaitForSecondsRealtime(0.8f);
+            var board = select.wheel.GetComponentsInChildren<FolderBoardView>(false).Single(v => v.title.text == "Festival Set");
+            Assert.That(board.coverMask.gameObject.activeSelf, Is.True);
+            Assert.That(board.cover.sprite, Is.SameAs(online.Folders[2].Cover));
+            // Cropped to cover the board: no narrower or shorter than its mask, proportions kept.
+            Vector2 area = board.coverMask.rectTransform.sizeDelta, drawn = board.cover.rectTransform.sizeDelta;
+            Assert.That(area, Is.EqualTo(board.panelOpen.rectTransform.sizeDelta - board.coverInset));
+            Assert.That(drawn.x, Is.GreaterThanOrEqualTo(area.x - 0.01f));
+            Assert.That(drawn.y, Is.GreaterThanOrEqualTo(area.y - 0.01f));
+            Assert.That(drawn.x / drawn.y, Is.EqualTo(1.6f).Within(0.001f));
+            Assert.That(board.count.text, Does.StartWith("1 songs"));
+            TestCapture.Capture("SongSelectPlaylistCover.png");
+            // Other folders show no picture, and a closed one hides it.
+            yield return Focus(select, 6);
+            yield return new WaitForSecondsRealtime(0.8f);
+            Assert.That(select.wheel.GetComponentsInChildren<FolderBoardView>(false).Count(v => v.coverMask.gameObject.activeSelf), Is.Zero);
+            TestCapture.Capture("SongSelectPlaylistSystem.png");
+
+            // The playlist opens like a category, and the cached picture is not fetched again.
+            yield return Focus(select, 5);
+            select.Manager.Confirm();
+            Assert.That(select.Manager.OpenFolder, Is.EqualTo(online.Folders[2].Key));
+            Assert.That(select.Manager.SongAt(6).ReadDisplayInfo().Title, Is.EqualTo("Fixture Song"));
+            online.RefreshSongs();
+            Assert.That(online.Folders[2].Cover, Is.Not.Null, "A decoded picture is reused at once.");
+            Assert.That(coverRequests, Is.EqualTo(1));
+        }
+
         // ESE lists ~3000 charts: the wheel binds pooled board views only while boards are on screen.
         [UnityTest]
         public IEnumerator LargeCatalogsShareAFewPooledBoards()

@@ -29,6 +29,8 @@ namespace OurTaiko.Online
         readonly Dictionary<string, (SongDefinition Song, FanmadeChart Chart)> byKey = new Dictionary<string, (SongDefinition, FanmadeChart)>();
         readonly Dictionary<SongDefinition, FanmadeChart> charts = new Dictionary<SongDefinition, FanmadeChart>();
         readonly List<UnityEngine.Object> owned = new List<UnityEngine.Object>();
+        // Decoded playlist covers by content hash.
+        readonly Dictionary<string, Sprite> covers = new Dictionary<string, Sprite>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() => Instance = null;
@@ -154,6 +156,45 @@ namespace OurTaiko.Online
                     Genre = GenreFrame(category.Genre),
                     Songs = category.ChartIds.SelectMany(id => songs.Where(song => charts[song].Server == category.Server && charts[song].Id == id)).ToArray(),
                 });
+            // Playlists follow the categories as further folders, drawn in their own genre.
+            foreach (var playlist in Client.Playlists)
+            {
+                var folder = new SongFolder
+                {
+                    Key = playlist.Server + "/playlist/" + playlist.Id, Title = playlist.Title, ServerName = playlist.ServerName,
+                    Genre = GenreFrame(playlist.Genre),
+                    Songs = playlist.ChartIds.SelectMany(id => songs.Where(song => charts[song].Server == playlist.Server && charts[song].Id == id)).ToArray(),
+                };
+                folders.Add(folder);
+                if (playlist.Cover != null) LoadCover(folder, playlist);
+            }
+        }
+
+        // Fills folder.Cover once the picture is cached and decoded; the folder shows without it
+        // until then, and for good when the download or the image is bad.
+        async void LoadCover(SongFolder folder, FanmadePlaylist playlist)
+        {
+            string hash = playlist.Cover.Hash;
+            if (covers.TryGetValue(hash, out var known)) { folder.Cover = known; return; }
+            var client = Client;
+            try
+            {
+                byte[] bytes = await client.PlaylistCoverAsync(playlist);
+                // The servers may have been reset while the picture was loading.
+                if (this == null || client != Client) return;
+                if (!covers.TryGetValue(hash, out var sprite))
+                {
+                    var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false) { name = "PlaylistCover " + hash, hideFlags = HideFlags.DontSave, wrapMode = TextureWrapMode.Clamp };
+                    owned.Add(texture);
+                    if (!texture.LoadImage(bytes, true) || texture.width > 2048 || texture.height > 2048) throw new FanmadeException("PLAYLIST_COVER_INVALID");
+                    sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect);
+                    sprite.name = texture.name; sprite.hideFlags = HideFlags.DontSave;
+                    owned.Add(sprite);
+                    covers[hash] = sprite;
+                }
+                folder.Cover = sprite;
+            }
+            catch (Exception error) { Debug.LogWarning("Playlist cover unavailable: " + error.Message); }
         }
 
         // Search can discover songs not present in any category. Register them for preview,
@@ -203,7 +244,7 @@ namespace OurTaiko.Online
         void ClearSongs()
         {
             foreach (var item in owned) if (item != null) Destroy(item);
-            owned.Clear(); songs.Clear(); byKey.Clear(); charts.Clear(); folders.Clear();
+            owned.Clear(); songs.Clear(); byKey.Clear(); charts.Clear(); folders.Clear(); covers.Clear();
         }
 
         // box.def GENRE names (enums.h GENRE_MAP) to the Nijiiro bar_genre frame (GENRE_TO_REF_FRAME).
