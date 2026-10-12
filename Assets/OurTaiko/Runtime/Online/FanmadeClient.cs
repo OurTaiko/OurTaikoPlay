@@ -120,6 +120,23 @@ namespace OurTaiko.Online
             return endpoint;
         }
 
+        // The playlists of a bootstrap that have a chart of `catalog`, in bootstrap order. The field
+        // is optional: servers without playlists omit it.
+        static List<FanmadePlaylist> ReadPlaylists(JToken value, FanmadeEndpoint e, ICollection<string> catalog)
+        {
+            var playlists = new List<FanmadePlaylist>();
+            if (value == null || value.Type == JTokenType.Null) return playlists;
+            if (!(value is JArray list)) throw new FanmadeException("API_PLAYLIST_INVALID");
+            var ids = new HashSet<string>();
+            foreach (var item in list)
+            {
+                var playlist = FanmadePlaylist.From(item, e.Id, e.Config.DisplayName, catalog, e.ValidateResourceUrl);
+                if (!ids.Add(playlist.Id)) throw new FanmadeException("API_PLAYLIST_INVALID");
+                if (playlist.ChartIds.Count > 0) playlists.Add(playlist);
+            }
+            return playlists;
+        }
+
         // Logs in (unless `guest`), then loads the complete catalog in one bootstrap. A rejected login
         // throws HTTP_401/403 without touching the catalog; the caller may then retry as a guest.
         // Only servers declaring the current game protocol are accepted.
@@ -188,38 +205,7 @@ namespace OurTaiko.Online
                         list.Add(chart);
                     }
                 }
-                // Optional: servers without playlists omit the field. A playlist may name charts the
-                // catalog does not list (not playable here); those are skipped.
-                var playlists = new List<FanmadePlaylist>();
-                if (snapshot["playlists"] != null && snapshot["playlists"].Type != JTokenType.Null)
-                {
-                    if (!(snapshot["playlists"] is JArray playlistList)) throw new FanmadeException("API_PLAYLIST_INVALID");
-                    var playlistIds = new HashSet<string>();
-                    foreach (var v in playlistList)
-                    {
-                        string id = Json.Str(v, "id");
-                        if (id.Length == 0 || !playlistIds.Add(id) || !(v["chartIds"] is JArray members))
-                            throw new FanmadeException("API_PLAYLIST_INVALID");
-                        var playlist = new FanmadePlaylist { Server = e.Id, ServerName = e.Config.DisplayName, Id = id,
-                            Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre"), Kind = Json.Str(v, "kind"), Owner = Json.Str(v, "owner") };
-                        if (v["cover"] is JObject cover)
-                        {
-                            playlist.Cover = new FanmadeResource { Url = Json.Str(cover, "url"), HeadUrl = Json.Str(cover, "headUrl"),
-                                Hash = Json.Str(cover, "sha256"), ContentType = Json.Str(cover, "contentType"), Size = Json.Number(cover, "size") };
-                            if (!Json.HexId(playlist.Cover.Hash, 64) || playlist.Cover.Size <= 0 || playlist.Cover.Size > FanmadePlaylist.MaxCoverBytes
-                                || (playlist.Cover.ContentType != "image/jpeg" && playlist.Cover.ContentType != "image/png"))
-                                throw new FanmadeException("API_PLAYLIST_INVALID");
-                            e.ValidateResourceUrl(playlist.Cover.Url);
-                        }
-                        var listed = new HashSet<string>();
-                        foreach (var member in members)
-                        {
-                            if (member.Type != JTokenType.String) throw new FanmadeException("API_PLAYLIST_INVALID");
-                            if (seen.Contains((string)member) && listed.Add((string)member)) playlist.ChartIds.Add((string)member);
-                        }
-                        if (playlist.ChartIds.Count > 0) playlists.Add(playlist);
-                    }
-                }
+                var playlists = ReadPlaylists(snapshot["playlists"], e, seen);
                 cancel.ThrowIfCancellationRequested();
                 lock (sync)
                 {

@@ -659,13 +659,17 @@ namespace OurTaiko
             item.title.rectTransform.anchoredPosition = slot.TitlePosition + item.titleOpenOffset * (float)pb;
             item.count.rectTransform.anchoredPosition = slot.CountPosition + item.countOpenOffset * (float)pb;
             item.count.Alpha((float)introAlpha);
-            // A playlist's picture fills the open board under the fading closed look, cropped to
-            // cover it whatever its proportions. It may finish loading while the board is on screen.
-            var picture = board.Folder >= 0 ? Manager.Folders[board.Folder].Cover : null;
-            bool pictured = picture != null && pb > 0;
-            item.coverMask.gameObject.SetActive(pictured);
-            if (!pictured) return;
-            var area = slot.PanelSize + expansion - item.coverInset;
+            // The picture may finish loading while the board is on screen.
+            DrawFolderCover(item, pb > 0 && board.Folder >= 0 ? Manager.Folders[board.Folder].Cover : null, slot.PanelSize + expansion);
+        }
+
+        // A playlist's picture fills the open board under the fading closed look, cropped to cover
+        // it whatever its proportions; null hides it.
+        static void DrawFolderCover(FolderBoardView item, Sprite picture, Vector2 boardSize)
+        {
+            item.coverMask.gameObject.SetActive(picture != null);
+            if (picture == null) return;
+            var area = boardSize - item.coverInset;
             float aspect = picture.rect.width / picture.rect.height;
             item.coverMask.rectTransform.sizeDelta = area;
             item.cover.sprite = picture;

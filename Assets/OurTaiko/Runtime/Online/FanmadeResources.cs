@@ -9,6 +9,17 @@ namespace OurTaiko.Online
     {
         public string Url, HeadUrl, Hash, ContentType;
         public long Size;
+
+        // One entry of a resource manifest: where to download a file of at most `limit` bytes and
+        // how to verify it.
+        public static FanmadeResource From(JObject item, long limit, Action<string> validateUrl)
+        {
+            var r = new FanmadeResource { Url = Json.Str(item, "url"), HeadUrl = Json.Str(item, "headUrl"),
+                Hash = Json.Str(item, "sha256"), ContentType = Json.Str(item, "contentType"), Size = Json.Number(item, "size") };
+            if (!Json.HexId(r.Hash, 64) || r.Size <= 0 || r.Size > limit) throw new FanmadeException("RESOURCE_METADATA_INVALID");
+            validateUrl(r.Url); validateUrl(r.HeadUrl);
+            return r;
+        }
     }
 
     public sealed class FanmadeResources
@@ -18,15 +29,8 @@ namespace OurTaiko.Online
         {
             if (Json.Str(value, "chartId") != chartId) throw new FanmadeException("RESOURCE_CHART_MISMATCH");
             if (!(value["resources"] is JObject resources)) throw new FanmadeException("RESOURCE_MANIFEST_INVALID");
-            FanmadeResource Read(string kind, long limit)
-            {
-                var item = resources[kind] as JObject ?? throw new FanmadeException("RESOURCE_MISSING");
-                var r = new FanmadeResource { Url = Json.Str(item, "url"), HeadUrl = Json.Str(item, "headUrl"),
-                    Hash = Json.Str(item, "sha256"), ContentType = Json.Str(item, "contentType"), Size = Json.Number(item, "size") };
-                if (!Json.HexId(r.Hash, 64) || r.Size <= 0 || r.Size > limit) throw new FanmadeException("RESOURCE_METADATA_INVALID");
-                validateUrl(r.Url); validateUrl(r.HeadUrl);
-                return r;
-            }
+            FanmadeResource Read(string kind, long limit) =>
+                FanmadeResource.From(resources[kind] as JObject ?? throw new FanmadeException("RESOURCE_MISSING"), limit, validateUrl);
             var result = new FanmadeResources { Tja = Read("tja", 4L * 1024 * 1024), Audio = Read("audio", 256L * 1024 * 1024) };
             if (result.Audio.ContentType != "audio/ogg" && result.Audio.ContentType != "audio/mpeg") throw new FanmadeException("API_AUDIO_FORMAT_UNSUPPORTED");
             if (resources["preview"] != null) {

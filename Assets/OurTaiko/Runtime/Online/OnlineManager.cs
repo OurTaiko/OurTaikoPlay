@@ -149,12 +149,14 @@ namespace OurTaiko.Online
             }
             foreach (string key in byKey.Keys.Where(k => !keep.Contains(k)).ToList()) byKey.Remove(key);
             folders.Clear();
+            // A double chart is two songs (P1 and P2) under one chart id.
+            SongDefinition[] SongsOf(string server, IEnumerable<string> ids) =>
+                ids.SelectMany(id => songs.Where(song => charts[song].Server == server && charts[song].Id == id)).ToArray();
             foreach (var category in Client.Categories)
                 folders.Add(new SongFolder
                 {
                     Key = category.Server + "/" + category.Id, Title = category.Title, ServerName = category.ServerName,
-                    Genre = GenreFrame(category.Genre),
-                    Songs = category.ChartIds.SelectMany(id => songs.Where(song => charts[song].Server == category.Server && charts[song].Id == id)).ToArray(),
+                    Genre = GenreFrame(category.Genre), Songs = SongsOf(category.Server, category.ChartIds),
                 });
             // Playlists follow the categories as further folders, drawn in their own genre.
             foreach (var playlist in Client.Playlists)
@@ -162,8 +164,7 @@ namespace OurTaiko.Online
                 var folder = new SongFolder
                 {
                     Key = playlist.Server + "/playlist/" + playlist.Id, Title = playlist.Title, ServerName = playlist.ServerName,
-                    Genre = GenreFrame(playlist.Genre),
-                    Songs = playlist.ChartIds.SelectMany(id => songs.Where(song => charts[song].Server == playlist.Server && charts[song].Id == id)).ToArray(),
+                    Genre = GenreFrame(playlist.Genre), Songs = SongsOf(playlist.Server, playlist.ChartIds),
                 };
                 folders.Add(folder);
                 if (playlist.Cover != null) LoadCover(folder, playlist);

@@ -150,17 +150,17 @@ namespace OurTaiko.Tests
             fixture.ChangeBootstrap = reply => reply["playlists"] = With(Cover(new string('0', 64), picture.Length));
             Run(() => client.ConnectAsync(client.Endpoints[0], true));
             Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PlaylistCoverAsync(client.Playlists[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
-            foreach (var bad in new[]
+            foreach (var (bad, code) in new[]
             {
-                Cover("xyz", 5), Cover(FanmadeFixture.Sha(picture), 0), Cover(FanmadeFixture.Sha(picture), FanmadePlaylist.MaxCoverBytes + 1),
-                Cover(FanmadeFixture.Sha(picture), 5, "image/webp"),
+                (Cover("xyz", 5), "RESOURCE_METADATA_INVALID"), (Cover(FanmadeFixture.Sha(picture), 0), "RESOURCE_METADATA_INVALID"),
+                (Cover(FanmadeFixture.Sha(picture), FanmadePlaylist.MaxCoverBytes + 1), "RESOURCE_METADATA_INVALID"),
+                (Cover(FanmadeFixture.Sha(picture), 5, "image/webp"), "API_PLAYLIST_INVALID"),
+                (Cover(FanmadeFixture.Sha(picture), 5, url: "http://example.com/cover.jpg"), "RESOURCE_URL_INVALID"),
             })
             {
                 fixture.ChangeBootstrap = reply => reply["playlists"] = With(bad);
-                Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(client.Endpoints[0], true))).Message, Is.EqualTo("API_PLAYLIST_INVALID"));
+                Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(client.Endpoints[0], true))).Message, Is.EqualTo(code));
             }
-            fixture.ChangeBootstrap = reply => reply["playlists"] = With(Cover(FanmadeFixture.Sha(picture), 5, url: "http://example.com/cover.jpg"));
-            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(client.Endpoints[0], true))).Message, Is.EqualTo("RESOURCE_URL_INVALID"));
 
             foreach (var broken in new JToken[]
             {

@@ -172,6 +172,28 @@ namespace OurTaiko.Online
         public string Server = "", ServerName = "", Id = "", Title = "", Genre = "", Kind = "", Owner = "";
         public FanmadeResource Cover;
         public readonly List<string> ChartIds = new List<string>();
+
+        // One bootstrap playlist. Charts outside `catalog` (not listed or not playable here) and
+        // repeated ones are skipped, so ChartIds may come out empty.
+        public static FanmadePlaylist From(JToken v, string server, string serverName, ICollection<string> catalog, Action<string> validateUrl)
+        {
+            if (!(v["chartIds"] is JArray members)) throw new FanmadeException("API_PLAYLIST_INVALID");
+            var playlist = new FanmadePlaylist { Server = server, ServerName = serverName, Id = Json.Str(v, "id"),
+                Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre"), Kind = Json.Str(v, "kind"), Owner = Json.Str(v, "owner") };
+            if (playlist.Id.Length == 0) throw new FanmadeException("API_PLAYLIST_INVALID");
+            if (v["cover"] is JObject cover)
+            {
+                playlist.Cover = FanmadeResource.From(cover, MaxCoverBytes, validateUrl);
+                if (playlist.Cover.ContentType != "image/jpeg" && playlist.Cover.ContentType != "image/png") throw new FanmadeException("API_PLAYLIST_INVALID");
+            }
+            foreach (var member in members)
+            {
+                if (member.Type != JTokenType.String) throw new FanmadeException("API_PLAYLIST_INVALID");
+                string id = (string)member;
+                if (catalog.Contains(id) && !playlist.ChartIds.Contains(id)) playlist.ChartIds.Add(id);
+            }
+            return playlist;
+        }
     }
 
     public sealed class FanmadeScore
