@@ -60,9 +60,9 @@ namespace OurTaiko.Online
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            UseCache(Path.Combine(Application.persistentDataPath, "cache", "fanmade"),
-                Path.Combine(Application.persistentDataPath, "scores.sqlite3"));
-            Load(Path.Combine(Application.persistentDataPath, ServerList.FileName));
+            UseCache(Path.Combine(GamePaths.Root, "cache", "fanmade"),
+                Path.Combine(GamePaths.Root, "scores.sqlite3"));
+            Load(Path.Combine(GamePaths.Root, ServerList.FileName));
         }
 
         void Update() => Client?.Update();

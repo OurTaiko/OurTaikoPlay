@@ -28,7 +28,7 @@ namespace OurTaiko
         public int Revision { get; private set; }
         public static ScoreStore Shared
         {
-            get => shared ??= new ScoreStore(Path.Combine(Application.persistentDataPath, "scores.sqlite3"));
+            get => shared ??= new ScoreStore(Path.Combine(GamePaths.Root, "scores.sqlite3"));
             set => shared = value;
         }
 

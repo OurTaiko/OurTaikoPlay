@@ -5,7 +5,7 @@ using UnityEngine;
 namespace OurTaiko
 {
     // Global settings holder, created before the first scene and kept across loads like
-    // PlayerInfoController. Reads settings.json (persistentDataPath) once, writes it on every change
+    // PlayerInfoController. Reads settings.json (GamePaths.Root) once, writes it on every change
     // and tells listeners through Changed.
     public sealed class SettingManager : MonoBehaviour
     {
@@ -41,7 +41,7 @@ namespace OurTaiko
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            Load(Path.Combine(Application.persistentDataPath, FileName));
+            Load(Path.Combine(GamePaths.Root, FileName));
         }
 
         void OnDestroy()

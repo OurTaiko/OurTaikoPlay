@@ -40,7 +40,7 @@ namespace OurTaiko
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            Load(Path.Combine(Application.persistentDataPath, FileName));
+            Load(Path.Combine(GamePaths.Root, FileName));
         }
 
         void OnDestroy()

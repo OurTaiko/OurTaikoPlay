@@ -28,7 +28,7 @@ namespace OurTaiko
         // Tests replace it with an unsaved instance so they never touch the player's options.
         public static PlayOptions Shared
         {
-            get => shared ??= Load(System.IO.Path.Combine(Application.persistentDataPath, "options.json"));
+            get => shared ??= Load(System.IO.Path.Combine(GamePaths.Root, "options.json"));
             set => shared = value;
         }
 

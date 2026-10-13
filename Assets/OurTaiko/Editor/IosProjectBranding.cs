@@ -42,6 +42,9 @@ namespace OurTaiko.Editor
             plist.root.SetBoolean("ITSAppUsesNonExemptEncryption", false);
             plist.root.SetBoolean("CADisableMinimumFrameDuration", true);
             plist.root.SetBoolean("CADisableMinimumFrameDurationOnPhone", true);
+            // Show Documents (GamePaths.Root) in Files as On My iPad/iPhone → OurTaikoPlay.
+            plist.root.SetBoolean("UIFileSharingEnabled", true);
+            plist.root.SetBoolean("LSSupportsOpeningDocumentsInPlace", true);
             plist.WriteToFile(plistPath);
 
             Rename(root, UnityName, AppName);

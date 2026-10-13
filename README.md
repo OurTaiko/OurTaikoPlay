@@ -37,7 +37,7 @@ git submodule update --init --recursive
 4. 在服务器页面登录、以游客进入，或跳过服务器只玩本地歌曲。
 5. 选择歌曲和难度，开始演奏。
 
-游戏不自带歌曲。本地歌曲放在 `Application.persistentDataPath/Songs`（首次启动自动创建；macOS 为 `~/Library/Application Support/OurTaiko/OurTaikoPlay/Songs`），每次经过服务器页面都会重新扫描：
+游戏不自带歌曲。本地歌曲放在数据目录的 `Songs` 文件夹（首次启动自动创建，位置见「曲目与存档」），每次经过服务器页面都会重新扫描：
 
 - 读取 `.tja`（BOM 决定编码，无 BOM 时为 UTF-8，解码失败按 Shift-JIS），音频为同目录下 `WAVE:` 指定的文件；至少有一个 Easy～Edit 课程才列出。
 - 含 `box.def`（自身或子目录）的顶层目录成为文件夹，标题与类别取 `#TITLE`／`#TITLE<语言>`、`#GENRE`，其下所有谱面按标题排序；其余谱面直接列在选曲列表，按文件名排序。本地文件夹排在服务器分类之前。
@@ -62,11 +62,21 @@ Entry 的「ゲーム設定」可进入系统设置。
 
 ## 曲目与存档
 
-在线服务器从 `Application.persistentDataPath/servers.json` 读取；内置 `https://fanmade.ourtaiko.org` 和 `https://ese-backend.llx.life`。可将对应配置的 `enabled` 设为 `false` 停用服务器。
+在线服务器从数据目录的 `servers.json` 读取；内置 `https://fanmade.ourtaiko.org` 和 `https://ese-backend.llx.life`。可将对应配置的 `enabled` 设为 `false` 停用服务器。
 
 本地曲目目前通过 Unity 资源配置：将 TJA 内容导入为 `.txt`，通过 **Assets → Create → OurTaiko → Song** 创建 `SongDefinition`，设置谱面、音乐和偏移，再加入 SongSelect 控制器的 `songs` 列表。
 
-用户数据位于 Unity 的 `Application.persistentDataPath`：
+歌曲、设置、成绩和缓存都在同一个数据目录：
+
+| 平台 | 数据目录 |
+| --- | --- |
+| Windows／Linux | 游戏可执行文件所在目录 |
+| macOS | `OurTaikoPlay.app` 内（右键「显示包内容」） |
+| iOS／iPadOS | 「文件」App →「我的 iPad／iPhone」→ OurTaikoPlay |
+| Android、Unity Editor | `Application.persistentDataPath` |
+
+桌面版的游戏目录不可写时（例如 macOS 尚未移出下载位置、Windows 装在 Program Files），改用 `Application.persistentDataPath`。
+
 
 | 文件 | 内容 |
 | --- | --- |

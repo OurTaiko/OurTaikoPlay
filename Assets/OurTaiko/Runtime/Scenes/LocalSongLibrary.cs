@@ -13,7 +13,7 @@ namespace OurTaiko
     public sealed class LocalSongLibrary : MonoBehaviour
     {
         public static LocalSongLibrary Instance { get; private set; }
-        public static string DefaultRoot => Path.Combine(Application.persistentDataPath, "Songs");
+        public static string DefaultRoot => Path.Combine(GamePaths.Root, "Songs");
 
         public IReadOnlyList<string> Roots => roots;
         // Charts outside box.def folders, by file name; then one folder per top-level box.def folder.

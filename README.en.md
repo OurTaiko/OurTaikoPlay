@@ -57,11 +57,21 @@ A large note needs only one side of the drum for a full judgment. Only the earli
 
 ## Songs and user data
 
-Online servers are configured in `Application.persistentDataPath/servers.json`, with `https://fanmade.ourtaiko.org` and `https://ese-backend.llx.life` included by default. Set an entry's `enabled` field to `false` to disable it.
+Online servers are configured in `servers.json` in the data folder, with `https://fanmade.ourtaiko.org` and `https://ese-backend.llx.life` included by default. Set an entry's `enabled` field to `false` to disable it.
 
 Local songs are currently configured as Unity assets: import TJA content as `.txt`, create a `SongDefinition` via **Assets → Create → OurTaiko → Song**, assign its chart, music, and offsets, then add it to the SongSelect controller's `songs` list.
 
-User data lives in Unity's `Application.persistentDataPath`:
+Songs (`Songs/`), settings, scores, and caches share one data folder:
+
+| Platform | Data folder |
+| --- | --- |
+| Windows / Linux | The folder containing the game executable |
+| macOS | Inside `OurTaikoPlay.app` (right-click → Show Package Contents) |
+| iOS / iPadOS | Files app → On My iPad / iPhone → OurTaikoPlay |
+| Android, Unity Editor | `Application.persistentDataPath` |
+
+If the desktop game folder is read-only (for example a macOS app still in its download location, or a Windows install under Program Files), `Application.persistentDataPath` is used instead.
+
 
 | File | Contents |
 | --- | --- |

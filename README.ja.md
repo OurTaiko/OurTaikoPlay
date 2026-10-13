@@ -57,11 +57,21 @@ git submodule update --init --recursive
 
 ## 楽曲と保存データ
 
-オンラインサーバーは `Application.persistentDataPath/servers.json` で設定します。初期設定には `https://fanmade.ourtaiko.org` と `https://ese-backend.llx.life` が含まれます。各項目の `enabled` を `false` にすると無効にできます。
+オンラインサーバーはデータフォルダーの `servers.json` で設定します。初期設定には `https://fanmade.ourtaiko.org` と `https://ese-backend.llx.life` が含まれます。各項目の `enabled` を `false` にすると無効にできます。
 
 ローカル楽曲は現在 Unity アセットとして設定します。TJA の内容を `.txt` としてインポートし、**Assets → Create → OurTaiko → Song** から `SongDefinition` を作成してください。譜面、音源、オフセットを設定し、SongSelect コントローラーの `songs` リストに追加します。
 
-ユーザーデータは Unity の `Application.persistentDataPath` に保存されます。
+楽曲（`Songs/`）、設定、スコア、キャッシュは同じデータフォルダーに保存されます。
+
+| プラットフォーム | データフォルダー |
+| --- | --- |
+| Windows／Linux | ゲームの実行ファイルがあるフォルダー |
+| macOS | `OurTaikoPlay.app` の中（右クリック →「パッケージの内容を表示」） |
+| iOS／iPadOS | 「ファイル」App →「この iPad／iPhone 内」→ OurTaikoPlay |
+| Android、Unity Editor | `Application.persistentDataPath` |
+
+デスクトップ版でゲームのフォルダーに書き込めない場合（ダウンロードした場所のままの macOS App や、Program Files にインストールした Windows 版など）は `Application.persistentDataPath` を使用します。
+
 
 | ファイル | 内容 |
 | --- | --- |
