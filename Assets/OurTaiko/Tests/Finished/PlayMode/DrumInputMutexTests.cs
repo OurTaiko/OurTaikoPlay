@@ -113,6 +113,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 Assert.That(InputManager.PressesThisFrame.Count(p => p.Key.IsDrum()), Is.EqualTo(4));
                 Assert.That(play.Session.Rolls, Is.EqualTo(1), "Later presses in the same frame must be dropped.");
+                Assert.That(play.DrumSounds, Is.EqualTo(1));
                 Assert.That(play.Record.Inputs.Count, Is.EqualTo(1));
                 Assert.That(play.Record.Inputs[0].Ms, Is.EqualTo((play.SongTime - song.audioOffsetMs / 1000.0) * 1000).Within(0.000001),
                     "The event timestamp only orders presses; judgment uses this frame's song time.");

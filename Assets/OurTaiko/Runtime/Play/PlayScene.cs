@@ -55,9 +55,13 @@ namespace OurTaiko
         public bool IsPaused
         {
             get => paused;
-            private set { if (paused != value) InputManager.DropDelayed(); paused = value; }
+            private set { if (paused != value) { InputManager.DropDelayed(); heard.Clear(); } paused = value; }
         }
         bool paused;
+        // Drum presses whose sound already played while they wait out the input delay.
+        readonly List<InputPress> heard = new List<InputPress>();
+        // Drum sounds started so far.
+        public int DrumSounds { get; private set; }
         public bool IsFinished { get; private set; }
         public PlayResult Result { get; private set; }
         // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
@@ -245,7 +249,7 @@ namespace OurTaiko
             double time = ChartTime;
             Session.Advance(time, autoPlay);
             UpdateBranchLane(time);
-            if (!autoPlay) HitFirstDrumPress();
+            if (!autoPlay) { SoundDrumLeads(); HitFirstDrumPress(); }
             UpdatePlayVisuals(time);
             // The song ends a second after its audio; charts often stretch their last measure far
             // past it (a closing measure at a few BPM). Without audio, the chart's length decides.
@@ -274,16 +278,46 @@ namespace OurTaiko
         // Input mutex: a frame judges only its earliest drum press; later ones in the same frame are dropped.
         void HitFirstDrumPress()
         {
+            bool judged = false;
             foreach (var press in InputManager.PressesThisFrame)
             {
                 if (!press.Key.IsDrum()) continue;
-                Hit(press.Key.IsKa(), press.Key.IsRight());
-                return;
+                bool wasHeard = Forget(press);
+                if (judged) continue;
+                judged = true;
+                Hit(press.Key.IsKa(), press.Key.IsRight(), !wasHeard);
             }
         }
-        public void Hit(bool isKa, bool right)
+        // The drum sound does not wait for the input delay: a press that will be judged is heard in the
+        // frame it arrives, and only its judgment and effects come later.
+        void SoundDrumLeads()
+        {
+            foreach (var press in InputManager.DrumLeadsThisFrame)
+            {
+                PlayDrum(press.Key.IsKa());
+                heard.Add(press);
+            }
+        }
+        bool Forget(InputPress press)
+        {
+            for (int i = 0; i < heard.Count; i++)
+            {
+                if (heard[i].Key != press.Key || heard[i].Time != press.Time) continue;
+                heard.RemoveAt(i);
+                return true;
+            }
+            return false;
+        }
+        void PlayDrum(bool isKa)
+        {
+            var clip = isKa ? ka : don;
+            if (clip != null) hitAudio.PlayAudioOneShot(clip, AudioGroup.Drum);
+            DrumSounds++;
+        }
+        public void Hit(bool isKa, bool right, bool sound = true)
         {
             if (Session == null || !songClock.Started || switcher.IsInputBlocked || IsPaused || IsFinished || autoPlay) return;
+            if (sound) PlayDrum(isKa);
             Feedback(isKa, right);
             hitKa = isKa;
             double time = ChartTime;
@@ -292,8 +326,6 @@ namespace OurTaiko
         }
         void Feedback(bool isKa, bool right)
         {
-            var clip = isKa ? ka : don;
-            if (clip != null) hitAudio.PlayAudioOneShot(clip, AudioGroup.Drum);
             int flash = (isKa ? 2 : 0) + (right ? 1 : 0);
             flashedAt[flash] = GameTimeline.FrameTime;
             ShowFlash(flash);
@@ -312,6 +344,7 @@ namespace OurTaiko
             if (autoPlay)
             {
                 // Alternate actual strikes, including every hit within the same long note.
+                PlayDrum(Session.Chart.Notes[index].IsKa);
                 Feedback(Session.Chart.Notes[index].IsKa, nextAutoRight);
                 nextAutoRight = !nextAutoRight;
             }

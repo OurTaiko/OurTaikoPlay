@@ -55,8 +55,15 @@ namespace OurTaiko.Tests
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F, Key.Enter), pressed);
             yield return null;
             Assert.That(InputManager.PressesThisFrame.Select(p => p.Key), Is.EqualTo(new[] { InputKey.Confirm }));
+            Assert.That(InputManager.DrumLeadsThisFrame.Select(p => p.Key), Is.EqualTo(new[] { InputKey.LeftDon }),
+                "The press is announced when it arrives.");
             Assert.That(InputManager.GetKeyDown(InputKey.LeftDon), Is.False);
             Assert.That(InputManager.GetKey(InputKey.LeftDon), Is.True, "Held state is not delayed.");
+
+            // A second press that will share the first one's frame does not lead it.
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F, Key.Enter, Key.K), pressed);
+            yield return null;
+            Assert.That(InputManager.DrumLeadsThisFrame, Is.Empty);
 
             int published = 0;
             float deadline = Time.realtimeSinceStartup + 5;
@@ -64,10 +71,12 @@ namespace OurTaiko.Tests
             {
                 yield return null;
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                Assert.That(InputManager.DrumLeadsThisFrame, Is.Empty, "A press is announced once.");
                 published = InputManager.PressesThisFrame.Count(p => p.Key == InputKey.LeftDon);
             }
             Assert.That(published, Is.EqualTo(1));
             Assert.That(InputManager.GetKeyDown(InputKey.LeftDon), Is.True);
+            Assert.That(InputManager.PressesThisFrame.Select(p => p.Key), Is.EqualTo(new[] { InputKey.LeftDon, InputKey.RightKa }));
             Assert.That(InputManager.PressesThisFrame[0].Time, Is.EqualTo(pressed), "The press keeps the time it happened.");
             Assert.That(InputState.currentTime - pressed, Is.GreaterThanOrEqualTo(delay));
             yield return null;
@@ -80,6 +89,15 @@ namespace OurTaiko.Tests
             InputManager.DrumDelay = 0;
             yield return null;
             Assert.That(InputManager.PressesThisFrame, Is.Empty);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+
+            // Without a delay the lead is the frame's earliest drum press.
+            double clock = InputState.currentTime;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D), clock);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.J), clock);
+            yield return null;
+            Assert.That(InputManager.PressesThisFrame.Select(p => p.Key), Is.EqualTo(new[] { InputKey.LeftKa, InputKey.RightDon }));
+            Assert.That(InputManager.DrumLeadsThisFrame.Select(p => p.Key), Is.EqualTo(new[] { InputKey.LeftKa }));
             InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
         }
 
@@ -116,6 +134,7 @@ namespace OurTaiko.Tests
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F), pressed);
                 yield return null;
                 Assert.That(play.Session.Rolls, Is.Zero, "The hit is still waiting.");
+                Assert.That(play.DrumSounds, Is.EqualTo(1), "Its sound does not wait.");
                 Assert.That(play.drumFlashes.Any(f => f.enabled), Is.False);
                 deadline = Time.realtimeSinceStartup + 5;
                 while (play.Session.Rolls == 0)
@@ -125,10 +144,29 @@ namespace OurTaiko.Tests
                 }
                 Assert.That(InputState.currentTime - pressed, Is.GreaterThanOrEqualTo(0.1));
                 Assert.That(play.Session.Rolls, Is.EqualTo(1));
+                Assert.That(play.DrumSounds, Is.EqualTo(1), "The judged hit is not heard twice.");
                 Assert.That(play.drumFlashes[0].enabled, Is.True);
                 Assert.That(play.Record.Inputs[0].Ms, Is.EqualTo(play.SongTime * 1000).Within(0.000001),
                     "Judgment uses the song time of the frame that publishes the hit.");
                 Assert.That(play.SongTime - pressedSong, Is.GreaterThanOrEqualTo(0.09));
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+
+                // Two presses that are published in one frame (same time, so no frame can split them):
+                // one hit, one sound.
+                double both = InputState.currentTime;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D), both);
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.K), both);
+                yield return null;
+                Assert.That(play.DrumSounds, Is.EqualTo(2));
+                deadline = Time.realtimeSinceStartup + 5;
+                while (play.Session.Rolls == 1)
+                {
+                    yield return null;
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                }
+                yield return null;
+                Assert.That(play.Session.Rolls, Is.EqualTo(2));
+                Assert.That(play.DrumSounds, Is.EqualTo(2));
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
 
                 // Pausing drops a hit that is still waiting.
@@ -136,7 +174,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 play.TogglePause();
                 yield return new WaitForSecondsRealtime(0.2f);
-                Assert.That(play.Session.Rolls, Is.EqualTo(1));
+                Assert.That(play.Session.Rolls, Is.EqualTo(2));
                 Assert.That(play.IsPaused, Is.True);
 
                 Object.Destroy(play.gameObject);
