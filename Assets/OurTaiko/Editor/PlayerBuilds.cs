@@ -155,8 +155,9 @@ namespace OurTaiko.Editor
                 EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
             }
             var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-            if (scenes.Length == 0 || scenes[0] != "Assets/Scenes/Entry.unity")
-                throw new BuildFailedException("Enabled scenes must start with Entry.");
+            // The player starts on the Presented card, which leads to Entry.
+            if (scenes.Length < 2 || scenes[0] != "Assets/Scenes/Presented.unity" || scenes[1] != "Assets/Scenes/Entry.unity")
+                throw new BuildFailedException("Enabled scenes must start with Presented, then Entry.");
             string customPath = Argument("-customBuildPath");
             string output = Path.GetFullPath(customPath ?? OutputPath(target));
             Directory.CreateDirectory(Path.GetDirectoryName(output));
