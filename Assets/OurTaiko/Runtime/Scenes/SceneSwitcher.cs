@@ -25,6 +25,8 @@ namespace OurTaiko
         public const string SettingScene = "GlobalSettingScene";
         // Online server login, between Entry's 演奏ゲーム and SongSelect.
         public const string ServerLoginScene = "ServerLogin";
+        // The first scene: the title card shown while the built-in servers connect.
+        public const string PresentedScene = "Presented";
         public static SceneSwitcher Instance { get; private set; }
         public static Camera MainCamera { get; private set; }
         public static string CurrentScene { get; private set; } = "";

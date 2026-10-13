@@ -56,7 +56,7 @@ namespace OurTaiko.Tests
             Assert.That(endpoint.IsConnected, Is.True);
             Assert.That(endpoint.IsAuthenticated, Is.False);
             Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"));
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/bootstrap" }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/catalog" }));
             Assert.That(fixture.Downloads, Is.Zero);
             Assert.That(client.CatalogProgress, Is.EqualTo((1, 1)));
             // First is in both categories but listed once, under the first category.
@@ -85,7 +85,7 @@ namespace OurTaiko.Tests
             Assert.That(endpoint.Nickname, Is.EqualTo("DON"));
             Assert.That(client.Best(client.Charts[0], (int)Difficulty.Oni).Score, Is.EqualTo(700000));
             Assert.That(client.Best(client.Charts[0], (int)Difficulty.Hard), Is.Null);
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "POST /api/v1/game/login", "GET /api/v1/game/bootstrap" }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "POST /api/v1/game/login", "GET /api/v1/game/scores", "GET /api/v1/game/playlists", "GET /api/v1/game/catalog" }));
         }
 
         [Test]
@@ -184,7 +184,7 @@ namespace OurTaiko.Tests
             Assert.That(client.Charts.Count, Is.EqualTo(3002));
             Assert.That(client.Categories[0].ChartIds.Count, Is.EqualTo(3001));
             Assert.That(client.Categories[1].ChartIds.Count, Is.EqualTo(3002));
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/bootstrap" }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/catalog" }));
             Assert.That(fixture.Downloads, Is.Zero);
         }
 
@@ -217,7 +217,7 @@ namespace OurTaiko.Tests
             Assert.That(endpoint.IsConnected, Is.False);
             Assert.That(client.Charts, Is.Empty);
             Assert.That(client.Categories, Is.Empty);
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/bootstrap" }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/catalog" }));
         }
 
         [TestCase(0)]
@@ -556,17 +556,20 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void ServerListHasBothBuiltInServersAndGenresMapToBoardFrames()
+        public void BuiltInServersStayOutOfTheServerListAndGenresMapToBoardFrames()
         {
-            var list = ServerList.Default();
-            Assert.That(list.servers.Select(s => s.baseUrl), Is.EqualTo(new[] { "https://fanmade.ourtaiko.org", "https://ese-backend.llx.life" }));
-            Assert.That(list.servers.All(s => s.enabled), Is.True);
-            // An existing list keeps its entries (and edits) and only gains the missing built-in address.
-            var edited = new ServerList { servers = { new ServerConfig { name = "Mine", baseUrl = "https://fanmade.ourtaiko.org/", enabled = false } } };
-            Assert.That(edited.AddBuiltIn(), Is.True);
-            Assert.That(edited.servers.Select(s => s.name), Is.EqualTo(new[] { "Mine", "ESE" }));
-            Assert.That(edited.servers[0].enabled, Is.False);
-            Assert.That(edited.AddBuiltIn(), Is.False);
+            Assert.That(ServerList.BuiltIn.Select(b => b.Url), Is.EqualTo(new[] { "https://fanmade.ourtaiko.org", "https://ese-backend.llx.life" }));
+            Assert.That(new ServerList().servers, Is.Empty);
+            // A file of an older version listed the built-in addresses; only the additional servers stay.
+            var old = new ServerList { servers =
+            {
+                new ServerConfig { name = "OurTaiko Fanmade", baseUrl = "https://fanmade.ourtaiko.org/" },
+                new ServerConfig { name = "Mine", baseUrl = "https://example.org" },
+                new ServerConfig { name = "ESE", baseUrl = "https://ese-backend.llx.life", enabled = false },
+            } };
+            Assert.That(old.RemoveBuiltIn(), Is.True);
+            Assert.That(old.servers.Select(s => s.name), Is.EqualTo(new[] { "Mine" }));
+            Assert.That(old.RemoveBuiltIn(), Is.False);
             Assert.That(OnlineManager.GenreFrame("GAME"), Is.EqualTo(3));
             Assert.That(OnlineManager.GenreFrame("ボーカロイド"), Is.EqualTo(8));
             Assert.That(OnlineManager.GenreFrame("Unknown"), Is.EqualTo(0));

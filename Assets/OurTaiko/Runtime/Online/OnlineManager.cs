@@ -2,19 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace OurTaiko.Online
 {
     // A server category as a song-select folder: its songs in API order (shared SongDefinitions).
     // Global holder of the online servers, created before the first scene and kept across loads
-    // (like SettingManager). It reads servers.json, owns the FanmadeClient, pumps its score
+    // (like SettingManager). It reads servers.json, signs in to the built-in servers and loads their
+    // song lists (at startup from the Presented scene, later from the settings), owns the FanmadeClient, pumps its score
     // uploads every frame and turns the connected catalog into SongDefinitions and category
     // folders for song select.
     public sealed class OnlineManager : MonoBehaviour
     {
         public static OnlineManager Instance { get; private set; }
 
+        // The additional servers of servers.json; the built-in ones are not in it.
         public ServerList Servers { get; private set; } = new ServerList();
         // null for unsaved data (tests); otherwise where Servers is read from and written to.
         public string FilePath { get; private set; }
@@ -71,26 +75,155 @@ namespace OurTaiko.Online
             Instance = null;
         }
 
-        public IEnumerable<ServerConfig> EnabledServers => Servers.servers.Where(s => s.enabled);
+        (string Name, string Url)[] builtIn = ServerList.BuiltIn;
 
-        // A missing file is created with the built-in servers so it can be edited.
+        // The built-in servers with the 1P OurTaiko account of the settings (a guest while it is empty).
+        public IReadOnlyList<ServerConfig> BuiltInServers
+        {
+            get
+            {
+                var account = SettingManager.EnsureInstance().Settings.accounts;
+                return builtIn.Select(b => new ServerConfig { name = b.Name, baseUrl = b.Url, username = account.p1Username, password = account.p1Password }).ToArray();
+            }
+        }
+
+        // What the running sign-in or song list request is doing, for the screen that started it,
+        // and how the last one of each ended.
+        public string Activity { get; private set; } = "";
+        public string LoginSummary { get; private set; } = "";
+        public string SongListSummary { get; private set; } = "";
+        public bool IsBusy { get; private set; }
+        // The built-in servers' connections, kept while ServerLogin reconnects the others.
+        readonly List<FanmadeEndpoint> builtInEndpoints = new List<FanmadeEndpoint>();
+
+        // Startup: load every built-in song list, then sign in, then (as part of signing in) load
+        // the account's scores. Cancelling stops at the current request and keeps what has arrived.
+        public async Task StartUpAsync(CancellationToken cancel = default)
+        {
+            await LoadSongListAsync(cancel);
+            if (!cancel.IsCancellationRequested) await LoginAsync(cancel);
+        }
+
+        // Signs 1P in to the built-in servers with the settings' OurTaiko account and loads its
+        // scores; no song list is requested. The nickname of the first server that accepts the account goes on the nameplate.
+        // 2P has no online play yet and is not signed in. True when a server accepted the account.
+        public async Task<bool> LoginAsync(CancellationToken cancel = default)
+        {
+            if (IsBusy) return false;
+            IsBusy = true;
+            var results = new List<string>();
+            string nickname = null;
+            try
+            {
+                var account = SettingManager.EnsureInstance().Settings.accounts;
+                foreach (var e in BuiltInEndpoints())
+                {
+                    string name = e.Config.DisplayName;
+                    Client.SetAccount(e, account.p1Username, account.p1Password);
+                    if (!e.Config.HasCredentials) { results.Add(name + ": guest (no account set)"); continue; }
+                    if (cancel.IsCancellationRequested) { results.Add(name + ": cancelled"); continue; }
+                    Activity = "Signing in to " + name + "…";
+                    try
+                    {
+                        await Client.LoginAsync(e, cancel);
+                        nickname ??= e.Nickname;
+                        results.Add(name + ": signed in as " + e.Nickname);
+                    }
+                    catch (Exception error)
+                    {
+                        Debug.LogWarning($"Sign-in to {name} failed: {error.Message}");
+                        results.Add(name + ": " + (cancel.IsCancellationRequested ? "cancelled" : Describe(error)));
+                    }
+                }
+                if (this != null && nickname != null) ShowNickname(nickname);
+            }
+            finally { Activity = ""; LoginSummary = string.Join("   •   ", results); IsBusy = false; }
+            return nickname != null;
+        }
+
+        // Loads the built-in servers' song lists again; accounts and scores stay as they are. A
+        // server that fails keeps the list it had.
+        public async Task LoadSongListAsync(CancellationToken cancel = default)
+        {
+            if (IsBusy) return;
+            IsBusy = true;
+            var results = new List<string>();
+            try
+            {
+                var endpoints = BuiltInEndpoints();
+                for (int i = 0; i < endpoints.Count; i++)
+                {
+                    var e = endpoints[i];
+                    string name = e.Config.DisplayName;
+                    if (cancel.IsCancellationRequested) { results.Add(name + ": cancelled"); continue; }
+                    Activity = $"Loading song list ({i + 1} / {endpoints.Count}): {name}…";
+                    try
+                    {
+                        await Client.LoadCatalogAsync(e, cancel);
+                        results.Add($"{name}: {e.ChartCount} songs");
+                    }
+                    catch (Exception error)
+                    {
+                        Debug.LogWarning($"Song list of {name} failed: {error.Message}");
+                        results.Add(name + ": " + (cancel.IsCancellationRequested ? "cancelled" : Describe(error)));
+                    }
+                }
+                if (this != null) RefreshSongs();
+            }
+            finally { Activity = ""; SongListSummary = string.Join("   •   ", results); IsBusy = false; }
+        }
+
+        static string Describe(Exception error) =>
+            error is HttpStatusException status && (status.Status == 401 || status.Status == 403) ? "wrong username or password"
+            : error is HttpStatusException { Status: 429 } ? "too many sign-in attempts, try again later"
+            : "failed (" + error.Message + ")";
+
+        // One connection per built-in server, created signed out; the account is set when signing in.
+        IReadOnlyList<FanmadeEndpoint> BuiltInEndpoints()
+        {
+            var current = Client.Endpoints;
+            if (builtInEndpoints.Count != builtIn.Length || builtInEndpoints.Any(e => !current.Contains(e)))
+            {
+                Client.Remove(builtInEndpoints.Contains);
+                builtInEndpoints.Clear();
+                foreach (var (name, url) in builtIn) builtInEndpoints.Add(Client.Add(new ServerConfig { name = name, baseUrl = url }));
+            }
+            return builtInEndpoints.ToArray();
+        }
+
+        void ShowNickname(string nickname)
+        {
+            var player = PlayerInfoController.EnsureInstance();
+            if (player.Info.name == nickname) return;
+            var info = player.Info.Clone();
+            info.name = nickname;
+            player.Set(info);
+        }
+
+        public IEnumerable<ServerConfig> EnabledServers => BuiltInServers.Concat(Servers.servers.Where(s => s.enabled));
+
+        // A missing file is created empty so it can be found and edited.
         public void Load(string path)
         {
             FilePath = path;
+            builtIn = ServerList.BuiltIn;
             ServerList list = null;
             try
             {
                 list = ServerList.Read(path) ?? new ServerList();
-                if (list.AddBuiltIn() || !File.Exists(path)) list.Write(path);
+                if (list.RemoveBuiltIn() || !File.Exists(path)) list.Write(path);
             }
             catch (Exception error) { Debug.LogWarning("Ignoring unreadable server list: " + error.Message); }
-            Servers = list ?? ServerList.Default();
+            Servers = list ?? new ServerList();
         }
 
-        // Tests use servers (and a cache folder) that never touch the player's files.
-        public void UseUnsaved(ServerList list, string cacheRoot = null)
+        // Tests use servers (and a cache folder) that never touch the player's files, and no
+        // built-in server unless they name their own.
+        public void UseUnsaved(ServerList list, string cacheRoot = null, params (string Name, string Url)[] builtInServers)
         {
             FilePath = null;
+            builtIn = builtInServers ?? Array.Empty<(string, string)>();
+            builtInEndpoints.Clear();
             Servers = list ?? new ServerList();
             if (cacheRoot != null) UseCache(cacheRoot);
             else Disconnect();
@@ -100,6 +233,7 @@ namespace OurTaiko.Online
         {
             Client?.Dispose();
             ClearSongs();
+            builtInEndpoints.Clear();
             Client = new FanmadeClient(root, databasePath);
         }
 
@@ -113,12 +247,17 @@ namespace OurTaiko.Online
             catch (Exception error) { Debug.LogWarning("Could not save the server list: " + error.Message); }
         }
 
-        // Forgets every connection and catalog song (ServerLogin starts over each time).
+        // Forgets every connection and catalog song.
         public void Disconnect()
         {
             Client.Reset();
+            builtInEndpoints.Clear();
             ClearSongs();
         }
+
+        // Forgets the servers.json connections (ServerLogin starts them over each time); the built-in
+        // servers stay as they are.
+        public void DisconnectAdditional() => Client.Remove(e => !builtInEndpoints.Contains(e));
 
         // Publishes the client's catalog as songs, reusing the instances of charts already listed.
         public void RefreshSongs()

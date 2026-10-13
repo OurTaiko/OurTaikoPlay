@@ -300,6 +300,71 @@ namespace OurTaiko.Tests
             }
         }
 
+        // The built-in servers connect on the Presented card before Entry: one sign-in with the
+        // settings' account, one song list, the nickname on the nameplate. ServerLogin then has
+        // nothing to ask and keeps those songs.
+        [UnityTest]
+        public IEnumerator PresentedSignsInAndLoadsTheBuiltInSongListBeforeEntry()
+        {
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            var manager = SettingManager.EnsureInstance();
+            var online = OnlineManager.EnsureInstance();
+            try
+            {
+                var settings = new GameSettings();
+                settings.accounts.p1Username = "don"; settings.accounts.p1Password = "katsu";
+                manager.UseUnsaved(settings);
+                TestData.UseServers(new ServerList());
+                online.UseUnsaved(new ServerList(), TestData.OnlineCache, ("Built-in", fixture.BaseUrl));
+                Assert.That(online.Servers.servers, Is.Empty, "Built-in servers are not part of servers.json.");
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.PresentedScene);
+                yield return null;
+                var presented = Object.FindFirstObjectByType<PresentedScene>();
+                presented.minimumSeconds = 1;
+                yield return null;
+                TestCapture.Capture("Presented.png");
+                yield return WaitForScene(SceneSwitcher.EntryScene);
+                Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/login"), Is.EqualTo(1));
+                Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/catalog"), Is.EqualTo(1));
+                Assert.That(online.Client.Endpoints.Single().IsAuthenticated, Is.True);
+                Assert.That(PlayerInfoController.Instance.Info.name, Is.EqualTo("DON"));
+                Assert.That(online.Songs, Is.Not.Empty);
+                TestCapture.Capture("EntryNickname.png");
+
+                Object.Destroy(SceneSwitcher.Instance.gameObject);
+                yield return null;
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
+                yield return WaitForScene(SceneSwitcher.SongSelectScene);
+                Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/catalog"), Is.EqualTo(1), "Song select does not load the list again.");
+                Assert.That(Object.FindFirstObjectByType<SongSelectScene>().Manager.Folders.Select(f => f.Title), Is.EqualTo(new[] { "Game", "Pop" }));
+            }
+            finally
+            {
+                PlayerInfoController.Instance.UseUnsaved(new PlayerInfo());
+                manager.UseUnsaved(new GameSettings());
+            }
+        }
+
+        // Space (or a tap) interrupts the startup requests and goes on to Entry with what arrived.
+        [UnityTest]
+        public IEnumerator PresentedCanBeSkippedBeforeTheServersAnswer()
+        {
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            var online = OnlineManager.EnsureInstance();
+            TestData.UseServers(new ServerList());
+            online.UseUnsaved(new ServerList(), TestData.OnlineCache, ("Built-in", fixture.BaseUrl));
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.PresentedScene);
+            var presented = Object.FindFirstObjectByType<PresentedScene>();
+            presented.minimumSeconds = 60;
+            presented.Skip();
+            Assert.That(presented.Skipped, Is.True);
+            yield return WaitForScene(SceneSwitcher.EntryScene, 5);
+            Assert.That(online.IsBusy, Is.False);
+            Assert.That(online.SongListSummary, Is.EqualTo("Built-in: cancelled").Or.EqualTo("Built-in: 1 songs"));
+        }
+
         [UnityTest]
         public IEnumerator GuestSkipAndADownloadErrorReturnToTheSongList()
         {

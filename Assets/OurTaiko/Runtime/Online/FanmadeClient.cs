@@ -35,6 +35,10 @@ namespace OurTaiko.Online
         readonly Dictionary<string, List<FanmadeChart>> charts = new Dictionary<string, List<FanmadeChart>>();
         readonly Dictionary<string, List<FanmadeCategory>> categoryLists = new Dictionary<string, List<FanmadeCategory>>();
         readonly Dictionary<string, List<FanmadePlaylist>> playlistLists = new Dictionary<string, List<FanmadePlaylist>>();
+        // The signed-in account's own playlists: as received at login, and read against the catalog
+        // once both are there (either may arrive first).
+        readonly Dictionary<string, JToken> personalPlaylists = new Dictionary<string, JToken>();
+        readonly Dictionary<string, List<FanmadePlaylist>> personalLists = new Dictionary<string, List<FanmadePlaylist>>();
         string status = "";
         (int, int) catalogProgress;
         long revision;
@@ -70,14 +74,16 @@ namespace OurTaiko.Online
             }
         }
 
-        // Every playlist of every connected server, in server then bootstrap order. Servers without
+        // Every playlist of every connected server: per server the account's own (owned, favorite,
+        // personal system ones) and then the catalog's, each in the server's order. Servers without
         // playlists have none; a playlist without a playable catalog chart is left out.
         public IReadOnlyList<FanmadePlaylist> Playlists
         {
             get
             {
                 lock (sync)
-                    return endpoints.Where(e => playlistLists.ContainsKey(e.Id)).SelectMany(e => playlistLists[e.Id]).ToArray();
+                    return endpoints.Where(e => playlistLists.ContainsKey(e.Id)).SelectMany(e =>
+                        personalLists.TryGetValue(e.Id, out var own) ? own.Concat(playlistLists[e.Id]) : playlistLists[e.Id]).ToArray();
             }
         }
 
@@ -100,6 +106,7 @@ namespace OurTaiko.Online
                 ResetRankThresholds();
                 foreach (var e in endpoints) e.Dispose();
                 endpoints.Clear(); charts.Clear(); categoryLists.Clear(); playlistLists.Clear();
+                personalPlaylists.Clear(); personalLists.Clear();
                 retryAt = DateTime.MinValue;
             }
             Interlocked.Increment(ref revision);
@@ -120,6 +127,116 @@ namespace OurTaiko.Online
             return endpoint;
         }
 
+        // Drops the matching servers and their catalogs (uploads finish first); the others stay connected.
+        public void Remove(Predicate<FanmadeEndpoint> match)
+        {
+            try { uploads?.Wait(); } catch (AggregateException) { }
+            uploads = null;
+            lock (sync)
+            {
+                foreach (var e in endpoints.FindAll(match))
+                {
+                    charts.Remove(e.Id); categoryLists.Remove(e.Id); playlistLists.Remove(e.Id);
+                    personalPlaylists.Remove(e.Id); personalLists.Remove(e.Id);
+                    e.Dispose();
+                }
+                endpoints.RemoveAll(match);
+            }
+            Interlocked.Increment(ref revision);
+        }
+
+        // Changes the account of a server without touching its catalog. The scores of the previous
+        // account are dropped; the endpoint is a guest until LoginAsync succeeds.
+        public void SetAccount(FanmadeEndpoint e, string username, string password)
+        {
+            lock (sync)
+            {
+                if (!e.SetAccount(username, password)) return;
+                e.Scores.Clear(); e.Best.Clear();
+                personalPlaylists.Remove(e.Id); personalLists.Remove(e.Id);
+            }
+            Interlocked.Increment(ref revision);
+        }
+
+        // Logs in on its own and loads the account's scores and playlists; the catalog is neither needed nor
+        // loaded, and is the same whether an account is signed in or not.
+        public async Task LoginAsync(FanmadeEndpoint e, CancellationToken cancel = default)
+        {
+            if (!e.HasValidUrl()) throw new FanmadeException("SERVER_URL_INVALID");
+            await e.Transport.WaitAsync(cancel);
+            try { await SignInAsync(e, cancel); }
+            finally { e.Transport.Release(); }
+            Interlocked.Increment(ref revision);
+            RetryNow();
+        }
+
+        // Login, GET /game/scores and GET /game/playlists, with the caller holding the endpoint's
+        // transport. A guest (no account) has neither. A server without one of the two lists
+        // answers 404 or 405: the login stands, without history or without own playlists.
+        async Task SignInAsync(FanmadeEndpoint e, CancellationToken cancel)
+        {
+            var scores = new List<FanmadeScore>();
+            JToken playlists = null;
+            try
+            {
+                await e.LoginAsync(cancel);
+                if (e.IsAuthenticated)
+                {
+                    try
+                    {
+                        var reply = Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", cancel: cancel));
+                        if (!(reply["scores"] is JArray scoreList)) throw new FanmadeException("API_SCORES_INVALID");
+                        foreach (var v in scoreList) scores.Add(FanmadeScore.From(v));
+                    }
+                    catch (HttpStatusException error) when (error.Status == 404 || error.Status == 405) { }
+                    try { playlists = Json.Parse(await e.AuthorizedAsync("/api/v1/game/playlists", cancel: cancel))["playlists"]; }
+                    catch (HttpStatusException error) when (error.Status == 404 || error.Status == 405) { }
+                }
+            }
+            catch (Exception error)
+            {
+                SetStatus(e.Config.DisplayName + ": " + error.Message);
+                // A refused account is a guest: its earlier scores and playlists are not shown any longer.
+                if (!e.IsAuthenticated) SetAccountData(e, scores, null);
+                throw;
+            }
+            SetAccountData(e, scores, playlists);
+        }
+
+        void SetAccountData(FanmadeEndpoint e, List<FanmadeScore> scores, JToken playlists)
+        {
+            lock (sync)
+            {
+                e.Scores.Clear(); e.Best.Clear();
+                foreach (var score in scores) { e.Scores.Add(score); e.IndexScore(score); }
+                if (playlists == null) personalPlaylists.Remove(e.Id);
+                else personalPlaylists[e.Id] = playlists;
+                ReadPersonalPlaylists(e);
+            }
+            Interlocked.Increment(ref revision);
+        }
+
+        // Called with `sync` held, whenever the account's playlists or the catalog changed. Playlists
+        // the client cannot read are left out; the catalog and the login are not affected.
+        void ReadPersonalPlaylists(FanmadeEndpoint e)
+        {
+            personalLists.Remove(e.Id);
+            if (!personalPlaylists.TryGetValue(e.Id, out var received) || !charts.TryGetValue(e.Id, out var catalog)) return;
+            try { personalLists[e.Id] = ReadPlaylists(received, e, new HashSet<string>(catalog.Select(c => c.Id))); }
+            catch (FanmadeException error) { status = e.Config.DisplayName + ": " + error.Message; }
+        }
+
+        // Loads the complete catalog; the account and its scores are untouched. A failure keeps the
+        // catalog loaded before.
+        public async Task LoadCatalogAsync(FanmadeEndpoint e, CancellationToken cancel = default)
+        {
+            if (!e.HasValidUrl()) throw new FanmadeException("SERVER_URL_INVALID");
+            await e.Transport.WaitAsync(cancel);
+            try { await BootstrapAsync(e, cancel); }
+            finally { e.Transport.Release(); }
+            Update();
+        }
+
         // The playlists of a bootstrap that have a chart of `catalog`, in bootstrap order. The field
         // is optional: servers without playlists omit it.
         static List<FanmadePlaylist> ReadPlaylists(JToken value, FanmadeEndpoint e, ICollection<string> catalog)
@@ -137,7 +254,7 @@ namespace OurTaiko.Online
             return playlists;
         }
 
-        // Logs in (unless `guest`), then loads the complete catalog in one bootstrap. A rejected login
+        // Logs in with the account's scores (unless `guest`), then loads the complete catalog. A rejected login
         // throws HTTP_401/403 without touching the catalog; the caller may then retry as a guest.
         // Only servers declaring the current game protocol are accepted.
         public async Task ConnectAsync(FanmadeEndpoint e, bool guest, CancellationToken cancel = default)
@@ -146,14 +263,36 @@ namespace OurTaiko.Online
             await e.Transport.WaitAsync(cancel);
             try
             {
-                lock (sync) { e.IsConnected = false; charts.Remove(e.Id); categoryLists.Remove(e.Id); playlistLists.Remove(e.Id); }
+                lock (sync) { e.IsConnected = false; charts.Remove(e.Id); categoryLists.Remove(e.Id); playlistLists.Remove(e.Id); personalLists.Remove(e.Id); }
+                if (guest) { e.BecomeGuest(); SetAccountData(e, new List<FanmadeScore>(), null); }
+                else await SignInAsync(e, cancel);
+                await BootstrapAsync(e, cancel);
+            }
+            finally { e.Transport.Release(); }
+            Update();
+        }
+
+        // GET /game/catalog: the public song list, the same signed in or not. A server from before
+        // it answers 404 or 405 and still has the deprecated bootstrap, whose catalog part is the same.
+        static async Task<string> CatalogAsync(FanmadeEndpoint e, CancellationToken cancel)
+        {
+            try { return await e.RequestAsync("/api/v1/game/catalog", cancel: cancel); }
+            catch (HttpStatusException error) when (error.Status == 404 || error.Status == 405)
+            {
+                return await e.AuthorizedAsync("/api/v1/game/bootstrap", cancel: cancel);
+            }
+        }
+
+        // One catalog request, with the caller holding the endpoint's transport.
+        async Task BootstrapAsync(FanmadeEndpoint e, CancellationToken cancel)
+        {
+            try
+            {
                 SetStatus(e.Config.DisplayName + ": loading catalog");
-                if (guest) e.BecomeGuest();
-                else await e.LoginAsync(cancel);
                 lock (sync) catalogProgress = (0, 1);
-                var snapshot = Json.Parse(await e.AuthorizedAsync("/api/v1/game/bootstrap", cancel: cancel));
+                var snapshot = Json.Parse(await CatalogAsync(e, cancel));
                 if (!SupportsProtocol(snapshot)) throw new FanmadeException("SERVER_PROTOCOL_UNSUPPORTED");
-                if (!(snapshot["categories"] is JArray categoryList) || !(snapshot["scores"] is JArray scoreList)
+                if (!(snapshot["categories"] is JArray categoryList)
                     || !(snapshot["charts"] is JArray chartList) || Json.Number(snapshot, "chartCount") != chartList.Count)
                     throw new FanmadeException("API_BOOTSTRAP_INVALID");
                 var folders = new List<FanmadeCategory>();
@@ -171,9 +310,6 @@ namespace OurTaiko.Online
                     expectedCounts.Add(id, Json.Number(v, "chartCount"));
                     actualCounts.Add(id, 0);
                 }
-                var scores = new List<FanmadeScore>();
-                if (e.IsAuthenticated) foreach (var v in scoreList) scores.Add(FanmadeScore.From(v));
-
                 var byId = new Dictionary<string, FanmadeChart>();
                 foreach (var value in chartList)
                 {
@@ -209,11 +345,10 @@ namespace OurTaiko.Online
                 cancel.ThrowIfCancellationRequested();
                 lock (sync)
                 {
-                    e.Scores.Clear(); e.Best.Clear();
-                    foreach (var score in scores) { e.Scores.Add(score); e.IndexScore(score); }
                     charts[e.Id] = list;
                     categoryLists[e.Id] = folders;
                     playlistLists[e.Id] = playlists;
+                    ReadPersonalPlaylists(e);
                     e.ChartCount = list.Count;
                     e.IsConnected = true;
                     catalogProgress = (1, 1);
@@ -226,8 +361,6 @@ namespace OurTaiko.Online
                 SetStatus(e.Config.DisplayName + ": " + error.Message);
                 throw;
             }
-            finally { e.Transport.Release(); }
-            Update();
         }
 
         // Course-keyed difficulties, signed resource links and replay uploads.
@@ -268,7 +401,7 @@ namespace OurTaiko.Online
             };
             try
             {
-                UploadQueue.Enqueue(e.Id, RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), chart.TjaHash, chart.AudioHash);
+                UploadQueue.Enqueue(e.AccountId, RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), chart.TjaHash, chart.AudioHash);
                 lock (sync) retryAt = DateTime.MinValue;
                 Update();
                 return true;
@@ -304,7 +437,7 @@ namespace OurTaiko.Online
             foreach (var e in Endpoints)
             {
                 if (!e.IsConnected || !e.IsAuthenticated) continue;
-                foreach (var queued in UploadQueue.Pending(e.Id))
+                foreach (var queued in UploadQueue.Pending(e.AccountId))
                 {
                     try
                     {
@@ -349,7 +482,7 @@ namespace OurTaiko.Online
             }
         }
 
-        public int PendingCount(FanmadeEndpoint e) => UploadQueue.Pending(e.Id).Length;
+        public int PendingCount(FanmadeEndpoint e) => UploadQueue.Pending(e.AccountId).Length;
 
         static string RandomKey()
         {

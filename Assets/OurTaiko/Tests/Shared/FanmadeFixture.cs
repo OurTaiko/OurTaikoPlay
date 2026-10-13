@@ -75,6 +75,8 @@ namespace OurTaiko.Tests
         public readonly ConcurrentDictionary<string, JObject> Idempotent = new ConcurrentDictionary<string, JObject>();
         public readonly ConcurrentBag<string> Requests = new ConcurrentBag<string>();
         public readonly List<JObject> AccountScores = new List<JObject>();
+        // GET /game/playlists for any signed-in account; null plays a server without that list (404).
+        public JArray AccountPlaylists;
         public int Downloads;
         // Paths answered with this status instead of their normal reply.
         public readonly ConcurrentDictionary<string, int> Fail = new ConcurrentDictionary<string, int>();
@@ -165,7 +167,7 @@ namespace OurTaiko.Tests
                 { Reply(context, 401, new JObject { ["error"] = "SESSION" }); return; }
                 var parts = path.Trim('/').Split('/');
                 if (request.HttpMethod == "POST" && path == "/api/v1/game/login") { Login(context, JObject.Parse(body)); return; }
-                if (request.HttpMethod == "GET" && path == "/api/v1/game/bootstrap") { Bootstrap(context, user); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v1/game/catalog") { Bootstrap(context); return; }
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/search")
                 {
                     var q = new SongSearchQuery(request.QueryString["q"]);
@@ -205,6 +207,18 @@ namespace OurTaiko.Tests
                     Bytes(context, parts[2] == "tja" ? chart.Tja : chart.Audio);
                     return;
                 }
+                if (request.HttpMethod == "GET" && path == "/api/v1/game/scores")
+                {
+                    if (user == null) { Reply(context, 401, new JObject()); return; }
+                    lock (AccountScores) Reply(context, 200, new JObject { ["scores"] = new JArray(AccountScores.Where(s => (string)s["user"] == user)) });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && path == "/api/v1/game/playlists" && AccountPlaylists != null)
+                {
+                    if (user == null) { Reply(context, 401, new JObject()); return; }
+                    Reply(context, 200, new JObject { ["playlists"] = AccountPlaylists, ["playlistVersion"] = 1 });
+                    return;
+                }
                 if (request.HttpMethod == "POST" && path == "/api/v1/game/scores") { Score(context, user, request.Headers["Idempotency-Key"], JObject.Parse(body)); return; }
                 Reply(context, 404, new JObject());
             }
@@ -225,18 +239,16 @@ namespace OurTaiko.Tests
             });
         }
 
-        void Bootstrap(HttpListenerContext context, string user)
+        // GET /game/catalog: public, the same for every caller.
+        void Bootstrap(HttpListenerContext context)
         {
             var categories = new JArray(Categories.Select(c => new JObject
             {
                 ["id"] = c.Id, ["title"] = c.Title, ["genre"] = c.Genre, ["chartCount"] = Charts.Count(x => x.Categories.Contains(c.Id)),
             }));
-            JArray scores;
-            lock (AccountScores) scores = user == null ? new JArray() : new JArray(AccountScores.Where(s => (string)s["user"] == user));
             var reply = new JObject
             {
-                ["user"] = user == null ? null : new JObject { ["username"] = user },
-                ["categories"] = categories, ["chartCount"] = Charts.Count, ["scores"] = scores,
+                ["categories"] = categories, ["chartCount"] = Charts.Count,
                 ["charts"] = new JArray(Charts.Select(c => c.ToJson())),
             };
             reply.Merge(Protocol);

@@ -23,6 +23,9 @@ namespace OurTaiko.Online
         public readonly ServerConfig Config;
         // sha256(base_url + "\n" + username): accounts on one server keep separate caches and queues.
         public readonly string Id;
+        // The same hash for the account currently set: what pending scores are queued under. It
+        // differs from Id only on an endpoint whose account was changed with SetAccount.
+        public string AccountId => Sha256Hex(Encoding.UTF8.GetBytes(Config.baseUrl + "\n" + Config.username));
         public bool IsConnected { get; internal set; }
         public bool IsAuthenticated => authenticated;
         public int ChartCount { get; internal set; } = -1;
@@ -94,6 +97,18 @@ namespace OurTaiko.Online
         }
 
         public void BecomeGuest() { token = ""; authenticated = false; }
+
+        // Another account on the same server and catalog: signed out until LoginAsync. False when
+        // the account is the one already set.
+        internal bool SetAccount(string username, string password)
+        {
+            username ??= ""; password ??= "";
+            if (Config.username == username && Config.password == password) return false;
+            Config.username = username; Config.password = password;
+            Nickname = "";
+            BecomeGuest();
+            return true;
+        }
 
         // An expired token logs in once more and repeats the request.
         public async Task<string> AuthorizedAsync(string path, string body = "", string key = "", CancellationToken cancel = default)

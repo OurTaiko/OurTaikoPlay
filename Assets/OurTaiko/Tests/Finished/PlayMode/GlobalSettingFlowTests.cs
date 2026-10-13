@@ -66,7 +66,8 @@ namespace OurTaiko.Tests
                 Assert.That(view.typeRows[1].label.text, Is.EqualTo("Play"));
                 Assert.That(view.typeRows[2].label.text, Is.EqualTo("Display"));
                 Assert.That(view.typeRows[3].label.text, Is.EqualTo("Sound"));
-                Assert.That(view.typeRows[4].label.text, Is.EqualTo("Return"));
+                Assert.That(view.typeRows[4].label.text, Is.EqualTo("OurTaiko Accounts"));
+                Assert.That(view.typeRows[5].label.text, Is.EqualTo("Return"));
                 Assert.That(view.itemRows[0].label.text, Is.EqualTo("Enable Drumpad for Single Player Mode"));
                 Assert.That(view.itemRows[0].value.text, Is.EqualTo("Enabled"));
                 Assert.That(view.typeRows[1].box.sprite, Is.SameAs(view.typeBoxSelected));
@@ -163,7 +164,7 @@ namespace OurTaiko.Tests
                 scene.Ka(1);
                 scene.Don();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
-                scene.Ka(2);
+                scene.Ka(3);
                 scene.Don();
                 Assert.That(scene.HasLeft, Is.True);
                 yield return WaitForScene(SceneSwitcher.EntryScene);

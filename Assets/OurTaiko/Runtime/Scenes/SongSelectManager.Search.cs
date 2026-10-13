@@ -52,7 +52,7 @@ namespace OurTaiko
             searchSongs.AddRange(found.Distinct().OrderByDescending(NeedsClear));
             var errors = replies.Where(r => r.Error != null).Select(r => r.Endpoint.Config.DisplayName + ": " + r.Error).ToList();
             foreach (var config in online.EnabledServers)
-                if (!online.Client.Endpoints.Any(e => e.IsConnected && e.Config.baseUrl.TrimEnd('/') == (config.baseUrl ?? "").TrimEnd('/') && e.Config.username == (config.username ?? "")))
+                if (!online.Client.Endpoints.Any(e => e.IsConnected && e.Config.baseUrl.TrimEnd('/') == (config.baseUrl ?? "").TrimEnd('/')))
                     errors.Add(config.DisplayName + ": offline");
             SearchStatus = string.Join(" · ", errors);
             SearchQuery = query; SearchActive = true;

@@ -1,9 +1,51 @@
+using System.Linq;
 using NUnit.Framework;
 
 namespace OurTaiko.Tests
 {
     public sealed class OffsetSettingsTests
     {
+        [Test]
+        public void AccountTextIsTypedAndSavedWithTheOtherSettings()
+        {
+            var menu = new SettingsMenu(SettingsMenu.Catalog(), new GameSettings());
+            menu.Ka(4);
+            Assert.That(menu.CurrentType.Label, Is.EqualTo("OurTaiko Accounts"));
+            Assert.That(menu.CurrentType.Items.Select(i => i.Label), Is.EqualTo(new[] { "1P Username", "1P Password", "Refresh Song List", "Refresh Login Status" }), "2P is not listed yet.");
+            menu.Don();
+            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("Not set"));
+            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Entered));
+            Assert.That(menu.EditingText, Is.True);
+            // The field owns the keys while typing; only its submit or a step back ends it.
+            Assert.That(menu.Ka(1), Is.EqualTo(SettingsMenu.Result.None));
+            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.None));
+            Assert.That(menu.Back(), Is.EqualTo(SettingsMenu.Result.Returned));
+            Assert.That(menu.Settings.accounts.p1Username, Is.Empty);
+            menu.Don();
+            Assert.That(menu.SubmitText(" don "), Is.EqualTo(SettingsMenu.Result.Changed));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("don"));
+            menu.Ka(1); menu.Don();
+            Assert.That(menu.CurrentItem.IsSecret, Is.True);
+            menu.SubmitText("katsu");
+            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("*****"), "A password is never shown.");
+
+            // The buttons open nothing: the scene runs them and writes their status.
+            menu.Ka(1);
+            Assert.That(menu.CurrentItem.ActionId, Is.EqualTo(SettingsMenu.RefreshSongListAction));
+            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Action));
+            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+            menu.CurrentItem.Status = "Done";
+            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("Done"));
+
+            string json = menu.Settings.ToJson();
+            Assert.That(json, Does.Contain("p2Username").And.Contain("p2Password"), "2P is kept in the file.");
+            var restored = GameSettings.FromJson(json);
+            Assert.That(restored.accounts.p1Username, Is.EqualTo("don"));
+            Assert.That(restored.accounts.p1Password, Is.EqualTo("katsu"));
+            Assert.That(GameSettings.FromJson("{}").accounts.p1Username, Is.Empty);
+        }
+
         [Test]
         public void NumbersStageSignedStepsAndOnlyConfirmPersists()
         {

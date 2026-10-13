@@ -1,3 +1,5 @@
+using System.Threading;
+using OurTaiko.Online;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,7 +9,9 @@ namespace OurTaiko
     // (left = up, right = down) moves within the focused list, don confirms; Esc steps back one
     // level. Taps work like SongSelect's boards (tap another row to move to it, tap the focused row
     // to confirm); the choice popup takes a tap on a choice to apply it and a tap outside it to
-    // close it, and both lists also take vertical swipes. Each
+    // close it, and both lists also take vertical swipes. A text item is typed into the popup's
+    // field: Enter applies it, Esc or a tap outside cancels. An action row (refreshing the song
+    // list or the login) runs when confirmed and reports on the line above the items. Each
     // applied choice is saved at once through SettingManager; leaving returns to Entry.
     public sealed class GlobalSettingScene : MonoBehaviour
     {
@@ -20,6 +24,11 @@ namespace OurTaiko
 
         SceneSwitcher switcher;
         int captureFrame;
+        // TMP_InputField handles Enter/Esc itself; the frame it does so ignores the same key here.
+        int textKeyFrame = -1;
+        // The running settings action; leaving the scene cancels it.
+        SettingItem running;
+        CancellationTokenSource actionCancel;
 
         void Awake()
         {
@@ -30,6 +39,12 @@ namespace OurTaiko
                 d => Run(() => Menu.SwipeTypes(d)), d => Run(() => Menu.SwipeItems(d)),
                 () => { if (Menu.Focus == SettingsFocus.Choice) Run(() => Menu.Back()); },
                 d => { if (Menu.Focus == SettingsFocus.Choice) Ka(d); });
+            if (view.textField != null)
+            {
+                view.textField.onSubmit.AddListener(text => { textKeyFrame = Time.frameCount; Handle(Menu.SubmitText(text)); });
+                // Ending the edit any other way (Esc, a tap elsewhere) leaves the value as it was.
+                view.textField.onEndEdit.AddListener(_ => { textKeyFrame = Time.frameCount; if (Menu.EditingText) Handle(Menu.Back()); });
+            }
             view.Show(Menu);
             switcher.SceneChanging += OnSceneChanging;
         }
@@ -46,6 +61,7 @@ namespace OurTaiko
         void OnDestroy()
         {
             if (switcher != null) switcher.SceneChanging -= OnSceneChanging;
+            actionCancel?.Cancel();
         }
 
         void OnSceneChanging(string scene)
@@ -55,6 +71,11 @@ namespace OurTaiko
 
         void Update()
         {
+            if (running != null)
+            {
+                string activity = OnlineManager.EnsureInstance().Activity;
+                if (activity.Length > 0 && view.status != activity) { view.status = activity; view.Show(Menu); }
+            }
             if (switcher.IsInputBlocked || HasLeft) return;
             if (Menu.CapturingKey)
             {
@@ -63,6 +84,8 @@ namespace OurTaiko
                     if (key.wasPressedThisFrame) { Handle(Menu.CaptureKey(key.keyCode)); break; }
                 return;
             }
+            // Typed letters also reach the drum keys; the field takes every key while it is open.
+            if (Menu.EditingText || Time.frameCount == textKeyFrame) return;
             if (InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm))
                 Don();
             else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuUp) || InputManager.GetKeyDown(InputKey.MenuLeft))
@@ -79,9 +102,10 @@ namespace OurTaiko
         void Run(System.Func<SettingsMenu.Result> action)
         {
             if (switcher.IsInputBlocked || HasLeft) return;
-            bool capturing = Menu.CapturingKey;
+            bool capturing = Menu.CapturingKey, typing = Menu.EditingText;
             Handle(action());
             if (!capturing && Menu.CapturingKey) captureFrame = Time.frameCount;
+            if (!typing && Menu.EditingText) view.BeginText(Menu.CurrentItem.GetText(Menu.Settings), Menu.CurrentItem.IsSecret);
         }
         void Handle(SettingsMenu.Result result)
         {
@@ -95,11 +119,42 @@ namespace OurTaiko
                 else Play(don);
             }
             else Play(result == SettingsMenu.Result.Moved ? ka : don);
+            if (result == SettingsMenu.Result.Action) RunAction(Menu.CurrentItem);
             if (result == SettingsMenu.Result.Exit)
             {
                 HasLeft = true;
                 SaveAndLeave();
             }
+            view.Show(Menu);
+        }
+
+        // The account typed above was saved when it was entered, so the manager reads the current one.
+        async void RunAction(SettingItem item)
+        {
+            var online = OnlineManager.EnsureInstance();
+            if (running != null || online.IsBusy) { view.status = "Still busy with the previous request."; return; }
+            running = item;
+            item.Status = "Working…";
+            actionCancel = new CancellationTokenSource();
+            var cancel = actionCancel;
+            try
+            {
+                if (item.ActionId == SettingsMenu.RefreshSongListAction)
+                {
+                    await online.LoadSongListAsync(cancel.Token);
+                    view.status = online.SongListSummary;
+                }
+                else
+                {
+                    await online.LoginAsync(cancel.Token);
+                    view.status = online.LoginSummary;
+                }
+            }
+            catch (System.Exception error) { view.status = error.Message; Debug.LogWarning(error); }
+            finally { cancel.Dispose(); if (actionCancel == cancel) actionCancel = null; }
+            if (this == null) return;
+            running = null;
+            item.Status = "Done";
             view.Show(Menu);
         }
 

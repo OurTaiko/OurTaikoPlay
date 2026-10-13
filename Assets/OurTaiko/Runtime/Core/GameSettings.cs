@@ -12,6 +12,7 @@ namespace OurTaiko
         public PlaySettings play = new PlaySettings();
         public DisplaySettings display = new DisplaySettings();
         public AudioOptions audio = new AudioOptions();
+        public AccountSettings accounts = new AccountSettings();
 
         public GameSettings Clone() => FromJson(ToJson());
         public string ToJson() => JsonUtility.ToJson(this, true);
@@ -29,6 +30,7 @@ namespace OurTaiko
             settings.audio ??= new AudioOptions();
             settings.audio.volume ??= new SoundVolumes();
             settings.audio.backend = settings.audio.Backend;
+            settings.accounts ??= new AccountSettings();
             return settings;
         }
     }
@@ -45,6 +47,15 @@ namespace OurTaiko
         public string[] songLibraryPaths = Array.Empty<string>();
         public KeyboardBindings keyboard = new KeyboardBindings();
         public string Language => Array.IndexOf(Languages, language) >= 0 ? language : "en";
+    }
+
+    // The OurTaiko account of each player, used by the built-in servers.
+    [Serializable]
+    public sealed class AccountSettings
+    {
+        public string p1Username = "", p1Password = "";
+        // File-only until two players can play online.
+        public string p2Username = "", p2Password = "";
     }
 
     [Serializable]

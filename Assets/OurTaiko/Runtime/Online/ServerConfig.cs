@@ -20,10 +20,9 @@ namespace OurTaiko.Online
         public string DisplayName => string.IsNullOrEmpty(name) ? baseUrl : name;
     }
 
-    // servers.json in the persistent data folder. The built-in servers (OurTaiko Fanmade and the ESE
-    // backend) are always listed: a missing file is written with them, and an existing file gets
-    // any built-in address it lacks; turn one off with "enabled": false. Accounts are filled in by
-    // ServerLogin.
+    // servers.json in the persistent data folder: the additional servers, each with the account
+    // ServerLogin filled in. The built-in servers (OurTaiko Fanmade and the ESE backend) are fixed
+    // here and never written to the file; they use the OurTaiko account of the settings.
     [Serializable]
     public sealed class ServerList
     {
@@ -36,25 +35,11 @@ namespace OurTaiko.Online
 
         public List<ServerConfig> servers = new List<ServerConfig>();
 
-        public static ServerList Default()
-        {
-            var list = new ServerList();
-            list.AddBuiltIn();
-            return list;
-        }
+        public static bool IsBuiltIn(string baseUrl) =>
+            Array.Exists(BuiltIn, b => string.Equals(b.Url, (baseUrl ?? "").Trim().TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
 
-        // True when a built-in server was added.
-        public bool AddBuiltIn()
-        {
-            bool added = false;
-            foreach (var (name, url) in BuiltIn)
-            {
-                if (servers.Exists(s => (s.baseUrl ?? "").TrimEnd('/') == url)) continue;
-                servers.Add(new ServerConfig { name = name, baseUrl = url });
-                added = true;
-            }
-            return added;
-        }
+        // Drops the built-in addresses older versions listed in the file. True when one was removed.
+        public bool RemoveBuiltIn() => servers.RemoveAll(s => IsBuiltIn(s.baseUrl)) > 0;
 
         public static ServerList Read(string path)
         {

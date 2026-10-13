@@ -10,6 +10,7 @@ namespace OurTaiko
     // on the left and the current type's item list on the right. Confirming an item opens the
     // choice popup (the item's name, description and choice buttons) over a dimming shade; the
     // popup is hidden while types and items are being chosen, and a tap on the shade closes it.
+    // A text item's popup has an input field in place of the choice buttons.
     // Row 0 of each list is the authored base; row i sits `pitch` below row i - 1, and missing
     // rows are copied from row 0 at runtime.
     public sealed class GlobalSettingView : MonoBehaviour
@@ -44,6 +45,10 @@ namespace OurTaiko
 
         public PointerRelay previousItems, nextItems, previousChoice, nextChoice;
         public TMP_Text itemPage, outputStatus;
+        [Tooltip("Typed settings (account names and passwords): shown in the popup instead of the choices.")]
+        public TMP_InputField textField;
+        // The line above the items outside the Sound type: how a settings action is going or ended.
+        [NonSerialized] public string status = "";
         public int visibleItems = 4;
         public int FirstItem { get; private set; }
         public int FirstChoice { get; private set; }
@@ -109,7 +114,7 @@ namespace OurTaiko
             int types = menu.TypeCount;
             int items = menu.CurrentType != null ? menu.ItemCount : 0;
             var item = menu.CurrentItem;
-            bool numeric = item?.IsNumber == true;
+            bool numeric = item?.IsNumber == true, typing = menu.EditingText;
             int choices = numeric ? 1 : menu.Choices.Count;
             int before = typeRows.Count + itemRows.Count + choiceRows.Count;
             Ensure(typeRows, types);
@@ -141,7 +146,8 @@ namespace OurTaiko
                 outputStatus.text = menu.CurrentType?.Label == "Sound" && engine != null
                     ? (!engine.Available ? "No audio output: " + engine.Failure
                         : engine.Silent ? "No output device (silent): " + engine.Failure
-                        : $"Current output: {engine.Backend}") + (engine.HasPendingDeviceChanges ? "   •   Applies on exit" : "") : "";
+                        : $"Current output: {engine.Backend}") + (engine.HasPendingDeviceChanges ? "   •   Applies on exit" : "") : status ?? "";
+                outputStatus.enableAutoSizing = true; outputStatus.fontSizeMin = 18; outputStatus.fontSizeMax = 30;
             }
             bool inItems = menu.Focus != SettingsFocus.Types;
             for (int i = 0; i < itemRows.Count; i++)
@@ -166,6 +172,7 @@ namespace OurTaiko
             detail.alpha = open ? 1 : 0;
             detail.blocksRaycasts = open;
             shade.gameObject.SetActive(open);
+            if (textField != null) textField.gameObject.SetActive(typing);
             if (previousChoice != null) previousChoice.gameObject.SetActive(open && !menu.CapturingKey && (numeric || choices > 3));
             if (nextChoice != null) nextChoice.gameObject.SetActive(open && !menu.CapturingKey && (numeric || choices > 3));
             if (open)
@@ -179,6 +186,7 @@ namespace OurTaiko
                 if (shownItem.BindingKey.HasValue && !menu.CapturingKey)
                     description.text += "\nBound: " + menu.Settings.general.keyboard.Format(shownItem.BindingKey.Value);
                 if (numeric) description.text += "  " + shownItem.NumberHint;
+                if (typing) description.text += "\nEnter: save / Esc or tap outside: cancel";
                 int lit = numeric ? 0 : menu.ChoiceIndex;
                 FirstChoice = Mathf.Clamp(lit - 1, 0, Math.Max(0, choices - 3));
                 int count = Math.Min(3, choices);
@@ -204,8 +212,19 @@ namespace OurTaiko
                 SettingsFocus.Items => itemRows[menu.ItemIndex].root,
                 _ => choiceRows[numeric ? 0 : menu.ChoiceIndex - FirstChoice].root,
             };
-            cursor.gameObject.SetActive(!menu.CapturingKey);
+            cursor.gameObject.SetActive(!menu.CapturingKey && !typing);
             PlaceCursor(target);
+        }
+
+        // Opens the popup's field on a text item's current value, ready for typing.
+        public void BeginText(string text, bool secret)
+        {
+            textField.contentType = secret ? TMP_InputField.ContentType.Password : TMP_InputField.ContentType.Standard;
+            textField.SetTextWithoutNotify(text);
+            textField.ForceLabelUpdate();
+            textField.Select();
+            textField.ActivateInputField();
+            textField.MoveTextEnd(false);
         }
 
         void PlaceCursor(RectTransform target)

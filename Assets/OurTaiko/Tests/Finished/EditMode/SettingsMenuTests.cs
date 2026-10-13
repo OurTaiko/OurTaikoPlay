@@ -18,7 +18,7 @@ namespace OurTaiko.Tests
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types), "The focus starts on the types.");
             Assert.That(menu.Types[0].Label, Is.EqualTo("General"));
             Assert.That(menu.Types[1].Label, Is.EqualTo("Play"));
-            Assert.That(menu.TypeCount, Is.EqualTo(5), "General, Play, Display, Sound and Return.");
+            Assert.That(menu.TypeCount, Is.EqualTo(6), "General, Play, Display, Sound, OurTaiko Accounts and Return.");
 
             // ka wraps through Play, Display and Return; the item focus does not move with it.
             Assert.That(menu.Ka(-2), Is.EqualTo(SettingsMenu.Result.Moved));

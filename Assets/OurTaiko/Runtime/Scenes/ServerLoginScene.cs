@@ -10,7 +10,8 @@ using UnityEngine;
 namespace OurTaiko
 {
     // Between Entry's play/practice modes and SongSelect, after MajdataPlay's Login scene: each enabled server
-    // of servers.json is shown in turn with its account. ログイン logs in and loads the catalog with
+    // of servers.json is shown in turn with its account. The built-in servers are not shown: they
+    // were connected at startup (Presented scene) and stay connected. ログイン logs in and loads the catalog with
     // the account's scores, ゲスト loads the catalog only (no score upload, as in OurTaikoPlayer),
     // スキップ leaves the server out, もどる returns to Entry. A remembered account that logged in
     // last time logs in on its own. With no enabled server the scene goes straight to SongSelect.
@@ -53,8 +54,8 @@ namespace OurTaiko
             view.username.onEndEdit.AddListener(_ => fieldKeyFrame = Time.frameCount);
             view.password.onEndEdit.AddListener(_ => fieldKeyFrame = Time.frameCount);
             switcher.SceneChanging += OnSceneChanging;
-            // OurTaikoPlayer refreshes every server whenever song select is entered from the mode select.
-            online.Disconnect();
+            // The servers.json servers refresh whenever song select is entered from the mode select.
+            online.DisconnectAdditional();
             SongSelectManager.EnsureInstance().Reset();
             // Rescan the songs folder meanwhile, so songs added since the last visit appear.
             LocalSongLibrary.EnsureInstance().Refresh();

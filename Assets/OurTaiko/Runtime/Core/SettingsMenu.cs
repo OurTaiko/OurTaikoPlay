@@ -7,7 +7,8 @@ namespace OurTaiko
 {
     public enum SettingsFocus { Types, Items, Choice }
 
-    // An editable field, either named choices or an integer adjusted by a configured step.
+    // An editable field: named choices, an integer adjusted by a configured step, or typed text.
+    // An action is a button instead: confirming it runs it, and its value column shows Status.
     public sealed class SettingItem
     {
         public string Label { get; }
@@ -18,6 +19,15 @@ namespace OurTaiko
         public int DefaultValue { get; private set; }
         public int Step { get; private set; }
         public string Unit { get; private set; }
+        public bool IsText { get; private set; }
+        // Text shown masked (a password).
+        public bool IsSecret { get; private set; }
+        // Which action the settings scene runs for this row; null for a field.
+        public string ActionId { get; private set; }
+        public bool IsAction => ActionId != null;
+        public string Status { get; set; } = "";
+        Func<GameSettings, string> getText;
+        Action<GameSettings, string> setText;
         readonly Func<GameSettings, int> get;
         readonly Action<GameSettings, int> set;
         int minimum = int.MinValue, maximum = int.MaxValue;
@@ -34,8 +44,12 @@ namespace OurTaiko
             "Keys move from their old action. Mouse/touch works even when unbound.",
             Array.Empty<string>(), _ => 0, (_, __) => { }) { BindingKey = key };
 
-        public string Format(GameSettings settings) => BindingKey.HasValue
-            ? settings.general.keyboard.Format(BindingKey.Value) : Format(Get(settings));
+        public string Format(GameSettings settings) => BindingKey.HasValue ? settings.general.keyboard.Format(BindingKey.Value)
+            : IsText ? FormatText(GetText(settings)) : IsAction ? Status : Format(Get(settings));
+
+        string FormatText(string text) => text.Length == 0 ? "Not set" : IsSecret ? new string('*', Math.Min(text.Length, 12)) : text;
+        public string GetText(GameSettings settings) => getText(settings) ?? "";
+        public void SetText(GameSettings settings, string text) => setText(settings, text ?? "");
 
         public string NumberHint => $"Default: {Format(DefaultValue)} / Step: {StepDisplay}"
             + (formatNumber == null ? " / Ka: adjust / Don or tap: save" : "");
@@ -56,6 +70,13 @@ namespace OurTaiko
                 { IsNumber = true, DefaultValue = defaultValue, Step = step, Unit = unit,
                     minimum = minimum, maximum = maximum, formatNumber = format };
         }
+
+        public static SettingItem Text(string label, string description, Func<GameSettings, string> get, Action<GameSettings, string> set, bool secret = false)
+            => new SettingItem(label, description, Array.Empty<string>(), _ => 0, (_, __) => { })
+                { IsText = true, IsSecret = secret, getText = get, setText = set };
+
+        public static SettingItem Action(string label, string description, string id)
+            => new SettingItem(label, description, Array.Empty<string>(), _ => 0, (_, __) => { }) { ActionId = id };
 
         // settings_template's bool rows: "Enabled" for true, "Disabled" for false.
         public static SettingItem Toggle(string label, string description, Func<GameSettings, bool> get, Action<GameSettings, bool> set)
@@ -85,9 +106,11 @@ namespace OurTaiko
     // ka moves through the items and don opens the item's choices; ka moves through the choices
     // and don applies one, returning the focus to the items. Both lists end with a Return entry:
     // the types' Return leaves the menu, the items' Return goes back to the types. Lists wrap.
+    // A text item has no choices: don opens it for typing and SubmitText applies what was typed.
+    // An action item opens nothing: don reports Action and the scene runs it.
     public sealed class SettingsMenu
     {
-        public enum Result { None, Moved, Entered, Returned, Changed, Exit }
+        public enum Result { None, Moved, Entered, Returned, Changed, Exit, Action }
 
         public IReadOnlyList<SettingType> Types { get; }
         public GameSettings Settings { get; private set; }
@@ -97,6 +120,7 @@ namespace OurTaiko
         public int ItemIndex { get; private set; }
         public int ChoiceIndex { get; private set; }
         public bool CapturingKey { get; private set; }
+        public bool EditingText => Focus == SettingsFocus.Choice && CurrentItem?.IsText == true;
         public IReadOnlyList<string> Choices => CurrentItem?.BindingKey is InputKey key
             ? new[] { "Add Key", "Clear All", "Defaults" }.Concat(Settings.general.keyboard.Get(key).Select(k => "Remove " + k)).ToArray()
             : CurrentItem?.Choices ?? Array.Empty<string>();
@@ -108,6 +132,16 @@ namespace OurTaiko
             Settings.general.keyboard.Set(action, Settings.general.keyboard.Get(action).Concat(new[] { key }).ToArray());
             CapturingKey = false;
             ChoiceIndex = 0;
+            return Result.Changed;
+        }
+
+        public Result SubmitText(string text)
+        {
+            if (!EditingText) return Result.None;
+            var settings = Settings.Clone();
+            CurrentItem.SetText(settings, text);
+            Settings = settings;
+            Focus = SettingsFocus.Items;
             return Result.Changed;
         }
 
@@ -134,6 +168,8 @@ namespace OurTaiko
             foreach (var type in Types) type.Refresh(Settings);
             ItemIndex = Math.Min(ItemIndex, ItemCount - 1);
         }
+
+        public const string RefreshSongListAction = "refresh-song-list", RefreshLoginAction = "refresh-login";
 
         public static IReadOnlyList<SettingType> Catalog() => new[]
         {
@@ -171,6 +207,20 @@ namespace OurTaiko
                     s => s.display.vSync, (s, on) => s.display.vSync = on),
             }),
             new SettingType("Sound", s => SoundSettings.Catalog(SoundSettings.Platform, s.audio.Backend)),
+            // The 2P account is saved in the file but not listed until two players can play online.
+            new SettingType("OurTaiko Accounts", new[]
+            {
+                SettingItem.Text("1P Username",
+                    "1P's OurTaiko account for the built-in servers. Empty: guest, scores are not saved.",
+                    s => s.accounts.p1Username, (s, text) => s.accounts.p1Username = text.Trim()),
+                SettingItem.Text("1P Password",
+                    "The password of 1P's OurTaiko account, saved in the settings file on this device.",
+                    s => s.accounts.p1Password, (s, text) => s.accounts.p1Password = text, secret: true),
+                SettingItem.Action("Refresh Song List",
+                    "Load the built-in servers' song lists again.", RefreshSongListAction),
+                SettingItem.Action("Refresh Login Status",
+                    "Sign in to the built-in servers again with the account above.", RefreshLoginAction),
+            }),
         };
 
         public int TypeCount => Types.Count + 1;
@@ -183,7 +233,7 @@ namespace OurTaiko
         // Drum ka: left ka = -1 (up), right ka = +1 (down) within the focused list.
         public Result Ka(int delta)
         {
-            if (CapturingKey || delta == 0) return Result.None;
+            if (CapturingKey || EditingText || delta == 0) return Result.None;
             switch (Focus)
             {
                 case SettingsFocus.Types: TypeIndex = Wrap(TypeIndex + delta, TypeCount); ItemIndex = 0; break;
@@ -196,7 +246,7 @@ namespace OurTaiko
         // Drum don: confirm the focused entry.
         public Result Don()
         {
-            if (CapturingKey) return Result.None;
+            if (CapturingKey || EditingText) return Result.None;
             switch (Focus)
             {
                 case SettingsFocus.Types:
@@ -206,6 +256,7 @@ namespace OurTaiko
                     return Result.Entered;
                 case SettingsFocus.Items:
                     if (IsItemReturn) { Focus = SettingsFocus.Types; return Result.Returned; }
+                    if (CurrentItem.IsAction) return Result.Action;
                     Focus = SettingsFocus.Choice;
                     ChoiceIndex = CurrentItem.Get(Settings);
                     return Result.Entered;
