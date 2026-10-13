@@ -100,14 +100,16 @@ namespace OurTaiko.Online
         // the account's scores. Cancelling stops at the current request and keeps what has arrived.
         public async Task StartUpAsync(CancellationToken cancel = default)
         {
-            await LoadSongListAsync(cancel);
-            if (!cancel.IsCancellationRequested) await LoginAsync(cancel);
+            // One rebuild of the song list for both steps, also when the startup is cancelled midway.
+            await LoadSongListAsync(cancel, refresh: false);
+            if (!cancel.IsCancellationRequested) await LoginAsync(cancel, refresh: false);
+            if (this != null) RefreshSongs();
         }
 
         // Signs 1P in to the built-in servers with the settings' OurTaiko account and loads its
         // scores; no song list is requested. The nickname of the first server that accepts the account goes on the nameplate.
         // 2P has no online play yet and is not signed in. True when a server accepted the account.
-        public async Task<bool> LoginAsync(CancellationToken cancel = default)
+        public async Task<bool> LoginAsync(CancellationToken cancel = default, bool refresh = true)
         {
             if (IsBusy) return false;
             IsBusy = true;
@@ -136,6 +138,8 @@ namespace OurTaiko.Online
                     }
                 }
                 if (this != null && nickname != null) ShowNickname(nickname);
+                // The account's own playlists are folders too.
+                if (this != null && refresh) RefreshSongs();
             }
             finally { Activity = ""; LoginSummary = string.Join("   •   ", results); IsBusy = false; }
             return nickname != null;
@@ -143,7 +147,7 @@ namespace OurTaiko.Online
 
         // Loads the built-in servers' song lists again; accounts and scores stay as they are. A
         // server that fails keeps the list it had.
-        public async Task LoadSongListAsync(CancellationToken cancel = default)
+        public async Task LoadSongListAsync(CancellationToken cancel = default, bool refresh = true)
         {
             if (IsBusy) return;
             IsBusy = true;
@@ -168,7 +172,7 @@ namespace OurTaiko.Online
                         results.Add(name + ": " + (cancel.IsCancellationRequested ? "cancelled" : Describe(error)));
                     }
                 }
-                if (this != null) RefreshSongs();
+                if (this != null && refresh) RefreshSongs();
             }
             finally { Activity = ""; SongListSummary = string.Join("   •   ", results); IsBusy = false; }
         }
@@ -288,9 +292,17 @@ namespace OurTaiko.Online
             }
             foreach (string key in byKey.Keys.Where(k => !keep.Contains(k)).ToList()) byKey.Remove(key);
             folders.Clear();
-            // A double chart is two songs (P1 and P2) under one chart id.
+            // A double chart is two songs (P1 and P2) under one chart id. Indexed once: looking each
+            // id up among every song took seconds with a catalog of a few thousand songs.
+            var byChart = new Dictionary<(string Server, string Id), List<SongDefinition>>();
+            foreach (var song in songs)
+            {
+                var chart = charts[song];
+                if (!byChart.TryGetValue((chart.Server, chart.Id), out var list)) byChart[(chart.Server, chart.Id)] = list = new List<SongDefinition>(1);
+                list.Add(song);
+            }
             SongDefinition[] SongsOf(string server, IEnumerable<string> ids) =>
-                ids.SelectMany(id => songs.Where(song => charts[song].Server == server && charts[song].Id == id)).ToArray();
+                ids.SelectMany(id => byChart.TryGetValue((server, id), out var list) ? list : Enumerable.Empty<SongDefinition>()).ToArray();
             foreach (var category in Client.Categories)
                 folders.Add(new SongFolder
                 {

@@ -155,13 +155,12 @@ namespace OurTaiko
                 switcher.PracticeMode = view.boards[Flow.SelectedMode].practice;
                 string scene = Modes[Flow.SelectedMode].Scene;
                 // With no server configured in servers.json there is nothing to log in to: song
-                // select follows directly, after the refresh ServerLogin does on the way.
-                var online = Online.OnlineManager.EnsureInstance();
-                if (scene == SceneSwitcher.ServerLoginScene && !online.Servers.servers.Exists(server => server.enabled))
+                // select follows directly, after the refresh ServerLogin does on the way. The online
+                // songs are already listed: OnlineManager rebuilds them whenever they change.
+                if (scene == SceneSwitcher.ServerLoginScene && !Online.OnlineManager.EnsureInstance().Servers.servers.Exists(server => server.enabled))
                 {
                     SongSelectManager.EnsureInstance().Reset();
                     LocalSongLibrary.EnsureInstance().Refresh();
-                    online.RefreshSongs();
                     scene = SceneSwitcher.SongSelectScene;
                 }
                 switcher.SwitchScene(scene);
