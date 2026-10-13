@@ -245,7 +245,7 @@ namespace OurTaiko.Tests
         }
         IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain)
         {
-            var settings = new GameSettings(); settings.audio.backend = backend;
+            var settings = new GameSettings(); settings.audio.backend = backend; settings.play.inputDelayMs = 0;
             SettingManager.EnsureInstance().UseUnsaved(settings);
             var apply = AudioEngine.EnsureInstance().ApplyPendingSettingsAsync();
             while (!apply.IsCompleted) yield return null;

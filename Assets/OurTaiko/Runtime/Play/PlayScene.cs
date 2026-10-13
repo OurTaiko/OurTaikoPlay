@@ -51,7 +51,13 @@ namespace OurTaiko
         public EndingView ending;
 
         public PlaySession Session { get; private set; }
-        public bool IsPaused { get; private set; }
+        // A drum press still waiting out the input delay must not land on the other side of a pause.
+        public bool IsPaused
+        {
+            get => paused;
+            private set { if (paused != value) InputManager.DropDelayed(); paused = value; }
+        }
+        bool paused;
         public bool IsFinished { get; private set; }
         public PlayResult Result { get; private set; }
         // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
@@ -133,6 +139,7 @@ namespace OurTaiko
             audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
             visualOffset = song.visualOffsetMs / 1000.0;
             judgeOffset = autoPlay ? 0 : playSettings.judgeOffsetMs / 1000.0;
+            InputManager.DrumDelay = Math.Min(Math.Max(0, playSettings.inputDelayMs), PlaySettings.InputDelayMaxMs) / 1000.0;
             Record = new Online.PlayRecord
             {
                 // Replay v1 stores already corrected judgment time. Keep its two-offset convention:
@@ -505,6 +512,7 @@ namespace OurTaiko
         }
         void OnDestroy()
         {
+            InputManager.DrumDelay = 0;
             if (switcher != null) switcher.SceneChanging -= PrepareToLeave;
             if (Session != null) Session.Judged -= OnJudged;
         }

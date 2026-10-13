@@ -41,6 +41,8 @@ namespace OurTaiko
         static readonly List<InputPress> pending = new List<InputPress>();
         static readonly List<InputPress> frame = new List<InputPress>();
         static readonly bool[] pressedThisFrame = new bool[KeyCount];
+        // Keys whose press arrived as an event since the last frame, so the poll does not add it again.
+        static readonly bool[] recorded = new bool[KeyCount];
         static readonly bool[] held = new bool[KeyCount];
         static readonly List<DrumPad> pads = new List<DrumPad>();
         static bool installed;
@@ -49,6 +51,9 @@ namespace OurTaiko
         public static IReadOnlyList<InputPress> PressesThisFrame => frame;
         public static bool GetKeyDown(InputKey key) => pressedThisFrame[(int)key];
         public static bool GetKey(InputKey key) => held[(int)key];
+        // Seconds a drum press waits before it is published, like the arcade's input delay.
+        // The play scene sets it for its lifetime; other keys and GetKey are never delayed.
+        public static double DrumDelay { get; set; }
 
         static InputManager() => ResetBindings();
 
@@ -82,6 +87,8 @@ namespace OurTaiko
         {
             pending.Clear(); frame.Clear(); pads.Clear();
             Array.Clear(pressedThisFrame, 0, KeyCount); Array.Clear(held, 0, KeyCount);
+            Array.Clear(recorded, 0, KeyCount);
+            DrumDelay = 0;
         }
 
         internal static void Initialize()
@@ -101,20 +108,41 @@ namespace OurTaiko
                 KeyControl control = keyboard[pair.Key];
                 if (control == null || control.isPressed) continue;
                 if (control.ReadValueFromEvent(eventPtr, out float value) && control.IsValueConsideredPressed(value))
+                {
                     pending.Add(new InputPress(pair.Value, eventPtr.time));
+                    recorded[(int)pair.Value] = true;
+                }
             }
         }
 
         // Called once per frame by GameLoop, ahead of every scene script.
         internal static void OnPreUpdate()
         {
-            frame.Clear(); frame.AddRange(pending); pending.Clear();
+            frame.Clear();
             Array.Clear(pressedThisFrame, 0, KeyCount);
             Array.Clear(held, 0, KeyCount);
-            foreach (var press in frame) pressedThisFrame[(int)press.Key] = true;
             PollKeyboard();
             PollPads();
+            Array.Clear(recorded, 0, KeyCount);
+            PublishDue(InputState.currentTime);
             SortFrame();
+        }
+
+        // Forgets the drum presses still waiting out DrumDelay.
+        public static void DropDelayed() => pending.RemoveAll(press => press.Key.IsDrum());
+
+        // Moves the presses whose delay has passed from pending to this frame; the rest wait.
+        static void PublishDue(double now)
+        {
+            int kept = 0;
+            for (int i = 0; i < pending.Count; i++)
+            {
+                var press = pending[i];
+                if (press.Key.IsDrum() && now - press.Time < DrumDelay) { pending[kept++] = press; continue; }
+                pressedThisFrame[(int)press.Key] = true;
+                frame.Add(press);
+            }
+            pending.RemoveRange(kept, pending.Count - kept);
         }
 
         static void PollKeyboard()
@@ -131,7 +159,7 @@ namespace OurTaiko
                     pressed |= control.wasPressedThisFrame;
                 }
                 // Fallback if an event was missed: keep the press, ordered after the recorded ones.
-                if (pressed && !pressedThisFrame[i]) AddPress((InputKey)i, InputState.currentTime);
+                if (pressed && !recorded[i]) pending.Add(new InputPress((InputKey)i, InputState.currentTime));
             }
         }
 
@@ -154,15 +182,9 @@ namespace OurTaiko
             {
                 if (!pad.TryHit(position, out var key)) continue;
                 held[(int)key] = true;
-                if (pressed) { AddPress(key, time); pad.Press(); }
+                if (pressed) { pending.Add(new InputPress(key, time)); pad.Press(); }
                 return;
             }
-        }
-
-        static void AddPress(InputKey key, double time)
-        {
-            pressedThisFrame[(int)key] = true;
-            frame.Add(new InputPress(key, time));
         }
 
         // Stable insertion sort: keyboard and pointer presses interleave by the time they happened.

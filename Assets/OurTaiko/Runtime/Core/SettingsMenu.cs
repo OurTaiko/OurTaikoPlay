@@ -194,6 +194,11 @@ namespace OurTaiko
                     "Move the judgment window only. Negative: earlier; positive: later.",
                     PlaySettings.OffsetDefaultMs, PlaySettings.OffsetStepMs, "ms",
                     s => s.play.judgeOffsetMs, (s, value) => s.play.judgeOffsetMs = value),
+                SettingItem.Number("Input Delay",
+                    "Delay drum hits before judgment, sound and effects, like the arcade. 0: off.",
+                    PlaySettings.InputDelayDefaultMs, PlaySettings.OffsetStepMs, "ms",
+                    s => s.play.inputDelayMs, (s, value) => s.play.inputDelayMs = value,
+                    0, PlaySettings.InputDelayMaxMs),
             }),
             new SettingType("Display", new[]
             {

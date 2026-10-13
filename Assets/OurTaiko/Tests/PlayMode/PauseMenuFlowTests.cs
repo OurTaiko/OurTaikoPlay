@@ -43,6 +43,10 @@ namespace OurTaiko.Tests
             keyboard.MakeCurrent();
             mouse.MakeCurrent();
             touchscreen.MakeCurrent();
+            // These tests check a press on the very next frame.
+            var settings = SettingManager.EnsureInstance().Settings.Clone();
+            settings.play.inputDelayMs = 0;
+            SettingManager.EnsureInstance().UseUnsaved(settings);
         }
 
         [UnityTearDown]

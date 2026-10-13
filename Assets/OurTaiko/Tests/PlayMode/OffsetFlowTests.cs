@@ -74,7 +74,7 @@ namespace OurTaiko.Tests
         static IEnumerator CheckPlay(bool practice, int a, int b)
         {
             SettingManager.EnsureInstance().UseUnsaved(new GameSettings
-                { play = new PlaySettings { audioOffsetMs = a, judgeOffsetMs = b } });
+                { play = new PlaySettings { audioOffsetMs = a, judgeOffsetMs = b, inputDelayMs = 0 } });
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:A B offset\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n0010,\n0010,\n#END");
             song.music = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/OurTaiko/Audio/entry/bgm.ogg");
