@@ -89,6 +89,7 @@ namespace OurTaiko
         public void Prepare(PlaySession session)
         {
             Session = session;
+            clocks = new ScrollClockTimeline(session.Chart);
             shownNotes = new NoteView[Session.Chart.Notes.Count];
             shownMoji = new MojiView[Session.Chart.Notes.Count];
             shownBars = new RectTransform[Session.Chart.Bars.Count];
@@ -257,8 +258,8 @@ namespace OurTaiko
             for (int i = 0; i < shownNotes.Length; i++) { if (shownNotes[i] != null) ReleaseNote(i); if (shownMoji[i] != null) ReleaseMoji(i); }
             for (int i = 0; i < shownBars.Length; i++) if (shownBars[i] != null) ReleaseBar(i);
             windowWidth = width;
-            noteWindow = LaneCull.ForNotes(Session.Chart.Notes, width, JudgeLocalX, Math.Max(NoteSize, MojiWidth));
-            barWindow = LaneCull.ForBars(Session.Chart.Bars, width, JudgeLocalX, NoteSize);
+            noteWindow = LaneCull.ForNotes(Session.Chart.Notes, clocks, width, JudgeLocalX, Math.Max(NoteSize, MojiWidth));
+            barWindow = LaneCull.ForBars(Session.Chart.Bars, clocks, width, JudgeLocalX, NoteSize);
             return true;
         }
 
@@ -269,11 +270,12 @@ namespace OurTaiko
         // Nijiiro note frames are 192x192; draw_balloon shifts the face by 12/128 of the width.
         const float NoteSize = 192, BalloonFace = 12f / 128f;
         double TravelDistance => noteLayer.rect.width - JudgeLocalX;
+        // The beat clock of BM/HB-scroll notes (the chart's, the same for every session of it).
+        ScrollClockTimeline clocks;
 
         Vector2 Position(ChartNote note, double time)
         {
-            double x = NoteScroll.DistanceFromJudge(note.Time, time, note.Bpm, note.ScrollX, TravelDistance);
-            double y = NoteScroll.DistanceFromJudge(note.Time, time, note.Bpm, note.ScrollY, TravelDistance);
+            var (x, y) = NoteScroll.Distance(note, time, clocks, TravelDistance);
             return new Vector2(JudgeLocalX + (float)x, JudgeLocalY - (float)y);
         }
         // Draws `session` at `time`. `preview` shows the routes a paused practice would play;

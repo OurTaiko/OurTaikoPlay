@@ -22,10 +22,29 @@ namespace OurTaiko
             return (hitTime - currentTime) * bpm / 240.0 * scroll * travelDistance;
         }
 
-        // A roll is a rigid body: its tail inherits the head's BPM and SCROLL, even
-        // when chart commands change before the tail. Its length stays constant.
+        // A note's distance from the judge on both axes, as OpenTaiko places it for its scroll mode:
+        // NM by its own time and BPM; BM and HB by the beat clock (measures to go × travel), BM with
+        // SCROLL 1 and no vertical part, HB with its SCROLL.
+        public static (double X, double Y) Distance(ChartNote note, double currentTime, ScrollClockTimeline clocks,
+            double travelDistance)
+        {
+            if (note.ScrollMode == ScrollMode.Normal)
+                return (DistanceFromJudge(note.Time, currentTime, note.Bpm, note.ScrollX, travelDistance),
+                    DistanceFromJudge(note.Time, currentTime, note.Bpm, note.ScrollY, travelDistance));
+            double measures = note.ScrollClock - clocks.At(ScrollClockTimeline.RouteOf(note), currentTime);
+            return (measures * ScrollX(note) * travelDistance, measures * ScrollY(note) * travelDistance);
+        }
+
+        // The SCROLL a note moves by: BM-scroll ignores the chart's (OpenTaiko forces 1 and no Y).
+        public static double ScrollX(ChartNote note) => note.ScrollMode == ScrollMode.BMScroll ? 1 : note.ScrollX;
+        public static double ScrollY(ChartNote note) => note.ScrollMode == ScrollMode.BMScroll ? 0 : note.ScrollY;
+
+        // A roll is a rigid body: its tail inherits the head's BPM and SCROLL (and scroll mode),
+        // even when chart commands change before the tail. Its length stays constant.
         public static double RollLength(ChartNote note, double travelDistance)
         {
+            if (note.ScrollMode != ScrollMode.Normal)
+                return (note.EndScrollClock - note.ScrollClock) * ScrollX(note) * travelDistance;
             return DistanceFromJudge(note.EndTime, note.Time, note.Bpm, note.ScrollX, travelDistance);
         }
     }

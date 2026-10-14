@@ -67,6 +67,83 @@ namespace OurTaiko.Tests
             }));
         }
 
+        // Stage 2 ------------------------------------------------------------------------
+        const double Travel = 1302;
+
+        // T5
+        [Test] public void TheClockRunsAtTheBpmAndThroughDelays()
+        {
+            // Measure 1 at 120 (0–2 s), measure 2 at 240 (2–3 s), a 1 s delay, the last note at 4 s.
+            var chart = Parse("1,\n#BPMCHANGE 240\n1,\n#DELAY 1\n1,");
+            var clocks = new ScrollClockTimeline(chart);
+            double At(double t) => clocks.At(BranchRoute.Normal, t);
+            Assert.That(At(-2), Is.EqualTo(-1), "Before the start it runs back at the first BPM.");
+            Assert.That(At(1), Is.EqualTo(0.5));
+            Assert.That(At(2.5), Is.EqualTo(1.5));
+            Assert.That(At(3.5), Is.EqualTo(2.5), "It keeps running through the delay.");
+            Assert.That(At(4), Is.EqualTo(chart.Notes[2].ScrollClock), "A note reaches the judge at its own time.");
+        }
+
+        [Test] public void EachRouteHasItsClockUntilTheBranchEnds()
+        {
+            // The branch is 2–4 s; 達人 slows to 60 BPM (and so is written last, its length decides).
+            var chart = Parse("1,\n#BRANCHSTART p,0,0\n#N\n1,\n#E\n1,\n#M\n#BPMCHANGE 60\n1,\n#BRANCHEND\n1,");
+            var clocks = new ScrollClockTimeline(chart);
+            Assert.That(clocks.At(BranchRoute.Normal, 3), Is.EqualTo(1.5));
+            Assert.That(clocks.At(BranchRoute.Master, 3), Is.EqualTo(1.25));
+            // The branch ends at 6 s (達人's 4 s measure): every route goes on from 達人's clock 2.
+            Assert.That(clocks.At(BranchRoute.Normal, 6), Is.EqualTo(2));
+            Assert.That(clocks.At(BranchRoute.Expert, 7), Is.EqualTo(2.25));
+            Assert.That(ScrollClockTimeline.RouteOf(chart.Notes[0]), Is.EqualTo(BranchRoute.Normal), "Common notes read the Normal clock.");
+        }
+
+        // T6
+        [Test] public void PositionsFollowTheModes()
+        {
+            var normal = Parse("#SCROLL 2\n1,\n#BPMCHANGE 240\n1,");
+            var bm = Parse("#BMSCROLL\n#SCROLL 2+1i\n1,\n#BPMCHANGE 240\n1,\n1,");
+            var hb = Parse("#HBSCROLL\n#SCROLL 2+1i\n1,\n#BPMCHANGE 240\n1,\n1,");
+            (double, double) At(TaikoChart chart, int note, double t) => NoteScroll.Distance(chart.Notes[note], t, new ScrollClockTimeline(chart), Travel);
+            // NM is unchanged: the second note keeps its own 240 BPM and SCROLL 2 from afar.
+            Assert.That(At(normal, 1, 1), Is.EqualTo((NoteScroll.DistanceFromJudge(2, 1, 240, 2, Travel), 0.0)));
+            Assert.That(At(normal, 1, 1).Item1, Is.EqualTo(2604));
+            // BM: half a measure to go at 1 s, SCROLL ignored, no vertical part.
+            Assert.That(At(bm, 1, 1), Is.EqualTo((651.0, 0.0)));
+            // HB: the same distance times SCROLL 2+1i.
+            Assert.That(At(hb, 1, 1), Is.EqualTo((1302.0, 651.0)));
+            // After the change to 240 every BM/HB note on the lane speeds up together: in the
+            // 0.25 s from 2 s the third note (clock 2) comes half a measure closer.
+            Assert.That(At(bm, 2, 2).Item1 - At(bm, 2, 2.25).Item1, Is.EqualTo(Travel / 4));
+            Assert.That(At(bm, 2, 1.5).Item1 - At(bm, 2, 1.75).Item1, Is.EqualTo(Travel / 8), "Before the change it came at 120.");
+        }
+
+        // T7
+        [Test] public void RollsAreRigidInEveryMode()
+        {
+            var hb = Parse("#HBSCROLL\n#SCROLL 2\n5000,\n#BPMCHANGE 60\n0008,");
+            var roll = hb.Notes[0];
+            Assert.That(NoteScroll.RollLength(roll, Travel), Is.EqualTo(1.75 * 2 * Travel));
+            var bm = Parse("#BMSCROLL\n#SCROLL 2\n5008,");
+            Assert.That(NoteScroll.RollLength(bm.Notes[0], Travel), Is.EqualTo(0.75 * Travel), "BM ignores SCROLL.");
+            var normal = Parse("#SCROLL 2\n5008,");
+            Assert.That(NoteScroll.RollLength(normal.Notes[0], Travel), Is.EqualTo(NoteScroll.DistanceFromJudge(1.5, 0, 120, 2, Travel)));
+        }
+
+        // T8 (the full cull comparison is ChartCursorTests' "Synthetic BM and HB scrolls")
+        [Test] public void ClockIntervalsCoverTheLane()
+        {
+            var chart = Parse("#BMSCROLL\n1,\n#BPMCHANGE 240\n1,\n1,");
+            var clocks = new ScrollClockTimeline(chart);
+            // Lane 1422 wide, judge at 120: the third note (clock 2) enters at clock 1 (1302 px out)
+            // and leaves at clock 2 + 120 / 1302.
+            LaneCull.ClockInterval(chart.Notes[2], clocks, Travel, 120, 1422, 0, out double start, out double end);
+            Assert.That(start, Is.EqualTo(2).Within(1e-9));
+            Assert.That(end, Is.EqualTo(3 + 120.0 / 1302).Within(1e-9));
+            var still = Parse("#HBSCROLL\n#SCROLL 0\n1,");
+            LaneCull.ClockInterval(still.Notes[0], new ScrollClockTimeline(still), Travel, 120, 1422, 0, out start, out end);
+            Assert.That((start, end), Is.EqualTo((double.NegativeInfinity, double.PositiveInfinity)));
+        }
+
         // T4
         [TestCase("#BMSCROLL")]
         [TestCase("#HBSCROLL")]
