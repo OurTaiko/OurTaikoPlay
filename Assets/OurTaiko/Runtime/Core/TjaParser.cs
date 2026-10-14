@@ -11,11 +11,9 @@ namespace OurTaiko
     public static class TjaParser
     {
         static double Number(string value) => double.Parse(value, CultureInfo.InvariantCulture);
+        // A numeric COURSE (0–4) by its name; any other value as written.
         static string Course(string value)
-        {
-            string[] names = { "Easy", "Normal", "Hard", "Oni", "Edit" };
-            return int.TryParse(value, out int n) && n >= 0 && n < names.Length ? names[n] : value;
-        }
+            => int.TryParse(value, out int n) && n >= 0 && n < SongInfo.CourseNames.Count ? SongInfo.CourseNames[n] : value;
 
         // One parse for every mode: how branches are played is PlaySession's choice.
         public static TaikoChart Parse(string text, string requestedCourse = "Oni")

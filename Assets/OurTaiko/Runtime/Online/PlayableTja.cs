@@ -20,7 +20,7 @@ namespace OurTaiko.Online
 
         public static string Build(string utf8, FanmadeChart chart, string seat = "single")
         {
-            var played = Enumerable.Range(0, FanmadeChart.Courses.Length).Select(i => chart.Block(i, seat)).ToList();
+            var played = Enumerable.Range(0, SongInfo.CourseNames.Count).Select(i => chart.Block(i, seat)).ToList();
             if (utf8.StartsWith("﻿", StringComparison.Ordinal)) utf8 = utf8.Substring(1);
             var output = new StringBuilder(chart.TitleHeaders() + "WAVE:" + chart.CachedAudioName + "\n");
             output.Append("OFFSET:").Append(chart.Offset.ToString("R", CultureInfo.InvariantCulture)).Append('\n');
@@ -72,7 +72,7 @@ namespace OurTaiko.Online
                 {
                     string value = line.Substring(line.IndexOf(':') + 1).Trim();
                     var difficulty = SongInfo.DifficultyOf(value);
-                    course = difficulty.HasValue ? FanmadeChart.Courses[(int)difficulty.Value] : value;
+                    course = difficulty.HasValue ? SongInfo.CourseNames[(int)difficulty.Value] : value;
                     seenCourse = true; headers.Clear(); continue;
                 }
                 (seenCourse ? headers : globals).Add(line);

@@ -36,8 +36,6 @@ namespace OurTaiko.Online
     // A published chart as /api/v1/game/categories/{id}/charts and /api/v1/charts/{id} return it.
     public sealed class FanmadeChart
     {
-        public static readonly string[] Courses = { "Easy", "Normal", "Hard", "Oni", "Edit" };
-
         public string Server = "", Id = "", Title = "", Subtitle = "", Maker = "";
         public string TjaHash = "", AudioHash = "", AudioName = "";
         public string Category = "", Genre = "";
@@ -86,7 +84,7 @@ namespace OurTaiko.Online
                     side = name.EndsWith("_1p") ? "p1" : name.EndsWith("_2p") ? "p2" : "single";
                     if (side != "single") name = name.Substring(0, name.Length - 3);
                 }
-                int slot = Array.IndexOf(Courses, name);
+                int slot = SongInfo.CourseNames.IndexOf(name);
                 if (slot < 0) continue;  // Tower/Dan are not playable here.
                 long level = Json.Number(d, "level");
                 if (level > 100 || d["branching"]?.Type != JTokenType.Boolean) throw new FanmadeException("API_DIFFICULTY_INVALID");
@@ -118,7 +116,7 @@ namespace OurTaiko.Online
         {
             foreach (string side in ReadOrder[seat])
             {
-                var block = Blocks.Find(x => x.Course == Courses[course] && x.Side == side);
+                var block = Blocks.Find(x => x.Course == SongInfo.CourseNames[course] && x.Side == side);
                 if (block != null) return block;
             }
             return null;

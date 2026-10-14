@@ -23,16 +23,18 @@ namespace OurTaiko
         public double Bpm = 120, DemoStart;
         public readonly List<CourseInfo> Courses = new List<CourseInfo>();
 
-        static readonly string[] CourseNames = { "Easy", "Normal", "Hard", "Oni", "Edit" };
+        // TJA COURSE names of Easy..Ura, as charts, scores and servers spell them.
+        public static readonly System.Collections.ObjectModel.ReadOnlyCollection<string> CourseNames =
+            Array.AsReadOnly(new[] { "Easy", "Normal", "Hard", "Oni", "Edit" });
 
         public static string CourseName(Difficulty difficulty) => CourseNames[(int)difficulty];
 
         public static Difficulty? DifficultyOf(string course)
         {
             string value = course.Trim().Split('_')[0];
-            if (int.TryParse(value, out int n)) return n >= 0 && n < CourseNames.Length ? (Difficulty)n : (Difficulty?)null;
+            if (int.TryParse(value, out int n)) return n >= 0 && n < CourseNames.Count ? (Difficulty)n : (Difficulty?)null;
             if (value.Equals("Ura", StringComparison.OrdinalIgnoreCase)) return Difficulty.Ura;
-            for (int i = 0; i < CourseNames.Length; i++)
+            for (int i = 0; i < CourseNames.Count; i++)
                 if (value.Equals(CourseNames[i], StringComparison.OrdinalIgnoreCase)) return (Difficulty)i;
             return null;
         }
