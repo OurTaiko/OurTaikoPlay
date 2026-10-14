@@ -73,7 +73,7 @@ namespace OurTaiko.Tests
             Assert.That(score.Condition, Is.EqualTo(BranchCondition.Score));
             Assert.That(score.HasAllRoutes, Is.True);
             Assert.Throws<FormatException>(() => Parse("#BRANCHSTART p,50,80\n#E\n1000,\n#BRANCHEND"), "#N is still required.");
-            Assert.Throws<NotSupportedException>(() => Parse("#BRANCHSTART x,1,2\n#N\n1000,\n#BRANCHEND"));
+            Assert.That(Parse("#BRANCHSTART x,1,2\n#N\n1000,\n#BRANCHEND").Branches[0].Condition, Is.EqualTo(BranchCondition.None));
         }
 
         [TestCase(NoMaster)]

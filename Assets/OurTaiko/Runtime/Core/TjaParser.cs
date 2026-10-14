@@ -168,25 +168,59 @@ namespace OurTaiko
             {
                 if (branch != null) EndBranch();
                 CheckLongNote();
-                string[] parts = arg.Split(',');
-                if (parts.Length != 3) throw new FormatException("#BRANCHSTART requires condition, expert threshold, master threshold.");
-                string condition = parts[0].Trim().ToLowerInvariant();
-                if (condition != "p" && condition != "r" && condition != "s")
-                    throw new NotSupportedException("Only p (accuracy), r (drumroll) and s (score) branch conditions are recognised.");
-                double expert = Number(parts[1]), master = Number(parts[2]);
-                if (double.IsNaN(expert) || double.IsInfinity(expert) || double.IsNaN(master) || double.IsInfinity(master))
-                    throw new FormatException("Branch thresholds must be finite.");
                 branchStart = state.Copy();
                 branch = new ChartBranch { Id = chart.Branches.Count, Time = state.Time,
-                    ArmTime = (sectionBarTime ?? state.Time) - 480.0 / state.Bpm,
-                    Condition = condition == "p" ? BranchCondition.Accuracy : condition == "r" ? BranchCondition.Drumroll : BranchCondition.Score,
-                    ExpertThreshold = expert, MasterThreshold = master };
+                    ArmTime = (sectionBarTime ?? state.Time) - 480.0 / state.Bpm };
+                ReadCondition(branch, arg);
                 chart.Branches.Add(branch);
                 routeLists = new[] { new List<ChartEntry>(), new List<ChartEntry>(), new List<ChartEntry>() };
                 chart.NoteLists.AddRange(routeLists);
                 sectionBarTime = null;
                 Array.Clear(routesSeen, 0, routesSeen.Length);
                 hasRoute = false;
+            }
+
+            // OpenTaiko CTja #BRANCHSTART: `type, expert, master[, l|m]`; a missing comma after the
+            // type is tolerated. An empty or unreadable condition keeps the current route; unlike
+            // OpenTaiko, which drops the whole command, an unknown type or range does the same.
+            void ReadCondition(ChartBranch target, string arg)
+            {
+                target.Condition = BranchCondition.None;
+                arg = Regex.Replace(arg, @"(?<=^\s*[a-zA-Z]+)\s*(?=\d)", ",");
+                if (string.IsNullOrWhiteSpace(arg)) return;
+                string[] parts = arg.Split(',').Select(p => p.Trim()).ToArray();
+                if (parts.Length < 3 || parts[0].Length == 0
+                    || !double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double expert)
+                    || !double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out double master))
+                {
+                    Warn("#BRANCHSTART " + arg);
+                    return;
+                }
+                bool upper = char.IsUpper(parts[0][0]);
+                BranchCondition? condition = parts[0].ToLowerInvariant() switch
+                {
+                    "p" => BranchCondition.Accuracy, "pp" => BranchCondition.PercentPerfect,
+                    "jp" => BranchCondition.JudgePerfect, "d" => BranchCondition.JudgePerfect,
+                    "jg" => BranchCondition.JudgeGood, "jb" => BranchCondition.JudgeBad,
+                    "r" => BranchCondition.Drumroll, "rb" => BranchCondition.BalloonHits,
+                    "s" => BranchCondition.Score, _ => null,
+                };
+                string range = parts.Length > 3 ? parts[3] : "";
+                if (condition == null || range != "" && range != "l" && range != "m")
+                {
+                    Warn("#BRANCHSTART " + arg);
+                    return;
+                }
+                target.Condition = condition.Value;
+                // s is never big-only; d always is.
+                target.BigOnly = parts[0].ToLowerInvariant() == "d" || upper && condition != BranchCondition.Score;
+                target.Less = range == "l";
+                target.ExpertThreshold = expert; target.MasterThreshold = master;
+            }
+
+            void Warn(string warning)
+            {
+                if (!chart.Warnings.Contains(warning)) chart.Warnings.Add(warning);
             }
 
             void SelectRoute(BranchRoute selected)

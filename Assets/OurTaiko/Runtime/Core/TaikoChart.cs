@@ -6,7 +6,10 @@ namespace OurTaiko
     public enum NoteKind { Don = 1, Ka, BigDon, BigKa, Roll, BigRoll, Balloon = 7, Kusudama = 9 }
     public enum Judgment { None, Good, Ok, Bad, Roll }
     public enum BranchRoute { Normal, Expert, Master }
-    public enum BranchCondition { Accuracy, Drumroll, Score }
+    // #BRANCHSTART conditions as OpenTaiko names them: p accuracy, pp 良 percentage, jp/jg/jb
+    // 良/可/不可 counts (d is a big-note jp), r drumroll hits, rb balloon hits, s score.
+    // None keeps the current route (an empty or unreadable condition).
+    public enum BranchCondition { Accuracy, Drumroll, Score, PercentPerfect, JudgePerfect, JudgeGood, JudgeBad, BalloonHits, None }
 
     public sealed class ChartNote
     {
@@ -40,6 +43,10 @@ namespace OurTaiko
         public int Id;
         public double Time, EndTime, ArmTime, DecisionTime, ExpertThreshold, MasterThreshold;
         public BranchCondition Condition;
+        // An upper-case condition (P, R, JP…) counts only big notes, big drumrolls or kusudama.
+        public bool BigOnly;
+        // A fourth argument `l`: the master threshold is an upper bound (value < master → 達人).
+        public bool Less;
         public readonly ChartNote[] FirstEntries = new ChartNote[3];
         // The route drawn for each requested one. An omitted #E uses #N and an omitted #M uses
         // #E, matching Fanmade's image renderer; a complete branch maps every route to itself.
