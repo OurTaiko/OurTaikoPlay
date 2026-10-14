@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
             {
                 var value = new JObject
                 {
-                    ["id"] = Id, ["title"] = Title, ["subtitle"] = Subtitle, ["maker"] = Maker,
+                    ["id"] = IdToken(Id), ["title"] = Title, ["subtitle"] = Subtitle, ["maker"] = Maker,
                     ["categoryIds"] = new JArray(Categories),
                     ["tjaHash"] = Sha(Tja), ["audioHash"] = Sha(Audio), ["audioName"] = AudioName,
                     ["titleTranslations"] = new JObject { ["ja"] = Title + " JA" }, ["subtitleTranslations"] = new JObject(),
@@ -56,6 +56,9 @@ namespace OurTaiko.Tests
                 return value;
             }
         }
+
+        // A chart ID of digits only goes out as a JSON number, as OurTaiko Database sends it.
+        public static JToken IdToken(string id) => long.TryParse(id, out long n) ? (JToken)n : id;
 
         public readonly string BaseUrl;
         public readonly Dictionary<string, string> Users = new Dictionary<string, string> { ["don"] = "katsu" };
@@ -112,7 +115,7 @@ namespace OurTaiko.Tests
             string audioType = chart.AudioName.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase) ? "audio/mpeg" : "audio/ogg";
             return new JObject
             {
-                ["chartId"] = chart.Id,
+                ["chartId"] = IdToken(chart.Id),
                 ["resources"] = new JObject { ["tja"] = Resource("tja", chart.Tja, "application/octet-stream"), ["audio"] = Resource("audio", chart.Audio, audioType) },
             };
         }
@@ -274,7 +277,7 @@ namespace OurTaiko.Tests
             var block = chart.Difficulties.Find(d => chart.BlockId(d.Course, d.Player) == (long)body["difficultyId"]);
             var score = new JObject
             {
-                ["id"] = Hex(32), ["songId"] = chart.Id, ["difficultyId"] = body["difficultyId"],
+                ["id"] = Hex(32), ["songId"] = IdToken(chart.Id), ["difficultyId"] = body["difficultyId"],
                 ["course"] = block.Course, ["side"] = Chart.Side(block.Player), ["isLatest"] = true,
                 ["good"] = body["good"], ["ok"] = body["ok"], ["bad"] = body["bad"], ["score"] = body["score"],
                 ["drumroll"] = body["drumroll"], ["max_combo"] = body["max_combo"],
@@ -291,7 +294,7 @@ namespace OurTaiko.Tests
             lock (AccountScores)
                 AccountScores.Add(new JObject
                 {
-                    ["user"] = user, ["id"] = Hex(32), ["songId"] = chart.Id, ["difficultyId"] = chart.BlockId(course, player),
+                    ["user"] = user, ["id"] = Hex(32), ["songId"] = IdToken(chart.Id), ["difficultyId"] = chart.BlockId(course, player),
                     ["course"] = course, ["side"] = Chart.Side(player), ["isLatest"] = latest,
                     ["good"] = 1, ["ok"] = 0, ["bad"] = 0, ["score"] = score, ["drumroll"] = 0, ["max_combo"] = 1,
                     ["ClearStatus"] = clearStatus,

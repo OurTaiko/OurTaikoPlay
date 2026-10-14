@@ -37,7 +37,7 @@ namespace OurTaiko.Tests
                     ["url"] = origin.BaseUrl + "/" + kind + "?signature=a%2Fb&mode=get", ["headUrl"] = origin.BaseUrl + "/" + kind + "?signature=head",
                     ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
                 };
-                return new JObject { ["chartId"] = c.Id,
+                return new JObject { ["chartId"] = FanmadeFixture.IdToken(c.Id),
                     ["resources"] = new JObject { ["tja"] = Resource("tja", c.Tja, "application/octet-stream"),
                         ["audio"] = Resource("audio", mismatch ? new byte[] { 9 } : c.Audio, "audio/ogg") } };
             };
@@ -219,6 +219,20 @@ namespace OurTaiko.Tests
             mismatch = true;
             Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("CHART_UPDATING"));
             Assert.That(manifests, Is.EqualTo(2)); Assert.That(tjaGets + audioGets, Is.Zero);
+        }
+        [Test] public void NumericChartIdsDownloadAndUploadLikeHexOnes()
+        {
+            chart.Id = "1617";
+            Run(() => client.ConnectAsync(endpoint, false));
+            Assert.That(client.Charts.Single().Id, Is.EqualTo("1617"));
+            var result = Run(() => client.PrepareAsync(client.Charts.Single()));
+            Assert.That(TjaParser.Parse(result.Tja, "Oni").Level, Is.EqualTo(8));
+            client.Submit(result.Chart, 3, new FanmadeScore { Score = 7 }); Run(() => client.WaitForUploadsAsync());
+            Assert.That(api.AcceptedScores.TryDequeue(out var body), Is.True);
+            Assert.That((long)body["difficultyId"], Is.EqualTo(chart.BlockId("Oni")));
+            Assert.That(client.Best(client.Charts.Single(), 3).Score, Is.EqualTo(7));
+            foreach (string id in new[] { "1617", "1", new string('a', 32) }) Assert.That(FanmadeChart.ValidId(id), Is.True, id);
+            foreach (string id in new[] { "0", "012", "-5", "1e3", "abc", "", new string('9', 19) }) Assert.That(FanmadeChart.ValidId(id), Is.False, id);
         }
         [Test] public void ChangedFilesStopOldUploads()
         {

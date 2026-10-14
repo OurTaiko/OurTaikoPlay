@@ -615,14 +615,14 @@ namespace OurTaiko.Tests
         [Test]
         public void BuiltInServersStayOutOfTheServerListAndGenresMapToBoardFrames()
         {
-            Assert.That(ServerList.BuiltIn.Select(b => b.Url), Is.EqualTo(new[] { "https://fanmade.ourtaiko.org", "https://ese-backend.llx.life" }));
+            Assert.That(ServerList.BuiltIn.Select(b => b.Url), Is.EqualTo(new[] { "https://fanmade.ourtaiko.org", "https://database.ourtaiko.org" }));
             Assert.That(new ServerList().servers, Is.Empty);
             // A file of an older version listed the built-in addresses; only the additional servers stay.
             var old = new ServerList { servers =
             {
                 new ServerConfig { name = "OurTaiko Fanmade", baseUrl = "https://fanmade.ourtaiko.org/" },
                 new ServerConfig { name = "Mine", baseUrl = "https://example.org" },
-                new ServerConfig { name = "ESE", baseUrl = "https://ese-backend.llx.life", enabled = false },
+                new ServerConfig { name = "OurTaiko Database", baseUrl = "https://database.ourtaiko.org", enabled = false },
             } };
             Assert.That(old.RemoveBuiltIn(), Is.True);
             Assert.That(old.servers.Select(s => s.name), Is.EqualTo(new[] { "Mine" }));

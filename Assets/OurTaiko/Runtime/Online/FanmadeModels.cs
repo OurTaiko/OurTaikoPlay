@@ -54,11 +54,11 @@ namespace OurTaiko.Online
             var c = new FanmadeChart
             {
                 Server = server,
-                Id = Json.Str(v, "id"), Title = Json.Str(v, "title"),
+                Id = Json.Id(v, "id"), Title = Json.Str(v, "title"),
                 Subtitle = Json.Str(v, "subtitle"), Maker = Json.Str(v, "maker"), TjaHash = Json.Str(v, "tjaHash"),
                 AudioHash = Json.Str(v, "audioHash"), AudioName = Json.Str(v, "audioName"),
             };
-            if (!Json.HexId(c.Id, 32) || !Json.HexId(c.TjaHash, 64) || !Json.HexId(c.AudioHash, 64))
+            if (!Json.ChartId(c.Id) || !Json.HexId(c.TjaHash, 64) || !Json.HexId(c.AudioHash, 64))
                 throw new FanmadeException("API_ID_INVALID");
             foreach (var (key, target) in new[] { ("titleTranslations", c.Titles), ("subtitleTranslations", c.Subtitles) })
             {
@@ -101,6 +101,9 @@ namespace OurTaiko.Online
             for (int i = 0; i < c.Difficulties.Length; i++) c.Difficulties[i] = c.Block(i);
             return c;
         }
+
+        // 32 hex digits on Fanmade, a positive whole number on OurTaiko Database.
+        public static bool ValidId(string id) => Json.ChartId(id);
 
         public static readonly string[] Sides = { "single", "p1", "p2" };
         // The arcade's side for each seat first, then the blocks that stand in where a course lacks
@@ -222,7 +225,7 @@ namespace OurTaiko.Online
 
         public static FanmadeScore From(JToken v) => new FanmadeScore
         {
-            Id = Json.Str(v, "id"), Song = Json.Str(v, "songId"),
+            Id = Json.Str(v, "id"), Song = Json.Id(v, "songId"),
             Difficulty = v["difficultyId"] == null ? Json.Str(v, "difficulty")
                 : new FanmadeDifficulty { Course = Json.Str(v, "course"), Side = Json.Str(v, "side") }.Name,
             IsLatest = v["isLatest"]?.Type != JTokenType.Boolean || (bool)v["isLatest"],
@@ -305,6 +308,18 @@ namespace OurTaiko.Online
         }
 
         public static bool IsNumber(JToken v) => v != null && (v.Type == JTokenType.Integer || v.Type == JTokenType.Float);
+
+        // An ID a server gives as a string or as a whole number, as text.
+        public static string Id(JToken v, string key)
+        {
+            var value = v is JObject o ? o[key] : null;
+            if (value?.Type == JTokenType.Integer && (long)value > 0) return ((long)value).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return Str(v, key);
+        }
+
+        // Fanmade charts have 32 hex digits; OurTaiko Database charts are positive whole numbers.
+        public static bool ChartId(string s) => HexId(s, 32)
+            || (s.Length > 0 && s.Length <= 18 && s[0] != '0' && s.All(c => c >= '0' && c <= '9'));
 
         public static bool HexId(string s, int length) => s.Length == length && s.All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'));
     }

@@ -21,7 +21,7 @@ namespace OurTaiko.Online
     }
 
     // servers.json in the persistent data folder: the additional servers, each with the account
-    // ServerLogin filled in. The built-in servers (OurTaiko Fanmade and the ESE backend) are fixed
+    // ServerLogin filled in. The built-in servers (OurTaiko Fanmade and OurTaiko Database) are fixed
     // here and never written to the file; they use the OurTaiko account of the settings.
     [Serializable]
     public sealed class ServerList
@@ -30,7 +30,7 @@ namespace OurTaiko.Online
         public static readonly (string Name, string Url)[] BuiltIn =
         {
             ("OurTaiko Fanmade", "https://fanmade.ourtaiko.org"),
-            ("ESE", "https://ese-backend.llx.life"),
+            ("OurTaiko Database", "https://database.ourtaiko.org"),
         };
 
         public List<ServerConfig> servers = new List<ServerConfig>();

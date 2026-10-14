@@ -27,7 +27,7 @@ namespace OurTaiko.Online
         public FanmadeResource Tja, Audio, Preview;
         public static FanmadeResources Parse(JObject value, string chartId, Action<string> validateUrl)
         {
-            if (Json.Str(value, "chartId") != chartId) throw new FanmadeException("RESOURCE_CHART_MISMATCH");
+            if (Json.Id(value, "chartId") != chartId) throw new FanmadeException("RESOURCE_CHART_MISMATCH");
             if (!(value["resources"] is JObject resources)) throw new FanmadeException("RESOURCE_MANIFEST_INVALID");
             FanmadeResource Read(string kind, long limit) =>
                 FanmadeResource.From(resources[kind] as JObject ?? throw new FanmadeException("RESOURCE_MISSING"), limit, validateUrl);
@@ -56,7 +56,7 @@ namespace OurTaiko.Online
         }
         public async Task<FanmadeResources> ResourcesAsync(string chartId, CancellationToken cancel = default)
         {
-            if (!Json.HexId(chartId, 32)) throw new FanmadeException("API_ID_INVALID");
+            if (!Json.ChartId(chartId)) throw new FanmadeException("API_ID_INVALID");
             return FanmadeResources.Parse(Json.Parse(await AuthorizedAsync("/api/v1/charts/" + chartId + "/resources", cancel: cancel)), chartId, ValidateResourceUrl);
         }
     }
