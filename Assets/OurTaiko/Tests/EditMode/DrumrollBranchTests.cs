@@ -2,7 +2,7 @@ using NUnit.Framework;
 
 namespace OurTaiko.Tests
 {
-    // r branches: drumroll (5/6) hits since the last #SECTION. At BPM 120 a branch after three
+    // r branches: hits on every roll (drumroll, balloon, kusudama) since the last #SECTION. At BPM 120 a branch after three
     // lead measures starts at 6 s and decides at the bar line before it (4 s), or when a
     // drumroll ending in that measure ends.
     public sealed class DrumrollBranchTests
@@ -42,7 +42,7 @@ namespace OurTaiko.Tests
             Assert.That(session.LastBranchValue, Is.EqualTo(6));
         }
 
-        [Test] public void BalloonAndKusudamaHitsDoNotCount()
+        [Test] public void BalloonAndKusudamaHitsCount()
         {
             // Balloon 0–1.5 s, kusudama 2–3.5 s.
             var session = Session("r,1,3", "7008,\n9008,\n0000,", "BALLOON:3,3");
@@ -50,7 +50,8 @@ namespace OurTaiko.Tests
             for (int i = 0; i < 3; i++) session.Hit(false, 2.1 + i * 0.1);
             Decide(session);
             Assert.That(session.Rolls, Is.EqualTo(6));
-            Assert.That(session.LastBranchValue, Is.Zero);
+            Assert.That(session.LastBranchValue, Is.EqualTo(6));
+            Assert.That(session.CurrentBranch, Is.EqualTo(BranchRoute.Master));
         }
 
         [Test] public void NoteJudgmentsAndHitsOutsideADrumrollDoNotCount()

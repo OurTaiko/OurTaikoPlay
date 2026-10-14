@@ -43,9 +43,12 @@ namespace OurTaiko
             feed.LongHit += (note, points) =>
             {
                 bool isBig = note.Kind == NoteKind.BigRoll || note.Kind == NoteKind.Kusudama;
-                // r counts drumrolls only; rb counts balloons and kusudama.
+                // r counts every roll hit, balloons and kusudama included; rb only the balloons.
                 foreach (var tally in isBig ? new[] { all, big } : new[] { all })
-                    if (note.IsBalloon) tally.Balloons++; else tally.Rolls++;
+                {
+                    tally.Rolls++;
+                    if (note.IsBalloon) tally.Balloons++;
+                }
                 score += points;
             };
             // OpenTaiko's s reads the total score, which #SECTION does not reset.
@@ -75,7 +78,8 @@ namespace OurTaiko
                 case BranchCondition.JudgePerfect: return t.Good;
                 case BranchCondition.JudgeGood: return t.Ok;
                 case BranchCondition.JudgeBad: return t.Bad;
-                // r: drumroll hits. The judgement waits for a drumroll ending in the last measure.
+                // r: drumroll, balloon and kusudama hits. The judgement waits for a roll ending in
+                // the last measure.
                 case BranchCondition.Drumroll: return t.Rolls;
                 case BranchCondition.BalloonHits: return t.Balloons;
                 // s: the score so far, from notes, drumrolls and balloons alike.

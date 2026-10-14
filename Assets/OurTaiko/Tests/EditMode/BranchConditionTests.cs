@@ -102,7 +102,7 @@ namespace OurTaiko.Tests
             Assert.That(perfect.LastBranchValue, Is.EqualTo(2));
         }
 
-        [Test] public void BalloonHitsCountForRbAndKusudamaForRb()
+        [Test] public void BalloonHitsCountForRbAndKusudamaForUpperCaseRb()
         {
             // Balloon 0–1.5 s (3 hits), kusudama 2–3.5 s (2 hits so far).
             string lead = "7008,\n9008,\n0000,";
@@ -117,17 +117,19 @@ namespace OurTaiko.Tests
             }
             Assert.That(all.LastBranchValue, Is.EqualTo(5)); Assert.That(all.CurrentBranch, Is.EqualTo(BranchRoute.Master));
             Assert.That(kusudama.LastBranchValue, Is.EqualTo(2)); Assert.That(kusudama.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
-            Assert.That(rolls.LastBranchValue, Is.Zero);
+            Assert.That(rolls.LastBranchValue, Is.EqualTo(5), "r counts balloon hits too");
         }
 
-        [Test] public void UpperCaseDrumrollCountsOnlyBigDrumrolls()
+        [Test] public void UpperCaseDrumrollCountsOnlyBigDrumrollsAndKusudama()
         {
-            // Big drumroll 0–1.5 s, small drumroll 2–3.5 s.
-            var session = Session("R,3,5", "6008,\n5008,\n0000,");
+            // Big drumroll 0–1.5 s, small drumroll 2–3.5 s, balloon 4–5.5 s, kusudama 6–7.5 s.
+            var session = Session("R,4,6", "6008,\n5008,\n7008,\n9008,\n0000,", "BALLOON:2,5");
             for (int i = 0; i < 3; i++) session.Hit(false, 0.1 + i * 0.1);
             for (int i = 0; i < 4; i++) session.Hit(false, 2.1 + i * 0.1);
+            for (int i = 0; i < 2; i++) session.Hit(false, 4.1 + i * 0.1);
+            for (int i = 0; i < 2; i++) session.Hit(false, 6.1 + i * 0.1);
             Decide(session);
-            Assert.That(session.LastBranchValue, Is.EqualTo(3));
+            Assert.That(session.LastBranchValue, Is.EqualTo(5));
             Assert.That(session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
         }
     }

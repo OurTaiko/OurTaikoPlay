@@ -208,7 +208,7 @@ namespace OurTaiko.Tests
         void HitLong(int i)
         {
             var n = Chart.Notes[i]; LongHits[i]++; Rolls++; scoring.AddLongHit();
-            if (!n.IsBalloon) branchRolls++;
+            branchRolls++;
             if (n.IsBalloon && LongHits[i] == n.BalloonHits) Resolved[i] = true;
             Judged?.Invoke(i, Judgment.Roll);
         }

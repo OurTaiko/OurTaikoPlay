@@ -111,12 +111,13 @@ namespace OurTaiko.Tests
             Assert.That(session.CurrentBranch, Is.EqualTo(expected)); Assert.That(session.LastBranchValue, Is.EqualTo(hits));
         }
 
-        [Test] public void BalloonHitsDoNotCountAsDrumrollBranchHits()
+        [Test] public void BalloonHitsCountAsDrumrollBranchHits()
         {
             var session = new PlaySession(Accuracy("r,1,3", "7008,\n0000,\n0000,", "BALLOON:5"));
             for (int i = 0; i < 5; i++) session.Hit(false, 0.1);
             session.Advance(4, false);
-            Assert.That(session.Rolls, Is.EqualTo(5)); Assert.That(session.LastBranchValue, Is.Zero);
+            Assert.That(session.Rolls, Is.EqualTo(5)); Assert.That(session.LastBranchValue, Is.EqualTo(5));
+            Assert.That(session.CurrentBranch, Is.EqualTo(BranchRoute.Master));
         }
 
         [Test] public void SectionResetsAccuracyAndDrumrollHits()
