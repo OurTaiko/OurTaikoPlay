@@ -1,0 +1,97 @@
+using System.Collections;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+
+namespace OurTaiko.Tests
+{
+    // Stage 3 of the BM/HB-scroll plan (T9): the play and practice scenes draw notes and bar
+    // lines where NoteScroll.Distance puts them, through a BPM change that moves every BM/HB
+    // note on the lane together.
+    public sealed class ScrollModeFlowTests
+    {
+        const float JudgeX = 120, JudgeY = -110, BarDrop = 4;
+        const string Chart = "TITLE:Scroll Modes\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#BMSCROLL\n#START\n" +
+            "#SCROLL 3\n1111,\n#BPMCHANGE 240\n1111,\n#HBSCROLL\n#SCROLL 2+0.5i\n1111,\n1111,\n#NMSCROLL\n#SCROLL 1\n1111,\n#END";
+
+        [UnityTest] public IEnumerator SinglePlayDrawsEveryModeWhereOpenTaikoDoes() => Verify(false);
+        [UnityTest] public IEnumerator PracticeDrawsEveryModeWhereOpenTaikoDoes() => Verify(true);
+
+        IEnumerator Verify(bool practice)
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset(Chart);
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                yield return null;
+                SceneSwitcher.Instance.PracticeMode = practice;
+                SceneSwitcher.Instance.Play(song, !practice);
+                float deadline = Time.realtimeSinceStartup + 40;
+                string scene = practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene;
+                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != scene)
+                {
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                    yield return null;
+                }
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                if (practice)
+                {
+                    // A paused practice draws its preview at the cursor through the same path.
+                    while (play.Session == null || Check(play, "practice preview") == 0)
+                    {
+                        Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                        yield return null;
+                    }
+                    yield break;
+                }
+                int checkedFrames = 0;
+                // Before and after the change to 240 BPM (2 s), in HB (3–5 s) and back in NM (5–6 s).
+                foreach (double at in new[] { 0.5, 1.8, 2.6, 3.3, 4.3 })
+                {
+                    while (play.RenderedTime < at)
+                    {
+                        if (play.IsPaused) play.TogglePause();
+                        Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                        yield return null;
+                    }
+                    checkedFrames += Check(play, "at " + play.RenderedTime.ToString("F3")) > 0 ? 1 : 0;
+                }
+                Assert.That(checkedFrames, Is.EqualTo(5), "Every sampled frame had notes on the lane.");
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
+        // Every drawn note and bar line against the formula; returns how many were drawn.
+        static int Check(PlayScene play, string when)
+        {
+            var chart = play.Session.Chart;
+            var clocks = new ScrollClockTimeline(chart);
+            double time = play.RenderedTime, travel = play.noteLayer.rect.width - JudgeX;
+            int drawn = 0;
+            for (int i = 0; i < chart.Notes.Count; i++)
+            {
+                var root = play.NoteRoot(i);
+                if (root == null) continue;
+                drawn++;
+                var (x, y) = NoteScroll.Distance(chart.Notes[i], time, clocks, travel);
+                Assert.That(root.anchoredPosition.x, Is.EqualTo(JudgeX + (float)x).Within(0.01), $"note {i} x {when}");
+                Assert.That(root.anchoredPosition.y, Is.EqualTo(JudgeY - (float)y).Within(0.01), $"note {i} y {when}");
+            }
+            for (int i = 0; i < chart.Bars.Count; i++)
+            {
+                var root = play.BarRoot(i);
+                if (root == null) continue;
+                var (x, y) = NoteScroll.Distance(chart.Bars[i], time, clocks, travel);
+                Assert.That(root.anchoredPosition.x, Is.EqualTo(JudgeX + (float)x).Within(0.01), $"bar {i} x {when}");
+                Assert.That(root.anchoredPosition.y, Is.EqualTo(JudgeY - (float)y - BarDrop).Within(0.01), $"bar {i} y {when}");
+            }
+            return drawn;
+        }
+    }
+}
