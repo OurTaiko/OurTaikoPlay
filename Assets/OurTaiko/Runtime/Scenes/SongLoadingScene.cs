@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Threading;
-using System.Threading.Tasks;
 using OurTaiko.Online;
 using UnityEngine;
 
@@ -70,19 +69,12 @@ namespace OurTaiko
                 if (Error == null)
                 {
                     string path = song.audioPath;
-                    int audioGeneration = engine.Generation;
-                    var preparation = Task.Run(() => new NativeAudioSample(encoded ?? System.IO.File.ReadAllBytes(path), engine, true, true, audioGeneration));
-                    // A cancelled scene must still release a completed native decode.
-                    bool claimed = false;
-                    try
+                    // A cancelled scene still releases a completed native decode.
+                    using (var decode = new BackgroundAudioDecode(() => encoded ?? System.IO.File.ReadAllBytes(path), engine, true))
                     {
-                        while (!preparation.IsCompleted) yield return null;
-                        if (preparation.IsCompletedSuccessfully) { song.SetPreparedAudio(preparation.Result); claimed = true; }
-                        else { Error = "AUDIO_DECODE_FAILED"; Debug.LogException(preparation.Exception.GetBaseException()); }
-                    }
-                    finally
-                    {
-                        if (!claimed) _ = preparation.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
+                        while (!decode.IsDone) yield return null;
+                        if (decode.Succeeded) song.SetPreparedAudio(decode.Take());
+                        else { Error = "AUDIO_DECODE_FAILED"; Debug.LogException(decode.Error); }
                     }
                 }
             }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -442,89 +441,73 @@ namespace OurTaiko
             if (preview != null) preview.clip = null;
             Destroy(onlinePreviewSong); onlinePreviewSong = null;
         }
-        IEnumerator LoadOnlinePreview(SongDefinition song, int generation)
+        // An online song's preview file comes from its server (cached by content) and starts at
+        // its beginning; a local song decodes its own audio and starts at DEMOSTART.
+        IEnumerator LoadPreview(SongDefinition song, double demoStart, int generation)
         {
+            var engine = AudioEngine.EnsureInstance();
             var online = Online.OnlineManager.Instance;
+            bool remote = online?.IsOnline(song) == true;
+            if (!remote && !engine.Available) yield break;
             var cancellation = previewCancellation = new System.Threading.CancellationTokenSource();
-            NativeAudioSample sample = null;
-            Task<NativeAudioSample> decode = null;
-            bool claimed = false;
             bool Stale() => generation != previewGeneration || cancellation.IsCancellationRequested;
-            var task = online.Client.PreparePreviewAsync(online.ChartOf(song), cancellation.Token);
             try
             {
-                while (!task.IsCompleted) yield return null;
-                if (Stale()) yield break;
-                if (!task.IsCompletedSuccessfully)
+                Func<byte[]> read;
+                if (remote)
                 {
-                    Debug.LogWarning("Online preview: " + task.Exception?.GetBaseException().Message);
-                    yield break;
+                    var download = online.Client.PreparePreviewAsync(online.ChartOf(song), cancellation.Token);
+                    while (!download.IsCompleted) yield return null;
+                    if (Stale()) yield break;
+                    if (!download.IsCompletedSuccessfully)
+                    {
+                        Debug.LogWarning("Online preview: " + download.Exception?.GetBaseException().Message);
+                        yield break;
+                    }
+                    string file = download.Result;
+                    read = () => System.IO.File.ReadAllBytes(file);
                 }
-                var engine = AudioEngine.EnsureInstance();
-                int audioGeneration = engine.Generation;
-                string path = task.Result;
+                else
+                {
+                    byte[] bytes = null;
+                    Exception readError = null;
+                    try { if (string.IsNullOrEmpty(song.audioPath)) bytes = AudioAssetCatalog.Read(song.music); }
+                    catch (Exception error) { readError = error; }
+                    if (readError != null) { Debug.LogWarning("Preview audio: " + readError.Message); StopPreview(); yield break; }
+                    string path = song.audioPath;
+                    read = () => bytes ?? System.IO.File.ReadAllBytes(path);
+                }
                 if (!engine.Available) yield break;
-                decode = Task.Run(() => new NativeAudioSample(System.IO.File.ReadAllBytes(path), engine, true, false, audioGeneration), cancellation.Token);
-                while (!decode.IsCompleted) yield return null;
-                if (Stale()) yield break;
-                if (!decode.IsCompletedSuccessfully) { Debug.LogWarning("Preview audio decode failed"); yield break; }
-                sample = decode.Result;
-                if (Stale() || engine.Generation != audioGeneration) yield break;
-                ReleaseOnlinePreview();
-                onlinePreviewSong = ScriptableObject.CreateInstance<SongDefinition>();
-                onlinePreviewSong.hideFlags = HideFlags.DontSave;
-                onlinePreviewSong.SetPreparedAudio(sample);
-                claimed = true;
-                preview.SetAudioSong(onlinePreviewSong, false);
-                preview.SeekAudio(0);
-                preview.PlayAudio();
+                using (var decode = new BackgroundAudioDecode(read, engine, false, cancellation.Token))
+                {
+                    while (!decode.IsDone) yield return null;
+                    if (Stale()) yield break;
+                    if (!decode.Succeeded)
+                    {
+                        Debug.LogWarning("Preview audio: " + decode.Error?.Message);
+                        if (!remote) StopPreview();
+                        yield break;
+                    }
+                    if (remote && engine.Generation != decode.Generation) yield break;
+                    var target = song;
+                    if (remote)
+                    {
+                        ReleaseOnlinePreview();
+                        target = onlinePreviewSong = ScriptableObject.CreateInstance<SongDefinition>();
+                        onlinePreviewSong.hideFlags = HideFlags.DontSave;
+                    }
+                    target.SetPreparedAudio(decode.Take());
+                    preview.SetAudioSong(target, false);
+                    preview.SeekAudio(remote ? 0 : Math.Clamp(demoStart, 0, Math.Max(0, preview.AudioLength() - 0.1)));
+                    preview.PlayAudio();
+                }
             }
             finally
             {
                 cancellation.Cancel();
                 if (previewCancellation == cancellation) previewCancellation = null;
-                if (!claimed && decode != null) _ = decode.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
                 cancellation.Dispose();
             }
-        }
-        IEnumerator LoadPreview(SongDefinition song, double demoStart, int generation)
-        {
-            var engine = AudioEngine.EnsureInstance();
-            var online = Online.OnlineManager.Instance;
-            if (online?.IsOnline(song) == true)
-            {
-                yield return LoadOnlinePreview(song, generation);
-                yield break;
-            }
-            if (!engine.Available) yield break;
-            byte[] bytes = null;
-            Exception readError = null;
-            try { if (string.IsNullOrEmpty(song.audioPath)) bytes = AudioAssetCatalog.Read(song.music); }
-            catch (Exception error) { readError = error; }
-            if (readError != null) { Debug.LogWarning("Preview audio: " + readError.Message); StopPreview(); yield break; }
-            string path = song.audioPath;
-            int audioGeneration = engine.Generation;
-            var task = Task.Run(() => new NativeAudioSample(bytes ?? System.IO.File.ReadAllBytes(path), engine, true, false, audioGeneration));
-            bool claimed = false;
-            try
-            {
-                while (!task.IsCompleted) yield return null;
-                if (generation != previewGeneration) yield break;
-                if (!task.IsCompletedSuccessfully)
-                {
-                    Debug.LogWarning("Preview audio: " + task.Exception?.GetBaseException().Message);
-                    StopPreview(); yield break;
-                }
-                song.SetPreparedAudio(task.Result); claimed = true;
-            }
-            finally
-            {
-                if (!claimed) _ = task.ContinueWith(t => { if (t.IsCompletedSuccessfully) t.Result.Dispose(); });
-            }
-            if (generation != previewGeneration) yield break;
-            preview.SetAudioSong(song, false);
-            preview.SeekAudio(Math.Clamp(demoStart, 0, Math.Max(0, preview.AudioLength() - 0.1)));
-            preview.PlayAudio();
         }
 
         // Selection changes stop only the preview. The selection BGM keeps playing.
