@@ -38,7 +38,12 @@ namespace OurTaiko
                     if (reading) { found = true; chart.Course = Course(course).Split('_')[0]; chart.Level = level; }
                     continue;
                 }
-                if (line.Kind == TjaLineKind.End) { if (reading) { ended = true; break; } continue; }
+                if (line.Kind == TjaLineKind.End)
+                {
+                    if (!reading) continue;
+                    if (line.Implicit) chart.Warnings.Add("#END missing");
+                    ended = true; break;
+                }
                 if (line.Kind == TjaLineKind.Body)
                 {
                     if (!reading) continue;
@@ -68,7 +73,7 @@ namespace OurTaiko
                         break;
                 }
             }
-            if (!found || !ended) throw new FormatException($"No complete {requestedCourse} course (#START / #END).");
+            if (!found || !ended) throw new FormatException($"No {requestedCourse} course (#START).");
             if (!(chart.Bpm > 0) || double.IsInfinity(chart.Bpm)) throw new FormatException("BPM must be positive and finite.");
             new ChartReader(chart, balloons).Read(tokens);
             return chart;
@@ -138,7 +143,9 @@ namespace OurTaiko
                     }
                     else pending.Add(token);
                 }
-                FlushCommands();
+                // OpenTaiko reads notes after the last comma as a measure of their own.
+                if (pending.Any(t => t[0] != '#')) { chart.Warnings.Add("Last measure without a comma"); Flush(); }
+                else FlushCommands();
                 if (branch != null) EndBranch(); // #BRANCHEND is optional before #END / the next branch.
                 CheckLongNote();
                 chart.Duration = Math.Max(chart.Duration, state.Time);
@@ -153,7 +160,7 @@ namespace OurTaiko
 
             void FlushCommands()
             {
-                if (pending.Any(t => t[0] != '#')) throw new FormatException("A measure is missing its comma before a branch boundary or #END.");
+                if (pending.Any(t => t[0] != '#')) throw new FormatException("A measure is missing its comma before a branch boundary.");
                 foreach (string token in pending) Command(token);
                 pending.Clear();
             }

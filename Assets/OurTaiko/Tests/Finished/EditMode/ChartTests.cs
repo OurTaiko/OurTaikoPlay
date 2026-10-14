@@ -19,6 +19,21 @@ namespace OurTaiko.Tests
             Assert.That((chart.Level, chart.Branches.Count), Is.EqualTo((5, 0)));
         }
 
+        // OpenTaiko: a block without #END ends at the next COURSE: (or the file's end), and notes
+        // after the last comma are a measure of their own.
+        [Test] public void MissingEndAndLastCommaAreTolerated()
+        {
+            const string text = "BPM:120\nCOURSE:Hard\nLEVEL:5\n#START\n1111,\n2222\nCOURSE:Oni\nLEVEL:9\n#START\n1000,\n10";
+            var hard = TjaParser.Parse(text, "Hard");
+            Assert.That(hard.Notes.Select(n => n.Time), Is.EqualTo(new[] { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5 }));
+            Assert.That(hard.Bars.Count, Is.EqualTo(2));
+            Assert.That(hard.Warnings, Is.SupersetOf(new[] { "#END missing", "Last measure without a comma" }));
+            var oni = TjaParser.Parse(text, "Oni");
+            Assert.That((oni.Level, oni.Notes.Count, oni.Duration), Is.EqualTo((9, 2, 4.0)));
+            Assert.That(SongInfo.Read(text).Courses.Select(c => (c.Difficulty, c.Level)),
+                Is.EqualTo(new[] { (Difficulty.Hard, 5), (Difficulty.Oni, 9) }));
+        }
+
         // TjaNumber: a comma is a decimal point (OpenTaiko), and a trailing one is dropped.
         [Test] public void CommasInNumbersAreDecimalPointsOrTrailing()
         {
