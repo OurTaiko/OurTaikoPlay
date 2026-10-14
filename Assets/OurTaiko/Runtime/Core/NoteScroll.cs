@@ -25,7 +25,23 @@ namespace OurTaiko
         // A note's distance from the judge on both axes, as OpenTaiko places it for its scroll mode:
         // NM by its own time and BPM; BM and HB by the beat clock (measures to go × travel), BM with
         // SCROLL 1 and no vertical part, HB with its SCROLL.
+        // #SUDDEN: until the note starts to move its horizontal place stays where it will start;
+        // the vertical part moves as usual (TJAP3, kept by OpenTaiko).
         public static (double X, double Y) Distance(ChartNote note, double currentTime, ScrollClockTimeline clocks,
+            double travelDistance)
+        {
+            var distance = RawDistance(note, currentTime, clocks, travelDistance);
+            double moveAt = note.Time - note.SuddenMove;
+            if (currentTime < moveAt) distance.X = RawDistance(note, moveAt, clocks, travelDistance).X;
+            return distance;
+        }
+
+        // A note is drawn (with its text) once its #SUDDEN appearance time has come.
+        public static bool Appeared(ChartNote note, double currentTime)
+            => !(note.SuddenHidesRoll && note.IsLong) && currentTime >= note.Time - note.SuddenShow;
+
+        // The place without #SUDDEN's standing still.
+        public static (double X, double Y) RawDistance(ChartNote note, double currentTime, ScrollClockTimeline clocks,
             double travelDistance)
         {
             if (note.ScrollMode == ScrollMode.Normal)

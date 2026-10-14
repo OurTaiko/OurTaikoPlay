@@ -112,6 +112,7 @@ namespace OurTaiko
         sealed class TimingState
         {
             public double Time, Beat, Bpm, Measure = 1, ScrollX = 1, ScrollY, Clock;
+            public double SuddenShow = double.PositiveInfinity, SuddenMove = double.PositiveInfinity;
             public bool Barline = true;
             public ScrollMode Mode;
             public TimingState Copy() => (TimingState)MemberwiseClone();
@@ -296,6 +297,7 @@ namespace OurTaiko
             ChartNote NewNote() => new ChartNote { Time = state.Time, EndTime = state.Time,
                 Beat = state.Beat, Bpm = state.Bpm, ScrollX = state.ScrollX, ScrollY = state.ScrollY,
                 ScrollMode = state.Mode, ScrollClock = state.Clock, EndScrollClock = state.Clock,
+                SuddenShow = state.SuddenShow, SuddenMove = state.SuddenMove,
                 BranchId = branch == null ? -1 : branch.Id, Route = route };
 
             // A route without a list, or past its end, gives 5 hits (OpenTaiko's default for an
@@ -316,6 +318,7 @@ namespace OurTaiko
             {
                 if (branch != null && !hasRoute) throw new FormatException("Branch notes must follow #N, #E or #M.");
                 var bar = NewNote(); bar.Display = state.Barline; bar.IsBranchStart = branchBar;
+                bar.SuddenShow = bar.SuddenMove = double.PositiveInfinity;
                 chart.Bars.Add(bar);
                 Entries.Add(new ChartEntry(bar, false));
                 if (branch != null && branch.FirstEntries[(int)route] == null) branch.FirstEntries[(int)route] = bar;
@@ -371,6 +374,18 @@ namespace OurTaiko
                         else chart.LevelHolds.Add(state.Time);
                         break;
                     case "#NMSCROLL": case "#BMSCROLL": case "#HBSCROLL": state.Mode = ScrollModeOf(key).Value; break;
+                    // OpenTaiko: `#SUDDEN show move` in seconds, both required. Less than a
+                    // millisecond means unset; the move time is cut to whole milliseconds.
+                    case "#SUDDEN":
+                        var times = arg.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (times.Length < 2 || !TjaNumber.TryParse(times[0], out double show) || !TjaNumber.TryParse(times[1], out double move))
+                        {
+                            if (!chart.Warnings.Contains(command)) chart.Warnings.Add(command);
+                            break;
+                        }
+                        state.SuddenShow = Math.Abs(Math.Truncate(show * 1000)) >= 1 ? show : double.PositiveInfinity;
+                        state.SuddenMove = Math.Abs(Math.Truncate(move * 1000)) >= 1 ? Math.Truncate(move * 1000) / 1000 : double.PositiveInfinity;
+                        break;
                     default: if (!chart.Warnings.Contains(key)) chart.Warnings.Add(key); break;
                 }
             }

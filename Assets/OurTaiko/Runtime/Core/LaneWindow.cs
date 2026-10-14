@@ -77,6 +77,10 @@ namespace OurTaiko
             if (note.ScrollMode == ScrollMode.Normal)
                 Interval(note.Time, note.Bpm, note.ScrollX, travel, judgeX, width, extent, holdsAtJudge, out start, out end);
             else ClockInterval(note, clocks, travel, judgeX, width, extent, out start, out end);
+            // #SUDDEN: standing on the lane before it moves keeps it a candidate from its appearance.
+            if (double.IsPositiveInfinity(note.SuddenMove)) return;
+            double x = judgeX + NoteScroll.RawDistance(note, note.Time - note.SuddenMove, clocks, travel).X;
+            if (InLane(x, -extent, extent, width)) start = Math.Min(start, note.Time - note.SuddenShow);
         }
 
         // Candidate windows for the renderer. The extent over-covers every sprite: a balloon with

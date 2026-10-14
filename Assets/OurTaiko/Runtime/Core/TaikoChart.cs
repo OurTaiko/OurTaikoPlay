@@ -22,6 +22,12 @@ namespace OurTaiko
         // OpenTaiko's fBMSCROLLTime in measures of four beats: the beat clock at the note (and at a
         // long note's tail). Written measures advance it whatever the BPM; #DELAY at its BPM.
         public double ScrollClock, EndScrollClock;
+        // OpenTaiko #SUDDEN, in seconds before the hit time: the note is drawn from SuddenShow
+        // and starts to move at SuddenMove, standing where it will start until then. Infinite
+        // when not set; bar lines never have them.
+        public double SuddenShow = double.PositiveInfinity, SuddenMove = double.PositiveInfinity;
+        // TJAP3's quirk: SUDDEN with an appearance but no move time hides rolls and balloons.
+        public bool SuddenHidesRoll => !double.IsInfinity(SuddenShow) && double.IsPositiveInfinity(SuddenMove);
         public int BalloonHits;
         // Frame of notes/moji drawn under the note; assigned by NoteMoji.Assign.
         public int Moji;

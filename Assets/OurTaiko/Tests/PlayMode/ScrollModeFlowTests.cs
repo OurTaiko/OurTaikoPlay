@@ -15,13 +15,18 @@ namespace OurTaiko.Tests
         const string Chart = "TITLE:Scroll Modes\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#BMSCROLL\n#START\n" +
             "#SCROLL 3\n1111,\n#BPMCHANGE 240\n1111,\n#HBSCROLL\n#SCROLL 2+0.5i\n1111,\n1111,\n#NMSCROLL\n#SCROLL 1\n1111,\n#END";
 
-        [UnityTest] public IEnumerator SinglePlayDrawsEveryModeWhereOpenTaikoDoes() => Verify(false);
-        [UnityTest] public IEnumerator PracticeDrawsEveryModeWhereOpenTaikoDoes() => Verify(true);
+        // #SUDDEN: notes appear 1.5 s ahead and stand until 0.8 s ahead; HB ones on the clock.
+        const string SuddenChart = "TITLE:Sudden\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n" +
+            "#SUDDEN 1.5 0.8\n#SCROLL 1+0.5i\n1111,\n#HBSCROLL\n#BPMCHANGE 180\n1111,\n1111,\n#END";
 
-        IEnumerator Verify(bool practice)
+        [UnityTest] public IEnumerator SinglePlayDrawsEveryModeWhereOpenTaikoDoes() => Verify(false, Chart);
+        [UnityTest] public IEnumerator PracticeDrawsEveryModeWhereOpenTaikoDoes() => Verify(true, Chart);
+        [UnityTest] public IEnumerator SinglePlayDrawsSuddenNotesWhereOpenTaikoDoes() => Verify(false, SuddenChart);
+
+        IEnumerator Verify(bool practice, string text)
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
-            song.chart = new TextAsset(Chart);
+            song.chart = new TextAsset(text);
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
@@ -77,6 +82,8 @@ namespace OurTaiko.Tests
             for (int i = 0; i < chart.Notes.Count; i++)
             {
                 var root = play.NoteRoot(i);
+                if (!NoteScroll.Appeared(chart.Notes[i], time))
+                    Assert.That(root, Is.Null, $"note {i} drawn before #SUDDEN shows it {when}");
                 if (root == null) continue;
                 drawn++;
                 var (x, y) = NoteScroll.Distance(chart.Notes[i], time, clocks, travel);

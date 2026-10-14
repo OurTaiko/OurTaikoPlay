@@ -29,6 +29,13 @@ namespace OurTaiko.Tests
             "#BRANCHSTART p,0,0\n#N\n#BPMCHANGE 200\n1111,\n#E\n#DELAY 0.3\n2222,\n#M\n#HBSCROLL\n#SCROLL -2\n#BPMCHANGE 100\n3333,\n" +
             "#BRANCHEND\n11111111,\n#END";
 
+        // #SUDDEN: appearing late, standing before moving (also on the clock), negative times,
+        // a reset, and the hidden-roll quirk.
+        const string SuddenSynthetic = "BPM:150\nBALLOON:4,3\nCOURSE:Oni\n#START\n" +
+            "#SUDDEN 1 0.6\n1212,\n#SCROLL 2\n5000,\n0008,\n#SUDDEN 0.5 2\n#SCROLL -1\n1122,\n#SUDDEN 3 0\n7000,\n0800,\n" +
+            "#SUDDEN 0 0\n#SCROLL 1\n1111,\n#HBSCROLL\n#SUDDEN 2 1\n#SCROLL 1+1i\n12121212,\n#BPMCHANGE 300\n6000,\n0008,\n" +
+            "#BMSCROLL\n#SUDDEN -0.2 0.3\n1111,\n#SUDDEN 0.8 -0.4\n9000,\n0008,\n#END";
+
         static string Read(string path) => File.ReadAllText(Path.Combine(Application.dataPath, "OurTaiko", path));
 
         static IEnumerable<TestCaseData> Charts()
@@ -39,10 +46,11 @@ namespace OurTaiko.Tests
             yield return new TestCaseData("Tests/Shared/Songs~/3 BranchTraining.tja", "Oni").SetName("{m}(BranchTraining Oni)");
             yield return new TestCaseData(null, "Oni").SetName("{m}(Synthetic scrolls)");
             yield return new TestCaseData("clock", "Oni").SetName("{m}(Synthetic BM and HB scrolls)");
+            yield return new TestCaseData("sudden", "Oni").SetName("{m}(Synthetic SUDDEN)");
         }
 
         static TaikoChart Load(string path, string course)
-            => TjaParser.Parse(path == null ? Synthetic : path == "clock" ? ClockSynthetic : Read(path), course);
+            => TjaParser.Parse(path == null ? Synthetic : path == "clock" ? ClockSynthetic : path == "sudden" ? SuddenSynthetic : Read(path), course);
 
         sealed class Pair
         {
@@ -165,6 +173,7 @@ namespace OurTaiko.Tests
         static bool NoteDrawn(ChartNote note, ScrollClockTimeline clocks, double time, double width)
         {
             double travel = width - JudgeX;
+            if (!NoteScroll.Appeared(note, time)) return false;
             double x = JudgeX + NoteScroll.Distance(note, time, clocks, travel).X;
             if (note.IsBalloon && time >= note.Time) x = JudgeX;
             double length = note.IsLong && !note.IsBalloon ? NoteScroll.RollLength(note, travel) : 0;
