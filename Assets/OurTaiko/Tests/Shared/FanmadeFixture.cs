@@ -301,11 +301,24 @@ namespace OurTaiko.Tests
                 });
         }
 
-        static void Reply(HttpListenerContext context, int status, JToken body)
+        // Gzip packs JSON replies for a client that asks for it, as OurTaiko Database does.
+        public bool Gzip;
+        public int GzippedReplies;
+
+        void Reply(HttpListenerContext context, int status, JToken body)
         {
             context.Response.StatusCode = status;
             context.Response.ContentType = "application/json";
-            Bytes(context, Encoding.UTF8.GetBytes(body.ToString(Newtonsoft.Json.Formatting.None)), status);
+            byte[] bytes = Encoding.UTF8.GetBytes(body.ToString(Newtonsoft.Json.Formatting.None));
+            if (Gzip && (context.Request.Headers["Accept-Encoding"] ?? "").Contains("gzip"))
+            {
+                using var packed = new MemoryStream();
+                using (var zip = new System.IO.Compression.GZipStream(packed, System.IO.Compression.CompressionLevel.Optimal, true)) zip.Write(bytes, 0, bytes.Length);
+                bytes = packed.ToArray();
+                context.Response.AddHeader("Content-Encoding", "gzip");
+                Interlocked.Increment(ref GzippedReplies);
+            }
+            Bytes(context, bytes, status);
         }
 
         static void Bytes(HttpListenerContext context, byte[] bytes, int status = 200)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -137,6 +138,9 @@ namespace OurTaiko.Online
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
             using var request = new HttpRequestMessage(string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post, Config.baseUrl + path);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            // API replies may come gzipped (an OurTaiko Database catalog is 4 MB, 0.8 MB packed). Only
+            // here: resource downloads keep the exact bytes and sizes their manifest names.
+            request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
             if (!string.IsNullOrEmpty(token)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             if (!string.IsNullOrEmpty(key)) request.Headers.TryAddWithoutValidation("Idempotency-Key", key);
             if (!string.IsNullOrEmpty(body)) request.Content = new StringContent(body, Encoding.UTF8, "application/json");
@@ -147,7 +151,11 @@ namespace OurTaiko.Online
                 if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 long total = response.Content.Headers.ContentLength ?? 0;
                 if (total > limit) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");
-                using var stream = await response.Content.ReadAsStreamAsync();
+                bool gzip = response.Content.Headers.ContentEncoding.Contains("gzip");
+                // The packed length says nothing of the unpacked one; the limit still bounds it below.
+                if (gzip) total = 0;
+                using var raw = await response.Content.ReadAsStreamAsync();
+                using var stream = gzip ? new GZipStream(raw, CompressionMode.Decompress) : raw;
                 var buffer = new byte[81920];
                 var output = new MemoryStream(total > 0 ? (int)Math.Min(total, int.MaxValue) : 0);
                 progress?.Invoke(0, total);

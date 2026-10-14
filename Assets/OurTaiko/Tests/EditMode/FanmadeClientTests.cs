@@ -465,6 +465,17 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void GzippedApiRepliesAreUnpacked()
+        {
+            fixture.Gzip = true;
+            fixture.AddAccountScore("don", first, "Oni", 600000);
+            Connect(guest: false);
+            Assert.That(client.Charts.Select(c => c.Title), Is.EquivalentTo(new[] { "First", "Second" }));
+            Assert.That(client.Best(client.Charts.Single(c => c.Title == "First"), (int)Difficulty.Oni).Score, Is.EqualTo(600000));
+            Assert.That(fixture.GzippedReplies, Is.GreaterThanOrEqualTo(3), "Login, catalog and scores came packed.");
+        }
+
+        [Test]
         public void BestPrefersAScoreOfTheCurrentFiles()
         {
             fixture.AddAccountScore("don", first, "Oni", 9000, latest: false);
