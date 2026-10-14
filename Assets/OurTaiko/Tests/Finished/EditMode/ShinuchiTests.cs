@@ -78,7 +78,7 @@ namespace OurTaiko.Tests
         [Test]
         public void CommonAndMasterTotalsStayFixedWhenNormalIsSelected()
         {
-            var chart = Parse("1000,\n0000,\n0000,\n#BRANCHSTART p,101,102\n#N\n1111,\n#E\n7008,\n#M\n1100,\n6000,\n0080,\n7008,\n#BRANCHEND\n1000,", "BALLOON:3");
+            var chart = Parse("1000,\n0000,\n0000,\n#BRANCHSTART p,101,102\n#N\n1111,\n#E\n7008,\n#M\n1100,\n6000,\n0080,\n7008,\n#BRANCHEND\n1000,", "BALLOONMAS:3");
             var statistics = new ChartStatistics(chart);
             Assert.That(statistics.JudgeableNotes, Is.EqualTo(4));
             Assert.That(statistics.BalloonHitBudget, Is.EqualTo(3));
@@ -94,13 +94,15 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void ChartsWithoutOrdinaryNotesUseReferenceFallbackAndMissingBalloonCountsUseOne()
+        public void ChartsWithoutOrdinaryNotesUseReferenceFallbackAndMissingBalloonCountsUseFive()
         {
             var session = new PlaySession(Parse("7008,\n9008,"));
             Assert.That(session.BaseScore, Is.EqualTo(1000000));
-            session.Hit(false, 0.1); session.Hit(false, 2.1);
+            Assert.That(session.Chart.Notes.Select(n => n.BalloonHits), Is.EqualTo(new[] { 5, 5 }), "OpenTaiko's default");
+            for (int i = 0; i < 5; i++) session.Hit(false, 0.1);
+            for (int i = 0; i < 5; i++) session.Hit(false, 2.1);
             Assert.That(session.Resolved.All(resolved => resolved), Is.True);
-            Assert.That(session.Score, Is.EqualTo(200));
+            Assert.That(session.Score, Is.EqualTo(1000));
             Assert.That(session.GaugePoints, Is.Zero);
             Assert.That(new PlaySession(Parse("0000,")).BaseScore, Is.EqualTo(1000000));
         }

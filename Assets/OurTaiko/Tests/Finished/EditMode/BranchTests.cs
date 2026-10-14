@@ -12,7 +12,7 @@ namespace OurTaiko.Tests
         static TaikoChart Accuracy(string condition = "p,50,80", string lead = "1111,\n0000,\n0000,", string metadata = "") =>
             Parse(lead + "\n#BRANCHSTART " + condition + Routes, metadata);
 
-        [Test] public void RoutesShareStartAndRestoreTimingAndBalloonCursor()
+        [Test] public void RoutesShareStartAndRestoreTiming()
         {
             var chart = Parse("7008,\n#BRANCHSTART p,50,80\n#N\n#BPMCHANGE 240\n#SCROLL 2\n#MEASURE 3/4\n#DELAY 0.25\n#BARLINEOFF\n7008,\n#E\n7008,\n#M\n7008,\n#BRANCHEND\n7008,", "BALLOON:2,3,4");
             var n = chart.Notes.Single(x => x.BranchId == 0 && x.Route == BranchRoute.Normal);
@@ -23,11 +23,41 @@ namespace OurTaiko.Tests
             Assert.That(e.Time, Is.EqualTo(2)); Assert.That(e.Bpm, Is.EqualTo(120));
             Assert.That(e.ScrollX, Is.EqualTo(1));
             Assert.That(m.Time, Is.EqualTo(2));
-            Assert.That(new[] { n.BalloonHits, e.BalloonHits, m.BalloonHits }, Is.EqualTo(new[] { 3, 3, 3 }));
+            // BALLOON is the Normal list only; 玄人 and 達人 have none and take the default 5.
+            Assert.That(new[] { n.BalloonHits, e.BalloonHits, m.BalloonHits }, Is.EqualTo(new[] { 3, 5, 5 }));
             Assert.That(chart.Notes.Last().Time, Is.EqualTo(4)); Assert.That(chart.Notes.Last().BalloonHits, Is.EqualTo(4));
             Assert.That(chart.Duration, Is.EqualTo(6));
             Assert.That(chart.Bars.Single(x => x.BranchId == 0 && x.Route == BranchRoute.Normal).Display, Is.False);
             Assert.That(chart.Bars.Single(x => x.BranchId == 0 && x.Route == BranchRoute.Expert).Display, Is.True);
+        }
+
+        // OpenTaiko: each route reads its own list in order. A common balloon is played with the
+        // Normal list's number on every route and moves every route's place past it.
+        [Test] public void EachRouteReadsItsOwnBalloonList()
+        {
+            var chart = Parse("7008,\n#BRANCHSTART p,50,80\n#N\n7008,\n#E\n7008,\n#M\n7008,\n#BRANCHEND\n7008,",
+                "BALLOONNOR:10,20,30\nBALLOONEXP:11,21,31\nBALLOONMAS:12,22,32");
+            int Route(BranchRoute route) => chart.Notes.Single(x => x.BranchId == 0 && x.Route == route).BalloonHits;
+            Assert.That(chart.Notes.First(x => x.BranchId < 0).BalloonHits, Is.EqualTo(10));
+            Assert.That(new[] { Route(BranchRoute.Normal), Route(BranchRoute.Expert), Route(BranchRoute.Master) }, Is.EqualTo(new[] { 20, 21, 22 }));
+            Assert.That(chart.Notes.Last().BalloonHits, Is.EqualTo(30));
+            // The Shinuchi budget counts what is played: common balloons from Normal, branches from Master.
+            Assert.That(new ChartStatistics(chart).BalloonHitBudget, Is.EqualTo(10 + 22 + 30));
+            // The header order does not matter, and BALLOON is BALLOONNOR.
+            var reordered = Parse("7008,\n#BRANCHSTART p,50,80\n#N\n7008,\n#E\n7008,\n#M\n7008,\n#BRANCHEND",
+                "BALLOONMAS:12,22\nBALLOONEXP:11,21\nBALLOON:10,20");
+            Assert.That(reordered.Notes.Select(x => x.BalloonHits), Is.EqualTo(new[] { 10, 20, 21, 22 }));
+        }
+
+        [Test] public void BalloonListsReadAsOpenTaikoDoes()
+        {
+            int[] Hits(string headers) => Parse("7008,\n7008,\n7008,", headers).Notes.Select(x => x.BalloonHits).ToArray();
+            Assert.That(Hits("BALLOON:4,6"), Is.EqualTo(new[] { 4, 6, 5 }), "Past the end: 5.");
+            Assert.That(Hits("BALLOON:4,,6"), Is.EqualTo(new[] { 4, 5, 5 }), "Reading stops at an empty item.");
+            Assert.That(Hits("BALLOON:4,6\nBALLOON:5.10"), Is.EqualTo(new[] { 4, 6, 5 }), "An unreadable line is ignored.");
+            Assert.That(Parse("7008,", "BALLOON:5.10").Warnings, Has.Member("BALLOON:5.10"));
+            // Lists before any COURSE are every course's defaults; a course's own list replaces them.
+            Assert.That(TjaParser.Parse("BPM:120\nBALLOON:7\nCOURSE:Hard\nBALLOON:8\n#START\n7008,\n#END\nCOURSE:Oni\n#START\n7008,\n#END").Notes[0].BalloonHits, Is.EqualTo(7));
         }
 
         [Test] public void DecisionIsAtTheLastBarLineBeforeTheBranch()

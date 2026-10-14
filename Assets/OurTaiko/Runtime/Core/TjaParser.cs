@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -20,7 +21,11 @@ namespace OurTaiko
             if (string.IsNullOrWhiteSpace(text)) throw new FormatException("The TJA chart is empty.");
             var chart = new TaikoChart();
             var tokens = new List<string>();
-            var balloons = new List<int>();
+            // Balloon hits per route (Normal, Expert, Master); headers before any COURSE are
+            // every course's defaults, and each COURSE starts again from them.
+            var globalBalloons = NewBalloonLists();
+            var balloons = NewBalloonLists();
+            bool seenCourse = false;
             string course = "Oni";
             int level = 0;
             bool reading = false, found = false, ended = false;
@@ -49,11 +54,18 @@ namespace OurTaiko
                     case "SUBTITLE": chart.Subtitle = value.TrimStart('-', '+'); break;
                     case "BPM": chart.Bpm = Number(value); break;
                     case "OFFSET": chart.Offset = Number(value); break;
-                    case "COURSE": course = value; balloons.Clear(); level = 0; break;
+                    case "COURSE":
+                        course = value; level = 0; seenCourse = true;
+                        for (int r = 0; r < 3; r++) balloons[r] = new List<int>(globalBalloons[r]);
+                        break;
                     case "LEVEL": level = (int)Number(value); break;
-                    // Match the reference parser's shared balloon pool and route cursor rewind.
-                    case "BALLOONNOR": case "BALLOONEXP": balloons.AddRange(Balloons(value)); break;
-                    case "BALLOONMAS": case "BALLOON": balloons = Balloons(value); break;
+                    // OpenTaiko: BALLOON is the Normal route's list; each header replaces its route's list.
+                    case "BALLOON": case "BALLOONNOR": case "BALLOONEXP": case "BALLOONMAS":
+                        int route = line.Key == "BALLOONEXP" ? 1 : line.Key == "BALLOONMAS" ? 2 : 0;
+                        if (!Balloons(value, out var hits)) { if (!chart.Warnings.Contains(line.Text)) chart.Warnings.Add(line.Text); break; }
+                        balloons[route] = hits;
+                        if (!seenCourse) globalBalloons[route] = new List<int>(hits);
+                        break;
                 }
             }
             if (!found || !ended) throw new FormatException($"No complete {requestedCourse} course (#START / #END).");
@@ -62,21 +74,36 @@ namespace OurTaiko
             return chart;
         }
 
-        static List<int> Balloons(string value) => value.Replace('.', ',').Split(',')
-            .Where(s => s.Trim().Length > 0).Select(s => (int)Number(s)).ToList();
+        static List<int>[] NewBalloonLists() => new[] { new List<int>(), new List<int>(), new List<int>() };
+
+        // OpenTaiko ParseBalloon: comma-separated whole numbers, read up to the first empty item; a
+        // number that does not read (such as `5.10`) rejects the whole line.
+        static bool Balloons(string value, out List<int> hits)
+        {
+            hits = new List<int>();
+            foreach (string item in value.Split(','))
+            {
+                if (item.Length == 0) break;
+                if (!int.TryParse(item, NumberStyles.Integer, CultureInfo.InvariantCulture, out int n)) return false;
+                hits.Add(n);
+            }
+            return true;
+        }
 
         sealed class TimingState
         {
             public double Time, Beat, Bpm, Measure = 1, ScrollX = 1, ScrollY;
             public bool Barline = true;
-            public int BalloonIndex;
             public TimingState Copy() => (TimingState)MemberwiseClone();
         }
 
         sealed class ChartReader
         {
             readonly TaikoChart chart;
-            readonly List<int> balloons;
+            // Each route reads its own list in order. A common balloon takes the Normal list's
+            // number (the one played on every route) and moves every route's place past it.
+            readonly List<int>[] balloons;
+            readonly int[] balloonIndex = new int[3];
             readonly List<string> pending = new List<string>();
             TimingState state, branchStart;
             ChartBranch branch;
@@ -91,7 +118,7 @@ namespace OurTaiko
             List<ChartEntry>[] routeLists;
             List<ChartEntry> Entries => branch == null ? common : routeLists[(int)route];
 
-            public ChartReader(TaikoChart chart, List<int> balloons)
+            public ChartReader(TaikoChart chart, List<int>[] balloons)
             {
                 this.chart = chart; this.balloons = balloons;
                 state = new TimingState { Time = -chart.Offset, Bpm = chart.Bpm };
@@ -237,6 +264,15 @@ namespace OurTaiko
                 Beat = state.Beat, Bpm = state.Bpm, ScrollX = state.ScrollX, ScrollY = state.ScrollY,
                 BranchId = branch == null ? -1 : branch.Id, Route = route };
 
+            // A route without a list, or past its end, gives 5 hits (OpenTaiko's default for an
+            // empty list; past the end it leaves 0, which no balloon can be popped at).
+            int NextBalloon(int r)
+            {
+                var list = balloons[r];
+                int i = balloonIndex[r]++;
+                return i < list.Count ? list[i] : 5;
+            }
+
             void SetGogo(bool on)
             {
                 chart.Gogos.Add(new ChartGogo { Time = state.Time, On = on, BranchId = branch == null ? -1 : branch.Id, Route = route });
@@ -324,7 +360,11 @@ namespace OurTaiko
                     {
                         if (longNote != null) throw new FormatException("Overlapping long notes are not supported.");
                         var note = NewNote(); note.Kind = (NoteKind)type;
-                        if (note.IsBalloon) { note.BalloonHits = state.BalloonIndex < balloons.Count ? balloons[state.BalloonIndex] : 1; state.BalloonIndex++; }
+                        if (note.IsBalloon)
+                        {
+                            if (branch != null) note.BalloonHits = NextBalloon((int)route);
+                            else { note.BalloonHits = NextBalloon(0); NextBalloon(1); NextBalloon(2); }
+                        }
                         chart.Notes.Add(note);
                         Entries.Add(new ChartEntry(note, false));
                         if (note.IsLong) longNote = note;
