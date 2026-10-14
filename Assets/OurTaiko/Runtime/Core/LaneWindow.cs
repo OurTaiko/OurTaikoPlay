@@ -66,7 +66,7 @@ namespace OurTaiko
             for (int i = 0; i < notes.Count; i++)
             {
                 var note = notes[i];
-                double length = note.IsLong && !note.IsBalloon ? Math.Abs(NoteScroll.RollLength(note, travel)) : 0;
+                double length = note.IsDrumroll ? Math.Abs(NoteScroll.RollLength(note, travel)) : 0;
                 Interval(note.Time, note.Bpm, note.ScrollX, travel, judgeX, width, 3 * spriteWidth + length,
                     note.IsBalloon, out start[i], out end[i]);
             }

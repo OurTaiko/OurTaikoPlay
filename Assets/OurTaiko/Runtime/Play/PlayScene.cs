@@ -350,7 +350,7 @@ namespace OurTaiko
             }
             SpawnArc(index, result);
             var judged = Session.Chart.Notes[index];
-            bool big = judged.Kind == NoteKind.BigDon || judged.Kind == NoteKind.BigKa;
+            bool big = judged.IsBigNote;
             double judgedAt = ChartTime;
             hitFace.Play(result, big, judgedAt);
             hitRing.Play(result, big, judgedAt);
@@ -373,7 +373,7 @@ namespace OurTaiko
                     ChartTime);
                 if (Session.LongHits[index] == note.BalloonHits) hitAudio.PlayAudioOneShot(balloonPop);
             }
-            else if (judged.Kind == NoteKind.Roll || judged.Kind == NoteKind.BigRoll)
+            else if (judged.IsDrumroll)
                 drumrollCounter.RecordHit(index, Session.LongHits[index], judgedAt);
             UpdateHud();
         }
@@ -562,7 +562,7 @@ namespace OurTaiko
             image.Initialize(r.GetComponentInParent<LaneSpriteLayer>(), sprite, r.GetSiblingIndex());
             return image;
         }
-        static int ShapeOf(ChartNote note) => note.Kind == NoteKind.Balloon ? BalloonShape : note.IsLong && !note.IsBalloon ? RollShape : PlainShape;
+        static int ShapeOf(ChartNote note) => note.Kind == NoteKind.Balloon ? BalloonShape : note.IsDrumroll ? RollShape : PlainShape;
         static int MojiShapeOf(ChartNote note) => ShapeOf(note) == RollShape ? RollShape - 1 : PlainShape;
 
         // Only the notes on the lane own views; prewarm enough that the first screens do not allocate.
@@ -782,11 +782,11 @@ namespace OurTaiko
                 int i = noteWindow[k];
                 var note = chartNotes[i]; var view = shownNotes[i]; var pos = Position(note, time);
                 if (note.IsBalloon && time >= note.Time) pos = new Vector2(JudgeLocalX, JudgeLocalY);
-                float length = note.IsLong && !note.IsBalloon ? (float)NoteScroll.RollLength(note, TravelDistance) : 0;
+                float length = note.IsDrumroll ? (float)NoteScroll.RollLength(note, TravelDistance) : 0;
                 // ドロン hides the notes; they are still judged. Like draw_note_buffer,
                 // only a hit removes a note: a 5/6 roll resolved at its tail and a note
                 // missed by timeout keep scrolling until they leave the lane.
-                bool rolling = note.IsLong && !note.IsBalloon;
+                bool rolling = note.IsDrumroll;
                 bool alive = note.Display && !(hideSkipped && Session.Skipped[i]) && (preview ? Session.IsPracticePreviewActive(note) : Session.IsShown(note)) && (rolling || Session.Missed[i] || !Session.Resolved[i]);
                 bool visible = alive && InLane(pos.x, Reach(note, view, length));
                 if (mojiLayer != null) mojiEntered |= RenderMoji(i, note, pos, length, alive);
@@ -887,7 +887,7 @@ namespace OurTaiko
         Vector2 Reach(ChartNote note, NoteView view, float length)
         {
             Vector2 size = view != null ? view.Root.rect.size : new Vector2(NoteSize, NoteSize);
-            float aspect = note.IsLong && !note.IsBalloon ? RollTailAspect(note) : 0;
+            float aspect = note.IsDrumroll ? RollTailAspect(note) : 0;
             LaneCull.NoteReach(note, size.x, size.y, length, aspect, BalloonFace, out double min, out double max);
             return new Vector2((float)min, (float)max);
         }

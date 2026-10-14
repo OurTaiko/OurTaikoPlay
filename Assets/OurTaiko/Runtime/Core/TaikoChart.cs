@@ -24,6 +24,10 @@ namespace OurTaiko
         public bool IsLong => (int)Kind >= 5;
         public bool IsBalloon => Kind == NoteKind.Balloon || Kind == NoteKind.Kusudama;
         public bool IsKa => Kind == NoteKind.Ka || Kind == NoteKind.BigKa;
+        // A 5/6 drumroll: a long note that is not a balloon.
+        public bool IsDrumroll => Kind == NoteKind.Roll || Kind == NoteKind.BigRoll;
+        // A big don or big ka (3/4).
+        public bool IsBigNote => Kind == NoteKind.BigDon || Kind == NoteKind.BigKa;
     }
 
     // One object of an authored note list in source order. A long note appears

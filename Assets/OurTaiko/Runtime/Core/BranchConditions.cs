@@ -37,7 +37,7 @@ namespace OurTaiko
             feed.NoteJudged += (note, result, points) =>
             {
                 Judge(all, result);
-                if (note.Kind == NoteKind.BigDon || note.Kind == NoteKind.BigKa) Judge(big, result);
+                if (note.IsBigNote) Judge(big, result);
                 score += points;
             };
             feed.LongHit += (note, points) =>
