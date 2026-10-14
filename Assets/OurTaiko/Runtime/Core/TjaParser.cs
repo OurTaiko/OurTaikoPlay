@@ -334,7 +334,13 @@ namespace OurTaiko
                     case "#SECTION":
                         chart.Sections.Add(new ChartSection { Time = state.Time, BranchId = branch == null ? -1 : branch.Id, Route = route });
                         break;
-                    case "#LEVELHOLD": case "#BMSCROLL": case "#HBSCROLL":
+                    // OpenTaiko: inside a route it holds that route once the branch chooses it;
+                    // anywhere else it holds the route being played from its time.
+                    case "#LEVELHOLD":
+                        if (branch != null && hasRoute) branch.HoldRoutes[(int)route] = true;
+                        else chart.LevelHolds.Add(state.Time);
+                        break;
+                    case "#BMSCROLL": case "#HBSCROLL":
                         throw new NotSupportedException($"{key} is not supported by the single-lane port yet.");
                     default: if (!chart.Warnings.Contains(key)) chart.Warnings.Add(key); break;
                 }

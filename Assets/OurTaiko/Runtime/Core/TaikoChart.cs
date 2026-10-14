@@ -52,6 +52,8 @@ namespace OurTaiko
         public bool BigOnly;
         // A fourth argument `l`: the master threshold is an upper bound (value < master → 達人).
         public bool Less;
+        // Routes with #LEVELHOLD: choosing one keeps it for every later branch (OpenTaiko).
+        public readonly bool[] HoldRoutes = new bool[3];
         public readonly ChartNote[] FirstEntries = new ChartNote[3];
         // The route drawn for each requested one. An omitted #E uses #N and an omitted #M uses
         // #E, matching Fanmade's image renderer; a complete branch maps every route to itself.
@@ -94,6 +96,8 @@ namespace OurTaiko
         public readonly List<ChartNote> Bars = new List<ChartNote>();
         public readonly List<ChartBranch> Branches = new List<ChartBranch>();
         public readonly List<ChartSection> Sections = new List<ChartSection>();
+        // Times of #LEVELHOLD outside a route: from there the route being played is kept.
+        public readonly List<double> LevelHolds = new List<double>();
         // Sorted by time; events at the same time keep their source order.
         public readonly List<ChartGogo> Gogos = new List<ChartGogo>();
         public readonly List<ChartTempo> Tempos = new List<ChartTempo>();

@@ -60,6 +60,45 @@ namespace OurTaiko.Tests
             Assert.That(TjaParser.Parse("BPM:120\nBALLOON:7\nCOURSE:Hard\nBALLOON:8\n#START\n7008,\n#END\nCOURSE:Oni\n#START\n7008,\n#END").Notes[0].BalloonHits, Is.EqualTo(7));
         }
 
+        // OpenTaiko #LEVELHOLD: in a route, choosing that route keeps it for every later branch;
+        // elsewhere, the route being played is kept from its time. Branch 2 (p,101,102) would
+        // otherwise always fall to 普通.
+        [TestCase(BranchRoute.Master, BranchRoute.Master, BranchRoute.Master)]
+        [TestCase(BranchRoute.Normal, BranchRoute.Master, BranchRoute.Normal)]
+        public void LevelHoldInARouteKeepsItOnceChosen(BranchRoute holding, BranchRoute first, BranchRoute second)
+        {
+            string routes = Routes.Replace("#" + holding.ToString()[0] + "\n", "#" + holding.ToString()[0] + "\n#LEVELHOLD\n");
+            var chart = Parse("1111,\n0000,\n0000,\n#BRANCHSTART p,50,80" + routes + "0000,\n0000,\n#BRANCHSTART p,101,102" + Routes);
+            Assert.That(chart.Branches[0].HoldRoutes[(int)holding], Is.True);
+            var session = new PlaySession(chart);
+            session.Advance(chart.Duration + 1, true);
+            Assert.That(session.BranchHistory, Is.EqualTo(new[] { first, second }));
+            Assert.That(session.IsLevelHeld, Is.EqualTo(holding == first));
+        }
+
+        [Test] public void LevelHoldOutsideARouteKeepsTheRouteBeingPlayed()
+        {
+            // Before the first judgement (4 s): 普通 is kept although every note is 良.
+            var early = Parse("1111,\n#LEVELHOLD\n0000,\n0000,\n#BRANCHSTART p,50,80" + Routes);
+            Assert.That(early.LevelHolds, Is.EqualTo(new[] { 2.0 }));
+            var session = new PlaySession(early);
+            session.Advance(early.Duration + 1, true);
+            Assert.That(session.BranchHistory, Is.EqualTo(new[] { BranchRoute.Normal }));
+            // At the judgement's own time it still comes first, as in OpenTaiko's chip order.
+            var same = new PlaySession(Parse("1111,\n0000,\n#LEVELHOLD\n0000,\n#BRANCHSTART p,50,80" + Routes));
+            same.Advance(same.Chart.Duration + 1, true);
+            Assert.That(same.BranchHistory, Is.EqualTo(new[] { BranchRoute.Normal }));
+            // Between #BRANCHSTART and #N it holds from there: the branch it follows is already judged.
+            var after = Parse("1111,\n0000,\n0000,\n#BRANCHSTART p,50,80\n#LEVELHOLD" + Routes + "0000,\n0000,\n#BRANCHSTART p,101,102" + Routes);
+            var held = new PlaySession(after);
+            held.Advance(after.Duration + 1, true);
+            Assert.That(held.BranchHistory, Is.EqualTo(new[] { BranchRoute.Master, BranchRoute.Master }));
+            // A fixed route (practice) is not held.
+            var practice = new PlaySession(early, 0, BranchRoute.Expert);
+            practice.Advance(early.Duration + 1, true);
+            Assert.That(practice.BranchHistory, Is.EqualTo(new[] { BranchRoute.Expert }));
+        }
+
         [Test] public void DecisionIsAtTheLastBarLineBeforeTheBranch()
         {
             // OpenTaiko: the bar line of the measure before #BRANCHSTART, hidden or not.
@@ -207,7 +246,8 @@ namespace OurTaiko.Tests
         [TestCase("10\n#BRANCHSTART p,50,80")]
         public void MalformedBranchIsRejected(string body) => Assert.Throws<FormatException>(() => Parse(body));
 
-        [TestCase("#LEVELHOLD")]
+        [TestCase("#BMSCROLL")]
+        [TestCase("#HBSCROLL")]
         public void UnsupportedBranchExtensionsAreExplicit(string command) => Assert.Throws<NotSupportedException>(() => Parse(command));
     }
 }
