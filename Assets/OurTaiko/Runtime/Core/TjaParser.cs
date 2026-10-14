@@ -24,30 +24,26 @@ namespace OurTaiko
             string course = "Oni";
             int level = 0;
             bool reading = false, found = false, ended = false;
-            foreach (string raw in text.TrimStart('\uFEFF').Replace("\r", "").Split('\n'))
+            // The first complete block of the requested course is played (SongInfo lists the same one).
+            foreach (var line in TjaLines.Read(text))
             {
-                string line = raw.Split(new[] { "//" }, StringSplitOptions.None)[0].Trim();
-                if (line.Length == 0) continue;
-                if (line.StartsWith("#START", StringComparison.OrdinalIgnoreCase))
+                if (line.Kind == TjaLineKind.Start)
                 {
                     reading = string.Equals(Course(course), Course(requestedCourse), StringComparison.OrdinalIgnoreCase);
                     if (reading) { found = true; chart.Course = Course(course).Split('_')[0]; chart.Level = level; }
                     continue;
                 }
-                if (line.Equals("#END", StringComparison.OrdinalIgnoreCase)) { if (reading) { ended = true; break; } reading = false; continue; }
-                if (reading)
+                if (line.Kind == TjaLineKind.End) { if (reading) { ended = true; break; } continue; }
+                if (line.Kind == TjaLineKind.Body)
                 {
-                    if (line[0] == '#') tokens.Add(line);
-                    else
-                    {
-                        foreach (char c in line.Where(c => !char.IsWhiteSpace(c))) tokens.Add(c.ToString());
-                    }
+                    if (!reading) continue;
+                    if (line.Text[0] == '#') tokens.Add(line.Text);
+                    else foreach (char c in line.Text.Where(c => !char.IsWhiteSpace(c))) tokens.Add(c.ToString());
                     continue;
                 }
-                int colon = line.IndexOf(':');
-                if (colon < 0) continue;
-                string key = line.Substring(0, colon).Trim().ToUpperInvariant(), value = line.Substring(colon + 1).Trim();
-                switch (key)
+                if (line.Kind != TjaLineKind.Header) continue;
+                string value = line.Value;
+                switch (line.Key)
                 {
                     case "TITLE": chart.Title = value; break;
                     case "SUBTITLE": chart.Subtitle = value.TrimStart('-', '+'); break;

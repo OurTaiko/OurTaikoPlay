@@ -9,6 +9,16 @@ namespace OurTaiko.Tests
     {
         static TaikoChart Parse(string body, string metadata = "") => TjaParser.Parse("TITLE:Test\nBPM:120\n" + metadata + "\nCOURSE:Oni\n#START\n" + body + "\n#END");
 
+        // TjaLines: the song list and the parser agree on the block they read, and on case.
+        [Test] public void SongInfoListsTheBlockTheParserPlays()
+        {
+            const string text = "TITLE:Twice\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#start\n1,\n#end\nCOURSE:Oni\nLEVEL:9\n#START\n#BRANCHSTART p,50,80\n#N\n1,\n#E\n1,\n#M\n1,\n#END";
+            var info = SongInfo.Read(text).Course(Difficulty.Oni);
+            var chart = TjaParser.Parse(text, info.Course);
+            Assert.That((info.Level, info.IsBranching), Is.EqualTo((5, false)));
+            Assert.That((chart.Level, chart.Branches.Count), Is.EqualTo((5, 0)));
+        }
+
         // TjaNumber: a comma is a decimal point (OpenTaiko), and a trailing one is dropped.
         [Test] public void CommasInNumbersAreDecimalPointsOrTrailing()
         {

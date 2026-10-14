@@ -21,7 +21,6 @@ namespace OurTaiko.Online
         public static string Build(string utf8, FanmadeChart chart, string seat = "single")
         {
             var played = Enumerable.Range(0, SongInfo.CourseNames.Count).Select(i => chart.Block(i, seat)).ToList();
-            if (utf8.StartsWith("﻿", StringComparison.Ordinal)) utf8 = utf8.Substring(1);
             var output = new StringBuilder(chart.TitleHeaders() + "WAVE:" + chart.CachedAudioName + "\n");
             output.Append("OFFSET:").Append(chart.Offset.ToString("R", CultureInfo.InvariantCulture)).Append('\n');
             var globals = new List<string>();
@@ -32,17 +31,13 @@ namespace OurTaiko.Online
             string course = "Oni";
             var wanted = new SortedDictionary<int, FanmadeDifficulty>();
             var found = new HashSet<int>();
-            foreach (string raw in utf8.Split('\n'))
+            foreach (var tja in TjaLines.Read(utf8))
             {
-                int comment = raw.IndexOf("//", StringComparison.Ordinal);
-                string line = Trim(comment >= 0 ? raw.Substring(0, comment) : raw);
-                if (line.Length == 0) continue;
-                string key = Key(line);
-                if (line.StartsWith("#START", StringComparison.Ordinal))
+                string line = tja.Text;
+                if (tja.Kind == TjaLineKind.Start)
                 {
                     inBlock = true; block++; body.Clear();
-                    string player = line.Substring(6).Trim().ToUpperInvariant();
-                    string side = player == "P1" ? "p1" : player == "P2" ? "p2" : "single";
+                    string side = tja.Value == "P1" ? "p1" : tja.Value == "P2" ? "p2" : "single";
                     var d = chart.Blocks.Find(x => x.Course == course && x.Side == side);
                     if (d != null)
                     {
@@ -51,7 +46,7 @@ namespace OurTaiko.Online
                     }
                     continue;
                 }
-                if (line == "#END")
+                if (tja.Kind == TjaLineKind.End)
                 {
                     if (inBlock && wanted.TryGetValue(block, out var d))
                     {
@@ -68,11 +63,10 @@ namespace OurTaiko.Online
                     continue;
                 }
                 if (inBlock) { body.Append(line).Append('\n'); continue; }
-                if (key == "COURSE")
+                if (tja.Key == "COURSE")
                 {
-                    string value = line.Substring(line.IndexOf(':') + 1).Trim();
-                    var difficulty = SongInfo.DifficultyOf(value);
-                    course = difficulty.HasValue ? SongInfo.CourseNames[(int)difficulty.Value] : value;
+                    var difficulty = SongInfo.DifficultyOf(tja.Value);
+                    course = difficulty.HasValue ? SongInfo.CourseNames[(int)difficulty.Value] : tja.Value;
                     seenCourse = true; headers.Clear(); continue;
                 }
                 (seenCourse ? headers : globals).Add(line);
@@ -81,11 +75,10 @@ namespace OurTaiko.Online
             return output.ToString();
         }
 
-        static string Trim(string s) => s.Trim(' ', '\t', '\r', '\n');
         static string Key(string line)
         {
             int colon = line.IndexOf(':');
-            return Trim(colon >= 0 ? line.Substring(0, colon) : line).ToUpperInvariant();
+            return (colon >= 0 ? line.Substring(0, colon) : line).Trim().ToUpperInvariant();
         }
 
         // API metadata replaces these headers; retain no original OFFSET, even inside course headers.

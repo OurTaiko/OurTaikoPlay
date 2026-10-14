@@ -50,31 +50,28 @@ namespace OurTaiko
             string course = "Oni";
             int level = 0;
             CourseInfo reading = null;
-            foreach (string raw in text.TrimStart('﻿').Replace("\r", "").Split('\n'))
+            foreach (var line in TjaLines.Read(text))
             {
-                string line = raw.Split(new[] { "//" }, StringSplitOptions.None)[0].Trim();
-                if (line.Length == 0) continue;
-                if (line.StartsWith("#START", StringComparison.OrdinalIgnoreCase))
+                if (line.Kind == TjaLineKind.Start)
                 {
                     var difficulty = DifficultyOf(course);
                     reading = difficulty == null ? null : new CourseInfo { Difficulty = difficulty.Value, Course = course, Level = level };
                     continue;
                 }
-                if (line.Equals("#END", StringComparison.OrdinalIgnoreCase))
+                if (line.Kind == TjaLineKind.End)
                 {
-                    // A later block of the same course replaces the earlier one, like the reference parser.
-                    if (reading != null) { info.Courses.RemoveAll(c => c.Difficulty == reading.Difficulty); info.Courses.Add(reading); }
+                    // The first complete block of a difficulty is the one TjaParser plays.
+                    if (reading != null && !info.Has(reading.Difficulty)) info.Courses.Add(reading);
                     reading = null;
                     continue;
                 }
-                if (reading != null)
+                if (line.Kind == TjaLineKind.Body)
                 {
-                    if (line.StartsWith("#BRANCHSTART", StringComparison.OrdinalIgnoreCase)) reading.IsBranching = true;
+                    if (reading != null && line.Text.StartsWith("#BRANCHSTART", StringComparison.OrdinalIgnoreCase)) reading.IsBranching = true;
                     continue;
                 }
-                int colon = line.IndexOf(':');
-                if (colon < 0) continue;
-                string key = line.Substring(0, colon).Trim().ToUpperInvariant(), value = line.Substring(colon + 1).Trim();
+                if (line.Kind != TjaLineKind.Header) continue;
+                string key = line.Key, value = line.Value;
                 switch (key)
                 {
                     case "TITLE": info.Title = value; titles["en"] = value; break;
