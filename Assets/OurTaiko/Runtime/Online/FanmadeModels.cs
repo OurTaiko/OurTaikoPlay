@@ -24,12 +24,12 @@ namespace OurTaiko.Online
     public sealed class FanmadeDifficulty
     {
         public string Course = "", Side = "single", Maker = "";
-        // The block's id on a server that sends chartSlotVersion 1; 0 on an older server.
+        // The block's id (chartSlotVersion 1).
         public long Id;
         public int Level;
         // The block has #BRANCHSTART (Fanmade migration 031).
         public bool Branching;
-        // The block as older servers name it, and as scores are keyed: Oni, Oni_1p, Oni_2p.
+        // The key of the block's scores: Oni, Oni_1p, Oni_2p.
         public string Name => Course + (Side == "p1" ? "_1p" : Side == "p2" ? "_2p" : "");
     }
 
@@ -71,19 +71,9 @@ namespace OurTaiko.Online
             if (!(v["difficulties"] is JArray difficulties)) throw new FanmadeException("API_DIFFICULTIES_INVALID");
             foreach (var d in difficulties)
             {
-                string name = Json.Str(d, "course"), side;
-                long id = 0;
-                if (d["side"] != null)
-                {
-                    side = Json.Str(d, "side"); id = Json.Number(d, "id");
-                    if (Array.IndexOf(Sides, side) < 0 || id == 0) throw new FanmadeException("API_DIFFICULTY_INVALID");
-                }
-                else
-                {
-                    // An older server names the side in the course: Oni_1p, Oni_2p.
-                    side = name.EndsWith("_1p") ? "p1" : name.EndsWith("_2p") ? "p2" : "single";
-                    if (side != "single") name = name.Substring(0, name.Length - 3);
-                }
+                string name = Json.Str(d, "course"), side = Json.Str(d, "side");
+                long id = Json.Number(d, "id");
+                if (Array.IndexOf(Sides, side) < 0 || id <= 0) throw new FanmadeException("API_DIFFICULTY_INVALID");
                 int slot = SongInfo.CourseNames.IndexOf(name);
                 if (slot < 0) continue;  // Tower/Dan are not playable here.
                 long level = Json.Number(d, "level");
@@ -172,7 +162,7 @@ namespace OurTaiko.Online
         internal static string LineText(string s) => (s ?? "").Replace('\n', ' ').Replace('\r', ' ').Replace('\0', ' ');
     }
 
-    // One server category in bootstrap order, with its charts in API order. A chart listed in
+    // One server category in catalog order, with its charts in API order. A chart listed in
     // several categories is the same FanmadeChart (by id) in each.
     public sealed class FanmadeCategory
     {
@@ -180,7 +170,7 @@ namespace OurTaiko.Online
         public readonly List<string> ChartIds = new List<string>();
     }
 
-    // A playlist folder from bootstrap: the account's own ("owned") and favorite playlists and the
+    // A playlist folder from the catalog or GET /game/playlists: the account's own ("owned") and favorite playlists and the
     // server's "system" ones, with its playable catalog charts in playlist order. Genre selects the
     // folder artwork like a category's; Cover is the optional JPEG or PNG shown on the open folder.
     public sealed class FanmadePlaylist
@@ -190,7 +180,7 @@ namespace OurTaiko.Online
         public FanmadeResource Cover;
         public readonly List<string> ChartIds = new List<string>();
 
-        // One bootstrap playlist. Charts outside `catalog` (not listed or not playable here) and
+        // One playlist. Charts outside `catalog` (not listed or not playable here) and
         // repeated ones are skipped, so ChartIds may come out empty.
         public static FanmadePlaylist From(JToken v, string server, string serverName, ICollection<string> catalog, Action<string> validateUrl)
         {
@@ -220,14 +210,13 @@ namespace OurTaiko.Online
         // Difficulty is the played block's name (FanmadeDifficulty.Name).
         public string Id = "", Song = "", Difficulty = "";
         public long Good, Ok, Bad, Score, Drumroll, MaxCombo, ClearStatus;
-        // False once the song's files were replaced after the play; older servers delete such scores.
+        // False once the song's files were replaced after the play.
         public bool IsLatest = true;
 
         public static FanmadeScore From(JToken v) => new FanmadeScore
         {
             Id = Json.Str(v, "id"), Song = Json.Id(v, "songId"),
-            Difficulty = v["difficultyId"] == null ? Json.Str(v, "difficulty")
-                : new FanmadeDifficulty { Course = Json.Str(v, "course"), Side = Json.Str(v, "side") }.Name,
+            Difficulty = new FanmadeDifficulty { Course = Json.Str(v, "course"), Side = Json.Str(v, "side") }.Name,
             IsLatest = v["isLatest"]?.Type != JTokenType.Boolean || (bool)v["isLatest"],
             Good = Json.Number(v, "good"), Ok = Json.Number(v, "ok"), Bad = Json.Number(v, "bad"), Score = Json.Number(v, "score"),
             Drumroll = Json.Number(v, "drumroll"), MaxCombo = Json.Number(v, "max_combo"),

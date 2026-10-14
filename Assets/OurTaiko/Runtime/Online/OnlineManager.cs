@@ -25,7 +25,7 @@ namespace OurTaiko.Online
         public FanmadeClient Client { get; private set; }
         // The connected catalog as playable songs; the same instance for a chart until Reset.
         public IReadOnlyList<SongDefinition> Songs => songs;
-        // One folder per server category, in server then bootstrap order.
+        // One folder per server category, in server then catalog order.
         public IReadOnlyList<SongFolder> Folders => folders;
 
         readonly List<SongDefinition> songs = new List<SongDefinition>();

@@ -202,11 +202,10 @@ namespace OurTaiko.Online
             return "NETWORK_ERROR";
         }
 
-        // Account scores of the bootstrap, kept only for a logged-in account.
+        // Account scores from GET /game/scores, kept only for a logged-in account.
         internal readonly List<FanmadeScore> Scores = new List<FanmadeScore>();
         internal readonly Dictionary<string, FanmadeScore> Best = new Dictionary<string, FanmadeScore>();
         // The catalog sent chartSlotVersion 1: blocks have ids, a course covers all its sides.
-        internal bool Slots;
         internal static string ScoreKey(string song, string difficulty) => song + "/" + difficulty;
 
         internal void IndexScore(FanmadeScore score)
