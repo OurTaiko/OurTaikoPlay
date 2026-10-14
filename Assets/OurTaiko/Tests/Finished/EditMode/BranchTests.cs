@@ -245,9 +245,5 @@ namespace OurTaiko.Tests
         [TestCase("#BRANCHSTART p,50,80\n#N\n5000,\n#E\n0008,")]
         [TestCase("10\n#BRANCHSTART p,50,80")]
         public void MalformedBranchIsRejected(string body) => Assert.Throws<FormatException>(() => Parse(body));
-
-        [TestCase("#BMSCROLL")]
-        [TestCase("#HBSCROLL")]
-        public void UnsupportedBranchExtensionsAreExplicit(string command) => Assert.Throws<NotSupportedException>(() => Parse(command));
     }
 }

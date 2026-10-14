@@ -6,6 +6,9 @@ namespace OurTaiko
     public enum NoteKind { Don = 1, Ka, BigDon, BigKa, Roll, BigRoll, Balloon = 7, Kusudama = 9 }
     public enum Judgment { None, Good, Ok, Bad, Roll }
     public enum BranchRoute { Normal, Expert, Master }
+    // How a note scrolls (OpenTaiko #NMSCROLL / #BMSCROLL / #HBSCROLL): by its own time and BPM, or
+    // by the beat clock shared with the notes around it, ignoring (BM) or applying (HB) its #SCROLL.
+    public enum ScrollMode { Normal, BMScroll, HBScroll }
     // #BRANCHSTART conditions as OpenTaiko names them: p accuracy, pp 良 percentage, jp/jg/jb
     // 良/可/不可 counts (d is a big-note jp), r drumroll hits, rb balloon hits, s score.
     // None keeps the current route (an empty or unreadable condition).
@@ -15,6 +18,10 @@ namespace OurTaiko
     {
         public NoteKind Kind;
         public double Time, EndTime, Beat, Bpm, ScrollX = 1, ScrollY, TailBpm;
+        public ScrollMode ScrollMode;
+        // OpenTaiko's fBMSCROLLTime in measures of four beats: the beat clock at the note (and at a
+        // long note's tail). Written measures advance it whatever the BPM; #DELAY at its BPM.
+        public double ScrollClock, EndScrollClock;
         public int BalloonHits;
         // Frame of notes/moji drawn under the note; assigned by NoteMoji.Assign.
         public int Moji;
@@ -62,6 +69,15 @@ namespace OurTaiko
         public bool HasAllRoutes => Routes[1] == BranchRoute.Expert && Routes[2] == BranchRoute.Master;
     }
 
+    // From Time on a route's beat clock runs at Bpm from Clock. Common points (BranchId -1) are on
+    // every route: the chart's start, each common #BPMCHANGE, and every branch's start and end.
+    public sealed class ChartClockPoint
+    {
+        public double Time, Clock, Bpm;
+        public int BranchId = -1;
+        public BranchRoute Route;
+    }
+
     public sealed class ChartSection
     {
         public double Time;
@@ -96,6 +112,8 @@ namespace OurTaiko
         public readonly List<ChartNote> Bars = new List<ChartNote>();
         public readonly List<ChartBranch> Branches = new List<ChartBranch>();
         public readonly List<ChartSection> Sections = new List<ChartSection>();
+        // The beat clock's BPM points (OpenTaiko listBPM): ScrollClockTimeline reads them per route.
+        public readonly List<ChartClockPoint> ScrollClocks = new List<ChartClockPoint>();
         // Times of #LEVELHOLD outside a route: from there the route being played is kept.
         public readonly List<double> LevelHolds = new List<double>();
         // Sorted by time; events at the same time keep their source order.
