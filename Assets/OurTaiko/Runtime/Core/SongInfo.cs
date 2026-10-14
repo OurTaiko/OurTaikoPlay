@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace OurTaiko
 {
@@ -117,7 +116,6 @@ namespace OurTaiko
             _ => null,
         };
 
-        static double Number(string value, double fallback)
-            => double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double result) ? result : fallback;
+        static double Number(string value, double fallback) => TjaNumber.TryParse(value, out double result) ? result : fallback;
     }
 }

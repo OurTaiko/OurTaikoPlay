@@ -9,6 +9,17 @@ namespace OurTaiko.Tests
     {
         static TaikoChart Parse(string body, string metadata = "") => TjaParser.Parse("TITLE:Test\nBPM:120\n" + metadata + "\nCOURSE:Oni\n#START\n" + body + "\n#END");
 
+        // TjaNumber: a comma is a decimal point (OpenTaiko), and a trailing one is dropped.
+        [Test] public void CommasInNumbersAreDecimalPointsOrTrailing()
+        {
+            var chart = TjaParser.Parse("TITLE:Test\nBPM:120,5\nOFFSET:-1,25\nCOURSE:Oni\n#START\n#BPMCHANGE 240,\n#MEASURE 2/4,\n1,\n#END");
+            Assert.That(chart.Bpm, Is.EqualTo(120.5));
+            Assert.That(chart.Offset, Is.EqualTo(-1.25));
+            Assert.That(chart.Notes[0].Bpm, Is.EqualTo(240));
+            Assert.That(chart.Duration, Is.EqualTo(1.25 + 0.5));
+            Assert.That(SongInfo.Read("BPM:120,5\nCOURSE:Oni\n#START\n1,\n#END").Bpm, Is.EqualTo(120.5));
+        }
+
         [TestCase("Easy", 0.6)]
         [TestCase("Normal", 0.7)]
         [TestCase("Hard", 0.7)]

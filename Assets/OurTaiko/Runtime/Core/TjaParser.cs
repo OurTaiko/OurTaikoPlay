@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -10,7 +9,7 @@ namespace OurTaiko
     // Commands are kept between note slots, so a BPM/SCROLL change inside a measure stays in place.
     public static class TjaParser
     {
-        static double Number(string value) => double.Parse(value, CultureInfo.InvariantCulture);
+        static double Number(string value) => TjaNumber.Parse(value);
         // A numeric COURSE (0–4) by its name; any other value as written.
         static string Course(string value)
             => int.TryParse(value, out int n) && n >= 0 && n < SongInfo.CourseNames.Count ? SongInfo.CourseNames[n] : value;
@@ -197,8 +196,7 @@ namespace OurTaiko
                 if (string.IsNullOrWhiteSpace(arg)) return;
                 string[] parts = arg.Split(',').Select(p => p.Trim()).ToArray();
                 if (parts.Length < 3 || parts[0].Length == 0
-                    || !double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double expert)
-                    || !double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out double master))
+                    || !TjaNumber.TryParse(parts[1], out double expert) || !TjaNumber.TryParse(parts[2], out double master))
                 {
                     Warn("#BRANCHSTART " + arg);
                     return;
