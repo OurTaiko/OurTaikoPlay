@@ -14,12 +14,12 @@ namespace OurTaiko.Online
         CancellationTokenSource rankCancellation = new CancellationTokenSource();
 
         // Polling from song select never blocks on disk, parsing, or the network. Both
-        // difficulty and content hash belong to the cache identity, including DOUBLE sides.
+        // the played blocks and the content hash belong to the cache identity.
         public int? RankThreshold(FanmadeChart chart, int difficulty)
         {
             if (chart == null || difficulty < 0 || difficulty >= chart.Difficulties.Length || chart.Difficulties[difficulty] == null) return null;
             string key = chart.Server + "/" + chart.Id + "/" + chart.TjaHash + "/"
-                + string.Join(",", chart.Difficulties.Select(d => d?.Course ?? ""));
+                + string.Join(",", chart.Difficulties.Select(d => d?.Name ?? ""));
             lock (sync)
             {
                 if (!rankThresholds.TryGetValue(key, out var entry)

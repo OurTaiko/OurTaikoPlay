@@ -268,7 +268,7 @@ namespace OurTaiko.Online
         {
             var keep = new HashSet<string>();
             songs.Clear(); charts.Clear();
-            foreach (var chart in Client.Charts.SelectMany(c => !c.IsSingle ? new[] { c.ForPlayer("P1"), c.ForPlayer("P2") }.Where(x => x.IsPlayable) : new[] { c }))
+            foreach (var chart in Client.Charts.Where(c => c.IsPlayable))
             {
                 string key = SongKey(chart);
                 keep.Add(key);
@@ -292,8 +292,8 @@ namespace OurTaiko.Online
             }
             foreach (string key in byKey.Keys.Where(k => !keep.Contains(k)).ToList()) byKey.Remove(key);
             folders.Clear();
-            // A double chart is two songs (P1 and P2) under one chart id. Indexed once: looking each
-            // id up among every song took seconds with a catalog of a few thousand songs.
+            // Indexed once: looking each id up among every song took seconds with a catalog of a
+            // few thousand songs.
             var byChart = new Dictionary<(string Server, string Id), List<SongDefinition>>();
             foreach (var song in songs)
             {
@@ -368,7 +368,7 @@ namespace OurTaiko.Online
             return entry.Song;
         }
 
-        public static string SongKey(FanmadeChart chart) => "fanmade/" + chart.Server + "/" + chart.Id + (chart.SelectedPlayer.Length > 0 ? "/" + chart.SelectedPlayer : "");
+        public static string SongKey(FanmadeChart chart) => "fanmade/" + chart.Server + "/" + chart.Id;
 
         public bool IsOnline(SongDefinition song) => song != null && charts.ContainsKey(song);
         public FanmadeChart ChartOf(SongDefinition song) => song != null && charts.TryGetValue(song, out var chart) ? chart : null;

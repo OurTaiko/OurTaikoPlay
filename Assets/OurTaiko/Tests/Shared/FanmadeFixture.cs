@@ -25,11 +25,16 @@ namespace OurTaiko.Tests
             public string Encoding, AudioName = "song.ogg";
             public byte[] Tja = new byte[0], Audio = new byte[0];
             public string[] Categories = { "game" };
-            // Base course, level and #START player ("", "P1" or "P2"); a chart with players is DOUBLE.
+            // Base course, level and #START player ("" for the single block, "P1" or "P2").
             public List<(string Course, int Level, string Player)> Difficulties =
                 new List<(string, int, string)> { ("Oni", 8, "") };
+            static long nextBlock;
+            readonly long firstBlock = Interlocked.Add(ref nextBlock, 100);
+            // The id the API gives a block, as scores name it.
+            public long BlockId(string course, string player = "") => firstBlock + Difficulties.FindIndex(d => d.Course == course && d.Player == player);
+            public static string Side(string player) => player == "P1" ? "p1" : player == "P2" ? "p2" : "single";
             public double Bpm = 120, DemoStart, Offset;
-            // Courses (as the API names them) reported with "branching": true; the rest are false.
+            // Blocks (Oni, or Oni_1p / Oni_2p for a side) reported with "branching": true; the rest are false.
             public readonly HashSet<string> Branching = new HashSet<string>();
 
             public JObject ToJson()
@@ -41,11 +46,10 @@ namespace OurTaiko.Tests
                     ["tjaHash"] = Sha(Tja), ["audioHash"] = Sha(Audio), ["audioName"] = AudioName,
                     ["titleTranslations"] = new JObject { ["ja"] = Title + " JA" }, ["subtitleTranslations"] = new JObject(),
                     ["bpm"] = Bpm, ["demoStart"] = DemoStart, ["offset"] = Offset,
-                    ["isSingle"] = Difficulties.All(d => string.IsNullOrEmpty(d.Player)),
-                    ["difficulties"] = new JArray(Difficulties.Select(d =>
+                    ["difficulties"] = new JArray(Difficulties.Select(d => new JObject
                     {
-                        string course = d.Course + (d.Player == "P1" ? "_1p" : d.Player == "P2" ? "_2p" : "");
-                        return new JObject { ["course"] = course, ["level"] = d.Level, ["maker"] = Maker, ["branching"] = Branching.Contains(course) };
+                        ["id"] = BlockId(d.Course, d.Player), ["course"] = d.Course, ["side"] = Side(d.Player), ["level"] = d.Level, ["maker"] = Maker,
+                        ["branching"] = Branching.Contains(d.Course + (d.Player == "P1" ? "_1p" : d.Player == "P2" ? "_2p" : "")),
                     })),
                 };
                 if (Encoding != null) value["encoding"] = Encoding;
@@ -63,7 +67,7 @@ namespace OurTaiko.Tests
         // Bootstrap capability fields; a test drops one to play an outdated server.
         public readonly JObject Protocol = new JObject
         {
-            ["courseKeyedDifficulties"] = true, ["resourceDownloadVersion"] = 1,
+            ["chartSlotVersion"] = 1, ["resourceDownloadVersion"] = 1,
             ["scoreReplayVersion"] = 1, ["audioPreviewVersion"] = 1,
         };
         public Func<Chart, JObject> Manifest;
@@ -174,7 +178,7 @@ namespace OurTaiko.Tests
                     string course = request.QueryString["course"];
                     int.TryParse(request.QueryString["level"], out int level);
                     var matches = Charts.Where(c => (q.MatchesText(c.Title) || q.MatchesText(c.Title + " JA") || q.MatchesText(c.Subtitle) || q.MatchesText(c.Maker))
-                        && c.Difficulties.Any(d => (string.IsNullOrEmpty(course) || d.Course + (d.Player == "P1" ? "_1p" : d.Player == "P2" ? "_2p" : "") == course) && (level == 0 || d.Level == level)))
+                        && c.Difficulties.Any(d => (string.IsNullOrEmpty(course) || d.Course == course) && (level == 0 || d.Level == level)))
                         .Select(c => c.ToJson()).ToArray();
                     Reply(context, 200, new JObject { ["items"] = new JArray(matches), ["total"] = matches.Length }); return;
                 }
@@ -264,9 +268,14 @@ namespace OurTaiko.Tests
             if (ScoreFailures.TryDequeue(out int status)) { Reply(context, status, new JObject()); return; }
             if (body.ContainsKey("versionId")) { Reply(context, 400, new JObject()); return; }
             if (body["max_combo"]?.Type != JTokenType.Integer) { Reply(context, 400, new JObject()); return; }
+            if (body["difficultyId"]?.Type != JTokenType.Integer) { Reply(context, 400, new JObject()); return; }
+            var chart = Charts.Find(c => c.Difficulties.Any(d => c.BlockId(d.Course, d.Player) == (long)body["difficultyId"]));
+            if (chart == null) { Reply(context, 404, new JObject()); return; }
+            var block = chart.Difficulties.Find(d => chart.BlockId(d.Course, d.Player) == (long)body["difficultyId"]);
             var score = new JObject
             {
-                ["id"] = Hex(32), ["songId"] = body["songId"], ["difficulty"] = body["difficulty"],
+                ["id"] = Hex(32), ["songId"] = chart.Id, ["difficultyId"] = body["difficultyId"],
+                ["course"] = block.Course, ["side"] = Chart.Side(block.Player), ["isLatest"] = true,
                 ["good"] = body["good"], ["ok"] = body["ok"], ["bad"] = body["bad"], ["score"] = body["score"],
                 ["drumroll"] = body["drumroll"], ["max_combo"] = body["max_combo"],
                 ["ClearStatus"] = body["ClearStatus"] ?? new JValue(0),
@@ -276,12 +285,14 @@ namespace OurTaiko.Tests
             Reply(context, 200, score);
         }
 
-        public void AddAccountScore(string user, Chart chart, string course, long score, int clearStatus = 0)
+        // A stored play of the chart's block: a course's single one, or "P1" / "P2".
+        public void AddAccountScore(string user, Chart chart, string course, long score, int clearStatus = 0, string player = "", bool latest = true)
         {
             lock (AccountScores)
                 AccountScores.Add(new JObject
                 {
-                    ["user"] = user, ["id"] = Hex(32), ["songId"] = chart.Id, ["difficulty"] = course,
+                    ["user"] = user, ["id"] = Hex(32), ["songId"] = chart.Id, ["difficultyId"] = chart.BlockId(course, player),
+                    ["course"] = course, ["side"] = Chart.Side(player), ["isLatest"] = latest,
                     ["good"] = 1, ["ok"] = 0, ["bad"] = 0, ["score"] = score, ["drumroll"] = 0, ["max_combo"] = 1,
                     ["ClearStatus"] = clearStatus,
                 });

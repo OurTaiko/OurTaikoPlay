@@ -19,13 +19,18 @@ namespace OurTaiko.Online
         public HttpStatusException(int status) : base("HTTP_" + status) { Status = status; }
     }
 
+    // One chart block: a course (Easy..Edit) on one side, as the arcade keeps a single, a 1P and a
+    // 2P chart per course. The side is the block's #START: plain single, #START P1 p1, #START P2 p2.
     public sealed class FanmadeDifficulty
     {
-        // Course as the API names it: Easy..Edit, with _1p/_2p on a DOUBLE chart.
-        public string Course = "", Player = "", Maker = "";
+        public string Course = "", Side = "single", Maker = "";
+        // The block's id on a server that sends chartSlotVersion 1; 0 on an older server.
+        public long Id;
         public int Level;
         // The block has #BRANCHSTART (Fanmade migration 031).
         public bool Branching;
+        // The block as older servers name it, and as scores are keyed: Oni, Oni_1p, Oni_2p.
+        public string Name => Course + (Side == "p1" ? "_1p" : Side == "p2" ? "_2p" : "");
     }
 
     // A published chart as /api/v1/game/categories/{id}/charts and /api/v1/charts/{id} return it.
@@ -36,10 +41,9 @@ namespace OurTaiko.Online
         public string Server = "", Id = "", Title = "", Subtitle = "", Maker = "";
         public string TjaHash = "", AudioHash = "", AudioName = "";
         public string Category = "", Genre = "";
-        public bool IsSingle = true;
         public readonly Dictionary<string, string> Titles = new Dictionary<string, string>(), Subtitles = new Dictionary<string, string>();
         public double Bpm = 120, DemoStart, Offset;
-        // One slot per Easy..Edit; a DOUBLE chart fills them per player through ForPlayer.
+        // The block single play reads for each of Easy..Edit; Block gives any seat's.
         public FanmadeDifficulty[] Difficulties = new FanmadeDifficulty[5];
         public readonly List<FanmadeDifficulty> Blocks = new List<FanmadeDifficulty>();
 
@@ -47,10 +51,9 @@ namespace OurTaiko.Online
 
         public static FanmadeChart From(JToken v, string server)
         {
-            if (v["isSingle"]?.Type != JTokenType.Boolean) throw new FanmadeException("API_DIFFICULTY_INVALID");
             var c = new FanmadeChart
             {
-                Server = server, IsSingle = (bool)v["isSingle"],
+                Server = server,
                 Id = Json.Str(v, "id"), Title = Json.Str(v, "title"),
                 Subtitle = Json.Str(v, "subtitle"), Maker = Json.Str(v, "maker"), TjaHash = Json.Str(v, "tjaHash"),
                 AudioHash = Json.Str(v, "audioHash"), AudioName = Json.Str(v, "audioName"),
@@ -70,39 +73,52 @@ namespace OurTaiko.Online
             if (!(v["difficulties"] is JArray difficulties)) throw new FanmadeException("API_DIFFICULTIES_INVALID");
             foreach (var d in difficulties)
             {
-                string name = Json.Str(d, "course");
-                string player = name.EndsWith("_1p") ? "P1" : name.EndsWith("_2p") ? "P2" : "";
-                int slot = Array.IndexOf(Courses, player.Length > 0 ? name.Substring(0, name.Length - 3) : name);
+                string name = Json.Str(d, "course"), side;
+                long id = 0;
+                if (d["side"] != null)
+                {
+                    side = Json.Str(d, "side"); id = Json.Number(d, "id");
+                    if (Array.IndexOf(Sides, side) < 0 || id == 0) throw new FanmadeException("API_DIFFICULTY_INVALID");
+                }
+                else
+                {
+                    // An older server names the side in the course: Oni_1p, Oni_2p.
+                    side = name.EndsWith("_1p") ? "p1" : name.EndsWith("_2p") ? "p2" : "single";
+                    if (side != "single") name = name.Substring(0, name.Length - 3);
+                }
+                int slot = Array.IndexOf(Courses, name);
                 if (slot < 0) continue;  // Tower/Dan are not playable here.
                 long level = Json.Number(d, "level");
                 if (level > 100 || d["branching"]?.Type != JTokenType.Boolean) throw new FanmadeException("API_DIFFICULTY_INVALID");
                 var difficulty = new FanmadeDifficulty
                 {
-                    Course = name, Level = (int)level, Player = player,
+                    Id = id, Course = name, Side = side, Level = (int)level,
                     Maker = Json.Str(d, "maker"), Branching = (bool)d["branching"],
                 };
-                if (c.Blocks.Any(x => x.Course == name) || c.IsSingle != (player.Length == 0))
-                    throw new FanmadeException("API_DIFFICULTY_INVALID");
+                if (c.Blocks.Any(x => x.Course == name && x.Side == side)) throw new FanmadeException("API_DIFFICULTY_INVALID");
                 c.Blocks.Add(difficulty);
-                c.Difficulties[slot] ??= difficulty;
             }
+            for (int i = 0; i < c.Difficulties.Length; i++) c.Difficulties[i] = c.Block(i);
             return c;
         }
 
-        public string SelectedPlayer = "";
-        public FanmadeChart ForPlayer(string player)
+        public static readonly string[] Sides = { "single", "p1", "p2" };
+        // The arcade's side for each seat first, then the blocks that stand in where a course lacks
+        // it: single play reads single; of two players, 1P reads p1 and 2P reads p2.
+        static readonly Dictionary<string, string[]> ReadOrder = new Dictionary<string, string[]>
         {
-            var copy = (FanmadeChart)MemberwiseClone();
-            copy.SelectedPlayer = player;
-            copy.Difficulties = new FanmadeDifficulty[5];
-            foreach (var d in Blocks)
+            ["single"] = new[] { "single", "p1" }, ["p1"] = new[] { "p1", "single" }, ["p2"] = new[] { "p2", "single", "p1" },
+        };
+
+        // The block a seat ("single", "p1" or "p2") plays on a course (0..4 for Easy..Edit); null when it has none.
+        public FanmadeDifficulty Block(int course, string seat = "single")
+        {
+            foreach (string side in ReadOrder[seat])
             {
-                if (d.Player != player) continue;
-                string basic = d.Course.Split('_')[0];
-                int slot = Array.IndexOf(Courses, basic);
-                if (slot >= 0) copy.Difficulties[slot] = d;
+                var block = Blocks.Find(x => x.Course == Courses[course] && x.Side == side);
+                if (block != null) return block;
             }
-            return copy;
+            return null;
         }
 
         // Song-select metadata straight from the API; the chart itself is only downloaded to play.
@@ -112,7 +128,7 @@ namespace OurTaiko.Online
             language = language == "zh-Hans" ? "zh" : language ?? "en";
             var info = new SongInfo
             {
-                Title = SongInfo.Translated(Titles, language, Title) + (SelectedPlayer.Length > 0 ? " " + SelectedPlayer : ""),
+                Title = SongInfo.Translated(Titles, language, Title),
                 Subtitle = SongInfo.Translated(Subtitles, language, Subtitle).TrimStart('-', '+'),
                 Genre = Genre, Bpm = Bpm, DemoStart = DemoStart,
             };
@@ -198,12 +214,18 @@ namespace OurTaiko.Online
 
     public sealed class FanmadeScore
     {
+        // Difficulty is the played block's name (FanmadeDifficulty.Name).
         public string Id = "", Song = "", Difficulty = "";
         public long Good, Ok, Bad, Score, Drumroll, MaxCombo, ClearStatus;
+        // False once the song's files were replaced after the play; older servers delete such scores.
+        public bool IsLatest = true;
 
         public static FanmadeScore From(JToken v) => new FanmadeScore
         {
-            Id = Json.Str(v, "id"), Song = Json.Str(v, "songId"), Difficulty = Json.Str(v, "difficulty"),
+            Id = Json.Str(v, "id"), Song = Json.Str(v, "songId"),
+            Difficulty = v["difficultyId"] == null ? Json.Str(v, "difficulty")
+                : new FanmadeDifficulty { Course = Json.Str(v, "course"), Side = Json.Str(v, "side") }.Name,
+            IsLatest = v["isLatest"]?.Type != JTokenType.Boolean || (bool)v["isLatest"],
             Good = Json.Number(v, "good"), Ok = Json.Number(v, "ok"), Bad = Json.Number(v, "bad"), Score = Json.Number(v, "score"),
             Drumroll = Json.Number(v, "drumroll"), MaxCombo = Json.Number(v, "max_combo"),
             ClearStatus = Json.Number(v, "ClearStatus"),

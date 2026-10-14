@@ -7,8 +7,9 @@ using System.Linq;
 namespace OurTaiko.Online
 {
     // fanmade.cpp playable_tja/to_utf8: the downloaded original stays byte-for-byte intact for the hash
-    // check; the playable copy is UTF-8, keeps exactly the API's courses (matched by COURSE and the
-    // #START player, so Oni_1p is the Oni block started with P1) and takes its titles and offset from the API.
+    // check; the playable copy is UTF-8 and takes its titles and offset from the API. Every block the
+    // API lists must be in the file (matched by COURSE and the #START player: plain single, P1, P2);
+    // the copy keeps the one block each course is played on from a seat, as a plain single chart.
     public static class PlayableTja
     {
         public static string ToUtf8(byte[] bytes)
@@ -17,8 +18,9 @@ namespace OurTaiko.Online
             catch (DecoderFallbackException error) { throw new FanmadeException("TJA_ENCODING_INVALID", error); }
         }
 
-        public static string Build(string utf8, FanmadeChart chart)
+        public static string Build(string utf8, FanmadeChart chart, string seat = "single")
         {
+            var played = Enumerable.Range(0, FanmadeChart.Courses.Length).Select(i => chart.Block(i, seat)).ToList();
             if (utf8.StartsWith("﻿", StringComparison.Ordinal)) utf8 = utf8.Substring(1);
             var output = new StringBuilder(chart.TitleHeaders() + "WAVE:" + chart.CachedAudioName + "\n");
             output.Append("OFFSET:").Append(chart.Offset.ToString("R", CultureInfo.InvariantCulture)).Append('\n');
@@ -40,11 +42,11 @@ namespace OurTaiko.Online
                 {
                     inBlock = true; block++; body.Clear();
                     string player = line.Substring(6).Trim().ToUpperInvariant();
-                    string name = course + (player == "P1" ? "_1p" : player == "P2" ? "_2p" : "");
-                    var d = chart.Blocks.Find(x => x.Course == name);
+                    string side = player == "P1" ? "p1" : player == "P2" ? "p2" : "single";
+                    var d = chart.Blocks.Find(x => x.Course == course && x.Side == side);
                     if (d != null)
                     {
-                        if (wanted.Values.Any(x => x.Course == name)) throw new FanmadeException("TJA_BLOCK_MISMATCH");
+                        if (wanted.ContainsValue(d)) throw new FanmadeException("TJA_BLOCK_MISMATCH");
                         wanted[block] = d;
                     }
                     continue;
@@ -53,13 +55,14 @@ namespace OurTaiko.Online
                 {
                     if (inBlock && wanted.TryGetValue(block, out var d))
                     {
-                        output.Append("COURSE:").Append(d.Course).Append("\nLEVEL:").Append(d.Level)
-                            .Append("\nSTYLE:").Append(string.IsNullOrEmpty(d.Player) ? "Single" : "Double").Append('\n');
-                        foreach (string h in globals) if (KeptHeader(h)) output.Append(h).Append('\n');
-                        foreach (string h in headers) if (KeptHeader(h)) output.Append(h).Append('\n');
-                        output.Append("#START").Append(string.IsNullOrEmpty(d.Player) ? "" : " " + d.Player).Append('\n')
-                            .Append(body).Append("#END\n");
                         found.Add(block);
+                        if (played.Contains(d))
+                        {
+                            output.Append("COURSE:").Append(d.Course).Append("\nLEVEL:").Append(d.Level).Append("\nSTYLE:Single\n");
+                            foreach (string h in globals) if (KeptHeader(h)) output.Append(h).Append('\n');
+                            foreach (string h in headers) if (KeptHeader(h)) output.Append(h).Append('\n');
+                            output.Append("#START\n").Append(body).Append("#END\n");
+                        }
                     }
                     inBlock = false;
                     continue;

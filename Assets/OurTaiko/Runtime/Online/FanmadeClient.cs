@@ -292,6 +292,7 @@ namespace OurTaiko.Online
                 lock (sync) catalogProgress = (0, 1);
                 var snapshot = Json.Parse(await CatalogAsync(e, cancel));
                 if (!SupportsProtocol(snapshot)) throw new FanmadeException("SERVER_PROTOCOL_UNSUPPORTED");
+                e.Slots = SlotProtocol(snapshot);
                 if (!(snapshot["categories"] is JArray categoryList)
                     || !(snapshot["charts"] is JArray chartList) || Json.Number(snapshot, "chartCount") != chartList.Count)
                     throw new FanmadeException("API_BOOTSTRAP_INVALID");
@@ -363,9 +364,13 @@ namespace OurTaiko.Online
             }
         }
 
-        // Course-keyed difficulties, signed resource links and replay uploads.
+        // Blocks as slots of course × side with their ids.
+        static bool SlotProtocol(JObject snapshot) =>
+            snapshot["chartSlotVersion"]?.Type == JTokenType.Integer && (long)snapshot["chartSlotVersion"] == 1;
+
+        // Difficulties as slots, or keyed by course on an older server; signed resource links and replay uploads.
         static bool SupportsProtocol(JObject snapshot) =>
-            snapshot["courseKeyedDifficulties"]?.Type == JTokenType.Boolean && (bool)snapshot["courseKeyedDifficulties"]
+            (SlotProtocol(snapshot) || (snapshot["courseKeyedDifficulties"]?.Type == JTokenType.Boolean && (bool)snapshot["courseKeyedDifficulties"]))
             && snapshot["resourceDownloadVersion"]?.Type == JTokenType.Integer && (long)snapshot["resourceDownloadVersion"] == 1
             && snapshot["scoreReplayVersion"]?.Type == JTokenType.Integer && (long)snapshot["scoreReplayVersion"] == 1;
 
@@ -379,7 +384,7 @@ namespace OurTaiko.Online
             lock (sync)
             {
                 var e = endpoints.Find(x => x.Id == chart.Server);
-                return e != null && e.Best.TryGetValue(FanmadeEndpoint.ScoreKey(chart.Id, chart.Difficulties[difficulty].Course), out var best) ? best : null;
+                return e != null && e.Best.TryGetValue(FanmadeEndpoint.ScoreKey(chart.Id, chart.Difficulties[difficulty].Name), out var best) ? best : null;
             }
         }
 
@@ -391,17 +396,16 @@ namespace OurTaiko.Online
             if (chart == null || difficulty < 0 || difficulty >= 5 || chart.Difficulties[difficulty] == null) return false;
             var e = Endpoint(chart.Server);
             if (e == null || !e.IsConnected || !e.IsAuthenticated) return false;
-            var body = new JObject
-            {
-                ["songId"] = chart.Id, ["difficulty"] = chart.Difficulties[difficulty].Course,
-                ["good"] = score.Good, ["ok"] = score.Ok, ["bad"] = score.Bad, ["score"] = score.Score,
-                ["drumroll"] = score.Drumroll, ["max_combo"] = score.MaxCombo,
-                ["ClearStatus"] = score.ClearStatus,
-                ["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull(),
-            };
+            // The block that was played; an older server takes the song and the block's name.
+            var block = chart.Difficulties[difficulty];
+            var body = block.Id > 0 ? new JObject { ["difficultyId"] = block.Id } : new JObject { ["songId"] = chart.Id, ["difficulty"] = block.Name };
+            body["good"] = score.Good; body["ok"] = score.Ok; body["bad"] = score.Bad; body["score"] = score.Score;
+            body["drumroll"] = score.Drumroll; body["max_combo"] = score.MaxCombo;
+            body["ClearStatus"] = score.ClearStatus;
+            body["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull();
             try
             {
-                UploadQueue.Enqueue(e.AccountId, RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), chart.TjaHash, chart.AudioHash);
+                UploadQueue.Enqueue(e.AccountId, RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), chart.TjaHash, chart.AudioHash, chart.Id);
                 lock (sync) retryAt = DateTime.MinValue;
                 Update();
                 return true;
@@ -448,7 +452,7 @@ namespace OurTaiko.Online
                             // A score belongs to the files it was played on; if they changed since, keep it aside.
                             if (!Json.HexId(queued.TjaHash ?? "", 64) || !Json.HexId(queued.AudioHash ?? "", 64))
                             { UploadQueue.Reject(queued.Key); continue; }
-                            var current = FanmadeChart.From(Json.Parse(await e.AuthorizedAsync("/api/v1/charts/" + Json.Str(Json.Parse(queued.Body), "songId"))), e.Id);
+                            var current = FanmadeChart.From(Json.Parse(await e.AuthorizedAsync("/api/v1/charts/" + (queued.Song ?? Json.Str(Json.Parse(queued.Body), "songId")))), e.Id);
                             var manifest = await e.ResourcesAsync(current.Id);
                             if (manifest.Tja.Hash != current.TjaHash || manifest.Audio.Hash != current.AudioHash)
                                 throw new FanmadeException("CHART_UPDATING");

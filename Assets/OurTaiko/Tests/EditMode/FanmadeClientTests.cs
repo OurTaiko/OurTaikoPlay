@@ -345,14 +345,17 @@ namespace OurTaiko.Tests
             try
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
-                string play = PlayableTja.Build(original, chart);
-                Assert.That(play, Does.Contain("OFFSET:-0.375\n"));
-                Assert.That(play.Split('\n').Count(line => line.StartsWith("OFFSET:", StringComparison.OrdinalIgnoreCase)), Is.EqualTo(1));
-                foreach (var block in chart.Blocks)
+                foreach (string seat in FanmadeChart.Sides)
                 {
-                    var parsed = TjaParser.Parse(play, block.Course);
-                    Assert.That(parsed.Offset, Is.EqualTo(-0.375));
-                    Assert.That(parsed.Notes[0].Time, Is.EqualTo(0.375).Within(1e-9));
+                    string play = PlayableTja.Build(original, chart, seat);
+                    Assert.That(play, Does.Contain("OFFSET:-0.375\n"));
+                    Assert.That(play.Split('\n').Count(line => line.StartsWith("OFFSET:", StringComparison.OrdinalIgnoreCase)), Is.EqualTo(1));
+                    foreach (var block in chart.Blocks)
+                    {
+                        var parsed = TjaParser.Parse(play, block.Course);
+                        Assert.That(parsed.Offset, Is.EqualTo(-0.375));
+                        Assert.That(parsed.Notes[0].Time, Is.EqualTo(0.375).Within(1e-9));
+                    }
                 }
             }
             finally { CultureInfo.CurrentCulture = previous; }
@@ -418,7 +421,8 @@ namespace OurTaiko.Tests
             Assert.That(client.PendingCount(endpoint), Is.EqualTo(0));
             Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
             Assert.That(body.ToString(Newtonsoft.Json.Formatting.None), Is.EqualTo(queued), "Retries send the original body.");
-            Assert.That((string)body["difficulty"], Is.EqualTo("Oni"));
+            Assert.That((long)body["difficultyId"], Is.EqualTo(first.BlockId("Oni")));
+            Assert.That(body.ContainsKey("songId") || body.ContainsKey("difficulty"), Is.False, "The block alone names what was played.");
             Assert.That((long)body["max_combo"], Is.EqualTo(3));
             Assert.That((int)body["ClearStatus"], Is.EqualTo(3));
             var replay = (JObject)body["replay_data"];
@@ -440,7 +444,7 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void GuestsNeverQueueAndDoubleCoursesUploadPerPlayer()
+        public void GuestsNeverQueueAndScoresNameTheBlockThatWasPlayed()
         {
             Connect(guest: true);
             Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new FanmadeScore()), Is.False, "Guests never queue scores.");
@@ -450,16 +454,30 @@ namespace OurTaiko.Tests
             first.Difficulties.Add(("Oni", 7, "P2"));
             first.Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P1\n1,\n#END\n#START P2\n2,\n#END\n");
             Connect(guest: false);
-            var player1 = client.Charts[0].ForPlayer("P1");
-            Assert.That(client.Submit(player1, (int)Difficulty.Oni, new FanmadeScore { Score = 5 }), Is.True);
+            // Single play of a course without a single block reads its 1P block.
+            Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new FanmadeScore { Score = 5 }), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
-            Assert.That((string)body["difficulty"], Is.EqualTo("Oni_1p"));
+            Assert.That((long)body["difficultyId"], Is.EqualTo(first.BlockId("Oni", "P1")));
+            Assert.That(client.Best(client.Charts[0], (int)Difficulty.Oni).Score, Is.EqualTo(5));
             Assert.That(body["replay_data"].Type, Is.EqualTo(JTokenType.Null), "Every score carries replay_data.");
             Assert.That(body.ContainsKey("versionId"), Is.False);
         }
 
-        [TestCase("courseKeyedDifficulties")]
+        [Test]
+        public void BestPrefersAScoreOfTheCurrentFiles()
+        {
+            fixture.AddAccountScore("don", first, "Oni", 9000, latest: false);
+            fixture.AddAccountScore("don", second, "Hard", 7000, latest: false);
+            fixture.AddAccountScore("don", second, "Hard", 4000);
+            fixture.AddAccountScore("don", second, "Hard", 8000, latest: false);
+            fixture.AddAccountScore("don", second, "Hard", 3000);
+            Connect(guest: false);
+            Assert.That(client.Best(client.Charts.Single(c => c.Title == "First"), (int)Difficulty.Oni).Score, Is.EqualTo(9000), "Only older plays: the best of them.");
+            Assert.That(client.Best(client.Charts.Single(c => c.Title == "Second"), (int)Difficulty.Hard).Score, Is.EqualTo(4000));
+        }
+
+        [TestCase("chartSlotVersion")]
         [TestCase("resourceDownloadVersion")]
         [TestCase("scoreReplayVersion")]
         public void AServerWithoutTheCurrentProtocolIsRefused(string capability)
@@ -493,9 +511,40 @@ namespace OurTaiko.Tests
             {
                 Title = "Pair", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") },
             }.ToJson(), "server");
-            play = PlayableTja.Build("BPM:150\nCOURSE:Oni\nSTYLE:Double\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n", pair);
-            Assert.That(play, Does.Contain("COURSE:Oni_1p\nLEVEL:9\nSTYLE:Double\nBPM:150\n#START P1\n3,\n#END\n"));
-            Assert.That(play, Does.Contain("COURSE:Oni_2p\nLEVEL:8\nSTYLE:Double\nBPM:150\n#START P2\n4,\n#END\n"));
+            // The copy holds the one block a seat plays, as a plain single chart.
+            string pairTja = "BPM:150\nCOURSE:Oni\nSTYLE:Double\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n";
+            foreach (string seat in new[] { "single", "p1" })
+            {
+                play = PlayableTja.Build(pairTja, pair, seat);
+                Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nSTYLE:Single\nBPM:150\n#START\n3,\n#END\n"), seat);
+                Assert.That(play, Does.Not.Contain("4,"), seat);
+            }
+            play = PlayableTja.Build(pairTja, pair, "p2");
+            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:8\nSTYLE:Single\nBPM:150\n#START\n4,\n#END\n"));
+            Assert.That(play, Does.Not.Contain("3,"));
+
+            // All three sides of a course in one file, as official charts have them.
+            var mixed = FanmadeChart.From(new FanmadeFixture.Chart
+            {
+                Title = "Mixed", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2"), ("Oni", 7, "") },
+            }.ToJson(), "server");
+            string mixedTja = "BPM:150\nCOURSE:Oni\n#START\n5,\n#END\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n";
+            foreach (var (seat, level, notes) in new[] { ("single", 7, "5,"), ("p1", 9, "3,"), ("p2", 8, "4,") })
+            {
+                play = PlayableTja.Build(mixedTja, mixed, seat);
+                Assert.That(play, Does.EndWith("COURSE:Oni\nLEVEL:" + level + "\nSTYLE:Single\nBPM:150\n#START\n" + notes + "\n#END\n"), seat);
+                Assert.That(mixed.Block(3, seat).Level, Is.EqualTo(level));
+            }
+            Assert.That(mixed.Difficulties[3].Side, Is.EqualTo("single"));
+            Assert.Throws<FanmadeException>(() => PlayableTja.Build(pairTja, mixed), "TJA_BLOCK_MISMATCH");
+
+            // A course with only a single block is what both of two players read; a 2P-only one is not for single play.
+            Assert.That(chart.Block(3, "p1"), Is.SameAs(chart.Difficulties[3])); Assert.That(chart.Block(3, "p2"), Is.SameAs(chart.Difficulties[3]));
+            var only2P = FanmadeChart.From(new FanmadeFixture.Chart
+            {
+                Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 8, "P2") },
+            }.ToJson(), "server");
+            Assert.That(only2P.IsPlayable, Is.False); Assert.That(only2P.Block(3, "p1"), Is.Null); Assert.That(only2P.Block(3, "p2").Level, Is.EqualTo(8));
         }
 
         [Test]
@@ -522,12 +571,20 @@ namespace OurTaiko.Tests
             {
                 Title = "Double", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") },
             }.ToJson();
+            // One song whatever its sides: single play lists the 1P block of a course without a single one.
+            var sided = FanmadeChart.From(keyed, "server");
+            Assert.That(sided.ToSongInfo("en").Title, Is.EqualTo("Double"));
+            Assert.That(sided.ToSongInfo("en").Courses.Select(c => (c.Difficulty, c.Course, c.Level, c.IsBranching)), Is.EqualTo(new[] { (Difficulty.Oni, "Oni", 9, false) }));
+            ((JObject)keyed["difficulties"][1])["side"] = "p3";
+            Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(keyed, "server")).Message, Is.EqualTo("API_DIFFICULTY_INVALID"));
+
+            // An older server names the side in the course and has no block ids.
+            keyed["isSingle"] = false;
             keyed["difficulties"] = new JArray(new JObject { ["course"] = "Oni_1p", ["level"] = 9, ["maker"] = "", ["branching"] = false },
                 new JObject { ["course"] = "Oni_2p", ["level"] = 8, ["maker"] = "", ["branching"] = true });
-            var p2 = FanmadeChart.From(keyed, "server").ForPlayer("P2").ToSongInfo("en");
-            Assert.That(p2.Title, Is.EqualTo("Double P2"));
-            Assert.That(p2.Courses.Select(c => (c.Difficulty, c.Course, c.Level, c.IsBranching)), Is.EqualTo(new[] { (Difficulty.Oni, "Oni_2p", 8, true) }));
-            Assert.That(FanmadeChart.From(keyed, "server").ForPlayer("P1").ToSongInfo("en").Course(Difficulty.Oni).IsBranching, Is.False);
+            var older = FanmadeChart.From(keyed, "server");
+            Assert.That(older.Blocks.Select(b => (b.Course, b.Side, b.Id, b.Name)), Is.EqualTo(new[] { ("Oni", "p1", 0L, "Oni_1p"), ("Oni", "p2", 0L, "Oni_2p") }));
+            Assert.That(older.Block(3, "p2").Branching, Is.True); Assert.That(older.Difficulties[3].Branching, Is.False);
         }
 
         [Test]

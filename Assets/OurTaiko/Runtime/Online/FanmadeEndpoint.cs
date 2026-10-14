@@ -197,12 +197,16 @@ namespace OurTaiko.Online
         // Account scores of the bootstrap, kept only for a logged-in account.
         internal readonly List<FanmadeScore> Scores = new List<FanmadeScore>();
         internal readonly Dictionary<string, FanmadeScore> Best = new Dictionary<string, FanmadeScore>();
+        // The catalog sent chartSlotVersion 1: blocks have ids, a course covers all its sides.
+        internal bool Slots;
         internal static string ScoreKey(string song, string difficulty) => song + "/" + difficulty;
 
         internal void IndexScore(FanmadeScore score)
         {
             var key = ScoreKey(score.Song, score.Difficulty);
-            if (!Best.TryGetValue(key, out var best) || score.Score > best.Score) Best[key] = score;
+            // A score of the song's current files comes before any score of replaced ones.
+            if (!Best.TryGetValue(key, out var best) || (score.IsLatest && !best.IsLatest)
+                || (score.IsLatest == best.IsLatest && score.Score > best.Score)) Best[key] = score;
         }
     }
 }

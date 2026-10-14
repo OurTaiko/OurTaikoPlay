@@ -252,12 +252,12 @@ namespace OurTaiko.Tests
             Run(() => client.ConnectAsync(endpoint, false));
             var result = Run(() => client.PrepareAsync(client.Charts[0]));
             string text = result.Tja;
-            Assert.That(TjaParser.Parse(text, "Oni_1p").Level, Is.EqualTo(8));
-            Assert.That(TjaParser.Parse(text, "Oni_2p").Level, Is.EqualTo(9));
-            var player2 = result.Chart.ForPlayer("P2");
-            client.Submit(player2, 3, new FanmadeScore { Score = 123 }); Run(() => client.WaitForUploadsAsync());
+            // Single play of a course without a single block gets its 1P block, as a plain Oni chart.
+            Assert.That(TjaParser.Parse(text, "Oni").Level, Is.EqualTo(8));
+            Assert.That(text, Does.Contain("#START\n1,\n#END")); Assert.That(text, Does.Not.Contain("2,"));
+            client.Submit(result.Chart, 3, new FanmadeScore { Score = 123 }); Run(() => client.WaitForUploadsAsync());
             Assert.That(api.AcceptedScores.TryDequeue(out var body), Is.True);
-            Assert.That((string)body["difficulty"], Is.EqualTo("Oni_2p")); Assert.That(body.ContainsKey("versionId"), Is.False);
+            Assert.That((long)body["difficultyId"], Is.EqualTo(chart.BlockId("Oni", "P1"))); Assert.That(body.ContainsKey("versionId"), Is.False);
         }
     }
 }

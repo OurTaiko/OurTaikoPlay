@@ -161,8 +161,7 @@ namespace OurTaiko.Tests
 
             yield return WaitUntil(() => !fixture.AcceptedScores.IsEmpty, 10);
             fixture.AcceptedScores.TryDequeue(out var body);
-            Assert.That((string)body["songId"], Is.EqualTo(chart.Id));
-            Assert.That((string)body["difficulty"], Is.EqualTo("Oni"));
+            Assert.That((long)body["difficultyId"], Is.EqualTo(chart.BlockId("Oni")));
             Assert.That((int)body["ClearStatus"], Is.EqualTo((int)play.Result.StoredCrown));
             Assert.That((long)body["good"] + (long)body["ok"] + (long)body["bad"], Is.EqualTo(4), "Every note is judged.");
             var inputs = (JArray)body["replay_data"]["inputs"];

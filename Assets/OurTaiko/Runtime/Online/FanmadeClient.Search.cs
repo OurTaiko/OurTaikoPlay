@@ -26,9 +26,9 @@ namespace OurTaiko.Online
             await endpoint.Transport.WaitAsync(cancel);
             try
             {
-                // A difficulty in the UI includes both players of double charts.
+                // A difficulty in the UI covers all its sides; an older server names each side as a course.
                 string course = query.Difficulty.HasValue ? SongInfo.CourseName(query.Difficulty.Value) : "";
-                var courses = course.Length == 0 ? new[] { "" } : new[] { course, course + "_1p", course + "_2p" };
+                var courses = course.Length == 0 || endpoint.Slots ? new[] { course } : new[] { course, course + "_1p", course + "_2p" };
                 var seen = new HashSet<string>();
                 foreach (var name in courses)
                 {
@@ -63,8 +63,13 @@ namespace OurTaiko.Online
                 var e = endpoints.Find(x => x.Id == chart.Server);
                 if (e == null || !e.IsAuthenticated) return false;
                 return chart.ToSongInfo(null).Courses.Where(query.Matches).Any(course =>
-                    !e.Scores.Any(s => s.Song == chart.Id && s.Difficulty == course.Course && s.Bad == 0 && (s.Good > 0 || s.Ok > 0)
-                        && (query.Order == SongSearchOrder.UnFullCombo || s.Ok == 0)));
+                {
+                    // Plays of replaced files count only while the block has no play of the current ones.
+                    string block = chart.Difficulties[(int)course.Difficulty].Name;
+                    var plays = e.Scores.Where(s => s.Song == chart.Id && s.Difficulty == block).ToList();
+                    if (plays.Any(s => s.IsLatest)) plays.RemoveAll(s => !s.IsLatest);
+                    return !plays.Any(s => s.Bad == 0 && (s.Good > 0 || s.Ok > 0) && (query.Order == SongSearchOrder.UnFullCombo || s.Ok == 0));
+                });
             }
         }
     }
