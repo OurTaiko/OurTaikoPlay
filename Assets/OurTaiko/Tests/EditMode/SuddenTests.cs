@@ -53,14 +53,14 @@ namespace OurTaiko.Tests
             var normal = Parse("#SUDDEN 2 1\n#SCROLL 2+1i\n0001,");
             var clocks = new ScrollClockTimeline(normal);
             var note = normal.Notes[0];
-            Assert.That(NoteScroll.Distance(note, 0, clocks, Travel), Is.EqualTo((1302.0, 976.5)), "Vertical still moves.");
+            Assert.That(NoteScroll.Distance(note, 0, clocks, Travel), Is.EqualTo((1302.0, 976.0)), "Vertical still moves (whole pixels).");
             Assert.That(NoteScroll.Distance(note, 0.4, clocks, Travel).X, Is.EqualTo(1302));
             Assert.That(NoteScroll.Distance(note, 1, clocks, Travel), Is.EqualTo(NoteScroll.RawDistance(note, 1, clocks, Travel)));
             // BM: the note (clock 1.75, at 2.75 s) starts at 1.75 s, when the clock is 0.875.
             var bm = Parse("#BMSCROLL\n#SUDDEN 2 1\n1,\n#BPMCHANGE 240\n0001,");
             var bmClocks = new ScrollClockTimeline(bm);
-            Assert.That(NoteScroll.Distance(bm.Notes[1], 1, bmClocks, Travel).X, Is.EqualTo((1.75 - 0.875) * Travel));
-            Assert.That(NoteScroll.Distance(bm.Notes[1], 2.5, bmClocks, Travel).X, Is.EqualTo(0.25 * Travel));
+            Assert.That(NoteScroll.Distance(bm.Notes[1], 1, bmClocks, Travel).X, Is.EqualTo(System.Math.Truncate((1.75 - 0.875) * Travel)));
+            Assert.That(NoteScroll.Distance(bm.Notes[1], 2.5, bmClocks, Travel).X, Is.EqualTo(System.Math.Truncate(0.25 * Travel)));
             // A roll stays rigid: only its head stands, the length is the same.
             var roll = Parse("#SUDDEN 3 1\n5008,").Notes[0];
             Assert.That(NoteScroll.RollLength(roll, Travel), Is.EqualTo(NoteScroll.DistanceFromJudge(1.5, 0, 120, 1, Travel)));

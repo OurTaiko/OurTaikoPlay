@@ -305,7 +305,8 @@ namespace OurTaiko
                 int i = noteWindow[k];
                 var note = chartNotes[i]; var view = shownNotes[i]; var pos = Position(note, time);
                 if (note.IsBalloon && time >= note.Time) pos = new Vector2(JudgeLocalX, JudgeLocalY);
-                float length = note.IsDrumroll ? (float)NoteScroll.RollLength(note, TravelDistance) : 0;
+                // The tail is placed (and cut to whole pixels) on its own, as OpenTaiko's roll end.
+                float length = note.IsDrumroll ? (float)(NoteScroll.TailDistance(note, time, clocks, TravelDistance) + JudgeLocalX) - pos.x : 0;
                 // ドロン hides the notes; they are still judged. Like draw_note_buffer,
                 // only a hit removes a note: a 5/6 roll resolved at its tail and a note
                 // missed by timeout keep scrolling until they leave the lane.

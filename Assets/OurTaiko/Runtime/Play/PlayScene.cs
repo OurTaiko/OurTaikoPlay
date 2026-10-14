@@ -77,7 +77,8 @@ namespace OurTaiko
         SongDefinition song;
         double audioOffset, visualOffset, judgeOffset;
         int playedAudioOffsetMs;
-        double ChartTime => SongTime - audioOffset;
+        // OpenTaiko judges and draws at a whole millisecond of the play clock (cut toward zero).
+        double ChartTime => TjaTime.Truncate(SongTime - audioOffset);
         SongInfo displayInfo;
         bool autoPlay, hitKa, nextAutoRight = true;
         SceneSwitcher switcher;

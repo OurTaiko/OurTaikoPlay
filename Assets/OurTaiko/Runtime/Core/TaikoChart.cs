@@ -79,7 +79,9 @@ namespace OurTaiko
     // every route: the chart's start, each common #BPMCHANGE, and every branch's start and end.
     public sealed class ChartClockPoint
     {
-        public double Time, Clock, Bpm;
+        // Time is on whole milliseconds (compared as OpenTaiko does); RawMs is OpenTaiko's
+        // unrounded bpm_change_time from #START, which the clock runs from.
+        public double Time, RawMs, Clock, Bpm;
         public int BranchId = -1;
         public BranchRoute Route;
     }

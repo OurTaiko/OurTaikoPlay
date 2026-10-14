@@ -7,8 +7,8 @@ namespace OurTaiko.Tests
     // OurTaikoPlay/Documentation/2026-10-14-bmscroll-plan.md). Stage 1: modes and the beat clock.
     public sealed class ScrollModeTests
     {
-        static TaikoChart Parse(string body, string beforeStart = "", string header = "")
-            => TjaParser.Parse("TITLE:Scroll\nBPM:120\n" + header + "\nCOURSE:Oni\n" + beforeStart + "\n#START\n" + body + "\n#END");
+        static TaikoChart Parse(string body, string beforeStart = "", string header = "", int bpm = 120)
+            => TjaParser.Parse("TITLE:Scroll\nBPM:" + bpm + "\n" + header + "\nCOURSE:Oni\n" + beforeStart + "\n#START\n" + body + "\n#END");
 
         static ScrollMode[] Modes(TaikoChart chart) => chart.Notes.Select(n => n.ScrollMode).ToArray();
 
@@ -112,9 +112,10 @@ namespace OurTaiko.Tests
             // HB: the same distance times SCROLL 2+1i.
             Assert.That(At(hb, 1, 1), Is.EqualTo((1302.0, 651.0)));
             // After the change to 240 every BM/HB note on the lane speeds up together: in the
-            // 0.25 s from 2 s the third note (clock 2) comes half a measure closer.
-            Assert.That(At(bm, 2, 2).Item1 - At(bm, 2, 2.25).Item1, Is.EqualTo(Travel / 4));
-            Assert.That(At(bm, 2, 1.5).Item1 - At(bm, 2, 1.75).Item1, Is.EqualTo(Travel / 8), "Before the change it came at 120.");
+            // 0.25 s from 2 s the third note (clock 2) comes a quarter measure closer (whole pixels).
+            Assert.That(At(bm, 2, 2).Item1, Is.EqualTo(Travel));
+            Assert.That(At(bm, 2, 2.25).Item1, Is.EqualTo(System.Math.Truncate(0.75 * Travel)));
+            Assert.That(At(bm, 2, 1.75).Item1, Is.EqualTo(System.Math.Truncate(1.125 * Travel)), "Before the change it came at 120.");
         }
 
         // T7
@@ -137,11 +138,62 @@ namespace OurTaiko.Tests
             // Lane 1422 wide, judge at 120: the third note (clock 2) enters at clock 1 (1302 px out)
             // and leaves at clock 2 + 120 / 1302.
             LaneCull.ClockInterval(chart.Notes[2], clocks, Travel, 120, 1422, 0, out double start, out double end);
-            Assert.That(start, Is.EqualTo(2).Within(1e-9));
-            Assert.That(end, Is.EqualTo(3 + 120.0 / 1302).Within(1e-9));
+            // Widened by 2 ms on each side for whole-millisecond times.
+            Assert.That(start, Is.EqualTo(2).Within(0.0021));
+            Assert.That(end, Is.EqualTo(3 + 120.0 / 1302).Within(0.0021));
             var still = Parse("#HBSCROLL\n#SCROLL 0\n1,");
             LaneCull.ClockInterval(still.Notes[0], new ScrollClockTimeline(still), Travel, 120, 1422, 0, out start, out end);
             Assert.That((start, end), Is.EqualTo((double.NegativeInfinity, double.PositiveInfinity)));
+        }
+
+        // Whole milliseconds and pixels (plan: "追加计划：时间与位置取整") -----------------
+        // M1
+        [Test] public void ChartTimesAreWholeMilliseconds()
+        {
+            // At 140 BPM a quarter is 428.571… ms: OpenTaiko cuts each note's time, not each step.
+            var chart = Parse("1111,\n1,", bpm: 140);
+            Assert.That(chart.Notes.Select(n => n.Time), Is.EqualTo(new[] { 0, 0.428, 0.857, 1.285, 1.714 }));
+            Assert.That(chart.Bars.Select(b => b.Time), Is.EqualTo(new[] { 0, 1.714 }));
+            Assert.That(Parse("1,", header: "OFFSET:1.2345").Notes[0].Time, Is.EqualTo(-1.234), "OFFSET is cut toward zero.");
+            Assert.That(Parse("1,", header: "OFFSET:-1.2345").Notes[0].Time, Is.EqualTo(1.234));
+            // Three 0.4 ms delays add up before the cut.
+            Assert.That(Parse("#DELAY 0.0004\n#DELAY 0.0004\n#DELAY 0.0004\n1,").Notes[0].Time, Is.EqualTo(0.001));
+            var branched = Parse("1111,\n#GOGOSTART\n#SECTION\n1,\n#BRANCHSTART p,0,0\n#N\n1,\n#E\n1,\n#M\n1,", bpm: 140);
+            Assert.That(branched.Gogos[0].Time, Is.EqualTo(1.714));
+            Assert.That(branched.Sections[0].Time, Is.EqualTo(1.714));
+            Assert.That((branched.Branches[0].Time, branched.Branches[0].DecisionTime), Is.EqualTo((3.428, 1.714)));
+        }
+
+        // M2
+        [Test] public void TheClockComparesWholeMillisecondsAndRunsFromTheRawTime()
+        {
+            var chart = Parse("#BMSCROLL\n1,\n#BPMCHANGE 280\n1,", bpm: 140);
+            var clocks = new ScrollClockTimeline(chart);
+            // The change is at 1714.285… ms. At 1.713 s the 140 BPM point holds, from raw 0; at
+            // 1.714 s (int)1714.285 = 1714 already counts as reached, and the 280 point runs from its
+            // unrounded time, so the clock is a little behind its 16 sixteenths.
+            Assert.That(clocks.At16(BranchRoute.Normal, 1.713), Is.EqualTo(1713 * 140 / 15000.0).Within(1e-9));
+            Assert.That(clocks.At16(BranchRoute.Normal, 1.714), Is.EqualTo(16 + (1714 - 15000 * 16 / 140.0) * 280 / 15000).Within(1e-9));
+            Assert.That(clocks.At16(BranchRoute.Normal, 1.7149), Is.EqualTo(clocks.At16(BranchRoute.Normal, 1.714)), "Times are cut to whole milliseconds.");
+        }
+
+        // M4
+        [Test] public void PositionsAreCutToWholePixels()
+        {
+            var chart = Parse("01005008,", bpm: 140);
+            var clocks = new ScrollClockTimeline(chart);
+            var don = chart.Notes[0]; var roll = chart.Notes[1];
+            // An eighth at 140 BPM: 214 ms → 214 × 140 / 240000 × 1302 = 162.5…
+            Assert.That(NoteScroll.Distance(don, 0, clocks, Travel), Is.EqualTo((162.0, 0.0)));
+            Assert.That(NoteScroll.Distance(don, 0.0004, clocks, Travel).X, Is.EqualTo(162), "The play clock is cut to whole milliseconds.");
+            // Seven eighths add up to 1499.999… ms, which OpenTaiko's accumulation cuts to 1499.
+            Assert.That((roll.Time, roll.EndTime), Is.EqualTo((0.857, 1.499)));
+            // The tail is placed and cut on its own: 1499 ms → 1138.4… → 1138.
+            Assert.That(NoteScroll.Distance(roll, 0, clocks, Travel).X, Is.EqualTo(System.Math.Truncate(857 * 140 / 240000.0 * Travel)));
+            Assert.That(NoteScroll.TailDistance(roll, 0, clocks, Travel), Is.EqualTo(System.Math.Truncate(1499 * 140 / 240000.0 * Travel)));
+            var hb = Parse("#HBSCROLL\n#SCROLL 1-0.5i\n01,", bpm: 120);
+            var (x, y) = NoteScroll.Distance(hb.Notes[0], 0, new ScrollClockTimeline(hb), Travel);
+            Assert.That((x, y), Is.EqualTo((System.Math.Truncate(0.5 * Travel), System.Math.Truncate(-0.25 * Travel))), "Cut toward zero.");
         }
 
         // T4

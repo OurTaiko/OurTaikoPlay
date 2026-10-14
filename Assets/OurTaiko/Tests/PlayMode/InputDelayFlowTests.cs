@@ -146,7 +146,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.Session.Rolls, Is.EqualTo(1));
                 Assert.That(play.DrumSounds, Is.EqualTo(1), "The judged hit is not heard twice.");
                 Assert.That(play.drumFlashes[0].enabled, Is.True);
-                Assert.That(play.Record.Inputs[0].Ms, Is.EqualTo(play.SongTime * 1000).Within(0.000001),
+                Assert.That(play.Record.Inputs[0].Ms, Is.EqualTo((double)TjaTime.Ms(play.SongTime)).Within(0.000001),
                     "Judgment uses the song time of the frame that publishes the hit.");
                 Assert.That(play.SongTime - pressedSong, Is.GreaterThanOrEqualTo(0.09));
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;

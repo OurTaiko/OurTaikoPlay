@@ -60,7 +60,8 @@ namespace OurTaiko.Tests
                 Vector2 Local(Transform t) => viewport.InverseTransformPoint(t.position);
                 Vector2 Centre(RectTransform r) => viewport.InverseTransformPoint(r.TransformPoint(r.rect.center));
                 var lane = (RectTransform)play.noteLayer.parent.parent;
-                double start = play.SongTime - SceneSwitcher.Instance.SelectedSong.audioOffsetMs / 1000.0;
+                // Arcs start at the judging frame's whole millisecond.
+                double start = TjaTime.Truncate(play.SongTime - SceneSwitcher.Instance.SelectedSong.audioOffsetMs / 1000.0);
                 arcs.ShowTime(start);
                 Assert.That(Vector2.Distance(Local(arcs.ArcRoot(0)), (Vector2)viewport.InverseTransformPoint(lane.TransformPoint(new Vector3(618, -110)))), Is.LessThan(0.1f));
                 arcs.ShowTime(start + NoteArcPath.Duration / 2);

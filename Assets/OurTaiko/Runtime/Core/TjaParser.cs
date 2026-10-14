@@ -65,7 +65,8 @@ namespace OurTaiko
                     case "TITLE": chart.Title = value; break;
                     case "SUBTITLE": chart.Subtitle = value.TrimStart('-', '+'); break;
                     case "BPM": chart.Bpm = Number(value); break;
-                    case "OFFSET": chart.Offset = Number(value); break;
+                    // OpenTaiko keeps OFFSET in whole milliseconds, cut toward zero.
+                    case "OFFSET": chart.Offset = (int)(Number(value) * 1000) / 1000.0; break;
                     case "COURSE":
                         course = value; level = 0; seenCourse = true; startMode = ScrollMode.Normal;
                         for (int r = 0; r < 3; r++) balloons[r] = new List<int>(globalBalloons[r]);
@@ -111,7 +112,9 @@ namespace OurTaiko
 
         sealed class TimingState
         {
-            public double Time, Beat, Bpm, Measure = 1, ScrollX = 1, ScrollY, Clock;
+            // RawMs and Clock16 are OpenTaiko's dbNowTime and dbNowBMScollTime: milliseconds from
+            // #START and sixteenth notes, accumulated in its order of operations.
+            public double RawMs, Beat, Bpm, Measure = 1, ScrollX = 1, ScrollY, Clock16;
             public double SuddenShow = double.PositiveInfinity, SuddenMove = double.PositiveInfinity;
             public bool Barline = true;
             public ScrollMode Mode;
@@ -121,6 +124,9 @@ namespace OurTaiko
         sealed class ChartReader
         {
             readonly TaikoChart chart;
+            readonly long offsetMs;
+            // The cursor's time: OpenTaiko's (int)dbNowTime, shifted by OFFSET, in seconds.
+            double Now => ((long)state.RawMs - offsetMs) / 1000.0;
             // Each route reads its own list in order. A common balloon takes the Normal list's
             // number (the one played on every route) and moves every route's place past it.
             readonly List<int>[] balloons;
@@ -142,14 +148,15 @@ namespace OurTaiko
             public ChartReader(TaikoChart chart, List<int>[] balloons, ScrollMode mode)
             {
                 this.chart = chart; this.balloons = balloons;
-                state = new TimingState { Time = -chart.Offset, Bpm = chart.Bpm, Mode = mode };
+                offsetMs = (long)Math.Round(chart.Offset * 1000);
+                state = new TimingState { Bpm = chart.Bpm, Mode = mode };
                 chart.NoteLists.Add(common);
                 AddClockPoint();
             }
 
             // A BPM point of the beat clock where the cursor is, on the current route or, outside a
             // route, on all of them.
-            void AddClockPoint() => chart.ScrollClocks.Add(new ChartClockPoint { Time = state.Time, Clock = state.Clock,
+            void AddClockPoint() => chart.ScrollClocks.Add(new ChartClockPoint { Time = Now, RawMs = state.RawMs, Clock = state.Clock16 / 16,
                 Bpm = state.Bpm, BranchId = branch != null && hasRoute ? branch.Id : -1, Route = route });
 
             public void Read(List<string> tokens)
@@ -170,7 +177,7 @@ namespace OurTaiko
                 else FlushCommands();
                 if (branch != null) EndBranch(); // #BRANCHEND is optional before #END / the next branch.
                 CheckLongNote();
-                chart.Duration = Math.Max(chart.Duration, state.Time);
+                chart.Duration = Math.Max(chart.Duration, Now);
                 chart.Notes.Sort((a, b) => a.Time.CompareTo(b.Time));
                 chart.Bars.Sort((a, b) => a.Time.CompareTo(b.Time));
                 var gogos = chart.Gogos.OrderBy(g => g.Time).ToList(); // stable, unlike List.Sort
@@ -201,7 +208,7 @@ namespace OurTaiko
                 // Match Fanmade's image renderer: omitted E uses N; omitted M uses E.
                 if (!routesSeen[1]) branch.Routes[1] = BranchRoute.Normal;
                 if (!routesSeen[2]) branch.Routes[2] = branch.Routes[1];
-                branch.EndTime = state.Time;
+                branch.EndTime = Now;
                 // As in OurTaikoPlayer, common notes continue from the final authored route.
                 branch = null; hasRoute = false; branchBar = false;
                 // OpenTaiko GotoBranchEnd: every route's beat clock continues from here.
@@ -214,7 +221,7 @@ namespace OurTaiko
                 CheckLongNote();
                 AddClockPoint();
                 branchStart = state.Copy();
-                branch = new ChartBranch { Id = chart.Branches.Count, Time = state.Time };
+                branch = new ChartBranch { Id = chart.Branches.Count, Time = Now };
                 ReadCondition(branch, arg);
                 branch.DecisionTime = JudgeTime(branch.Condition == BranchCondition.Drumroll || branch.Condition == BranchCondition.BalloonHits);
                 chart.Branches.Add(branch);
@@ -230,9 +237,9 @@ namespace OurTaiko
             // the branch itself.
             double JudgeTime(bool waitForRolls)
             {
-                double judge = lastBar.Max() ?? -chart.Offset - 240.0 / chart.Bpm;
+                double judge = lastBar.Max() ?? ((long)(-240000.0 / chart.Bpm) - offsetMs) / 1000.0;
                 double? rollEnd = rollEndAfterBar.Max();
-                if (waitForRolls && rollEnd > judge) judge = Math.Min(rollEnd.Value, state.Time);
+                if (waitForRolls && rollEnd > judge) judge = Math.Min(rollEnd.Value, Now);
                 return judge;
             }
 
@@ -294,9 +301,9 @@ namespace OurTaiko
                 state = branchStart.Copy(); route = selected; hasRoute = true; branchBar = true;
             }
 
-            ChartNote NewNote() => new ChartNote { Time = state.Time, EndTime = state.Time,
+            ChartNote NewNote() => new ChartNote { Time = Now, EndTime = Now,
                 Beat = state.Beat, Bpm = state.Bpm, ScrollX = state.ScrollX, ScrollY = state.ScrollY,
-                ScrollMode = state.Mode, ScrollClock = state.Clock, EndScrollClock = state.Clock,
+                ScrollMode = state.Mode, ScrollClock = state.Clock16 / 16, EndScrollClock = state.Clock16 / 16,
                 SuddenShow = state.SuddenShow, SuddenMove = state.SuddenMove,
                 BranchId = branch == null ? -1 : branch.Id, Route = route };
 
@@ -311,7 +318,7 @@ namespace OurTaiko
 
             void SetGogo(bool on)
             {
-                chart.Gogos.Add(new ChartGogo { Time = state.Time, On = on, BranchId = branch == null ? -1 : branch.Id, Route = route });
+                chart.Gogos.Add(new ChartGogo { Time = Now, On = on, BranchId = branch == null ? -1 : branch.Id, Route = route });
             }
 
             void AddBar()
@@ -323,7 +330,7 @@ namespace OurTaiko
                 Entries.Add(new ChartEntry(bar, false));
                 if (branch != null && branch.FirstEntries[(int)route] == null) branch.FirstEntries[(int)route] = bar;
                 branchBar = false;
-                Track(lastBar, state.Time);
+                Track(lastBar, Now);
                 Track(rollEndAfterBar, null);
             }
 
@@ -337,11 +344,12 @@ namespace OurTaiko
                     case "#BPMCHANGE":
                         state.Bpm = Number(arg);
                         if (!(state.Bpm > 0) || double.IsInfinity(state.Bpm)) throw new FormatException("Invalid BPMCHANGE.");
-                        chart.Tempos.Add(new ChartTempo { Time = state.Time, ResumeTime = state.Time, Beat = state.Beat, Bpm = state.Bpm,
+                        chart.Tempos.Add(new ChartTempo { Time = Now, ResumeTime = Now, Beat = state.Beat, Bpm = state.Bpm,
                             BranchId = branch == null ? -1 : branch.Id, Route = route });
                         AddClockPoint();
                         break;
-                    case "#MEASURE": var parts = arg.Split('/'); state.Measure = Number(parts[0]) / Number(parts[1]); if (!(state.Measure > 0) || double.IsInfinity(state.Measure)) throw new FormatException("Invalid MEASURE."); break;
+                    // OpenTaiko keeps the two numbers as floats and divides them as floats.
+                    case "#MEASURE": var parts = arg.Split('/'); state.Measure = (float)Number(parts[0]) / (float)Number(parts[1]); if (!(state.Measure > 0) || double.IsInfinity(state.Measure)) throw new FormatException("Invalid MEASURE."); break;
                     case "#SCROLL":
                         var match = Regex.Match(arg, @"^([+-]?[\d.]+)([+-][\d.]+)i$");
                         state.ScrollX = match.Success ? Number(match.Groups[1].Value) : Number(arg);
@@ -349,11 +357,12 @@ namespace OurTaiko
                         break;
                     case "#DELAY":
                         double delay = Number(arg);
-                        chart.Tempos.Add(new ChartTempo { Time = state.Time, ResumeTime = state.Time + delay,
+                        double start = Now;
+                        state.RawMs += delay * 1000;
+                        chart.Tempos.Add(new ChartTempo { Time = start, ResumeTime = Now,
                             Beat = state.Beat, Bpm = state.Bpm, BranchId = branch == null ? -1 : branch.Id, Route = route });
-                        state.Time += delay;
                         // The beat clock keeps running through a delay (OpenTaiko dbNowBMScollTime).
-                        state.Clock += delay * state.Bpm / 240;
+                        state.Clock16 += delay * 1000 * state.Bpm / 15000;
                         break;
                     case "#GOGOSTART": SetGogo(true); break;
                     case "#GOGOEND": SetGogo(false); break;
@@ -365,13 +374,13 @@ namespace OurTaiko
                     case "#E": SelectRoute(BranchRoute.Expert); break;
                     case "#M": SelectRoute(BranchRoute.Master); break;
                     case "#SECTION":
-                        chart.Sections.Add(new ChartSection { Time = state.Time, BranchId = branch == null ? -1 : branch.Id, Route = route });
+                        chart.Sections.Add(new ChartSection { Time = Now, BranchId = branch == null ? -1 : branch.Id, Route = route });
                         break;
                     // OpenTaiko: inside a route it holds that route once the branch chooses it;
                     // anywhere else it holds the route being played from its time.
                     case "#LEVELHOLD":
                         if (branch != null && hasRoute) branch.HoldRoutes[(int)route] = true;
-                        else chart.LevelHolds.Add(state.Time);
+                        else chart.LevelHolds.Add(Now);
                         break;
                     case "#NMSCROLL": case "#BMSCROLL": case "#HBSCROLL": state.Mode = ScrollModeOf(key).Value; break;
                     // OpenTaiko: `#SUDDEN show move` in seconds, both required. Less than a
@@ -407,10 +416,10 @@ namespace OurTaiko
                     if (type == 8)
                     {
                         if (longNote == null) throw new FormatException("Long-note tail has no head.");
-                        longNote.EndTime = state.Time;
+                        longNote.EndTime = Now;
                         longNote.TailBpm = state.Bpm;
-                        longNote.EndScrollClock = state.Clock;
-                        Track(rollEndAfterBar, state.Time, latest: true);
+                        longNote.EndScrollClock = state.Clock16 / 16;
+                        Track(rollEndAfterBar, Now, latest: true);
                         Entries.Add(new ChartEntry(longNote, true));
                         longNote = null;
                     }
@@ -427,13 +436,19 @@ namespace OurTaiko
                         Entries.Add(new ChartEntry(note, false));
                         if (note.IsLong) longNote = note;
                     }
-                    state.Time += 240.0 / state.Bpm * state.Measure / Math.Max(1, slots);
+                    state.RawMs += 15000.0 / state.Bpm * state.Measure * (16.0 / slots);
                     state.Beat += 4.0 * state.Measure / Math.Max(1, slots);
-                    state.Clock += state.Measure / Math.Max(1, slots);
+                    state.Clock16 += state.Measure * (16.0 / slots);
                     index++;
                 }
-                if (index == 0) { AddBar(); state.Time += 240.0 / state.Bpm * state.Measure; state.Beat += 4 * state.Measure; state.Clock += state.Measure; }
-                chart.Duration = Math.Max(chart.Duration, state.Time);
+                if (index == 0)
+                {
+                    AddBar();
+                    state.RawMs += 15000.0 / state.Bpm * state.Measure * 16.0;
+                    state.Beat += 4 * state.Measure;
+                    state.Clock16 += state.Measure * 16.0;
+                }
+                chart.Duration = Math.Max(chart.Duration, Now);
                 pending.Clear();
             }
         }

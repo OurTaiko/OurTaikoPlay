@@ -78,6 +78,7 @@ namespace OurTaiko.Tests
             var chart = play.Session.Chart;
             var clocks = new ScrollClockTimeline(chart);
             double time = play.RenderedTime, travel = play.noteLayer.rect.width - JudgeX;
+            Assert.That(time * 1000, Is.EqualTo(System.Math.Round(time * 1000)).Within(1e-6), "Drawn at a whole millisecond " + when);
             int drawn = 0;
             for (int i = 0; i < chart.Notes.Count; i++)
             {

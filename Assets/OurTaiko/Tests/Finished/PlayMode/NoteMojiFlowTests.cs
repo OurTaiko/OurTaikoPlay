@@ -73,7 +73,10 @@ namespace OurTaiko.Tests
                 Render.Invoke(play, new object[] { rollNote.Time - 0.2 });
                 Canvas.ForceUpdateCanvases();
                 roll = play.MojiRoot(6);
-                float length = (float)NoteScroll.RollLength(rollNote, play.noteLayer.rect.width - 120);
+                // The tail is placed on its own in whole pixels, as the renderer does.
+                var clocks = new ScrollClockTimeline(play.Session.Chart);
+                double travel = play.noteLayer.rect.width - 120, at = rollNote.Time - 0.2;
+                float length = (float)(NoteScroll.TailDistance(rollNote, at, clocks, travel) - NoteScroll.Distance(rollNote, at, clocks, travel).X);
                 Assert.That(roll.Find("Mid").GetComponent<RectTransform>().rect.width, Is.EqualTo(8 + length).Within(0.01));
                 Assert.That(((RectTransform)roll.Find("Tail")).anchoredPosition.x, Is.EqualTo(length).Within(0.01));
                 Assert.That(roll.anchoredPosition.x, Is.EqualTo(play.NoteRoot(6).anchoredPosition.x).Within(0.01));

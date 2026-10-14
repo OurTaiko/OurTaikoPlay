@@ -110,11 +110,12 @@ namespace OurTaiko.Tests
                 double songTime = play.SongTime;
                 Assert.That(play.music.IsAudioPlaying(), Is.True);
                 Assert.That(play.music.AudioPosition(), Is.EqualTo(songTime).Within(.15), "A/B must not desynchronize the music clock.");
-                Assert.That(play.RenderedTime, Is.EqualTo(songTime - a / 1000.0).Within(1e-6), "A moves notes; B leaves visual time unchanged.");
+                // Judging and drawing use the play clock's whole millisecond.
+                Assert.That(play.RenderedTime, Is.EqualTo(TjaTime.Truncate(songTime - a / 1000.0)).Within(1e-6), "A moves notes; B leaves visual time unchanged.");
                 Assert.That(play.Session.Bad, Is.Zero, "A delayed window must not time out early.");
                 play.Hit(false, false);
                 Assert.That(play.Session.Good, Is.EqualTo(1));
-                Assert.That(play.Record.Inputs[0].Ms, Is.EqualTo((songTime - (a + b) / 1000.0) * 1000).Within(1e-6));
+                Assert.That(play.Record.Inputs[0].Ms, Is.EqualTo(TjaTime.Ms(songTime - a / 1000.0) - b).Within(1e-6));
                 Assert.That(play.Record.AudioOffsetMs, Is.EqualTo(a + b));
                 Assert.That(play.Record.VisualOffsetMs, Is.EqualTo(-b));
                 Assert.That(play.hitFace.IsPlaying, Is.True);
