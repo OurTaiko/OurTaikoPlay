@@ -503,6 +503,36 @@ namespace OurTaiko.Online
         // The cached file for a content hash (the manifest only accepts 64-digit hex hashes).
         string ObjectPath(string hash) => Path.Combine(CacheRoot, "objects", hash.Substring(0, 2), hash);
 
+        // The cached file of a resource, downloaded and verified (size and SHA-256) first when the
+        // cache does not hold it. `transfer` and `publish` report the steps to a progress display.
+        async Task<string> EnsureObjectAsync(FanmadeEndpoint e, FanmadeResource resource, CancellationToken cancel,
+            FileProgress transfer = null, Action publish = null)
+        {
+            string file = ObjectPath(resource.Hash);
+            void Report(FileProgress.State status)
+            {
+                if (transfer == null) return;
+                transfer.Status = status; publish?.Invoke();
+            }
+            Report(FileProgress.State.Verifying);
+            if (await CacheWork(() => Matches(file, resource), cancel))
+            {
+                if (transfer != null) transfer.Received = transfer.Total = resource.Size;
+                Report(FileProgress.State.Cached);
+                return file;
+            }
+            if (transfer != null) { transfer.Total = resource.Size; transfer.Received = 0; }
+            Report(FileProgress.State.Downloading);
+            var bytes = await e.ResourceBytesAsync(resource, cancel, transfer == null ? (Action<long, long>)null
+                : (received, total) => { transfer.Received = received; transfer.Total = total; publish?.Invoke(); });
+            Report(FileProgress.State.Verifying);
+            if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
+                throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
+            await CacheWork(() => { cancel.ThrowIfCancellationRequested(); StoreObject(file, bytes, resource); return true; }, cancel);
+            Report(FileProgress.State.Complete);
+            return file;
+        }
+
         static bool Matches(string path, FanmadeResource resource)
         {
             if (!File.Exists(path) || new FileInfo(path).Length != resource.Size) return false;

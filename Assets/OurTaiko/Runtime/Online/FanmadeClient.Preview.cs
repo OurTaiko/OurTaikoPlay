@@ -19,15 +19,9 @@ namespace OurTaiko.Online
                     var manifest = await endpoint.ResourcesAsync(selected.Id, cancel);
                     var resource = manifest.Preview;
                     if (resource == null) throw new FanmadeException("PREVIEW_UNAVAILABLE");
-                    string path = ObjectPath(resource.Hash);
                     try
                     {
-                        bool valid = await CacheWork(() => Matches(path, resource), cancel);
-                        if (valid) { cancel.ThrowIfCancellationRequested(); return path; }
-                        var bytes = await endpoint.ResourceBytesAsync(resource, cancel);
-                        if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
-                            throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
-                        await CacheWork(() => { cancel.ThrowIfCancellationRequested(); StoreObject(path, bytes, resource); return true; }, cancel);
+                        string path = await EnsureObjectAsync(endpoint, resource, cancel);
                         cancel.ThrowIfCancellationRequested();
                         return path;
                     }

@@ -55,16 +55,9 @@ namespace OurTaiko.Online
                     var manifest = await endpoint.ResourcesAsync(selected.Id, cancel);
                     var resource = manifest.Tja;
                     if (resource.Hash != selected.TjaHash) throw new FanmadeException("CHART_UPDATING");
-                    string path = ObjectPath(resource.Hash);
                     try
                     {
-                        if (!await CacheWork(() => Matches(path, resource), cancel))
-                        {
-                            var bytes = await endpoint.ResourceBytesAsync(resource, cancel);
-                            if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
-                                throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
-                            await CacheWork(() => { cancel.ThrowIfCancellationRequested(); StoreObject(path, bytes, resource); return true; }, cancel);
-                        }
+                        string path = await EnsureObjectAsync(endpoint, resource, cancel);
                         return await CacheWork(() =>
                         {
                             string text = PlayableTja.Build(PlayableTja.ToUtf8(File.ReadAllBytes(path)), selected);
