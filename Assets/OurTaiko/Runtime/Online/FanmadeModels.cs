@@ -207,8 +207,10 @@ namespace OurTaiko.Online
             }
             foreach (var member in members)
             {
-                if (member.Type != JTokenType.String) throw new FanmadeException("API_PLAYLIST_INVALID");
-                string id = (string)member;
+                // Fanmade lists chart IDs as strings, OurTaiko Database as whole numbers.
+                string id = member.Type == JTokenType.String ? (string)member
+                    : member.Type == JTokenType.Integer && (long)member > 0 ? ((long)member).ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    : throw new FanmadeException("API_PLAYLIST_INVALID");
                 if (catalog.Contains(id) && !playlist.ChartIds.Contains(id)) playlist.ChartIds.Add(id);
             }
             return playlist;

@@ -101,6 +101,19 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void PlaylistsOfNumericChartIdsFollowTheCatalog()
+        {
+            first.Id = "1617"; second.Id = "2973";
+            fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray
+            {
+                new JObject { ["id"] = "daily", ["title"] = "Daily Challenge", ["genre"] = "バラエティー", ["kind"] = "system", ["owner"] = "",
+                    ["chartIds"] = new JArray(2973L, 99L, 1617L) },
+            };
+            Connect(guest: true);
+            Assert.That(client.Playlists.Single().ChartIds, Is.EqualTo(new[] { "2973", "1617" }));
+        }
+
+        [Test]
         public void PlaylistsListTheirPlayableCatalogChartsInOrder()
         {
             Connect(guest: true);
@@ -166,7 +179,7 @@ namespace OurTaiko.Tests
             {
                 new JObject(),
                 new JArray(new JObject { ["id"] = "x", ["title"] = "X", ["genre"] = "", ["kind"] = "owned", ["owner"] = "" }),
-                new JArray(new JObject { ["id"] = "x", ["title"] = "X", ["genre"] = "", ["kind"] = "owned", ["owner"] = "", ["chartIds"] = new JArray(1) }),
+                new JArray(new JObject { ["id"] = "x", ["title"] = "X", ["genre"] = "", ["kind"] = "owned", ["owner"] = "", ["chartIds"] = new JArray(1.5) }),
             })
             {
                 fixture.ChangeBootstrap = reply => reply["playlists"] = broken;
