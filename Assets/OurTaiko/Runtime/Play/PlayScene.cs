@@ -787,7 +787,7 @@ namespace OurTaiko
                 // only a hit removes a note: a 5/6 roll resolved at its tail and a note
                 // missed by timeout keep scrolling until they leave the lane.
                 bool rolling = note.IsLong && !note.IsBalloon;
-                bool alive = note.Display && !(hideSkipped && Session.Skipped[i]) && (preview ? Session.IsPracticePreviewActive(note) : Session.IsActive(note)) && (rolling || Session.Missed[i] || !Session.Resolved[i]);
+                bool alive = note.Display && !(hideSkipped && Session.Skipped[i]) && (preview ? Session.IsPracticePreviewActive(note) : Session.IsShown(note)) && (rolling || Session.Missed[i] || !Session.Resolved[i]);
                 bool visible = alive && InLane(pos.x, Reach(note, view, length));
                 if (mojiLayer != null) mojiEntered |= RenderMoji(i, note, pos, length, alive);
                 if (!visible)
@@ -825,7 +825,7 @@ namespace OurTaiko
                 var bar = Session.Chart.Bars[i];
                 var pos = Position(bar, time); pos.y -= 4;
                 float half = (bar.IsBranchStart ? 6 : 3) / 2f;
-                bool visible = bar.Display && (preview ? Session.IsPracticePreviewActive(bar) : Session.IsActive(bar)) && InLane(pos.x, new Vector2(-half, half));
+                bool visible = bar.Display && (preview ? Session.IsPracticePreviewActive(bar) : Session.IsShown(bar)) && InLane(pos.x, new Vector2(-half, half));
                 var root = shownBars[i];
                 if (!visible)
                 {

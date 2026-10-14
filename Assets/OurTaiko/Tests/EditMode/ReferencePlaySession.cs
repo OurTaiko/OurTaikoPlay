@@ -6,6 +6,8 @@ namespace OurTaiko.Tests
 {
     // Pure C#: independent of frame rate, rendering and audio, and testable without a scene.
     // Verbatim copy of PlaySession before the cursor optimisation (0e4fb7c): the full-scan reference.
+    // Branch counting follows OpenTaiko since: only #SECTION (on any route) resets the counts,
+    // and notes due at a decision or section time come before it.
     public sealed class ReferencePlaySession
     {
         public const double GoodWindow = 0.0250250015258789, OkWindow = 0.0750750045776367, BadWindow = 0.108441665649414;
@@ -49,7 +51,7 @@ namespace OurTaiko.Tests
             public double Time;
             public ChartBranch Branch;
             public ChartSection Section;
-            public int Priority => Branch != null ? 1 : Section.BranchId < 0 ? 0 : 2;
+            public int Priority => Branch != null ? 0 : 1;
         }
 
         public ReferencePlaySession(TaikoChart chart, double judgeOffset = 0)
@@ -109,9 +111,9 @@ namespace OurTaiko.Tests
             while (nextEvent < timeline.Count && timeline[nextEvent].Time <= time)
             {
                 var item = timeline[nextEvent++];
-                AdvanceNotes(item.Time - 1e-9, auto);
+                AdvanceNotes(item.Time, auto);
                 if (item.Branch != null) SelectBranch(item.Branch);
-                else if (IsActive(item.Section.BranchId, item.Section.Route)) ResetBranchStats();
+                else ResetBranchStats();
             }
             AdvanceNotes(time, auto);
         }
@@ -123,22 +125,11 @@ namespace OurTaiko.Tests
             double value;
             if (branch.Condition == BranchCondition.Accuracy)
                 value = branchNotes == 0 ? 0 : Math.Max(0, Math.Min(100, (int)(branchPoints / branchNotes * 100)));
-            else
-            {
-                int activeRollHits = 0;
-                for (int i = 0; i < Chart.Notes.Count; i++)
-                {
-                    var note = Chart.Notes[i];
-                    if (IsActive(note) && note.IsLong && !note.IsBalloon && note.Time <= branch.DecisionTime && branch.DecisionTime < note.EndTime)
-                        activeRollHits = Math.Max(activeRollHits, LongHits[i]);
-                }
-                value = Math.Max(branchRolls, activeRollHits);
-            }
+            else value = branchRolls;
             var chosen = value >= branch.ExpertThreshold && value < branch.MasterThreshold && branch.ExpertThreshold >= 0
                 ? BranchRoute.Expert : value >= branch.MasterThreshold ? BranchRoute.Master : BranchRoute.Normal;
             selectedRoutes[branch.Id] = (int)chosen;
             CurrentBranch = chosen; LastBranchValue = value; branchHistory.Add(chosen);
-            ResetBranchStats();
             BranchSelected?.Invoke(branch, chosen);
         }
 

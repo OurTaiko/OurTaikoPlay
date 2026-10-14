@@ -72,7 +72,8 @@ namespace OurTaiko
             public double Time;
             public ChartBranch Branch;
             public ChartSection Section;
-            public int Priority => Branch != null ? 1 : Section.BranchId < 0 ? 0 : 2;
+            // OpenTaiko's chip order at one time: notes, then the branch judgement, then #SECTION.
+            public int Priority => Branch != null ? 0 : 1;
         }
 
         // A fixed route (practice) plays every branch on ResolveRoute(route) and evaluates no
@@ -91,7 +92,7 @@ namespace OurTaiko
             var statistics = new ChartStatistics(chart);
             scoring = new ShinuchiScore(statistics);
             gauge = new SoulGauge(statistics.JudgeableNotes, chart.Course, chart.Level);
-            branchCounter = new BranchCounter(branchFeed, HeldRollHits);
+            branchCounter = new BranchCounter(branchFeed);
             bool easy = chart.Course == "Easy" || chart.Course == "Normal";
             goodWindow = easy ? 0.0417083358764648 : GoodWindow;
             okWindow = easy ? 0.108441665649414 : OkWindow;
@@ -107,6 +108,11 @@ namespace OurTaiko
         }
 
         public bool IsActive(ChartNote note) => IsActive(note.BranchId, note.Route);
+
+        // Drawn in normal play: the active route, and before a branch is judged the route played
+        // so far (Normal at first), which OpenTaiko shows until the judgement swaps it.
+        public bool IsShown(ChartNote note) => note.BranchId < 0 || note.Route == (SelectedRoute(note.BranchId)
+            ?? Chart.Branches[note.BranchId].ResolveRoute(ForcedBranch ?? CurrentBranch));
 
         // Decisions can happen before the authored branch starts so its notes can load.
         // The lane label follows the actual section: common measures always show Normal.
@@ -212,28 +218,16 @@ namespace OurTaiko
         {
             // Split a long frame at each reset/decision. Future hits must not affect an
             // earlier checkpoint, and inactive routes must never enter its statistics.
+            // Notes due at the same time come first, as in OpenTaiko.
             while (nextEvent < timeline.Count && timeline[nextEvent].Time <= time)
             {
                 var item = timeline[nextEvent++];
-                AdvanceNotes(item.Time - 1e-9, auto);
+                AdvanceNotes(item.Time, auto);
                 if (item.Branch != null) SelectBranch(item.Branch);
-                else if (IsActive(item.Section.BranchId, item.Section.Route)) branchFeed.Clear();
+                // Like OpenTaiko, a #SECTION on any route of a branch resets the counts.
+                else branchFeed.Clear();
             }
             AdvanceNotes(time, auto);
-        }
-
-        // Hits so far on an active drumroll that spans the decision, for r conditions.
-        int HeldRollHits(ChartBranch branch)
-        {
-            int hits = 0;
-            for (int i = 0; i < Chart.Notes.Count; i++)
-            {
-                var note = Chart.Notes[i];
-                if (IsActive(note) && note.IsLong && !note.IsBalloon && (!branch.BigOnly || note.Kind == NoteKind.BigRoll)
-                    && note.Time <= branch.DecisionTime && branch.DecisionTime < note.EndTime)
-                    hits = Math.Max(hits, longHits[i]);
-            }
-            return hits;
         }
 
         void SelectBranch(ChartBranch branch)
@@ -249,8 +243,8 @@ namespace OurTaiko
                 ? BranchRoute.Expert : value >= branch.MasterThreshold ? BranchRoute.Master : BranchRoute.Normal;
             chosen = branch.ResolveRoute(ForcedBranch ?? chosen);
             selectedRoutes[branch.Id] = (int)chosen;
+            // Counts carry on into the next branch; only #SECTION resets them (OpenTaiko).
             CurrentBranch = chosen; LastBranchValue = value; branchHistory.Add(chosen); Version++;
-            branchFeed.Clear();
             BranchSelected?.Invoke(branch, chosen);
         }
 

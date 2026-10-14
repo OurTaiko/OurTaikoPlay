@@ -89,8 +89,10 @@ namespace OurTaiko
             ChartBranch branch;
             readonly bool[] routesSeen = new bool[3];
             BranchRoute route;
-            bool hasRoute, branchBar, sectionBarPending;
-            double? sectionBarTime;
+            bool hasRoute, branchBar;
+            // Per route, the latest bar line and the latest long-note end after it, for
+            // OpenTaiko's branch judgement time (CTja.GetBranchJudgeChipTime).
+            readonly double?[] lastBar = new double?[3], rollEndAfterBar = new double?[3];
             ChartNote longNote;
             readonly List<ChartEntry> common = new List<ChartEntry>();
             List<ChartEntry>[] routeLists;
@@ -126,17 +128,6 @@ namespace OurTaiko
                 chart.Gogos.Clear(); chart.Gogos.AddRange(gogos);
                 var tempos = chart.Tempos.OrderBy(t => t.Time).ToList();
                 chart.Tempos.Clear(); chart.Tempos.AddRange(tempos);
-                double previousDecision = double.NegativeInfinity;
-                foreach (var checkpoint in chart.Branches)
-                {
-                    var first = checkpoint.FirstEntries[(int)BranchRoute.Master]
-                        ?? checkpoint.FirstEntries[(int)BranchRoute.Expert] ?? checkpoint.FirstEntries[(int)BranchRoute.Normal];
-                    // The original arms two measures early, then chooses when the first route
-                    // object loads. A consecutive checkpoint cannot precede its predecessor.
-                    checkpoint.DecisionTime = Math.Max(previousDecision,
-                        Math.Max(checkpoint.ArmTime, first == null ? checkpoint.Time : NoteScroll.LoadTime(first)));
-                    previousDecision = checkpoint.DecisionTime;
-                }
                 NoteMoji.Assign(chart);
             }
 
@@ -169,15 +160,33 @@ namespace OurTaiko
                 if (branch != null) EndBranch();
                 CheckLongNote();
                 branchStart = state.Copy();
-                branch = new ChartBranch { Id = chart.Branches.Count, Time = state.Time,
-                    ArmTime = (sectionBarTime ?? state.Time) - 480.0 / state.Bpm };
+                branch = new ChartBranch { Id = chart.Branches.Count, Time = state.Time };
                 ReadCondition(branch, arg);
+                branch.DecisionTime = JudgeTime(branch.Condition == BranchCondition.Drumroll || branch.Condition == BranchCondition.BalloonHits);
                 chart.Branches.Add(branch);
                 routeLists = new[] { new List<ChartEntry>(), new List<ChartEntry>(), new List<ChartEntry>() };
                 chart.NoteLists.AddRange(routeLists);
-                sectionBarTime = null;
                 Array.Clear(routesSeen, 0, routesSeen.Length);
                 hasRoute = false;
+            }
+
+            // OpenTaiko judges a branch at the latest bar line before it (the start of the measure
+            // before #BRANCHSTART), or four beats before the chart if there is none. For drumroll
+            // and balloon conditions it waits for a roll ending in that last measure. Never after
+            // the branch itself.
+            double JudgeTime(bool waitForRolls)
+            {
+                double judge = lastBar.Max() ?? -chart.Offset - 240.0 / chart.Bpm;
+                double? rollEnd = rollEndAfterBar.Max();
+                if (waitForRolls && rollEnd > judge) judge = Math.Min(rollEnd.Value, state.Time);
+                return judge;
+            }
+
+            // Marks the current route, or every route outside a branch.
+            void Track(double?[] perRoute, double? value, bool latest = false)
+            {
+                for (int r = 0; r < 3; r++)
+                    if (branch == null || r == (int)route) perRoute[r] = latest ? Math.Max(perRoute[r] ?? value.Value, value.Value) : value;
             }
 
             // OpenTaiko CTja #BRANCHSTART: `type, expert, master[, l|m]`; a missing comma after the
@@ -249,7 +258,8 @@ namespace OurTaiko
                 Entries.Add(new ChartEntry(bar, false));
                 if (branch != null && branch.FirstEntries[(int)route] == null) branch.FirstEntries[(int)route] = bar;
                 branchBar = false;
-                if (sectionBarPending) { sectionBarTime = state.Time; sectionBarPending = false; }
+                Track(lastBar, state.Time);
+                Track(rollEndAfterBar, null);
             }
 
             void Command(string command)
@@ -288,7 +298,6 @@ namespace OurTaiko
                     case "#M": SelectRoute(BranchRoute.Master); break;
                     case "#SECTION":
                         chart.Sections.Add(new ChartSection { Time = state.Time, BranchId = branch == null ? -1 : branch.Id, Route = route });
-                        sectionBarPending = true;
                         break;
                     case "#LEVELHOLD": case "#BMSCROLL": case "#HBSCROLL":
                         throw new NotSupportedException($"{key} is not supported by the single-lane port yet.");
@@ -315,6 +324,7 @@ namespace OurTaiko
                         if (longNote == null) throw new FormatException("Long-note tail has no head.");
                         longNote.EndTime = state.Time;
                         longNote.TailBpm = state.Bpm;
+                        Track(rollEndAfterBar, state.Time, latest: true);
                         Entries.Add(new ChartEntry(longNote, true));
                         longNote = null;
                     }

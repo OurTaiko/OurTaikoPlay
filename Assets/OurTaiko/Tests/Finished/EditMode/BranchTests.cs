@@ -30,14 +30,35 @@ namespace OurTaiko.Tests
             Assert.That(chart.Bars.Single(x => x.BranchId == 0 && x.Route == BranchRoute.Expert).Display, Is.True);
         }
 
-        [Test] public void DecisionUsesMasterFirstBarLoadIncludingHiddenAndEmptyMeasures()
+        [Test] public void DecisionIsAtTheLastBarLineBeforeTheBranch()
         {
-            var chart = Parse("0000,\n0000,\n0000,\n#BRANCHSTART p,50,80\n#N\n1000,\n#E\n2000,\n#M\n#BARLINEOFF\n#SCROLL 2\n,\n#BRANCHEND");
+            // OpenTaiko: the bar line of the measure before #BRANCHSTART, hidden or not.
+            var chart = Parse("0000,\n0000,\n#BARLINEOFF\n0000,\n#BRANCHSTART p,50,80\n#N\n1000,\n#E\n2000,\n#M\n#BARLINEOFF\n#SCROLL 2\n,\n#BRANCHEND");
             var branch = chart.Branches.Single();
             Assert.That(branch.Time, Is.EqualTo(6));
-            Assert.That(branch.ArmTime, Is.EqualTo(2));
-            Assert.That(branch.DecisionTime, Is.EqualTo(6 - 1398.0 / 1302).Within(1e-9));
+            Assert.That(branch.DecisionTime, Is.EqualTo(4));
             Assert.That(branch.FirstEntries[2].Display, Is.False);
+        }
+
+        [Test] public void DecisionFollowsTheLatestRouteOfAPreviousBranchAndTheChartStart()
+        {
+            // Without a bar line before it, four beats before the chart starts (OFFSET 1 → -1 - 2).
+            Assert.That(Parse("#BRANCHSTART p,50,80" + Routes, "OFFSET:1").Branches[0].DecisionTime, Is.EqualTo(-3));
+            // Back-to-back branches: the latest bar line of any route, here 達人's second 2/4 measure.
+            var chart = Parse("1111,\n#BRANCHSTART p,50,80\n#N\n1000,\n#E\n2000,\n#M\n#MEASURE 2/4\n3000,\n3000,\n#BRANCHSTART p,50,80" + Routes);
+            Assert.That(chart.Branches[1].Time, Is.EqualTo(4));
+            Assert.That(chart.Branches[1].DecisionTime, Is.EqualTo(3));
+        }
+
+        [Test] public void RollConditionsWaitForARollEndingInTheLastMeasure()
+        {
+            // Drumroll 4.5–6.5 s ending in the measure before the branch (bar line at 6 s).
+            string lead = "1111,\n0000,\n0500,\n0800,";
+            Assert.That(Parse(lead + "\n#BRANCHSTART r,1,2" + Routes).Branches[0].DecisionTime, Is.EqualTo(6.5));
+            Assert.That(Parse(lead + "\n#BRANCHSTART rb,1,2" + Routes).Branches[0].DecisionTime, Is.EqualTo(6.5));
+            Assert.That(Parse(lead + "\n#BRANCHSTART p,1,2" + Routes).Branches[0].DecisionTime, Is.EqualTo(6));
+            // A roll that ended before that bar line does not delay it.
+            Assert.That(Parse("5008,\n0000,\n0000,\n#BRANCHSTART r,1,2" + Routes).Branches[0].DecisionTime, Is.EqualTo(4));
         }
 
         [TestCase(0, 1, 6)]
@@ -98,20 +119,18 @@ namespace OurTaiko.Tests
             Assert.That(session.Rolls, Is.EqualTo(5)); Assert.That(session.LastBranchValue, Is.Zero);
         }
 
-        [Test] public void SectionResetsAccuracyButActiveRollFallbackMatchesReference()
+        [Test] public void SectionResetsAccuracyAndDrumrollHits()
         {
             var session = new PlaySession(Accuracy("p,50,80", "1111,\n#SECTION\n1000,\n0000,"));
             for (int i = 0; i < 4; i++) session.Hit(false, i * 0.5);
             session.Advance(4, false);
             Assert.That(session.CurrentBranch, Is.EqualTo(BranchRoute.Normal)); Assert.That(session.LastBranchValue, Is.Zero);
+            // Unlike the reference player, hits on a drumroll before #SECTION are gone even
+            // though the drumroll runs on past it.
             var roll = new PlaySession(Accuracy("r,3,5", "5000,\n#SECTION\n0000,\n0008,"));
             for (int i = 0; i < 5; i++) roll.Hit(false, 0.1);
-            roll.Advance(4, false);
-            Assert.That(roll.CurrentBranch, Is.EqualTo(BranchRoute.Master)); Assert.That(roll.LastBranchValue, Is.EqualTo(5));
-            var ended = new PlaySession(Accuracy("r,3,5", "5000,\n#SECTION\n0000,\n0008,\n0000,"));
-            for (int i = 0; i < 5; i++) ended.Hit(false, 0.1);
-            ended.Advance(6, false);
-            Assert.That(ended.LastBranchValue, Is.Zero);
+            roll.Advance(roll.Chart.Branches[0].DecisionTime, false);
+            Assert.That(roll.CurrentBranch, Is.EqualTo(BranchRoute.Normal)); Assert.That(roll.LastBranchValue, Is.Zero);
         }
 
         [Test] public void UnselectedNotesCannotConsumeInputMissOrInflateScore()
@@ -139,14 +158,16 @@ namespace OurTaiko.Tests
             Assert.That(coarse.Good, Is.EqualTo(chart.Notes.Count(n => !n.IsLong && coarse.IsActive(n))));
         }
 
-        [Test] public void DecisionsResetCountersAndUnchosenSectionDoesNotResetThem()
+        [Test] public void DecisionsKeepCountingAndASectionOnAnyRouteResets()
         {
+            // OpenTaiko: counts carry over a decision; #SECTION resets them even on an unplayed route.
+            var kept = new PlaySession(Parse("1111,\n0000,\n0000,\n#BRANCHSTART p,50,80\n#N\n0000,\n#E\n0000,\n#M\n0000,\n#BRANCHEND\n0000,\n0000,\n#BRANCHSTART p,50,80" + Routes));
+            kept.Advance(kept.Chart.Duration + 1, true);
+            Assert.That(kept.BranchHistory, Is.EqualTo(new[] { BranchRoute.Master, BranchRoute.Master }));
             var chart = Parse("1111,\n0000,\n0000,\n#BRANCHSTART p,50,80\n#N\n#SECTION\n0000,\n#E\n0000,\n#M\n1000,\n#BRANCHEND\n0000,\n0000,\n#BRANCHSTART p,50,80" + Routes);
-            var session = new PlaySession(chart); session.Advance(chart.Duration + 1, true);
-            Assert.That(session.BranchHistory, Is.EqualTo(new[] { BranchRoute.Master, BranchRoute.Master }));
-            var reset = new PlaySession(Parse("1111,\n0000,\n0000,\n#BRANCHSTART p,50,80\n#N\n0000,\n#E\n0000,\n#M\n0000,\n#BRANCHEND\n0000,\n0000,\n#BRANCHSTART p,50,80" + Routes));
-            reset.Advance(reset.Chart.Duration + 1, true);
-            Assert.That(reset.BranchHistory, Is.EqualTo(new[] { BranchRoute.Master, BranchRoute.Normal }));
+            var reset = new PlaySession(chart); reset.Advance(chart.Duration + 1, true);
+            Assert.That(reset.BranchHistory, Is.EqualTo(new[] { BranchRoute.Master, BranchRoute.Normal }),
+                "The 達人 note at the #SECTION time counts first, then the 普通 #SECTION clears it.");
         }
 
         [TestCase("#N\n1000,")]

@@ -41,7 +41,8 @@ namespace OurTaiko
     public sealed class ChartBranch
     {
         public int Id;
-        public double Time, EndTime, ArmTime, DecisionTime, ExpertThreshold, MasterThreshold;
+        // DecisionTime: when OpenTaiko judges the condition, at or before Time (see TjaParser).
+        public double Time, EndTime, DecisionTime, ExpertThreshold, MasterThreshold;
         public BranchCondition Condition;
         // An upper-case condition (P, R, JP…) counts only big notes, big drumrolls or kusudama.
         public bool BigOnly;

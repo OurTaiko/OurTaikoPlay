@@ -3,7 +3,7 @@ using System;
 namespace OurTaiko
 {
     // Play events a branch condition counts, raised by PlaySession as each result is applied
-    // within the game loop's update. #SECTION and every branch decision raise Reset.
+    // within the game loop's update. Only #SECTION raises Reset, as in OpenTaiko.
     public sealed class BranchFeed
     {
         // A normal note's result and the points it scored.
@@ -30,13 +30,10 @@ namespace OurTaiko
         }
 
         readonly Tally all = new Tally(), big = new Tally();
-        readonly Func<ChartBranch, int> heldRollHits;
         int score;
 
-        // heldRollHits gives the hits on an active drumroll that spans the branch's decision.
-        public BranchCounter(BranchFeed feed, Func<ChartBranch, int> heldRollHits)
+        public BranchCounter(BranchFeed feed)
         {
-            this.heldRollHits = heldRollHits;
             feed.NoteJudged += (note, result, points) =>
             {
                 Judge(all, result);
@@ -51,7 +48,8 @@ namespace OurTaiko
                     if (note.IsBalloon) tally.Balloons++; else tally.Rolls++;
                 score += points;
             };
-            feed.Reset += () => { all.Clear(); big.Clear(); score = 0; };
+            // OpenTaiko's s reads the total score, which #SECTION does not reset.
+            feed.Reset += () => { all.Clear(); big.Clear(); };
         }
 
         static void Judge(Tally tally, Judgment result)
@@ -77,11 +75,10 @@ namespace OurTaiko
                 case BranchCondition.JudgePerfect: return t.Good;
                 case BranchCondition.JudgeGood: return t.Ok;
                 case BranchCondition.JudgeBad: return t.Bad;
-                // r: as in the reference player, a drumroll still running at the decision counts
-                // all its hits if that is more.
-                case BranchCondition.Drumroll: return Math.Max(t.Rolls, heldRollHits(branch));
+                // r: drumroll hits. The judgement waits for a drumroll ending in the last measure.
+                case BranchCondition.Drumroll: return t.Rolls;
                 case BranchCondition.BalloonHits: return t.Balloons;
-                // s: points scored, from notes, drumrolls and balloons alike.
+                // s: the score so far, from notes, drumrolls and balloons alike.
                 case BranchCondition.Score: return score;
                 default: return 0;
             }
