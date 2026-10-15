@@ -87,15 +87,19 @@ namespace OurTaiko.Tests
             Assert.That(api.Downloads, Is.EqualTo(2));
         }
 
-        [Test] public void TheThresholdIsOfTheBlockSinglePlayReads()
+        [Test] public void TheThresholdIsOfTheBlockThe1PSeatReads()
         {
             api.Charts[0].Difficulties.Clear();
             api.Charts[0].Difficulties.Add(("Oni", 8, "P1")); api.Charts[0].Difficulties.Add(("Oni", 8, "P2"));
             api.Charts[0].Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\nSTYLE:Double\n#START P1\n1110,\n#END\n#START P2\n1111,\n#END");
-            Assert.That(Load(FanmadeChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000020), "Without a single block, the 1P one.");
+            Assert.That(Load(FanmadeChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000020), "The 1P block.");
             api.Charts[0].Difficulties.Add(("Oni", 8, ""));
             api.Charts[0].Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P1\n1110,\n#END\n#START P2\n1110,\n#END\n#START\n1111,\n#END");
-            Assert.That(Load(FanmadeChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000000));
+            Assert.That(Load(FanmadeChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000020), "Still the 1P block, not the single one.");
+            api.Charts[0].Difficulties.Clear();
+            api.Charts[0].Difficulties.Add(("Oni", 8, "P2")); api.Charts[0].Difficulties.Add(("Oni", 8, ""));
+            api.Charts[0].Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P2\n1110,\n#END\n#START\n1111,\n#END");
+            Assert.That(Load(FanmadeChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000000), "Without a 1P block, the single one.");
         }
     }
 }

@@ -358,7 +358,7 @@ namespace OurTaiko.Tests
             try
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
-                foreach (string seat in FanmadeChart.Sides)
+                foreach (string seat in ChartSide.Seats)
                 {
                     string play = PlayableTja.Build(original, chart, seat);
                     Assert.That(play, Does.Contain("OFFSET:-0.375\n"));
@@ -537,7 +537,7 @@ namespace OurTaiko.Tests
             }.ToJson(), "server");
             // The copy holds the one block a seat plays, as a plain single chart.
             string pairTja = "BPM:150\nCOURSE:Oni\nSTYLE:Double\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n";
-            foreach (string seat in new[] { "single", "p1" })
+            foreach (string seat in new[] { "p1" })
             {
                 play = PlayableTja.Build(pairTja, pair, seat);
                 Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nSTYLE:Single\nBPM:150\n#START\n3,\n#END\n"), seat);
@@ -553,16 +553,16 @@ namespace OurTaiko.Tests
                 Title = "Mixed", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2"), ("Oni", 7, "") },
             }.ToJson(), "server");
             string mixedTja = "BPM:150\nCOURSE:Oni\n#START\n5,\n#END\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n";
-            foreach (var (seat, level, notes) in new[] { ("single", 7, "5,"), ("p1", 9, "3,"), ("p2", 8, "4,") })
+            foreach (var (seat, level, notes) in new[] { ("p1", 9, "3,"), ("p2", 8, "4,") })
             {
                 play = PlayableTja.Build(mixedTja, mixed, seat);
                 Assert.That(play, Does.EndWith("COURSE:Oni\nLEVEL:" + level + "\nSTYLE:Single\nBPM:150\n#START\n" + notes + "\n#END\n"), seat);
                 Assert.That(mixed.Block(3, seat).Level, Is.EqualTo(level));
             }
-            Assert.That(mixed.Difficulties[3].Side, Is.EqualTo("single"));
+            Assert.That(mixed.Difficulties[3].Side, Is.EqualTo("p1"));
             Assert.Throws<FanmadeException>(() => PlayableTja.Build(pairTja, mixed), "TJA_BLOCK_MISMATCH");
 
-            // A course with only a single block is what both of two players read; a 2P-only one is not for single play.
+            // A course with only a single block is what both seats read; a 2P-only one is not for the 1P seat.
             Assert.That(chart.Block(3, "p1"), Is.SameAs(chart.Difficulties[3])); Assert.That(chart.Block(3, "p2"), Is.SameAs(chart.Difficulties[3]));
             var only2P = FanmadeChart.From(new FanmadeFixture.Chart
             {

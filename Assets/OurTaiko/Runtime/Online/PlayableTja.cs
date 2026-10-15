@@ -18,7 +18,7 @@ namespace OurTaiko.Online
             catch (DecoderFallbackException error) { throw new FanmadeException("TJA_ENCODING_INVALID", error); }
         }
 
-        public static string Build(string utf8, FanmadeChart chart, string seat = "single")
+        public static string Build(string utf8, FanmadeChart chart, string seat = "p1")
         {
             var played = Enumerable.Range(0, SongInfo.CourseNames.Count).Select(i => chart.Block(i, seat)).ToList();
             var output = new StringBuilder(chart.TitleHeaders() + "WAVE:" + chart.CachedAudioName + "\n");
@@ -37,7 +37,7 @@ namespace OurTaiko.Online
                 if (tja.Kind == TjaLineKind.Start)
                 {
                     inBlock = true; block++; body.Clear();
-                    string side = tja.Value == "P1" ? "p1" : tja.Value == "P2" ? "p2" : "single";
+                    string side = ChartSide.OfStart(tja.Value);
                     var d = chart.Blocks.Find(x => x.Course == course && x.Side == side);
                     if (d != null)
                     {

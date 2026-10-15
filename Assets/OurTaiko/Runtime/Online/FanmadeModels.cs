@@ -41,7 +41,7 @@ namespace OurTaiko.Online
         public string Category = "", Genre = "";
         public readonly Dictionary<string, string> Titles = new Dictionary<string, string>(), Subtitles = new Dictionary<string, string>();
         public double Bpm = 120, DemoStart, Offset;
-        // The block single play reads for each of Easy..Edit; Block gives any seat's.
+        // The block the 1P seat reads for each of Easy..Edit; Block gives either seat's.
         public FanmadeDifficulty[] Difficulties = new FanmadeDifficulty[5];
         public readonly List<FanmadeDifficulty> Blocks = new List<FanmadeDifficulty>();
 
@@ -73,7 +73,7 @@ namespace OurTaiko.Online
             {
                 string name = Json.Str(d, "course"), side = Json.Str(d, "side");
                 long id = Json.Number(d, "id");
-                if (Array.IndexOf(Sides, side) < 0 || id <= 0) throw new FanmadeException("API_DIFFICULTY_INVALID");
+                if (Array.IndexOf(ChartSide.All, side) < 0 || id <= 0) throw new FanmadeException("API_DIFFICULTY_INVALID");
                 int slot = SongInfo.CourseNames.IndexOf(name);
                 if (slot < 0) continue;  // Tower/Dan are not playable here.
                 long level = Json.Number(d, "level");
@@ -93,18 +93,10 @@ namespace OurTaiko.Online
         // 32 hex digits on Fanmade, a positive whole number on OurTaiko Database.
         public static bool ValidId(string id) => Json.ChartId(id);
 
-        public static readonly string[] Sides = { "single", "p1", "p2" };
-        // The arcade's side for each seat first, then the blocks that stand in where a course lacks
-        // it: single play reads single; of two players, 1P reads p1 and 2P reads p2.
-        static readonly Dictionary<string, string[]> ReadOrder = new Dictionary<string, string[]>
+        // The block a seat ("p1" or "p2") plays on a course (0..4 for Easy..Edit); null when it has none.
+        public FanmadeDifficulty Block(int course, string seat = "p1")
         {
-            ["single"] = new[] { "single", "p1" }, ["p1"] = new[] { "p1", "single" }, ["p2"] = new[] { "p2", "single", "p1" },
-        };
-
-        // The block a seat ("single", "p1" or "p2") plays on a course (0..4 for Easy..Edit); null when it has none.
-        public FanmadeDifficulty Block(int course, string seat = "single")
-        {
-            foreach (string side in ReadOrder[seat])
+            foreach (string side in ChartSide.Reads(seat))
             {
                 var block = Blocks.Find(x => x.Course == SongInfo.CourseNames[course] && x.Side == side);
                 if (block != null) return block;
