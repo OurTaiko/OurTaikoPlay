@@ -136,6 +136,11 @@ namespace OurTaiko.Tests
                 render.Invoke(play, new object[] { -0.5 });
                 Vector2 circleHome = circle.anchoredPosition, textHome = play.judgment.rectTransform.anchoredPosition;
                 var balloonHome = ((RectTransform)play.balloonCounter.transform).anchoredPosition;
+                // OpenTaiko draws the soul gauge under the notes; the rest of the HUD stays above.
+                var gaugeCanvas = play.soulGauge.GetComponent<Canvas>();
+                Assert.That(gaugeCanvas.overrideSorting && gaugeCanvas.sortingOrder == PlayScene.SoulGaugeOrder, Is.True);
+                Assert.That(gaugeCanvas.sortingOrder, Is.LessThan(play.barLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
+                Assert.That(play.soulGauge.transform.parent.GetComponent<Canvas>().sortingOrder, Is.GreaterThan(play.mojiLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
                 // Halfway (0.5 s): -100 across and 50 down in 1280 pixels → -150, -75 here.
                 render.Invoke(play, new object[] { 0.5 });
                 var offset = new Vector2(-150, -75);

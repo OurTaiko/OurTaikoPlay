@@ -148,6 +148,7 @@ namespace OurTaiko
                 balloonCounter.ResetDisplay();
                 drumrollCounter.ResetDisplay();
                 soulGauge.Initialize(Session.ClearThreshold);
+                PutSoulGaugeUnderNotes();
                 foreach (string warning in Session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
                 Session.Judged += OnJudged;
                 if (branchLane != null) branchLane.Initialize(Session.Chart.Branches.Count > 0);
@@ -536,6 +537,20 @@ namespace OurTaiko
             bool hideSkipped = IsPractice && (!IsPaused || practiceRewinding);
             ShiftJudge(time);
             if (lane.Render(Session, time, preview, hideSkipped)) gogo.ShowTime(Session, time, preview);
+        }
+
+        // OpenTaiko draws the soul gauge after the lane and before the notes (t進行描画_ゲージ, then
+        // t進行描画_チップ), so notes a vertical SCROLL or #JPOSSCROLL carries up pass over it. The
+        // rest of the HUD (combo, score, flying notes…) stays above them. The note sprites sort at
+        // -1 (bar lines) to 10 (text); the lane's canvas is at -50.
+        public const int SoulGaugeOrder = -20;
+        void PutSoulGaugeUnderNotes()
+        {
+            if (soulGauge == null) return;
+            var canvas = soulGauge.GetComponent<Canvas>();
+            if (canvas == null) canvas = soulGauge.gameObject.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = SoulGaugeOrder;
         }
 
         // What #JPOSSCROLL moves with the note origin, as OpenTaiko adds GetJPOSCROLLX/Y to them:
