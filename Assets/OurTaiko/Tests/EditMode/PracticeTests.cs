@@ -42,13 +42,15 @@ namespace OurTaiko.Tests
         {
             var clock = new SongClock();
             clock.Seek(10, 0.8); clock.Resume(100);
-            Assert.That(clock.Schedule(100, 20).Value.Position, Is.EqualTo(10.04).Within(1e-8));
+            Assert.That(clock.TrackDue(100), Is.EqualTo(10));
+            clock.TrackStarted(100);
             clock.Update(105);
             Assert.That(clock.Time, Is.EqualTo(14).Within(1e-8));
             clock.Pause(); clock.Update(200);
             Assert.That(clock.Time, Is.EqualTo(14).Within(1e-8));
             clock.Seek(-1, 0.5); clock.Resume(210);
-            Assert.That(clock.Schedule(210, 20).Value.At, Is.EqualTo(212).Within(1e-8));
+            Assert.That(clock.TrackDue(211.999), Is.Null);
+            Assert.That(clock.TrackDue(212), Is.EqualTo(0));
             clock.Update(213);
             Assert.That(clock.Time, Is.EqualTo(0.5).Within(1e-8));
         }

@@ -179,7 +179,7 @@ namespace OurTaiko
             // The full countdown starts only after the global cover has opened.
             songClock.Start(GameTimeline.AudioNow, Math.Max(2, Session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset)));
             if (IsPractice) InitializePractice();
-            else ScheduleMusic();
+            else StartDueMusic();
         }
 
         void ShowDifficulty(string course)
@@ -197,13 +197,15 @@ namespace OurTaiko
             return chart;
         }
 
-        void ScheduleMusic()
+        // MajdataPlay plays the track once the clock reaches it and restarts the clock from there.
+        void StartDueMusic()
         {
+            if (songClock.TrackDue(GameTimeline.AudioNow) is not double position) return;
             music.StopAudio();
-            var schedule = songClock.Schedule(GameTimeline.AudioNow, music.AudioLength());
-            if (!schedule.HasValue) return;
-            music.SeekAudio(schedule.Value.Position);
-            music.PlayAudioScheduled(schedule.Value.At);
+            if (position >= music.AudioLength()) { songClock.SkipTrack(); return; }
+            music.SeekAudio(position);
+            music.PlayAudio();
+            songClock.TrackStarted(GameTimeline.AudioNow);
         }
 
         void Update()
@@ -214,6 +216,7 @@ namespace OurTaiko
             double? playback = AudioEngine.EnsureInstance().Backend == AudioBackend.BassSimple && music.IsAudioPlaying()
                 ? music.AudioPosition() : null;
             songClock.Update(GameTimeline.AudioFrameTime, playback);
+            StartDueMusic();
             if (closingPauseMenu || Time.frameCount == resumeFrame || Time.frameCount == pauseOpenedFrame) return;
             if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause))
             { TogglePause(); return; }
@@ -428,7 +431,7 @@ namespace OurTaiko
                 songClock.Resume(GameTimeline.AudioNow);
                 IsPaused = false;
                 resumeFrame = Time.frameCount;
-                ScheduleMusic();
+                StartDueMusic();
                 foreach (var pad in pausedPads) if (pad != null) pad.enabled = true;
                 pausedPads.Clear();
                 pauseButton.interactable = true;
