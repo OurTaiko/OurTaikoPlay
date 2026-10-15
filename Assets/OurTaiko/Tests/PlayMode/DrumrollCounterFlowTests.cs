@@ -69,7 +69,8 @@ namespace OurTaiko.Tests
             play.pausePanel.SetActive(false);
             var view = play.drumrollCounter;
             var session = play.Session;
-            double now = play.SongTime - (song.audioOffsetMs + (double)SettingManager.EnsureInstance().Settings.play.audioOffsetMs) / 1000;
+            // Hits are judged at the play clock's whole millisecond.
+            double now = TjaTime.Truncate(play.SongTime - (song.audioOffsetMs + (double)SettingManager.EnsureInstance().Settings.play.audioOffsetMs) / 1000);
             // Drive the actual judgment event with both drum colours; no UI-only counting path.
             for (int i = 0; i < 14; i++)
                 Assert.That(session.Hit(i % 2 == 0, .1), Is.EqualTo(Judgment.Roll));

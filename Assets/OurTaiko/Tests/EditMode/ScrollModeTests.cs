@@ -196,6 +196,9 @@ namespace OurTaiko.Tests
             Assert.That((x, y), Is.EqualTo((System.Math.Truncate(0.5 * Travel), System.Math.Truncate(-0.25 * Travel))), "Cut toward zero.");
         }
 
+        // OpenTaiko's Game_Notes_Interval 960 on 1280 wide: 75% of the 1920 design width.
+        [Test] public void AMeasureIsThreeQuartersOfTheDesignWidth() => Assert.That(NoteScroll.MeasureWidth, Is.EqualTo(1440));
+
         // T4
         [TestCase("#BMSCROLL")]
         [TestCase("#HBSCROLL")]

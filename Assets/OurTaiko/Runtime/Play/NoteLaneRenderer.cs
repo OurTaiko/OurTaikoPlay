@@ -258,8 +258,8 @@ namespace OurTaiko
             for (int i = 0; i < shownNotes.Length; i++) { if (shownNotes[i] != null) ReleaseNote(i); if (shownMoji[i] != null) ReleaseMoji(i); }
             for (int i = 0; i < shownBars.Length; i++) if (shownBars[i] != null) ReleaseBar(i);
             windowWidth = width;
-            noteWindow = LaneCull.ForNotes(Session.Chart.Notes, clocks, width, JudgeLocalX, Math.Max(NoteSize, MojiWidth));
-            barWindow = LaneCull.ForBars(Session.Chart.Bars, clocks, width, JudgeLocalX, NoteSize);
+            noteWindow = LaneCull.ForNotes(Session.Chart.Notes, clocks, width, JudgeLocalX, Math.Max(NoteSize, MojiWidth), TravelDistance);
+            barWindow = LaneCull.ForBars(Session.Chart.Bars, clocks, width, JudgeLocalX, NoteSize, TravelDistance);
             return true;
         }
 
@@ -269,7 +269,8 @@ namespace OurTaiko
         const float MojiWidth = 256, MojiHeight = 48, MojiDrop = 209 - 14 + MojiHeight / 2 - NoteSize / 2;
         // Nijiiro note frames are 192x192; draw_balloon shifts the face by 12/128 of the width.
         const float NoteSize = 192, BalloonFace = 12f / 128f;
-        double TravelDistance => noteLayer.rect.width - JudgeLocalX;
+        // A measure's length on the lane, whatever the lane's width (NoteScroll.MeasureWidth).
+        const double TravelDistance = NoteScroll.MeasureWidth;
         // The beat clock of BM/HB-scroll notes (the chart's, the same for every session of it).
         ScrollClockTimeline clocks;
 

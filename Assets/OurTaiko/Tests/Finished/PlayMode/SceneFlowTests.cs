@@ -292,7 +292,7 @@ namespace OurTaiko.Tests
                     Assert.That(tail.GetComponent<LaneSprite>().sprite.name, Is.EqualTo(big ? "RollTailBig" : "RollTailSmall"));
                     Assert.That(body.GetSiblingIndex(), Is.LessThan(tail.GetSiblingIndex()));
                     Assert.That(tail.GetSiblingIndex(), Is.LessThan(head.GetSiblingIndex()), "The head must cover the body join.");
-                    double speed = note.Bpm / 240 * note.ScrollX * (1920 - 618);
+                    double speed = note.Bpm / 240 * note.ScrollX * NoteScroll.MeasureWidth;
                     double length = (note.EndTime - note.Time) * speed;
                     float direction = length < 0 ? -1 : 1;
                     Vector3 TailPosition() => play.noteLayer.InverseTransformPoint(tail.position);
@@ -347,7 +347,7 @@ namespace OurTaiko.Tests
                 // draw_notes iterates in reverse: the earlier roll paints over the later don.
                 Assert.That(play.NoteRoot(0).GetSiblingIndex(), Is.GreaterThan(play.NoteRoot(1).GetSiblingIndex()));
                 var tail = (RectTransform)root.transform.Find("RollTail");
-                double speed = note.Bpm / 240 * note.ScrollX * (1920 - 618);
+                double speed = note.Bpm / 240 * note.ScrollX * NoteScroll.MeasureWidth;
                 // Original keeps the roll in draw_note_buffer until the tail's unload_ms,
                 // regardless of the roll having been judged at its end time.
                 play.Session.Advance(note.EndTime + 0.1, false);
@@ -518,7 +518,7 @@ namespace OurTaiko.Tests
                 play.Hit(false, false);
                 Assert.That(play.Session.LongHits[0], Is.Zero, "The visual offset must not start balloon hits early.");
                 Capture("BalloonApproaching.png");
-                double distance = NoteScroll.Distance(play.Session.Chart.Notes[0], play.RenderedTime, new ScrollClockTimeline(play.Session.Chart), 1920 - 618).X;
+                double distance = NoteScroll.Distance(play.Session.Chart.Notes[0], play.RenderedTime, new ScrollClockTimeline(play.Session.Chart), NoteScroll.MeasureWidth).X;
                 Assert.That(FacePosition().x, Is.EqualTo(judge.x + distance).Within(0.01));
                 Assert.That(FacePosition().y, Is.EqualTo(judge.y).Within(0.01));
                 while (play.RenderedTime < 0.15)
@@ -603,8 +603,8 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.15f);
             double elapsed = play.RenderedTime - timeBefore;
             Assert.That(elapsed, Is.GreaterThan(0));
-            // Nijiiro skin: screen width 1920, judge x 618; default song starts at BPM 160 / SCROLL 1.
-            double expectedDistance = elapsed * 160 / 240 * (1920 - 618);
+            // A measure is 75% of the 1920 design width (OpenTaiko); the default song starts at BPM 160 / SCROLL 1.
+            double expectedDistance = elapsed * 160 / 240 * NoteScroll.MeasureWidth;
             // Both places are cut to whole pixels (OpenTaiko).
             Assert.That(xBefore - rect.anchoredPosition.x, Is.EqualTo(expectedDistance).Within(1));
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);

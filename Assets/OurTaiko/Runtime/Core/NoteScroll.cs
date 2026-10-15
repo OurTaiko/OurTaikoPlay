@@ -4,6 +4,11 @@ namespace OurTaiko
     {
         // Nijiiro's native 1920-wide field: judge X=618 and 192-pixel notes.
         public const double DefaultTravelDistance = 1302, NoteHalfWidth = 96;
+        // How far a note moves in one measure (four beats) at SCROLL 1, in canvas units: OpenTaiko's
+        // Game_Notes_Interval 960 on its 1280-wide layout, i.e. 75% of the 1920 design width. The
+        // canvas scales with the window, so this is a proportion of it, not of the lane: a wider
+        // window shows more lane at the same speed.
+        public const double MeasureWidth = 0.75 * 1920;
 
         // Same entry boundary as Player::get_load_time, including the sprite radius.
         public static double LoadTime(ChartNote note)

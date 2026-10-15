@@ -87,9 +87,9 @@ namespace OurTaiko
         // its tail reaches 1.5 notes from its centre, a roll its length plus the tail, its text
         // half the text width plus the length; three of the wider sprite plus the length leaves
         // ample margin. Bar lines are a few pixels wide and keep one sprite of margin.
-        public static LaneWindow ForNotes(IReadOnlyList<ChartNote> notes, ScrollClockTimeline clocks, double width, double judgeX, double spriteWidth)
+        public static LaneWindow ForNotes(IReadOnlyList<ChartNote> notes, ScrollClockTimeline clocks, double width, double judgeX,
+            double spriteWidth, double travel)
         {
-            double travel = width - judgeX;
             double[] start = new double[notes.Count], end = new double[notes.Count];
             for (int i = 0; i < notes.Count; i++)
             {
@@ -100,9 +100,9 @@ namespace OurTaiko
             return new LaneWindow(start, end);
         }
 
-        public static LaneWindow ForBars(IReadOnlyList<ChartNote> bars, ScrollClockTimeline clocks, double width, double judgeX, double spriteWidth)
+        public static LaneWindow ForBars(IReadOnlyList<ChartNote> bars, ScrollClockTimeline clocks, double width, double judgeX,
+            double spriteWidth, double travel)
         {
-            double travel = width - judgeX;
             double[] start = new double[bars.Count], end = new double[bars.Count];
             for (int i = 0; i < bars.Count; i++)
                 ObjectInterval(bars[i], clocks, travel, judgeX, width, spriteWidth, false, out start[i], out end[i]);

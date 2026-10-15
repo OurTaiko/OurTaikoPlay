@@ -135,8 +135,9 @@ namespace OurTaiko.Tests
             var clocks = new ScrollClockTimeline(chart);
             foreach (double width in new[] { 1422.0, 2100.0 })
             {
-                var notes = LaneCull.ForNotes(chart.Notes, clocks, width, JudgeX, Math.Max(NoteSize, MojiWidth));
-                var bars = LaneCull.ForBars(chart.Bars, clocks, width, JudgeX, NoteSize);
+                // The measure keeps its length on lanes of either width.
+                var notes = LaneCull.ForNotes(chart.Notes, clocks, width, JudgeX, Math.Max(NoteSize, MojiWidth), NoteScroll.MeasureWidth);
+                var bars = LaneCull.ForBars(chart.Bars, clocks, width, JudgeX, NoteSize, NoteScroll.MeasureWidth);
                 var left = new List<int>();
                 var random = new System.Random(5);
                 int maxCandidates = 0, maxDrawn = 0;
@@ -172,7 +173,7 @@ namespace OurTaiko.Tests
         // The exact cull PlayScene applies to every candidate, without the alive test (which only hides more).
         static bool NoteDrawn(ChartNote note, ScrollClockTimeline clocks, double time, double width)
         {
-            double travel = width - JudgeX;
+            double travel = NoteScroll.MeasureWidth;
             if (!NoteScroll.Appeared(note, time)) return false;
             double x = JudgeX + NoteScroll.Distance(note, time, clocks, travel).X;
             if (note.IsBalloon && time >= note.Time) x = JudgeX;
@@ -187,7 +188,7 @@ namespace OurTaiko.Tests
 
         static bool BarDrawn(ChartNote bar, ScrollClockTimeline clocks, double time, double width)
         {
-            double x = JudgeX + NoteScroll.Distance(bar, time, clocks, width - JudgeX).X;
+            double x = JudgeX + NoteScroll.Distance(bar, time, clocks, NoteScroll.MeasureWidth).X;
             return LaneCull.InLane(x, -3, 3, width);
         }
 

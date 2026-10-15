@@ -23,6 +23,49 @@ namespace OurTaiko.Tests
         [UnityTest] public IEnumerator PracticeDrawsEveryModeWhereOpenTaikoDoes() => Verify(true, Chart);
         [UnityTest] public IEnumerator SinglePlayDrawsSuddenNotesWhereOpenTaikoDoes() => Verify(false, SuddenChart);
 
+        // OpenTaiko's note speed: a measure is 75% of the 1920 design width in canvas units, so a
+        // wider lane (a wider window) shows more of it without moving the notes faster.
+        [UnityTest] public IEnumerator AMeasureKeepsItsLengthOnAWiderLane()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Speed\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n#END");
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                yield return null;
+                SceneSwitcher.Instance.Play(song);
+                float deadline = Time.realtimeSinceStartup + 40;
+                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene)
+                {
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                    yield return null;
+                }
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                while (play.Session == null) { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
+                if (!play.IsPaused) play.TogglePause();
+                play.pausePanel.SetActive(false);
+                var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                // At 0 s the note at 1.5 s is three quarters of a measure (1080 units) right of the
+                // judge; the note at 2 s, a measure (1440) away, is past the 16:9 lane's edge.
+                render.Invoke(play, new object[] { 0.0 });
+                float before = play.NoteRoot(3).anchoredPosition.x;
+                Assert.That(before, Is.EqualTo(JudgeX + 1080).Within(0.01));
+                Assert.That(play.NoteRoot(4), Is.Null);
+                play.noteLayer.sizeDelta += new Vector2(800, 0);
+                Canvas.ForceUpdateCanvases();
+                render.Invoke(play, new object[] { 0.001 });
+                render.Invoke(play, new object[] { 0.0 });
+                Assert.That(play.NoteRoot(3).anchoredPosition.x, Is.EqualTo(before).Within(0.01), "Same speed on a wider lane.");
+                Assert.That(play.NoteRoot(4), Is.Not.Null, "The wider lane shows more of the measure.");
+                Assert.That(play.NoteRoot(4).anchoredPosition.x, Is.EqualTo(JudgeX + 1440).Within(0.01));
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
         IEnumerator Verify(bool practice, string text)
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
@@ -77,7 +120,7 @@ namespace OurTaiko.Tests
         {
             var chart = play.Session.Chart;
             var clocks = new ScrollClockTimeline(chart);
-            double time = play.RenderedTime, travel = play.noteLayer.rect.width - JudgeX;
+            double time = play.RenderedTime, travel = NoteScroll.MeasureWidth;
             Assert.That(time * 1000, Is.EqualTo(System.Math.Round(time * 1000)).Within(1e-6), "Drawn at a whole millisecond " + when);
             int drawn = 0;
             for (int i = 0; i < chart.Notes.Count; i++)
