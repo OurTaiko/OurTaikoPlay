@@ -150,6 +150,19 @@ namespace OurTaiko.Tests
                 // The note due now sits on the moved judge; the next one a quarter measure on from it.
                 Assert.That(play.NoteRoot(1).anchoredPosition, Is.EqualTo(new Vector2(JudgeX, JudgeY) + offset));
                 Assert.That(play.NoteRoot(2).anchoredPosition.x, Is.EqualTo(JudgeX - 150 + 360).Within(0.01));
+                // A note hit now flies from the moved judge (lane-local 618-150, 110+75) and lands on the badge.
+                var arcs = play.noteArcs;
+                var lane = (RectTransform)play.noteLayer.parent.parent;
+                var viewport = (RectTransform)arcs.transform.parent;
+                var shift = JudgeShift.At(play.Session.Chart.JudgeMoves, 0.5);
+                Assert.That((shift.X, shift.Y), Is.EqualTo((-150.0, 75.0)));
+                arcs.Spawn(play.noteSprites[1], false, 0.5, shift.X, shift.Y);
+                arcs.ShowTime(0.5);
+                Vector2 Local(Transform t) => viewport.InverseTransformPoint(t.position);
+                Assert.That(Vector2.Distance(Local(arcs.ArcRoot(0)), (Vector2)viewport.InverseTransformPoint(lane.TransformPoint(new Vector3(468, -185)))), Is.LessThan(0.1f));
+                arcs.ShowTime(0.5 + NoteArcPath.Duration - 1e-6);
+                var soul = (RectTransform)play.soulGauge.transform.Find("Soul");
+                Assert.That(Vector2.Distance(Local(arcs.ArcRoot(0)), (Vector2)viewport.InverseTransformPoint(soul.TransformPoint(soul.rect.center))), Is.LessThan(0.1f));
             }
             finally
             {

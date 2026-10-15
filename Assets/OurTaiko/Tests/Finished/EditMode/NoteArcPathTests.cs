@@ -41,5 +41,18 @@ namespace OurTaiko.Tests
                     Is.EqualTo(NoteArcPath.Radius).Within(1e-9));
             }
         }
+
+        // #JPOSSCROLL: the arc leaves the moved judge and still lands on the soul badge.
+        [Test]
+        public void AMovedJudgeShiftsTheStartButNotTheLanding()
+        {
+            NoteArcPath.Position(0, -150, 75, out double x, out double y);
+            Assert.That(x, Is.EqualTo(618 - 150).Within(0.05)); Assert.That(y, Is.EqualTo(110 + 75).Within(0.05));
+            NoteArcPath.Position(0.5, -150, 75, out x, out y);
+            NoteArcPath.Position(0.5, out double bx, out double by);
+            Assert.That(x, Is.EqualTo(bx - 75).Within(1e-9)); Assert.That(y, Is.EqualTo(by + 37.5).Within(1e-9));
+            NoteArcPath.Position(1, -150, 75, out x, out y);
+            Assert.That(x, Is.EqualTo(1834).Within(0.05)); Assert.That(y, Is.EqualTo(-30).Within(0.05));
+        }
     }
 }
