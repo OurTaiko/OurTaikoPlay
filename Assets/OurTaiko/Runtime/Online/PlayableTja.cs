@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using System.Linq;
 
 namespace OurTaiko.Online
 {
     // fanmade.cpp playable_tja/to_utf8: the downloaded original stays byte-for-byte intact for the hash
     // check; the playable copy is UTF-8 and takes its titles and offset from the API. Every block the
     // API lists must be in the file (matched by COURSE and the #START player: plain single, P1, P2);
-    // the copy keeps the one block each course is played on from a seat, as a plain single chart.
+    // the copy keeps exactly those blocks with their #START player, so TjaParser and SongInfo pick
+    // the seat's block by the same ChartSide rule FanmadeChart.Block gives the score's block id by.
     public static class PlayableTja
     {
         public static string ToUtf8(byte[] bytes)
@@ -18,9 +18,8 @@ namespace OurTaiko.Online
             catch (DecoderFallbackException error) { throw new FanmadeException("TJA_ENCODING_INVALID", error); }
         }
 
-        public static string Build(string utf8, FanmadeChart chart, string seat = "p1")
+        public static string Build(string utf8, FanmadeChart chart)
         {
-            var played = Enumerable.Range(0, SongInfo.CourseNames.Count).Select(i => chart.Block(i, seat)).ToList();
             var output = new StringBuilder(chart.TitleHeaders() + "WAVE:" + chart.CachedAudioName + "\n");
             output.Append("OFFSET:").Append(chart.Offset.ToString("R", CultureInfo.InvariantCulture)).Append('\n');
             var globals = new List<string>();
@@ -51,13 +50,10 @@ namespace OurTaiko.Online
                     if (inBlock && wanted.TryGetValue(block, out var d))
                     {
                         found.Add(block);
-                        if (played.Contains(d))
-                        {
-                            output.Append("COURSE:").Append(d.Course).Append("\nLEVEL:").Append(d.Level).Append("\nSTYLE:Single\n");
-                            foreach (string h in globals) if (KeptHeader(h)) output.Append(h).Append('\n');
-                            foreach (string h in headers) if (KeptHeader(h)) output.Append(h).Append('\n');
-                            output.Append("#START\n").Append(body).Append("#END\n");
-                        }
+                        output.Append("COURSE:").Append(d.Course).Append("\nLEVEL:").Append(d.Level).Append('\n');
+                        foreach (string h in globals) if (KeptHeader(h)) output.Append(h).Append('\n');
+                        foreach (string h in headers) if (KeptHeader(h)) output.Append(h).Append('\n');
+                        output.Append(d.Side == "p1" ? "#START P1\n" : d.Side == "p2" ? "#START P2\n" : "#START\n").Append(body).Append("#END\n");
                     }
                     inBlock = false;
                     continue;

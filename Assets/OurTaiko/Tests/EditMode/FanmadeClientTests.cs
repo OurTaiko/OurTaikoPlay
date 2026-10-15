@@ -290,7 +290,7 @@ namespace OurTaiko.Tests
             Assert.That(play, Does.Contain("TITLE:First\n"));
             Assert.That(play, Does.Contain("TITLEJA:First JA\n"));
             Assert.That(play, Does.Contain("WAVE:audio.ogg\n"));
-            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:8\nSTYLE:Single\n"));
+            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:8\n"));
             Assert.That(play, Does.Not.Contain("Original Title"));
             Assert.That(TjaParser.Parse(play, "Oni").Title, Is.EqualTo("First"));
 
@@ -358,18 +358,16 @@ namespace OurTaiko.Tests
             try
             {
                 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+                string play = PlayableTja.Build(original, chart);
+                Assert.That(play, Does.Contain("OFFSET:-0.375\n"));
+                Assert.That(play.Split('\n').Count(line => line.StartsWith("OFFSET:", StringComparison.OrdinalIgnoreCase)), Is.EqualTo(1));
                 foreach (string seat in ChartSide.Seats)
-                {
-                    string play = PlayableTja.Build(original, chart, seat);
-                    Assert.That(play, Does.Contain("OFFSET:-0.375\n"));
-                    Assert.That(play.Split('\n').Count(line => line.StartsWith("OFFSET:", StringComparison.OrdinalIgnoreCase)), Is.EqualTo(1));
                     foreach (var block in chart.Blocks)
                     {
-                        var parsed = TjaParser.Parse(play, block.Course);
+                        var parsed = TjaParser.Parse(play, block.Course, seat);
                         Assert.That(parsed.Offset, Is.EqualTo(-0.375));
                         Assert.That(parsed.Notes[0].Time, Is.EqualTo(0.375).Within(1e-9));
                     }
-                }
             }
             finally { CultureInfo.CurrentCulture = previous; }
         }
@@ -527,25 +525,22 @@ namespace OurTaiko.Tests
             string play = PlayableTja.Build(original, chart);
             Assert.That(play, Does.StartWith("MAKER:Tester\nTITLE:Blocks\nSUBTITLE:\nTITLEJA:Blocks JA\nWAVE:audio.mp3\n"));
             Assert.That(play, Does.Not.Contain("COURSE:Easy"));
-            Assert.That(play, Does.Contain("COURSE:Hard\nLEVEL:4\nSTYLE:Single\nBPM:150\nSCOREINIT:1000\n#START\n2,\n#END\n"));
-            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nSTYLE:Single\nBPM:150\n#START\n3,\n#END\n"));
+            Assert.That(play, Does.Contain("COURSE:Hard\nLEVEL:4\nBPM:150\nSCOREINIT:1000\n#START\n2,\n#END\n"));
+            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nBPM:150\n#START\n3,\n#END\n"));
             Assert.Throws<FanmadeException>(() => PlayableTja.Build("COURSE:Hard\n#START\n1,\n#END\n", chart), "TJA_BLOCK_MISMATCH");
 
             var pair = FanmadeChart.From(new FanmadeFixture.Chart
             {
                 Title = "Pair", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") },
             }.ToJson(), "server");
-            // The copy holds the one block a seat plays, as a plain single chart.
+            // The copy keeps every listed block with its #START player; the seat picks one when parsing.
             string pairTja = "BPM:150\nCOURSE:Oni\nSTYLE:Double\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n";
-            foreach (string seat in new[] { "p1" })
-            {
-                play = PlayableTja.Build(pairTja, pair, seat);
-                Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nSTYLE:Single\nBPM:150\n#START\n3,\n#END\n"), seat);
-                Assert.That(play, Does.Not.Contain("4,"), seat);
-            }
-            play = PlayableTja.Build(pairTja, pair, "p2");
-            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:8\nSTYLE:Single\nBPM:150\n#START\n4,\n#END\n"));
-            Assert.That(play, Does.Not.Contain("3,"));
+            play = PlayableTja.Build(pairTja, pair);
+            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nBPM:150\n#START P1\n3,\n#END\n"));
+            Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:8\nBPM:150\n#START P2\n4,\n#END\n"));
+            Assert.That(play, Does.Not.Contain("STYLE:"));
+            Assert.That(TjaParser.Parse(play, "Oni", "p1").Notes[0].Kind, Is.EqualTo(NoteKind.BigDon));
+            Assert.That(TjaParser.Parse(play, "Oni", "p2").Notes[0].Kind, Is.EqualTo(NoteKind.BigKa));
 
             // All three sides of a course in one file, as official charts have them.
             var mixed = FanmadeChart.From(new FanmadeFixture.Chart
@@ -553,11 +548,15 @@ namespace OurTaiko.Tests
                 Title = "Mixed", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2"), ("Oni", 7, "") },
             }.ToJson(), "server");
             string mixedTja = "BPM:150\nCOURSE:Oni\n#START\n5,\n#END\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n";
-            foreach (var (seat, level, notes) in new[] { ("p1", 9, "3,"), ("p2", 8, "4,") })
+            play = PlayableTja.Build(mixedTja, mixed);
+            Assert.That(play, Does.EndWith("COURSE:Oni\nLEVEL:7\nBPM:150\n#START\n5,\n#END\nCOURSE:Oni\nLEVEL:9\nBPM:150\n#START P1\n3,\n#END\nCOURSE:Oni\nLEVEL:8\nBPM:150\n#START P2\n4,\n#END\n"));
+            foreach (var (seat, level, kind) in new[] { ("p1", 9, NoteKind.BigDon), ("p2", 8, NoteKind.BigKa) })
             {
-                play = PlayableTja.Build(mixedTja, mixed, seat);
-                Assert.That(play, Does.EndWith("COURSE:Oni\nLEVEL:" + level + "\nSTYLE:Single\nBPM:150\n#START\n" + notes + "\n#END\n"), seat);
+                // The parsed block and the score's block id come from the same seat rule.
+                var parsed = TjaParser.Parse(play, "Oni", seat);
+                Assert.That((parsed.Level, parsed.Notes[0].Kind), Is.EqualTo((level, kind)), seat);
                 Assert.That(mixed.Block(3, seat).Level, Is.EqualTo(level));
+                Assert.That(SongInfo.Read(play, seat: seat).Course(Difficulty.Oni).Level, Is.EqualTo(level));
             }
             Assert.That(mixed.Difficulties[3].Side, Is.EqualTo("p1"));
             Assert.Throws<FanmadeException>(() => PlayableTja.Build(pairTja, mixed), "TJA_BLOCK_MISMATCH");
