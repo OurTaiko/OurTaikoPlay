@@ -11,7 +11,7 @@ using Newtonsoft.Json.Linq;
 namespace OurTaiko.Online
 {
     // fanmade.cpp Client without rendering or Unity state, so it can be tested against a fixture
-    // server. One bootstrap loads every category and chart when a server connects;
+    // server. One catalog request loads every category and chart when a server connects;
     // song select shows each category as a folder without further catalog requests.
     //
     // Cache layout under the root: objects/<first two hex digits>/<sha256>, one verified file per
@@ -64,7 +64,7 @@ namespace OurTaiko.Online
             }
         }
 
-        // Every category of every connected server, in server then bootstrap order (empty ones included).
+        // Every category of every connected server, in server then catalog order (empty ones included).
         public IReadOnlyList<FanmadeCategory> Categories
         {
             get
@@ -112,7 +112,7 @@ namespace OurTaiko.Online
             Interlocked.Increment(ref revision);
         }
 
-        // A second connected entry for the same API and account is reused, as in bootstrap().
+        // A second connected entry for the same API and account is reused.
         public FanmadeEndpoint Add(ServerConfig config)
         {
             var endpoint = new FanmadeEndpoint(config);
@@ -171,8 +171,7 @@ namespace OurTaiko.Online
         }
 
         // Login, GET /game/scores and GET /game/playlists, with the caller holding the endpoint's
-        // transport. A guest (no account) has neither. A server without one of the two lists
-        // answers 404 or 405: the login stands, without history or without own playlists.
+        // transport. A guest (no account) has neither.
         async Task SignInAsync(FanmadeEndpoint e, CancellationToken cancel)
         {
             var scores = new List<FanmadeScore>();
@@ -182,15 +181,10 @@ namespace OurTaiko.Online
                 await e.LoginAsync(cancel);
                 if (e.IsAuthenticated)
                 {
-                    try
-                    {
-                        var reply = Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", cancel: cancel));
-                        if (!(reply["scores"] is JArray scoreList)) throw new FanmadeException("API_SCORES_INVALID");
-                        foreach (var v in scoreList) scores.Add(FanmadeScore.From(v));
-                    }
-                    catch (HttpStatusException error) when (error.Status == 404 || error.Status == 405) { }
-                    try { playlists = Json.Parse(await e.AuthorizedAsync("/api/v1/game/playlists", cancel: cancel))["playlists"]; }
-                    catch (HttpStatusException error) when (error.Status == 404 || error.Status == 405) { }
+                    var reply = Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", cancel: cancel));
+                    if (!(reply["scores"] is JArray scoreList)) throw new FanmadeException("API_SCORES_INVALID");
+                    foreach (var v in scoreList) scores.Add(FanmadeScore.From(v));
+                    playlists = Json.Parse(await e.AuthorizedAsync("/api/v1/game/playlists", cancel: cancel))["playlists"];
                 }
             }
             catch (Exception error)
@@ -237,8 +231,8 @@ namespace OurTaiko.Online
             Update();
         }
 
-        // The playlists of a bootstrap that have a chart of `catalog`, in bootstrap order. The field
-        // is optional: servers without playlists omit it.
+        // The playlists of a catalog or of GET /game/playlists that have a chart of `catalog`, in
+        // their order. The field is optional: servers without playlists omit it.
         static List<FanmadePlaylist> ReadPlaylists(JToken value, FanmadeEndpoint e, ICollection<string> catalog)
         {
             var playlists = new List<FanmadePlaylist>();
@@ -272,27 +266,16 @@ namespace OurTaiko.Online
             Update();
         }
 
-        // GET /game/catalog: the public song list, the same signed in or not. A server from before
-        // it answers 404 or 405 and still has the deprecated bootstrap, whose catalog part is the same.
-        static async Task<string> CatalogAsync(FanmadeEndpoint e, CancellationToken cancel)
-        {
-            try { return await e.RequestAsync("/api/v1/game/catalog", cancel: cancel); }
-            catch (HttpStatusException error) when (error.Status == 404 || error.Status == 405)
-            {
-                return await e.AuthorizedAsync("/api/v1/game/bootstrap", cancel: cancel);
-            }
-        }
-
-        // One catalog request, with the caller holding the endpoint's transport.
+        // One GET /game/catalog (the public song list, the same signed in or not), with the caller
+        // holding the endpoint's transport.
         async Task BootstrapAsync(FanmadeEndpoint e, CancellationToken cancel)
         {
             try
             {
                 SetStatus(e.Config.DisplayName + ": loading catalog");
                 lock (sync) catalogProgress = (0, 1);
-                var snapshot = Json.Parse(await CatalogAsync(e, cancel));
+                var snapshot = Json.Parse(await e.RequestAsync("/api/v1/game/catalog", cancel: cancel));
                 if (!SupportsProtocol(snapshot)) throw new FanmadeException("SERVER_PROTOCOL_UNSUPPORTED");
-                e.Slots = SlotProtocol(snapshot);
                 if (!(snapshot["categories"] is JArray categoryList)
                     || !(snapshot["charts"] is JArray chartList) || Json.Number(snapshot, "chartCount") != chartList.Count)
                     throw new FanmadeException("API_BOOTSTRAP_INVALID");
@@ -364,13 +347,9 @@ namespace OurTaiko.Online
             }
         }
 
-        // Blocks as slots of course × side with their ids.
-        static bool SlotProtocol(JObject snapshot) =>
-            snapshot["chartSlotVersion"]?.Type == JTokenType.Integer && (long)snapshot["chartSlotVersion"] == 1;
-
-        // Difficulties as slots, or keyed by course on an older server; signed resource links and replay uploads.
+        // Blocks as slots of course × side with their ids (Fanmade 042), signed resource links and replay uploads.
         static bool SupportsProtocol(JObject snapshot) =>
-            (SlotProtocol(snapshot) || (snapshot["courseKeyedDifficulties"]?.Type == JTokenType.Boolean && (bool)snapshot["courseKeyedDifficulties"]))
+            snapshot["chartSlotVersion"]?.Type == JTokenType.Integer && (long)snapshot["chartSlotVersion"] == 1
             && snapshot["resourceDownloadVersion"]?.Type == JTokenType.Integer && (long)snapshot["resourceDownloadVersion"] == 1
             && snapshot["scoreReplayVersion"]?.Type == JTokenType.Integer && (long)snapshot["scoreReplayVersion"] == 1;
 
@@ -396,9 +375,8 @@ namespace OurTaiko.Online
             if (chart == null || difficulty < 0 || difficulty >= 5 || chart.Difficulties[difficulty] == null) return false;
             var e = Endpoint(chart.Server);
             if (e == null || !e.IsConnected || !e.IsAuthenticated) return false;
-            // The block that was played; an older server takes the song and the block's name.
-            var block = chart.Difficulties[difficulty];
-            var body = block.Id > 0 ? new JObject { ["difficultyId"] = block.Id } : new JObject { ["songId"] = chart.Id, ["difficulty"] = block.Name };
+            // The block that was played names the song and course.
+            var body = new JObject { ["difficultyId"] = chart.Difficulties[difficulty].Id };
             body["good"] = score.Good; body["ok"] = score.Ok; body["bad"] = score.Bad; body["score"] = score.Score;
             body["drumroll"] = score.Drumroll; body["max_combo"] = score.MaxCombo;
             body["ClearStatus"] = score.ClearStatus;
@@ -502,6 +480,36 @@ namespace OurTaiko.Online
 
         // The cached file for a content hash (the manifest only accepts 64-digit hex hashes).
         string ObjectPath(string hash) => Path.Combine(CacheRoot, "objects", hash.Substring(0, 2), hash);
+
+        // The cached file of a resource, downloaded and verified (size and SHA-256) first when the
+        // cache does not hold it. `transfer` and `publish` report the steps to a progress display.
+        async Task<string> EnsureObjectAsync(FanmadeEndpoint e, FanmadeResource resource, CancellationToken cancel,
+            FileProgress transfer = null, Action publish = null)
+        {
+            string file = ObjectPath(resource.Hash);
+            void Report(FileProgress.State status)
+            {
+                if (transfer == null) return;
+                transfer.Status = status; publish?.Invoke();
+            }
+            Report(FileProgress.State.Verifying);
+            if (await CacheWork(() => Matches(file, resource), cancel))
+            {
+                if (transfer != null) transfer.Received = transfer.Total = resource.Size;
+                Report(FileProgress.State.Cached);
+                return file;
+            }
+            if (transfer != null) { transfer.Total = resource.Size; transfer.Received = 0; }
+            Report(FileProgress.State.Downloading);
+            var bytes = await e.ResourceBytesAsync(resource, cancel, transfer == null ? (Action<long, long>)null
+                : (received, total) => { transfer.Received = received; transfer.Total = total; publish?.Invoke(); });
+            Report(FileProgress.State.Verifying);
+            if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
+                throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
+            await CacheWork(() => { cancel.ThrowIfCancellationRequested(); StoreObject(file, bytes, resource); return true; }, cancel);
+            Report(FileProgress.State.Complete);
+            return file;
+        }
 
         static bool Matches(string path, FanmadeResource resource)
         {

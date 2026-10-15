@@ -67,9 +67,10 @@ namespace OurTaiko.Tests
                         pass.clipRect.GetWorldCorners(corners);
                         var clip = pass.Material.GetVector("_ClipRect");
                         Assert.That(clip.x, Is.EqualTo(corners[0].x).Within(1e-5));
-                        Assert.That(clip.y, Is.EqualTo(corners[0].y).Within(1e-5));
                         Assert.That(clip.z, Is.EqualTo(corners[2].x).Within(1e-5));
-                        Assert.That(clip.w, Is.EqualTo(corners[2].y).Within(1e-5));
+                        // Only across the lane: notes taken off it vertically stay drawn (OpenTaiko).
+                        Assert.That(clip.y, Is.LessThan(corners[0].y - 10000));
+                        Assert.That(clip.w, Is.GreaterThan(corners[2].y + 10000));
                         var root = play.NoteRoot(0);
                         var head = root.Find("Head").GetComponent<LaneSprite>();
                         var screen = camera.WorldToScreenPoint(head.Renderer.bounds.center);

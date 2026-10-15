@@ -33,25 +33,11 @@ namespace OurTaiko.Online
                     { if (attempt == 0) continue; throw new FanmadeException("CHART_UPDATING"); }
                     if (!c.IsPlayable) throw new FanmadeException("CHART_NO_PLAYABLE_COURSE");
                     c.AudioName = manifest.Audio.ContentType == "audio/ogg" ? "audio.ogg" : "audio.mp3";
-                    async Task<string> Ensure(FanmadeResource resource, FileProgress transfer)
-                    {
-                        string file = ObjectPath(resource.Hash);
-                        transfer.Status = FileProgress.State.Verifying; Publish();
-                        if (await CacheWork(() => Matches(file, resource), cancel))
-                        { transfer.Status = FileProgress.State.Cached; transfer.Received = transfer.Total = resource.Size; Publish(); return file; }
-                        transfer.Status = FileProgress.State.Downloading; transfer.Total = resource.Size; transfer.Received = 0; Publish();
-                        var bytes = await e.ResourceBytesAsync(resource, cancel, (received, total) => { transfer.Received = received; transfer.Total = total; Publish(); });
-                        transfer.Status = FileProgress.State.Verifying; Publish();
-                        if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
-                            throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
-                        await CacheWork(() => { cancel.ThrowIfCancellationRequested(); StoreObject(file, bytes, resource); return true; }, cancel);
-                        transfer.Status = FileProgress.State.Complete; Publish(); return file;
-                    }
                     try
                     {
                         state.Step = DownloadProgress.Stage.Files; Publish();
-                        string original = await Ensure(manifest.Tja, state.Chart);
-                        string audio = await Ensure(manifest.Audio, state.Audio);
+                        string original = await EnsureObjectAsync(e, manifest.Tja, cancel, state.Chart, Publish);
+                        string audio = await EnsureObjectAsync(e, manifest.Audio, cancel, state.Audio, Publish);
                         state.Step = DownloadProgress.Stage.Preparing; Publish();
                         // Rebuilt on every preparation: it depends on the API metadata, not only on the files.
                         string text = await CacheWork(() =>
@@ -82,13 +68,8 @@ namespace OurTaiko.Online
         {
             var e = Endpoint(playlist.Server) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
             var resource = playlist.Cover ?? throw new FanmadeException("RESOURCE_MISSING");
-            string file = ObjectPath(resource.Hash);
-            if (await CacheWork(() => Matches(file, resource), cancel)) return await CacheWork(() => File.ReadAllBytes(file), cancel);
-            var bytes = await e.ResourceBytesAsync(resource, cancel);
-            if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
-                throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
-            await CacheWork(() => { cancel.ThrowIfCancellationRequested(); StoreObject(file, bytes, resource); return true; }, cancel);
-            return bytes;
+            string file = await EnsureObjectAsync(e, resource, cancel);
+            return await CacheWork(() => File.ReadAllBytes(file), cancel);
         }
     }
 }

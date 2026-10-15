@@ -9,6 +9,42 @@ namespace OurTaiko.Tests
     {
         static TaikoChart Parse(string body, string metadata = "") => TjaParser.Parse("TITLE:Test\nBPM:120\n" + metadata + "\nCOURSE:Oni\n#START\n" + body + "\n#END");
 
+        // TjaLines: the song list and the parser agree on the block they read, and on case.
+        [Test] public void SongInfoListsTheBlockTheParserPlays()
+        {
+            const string text = "TITLE:Twice\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#start\n1,\n#end\nCOURSE:Oni\nLEVEL:9\n#START\n#BRANCHSTART p,50,80\n#N\n1,\n#E\n1,\n#M\n1,\n#END";
+            var info = SongInfo.Read(text).Course(Difficulty.Oni);
+            var chart = TjaParser.Parse(text, info.Course);
+            Assert.That((info.Level, info.IsBranching), Is.EqualTo((5, false)));
+            Assert.That((chart.Level, chart.Branches.Count), Is.EqualTo((5, 0)));
+        }
+
+        // OpenTaiko: a block without #END ends at the next COURSE: (or the file's end), and notes
+        // after the last comma are a measure of their own.
+        [Test] public void MissingEndAndLastCommaAreTolerated()
+        {
+            const string text = "BPM:120\nCOURSE:Hard\nLEVEL:5\n#START\n1111,\n2222\nCOURSE:Oni\nLEVEL:9\n#START\n1000,\n10";
+            var hard = TjaParser.Parse(text, "Hard");
+            Assert.That(hard.Notes.Select(n => n.Time), Is.EqualTo(new[] { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5 }));
+            Assert.That(hard.Bars.Count, Is.EqualTo(2));
+            Assert.That(hard.Warnings, Is.SupersetOf(new[] { "#END missing", "Last measure without a comma" }));
+            var oni = TjaParser.Parse(text, "Oni");
+            Assert.That((oni.Level, oni.Notes.Count, oni.Duration), Is.EqualTo((9, 2, 4.0)));
+            Assert.That(SongInfo.Read(text).Courses.Select(c => (c.Difficulty, c.Level)),
+                Is.EqualTo(new[] { (Difficulty.Hard, 5), (Difficulty.Oni, 9) }));
+        }
+
+        // TjaNumber: a comma is a decimal point (OpenTaiko), and a trailing one is dropped.
+        [Test] public void CommasInNumbersAreDecimalPointsOrTrailing()
+        {
+            var chart = TjaParser.Parse("TITLE:Test\nBPM:120,5\nOFFSET:-1,25\nCOURSE:Oni\n#START\n#BPMCHANGE 240,\n#MEASURE 2/4,\n1,\n#END");
+            Assert.That(chart.Bpm, Is.EqualTo(120.5));
+            Assert.That(chart.Offset, Is.EqualTo(-1.25));
+            Assert.That(chart.Notes[0].Bpm, Is.EqualTo(240));
+            Assert.That(chart.Duration, Is.EqualTo(1.25 + 0.5));
+            Assert.That(SongInfo.Read("BPM:120,5\nCOURSE:Oni\n#START\n1,\n#END").Bpm, Is.EqualTo(120.5));
+        }
+
         [TestCase("Easy", 0.6)]
         [TestCase("Normal", 0.7)]
         [TestCase("Hard", 0.7)]

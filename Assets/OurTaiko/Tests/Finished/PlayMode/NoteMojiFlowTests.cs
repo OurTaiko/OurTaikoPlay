@@ -36,7 +36,9 @@ namespace OurTaiko.Tests
                 string FrameAt(int i) { Render.Invoke(play, new object[] { notes[i].Time }); return Frame(play.MojiRoot(i).Find("Head")); }
                 Assert.That(Enumerable.Range(0, notes.Count).Select(FrameAt),
                     Is.EqualTo(new[] { "Moji1", "Moji2", "Moji0", "Moji1", "Moji1", "Moji3", "Moji7", "Moji0" }));
-                Render.Invoke(play, new object[] { 0.0 });
+                // At 0.2 s the first note has not left and the roll (a measure at 1440 units, from
+                // 2 s) has entered the 16:9 lane.
+                Render.Invoke(play, new object[] { 0.2 });
                 Canvas.ForceUpdateCanvases();
                 var roll = play.MojiRoot(6);
                 Assert.That(Frame(roll.Find("Tail")), Is.EqualTo("Moji10"));
@@ -73,7 +75,10 @@ namespace OurTaiko.Tests
                 Render.Invoke(play, new object[] { rollNote.Time - 0.2 });
                 Canvas.ForceUpdateCanvases();
                 roll = play.MojiRoot(6);
-                float length = (float)NoteScroll.RollLength(rollNote, play.noteLayer.rect.width - 120);
+                // The tail is placed on its own in whole pixels, as the renderer does.
+                var clocks = new ScrollClockTimeline(play.Session.Chart);
+                double travel = NoteScroll.MeasureWidth, at = rollNote.Time - 0.2;
+                float length = (float)(NoteScroll.TailDistance(rollNote, at, clocks, travel).X - NoteScroll.Distance(rollNote, at, clocks, travel).X);
                 Assert.That(roll.Find("Mid").GetComponent<RectTransform>().rect.width, Is.EqualTo(8 + length).Within(0.01));
                 Assert.That(((RectTransform)roll.Find("Tail")).anchoredPosition.x, Is.EqualTo(length).Within(0.01));
                 Assert.That(roll.anchoredPosition.x, Is.EqualTo(play.NoteRoot(6).anchoredPosition.x).Within(0.01));

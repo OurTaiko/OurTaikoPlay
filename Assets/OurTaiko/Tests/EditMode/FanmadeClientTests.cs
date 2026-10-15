@@ -602,13 +602,9 @@ namespace OurTaiko.Tests
             ((JObject)keyed["difficulties"][1])["side"] = "p3";
             Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(keyed, "server")).Message, Is.EqualTo("API_DIFFICULTY_INVALID"));
 
-            // An older server names the side in the course and has no block ids.
-            keyed["isSingle"] = false;
-            keyed["difficulties"] = new JArray(new JObject { ["course"] = "Oni_1p", ["level"] = 9, ["maker"] = "", ["branching"] = false },
-                new JObject { ["course"] = "Oni_2p", ["level"] = 8, ["maker"] = "", ["branching"] = true });
-            var older = FanmadeChart.From(keyed, "server");
-            Assert.That(older.Blocks.Select(b => (b.Course, b.Side, b.Id, b.Name)), Is.EqualTo(new[] { ("Oni", "p1", 0L, "Oni_1p"), ("Oni", "p2", 0L, "Oni_2p") }));
-            Assert.That(older.Block(3, "p2").Branching, Is.True); Assert.That(older.Difficulties[3].Branching, Is.False);
+            // Blocks without a side and id (a server from before chart slots) are refused.
+            keyed["difficulties"] = new JArray(new JObject { ["course"] = "Oni_1p", ["level"] = 9, ["maker"] = "", ["branching"] = false });
+            Assert.Throws<FanmadeException>(() => FanmadeChart.From(keyed, "server"));
         }
 
         [Test]

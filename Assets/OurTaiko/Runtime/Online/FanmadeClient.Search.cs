@@ -26,26 +26,21 @@ namespace OurTaiko.Online
             await endpoint.Transport.WaitAsync(cancel);
             try
             {
-                // A difficulty in the UI covers all its sides; an older server names each side as a course.
-                string course = query.Difficulty.HasValue ? SongInfo.CourseName(query.Difficulty.Value) : "";
-                var courses = course.Length == 0 || endpoint.Slots ? new[] { course } : new[] { course, course + "_1p", course + "_2p" };
+                // A difficulty in the UI covers all its sides, as the server's course filter does.
+                string path = "/api/v1/game/search?q=" + Uri.EscapeDataString(query.Keyword) + "&order=" + query.ApiOrder;
+                if (query.Difficulty.HasValue) path += "&course=" + SongInfo.CourseName(query.Difficulty.Value);
+                if (query.Level > 0) path += "&level=" + query.Level;
+                var reply = Json.Parse(await endpoint.AuthorizedAsync(path, cancel: cancel));
+                if (!(reply["items"] is JArray items) || Json.Number(reply, "total") != items.Count)
+                    throw new FanmadeException("API_SEARCH_INVALID");
                 var seen = new HashSet<string>();
-                foreach (var name in courses)
+                foreach (var value in items)
                 {
-                    string path = "/api/v1/game/search?q=" + Uri.EscapeDataString(query.Keyword) + "&order=" + query.ApiOrder;
-                    if (name.Length > 0) path += "&course=" + name;
-                    if (query.Level > 0) path += "&level=" + query.Level;
-                    var reply = Json.Parse(await endpoint.AuthorizedAsync(path, cancel: cancel));
-                    if (!(reply["items"] is JArray items) || Json.Number(reply, "total") != items.Count)
-                        throw new FanmadeException("API_SEARCH_INVALID");
-                    foreach (var value in items)
-                    {
-                        var chart = FanmadeChart.From(value, endpoint.Id);
-                        if (!chart.IsPlayable || !seen.Add(chart.Id)) continue;
-                        var known = Chart(endpoint.Id, chart.Id);
-                        chart.Category = known?.Category ?? ""; chart.Genre = known?.Genre ?? "";
-                        result.Charts.Add(chart);
-                    }
+                    var chart = FanmadeChart.From(value, endpoint.Id);
+                    if (!chart.IsPlayable || !seen.Add(chart.Id)) continue;
+                    var known = Chart(endpoint.Id, chart.Id);
+                    chart.Category = known?.Category ?? ""; chart.Genre = known?.Genre ?? "";
+                    result.Charts.Add(chart);
                 }
             }
             catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw; }

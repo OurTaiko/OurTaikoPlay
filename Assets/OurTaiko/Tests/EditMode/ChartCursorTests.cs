@@ -20,6 +20,26 @@ namespace OurTaiko.Tests
             "#SCROLL 1\n50800000,\n#SCROLL -3\n7000,\n0008,\n" +
             "#SCROLL 1\n#GOGOSTART\n11111111,\n#GOGOEND\n#END";
 
+        // BM/HB scroll (OpenTaiko): beat-clock placement with BPM changes, delays, forced and
+        // zero, negative and complex SCROLL, and routes with their own clocks.
+        const string ClockSynthetic = "BPM:150\nBALLOON:4,3,6\nCOURSE:Oni\n#BMSCROLL\n#START\n" +
+            "#SCROLL -1\n1212,\n#BPMCHANGE 300\n1122,\n#HBSCROLL\n#SCROLL 2\n5000,\n0008,\n#DELAY 0.4\n" +
+            "#SCROLL -0.5\n6000,\n8000,\n#BPMCHANGE 75\n#SCROLL 1\n7000,\n0800,\n#BMSCROLL\n9000,\n0008,\n" +
+            "#HBSCROLL\n#SCROLL 1-0.5i\n3434,\n#SCROLL 0\n1212,\n#NMSCROLL\n#SCROLL 0.5\n12121212,\n#BMSCROLL\n" +
+            "#BRANCHSTART p,0,0\n#N\n#BPMCHANGE 200\n1111,\n#E\n#DELAY 0.3\n2222,\n#M\n#HBSCROLL\n#SCROLL -2\n#BPMCHANGE 100\n3333,\n" +
+            "#BRANCHEND\n11111111,\n#END";
+
+        // #SUDDEN: appearing late, standing before moving (also on the clock), negative times,
+        // a reset, and the hidden-roll quirk.
+        const string SuddenSynthetic = "BPM:150\nBALLOON:4,3\nCOURSE:Oni\n#START\n" +
+            "#SUDDEN 1 0.6\n1212,\n#SCROLL 2\n5000,\n0008,\n#SUDDEN 0.5 2\n#SCROLL -1\n1122,\n#SUDDEN 3 0\n7000,\n0800,\n" +
+            "#SUDDEN 0 0\n#SCROLL 1\n1111,\n#HBSCROLL\n#SUDDEN 2 1\n#SCROLL 1+1i\n12121212,\n#BPMCHANGE 300\n6000,\n0008,\n" +
+            "#BMSCROLL\n#SUDDEN -0.2 0.3\n1111,\n#SUDDEN 0.8 -0.4\n9000,\n0008,\n#END";
+
+        // #JPOSSCROLL moving the judge far both ways while notes pass.
+        const string JposSynthetic = "BPM:150\nCOURSE:Oni\n#START\n1111,\n#JPOSSCROLL 1 -400 1\n12121212,\n" +
+            "#JPOSSCROLL 0.3 600-80i 1\n5000,\n0008,\n#SCROLL 2\n#JPOSSCROLL 0 -350 1\n11221122,\n#BMSCROLL\n1111,\n#END";
+
         static string Read(string path) => File.ReadAllText(Path.Combine(Application.dataPath, "OurTaiko", path));
 
         static IEnumerable<TestCaseData> Charts()
@@ -29,9 +49,13 @@ namespace OurTaiko.Tests
             yield return new TestCaseData("Tests/Shared/Songs~/1 TripleHelix.tja", "Oni").SetName("{m}(TripleHelix Oni)");
             yield return new TestCaseData("Tests/Shared/Songs~/3 BranchTraining.tja", "Oni").SetName("{m}(BranchTraining Oni)");
             yield return new TestCaseData(null, "Oni").SetName("{m}(Synthetic scrolls)");
+            yield return new TestCaseData("clock", "Oni").SetName("{m}(Synthetic BM and HB scrolls)");
+            yield return new TestCaseData("sudden", "Oni").SetName("{m}(Synthetic SUDDEN)");
+            yield return new TestCaseData("jpos", "Oni").SetName("{m}(Synthetic JPOSSCROLL)");
         }
 
-        static TaikoChart Load(string path, string course) => TjaParser.Parse(path == null ? Synthetic : Read(path), course);
+        static TaikoChart Load(string path, string course)
+            => TjaParser.Parse(path == null ? Synthetic : path == "clock" ? ClockSynthetic : path == "sudden" ? SuddenSynthetic : path == "jpos" ? JposSynthetic : Read(path), course);
 
         sealed class Pair
         {
@@ -113,10 +137,13 @@ namespace OurTaiko.Tests
         public void LaneWindowsCoverEveryDrawnObject(string path, string course)
         {
             var chart = Load(path, course);
+            var clocks = new ScrollClockTimeline(chart);
             foreach (double width in new[] { 1422.0, 2100.0 })
             {
-                var notes = LaneCull.ForNotes(chart.Notes, width, JudgeX, Math.Max(NoteSize, MojiWidth));
-                var bars = LaneCull.ForBars(chart.Bars, width, JudgeX, NoteSize);
+                // The measure keeps its length on lanes of either width.
+                double shift = JudgeShift.MaxAcross(chart.JudgeMoves);
+                var notes = LaneCull.ForNotes(chart.Notes, clocks, width, JudgeX, Math.Max(NoteSize, MojiWidth), NoteScroll.MeasureWidth, shift);
+                var bars = LaneCull.ForBars(chart.Bars, clocks, width, JudgeX, NoteSize, NoteScroll.MeasureWidth, shift);
                 var left = new List<int>();
                 var random = new System.Random(5);
                 int maxCandidates = 0, maxDrawn = 0;
@@ -127,13 +154,13 @@ namespace OurTaiko.Tests
                     left.Clear(); bars.Seek(time, left);
                     int drawn = 0;
                     for (int i = 0; i < chart.Notes.Count; i++)
-                        if (NoteDrawn(chart.Notes[i], time, width))
+                        if (NoteDrawn(chart, chart.Notes[i], clocks, time, width))
                         {
                             drawn++;
                             Assert.That(notes.Contains(i), $"note {i} ({chart.Notes[i].Kind} at {chart.Notes[i].Time:F3}) at {time:F4}, width {width}");
                         }
                     for (int i = 0; i < chart.Bars.Count; i++)
-                        if (BarDrawn(chart.Bars[i], time, width))
+                        if (BarDrawn(chart, chart.Bars[i], clocks, time, width))
                             Assert.That(bars.Contains(i), $"bar {i} at {time:F4}, width {width}");
                     maxCandidates = Math.Max(maxCandidates, notes.Count); maxDrawn = Math.Max(maxDrawn, drawn);
                 }
@@ -150,12 +177,14 @@ namespace OurTaiko.Tests
         }
 
         // The exact cull PlayScene applies to every candidate, without the alive test (which only hides more).
-        static bool NoteDrawn(ChartNote note, double time, double width)
+        static bool NoteDrawn(TaikoChart chart, ChartNote note, ScrollClockTimeline clocks, double time, double width)
         {
-            double travel = width - JudgeX;
-            double x = JudgeX + NoteScroll.DistanceFromJudge(note.Time, time, note.Bpm, note.ScrollX, travel);
-            if (note.IsBalloon && time >= note.Time) x = JudgeX;
-            double length = note.IsLong && !note.IsBalloon ? NoteScroll.RollLength(note, travel) : 0;
+            double travel = NoteScroll.MeasureWidth;
+            if (!NoteScroll.Appeared(note, time)) return false;
+            double judge = JudgeX + JudgeShift.At(chart.JudgeMoves, time).X;
+            double x = judge + NoteScroll.Distance(note, time, clocks, travel).X;
+            if (note.IsBalloon && time >= note.Time) x = judge;
+            double length = note.IsDrumroll ? NoteScroll.TailDistance(note, time, clocks, travel).X - (x - judge) : 0;
             double aspect = note.Kind == NoteKind.BigRoll ? 120 / 192.0 : 80 / 192.0;
             LaneCull.NoteReach(note, NoteSize, NoteSize, length, aspect, BalloonFace, out double min, out double max);
             if (LaneCull.InLane(x, min, max, width)) return true;
@@ -164,9 +193,9 @@ namespace OurTaiko.Tests
             return LaneCull.InLane(x, min, max, width);
         }
 
-        static bool BarDrawn(ChartNote bar, double time, double width)
+        static bool BarDrawn(TaikoChart chart, ChartNote bar, ScrollClockTimeline clocks, double time, double width)
         {
-            double x = JudgeX + NoteScroll.DistanceFromJudge(bar.Time, time, bar.Bpm, bar.ScrollX, width - JudgeX);
+            double x = JudgeX + JudgeShift.At(chart.JudgeMoves, time).X + NoteScroll.Distance(bar, time, clocks, NoteScroll.MeasureWidth).X;
             return LaneCull.InLane(x, -3, 3, width);
         }
 

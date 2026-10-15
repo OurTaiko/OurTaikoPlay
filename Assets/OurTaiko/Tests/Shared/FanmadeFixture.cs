@@ -82,8 +82,8 @@ namespace OurTaiko.Tests
         public readonly ConcurrentDictionary<string, JObject> Idempotent = new ConcurrentDictionary<string, JObject>();
         public readonly ConcurrentBag<string> Requests = new ConcurrentBag<string>();
         public readonly List<JObject> AccountScores = new List<JObject>();
-        // GET /game/playlists for any signed-in account; null plays a server without that list (404).
-        public JArray AccountPlaylists;
+        // GET /game/playlists for any signed-in account.
+        public JArray AccountPlaylists = new JArray();
         public int Downloads;
         // Paths answered with this status instead of their normal reply.
         public readonly ConcurrentDictionary<string, int> Fail = new ConcurrentDictionary<string, int>();
@@ -220,7 +220,7 @@ namespace OurTaiko.Tests
                     lock (AccountScores) Reply(context, 200, new JObject { ["scores"] = new JArray(AccountScores.Where(s => (string)s["user"] == user)) });
                     return;
                 }
-                if (request.HttpMethod == "GET" && path == "/api/v1/game/playlists" && AccountPlaylists != null)
+                if (request.HttpMethod == "GET" && path == "/api/v1/game/playlists")
                 {
                     if (user == null) { Reply(context, 401, new JObject()); return; }
                     Reply(context, 200, new JObject { ["playlists"] = AccountPlaylists, ["playlistVersion"] = 1 });

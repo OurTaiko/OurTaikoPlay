@@ -292,16 +292,19 @@ namespace OurTaiko.Tests
                     Assert.That(tail.GetComponent<LaneSprite>().sprite.name, Is.EqualTo(big ? "RollTailBig" : "RollTailSmall"));
                     Assert.That(body.GetSiblingIndex(), Is.LessThan(tail.GetSiblingIndex()));
                     Assert.That(tail.GetSiblingIndex(), Is.LessThan(head.GetSiblingIndex()), "The head must cover the body join.");
-                    double speed = note.Bpm / 240 * note.ScrollX * (1920 - 618);
+                    double speed = note.Bpm / 240 * note.ScrollX * NoteScroll.MeasureWidth;
                     double length = (note.EndTime - note.Time) * speed;
                     float direction = length < 0 ? -1 : 1;
                     Vector3 TailPosition() => play.noteLayer.InverseTransformPoint(tail.position);
                     Assert.That(body.rect.height, Is.EqualTo(head.rect.height));
-                    Assert.That(body.rect.width, Is.EqualTo(System.Math.Abs(length) + 1.5).Within(0.01));
+                    // Head and tail are each cut toward zero to whole pixels (OpenTaiko): a place is
+                    // within a pixel of the continuous formula, a length (one each side of the judge
+                    // possibly) within two.
+                    Assert.That(body.rect.width, Is.EqualTo(System.Math.Abs(length) + 1.5).Within(2));
                     Assert.That(body.localScale.x, Is.EqualTo(direction));
                     Assert.That(tail.rect.size, Is.EqualTo(new Vector2(big ? 120 : 80, 192)));
                     Assert.That(tail.localScale.x, Is.EqualTo(direction));
-                    Assert.That(TailPosition().x, Is.EqualTo(120 + (note.EndTime - time) * speed).Within(0.01));
+                    Assert.That(TailPosition().x, Is.EqualTo(120 + (note.EndTime - time) * speed).Within(1));
                     Assert.That(TailPosition().y, Is.EqualTo(root.anchoredPosition.y).Within(0.01));
                     var bodyEnd = play.noteLayer.InverseTransformPoint(body.TransformPoint(new Vector3(body.rect.xMax, 0)));
                     Assert.That((bodyEnd.x - TailPosition().x) * direction, Is.EqualTo(1.5).Within(0.01), "Body and cap overlap without a gap.");
@@ -311,9 +314,9 @@ namespace OurTaiko.Tests
                     if (i <= 1) Capture(captureNames[i] + "-720p.png", 1280, 720);
                     float headBefore = root.anchoredPosition.x, tailBefore = TailPosition().x;
                     render.Invoke(play, new object[] { time + 0.125 });
-                    Assert.That(headBefore - root.anchoredPosition.x, Is.EqualTo(speed * 0.125).Within(0.01));
-                    Assert.That(tailBefore - TailPosition().x, Is.EqualTo(speed * 0.125).Within(0.01), "Tail must inherit the head's speed.");
-                    Assert.That(tail.anchoredPosition.x, Is.EqualTo(length).Within(0.01));
+                    Assert.That(headBefore - root.anchoredPosition.x, Is.EqualTo(speed * 0.125).Within(2));
+                    Assert.That(tailBefore - TailPosition().x, Is.EqualTo(speed * 0.125).Within(2), "Tail must inherit the head's speed.");
+                    Assert.That(tail.anchoredPosition.x, Is.EqualTo(length).Within(2));
                 }
                 play.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
@@ -344,14 +347,14 @@ namespace OurTaiko.Tests
                 // draw_notes iterates in reverse: the earlier roll paints over the later don.
                 Assert.That(play.NoteRoot(0).GetSiblingIndex(), Is.GreaterThan(play.NoteRoot(1).GetSiblingIndex()));
                 var tail = (RectTransform)root.transform.Find("RollTail");
-                double speed = note.Bpm / 240 * note.ScrollX * (1920 - 618);
+                double speed = note.Bpm / 240 * note.ScrollX * NoteScroll.MeasureWidth;
                 // Original keeps the roll in draw_note_buffer until the tail's unload_ms,
                 // regardless of the roll having been judged at its end time.
                 play.Session.Advance(note.EndTime + 0.1, false);
                 Assert.That(play.Session.Resolved[0], Is.True);
                 render.Invoke(play, new object[] { note.EndTime + 0.1 });
                 Assert.That(play.NoteRoot(0), Is.SameAs(root.transform), "A finished roll must flow past the judge instead of vanishing.");
-                Assert.That(play.noteLayer.InverseTransformPoint(tail.position).x, Is.EqualTo(120 - 0.1 * speed).Within(0.01));
+                Assert.That(play.noteLayer.InverseTransformPoint(tail.position).x, Is.EqualTo(120 - 0.1 * speed).Within(1), "Whole pixels.");
                 render.Invoke(play, new object[] { note.EndTime + 2 });
                 Assert.That(play.NoteRoot(0), Is.Null, "The roll unloads once its tail has left the lane.");
                 Assert.That(root.activeSelf, Is.False, "An unloaded view returns to the pool inactive.");
@@ -366,7 +369,7 @@ namespace OurTaiko.Tests
                 render.Invoke(play, new object[] { donNote.Time + 0.2 });
                 Assert.That(play.NoteRoot(2), Is.Not.Null, "A missed note must flow past the judge.");
                 var don = play.NoteRoot(2).gameObject;
-                Assert.That(((RectTransform)don.transform).anchoredPosition.x, Is.EqualTo(120 - 0.2 * speed).Within(0.01));
+                Assert.That(((RectTransform)don.transform).anchoredPosition.x, Is.EqualTo(120 - 0.2 * speed).Within(1), "Whole pixels.");
                 // Culling follows the live lane clip and note size, not fixed pixels:
                 // the note stays until its right edge passes the lane's left edge.
                 float halfWidth = ((RectTransform)don.transform).rect.width / 2;
@@ -515,7 +518,7 @@ namespace OurTaiko.Tests
                 play.Hit(false, false);
                 Assert.That(play.Session.LongHits[0], Is.Zero, "The visual offset must not start balloon hits early.");
                 Capture("BalloonApproaching.png");
-                double distance = NoteScroll.DistanceFromJudge(0, play.RenderedTime, 120, 1, 1920 - 618);
+                double distance = NoteScroll.Distance(play.Session.Chart.Notes[0], play.RenderedTime, new ScrollClockTimeline(play.Session.Chart), NoteScroll.MeasureWidth).X;
                 Assert.That(FacePosition().x, Is.EqualTo(judge.x + distance).Within(0.01));
                 Assert.That(FacePosition().y, Is.EqualTo(judge.y).Within(0.01));
                 while (play.RenderedTime < 0.15)
@@ -600,9 +603,10 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.15f);
             double elapsed = play.RenderedTime - timeBefore;
             Assert.That(elapsed, Is.GreaterThan(0));
-            // Nijiiro skin: screen width 1920, judge x 618; default song starts at BPM 160 / SCROLL 1.
-            double expectedDistance = elapsed * 160 / 240 * (1920 - 618);
-            Assert.That(xBefore - rect.anchoredPosition.x, Is.EqualTo(expectedDistance).Within(0.01));
+            // A measure is 75% of the 1920 design width (OpenTaiko); the default song starts at BPM 160 / SCROLL 1.
+            double expectedDistance = elapsed * 160 / 240 * NoteScroll.MeasureWidth;
+            // Both places are cut to whole pixels (OpenTaiko).
+            Assert.That(xBefore - rect.anchoredPosition.x, Is.EqualTo(expectedDistance).Within(1));
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
         }
 

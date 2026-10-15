@@ -39,7 +39,8 @@ namespace OurTaiko.Tests
                 Assert.That(session.IsClear && play.soulGauge.IsClear, Is.True);
                 Assert.That(play.soulGauge.FilledCells, Is.EqualTo(30));
                 Assert.That(play.scoreCounter.Text, Is.EqualTo("360000"));
-                play.soulGauge.ShowTime(play.SongTime + 0.225);
+                // The fade starts at the judging frame's whole millisecond.
+                play.soulGauge.ShowTime(TjaTime.Truncate(play.SongTime) + 0.225);
                 Assert.That(play.soulGauge.cellFade.enabled, Is.True);
                 Assert.That(play.soulGauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001));
 
