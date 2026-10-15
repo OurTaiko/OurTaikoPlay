@@ -90,6 +90,7 @@ namespace OurTaiko
         {
             Session = session;
             clocks = new ScrollClockTimeline(session.Chart);
+            judgeTravel = JudgeShift.MaxAcross(session.Chart.JudgeMoves);
             shownNotes = new NoteView[Session.Chart.Notes.Count];
             shownMoji = new MojiView[Session.Chart.Notes.Count];
             shownBars = new RectTransform[Session.Chart.Bars.Count];
@@ -258,8 +259,8 @@ namespace OurTaiko
             for (int i = 0; i < shownNotes.Length; i++) { if (shownNotes[i] != null) ReleaseNote(i); if (shownMoji[i] != null) ReleaseMoji(i); }
             for (int i = 0; i < shownBars.Length; i++) if (shownBars[i] != null) ReleaseBar(i);
             windowWidth = width;
-            noteWindow = LaneCull.ForNotes(Session.Chart.Notes, clocks, width, JudgeLocalX, Math.Max(NoteSize, MojiWidth), TravelDistance);
-            barWindow = LaneCull.ForBars(Session.Chart.Bars, clocks, width, JudgeLocalX, NoteSize, TravelDistance);
+            noteWindow = LaneCull.ForNotes(Session.Chart.Notes, clocks, width, JudgeLocalX, Math.Max(NoteSize, MojiWidth), TravelDistance, judgeTravel);
+            barWindow = LaneCull.ForBars(Session.Chart.Bars, clocks, width, JudgeLocalX, NoteSize, TravelDistance, judgeTravel);
             return true;
         }
 
@@ -274,16 +275,23 @@ namespace OurTaiko
         // The beat clock of BM/HB-scroll notes (the chart's, the same for every session of it).
         ScrollClockTimeline clocks;
 
+        // How far #JPOSSCROLL may move the judge across (culling margin), and where it is this frame.
+        double judgeTravel;
+        Vector2 judge;
+
         Vector2 Position(ChartNote note, double time)
         {
             var (x, y) = NoteScroll.Distance(note, time, clocks, TravelDistance);
-            return new Vector2(JudgeLocalX + (float)x, JudgeLocalY - (float)y);
+            return new Vector2(judge.x + (float)x, judge.y - (float)y);
         }
         // Draws `session` at `time`. `preview` shows the routes a paused practice would play;
         // `hideSkipped` hides notes the practice attempt skipped. Returns false for an unchanged frame.
         public bool Render(PlaySession session, double time, bool preview, bool hideSkipped)
         {
             Session = session;
+            // #JPOSSCROLL moves the origin notes are placed from (OpenTaiko GetNoteOriginX/Y).
+            var shift = JudgeShift.At(session.Chart.JudgeMoves, time);
+            judge = new Vector2(JudgeLocalX + (float)shift.X, JudgeLocalY - (float)shift.Y);
             bool rebuilt = EnsureLaneWindows();
             if (!rebuilt && rendered && time == RenderedTime && Session == renderedSession && Session.Version == renderedVersion
                 && balloonCounter.NoteIndex == renderedBalloon && preview == renderedPreview) return false;
@@ -305,12 +313,12 @@ namespace OurTaiko
             {
                 int i = noteWindow[k];
                 var note = chartNotes[i]; var view = shownNotes[i]; var pos = Position(note, time);
-                if (note.IsBalloon && time >= note.Time) pos = new Vector2(JudgeLocalX, JudgeLocalY);
+                if (note.IsBalloon && time >= note.Time) pos = judge;
                 // The tail is placed (and cut to whole pixels) on its own, as OpenTaiko's roll end:
                 // `length` across the lane, `rise` up it (a vertical SCROLL turns the roll).
                 var tail = note.IsDrumroll ? NoteScroll.TailDistance(note, time, clocks, TravelDistance) : default;
-                float length = note.IsDrumroll ? (float)(tail.X + JudgeLocalX) - pos.x : 0;
-                float rise = note.IsDrumroll ? (float)(JudgeLocalY - tail.Y) - pos.y : 0;
+                float length = note.IsDrumroll ? (float)(tail.X + judge.x) - pos.x : 0;
+                float rise = note.IsDrumroll ? (float)(judge.y - tail.Y) - pos.y : 0;
                 // ドロン hides the notes; they are still judged. Like draw_note_buffer,
                 // only a hit removes a note: a 5/6 roll resolved at its tail and a note
                 // missed by timeout keep scrolling until they leave the lane.

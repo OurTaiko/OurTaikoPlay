@@ -87,25 +87,26 @@ namespace OurTaiko
         // its tail reaches 1.5 notes from its centre, a roll its length plus the tail, its text
         // half the text width plus the length; three of the wider sprite plus the length leaves
         // ample margin. Bar lines are a few pixels wide and keep one sprite of margin.
+        // `shift` is how far #JPOSSCROLL may move the judge across; it widens every interval.
         public static LaneWindow ForNotes(IReadOnlyList<ChartNote> notes, ScrollClockTimeline clocks, double width, double judgeX,
-            double spriteWidth, double travel)
+            double spriteWidth, double travel, double shift = 0)
         {
             double[] start = new double[notes.Count], end = new double[notes.Count];
             for (int i = 0; i < notes.Count; i++)
             {
                 var note = notes[i];
                 double length = note.IsDrumroll ? Math.Abs(NoteScroll.RollLength(note, travel)) : 0;
-                ObjectInterval(note, clocks, travel, judgeX, width, 3 * spriteWidth + length, note.IsBalloon, out start[i], out end[i]);
+                ObjectInterval(note, clocks, travel, judgeX, width, 3 * spriteWidth + length + shift, note.IsBalloon, out start[i], out end[i]);
             }
             return new LaneWindow(start, end);
         }
 
         public static LaneWindow ForBars(IReadOnlyList<ChartNote> bars, ScrollClockTimeline clocks, double width, double judgeX,
-            double spriteWidth, double travel)
+            double spriteWidth, double travel, double shift = 0)
         {
             double[] start = new double[bars.Count], end = new double[bars.Count];
             for (int i = 0; i < bars.Count; i++)
-                ObjectInterval(bars[i], clocks, travel, judgeX, width, spriteWidth, false, out start[i], out end[i]);
+                ObjectInterval(bars[i], clocks, travel, judgeX, width, spriteWidth + shift, false, out start[i], out end[i]);
             return new LaneWindow(start, end);
         }
     }

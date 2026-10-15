@@ -213,6 +213,9 @@ namespace OurTaiko
                 chart.Tempos.Clear(); chart.Tempos.AddRange(tempos);
                 var clocks = chart.ScrollClocks.OrderBy(c => c.Time).ToList();
                 chart.ScrollClocks.Clear(); chart.ScrollClocks.AddRange(clocks);
+                var moves = chart.JudgeMoves.OrderBy(m => m.Time).ToList();
+                chart.JudgeMoves.Clear(); chart.JudgeMoves.AddRange(moves);
+                JudgeShift.Link(chart.JudgeMoves);
                 NoteMoji.Assign(chart);
             }
 
@@ -410,6 +413,22 @@ namespace OurTaiko
                         else chart.LevelHolds.Add(Now);
                         break;
                     case "#NMSCROLL": case "#BMSCROLL": case "#HBSCROLL": state.Mode = ScrollModeOf(key).Value; break;
+                    // OpenTaiko: `#JPOSSCROLL seconds move [direction]`; move is a real (across) or a
+                    // complex number (across and down) in 1280-wide pixels; direction 0 (the default)
+                    // turns it around, as notes move. Moves on every route count.
+                    case "#JPOSSCROLL":
+                        var jpos = arg.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                        int jposDirection = 0;
+                        if (jpos.Length < 2 || !TjaNumber.TryParse(Infinity.Replace(jpos[0], "Infinity"), out double jposSeconds)
+                            || !Scroll(jpos[1], out double jposX, out double jposY)
+                            || jpos.Length >= 3 && !int.TryParse(jpos[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out jposDirection))
+                        {
+                            if (!chart.Warnings.Contains(command)) chart.Warnings.Add(command);
+                            break;
+                        }
+                        if (jposDirection == 0) { jposX = -jposX; jposY = -jposY; }
+                        chart.JudgeMoves.Add(new ChartJudgeMove { Time = Now, Duration = Math.Max(0, 1000 * jposSeconds), MoveX = jposX, MoveY = jposY });
+                        break;
                     // OpenTaiko: `#SUDDEN show move` in seconds, both required. Less than a
                     // millisecond means unset; the move time is cut to whole milliseconds.
                     case "#SUDDEN":

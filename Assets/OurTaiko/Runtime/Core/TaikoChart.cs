@@ -122,6 +122,8 @@ namespace OurTaiko
         public readonly List<ChartSection> Sections = new List<ChartSection>();
         // The beat clock's BPM points (OpenTaiko listBPM): ScrollClockTimeline reads them per route.
         public readonly List<ChartClockPoint> ScrollClocks = new List<ChartClockPoint>();
+        // #JPOSSCROLL moves of the judge, in time order and linked (JudgeShift).
+        public readonly List<ChartJudgeMove> JudgeMoves = new List<ChartJudgeMove>();
         // Times of #LEVELHOLD outside a route: from there the route being played is kept.
         public readonly List<double> LevelHolds = new List<double>();
         // Sorted by time; events at the same time keep their source order.

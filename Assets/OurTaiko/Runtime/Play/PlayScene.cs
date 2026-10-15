@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -533,7 +534,30 @@ namespace OurTaiko
         {
             bool preview = IsPractice && IsPaused;
             bool hideSkipped = IsPractice && (!IsPaused || practiceRewinding);
+            ShiftJudge(time);
             if (lane.Render(Session, time, preview, hideSkipped)) gogo.ShowTime(Session, time, preview);
+        }
+
+        // What #JPOSSCROLL moves with the note origin, as OpenTaiko adds GetJPOSCROLLX/Y to them:
+        // the judge frame, judgment text, hit effects, GOGO fire and balloon counter. The lane,
+        // its GOGO tint and the notes flying to the soul gauge stay.
+        RectTransform[] judgeFollowers;
+        Vector2[] judgeHomes;
+        void ShiftJudge(double time)
+        {
+            if (judgeFollowers == null)
+            {
+                var lane = noteLayer.parent.parent;
+                judgeFollowers = new[] { lane.Find("JudgeCircle") as RectTransform, judgment != null ? judgment.rectTransform : null,
+                        hitFace != null ? (RectTransform)hitFace.transform : null, hitRing != null ? (RectTransform)hitRing.transform : null,
+                        gogo != null && gogo.fire != null ? gogo.fire.rectTransform : null,
+                        balloonCounter != null ? (RectTransform)balloonCounter.transform : null }
+                    .Where(t => t != null).ToArray();
+                judgeHomes = judgeFollowers.Select(t => t.anchoredPosition).ToArray();
+            }
+            var shift = JudgeShift.At(Session.Chart.JudgeMoves, time);
+            var offset = new Vector2((float)shift.X, -(float)shift.Y);
+            for (int i = 0; i < judgeFollowers.Length; i++) judgeFollowers[i].anchoredPosition = judgeHomes[i] + offset;
         }
 
         void SampleDancers(double time)

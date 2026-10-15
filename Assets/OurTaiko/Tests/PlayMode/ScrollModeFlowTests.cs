@@ -112,6 +112,47 @@ namespace OurTaiko.Tests
             }
         }
 
+        // #JPOSSCROLL (OpenTaiko): the judge frame, the note origin and the judge-area effects move
+        // together, by the 1280-wide pixels × 1.5.
+        [UnityTest] public IEnumerator JposScrollMovesTheJudgeAndTheNotes()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Jpos\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#JPOSSCROLL 1 -200+100i 1\n1111,\n1111,\n#END");
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                yield return null;
+                SceneSwitcher.Instance.Play(song);
+                float deadline = Time.realtimeSinceStartup + 40;
+                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene)
+                {
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                    yield return null;
+                }
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                while (play.Session == null) { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
+                var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var circle = (RectTransform)play.noteLayer.parent.parent.Find("JudgeCircle");
+                render.Invoke(play, new object[] { -0.5 });
+                Vector2 circleHome = circle.anchoredPosition, textHome = play.judgment.rectTransform.anchoredPosition;
+                var balloonHome = ((RectTransform)play.balloonCounter.transform).anchoredPosition;
+                // Halfway (0.5 s): -100 across and 50 down in 1280 pixels → -150, -75 here.
+                render.Invoke(play, new object[] { 0.5 });
+                var offset = new Vector2(-150, -75);
+                Assert.That(circle.anchoredPosition, Is.EqualTo(circleHome + offset));
+                Assert.That(play.judgment.rectTransform.anchoredPosition, Is.EqualTo(textHome + offset));
+                Assert.That(((RectTransform)play.balloonCounter.transform).anchoredPosition, Is.EqualTo(balloonHome + offset));
+                // The note due now sits on the moved judge; the next one a quarter measure on from it.
+                Assert.That(play.NoteRoot(1).anchoredPosition, Is.EqualTo(new Vector2(JudgeX, JudgeY) + offset));
+                Assert.That(play.NoteRoot(2).anchoredPosition.x, Is.EqualTo(JudgeX - 150 + 360).Within(0.01));
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
         IEnumerator Verify(bool practice, string text)
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
