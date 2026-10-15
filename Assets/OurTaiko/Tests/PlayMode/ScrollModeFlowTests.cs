@@ -66,6 +66,52 @@ namespace OurTaiko.Tests
             }
         }
 
+        // OpenTaiko DisplayRoll: a roll with a vertical SCROLL (here 0.5+0.5i, coming up from the
+        // lower right) turns its body and tail toward the tail, keeps its head upright, and its
+        // text follows the head.
+        [UnityTest] public IEnumerator AVerticalRollTurnsTowardItsTail()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Turn\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#SCROLL 0.5+0.5i\n5008,\n#END");
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                yield return null;
+                SceneSwitcher.Instance.Play(song);
+                float deadline = Time.realtimeSinceStartup + 40;
+                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene)
+                {
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                    yield return null;
+                }
+                var play = Object.FindFirstObjectByType<PlayScene>();
+                while (play.Session == null) { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
+                var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                render.Invoke(play, new object[] { -0.5 });
+                var note = play.Session.Chart.Notes[0];
+                var clocks = new ScrollClockTimeline(play.Session.Chart);
+                var head = NoteScroll.Distance(note, -0.5, clocks, NoteScroll.MeasureWidth);
+                var tailAt = NoteScroll.TailDistance(note, -0.5, clocks, NoteScroll.MeasureWidth);
+                float length = (float)(tailAt.X - head.X), rise = (float)(head.Y - tailAt.Y);
+                Assert.That(rise, Is.LessThan(0), "A positive imaginary part comes from below: the tail is lower.");
+                var root = play.NoteRoot(0);
+                var body = (RectTransform)root.Find("RollBody"); var tail = (RectTransform)root.Find("RollTail");
+                float angle = Mathf.Atan2(rise, length) * Mathf.Rad2Deg;
+                Assert.That(Mathf.DeltaAngle(body.localEulerAngles.z, angle), Is.EqualTo(0).Within(0.01));
+                Assert.That(Mathf.DeltaAngle(tail.localEulerAngles.z, angle), Is.EqualTo(0).Within(0.01));
+                Assert.That(root.Find("Head").localEulerAngles.z, Is.EqualTo(0), "The head stays upright.");
+                Assert.That(tail.anchoredPosition, Is.EqualTo(new Vector2(length, rise)));
+                Assert.That(body.sizeDelta.x, Is.EqualTo(Mathf.Sqrt(length * length + rise * rise) + root.rect.height / 128f).Within(0.01));
+                var moji = play.MojiRoot(0);
+                Assert.That(moji.anchoredPosition.y, Is.EqualTo(root.anchoredPosition.y - 123).Within(0.01), "Roll text follows its head.");
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
         IEnumerator Verify(bool practice, string text)
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();

@@ -190,7 +190,7 @@ namespace OurTaiko.Tests
             Assert.That((roll.Time, roll.EndTime), Is.EqualTo((0.857, 1.499)));
             // The tail is placed and cut on its own: 1499 ms → 1138.4… → 1138.
             Assert.That(NoteScroll.Distance(roll, 0, clocks, Travel).X, Is.EqualTo(System.Math.Truncate(857 * 140 / 240000.0 * Travel)));
-            Assert.That(NoteScroll.TailDistance(roll, 0, clocks, Travel), Is.EqualTo(System.Math.Truncate(1499 * 140 / 240000.0 * Travel)));
+            Assert.That(NoteScroll.TailDistance(roll, 0, clocks, Travel).X, Is.EqualTo(System.Math.Truncate(1499 * 140 / 240000.0 * Travel)));
             var hb = Parse("#HBSCROLL\n#SCROLL 1-0.5i\n01,", bpm: 120);
             var (x, y) = NoteScroll.Distance(hb.Notes[0], 0, new ScrollClockTimeline(hb), Travel);
             Assert.That((x, y), Is.EqualTo((System.Math.Truncate(0.5 * Travel), System.Math.Truncate(-0.25 * Travel))), "Cut toward zero.");
@@ -198,6 +198,45 @@ namespace OurTaiko.Tests
 
         // OpenTaiko's Game_Notes_Interval 960 on 1280 wide: 75% of the 1920 design width.
         [Test] public void AMeasureIsThreeQuartersOfTheDesignWidth() => Assert.That(NoteScroll.MeasureWidth, Is.EqualTo(1440));
+
+        // A6: OpenTaiko's complex SCROLL — the imaginary part is the vertical speed.
+        [TestCase("1.5", 1.5, 0.0)]
+        [TestCase("1+2i", 1.0, 2.0)]
+        [TestCase("1 +2i", 1.0, 2.0)]
+        [TestCase("1 2i", 1.0, 2.0)]
+        [TestCase("1-i", 1.0, -1.0)]
+        [TestCase("2i", 0.0, 2.0)]
+        [TestCase("i", 0.0, 1.0)]
+        [TestCase("-i", 0.0, -1.0)]
+        [TestCase("1e1+2.5i", 10.0, 2.5)]
+        [TestCase("-0.5-0.25i", -0.5, -0.25)]
+        public void ScrollReadsRealAndComplexForms(string text, double x, double y)
+        {
+            var note = Parse("#SCROLL " + text + "\n1,").Notes[0];
+            Assert.That((note.ScrollX, note.ScrollY), Is.EqualTo((x, y)));
+        }
+
+        [Test] public void ScrollReadsInfinityAndKeepsTheLastOneWhenUnreadable()
+        {
+            Assert.That(Parse("#SCROLL inf\n1,").Notes[0].ScrollX, Is.EqualTo(double.PositiveInfinity));
+            var chart = Parse("#SCROLL 1+1i\n#SCROLL abc\n1,");
+            Assert.That((chart.Notes[0].ScrollX, chart.Notes[0].ScrollY), Is.EqualTo((1.0, 1.0)));
+            Assert.That(chart.Warnings, Has.Member("#SCROLL abc"));
+            // OpenTaiko's split also cuts after a `+` followed by a space, leaving a lone `+`: it
+            // does not read `1 + 2i` either.
+            var spaced = Parse("#SCROLL 0.5\n#SCROLL 1 + 2i\n1,");
+            Assert.That((spaced.Notes[0].ScrollX, spaced.Notes[0].ScrollY), Is.EqualTo((0.5, 0.0)));
+        }
+
+        [Test] public void ARollTailIsPlacedOnBothAxes()
+        {
+            // 2i: no horizontal speed, twice the vertical; the tail (1.5 s) is further along than the head.
+            var chart = Parse("#SCROLL 2i\n5008,");
+            var clocks = new ScrollClockTimeline(chart);
+            var roll = chart.Notes[0];
+            Assert.That(NoteScroll.Distance(roll, -1, clocks, Travel), Is.EqualTo((0.0, System.Math.Truncate(2 * 1000 * 120 / 240000.0 * Travel))));
+            Assert.That(NoteScroll.TailDistance(roll, -1, clocks, Travel), Is.EqualTo((0.0, System.Math.Truncate(2 * 2500 * 120 / 240000.0 * Travel))));
+        }
 
         // T4
         [TestCase("#BMSCROLL")]

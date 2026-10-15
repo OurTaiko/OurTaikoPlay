@@ -87,6 +87,33 @@ namespace OurTaiko
             return chart;
         }
 
+        // OpenTaiko #SCROLL (ParseReal / ParseComplex): a real number, or with an `i` a complex one
+        // whose imaginary part is the vertical speed: `1+2i`, `1 + 2i`, `1 2i`, `2i`, `i`, `-i`,
+        // exponents and `inf`. A positive imaginary part comes from below the judge.
+        static readonly Regex ComplexParts = new Regex(@"(?<=[^e\s])\s*(?=[+-])|(?<=[^e\s])\s+(?=[^e\s])", RegexOptions.IgnoreCase);
+        static readonly Regex Infinity = new Regex(@"inf(?:inity)?", RegexOptions.IgnoreCase);
+
+        internal static bool Scroll(string value, out double x, out double y)
+        {
+            x = 0; y = 0;
+            if (value.IndexOf('i') < 0) return TjaNumber.TryParse(Infinity.Replace(value, "Infinity"), out x);
+            string[] parts = ComplexParts.Split(value);
+            var ri = new double[2];
+            int first = parts[0].EndsWith("i") ? 1 : 0;
+            for (int k = 0, n = Math.Min(2 - first, parts.Length); k < n; k++)
+            {
+                string part = Infinity.Replace(parts[k], "Infinity").Replace(" ", "");
+                if (first + k == 1 && part.EndsWith("i"))
+                {
+                    part = part.TrimEnd('i');
+                    if (part.Length == 0 || part[part.Length - 1] == '+' || part[part.Length - 1] == '-') part += "1";
+                }
+                if (!double.TryParse(part, NumberStyles.Float, CultureInfo.InvariantCulture, out ri[first + k])) return false;
+            }
+            x = ri[0]; y = ri[1];
+            return true;
+        }
+
         static ScrollMode? ScrollModeOf(string command)
         {
             string key = command.Split(new[] { ' ', '\t' }, 2)[0].ToUpperInvariant();
@@ -351,9 +378,9 @@ namespace OurTaiko
                     // OpenTaiko keeps the two numbers as floats and divides them as floats.
                     case "#MEASURE": var parts = arg.Split('/'); state.Measure = (float)Number(parts[0]) / (float)Number(parts[1]); if (!(state.Measure > 0) || double.IsInfinity(state.Measure)) throw new FormatException("Invalid MEASURE."); break;
                     case "#SCROLL":
-                        var match = Regex.Match(arg, @"^([+-]?[\d.]+)([+-][\d.]+)i$");
-                        state.ScrollX = match.Success ? Number(match.Groups[1].Value) : Number(arg);
-                        state.ScrollY = match.Success ? Number(match.Groups[2].Value) : 0;
+                        // An unreadable SCROLL keeps the current one (OpenTaiko drops the command).
+                        if (Scroll(arg, out double scrollX, out double scrollY)) { state.ScrollX = scrollX; state.ScrollY = scrollY; }
+                        else if (!chart.Warnings.Contains(command)) chart.Warnings.Add(command);
                         break;
                     case "#DELAY":
                         double delay = Number(arg);

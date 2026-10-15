@@ -43,9 +43,10 @@ namespace OurTaiko
             => Place(note, currentTime, clocks, travelDistance, note.Time, note.ScrollClock, false);
 
         // A long note's tail, placed on its own by the head's BPM, SCROLL and mode, and cut to
-        // whole pixels on its own, as OpenTaiko places the roll-end chip.
-        public static double TailDistance(ChartNote note, double currentTime, ScrollClockTimeline clocks, double travelDistance)
-            => Place(note, currentTime, clocks, travelDistance, note.EndTime, note.EndScrollClock, Standing(note, currentTime)).X;
+        // whole pixels on its own, as OpenTaiko places the roll-end chip; with a vertical SCROLL it
+        // is off the head's line, and the roll is drawn turned toward it.
+        public static (double X, double Y) TailDistance(ChartNote note, double currentTime, ScrollClockTimeline clocks, double travelDistance)
+            => Place(note, currentTime, clocks, travelDistance, note.EndTime, note.EndScrollClock, Standing(note, currentTime));
 
         // A note is drawn (with its text) once its #SUDDEN appearance time has come.
         public static bool Appeared(ChartNote note, double currentTime)

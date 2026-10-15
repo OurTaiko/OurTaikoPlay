@@ -177,7 +177,7 @@ namespace OurTaiko.Tests
             if (!NoteScroll.Appeared(note, time)) return false;
             double x = JudgeX + NoteScroll.Distance(note, time, clocks, travel).X;
             if (note.IsBalloon && time >= note.Time) x = JudgeX;
-            double length = note.IsDrumroll ? NoteScroll.TailDistance(note, time, clocks, travel) - (x - JudgeX) : 0;
+            double length = note.IsDrumroll ? NoteScroll.TailDistance(note, time, clocks, travel).X - (x - JudgeX) : 0;
             double aspect = note.Kind == NoteKind.BigRoll ? 120 / 192.0 : 80 / 192.0;
             LaneCull.NoteReach(note, NoteSize, NoteSize, length, aspect, BalloonFace, out double min, out double max);
             if (LaneCull.InLane(x, min, max, width)) return true;

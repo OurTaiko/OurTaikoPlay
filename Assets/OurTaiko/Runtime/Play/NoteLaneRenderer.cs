@@ -306,8 +306,11 @@ namespace OurTaiko
                 int i = noteWindow[k];
                 var note = chartNotes[i]; var view = shownNotes[i]; var pos = Position(note, time);
                 if (note.IsBalloon && time >= note.Time) pos = new Vector2(JudgeLocalX, JudgeLocalY);
-                // The tail is placed (and cut to whole pixels) on its own, as OpenTaiko's roll end.
-                float length = note.IsDrumroll ? (float)(NoteScroll.TailDistance(note, time, clocks, TravelDistance) + JudgeLocalX) - pos.x : 0;
+                // The tail is placed (and cut to whole pixels) on its own, as OpenTaiko's roll end:
+                // `length` across the lane, `rise` up it (a vertical SCROLL turns the roll).
+                var tail = note.IsDrumroll ? NoteScroll.TailDistance(note, time, clocks, TravelDistance) : default;
+                float length = note.IsDrumroll ? (float)(tail.X + JudgeLocalX) - pos.x : 0;
+                float rise = note.IsDrumroll ? (float)(JudgeLocalY - tail.Y) - pos.y : 0;
                 // ドロン hides the notes; they are still judged. Like draw_note_buffer,
                 // only a hit removes a note: a 5/6 roll resolved at its tail and a note
                 // missed by timeout keep scrolling until they leave the lane.
@@ -330,13 +333,19 @@ namespace OurTaiko
                 {
                     // draw_drumroll adds the strip's native width to length +
                     // drumroll_width_offset: (48 - 47) / 128 of the note height.
+                    // OpenTaiko DisplayRoll turns the body and tail toward the tail; the head stays
+                    // upright. Mirroring keeps a leftward roll as before; the turn adds the rise.
                     float overlap = view.Root.rect.height / 128f;
                     float direction = length < 0 ? -1 : 1;
-                    view.Body.sizeDelta = new Vector2(Mathf.Abs(length) + overlap, 0);
+                    float span = Mathf.Sqrt(length * length + rise * rise);
+                    var turn = Quaternion.Euler(0, 0, Mathf.Atan2(direction * rise, Mathf.Abs(length)) * Mathf.Rad2Deg);
+                    view.Body.sizeDelta = new Vector2(span + overlap, 0);
                     view.Body.localScale = new Vector3(direction, 1, 1);
-                    view.Tail.anchoredPosition = new Vector2(length, 0);
+                    view.Body.localRotation = turn;
+                    view.Tail.anchoredPosition = new Vector2(length, rise);
                     view.Tail.sizeDelta = new Vector2(view.Root.rect.height * view.TailAspect, 0);
                     view.Tail.localScale = view.Body.localScale;
+                    view.Tail.localRotation = turn;
                 }
             }
             if (notesEntered || mojiEntered) SortCandidates(noteWindow);
@@ -378,8 +387,8 @@ namespace OurTaiko
             alive &= balloonCounter.NoteIndex != index;
             bool roll = MojiShapeOf(note) == 1;
             var view = shownMoji[index];
-            // draw_drumroll places roll text at the lane height, ignoring the head's Y scroll.
-            var at = new Vector2(pos.x, (roll ? JudgeLocalY : pos.y) - MojiDrop);
+            // The text follows its head, rolls too (OpenTaiko draws SE notes at the head's y).
+            var at = new Vector2(pos.x, pos.y - MojiDrop);
             float half = (view != null ? view.Root.rect.width : MojiWidth) / 2;
             LaneCull.MojiReach(roll, 2 * half, length, out double min, out double max);
             var reach = new Vector2((float)min, (float)max);
