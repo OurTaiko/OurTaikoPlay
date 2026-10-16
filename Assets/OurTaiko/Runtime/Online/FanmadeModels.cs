@@ -113,7 +113,7 @@ namespace OurTaiko.Online
             {
                 Title = SongInfo.Translated(Titles, language, Title),
                 Subtitle = SongInfo.Translated(Subtitles, language, Subtitle).TrimStart('-', '+'),
-                Genre = Genre, Bpm = Bpm, DemoStart = DemoStart,
+                Genre = Genre, Bpm = Bpm, DemoStart = DemoStart, Maker = (Maker ?? "").Trim(),
             };
             for (int i = 0; i < Difficulties.Length; i++)
                 if (Difficulties[i] != null)

@@ -4,6 +4,14 @@ namespace OurTaiko.Tests
 {
     public sealed class SongLanguageTests
     {
+        [Test]
+        public void MakerHeaderIsReadForDisplay()
+        {
+            Assert.That(SongInfo.Read("TITLE:Base\nMAKER: Someone \nCOURSE:Oni\n#START\n1000,\n#END").Maker, Is.EqualTo("Someone"));
+            Assert.That(SongInfo.Read("TITLE:Base\nCOURSE:Oni\n#START\n1000,\n#END").Maker, Is.Empty, "Without MAKER there is nothing to rotate in.");
+            Assert.That(new Online.FanmadeChart { Title = "T", Maker = "Author" }.ToSongInfo("en").Maker, Is.EqualTo("Author"));
+        }
+
         const string Chart = "TITLE:Base title\nSUBTITLE:--Base subtitle\nTITLEJA:日本語の曲名\nSUBTITLEJA:--日本語の副題\nTITLEZH:中文歌名\nTITLEZH_TW:繁體歌名\nSUBTITLEKO:--한국어\nBPM:120\nCOURSE:Oni\nLEVEL:3\n#START\n1000,\n#END";
 
         [TestCase("zh", "中文歌名", "Base subtitle")]

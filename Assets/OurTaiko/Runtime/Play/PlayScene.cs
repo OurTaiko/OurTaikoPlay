@@ -81,6 +81,11 @@ namespace OurTaiko
         // OpenTaiko judges and draws at a whole millisecond of the play clock (cut toward zero).
         double ChartTime => TjaTime.Truncate(SongTime - audioOffset);
         SongInfo displayInfo;
+        // The subtitle line shows the SUBTITLE and, when the chart names one, the MAKER in turn.
+        const float SubtitleRotationSeconds = 4f;
+        string[] subtitleLines = Array.Empty<string>();
+        int subtitleIndex;
+        float subtitleShownAt;
         bool autoPlay, hitKa, nextAutoRight = true;
         SceneSwitcher switcher;
         double feedbackTime = -10;
@@ -154,7 +159,7 @@ namespace OurTaiko
                 if (branchLane != null) branchLane.Initialize(Session.Chart.Branches.Count > 0);
                 displayInfo = song.ReadDisplayInfo();
                 title.text = displayInfo.Title;
-                subtitle.text = $"{displayInfo.Subtitle}    {Session.Chart.Course.ToUpperInvariant()}  LV.{Session.Chart.Level}";
+                ShowSubtitleLines(displayInfo);
                 lane = new NoteLaneRenderer(new NoteLaneRenderer.Assets
                 {
                     NoteLayer = noteLayer, BarLayer = barLayer, MojiLayer = mojiLayer,
@@ -180,6 +185,23 @@ namespace OurTaiko
             songClock.Start(GameTimeline.AudioNow, Math.Max(2, Session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset)));
             if (IsPractice) InitializePractice();
             else StartDueMusic();
+        }
+
+        void ShowSubtitleLines(SongInfo info)
+        {
+            subtitleLines = new[] { info.Subtitle, info.Maker }.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+            subtitleIndex = 0;
+            subtitleShownAt = Time.unscaledTime;
+            subtitle.text = subtitleLines.Length > 0 ? subtitleLines[0] : "";
+        }
+
+        // Alternates the subtitle and the maker on a fixed cadence, through pauses too.
+        void RotateSubtitle()
+        {
+            if (subtitleLines.Length < 2 || Time.unscaledTime - subtitleShownAt < SubtitleRotationSeconds) return;
+            subtitleIndex = (subtitleIndex + 1) % subtitleLines.Length;
+            subtitleShownAt = Time.unscaledTime;
+            subtitle.text = subtitleLines[subtitleIndex];
         }
 
         void ShowDifficulty(string course)
@@ -210,6 +232,7 @@ namespace OurTaiko
 
         void Update()
         {
+            RotateSubtitle();
             if (switcher == null || switcher.IsInputBlocked || !songClock.Started) return;
             if (IsFinished) return;
             // Keep the intentional frame-based judgment; input event timestamps only sort hits.
