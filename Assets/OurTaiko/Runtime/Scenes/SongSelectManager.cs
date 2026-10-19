@@ -313,6 +313,14 @@ namespace OurTaiko
             Navigate(delta);
         }
 
+        // A swipe moved the wheel `delta` boards: one ka however far it went this frame.
+        public void Scroll(int delta)
+        {
+            if (Phase != State.Browsing || !AcceptsInput() || delta == 0) return;
+            Play(Sound.Ka);
+            Navigate(delta);
+        }
+
         // A tap on a course card or the back/option button walks the cursor by the drum's rules.
         public void SelectCourse(Difficulty difficulty)
         {

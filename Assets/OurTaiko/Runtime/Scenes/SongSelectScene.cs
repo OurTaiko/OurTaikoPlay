@@ -177,6 +177,7 @@ namespace OurTaiko
             Manager.OptionChanged += OnOptionChanged;
             Manager.OptionsClosing += OnOptionsClosing;
             BindBoards();
+            BindSwipe();
             backgroundPositions = backgroundTiles.Select(tile => tile.rectTransform.anchoredPosition).ToArray();
             currentGenre = previousGenre = Manager.FocusedItem.Genre;
             BindCoursePanel();
@@ -242,6 +243,7 @@ namespace OurTaiko
             if (view.search != null) view.search.Tick();
             if (view.search == null || !view.search.BlocksInput) Manager.HandleInput();
             if (Manager.Phase == State.Decided && !voice.IsAudioPlaying() && !switcher.IsSwitching) Manager.StartSong();
+            StepSwipe(now);
             UpdatePreview(now);
             DrawBackground(now);
             var items = Manager.Items;
@@ -274,6 +276,7 @@ namespace OurTaiko
         // fading in as they slide to their rows (もどる and the folder board appear at once).
         void OnFolderChanged(SongSelectManager.FolderChange change)
         {
+            CancelSwipe();
             var anchor = BoardOf(change.Anchor);
             foreach (var item in change.Removed)
             {
@@ -295,6 +298,7 @@ namespace OurTaiko
 
         void OnWheelRebuilt()
         {
+            CancelSwipe();
             StopPreview();
             foreach (var board in visuals.Values) ReleaseView(board);
             visuals.Clear();
@@ -305,6 +309,13 @@ namespace OurTaiko
 
         void OnFocusChanged(WheelItem previous, SongSelectManager.FocusReason reason)
         {
+            // A swipe walking the focus lays the boards out itself and opens the board it rests on.
+            if (swipeStepping)
+            {
+                ChangeGenre(Manager.FocusedItem.Genre);
+                return;
+            }
+            CancelSwipe();
             if (reason == SongSelectManager.FocusReason.Navigate && visuals.TryGetValue(previous, out var left) && left.OpenStart >= 0)
             {
                 left.CloseStart = Now; left.OpenStart = -1;
@@ -318,6 +329,7 @@ namespace OurTaiko
 
         void OnPhaseChanged(State previous)
         {
+            CancelSwipe();
             if (Manager.Phase == State.CourseSelect) EnterCourseSelect();
             else if (Manager.Phase == State.Browsing && previous != State.Browsing) ExitCourseSelect();
         }
