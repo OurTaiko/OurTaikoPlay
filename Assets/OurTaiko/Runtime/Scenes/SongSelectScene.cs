@@ -62,7 +62,7 @@ namespace OurTaiko
 
         [Header("Audio")]
         public AudioSource bgm, preview, sfx, voice;
-        public AudioClip don, ka, uraSwitch, voiceEnter, voiceStartSong;
+        public AudioClip don, ka, uraSwitch, skip, voiceEnter, voiceStartSong;
 
         const double MoveMs = 166, OpenHoldMs = 61 / 120.0 * 1000, OpenGrowMs = 233, CloseMs = 13 / 0.06, FolderCloseMs = 8 / 0.06;
         const double CourseExitMoveMs = 500, CourseEnterMoveMs = 800, BoardFadeMs = 166;
@@ -144,7 +144,9 @@ namespace OurTaiko
         OptionPanel optionPanel;
         Vector2 framePosition, glowPosition, balloonPosition;
         Vector2[] backgroundPositions;
-        Func<bool> courseReady;
+        Func<bool> courseReady, wheelScrolling;
+        // When the last ka, arrow or tap started the wheel sliding.
+        double scrolledAt = double.NegativeInfinity;
 
         double Now => GameTimeline.FrameTime * 1000 - startedAt;
         static double Clamp01(double v) => v < 0 ? 0 : v > 1 ? 1 : v;
@@ -165,6 +167,7 @@ namespace OurTaiko
             Manager = SongSelectManager.EnsureInstance();
             Manager.Load(optionArt.hitSounds != null ? optionArt.hitSounds.Count : 0);
             Manager.CourseReady = courseReady = () => CourseFade >= 1;
+            Manager.WheelScrolling = wheelScrolling = () => Now - scrolledAt < MoveMs;
             Manager.SoundRequested += OnSound;
             Manager.VoiceRequested += OnVoice;
             Manager.FolderChanged += OnFolderChanged;
@@ -198,7 +201,7 @@ namespace OurTaiko
         {
             bgm.SetAudioGroup(AudioGroup.Bgm);
             voice.SetAudioGroup(AudioGroup.Voice);
-            sfx.PrepareAudioEffects(don, ka, uraSwitch);
+            sfx.PrepareAudioEffects(don, ka, uraSwitch, skip);
             if (optionArt.hitSounds != null) { sfx.PrepareAudioEffects(optionArt.hitSounds.don); sfx.PrepareAudioEffects(optionArt.hitSounds.ka); }
             voice.PrepareAudioTracks(voiceEnter, voiceStartSong, optionArt.voice);
             bgm.loop = true;
@@ -227,6 +230,7 @@ namespace OurTaiko
             Manager.OptionsClosing -= OnOptionsClosing;
             // A newer song select may already have bound itself.
             if (Manager.CourseReady == courseReady) Manager.CourseReady = null;
+            if (Manager.WheelScrolling == wheelScrolling) Manager.WheelScrolling = null;
         }
 
         void OnSceneChanging(string scene)
@@ -260,7 +264,16 @@ namespace OurTaiko
         // ---------------------------------------------------------------- manager events
 
         void OnSound(SongSelectManager.Sound sound)
-            => sfx.PlayAudioOneShot(sound == SongSelectManager.Sound.Don ? don : sound == SongSelectManager.Sound.Ka ? ka : uraSwitch);
+        {
+            var clip = sound switch
+            {
+                SongSelectManager.Sound.Don => don,
+                SongSelectManager.Sound.Ka => ka,
+                SongSelectManager.Sound.Skip => skip != null ? skip : ka,
+                _ => uraSwitch,
+            };
+            sfx.PlayAudioOneShot(clip);
+        }
 
         void OnVoice(SongSelectManager.Voice clip)
             => PlayVoice(clip == SongSelectManager.Voice.StartSong ? voiceStartSong : optionArt.voice);
@@ -316,6 +329,7 @@ namespace OurTaiko
                 return;
             }
             CancelSwipe();
+            if (reason == SongSelectManager.FocusReason.Navigate) scrolledAt = Now;
             if (reason == SongSelectManager.FocusReason.Navigate && visuals.TryGetValue(previous, out var left) && left.OpenStart >= 0)
             {
                 left.CloseStart = Now; left.OpenStart = -1;

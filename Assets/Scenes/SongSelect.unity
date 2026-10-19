@@ -10366,6 +10366,7 @@ MonoBehaviour:
   don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}
   ka: {fileID: 8300000, guid: b5d46904052a14efdbf9361bde1e09ae, type: 3}
   uraSwitch: {fileID: 8300000, guid: 584dcf6996258458b90f66c715c87b96, type: 3}
+  skip: {fileID: 8300000, guid: 07cd734ee07e4470eb9abf7b22c9b8b6, type: 3}
   voiceEnter: {fileID: 8300000, guid: 42060ffc1700f45f288be7e1ef786e61, type: 3}
   voiceStartSong: {fileID: 8300000, guid: 80438fbb033454f7188ec6ad51c692d4, type: 3}
 --- !u!4 &1134249236

@@ -16,7 +16,7 @@ namespace OurTaiko
     {
         public enum State { Browsing, CourseSelect, Decided }
         public enum ItemKind { Song, Folder, Back, Search }
-        public enum Sound { Don, Ka, UraSwitch }
+        public enum Sound { Don, Ka, UraSwitch, Skip }
         public enum Voice { StartSong, Options }
         public enum FocusReason { Navigate, FolderOpened, FolderClosed }
 
@@ -73,6 +73,8 @@ namespace OurTaiko
         public bool AutoPlay => PlayOptions.Shared.auto;
         // The view: whether the course panel has faded in (it ignores input until then).
         public Func<bool> CourseReady { get; set; }
+        // The view: whether the wheel is still sliding from the last move (a ka now skips).
+        public Func<bool> WheelScrolling { get; set; }
 
         public event Action<Sound> SoundRequested;
         public event Action<Voice> VoiceRequested;
@@ -197,11 +199,12 @@ namespace OurTaiko
             if (Switcher.IsInputBlocked || SearchDialogOpen) return;
             // song_select.cpp: the back key leaves for Entry from any state (an open option panel closes first).
             if (InputManager.GetKeyDown(InputKey.Back)) { Back(); return; }
-            bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft);
-            bool rightKa = InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight);
+            bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa), rightKa = InputManager.GetKeyDown(InputKey.RightKa);
             bool donHit = InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
-            if (leftKa) Left();
-            else if (rightKa) Right();
+            if (leftKa) Ka(-1);
+            else if (rightKa) Ka(+1);
+            else if (InputManager.GetKeyDown(InputKey.MenuLeft)) Left();
+            else if (InputManager.GetKeyDown(InputKey.MenuRight)) Right();
             else if (donHit) Confirm();
         }
 
@@ -237,6 +240,22 @@ namespace OurTaiko
             if (IsOptionPanelOpen) ChangeOption(+1);
             else if (Phase == State.Browsing) Navigate(+1);
             else if (Cursor.Right()) ToggledUra();
+        }
+
+        // CStageSongSelect: a ka while the wheel is still scrolling skips seven boards that way
+        // (tカーソルスキップ, Skip.ogg); otherwise it moves like Left/Right. Only the ka pads skip,
+        // the menu arrows always move one board.
+        public const int SkipBoards = 7;
+
+        public void Ka(int direction)
+        {
+            if (Phase == State.Browsing && !IsOptionPanelOpen && AcceptsInput() && WheelScrolling?.Invoke() == true)
+            {
+                Play(Sound.Skip);
+                Navigate(direction * SkipBoards);
+            }
+            else if (direction < 0) Left();
+            else Right();
         }
 
         public void Confirm()

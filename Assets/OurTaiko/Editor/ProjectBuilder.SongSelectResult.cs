@@ -171,6 +171,7 @@ namespace OurTaiko.Editor
             controller.bgm.clip = Clip("song_select/bgm");
             controller.don = Clip("don"); controller.ka = Clip("ka");
             controller.uraSwitch = Clip("song_select/ura_switch");
+            controller.skip = Clip("song_select/skip");
             controller.voiceEnter = Clip("song_select/voice_enter");
             controller.voiceStartSong = Clip("song_select/voice_start_song_1p");
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), SongSelectPath);
