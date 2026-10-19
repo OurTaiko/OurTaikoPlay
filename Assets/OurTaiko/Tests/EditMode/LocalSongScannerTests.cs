@@ -32,7 +32,7 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void RootChartsSortByFileNameAndPlainFoldersListInline()
+        public void RootChartsSortByPathAndPlainFoldersListInline()
         {
             Write("b.tja", Chart("B"));
             Write("A.TJA", Chart("A"));
@@ -43,21 +43,52 @@ namespace OurTaiko.Tests
             Assert.That(catalog.Folders, Is.Empty);
         }
 
+        // OpenTaiko: a box.def directory is a folder read the same way as the root, so folders nest;
+        // a directory without one lists its charts and folders where the directory itself is.
         [Test]
-        public void BoxDefFoldersHoldEveryChartBelowSortedByTitle()
+        public void BoxDefFoldersNestAndPlainFoldersStayTransparent()
         {
             Write("Anime/box.def", "#TITLE:Anime Songs\n#TITLEJA:アニメ\n#GENRE:アニメ\n");
             Write("Anime/z.tja", Chart("Alpha"));
             Write("Anime/Deep/a.tja", Chart("Zulu"));
+            Write("Anime/Sub/box.def", "#TITLE:Sub\n");
+            Write("Anime/Sub/s.tja", Chart("S"));
+            Write("Anime/Sub/More/box.def", "#GENRE:GAME\n");
+            Write("Anime/Sub/More/m.tja", Chart("M"));
+            Write("Anime/Plain/Boxed/box.def", "#TITLE:Boxed\n");
+            Write("Anime/Plain/Boxed/b.tja", Chart("B"));
             Write("Outer/Inner/box.def", "#TITLE:Inner\n");
+            Write("Outer/Inner/i.tja", Chart("I"));
             Write("Outer/x.tja", Chart("X"));
+            Write("Empty/box.def", "#TITLE:Empty\n");
+            Write("Empty/Nested/box.def", "#TITLE:Nested\n");
             var catalog = LocalSongScanner.Scan(root);
-            Assert.That(catalog.Songs, Is.Empty);
+            Assert.That(catalog.Songs.Select(s => s.Key), Is.EqualTo(new[] { "Outer/x" }));
             Assert.That(catalog.Folders.Select(f => (f.Key, f.Title, f.Genre)),
-                Is.EqualTo(new[] { ("local/Anime", "Anime Songs", "アニメ"), ("local/Outer", "Outer", "") }));
-            Assert.That(catalog.Folders[0].Charts.Select(c => c.Info.Title), Is.EqualTo(new[] { "Alpha", "Zulu" }));
-            Assert.That(catalog.Folders[1].Charts.Single().Key, Is.EqualTo("Outer/x"));
+                Is.EqualTo(new[] { ("local/Anime", "Anime Songs", "アニメ"), ("local/Outer/Inner", "Inner", "") }),
+                "Folders without a chart beneath them are left out.");
+            var anime = catalog.Folders[0];
+            Assert.That(anime.Charts.Select(c => c.Key), Is.EqualTo(new[] { "Anime/Deep/a", "Anime/z" }));
+            Assert.That(anime.Folders.Select(f => (f.Key, f.Title)),
+                Is.EqualTo(new[] { ("local/Anime/Plain/Boxed", "Boxed"), ("local/Anime/Sub", "Sub") }));
+            var sub = anime.Folders[1];
+            Assert.That(sub.Charts.Single().Key, Is.EqualTo("Anime/Sub/s"));
+            Assert.That(sub.Folders.Select(f => (f.Key, f.Title, f.Genre)), Is.EqualTo(new[] { ("local/Anime/Sub/More", "More", "GAME") }));
+            Assert.That(sub.Folders[0].Charts.Single().Key, Is.EqualTo("Anime/Sub/More/m"));
             Assert.That(LocalSongScanner.Scan(root, "ja").Folders[0].Title, Is.EqualTo("アニメ"));
+        }
+
+        [Test]
+        public void BoxDefReadsLocalizedTitlesAndGenreLikeOpenTaiko()
+        {
+            Write("A/box.def", "  #TITLEZH: 动画\n#TITLE: Re:Zero \n#COLLECTION:VOCALOID\n#GENRE:ANIME\n#GENRE:GAME\n; comment\n");
+            Write("A/a.tja", Chart("A"));
+            Write("B/box.def", "#COLLECTION:VOCALOID\n#TITLE:\n");
+            Write("B/b.tja", Chart("B"));
+            var catalog = LocalSongScanner.Scan(root);
+            Assert.That(catalog.Folders.Select(f => (f.Title, f.Genre)), Is.EqualTo(new[] { ("Re:Zero", "GAME"), ("B", "VOCALOID") }));
+            Assert.That(LocalSongScanner.Scan(root, "zh").Folders[0].Title, Is.EqualTo("动画"), "#TITLE<LANG> wins wherever it is.");
+            Assert.That(LocalSongScanner.Scan(root, "ja").Folders[0].Title, Is.EqualTo("Re:Zero"));
         }
 
         [Test]

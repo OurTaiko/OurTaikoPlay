@@ -16,7 +16,8 @@ namespace OurTaiko
         public static string DefaultRoot => Path.Combine(GamePaths.Root, "Songs");
 
         public IReadOnlyList<string> Roots => roots;
-        // Charts outside box.def folders, by file name; then one folder per top-level box.def folder.
+        // Charts outside box.def folders, by path; then the top-level box.def folders, which hold
+        // their own sub-folders.
         public IReadOnlyList<SongDefinition> Songs { get { Complete(); return songs; } }
         public IReadOnlyList<SongFolder> Folders { get { Complete(); return folders; } }
 
@@ -121,16 +122,15 @@ namespace OurTaiko
         {
             var keep = new HashSet<string>();
             songs.Clear(); folders.Clear();
-            foreach (var chart in catalog.Songs) songs.Add(Song(chart, 0, keep));
-            foreach (var folder in catalog.Folders)
+            foreach (var chart in catalog.Songs) songs.Add(Song(chart, null, keep));
+            // OpenTaiko: a song takes its folder's genre when the box.def names one, else its own GENRE.
+            SongFolder Folder(LocalFolder folder) => new SongFolder
             {
-                int genre = Online.OnlineManager.GenreFrame(folder.Genre);
-                folders.Add(new SongFolder
-                {
-                    Key = folder.Key, Title = folder.Title, Genre = genre,
-                    Songs = folder.Charts.Select(chart => Song(chart, genre, keep)).ToArray(),
-                });
-            }
+                Key = folder.Key, Title = folder.Title, Genre = Online.OnlineManager.GenreFrame(folder.Genre),
+                Folders = folder.Folders.Select(Folder).ToArray(),
+                Songs = folder.Charts.Select(chart => Song(chart, folder.Genre, keep)).ToArray(),
+            };
+            folders.AddRange(catalog.Folders.Select(Folder));
             foreach (string key in byKey.Keys.Where(k => !keep.Contains(k)).ToList())
             {
                 Release(byKey[key]);
@@ -138,7 +138,7 @@ namespace OurTaiko
             }
         }
 
-        SongDefinition Song(LocalChart chart, int genre, HashSet<string> keep)
+        SongDefinition Song(LocalChart chart, string folderGenre, HashSet<string> keep)
         {
             if (!byKey.TryGetValue(chart.Key, out var song))
             {
@@ -155,7 +155,7 @@ namespace OurTaiko
             }
             song.audioPath = chart.AudioPath;
             song.localChartSha256 = chart.Sha256;
-            song.genre = genre;
+            song.genre = Online.OnlineManager.GenreFrame(string.IsNullOrEmpty(folderGenre) ? chart.Info.Genre : folderGenre);
             var oni = chart.Info.Course(Difficulty.Oni);
             song.course = (oni ?? chart.Info.Courses[chart.Info.Courses.Count - 1]).Course;
             return song;

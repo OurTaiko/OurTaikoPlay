@@ -20,8 +20,8 @@ namespace OurTaiko
         public enum Voice { StartSong, Options }
         public enum FocusReason { Navigate, FolderOpened, FolderClosed }
 
-        // One board on the wheel. Folder is the folders[] index of a folder or もどる board
-        // (-1: the root もどる), or of the folder a song was opened from.
+        // One board on the wheel. Folder is the folders[] index of a folder board, of the folder a
+        // もどる board closes (-1: the root もどる), or of the folder a song was opened from.
         public sealed class WheelItem
         {
             public ItemKind Kind;
@@ -39,13 +39,16 @@ namespace OurTaiko
             public readonly List<WheelItem> Removed = new List<WheelItem>(), Added = new List<WheelItem>();
         }
 
-        const int BackEvery = 10;
+        // CSongDict.tReinsertBackButtons: an open folder starts with もどる, and another comes before
+        // every seventh board after it.
+        const int BackEvery = 7;
         public const string BackLabel = "もどる";
 
         public static SongSelectManager Instance { get; private set; }
 
         // The local songs (LocalSongLibrary) ahead of the folders: local box.def folders, then server categories.
         public SongDefinition[] Songs { get; private set; } = Array.Empty<SongDefinition>();
+        // Every folder, each followed by the folders inside it (WheelItem.Folder indexes it).
         public IReadOnlyList<SongFolder> Folders => folders;
         public IReadOnlyList<WheelItem> Items => items;
         public int Focused { get; private set; }
@@ -56,10 +59,10 @@ namespace OurTaiko
         public int BoardCount => items.Count;
         public ItemKind KindAt(int index) => items[index].Kind;
         public SongDefinition SongAt(int index) => items[index].Song;
-        // The open folder's key, or null.
-        public string OpenFolder => openFolder >= 0 ? folders[openFolder].Key : null;
-        // The folder song select had open, reopened when it comes back from a song; ServerLogin
-        // closes every folder again (Reset).
+        // The innermost open folder's key, or null.
+        public string OpenFolder => open.Count > 0 ? folders[open[open.Count - 1]].Key : null;
+        // The innermost folder song select had open, reopened with the folders around it when it
+        // comes back from a song; ServerLogin closes every folder again (Reset).
         public string OpenFolderKey { get; private set; }
         public State Phase { get; private set; } = State.Browsing;
         public DifficultyCursor Cursor { get; private set; }
@@ -83,8 +86,12 @@ namespace OurTaiko
 
         readonly List<WheelItem> items = new List<WheelItem>();
         SongFolder[] folders = Array.Empty<SongFolder>();
-        // The open folder, its もどる board's index and how many boards follow it.
-        int openFolder = -1, openAt = -1, openCount;
+        // The folder holding each of folders[], -1 at the root.
+        int[] parents = Array.Empty<int>();
+        // The open folders from the outermost in, each inside the one before: one path is open at a time.
+        readonly List<int> open = new List<int>();
+        // CSongListNode.Openindex: where in each folder (by key) the focus was when it last closed.
+        readonly Dictionary<string, int> openIndex = new Dictionary<string, int>();
         int hitSoundCount;
 
         SceneSwitcher Switcher => SceneSwitcher.EnsureInstance();
@@ -120,12 +127,13 @@ namespace OurTaiko
         }
 
         // ServerLogin: the next song select starts with every folder closed.
-        public void Reset() { OpenFolderKey = null; ClearSearchState(); }
+        public void Reset() { OpenFolderKey = null; openIndex.Clear(); ClearSearchState(); }
 
         // ---------------------------------------------------------------- loading
 
-        // Rebuilds the wheel for a new song select: local songs, the closed folders, the root もどる;
-        // coming back from a song in a folder reopens that folder on the song (reopen_folder_path).
+        // Rebuilds the wheel for a new song select: local songs, the closed top-level folders, the
+        // root もどる; coming back from a song in a folder reopens that folder, and the folders
+        // around it, on the song (reopen_folder_path).
         public void Load(int hitSounds)
         {
             hitSoundCount = hitSounds;
@@ -136,11 +144,21 @@ namespace OurTaiko
             var library = LocalSongLibrary.EnsureInstance();
             var online = Online.OnlineManager.EnsureInstance();
             Songs = library.Songs.ToArray();
-            folders = library.Folders.Concat(online.Folders).ToArray();
+            var all = new List<SongFolder>();
+            var holders = new List<int>();
+            void AddFolder(SongFolder folder, int parent)
+            {
+                int index = all.Count;
+                all.Add(folder); holders.Add(parent);
+                foreach (var sub in folder.Folders) AddFolder(sub, index);
+            }
+            foreach (var folder in library.Folders.Concat(online.Folders)) AddFolder(folder, -1);
+            folders = all.ToArray();
+            parents = holders.ToArray();
             items.Clear();
-            openFolder = -1; openAt = -1; openCount = 0;
+            open.Clear();
             foreach (var song in Songs) items.Add(SongItem(song, -1));
-            for (int f = 0; f < folders.Length; f++) items.Add(new WheelItem { Kind = ItemKind.Folder, Folder = f, Genre = folders[f].Genre });
+            for (int f = 0; f < folders.Length; f++) if (parents[f] < 0) items.Add(FolderItem(f));
             items.Add(NewSearchItem());
             // The root もどる, which returns to Entry.
             items.Add(new WheelItem { Kind = ItemKind.Back });
@@ -150,19 +168,26 @@ namespace OurTaiko
             int reopen = Array.FindIndex(folders, f => f.Key == OpenFolderKey);
             if (reopen >= 0)
             {
-                InsertFolder(FolderItemIndex(reopen), null);
-                int inside = items.FindIndex(openAt, openCount + 1, item => item.Song != null && item.Song == selected);
-                remembered = inside >= 0 ? inside : openAt;
+                var path = new List<int>();
+                for (int f = reopen; f >= 0; f = parents[f]) path.Insert(0, f);
+                foreach (int f in path) InsertFolder(FolderItemIndex(f), null);
+                int outer = AnchorOf(path[0]);
+                int inside = items.FindIndex(outer, BlockEnd(outer, path[0]) - outer, item => item.Song != null && item.Song == selected);
+                remembered = inside >= 0 ? inside : AnchorOf(reopen);
             }
             Focused = remembered >= 0 ? remembered : 0;
             if (SearchActive) BuildSearchWheel(selected);
         }
 
+        // A song wears its folder's genre (the box.def or category it came from) when the folder has
+        // one, else its own (OpenTaiko's songGenre).
         WheelItem SongItem(SongDefinition song, int folder) => new WheelItem
         {
             Kind = ItemKind.Song, Song = song, Info = song.ReadDisplayInfo(), Folder = folder,
-            Genre = folder >= 0 ? folders[folder].Genre : song.genre,
+            Genre = folder >= 0 && folders[folder].Genre != 0 ? folders[folder].Genre : song.genre,
         };
+
+        WheelItem FolderItem(int folder) => new WheelItem { Kind = ItemKind.Folder, Folder = folder, Genre = folders[folder].Genre };
 
         // ---------------------------------------------------------------- input
 
@@ -192,7 +217,7 @@ namespace OurTaiko
             if (SearchDialogOpen) return;
             if (Phase == State.Browsing && SearchActive) { ClearSearch(); return; }
             if (IsOptionPanelOpen) CloseOptions();
-            else if (Phase == State.Browsing && openFolder >= 0) { if (AcceptsInput()) { Play(Sound.Don); CloseFolder(); } }
+            else if (Phase == State.Browsing && open.Count > 0) { if (AcceptsInput()) { Play(Sound.Don); CloseFolder(); } }
             else Switcher.SwitchScene(SceneSwitcher.EntryScene);
         }
 
@@ -328,33 +353,66 @@ namespace OurTaiko
 
         // ---------------------------------------------------------------- folders
 
+        // As in OpenTaiko's song list (CActSelect曲リスト, tOpenBOX/tCloseBOX), an open folder's boards
+        // replace its board inline: its first もどる, then its sub-folders and songs. A sub-folder
+        // opens the same way inside it, so the open folders form one block in another.
+
         int FolderItemIndex(int folder) => items.FindIndex(item => item.Kind == ItemKind.Folder && item.Folder == folder);
 
-        // Opening a folder closes the open one first (collapse_inline_now), then opens inline.
+        // The first もどる of an open folder, where its board was.
+        int AnchorOf(int folder) => items.FindIndex(item => item.Kind == ItemKind.Back && item.Folder == folder);
+
+        // The folder a board lists in, -1 at the root.
+        int Holder(WheelItem item) => item.Kind == ItemKind.Folder ? parents[item.Folder] : item.Folder;
+
+        bool Inside(int folder, int outer)
+        {
+            for (; folder >= 0; folder = parents[folder]) if (folder == outer) return true;
+            return false;
+        }
+
+        // Just past an open folder's boards, those of the folders open inside it included.
+        int BlockEnd(int anchor, int folder)
+        {
+            int end = anchor + 1;
+            while (end < items.Count && Inside(Holder(items[end]), folder)) end++;
+            return end;
+        }
+
+        // Opening a folder first closes the open ones it is not inside (collapse_inline_now), then
+        // opens inline on the board it was left on, else its first もどる.
         public void OpenFolderAt(int index)
         {
             var previous = items[Focused];
             int folder = items[index].Folder;
-            if (openFolder >= 0) { CollapseFolder(); index = FolderItemIndex(folder); }
-            InsertFolder(index, FolderChanged);
-            Focused = openAt;
+            while (open.Count > 0 && !Inside(parents[folder], open[open.Count - 1])) CollapseFolder();
+            InsertFolder(FolderItemIndex(folder), FolderChanged);
+            int anchor = AnchorOf(folder);
+            Focused = anchor + (openIndex.TryGetValue(folders[folder].Key, out int at) && at < BlockEnd(anchor, folder) - anchor ? at : 0);
             OpenFolderKey = folders[folder].Key;
             FocusChanged?.Invoke(previous, FocusReason.FolderOpened);
         }
 
-        // もどる (or Back) closes the folder and focuses its board again.
+        // もどる (or Back) closes the folder the focused board lists in, with any folder open inside
+        // it, and focuses its board again; from a board at the root it closes every open folder.
         public void CloseFolder()
         {
-            if (openFolder < 0) return;
+            if (open.Count == 0) return;
             var previous = items[Focused];
-            int folder = openFolder;
-            CollapseFolder();
+            int holder = Holder(previous), folder = holder >= 0 ? holder : open[0];
+            while (open.Count > 0)
+            {
+                int innermost = open[open.Count - 1];
+                CollapseFolder();
+                if (innermost == folder) break;
+            }
             Focused = FolderItemIndex(folder);
-            OpenFolderKey = null;
+            OpenFolderKey = open.Count > 0 ? folders[open[open.Count - 1]].Key : null;
             FocusChanged?.Invoke(previous, FocusReason.FolderClosed);
         }
 
-        // The folder board becomes もどる; its songs follow, with another もどる every ten songs.
+        // The folder board becomes もどる and its sub-folders, then its songs, follow it, with another
+        // もどる before every seventh of them and after them when they fill the last seven.
         void InsertFolder(int index, Action<FolderChange> notify)
         {
             var folderItem = items[index];
@@ -368,35 +426,47 @@ namespace OurTaiko
                 change.Removed.Add(items[rootBack]);
                 items.RemoveAt(rootBack);
                 if (rootBack < index) index--;
+                if (rootBack < Focused) Focused--;
             }
-            var back = NewBack(folder);
-            change.Added.Add(back);
-            var songsIn = folders[folder].Songs;
-            for (int i = 0; i < songsIn.Length; i++)
+            var boards = new List<WheelItem>();
+            for (int f = 0; f < folders.Length; f++) if (parents[f] == folder) boards.Add(FolderItem(f));
+            boards.AddRange(folders[folder].Songs.Select(song => SongItem(song, folder)));
+            for (int i = 0; i <= boards.Count; i++)
             {
-                if (i > 0 && i % BackEvery == 0) change.Added.Add(NewBack(folder));
-                change.Added.Add(SongItem(songsIn[i], folder));
+                if (i % BackEvery == 0) change.Added.Add(NewBack(folder));
+                if (i < boards.Count) change.Added.Add(boards[i]);
             }
-            items[index] = back;
+            items[index] = change.Added[0];
             items.InsertRange(index + 1, change.Added.Skip(1));
-            openFolder = folder; openAt = index; openCount = change.Added.Count - 1;
+            if (Focused > index) Focused += change.Added.Count - 1;
+            open.Add(folder);
             notify?.Invoke(change);
         }
 
         WheelItem NewBack(int folder) => new WheelItem { Kind = ItemKind.Back, Folder = folder, Genre = folders[folder].Genre };
 
+        // Closes the innermost open folder; the focus stays on the same board, or moves to the
+        // folder's board from inside it (remembered for its next opening).
         void CollapseFolder()
         {
-            var change = new FolderChange { Anchor = items[openAt] };
-            change.Removed.AddRange(items.GetRange(openAt, openCount + 1));
-            var folderItem = new WheelItem { Kind = ItemKind.Folder, Folder = openFolder, Genre = folders[openFolder].Genre };
+            int folder = open[open.Count - 1];
+            int anchor = AnchorOf(folder), end = BlockEnd(anchor, folder);
+            if (Focused >= anchor && Focused < end) openIndex[folders[folder].Key] = Focused - anchor;
+            var change = new FolderChange { Anchor = items[anchor] };
+            change.Removed.AddRange(items.GetRange(anchor, end - anchor));
+            var folderItem = FolderItem(folder);
             change.Added.Add(folderItem);
-            items.RemoveRange(openAt + 1, openCount);
-            items[openAt] = folderItem;
-            var rootBack = new WheelItem { Kind = ItemKind.Back };
-            items.Add(rootBack);
-            change.Added.Add(rootBack);
-            openFolder = -1; openAt = -1; openCount = 0;
+            items.RemoveRange(anchor + 1, end - anchor - 1);
+            items[anchor] = folderItem;
+            if (Focused >= end) Focused -= end - anchor - 1;
+            else if (Focused > anchor) Focused = anchor;
+            open.RemoveAt(open.Count - 1);
+            if (open.Count == 0)
+            {
+                var rootBack = new WheelItem { Kind = ItemKind.Back };
+                items.Add(rootBack);
+                change.Added.Add(rootBack);
+            }
             FolderChanged?.Invoke(change);
         }
 

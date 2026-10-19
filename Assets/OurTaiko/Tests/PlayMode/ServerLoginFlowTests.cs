@@ -524,11 +524,12 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.BoardCount, Is.EqualTo(7));
             yield return Focus(select, 4);
             select.Manager.Confirm();
-            // Pop holds the 1500 odd charts: もどる, then one more もどる after every ten songs.
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(4 + 1 + 1500 + 149 + 1));
+            // Pop holds the 1500 odd charts: もどる, then one more もどる after every seven songs (OpenTaiko).
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(4 + 1 + 1500 + 214 + 1));
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Back));
             Assert.That(select.Manager.SongAt(5).ReadDisplayInfo().Title, Is.EqualTo("Bulk 1"));
-            Assert.That(select.Manager.KindAt(15), Is.EqualTo(SongSelectManager.ItemKind.Back));
+            Assert.That(select.Manager.KindAt(12), Is.EqualTo(SongSelectManager.ItemKind.Back));
+            Assert.That(select.Manager.SongAt(13).ReadDisplayInfo().Title, Is.EqualTo("Bulk 15"));
             Assert.That(select.Manager.SongAt(16).ReadDisplayInfo().Title, Is.EqualTo("Bulk 21"));
             float started = Time.realtimeSinceStartup;
             int frames = 0;

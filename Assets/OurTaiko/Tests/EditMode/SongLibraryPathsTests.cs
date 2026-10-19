@@ -119,6 +119,26 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void NestedFoldersKeepStableKeysAndDropFoldersAnEarlierRootEmptied()
+        {
+            WriteChart(defaultRoot, "Pack/Sub/inner.tja", "Inner");
+            WriteChart(defaultRoot, "Pack/Other/other.tja", "Other");
+            File.WriteAllText(Path.Combine(defaultRoot, "Pack/box.def"), "#TITLE:Pack");
+            File.WriteAllText(Path.Combine(defaultRoot, "Pack/Sub/box.def"), "#TITLE:Sub");
+            File.WriteAllText(Path.Combine(defaultRoot, "Pack/Other/box.def"), "#TITLE:Other");
+            var pack = LocalSongScanner.ScanRoots(new[] { defaultRoot }, defaultRoot).Folders.Single();
+            Assert.That(pack.Key, Is.EqualTo("local/Pack"));
+            Assert.That(pack.Folders.Select(f => f.Key), Is.EqualTo(new[] { "local/Pack/Other", "local/Pack/Sub" }));
+            Assert.That(pack.Folders[1].Charts.Single().Key, Is.EqualTo("Pack/Sub/inner"));
+
+            string sub = Path.Combine(defaultRoot, "Pack", "Sub");
+            var catalog = LocalSongScanner.ScanRoots(new[] { sub, defaultRoot }, defaultRoot);
+            Assert.That(catalog.Songs.Single().Info.Title, Is.EqualTo("Inner"), "The overlapping root lists Sub's chart first.");
+            Assert.That(catalog.Folders.Single().Folders.Select(f => f.Title), Is.EqualTo(new[] { "Other" }),
+                "Sub, emptied by the earlier root, is left out of Pack.");
+        }
+
+        [Test]
         public void MissingDirectoryAndFileDoNotStopOtherLibrariesOrGetCreated()
         {
             string missing = Path.Combine(directory, "missing");

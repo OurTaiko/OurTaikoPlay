@@ -36,7 +36,7 @@ namespace OurTaiko
             int version = ++searchVersion;
             var online = OnlineManager.EnsureInstance();
             var library = LocalSongLibrary.EnsureInstance();
-            var local = library.Songs.Concat(library.Folders.SelectMany(f => f.Songs)).Distinct().Where(query.MatchesLocal).ToList();
+            var local = library.Songs.Concat(library.Folders.SelectMany(f => f.AllSongs())).Distinct().Where(query.MatchesLocal).ToList();
             var replies = await online.Client.SearchAsync(query, cancel);
             cancel.ThrowIfCancellationRequested();
             if (version != searchVersion) return;
@@ -61,7 +61,7 @@ namespace OurTaiko
 
         void BuildSearchWheel(SongDefinition selected)
         {
-            items.Clear(); openFolder = -1; openAt = -1; openCount = 0;
+            items.Clear(); open.Clear();
             foreach (var song in searchSongs.Where(s => s != null))
             {
                 var item = SongItem(song, -1);
