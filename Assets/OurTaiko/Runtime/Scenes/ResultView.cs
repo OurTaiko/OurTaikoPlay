@@ -34,6 +34,8 @@ namespace OurTaiko
         [Header("Two players")]
         [Tooltip("2P's board on the right half (result_player.lua index 1). Empty unless built by OurTaiko/Apply Two Player Result.")]
         public ResultBoardView secondBoard;
+        [Tooltip("2P's score / timing-detail pages and their navigation, on the right half.")]
+        public ResultAnalysisView secondAnalysis;
 
         [Header("Overlays")]
         public TextMeshProUGUI freePlay;

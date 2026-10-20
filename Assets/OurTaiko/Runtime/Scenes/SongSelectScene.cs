@@ -146,7 +146,7 @@ namespace OurTaiko
         OptionPanel optionPanel, optionPanel2P;
         // When 2P joined on this screen (its plate fades in); -inf when it came in already joined.
         double secondJoinedAt = double.NegativeInfinity;
-        Vector2 frame2PPosition, balloon2PPosition;
+        Vector2 frame2PPosition, balloon2PPosition, glow2PPosition;
         Vector2 framePosition, glowPosition, balloonPosition;
         Vector2[] backgroundPositions;
         Func<bool> courseReady, wheelScrolling;

@@ -16,6 +16,8 @@ namespace OurTaiko
         public CanvasGroup offsetControls;
         public ResultPointerControl adjustAudio, adjustJudge;
         public TextMeshProUGUI audioRecommendation, judgeRecommendation, calibrationStatus;
+        [Tooltip("Where the pages rest: 960 for 1P's, 1916 for 2P's on the right half.")]
+        public float pageX = 960;
         PlayResult boundResult;
         string calibrationError;
         public bool Details { get; private set; }
@@ -99,7 +101,7 @@ namespace OurTaiko
             {
                 group.alpha = entering ? t : 1 - t;
                 group.blocksRaycasts = group.interactable = false;
-                ((RectTransform)group.transform).anchoredPosition = new Vector2(960 + direction * (entering ? 1 - t : -t) * 65, -540);
+                ((RectTransform)group.transform).anchoredPosition = new Vector2(pageX + direction * (entering ? 1 - t : -t) * 65, -540);
                 // Hiding the whole root also hides crowns, rank animation and nested canvases.
                 group.gameObject.SetActive(entering || t < 1);
             }

@@ -228,22 +228,30 @@ namespace OurTaiko
         // Oni and Ura share a column; Back and Modifier are their buttons.
         static int CourseSlot(Difficulty difficulty) => difficulty >= Difficulty.Easy ? Math.Min((int)Difficulty.Oni, (int)difficulty) : (int)difficulty;
 
-        // 2P's frame and bubble (difficulty_select_bar2, 2p_balloon) over the same cards.
+        // 2P's cursor by 1P's rules: difficulty_select_bar2 on a card, the button glow on もどる /
+        // オプション, and 2p_balloon above.
         void DrawSecondCursor(DifficultyCursor cursor, float cardX, double ura, float part)
         {
-            var frame2 = view.frame2P; var balloon2 = view.balloon2P;
+            var frame2 = view.frame2P; var balloon2 = view.balloon2P; var glow2 = view.glow2P;
             if (frame2 == null || balloon2 == null) return;
-            if (cursor == null) { frame2.enabled = balloon2.enabled = false; return; }
+            if (cursor == null) { frame2.enabled = balloon2.enabled = false; if (glow2 != null) glow2.enabled = false; return; }
             var selected = cursor.Selected;
             int column = selected >= Difficulty.Easy ? Math.Min((int)Difficulty.Oni, (int)selected) : -1;
             float x = column >= 0 ? cards[column].Board.rectTransform.anchoredPosition.x
                 : (selected == Difficulty.Modifier ? option : back).rectTransform.anchoredPosition.x;
             bool hideForUra = column == 3 && ura >= 0;
-            frame2.enabled = column >= 0 && !hideForUra;
-            balloon2.enabled = !hideForUra;
             // A seat that has decided keeps its cursor on the course, half faded like the original's fade on ready.
+            // Alpha() also switches a graphic on, so the fade comes first and what is shown after.
             float fade = Manager.IsReady(1) || Manager.IsOptionPanelOpenFor(1) ? 0.5f : 1;
             frame2.Alpha(fade); balloon2.Alpha(fade);
+            if (glow2 != null) glow2.Alpha(fade);
+            frame2.enabled = column >= 0 && !hideForUra;
+            balloon2.enabled = !hideForUra;
+            if (glow2 != null)
+            {
+                glow2.enabled = column < 0;
+                glow2.rectTransform.anchoredPosition = glow2PPosition + Vector2.right * (x - back.rectTransform.anchoredPosition.x);
+            }
             frame2.rectTransform.anchoredPosition = frame2PPosition + Vector2.right * (x - cardX);
             balloon2.rectTransform.anchoredPosition = balloon2PPosition + Vector2.right * (x - cardX + part);
         }

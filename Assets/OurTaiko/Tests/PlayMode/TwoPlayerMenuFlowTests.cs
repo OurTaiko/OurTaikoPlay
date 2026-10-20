@@ -102,6 +102,12 @@ namespace OurTaiko.Tests
             // 2P opens its own options on the right; オート is 2P's alone.
             for (int i = 0; i < 3; i++) manager.Left(1);
             Assert.That(manager.CursorOf(1).Selected, Is.EqualTo(Difficulty.Modifier));
+            yield return null;
+            // On a button 2P shows the small button glow, as 1P does, not the course frame.
+            Assert.That(select.view.glow2P.enabled && !select.view.frame2P.enabled, Is.True,
+                $"glow2P {select.view.glow2P.enabled} active {select.view.glow2P.gameObject.activeInHierarchy} frame2P {select.view.frame2P.enabled} glow {select.view.glow.enabled}");
+            Assert.That(Centre(select.view.glow2P).x, Is.EqualTo(Centre(select.view.option).x).Within(0.01f), "The glow sits on オプション.");
+            TestCapture.Capture("SongSelectTwoPlayerButtonGlow.png");
             manager.Confirm(1);
             Assert.That(manager.IsOptionPanelOpenFor(1) && !manager.IsOptionPanelOpen, Is.True);
             Assert.That(select.voice.clip, Is.SameAs(select.voiceOptions2P));
@@ -132,6 +138,13 @@ namespace OurTaiko.Tests
             Assert.That(switcher.AutoPlay2P, Is.True);
             Assert.That(switcher.AutoPlay, Is.False);
             Assert.That(switcher.SelectedPlayScene, Is.EqualTo(SceneSwitcher.DoublePlayScene));
+        }
+
+        static Vector3 Centre(UnityEngine.UI.Graphic graphic)
+        {
+            var corners = new Vector3[4];
+            graphic.rectTransform.GetWorldCorners(corners);
+            return (corners[0] + corners[2]) / 2;
         }
 
         static IEnumerator WaitUntil(System.Func<bool> condition, float seconds)

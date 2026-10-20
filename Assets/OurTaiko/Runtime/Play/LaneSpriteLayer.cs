@@ -5,9 +5,10 @@ namespace OurTaiko
 {
     // Each pass shares one clipped material. Clipping follows its design rectangle
     // after Canvas layout, including window resizing and offscreen test captures.
-    // Only across: as in OpenTaiko, notes that a vertical SCROLL or #JPOSSCROLL takes off the
-    // lane stay drawn over the backgrounds (the HUD above still covers them); the lane's left
-    // edge still hides them, as OpenTaiko's drum panel does.
+    // Only the right edge: as in OpenTaiko, notes that a vertical SCROLL or #JPOSSCROLL takes off
+    // the lane stay drawn over the backgrounds (the HUD above still covers them), and a note
+    // passing the lane's left edge is not cut there: it slides under the player cover, which
+    // LaneForeground draws above the notes like OpenTaiko's drum panel (actMtaiko after the chips).
     [DisallowMultipleComponent, RequireComponent(typeof(SortingGroup))]
     public sealed class LaneSpriteLayer : MonoBehaviour
     {
@@ -51,7 +52,7 @@ namespace OurTaiko
         {
             if (material == null || clipRect == null) return;
             clipRect.GetWorldCorners(corners);
-            var value = new Vector4(corners[0].x, -Unbounded, corners[2].x, Unbounded);
+            var value = new Vector4(-Unbounded, -Unbounded, corners[2].x, Unbounded);
             if (value == previousClip) return;
             material.SetVector(ClipId, value);
             previousClip = value;

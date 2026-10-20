@@ -55,6 +55,7 @@ namespace OurTaiko.Editor
                 copy.gameObject.SetActive(false);
                 EditorUtility.SetDirty(view);
             }
+            if (view.secondAnalysis == null && view.analysis != null) BuildSecondAnalysis(view);
             result.unfilled2P = new[] { "easy", "normal", "hard" }.Select(a => Sprite("result/gauge/2p_unfilled_" + a)).ToArray();
             result.messages2P = Enumerable.Range(4, 4).Select(i => Sprite("result/crown/message/" + i)).ToArray();
             result.highScoreVoice2P = RequiredClip("result/high_score_voice_2p");
@@ -65,6 +66,50 @@ namespace OurTaiko.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("OurTaiko: two-player result board saved.");
+        }
+
+        // 2P's score / timing-detail pages and page controls: copies of 1P's timing page and
+        // navigation moved right with the board, driving 2P's own pages. The continue button stays 1P's.
+        static void BuildSecondAnalysis(ResultView view)
+        {
+            var first = view.analysis;
+            var map = new Dictionary<Object, Object>();
+            var timing = first.detailPage.transform;
+            var timing2P = Object.Instantiate(timing.gameObject, timing.parent).transform;
+            timing2P.name = timing.name + "2P";
+            timing2P.SetSiblingIndex(timing.GetSiblingIndex() + 1);
+            MapHierarchy(timing, timing2P, map);
+            MapHierarchy(first.scorePage.transform, view.secondBoard.transform, map);
+            var navigation = first.transform;
+            var navigation2P = Object.Instantiate(navigation.gameObject, navigation.parent).transform;
+            navigation2P.name = navigation.name + "2P";
+            navigation2P.SetSiblingIndex(navigation.GetSiblingIndex() + 1);
+            ((RectTransform)navigation2P).anchoredPosition += new Vector2(Board2PX, 0);
+            foreach (var component in navigation2P.GetComponentsInChildren<Component>(true))
+            {
+                if (component == null || component is Transform) continue;
+                var serialized = new SerializedObject(component);
+                var property = serialized.GetIterator();
+                bool changed = false;
+                while (property.Next(true))
+                {
+                    if (property.propertyType != SerializedPropertyType.ObjectReference || property.objectReferenceValue == null) continue;
+                    if (!map.TryGetValue(property.objectReferenceValue, out var target)) continue;
+                    property.objectReferenceValue = target;
+                    changed = true;
+                }
+                if (changed) serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+            var second = navigation2P.GetComponent<ResultAnalysisView>();
+            if (second.scorePage == null || second.scorePage.transform != view.secondBoard.transform)
+                second.scorePage = view.secondBoard.GetComponent<CanvasGroup>();
+            second.pageX = first.pageX + Board2PX;
+            second.action.gameObject.SetActive(false);
+            timing2P.gameObject.SetActive(false);
+            navigation2P.gameObject.SetActive(false);
+            view.secondAnalysis = second;
+            EditorUtility.SetDirty(second);
+            EditorUtility.SetDirty(view);
         }
 
         static void Lay2PBoard(Transform page, ResultBoardView board)

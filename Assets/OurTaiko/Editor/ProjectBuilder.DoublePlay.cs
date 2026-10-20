@@ -50,10 +50,11 @@ namespace OurTaiko.Editor
             {
                 BuildSecondLane(play);
                 TwoPlayerBackground(play);
-                EditorUtility.SetDirty(play);
-                EditorSceneManager.MarkSceneDirty(scene);
-                EditorSceneManager.SaveScene(scene);
             }
+            MirrorSecondReadouts(play);
+            EditorUtility.SetDirty(play);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
             if (!EditorBuildSettings.scenes.Any(s => s.path == DoublePlayScenePath))
                 EditorBuildSettings.scenes = EditorBuildSettings.scenes.Append(new EditorBuildSettingsScene(DoublePlayScenePath, true)).ToArray();
             AssetDatabase.SaveAssets();
@@ -97,12 +98,54 @@ namespace OurTaiko.Editor
             var views = lane2.gameObject.AddComponent<LaneViews>();
             foreach (var field in typeof(LaneViews).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
             {
-                // The judge counter is 1P's only (Player::Player: judge_counter && !is_2p).
+                // 2P's judge counter is its own copy (MirrorSecondReadouts).
                 if (field.Name == nameof(LaneViews.judgeCounter)) continue;
                 field.SetValue(views, Remap(field.GetValue(play), map));
             }
             Lay2P(lane, lane2, views);
             play.secondLane = views;
+        }
+
+        // 2P's timing feedback and judge counter (user decision, 2026-10-20; YataiDON gives 2P no
+        // judge counter) sit below the 2P lane, mirrored from 1P's across the line between the lanes.
+        static void MirrorSecondReadouts(PlayScene play)
+        {
+            var views = play.secondLane;
+            var viewport = (RectTransform)play.noteLayer.GetComponentInParent<Canvas>().rootCanvas.transform.Find("Viewport1920x1080");
+            var lane1 = (RectTransform)play.noteLayer.parent.parent;
+            var lane2 = (RectTransform)views.transform;
+            // A scene just opened has not been laid out: its canvas scale would make every box a point.
+            Canvas.ForceUpdateCanvases();
+            if (Bounds(viewport, lane1).height < 1) throw new InvalidOperationException("The play canvas is not laid out.");
+            float split = (Bounds(viewport, lane1).yMin + Bounds(viewport, lane2).yMax) / 2;
+            if (views.judgeCounter == null && play.judgeCounter != null)
+            {
+                var copy = Object.Instantiate(play.judgeCounter.gameObject, play.judgeCounter.transform.parent);
+                copy.name = play.judgeCounter.name + "2P";
+                copy.transform.SetSiblingIndex(play.judgeCounter.transform.GetSiblingIndex() + 1);
+                views.judgeCounter = copy.GetComponent<JudgeCounterView>();
+            }
+            if (views.judgeCounter != null) MirrorAcross(viewport, play.judgeCounter.transform, views.judgeCounter.transform, split);
+            if (views.timingFeedback != null) MirrorAcross(viewport, play.timingFeedback.transform, views.timingFeedback.transform, split);
+            EditorUtility.SetDirty(views);
+        }
+
+        static UnityEngine.Rect Bounds(RectTransform space, Transform target)
+        {
+            var corners = new Vector3[4];
+            ((RectTransform)target).GetWorldCorners(corners);
+            Vector2 a = space.InverseTransformPoint(corners[0]), b = space.InverseTransformPoint(corners[2]);
+            return UnityEngine.Rect.MinMaxRect(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y), Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y));
+        }
+
+        // Moves target (a copy of source) so its box is source's box reflected across y = split; the
+        // contents keep their upright layout.
+        static void MirrorAcross(RectTransform space, Transform source, Transform target, float split)
+        {
+            var from = Bounds(space, source);
+            var at = Bounds(space, target);
+            var wanted = new Vector2(from.center.x, 2 * split - from.center.y);
+            target.position += space.TransformVector(wanted - at.center);
         }
 
         static void MapHierarchy(Transform source, Transform copy, Dictionary<Object, Object> map)

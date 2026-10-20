@@ -170,6 +170,7 @@ namespace OurTaiko
             balloonPosition = balloon.rectTransform.anchoredPosition;
             if (view.frame2P != null) frame2PPosition = view.frame2P.rectTransform.anchoredPosition;
             if (view.balloon2P != null) balloon2PPosition = view.balloon2P.rectTransform.anchoredPosition;
+            if (view.glow2P != null) glow2PPosition = view.glow2P.rectTransform.anchoredPosition;
             AddClick(back, Difficulty.Back);
             AddClick(option, Difficulty.Modifier);
             for (int i = 0; i < cards.Length; i++)

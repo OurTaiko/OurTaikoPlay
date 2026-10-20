@@ -25,6 +25,8 @@ namespace OurTaiko
         public Image mark, backboard, back, option, auto, frame, glow, balloon, uraChange;
         [Tooltip("2P's course cursor: difficulty_select_bar2 under the cards and 2p_balloon above them.")]
         public Image frame2P, balloon2P;
+        [Tooltip("2P's glow on もどる / オプション, like 1P's glow.")]
+        public Image glow2P;
         public TextMeshProUGUI header, headerSub;
         public CourseCardView[] cards;
         public OptionPanelView options;

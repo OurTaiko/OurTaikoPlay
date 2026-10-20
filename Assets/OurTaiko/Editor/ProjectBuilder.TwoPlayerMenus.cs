@@ -57,6 +57,15 @@ namespace OurTaiko.Editor
                 view.balloon2P = SecondImage(view.balloon, "PlayerBalloon2P", "song_select/diff_select/2p_balloon");
                 changed = true;
             }
+            if (view.glow2P == null)
+            {
+                view.glow2P = Object.Instantiate(view.glow.gameObject, view.glow.transform.parent).GetComponent<Image>();
+                view.glow2P.name = "ButtonGlow2P";
+                view.glow2P.transform.SetSiblingIndex(view.glow.transform.GetSiblingIndex() + 1);
+                view.glow2P.raycastTarget = false;
+                view.glow2P.enabled = false;
+                changed = true;
+            }
             if (view.options2P == null)
             {
                 var source = PrefabUtility.GetCorrespondingObjectFromSource(view.options.gameObject);

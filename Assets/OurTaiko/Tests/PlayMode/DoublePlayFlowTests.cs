@@ -51,6 +51,14 @@ namespace OurTaiko.Tests
         }
         void ReleaseAll() => InputSystem.QueueStateEvent(keyboard, new KeyboardState(), clock += 0.001);
 
+        // A rect's box in screen-space world coordinates.
+        static Rect Corners(Transform target)
+        {
+            var corners = new Vector3[4];
+            ((RectTransform)target).GetWorldCorners(corners);
+            return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+        }
+
         static IEnumerator PlayBoth(SongDefinition song, bool auto1P = false)
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
@@ -81,6 +89,15 @@ namespace OurTaiko.Tests
             Assert.That(first.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.Zero, "1P reads the P1 block.");
             Assert.That(second.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.EqualTo(1), "2P reads the P2 block.");
             Assert.That(play.dancers, Is.Null, "Two players have no dancers.");
+            // 2P's timing feedback and judge counter mirror 1P's across the line between the lanes.
+            float split = (Corners(play.noteLayer.parent.parent).yMin + Corners(play.secondLane.transform).yMax) / 2;
+            foreach (var (one, two) in new[] { ((Component)play.timingFeedback, (Component)play.secondLane.timingFeedback), (play.judgeCounter, play.secondLane.judgeCounter) })
+            {
+                Assert.That(two, Is.Not.Null);
+                var a = Corners(one.transform); var b = Corners(two.transform);
+                Assert.That(b.center.y, Is.EqualTo(2 * split - a.center.y).Within(0.5f), two.name + " mirrors " + one.name);
+                Assert.That(b.center.x, Is.EqualTo(a.center.x).Within(0.5f));
+            }
 
             float deadline = Time.realtimeSinceStartup + 10;
             while (play.SongTime < 0.5)
@@ -109,6 +126,7 @@ namespace OurTaiko.Tests
             Assert.That(second.Rolls, Is.EqualTo(2));
             Assert.That(play.Lanes[1].Record.Inputs.Count, Is.EqualTo(2));
             Assert.That(play.Lanes[0].Record.Inputs.Count, Is.EqualTo(1));
+            Assert.That(play.secondLane.judgeCounter.gameObject.activeInHierarchy, Is.True);
             ReleaseAll(); yield return null;
             Object.Destroy(song);
         }
@@ -152,6 +170,19 @@ namespace OurTaiko.Tests
                 Assert.That(result.Boards.All(b => b.Sequence.RevealEndMs > 0), Is.True, "One don skips both boards.");
                 yield return new WaitForSecondsRealtime(0.5f);
                 TestCapture.Capture("ResultTwoPlayers.png");
+
+                // Each seat's ka turns only its own board's pages.
+                yield return null;
+                result.ChangePage(1, 1);
+                Assert.That(result.view.secondAnalysis.Details, Is.True);
+                Assert.That(result.view.analysis.Details, Is.False);
+                yield return new WaitForSecondsRealtime(0.3f);
+                TestCapture.Capture("ResultTwoPlayersDetail2P.png");
+                result.ChangePage(0, 1);
+                Assert.That(result.view.analysis.Details && result.view.secondAnalysis.Details, Is.True);
+                result.ChangePage(1, -1);
+                Assert.That(result.view.secondAnalysis.Details, Is.False);
+                Assert.That(result.view.analysis.Details, Is.True);
             }
             finally { ScoreStore.Shared = scores; }
             Object.Destroy(song);

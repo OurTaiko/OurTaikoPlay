@@ -356,7 +356,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.NoteRoot(0), Is.SameAs(root.transform), "A finished roll must flow past the judge instead of vanishing.");
                 Assert.That(play.noteLayer.InverseTransformPoint(tail.position).x, Is.EqualTo(120 - 0.1 * speed).Within(1), "Whole pixels.");
                 render.Invoke(play, new object[] { note.EndTime + 2 });
-                Assert.That(play.NoteRoot(0), Is.Null, "The roll unloads once its tail has left the lane.");
+                Assert.That(play.NoteRoot(0), Is.Null, "The roll unloads once its tail has left the screen.");
                 Assert.That(root.activeSelf, Is.False, "An unloaded view returns to the pool inactive.");
                 // A missed normal note flows on as well; a hit one is removed.
                 var hitNote = play.Session.Chart.Notes[1];
@@ -370,10 +370,14 @@ namespace OurTaiko.Tests
                 Assert.That(play.NoteRoot(2), Is.Not.Null, "A missed note must flow past the judge.");
                 var don = play.NoteRoot(2).gameObject;
                 Assert.That(((RectTransform)don.transform).anchoredPosition.x, Is.EqualTo(120 - 0.2 * speed).Within(1), "Whole pixels.");
-                // Culling follows the live lane clip and note size, not fixed pixels:
-                // the note stays until its right edge passes the lane's left edge.
+                // Culling follows the live layout and note size, not fixed pixels: the note stays
+                // until its right edge passes the screen's left edge (it is under the cover from the lane's).
                 float halfWidth = ((RectTransform)don.transform).rect.width / 2;
-                double exit = donNote.Time + (120 + halfWidth) / speed;
+                var corners = new Vector3[4];
+                ((RectTransform)play.noteLayer.parent.parent).GetWorldCorners(corners);
+                float margin = play.noteLayer.rect.xMin - play.noteLayer.InverseTransformPoint(corners[0]).x;
+                Assert.That(margin, Is.EqualTo(498).Within(1), "The lane starts 498 px from the screen's edge.");
+                double exit = donNote.Time + (120 + halfWidth + margin) / speed;
                 render.Invoke(play, new object[] { exit - 0.005 });
                 Assert.That(play.NoteRoot(2), Is.Not.Null);
                 render.Invoke(play, new object[] { exit + 0.005 });

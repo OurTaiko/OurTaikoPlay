@@ -77,7 +77,9 @@ namespace OurTaiko
         ResultBackground background, fadeIn;
         readonly List<ResultBoard> boards = new List<ResultBoard>();
         double sceneStart, revealStart = -1;
-        int lastActionFrame = -1, countLoops;
+        int countLoops;
+        // The frame each seat last acted on (1P and 2P can turn their own pages in the same frame).
+        readonly int[] lastActionFrame = { -1, -1 };
 
         double Clock => GameTimeline.FrameTime * 1000;
         double Reveal => revealStart < 0 ? -1 : Clock - revealStart;
@@ -98,6 +100,14 @@ namespace OurTaiko
             boards.Add(new ResultBoard(this, 0, view, Result, result2P != null));
             if (view.secondBoard != null) view.secondBoard.gameObject.SetActive(result2P != null);
             if (result2P != null) boards.Add(new ResultBoard(this, 1, view.secondBoard, result2P, true));
+            if (view.secondAnalysis != null)
+            {
+                view.secondAnalysis.gameObject.SetActive(result2P != null);
+                if (result2P != null) BindAnalysis(view.secondAnalysis, result2P, 1);
+                else view.secondAnalysis.detailPage.gameObject.SetActive(false);
+            }
+            // 2P's page controls take the bottom right, where the credit line sits.
+            if (result2P != null && view.freePlay != null) view.freePlay.gameObject.SetActive(false);
             switcher.SceneChanging += OnSceneChanging;
         }
 
@@ -184,6 +194,7 @@ namespace OurTaiko
             foreach (var board in boards) board.Advance(now, clock);
             HandleInput();
             if (view.analysis != null) view.analysis.SetReady(CanAdvance);
+            if (boards.Count > 1 && view.secondAnalysis != null) view.secondAnalysis.SetReady(CanAdvance);
 
             // result animation 15: the backdrop drawn on top, faded out after 100 ms over 316.67 ms.
             float cover = 1 - (float)Math.Min(1, Math.Max(0, (now - ResultSequence.FadeInDelayMs) / ResultSequence.FadeInMs));
@@ -197,22 +208,28 @@ namespace OurTaiko
         bool RevealEnded => boards.All(board => board.Sequence.RevealEndMs > 0);
         bool CanAdvance => boards.All(board => board.Sequence.CanAdvance);
 
+        // Each seat's first drum press of the frame: its ka turns its own board's pages, a don from
+        // either seat skips or leaves.
         void HandleInput()
         {
-            foreach (var press in InputManager.PressesThisFrame)
-            {
-                if (!press.Key.IsDrum()) continue;
-                if (press.Key.IsKa()) ChangePage(press.Key.IsRight() ? 1 : -1);
-                else Don();
-                return;
-            }
+            for (int seat = 0; seat < InputManager.Players.Count; seat++)
+                foreach (var press in InputManager.Players[seat].PressesThisFrame)
+                {
+                    if (press.Key.IsKa()) ChangePage(seat, press.Key.IsRight() ? 1 : -1);
+                    else Don(seat);
+                    break;
+                }
         }
 
+        ResultAnalysisView AnalysisOf(int seat) => seat == 0 ? view.analysis : boards.Count > 1 ? view.secondAnalysis : null;
+
         // ResultScreen::handle_input: a don press skips the reveal, or leaves once it has settled.
-        public void Don()
+        public void Don() => Don(0);
+
+        void Don(int seat)
         {
-            if (!CanAct()) return;
-            lastActionFrame = Time.frameCount;
+            if (!CanAct(seat)) return;
+            lastActionFrame[0] = lastActionFrame[1] = Time.frameCount;
             if (!RevealEnded)
             {
                 if (!SkipAll()) return;
@@ -225,8 +242,8 @@ namespace OurTaiko
             Leave();
         }
 
-        bool CanAct() => !IsLeaving && !switcher.IsInputBlocked && revealStart >= 0
-            && Sequence.FadeInFinished && lastActionFrame != Time.frameCount;
+        bool CanAct(int seat) => !IsLeaving && !switcher.IsInputBlocked && revealStart >= 0
+            && Sequence.FadeInFinished && lastActionFrame[seat] != Time.frameCount;
 
         // Lands every board's reveal at once; false when none could skip.
         bool SkipAll()
@@ -237,21 +254,27 @@ namespace OurTaiko
             return skipped;
         }
 
-        public void ChangePage(int direction) => ShowPage(!(view.analysis?.Details ?? false), direction);
+        public void ChangePage(int direction) => ChangePage(0, direction);
+        public void ChangePage(int seat, int direction) => ShowPage(seat, !(AnalysisOf(seat)?.Details ?? false), direction);
 
-        void AdjustTiming(bool audio)
+        void AdjustTiming(int seat, bool audio)
         {
-            if (!CanAct() || view.analysis == null || !view.analysis.ApplyOffset(audio)) return;
-            lastActionFrame = Time.frameCount;
+            var analysis = AnalysisOf(seat);
+            if (!CanAct(seat) || analysis == null || !analysis.ApplyOffset(audio)) return;
+            lastActionFrame[seat] = Time.frameCount;
             sfx.PlayAudioOneShot(don);
         }
 
-        public void ShowPage(bool details, int direction = 1)
+        public void ShowPage(bool details, int direction = 1) => ShowPage(0, details, direction);
+
+        // One board's score / timing-detail pages; the first turn also lands every reveal.
+        public void ShowPage(int seat, bool details, int direction = 1)
         {
-            if (!CanAct() || view.analysis == null || view.analysis.IsTransitioning || view.analysis.Details == details) return;
-            lastActionFrame = Time.frameCount;
+            var analysis = AnalysisOf(seat);
+            if (!CanAct(seat) || analysis == null || analysis.IsTransitioning || analysis.Details == details) return;
+            lastActionFrame[seat] = Time.frameCount;
             if (!RevealEnded && !SkipAll()) return;
-            view.analysis.SetPage(details, direction);
+            analysis.SetPage(details, direction);
         }
 
         void Leave()
@@ -311,22 +334,24 @@ namespace OurTaiko
 
             // ResultScreen::draw_overlay: coin_overlay's credit line (result shows no chip or invite), over the wipe.
             if (overlay != null) Coins = new CoinOverlayView(overlay, view.freePlay, null, null, null, null);
-            if (view.analysis != null)
+            if (view.analysis != null) BindAnalysis(view.analysis, Result, 0);
+        }
+
+        // A board's pages: its own result, page controls and timing adjustments.
+        void BindAnalysis(ResultAnalysisView analysis, PlayResult result, int seat)
+        {
+            analysis.Bind(result);
+            analysis.action.Clicked = Don;
+            analysis.previous.Clicked = () => ChangePage(seat, -1);
+            analysis.next.Clicked = () => ChangePage(seat, 1);
+            analysis.scoreDot.Clicked = () => ShowPage(seat, false, -1);
+            analysis.detailDot.Clicked = () => ShowPage(seat, true, 1);
+            analysis.swipeArea.Swiped = direction => ChangePage(seat, direction);
+            if (analysis.adjustAudio != null)
             {
-                var analysis = view.analysis;
-                analysis.Bind(Result);
-                analysis.action.Clicked = Don;
-                analysis.previous.Clicked = () => ChangePage(-1);
-                analysis.next.Clicked = () => ChangePage(1);
-                analysis.scoreDot.Clicked = () => ShowPage(false, -1);
-                analysis.detailDot.Clicked = () => ShowPage(true, 1);
-                analysis.swipeArea.Swiped = ChangePage;
-                if (analysis.adjustAudio != null)
-                {
-                    analysis.adjustAudio.Clicked = () => AdjustTiming(true);
-                    analysis.adjustJudge.Clicked = () => AdjustTiming(false);
-                    analysis.adjustAudio.Swiped = analysis.adjustJudge.Swiped = ChangePage;
-                }
+                analysis.adjustAudio.Clicked = () => AdjustTiming(seat, true);
+                analysis.adjustJudge.Clicked = () => AdjustTiming(seat, false);
+                analysis.adjustAudio.Swiped = analysis.adjustJudge.Swiped = direction => ChangePage(seat, direction);
             }
         }
     }
