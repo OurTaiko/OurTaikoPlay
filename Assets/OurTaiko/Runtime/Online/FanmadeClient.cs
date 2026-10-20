@@ -356,27 +356,39 @@ namespace OurTaiko.Online
         static bool ValidCategory(string id) => id.Length > 0 && id.Length <= 64 && id[0] >= 'a' && id[0] <= 'z'
             && id.All(c => (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-');
 
-        // The account's best on this chart and course; null for a guest.
-        public FanmadeScore Best(FanmadeChart chart, int difficulty)
+        // The block a seat plays on this course (ChartSide): 1P's is Difficulties[course].
+        static FanmadeDifficulty SeatBlock(FanmadeChart chart, int difficulty, int seat)
+            => chart == null || difficulty < 0 || difficulty >= 5 ? null
+                : seat == 0 ? chart.Difficulties[difficulty] : chart.Block(difficulty, ChartSide.Seats[seat]);
+
+        // Only 1P logs in to a server; 2P has no account yet (user decision, 2026-10-20), so its
+        // scores are neither looked up nor uploaded.
+        static bool HasAccount(FanmadeEndpoint e, int seat) => seat == 0 && e.IsAuthenticated;
+
+        // The seat's account's best on this chart and course; null for a guest.
+        public FanmadeScore Best(FanmadeChart chart, int difficulty, int seat = 0)
         {
-            if (chart == null || difficulty < 0 || difficulty >= 5 || chart.Difficulties[difficulty] == null) return null;
+            var block = SeatBlock(chart, difficulty, seat);
+            if (block == null) return null;
             lock (sync)
             {
                 var e = endpoints.Find(x => x.Id == chart.Server);
-                return e != null && e.Best.TryGetValue(FanmadeEndpoint.ScoreKey(chart.Id, chart.Difficulties[difficulty].Name), out var best) ? best : null;
+                return e != null && HasAccount(e, seat) && e.Best.TryGetValue(FanmadeEndpoint.ScoreKey(chart.Id, block.Name), out var best) ? best : null;
             }
         }
 
         // Queues a finished play of a logged-in account, then sends it in the background. Guests
         // and unknown charts are not uploaded. The request body and its idempotency key are fixed
         // when queued, so retries never create a second score.
-        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null)
+        // seat picks the block played (2P reads p2, then single, then p1) and the account it belongs to.
+        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0)
         {
-            if (chart == null || difficulty < 0 || difficulty >= 5 || chart.Difficulties[difficulty] == null) return false;
+            var block = SeatBlock(chart, difficulty, seat);
+            if (block == null) return false;
             var e = Endpoint(chart.Server);
-            if (e == null || !e.IsConnected || !e.IsAuthenticated) return false;
+            if (e == null || !e.IsConnected || !HasAccount(e, seat)) return false;
             // The block that was played names the song and course.
-            var body = new JObject { ["difficultyId"] = chart.Difficulties[difficulty].Id };
+            var body = new JObject { ["difficultyId"] = block.Id };
             body["good"] = score.Good; body["ok"] = score.Ok; body["bad"] = score.Bad; body["score"] = score.Score;
             body["drumroll"] = score.Drumroll; body["max_combo"] = score.MaxCombo;
             body["ClearStatus"] = score.ClearStatus;

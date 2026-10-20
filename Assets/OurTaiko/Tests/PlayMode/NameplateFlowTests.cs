@@ -173,13 +173,15 @@ namespace OurTaiko.Tests
                 SceneSwitcher.Instance.SwitchScene(SceneSwitcher.SongSelectScene);
                 yield return WaitForScene(SceneSwitcher.SongSelectScene);
                 var select = Object.FindFirstObjectByType<SongSelectScene>();
-                var plate = Object.FindFirstObjectByType<NameplateView>();
+                var plate = select.view.nameplate;
                 Assert.That(plate, Is.Not.Null);
-                // song_select_nameplate_1p (14, 908): over the wheel, under the course panel and its option panel.
+                // song_select_nameplate_1p (14, 908): over the wheel, under the course panel and its option panel
+                // (2P's plate, when it joins, sits on the same layer).
                 Assert.That(plate.RectTransform.anchoredPosition, Is.EqualTo(new Vector2(14, -908)));
                 Assert.That(plate.transform.parent, Is.SameAs(select.coursePanel.parent));
                 Assert.That(plate.transform.GetSiblingIndex(), Is.EqualTo(select.wheel.GetSiblingIndex() + 1));
-                Assert.That(plate.transform.GetSiblingIndex(), Is.EqualTo(select.coursePanel.GetSiblingIndex() - 1));
+                Assert.That(plate.transform.GetSiblingIndex(), Is.LessThan(select.coursePanel.GetSiblingIndex()));
+                Assert.That(select.view.nameplate2P.transform.GetSiblingIndex(), Is.LessThan(select.coursePanel.GetSiblingIndex()));
                 Assert.That(plate.dan.sprite, Is.SameAs(plate.danEmblems[10]));
                 yield return new WaitForSecondsRealtime(0.5f);
                 TestCapture.Capture("NameplateSongSelect.png");
@@ -192,7 +194,7 @@ namespace OurTaiko.Tests
                 SceneSwitcher.Instance.ShowResult(run);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
                 var result = Object.FindFirstObjectByType<ResultScene>();
-                plate = Object.FindFirstObjectByType<NameplateView>();
+                plate = result.view.nameplate;
                 // result_player.lua nameplate_pos (2, 922), drawn after the board and before the fade-in wipe.
                 Assert.That(plate.transform.parent, Is.SameAs(result.view.analysis.scorePage.transform));
                 Assert.That(plate.RectTransform.anchoredPosition, Is.EqualTo(new Vector2(2, -922)));

@@ -471,7 +471,13 @@
     "Skins/YataiDONNijiiro/Graphics/result/gauge/2p_bar.png",
     "Skins/YataiDONNijiiro/Graphics/result/gauge/2p_unfilled_easy.png",
     "Skins/YataiDONNijiiro/Graphics/result/gauge/2p_unfilled_normal.png",
-    "Skins/YataiDONNijiiro/Graphics/result/gauge/2p_unfilled_hard.png"
+    "Skins/YataiDONNijiiro/Graphics/result/gauge/2p_unfilled_hard.png",
+    "Skins/YataiDONNijiiro/Graphics/result/score/overlay/1.png",
+    "Skins/YataiDONNijiiro/Graphics/result/bottom/chara_0/1.png",
+    "Skins/YataiDONNijiiro/Graphics/result/crown/message/4.png",
+    "Skins/YataiDONNijiiro/Graphics/result/crown/message/5.png",
+    "Skins/YataiDONNijiiro/Graphics/result/crown/message/6.png",
+    "Skins/YataiDONNijiiro/Graphics/result/crown/message/7.png"
   ],
   "other": [
     "Skins/PyTaikoGreen/Sounds/result/clear_voice_1p.ogg",

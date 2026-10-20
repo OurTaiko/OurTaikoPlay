@@ -119,6 +119,7 @@ namespace OurTaiko.Editor
             }
         }
 
+        // A view field pointed at the clone: objects through the map, arrays and [Serializable] rows copied.
         static object Remap(object value, Dictionary<Object, Object> map)
         {
             if (value is Object obj) return obj != null && map.TryGetValue(obj, out var target) ? target : null;
@@ -126,6 +127,13 @@ namespace OurTaiko.Editor
             {
                 var copy = Array.CreateInstance(array.GetType().GetElementType(), array.Length);
                 for (int i = 0; i < array.Length; i++) copy.SetValue(Remap(array.GetValue(i), map), i);
+                return copy;
+            }
+            if (value != null && value.GetType().IsClass && value.GetType().IsSerializable && !(value is string))
+            {
+                var copy = Activator.CreateInstance(value.GetType());
+                foreach (var field in value.GetType().GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+                    field.SetValue(copy, Remap(field.GetValue(value), map));
                 return copy;
             }
             return value;

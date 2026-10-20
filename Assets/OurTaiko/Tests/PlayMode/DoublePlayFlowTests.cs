@@ -118,20 +118,42 @@ namespace OurTaiko.Tests
         {
             // A one-measure chart at 240 BPM ends a second after its last note (no audio).
             var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.name = "Two Players End " + System.Guid.NewGuid();
             song.chart = new TextAsset("TITLE:Two Players End\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1,\n#END");
-            yield return PlayBoth(song, auto1P: true);
-            float deadline = Time.realtimeSinceStartup + 30;
-            while (SceneManager.GetActiveScene().name != SceneSwitcher.ResultScene)
+            var scores = ScoreStore.Shared;
+            ScoreStore.Shared = new ScoreStore(System.IO.Path.Combine(Application.temporaryCachePath, "two-players-" + System.Guid.NewGuid() + ".sqlite3"));
+            try
             {
-                var play = Object.FindFirstObjectByType<PlayScene>();
-                if (play != null && play.IsPaused) play.TogglePause();
-                yield return null;
-                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                yield return PlayBoth(song, auto1P: true);
+                float deadline = Time.realtimeSinceStartup + 30;
+                while (SceneManager.GetActiveScene().name != SceneSwitcher.ResultScene)
+                {
+                    var play = Object.FindFirstObjectByType<PlayScene>();
+                    if (play != null && play.IsPaused) play.TogglePause();
+                    yield return null;
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                }
+                Assert.That(SceneSwitcher.Instance.LastResult, Is.Not.Null);
+                Assert.That(SceneSwitcher.Instance.LastResult2P, Is.Not.Null);
+                Assert.That(SceneSwitcher.Instance.LastResult.Good, Is.EqualTo(1), "1P played automatically.");
+                Assert.That(SceneSwitcher.Instance.LastResult2P.Bad, Is.EqualTo(1), "2P did not hit the don.");
+
+                // result_2p: 2P's board on the right with its nameplate; both reveal and skip together.
+                var result = Object.FindFirstObjectByType<ResultScene>();
+                Assert.That(result.Boards.Count, Is.EqualTo(2));
+                Assert.That(result.view.secondBoard.gameObject.activeSelf, Is.True);
+                Assert.That(result.view.secondBoard.nameplate.seat, Is.EqualTo(1));
+                Assert.That(((RectTransform)result.view.secondBoard.transform).position.x, Is.GreaterThan(((RectTransform)result.view.crown.transform.parent).position.x));
+                // Local charts keep every seat's score; 1P played automatically and is not saved.
+                Assert.That(ScoreStore.Shared.Get(song.ScoreKey, Difficulty.Oni)?.bad, Is.EqualTo(1));
+                deadline = Time.realtimeSinceStartup + 10;
+                while (!result.Sequence.FadeInFinished) { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
+                result.Don();
+                Assert.That(result.Boards.All(b => b.Sequence.RevealEndMs > 0), Is.True, "One don skips both boards.");
+                yield return new WaitForSecondsRealtime(0.5f);
+                TestCapture.Capture("ResultTwoPlayers.png");
             }
-            Assert.That(SceneSwitcher.Instance.LastResult, Is.Not.Null);
-            Assert.That(SceneSwitcher.Instance.LastResult2P, Is.Not.Null);
-            Assert.That(SceneSwitcher.Instance.LastResult.Good, Is.EqualTo(1), "1P played automatically.");
-            Assert.That(SceneSwitcher.Instance.LastResult2P.Bad, Is.EqualTo(1), "2P did not hit the don.");
+            finally { ScoreStore.Shared = scores; }
             Object.Destroy(song);
         }
     }
