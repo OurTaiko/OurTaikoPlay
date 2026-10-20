@@ -63,6 +63,8 @@ namespace OurTaiko
         [Header("Audio")]
         public AudioSource bgm, preview, sfx, voice;
         public AudioClip don, ka, uraSwitch, skip, voiceEnter, voiceStartSong;
+        [Tooltip("voice_start_song_2p, voice_options_2p and entry_2p_add (2P joins).")]
+        public AudioClip voiceStartSong2P, voiceOptions2P, secondJoined;
 
         const double MoveMs = 166, OpenHoldMs = 61 / 120.0 * 1000, OpenGrowMs = 233, CloseMs = 13 / 0.06, FolderCloseMs = 8 / 0.06;
         const double CourseExitMoveMs = 500, CourseEnterMoveMs = 800, BoardFadeMs = 166;
@@ -141,7 +143,10 @@ namespace OurTaiko
         Sprite[] uraToUraCells, uraToOniCells;
         Image mark, backboard, back, option, auto, frame, glow, balloon, uraChange;
         TextMeshProUGUI header, headerSub;
-        OptionPanel optionPanel;
+        OptionPanel optionPanel, optionPanel2P;
+        // When 2P joined on this screen (its plate fades in); -inf when it came in already joined.
+        double secondJoinedAt = double.NegativeInfinity;
+        Vector2 frame2PPosition, balloon2PPosition;
         Vector2 framePosition, glowPosition, balloonPosition;
         Vector2[] backgroundPositions;
         Func<bool> courseReady, wheelScrolling;
@@ -176,6 +181,7 @@ namespace OurTaiko
             Manager.FocusChanged += OnFocusChanged;
             Manager.PhaseChanged += OnPhaseChanged;
             Manager.UraToggled += OnUraToggled;
+            Manager.SecondJoined += OnSecondJoined;
             Manager.OptionsOpened += OnOptionsOpened;
             Manager.OptionChanged += OnOptionChanged;
             Manager.OptionsClosing += OnOptionsClosing;
@@ -203,7 +209,7 @@ namespace OurTaiko
             voice.SetAudioGroup(AudioGroup.Voice);
             sfx.PrepareAudioEffects(don, ka, uraSwitch, skip);
             if (optionArt.hitSounds != null) { sfx.PrepareAudioEffects(optionArt.hitSounds.don); sfx.PrepareAudioEffects(optionArt.hitSounds.ka); }
-            voice.PrepareAudioTracks(voiceEnter, voiceStartSong, optionArt.voice);
+            voice.PrepareAudioTracks(voiceEnter, voiceStartSong, optionArt.voice, voiceStartSong2P, voiceOptions2P, secondJoined);
             bgm.loop = true;
             bgm.PlayAudio();
             PlayVoice(voiceEnter);
@@ -225,6 +231,7 @@ namespace OurTaiko
             Manager.FocusChanged -= OnFocusChanged;
             Manager.PhaseChanged -= OnPhaseChanged;
             Manager.UraToggled -= OnUraToggled;
+            Manager.SecondJoined -= OnSecondJoined;
             Manager.OptionsOpened -= OnOptionsOpened;
             Manager.OptionChanged -= OnOptionChanged;
             Manager.OptionsClosing -= OnOptionsClosing;
@@ -254,7 +261,9 @@ namespace OurTaiko
             for (int i = 0; i < items.Count; i++) DrawBoard(BoardOf(items[i]), i == Manager.Focused, now);
             if (restackBoards) RestackBoards();
             if (Manager.Phase != State.Browsing) DrawCoursePanel(now);
-            if (optionPanel.Draw(now)) Manager.OptionsHidden();
+            if (optionPanel.Draw(now)) Manager.OptionsHidden(0);
+            if (optionPanel2P != null && optionPanel2P.Draw(now)) Manager.OptionsHidden(1);
+            DrawSecondPlayer(now);
             DrawOverlays(now);
             if (view.bestScore != null)
                 view.bestScore.Show(Manager.FocusedSong, Manager.FocusedKind == ItemKind.Song ? Manager.FocusedItem.Info : null,
@@ -276,7 +285,14 @@ namespace OurTaiko
         }
 
         void OnVoice(SongSelectManager.Voice clip)
-            => PlayVoice(clip == SongSelectManager.Voice.StartSong ? voiceStartSong : optionArt.voice);
+            => PlayVoice(clip switch
+            {
+                SongSelectManager.Voice.StartSong => voiceStartSong,
+                SongSelectManager.Voice.StartSong2P => voiceStartSong2P,
+                SongSelectManager.Voice.Options2P => voiceOptions2P,
+                SongSelectManager.Voice.SecondJoined => secondJoined,
+                _ => optionArt.voice,
+            });
 
         void PlayVoice(AudioClip clip)
         {
@@ -353,19 +369,31 @@ namespace OurTaiko
             uraChangedAt = Now; uraChangeToUraSide = Manager.Cursor.IsUra;
         }
 
-        void OnOptionsOpened(OptionMenu menu) => optionPanel.Open(menu, Now);
+        OptionPanel PanelOf(int seat) => seat == 1 ? optionPanel2P : optionPanel;
 
-        void OnOptionChanged(int direction)
+        void OnOptionsOpened(int seat, OptionMenu menu) => PanelOf(seat)?.Open(menu, Now);
+
+        void OnOptionChanged(int seat, int direction)
         {
-            optionPanel.Changed(direction, Now);
+            PanelOf(seat)?.Changed(direction, Now);
             // step_neiro previews the new set's don; 無音 plays nothing.
-            var menu = Manager.OptionMenu;
+            var menu = Manager.OptionMenuOf(seat);
             if (menu.Current == OptionRow.Neiro && optionArt.hitSounds != null
                 && optionArt.hitSounds.TryGet(menu.Options.neiro, out var neiro, out _))
                 sfx.PlayAudioOneShot(neiro, AudioGroup.Drum);
         }
 
-        void OnOptionsClosing() => optionPanel.Close(Now);
+        void OnOptionsClosing(int seat) => PanelOf(seat)?.Close(Now);
+
+        void OnSecondJoined() => secondJoinedAt = Now;
+
+        // 2P's plate (fading in like Entry's when 2P joins here).
+        void DrawSecondPlayer(double now)
+        {
+            if (view.nameplateGroup2P == null) return;
+            view.nameplateGroup2P.alpha = !Manager.TwoPlayers ? 0
+                : (float)Clamp01((now - secondJoinedAt) / EntryFlow.NameplateFadeMs);
+        }
 
         // ---------------------------------------------------------------- wheel animation
 

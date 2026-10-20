@@ -168,6 +168,8 @@ namespace OurTaiko
             framePosition = frame.rectTransform.anchoredPosition;
             glowPosition = glow.rectTransform.anchoredPosition;
             balloonPosition = balloon.rectTransform.anchoredPosition;
+            if (view.frame2P != null) frame2PPosition = view.frame2P.rectTransform.anchoredPosition;
+            if (view.balloon2P != null) balloon2PPosition = view.balloon2P.rectTransform.anchoredPosition;
             AddClick(back, Difficulty.Back);
             AddClick(option, Difficulty.Modifier);
             for (int i = 0; i < cards.Length; i++)
@@ -180,6 +182,8 @@ namespace OurTaiko
             optionPanel = new OptionPanel(view.options, optionArt);
             optionPanel.RowTapped += Manager.TapOptionRow;
             optionPanel.OutsideTapped += Manager.CloseOptions;
+            // 2P's panel follows 2P's drum only; touch belongs to 1P.
+            if (view.options2P != null) optionPanel2P = new OptionPanel(view.options2P, optionArt);
         }
 
         void DrawOverlays(double now)
@@ -187,7 +191,7 @@ namespace OurTaiko
             if (TimerView == null) return;
             TimerView.Show(Manager.Phase == State.Browsing ? ListTimerSeconds : CourseTimerSeconds);
             // coin_overlay: the invite shows while a 2P join would still be allowed (songs played < 2).
-            Coins.ShowInvite(switcher.SongsPlayed < 2, now);
+            Coins.ShowInvite(switcher.SongsPlayed < 2 && !Manager.TwoPlayers, now);
         }
 
         void AddClick(Image image, Difficulty difficulty)

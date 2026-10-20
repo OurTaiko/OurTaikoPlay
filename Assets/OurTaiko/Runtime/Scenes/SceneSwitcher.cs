@@ -64,6 +64,7 @@ namespace OurTaiko
         Online.PlayRecord completedRecord, completedRecord2P;
         // global_data.last_difficulty / songs_played for the single local player.
         public int LastDifficulty { get; set; } = -1;
+        public int LastDifficulty2P { get; set; } = -1;
         public int SongsPlayed { get; private set; }
         public bool IsSwitching { get; private set; }
         public bool IsCovered => IsCurtainClosed || (transition != null && transition.alpha >= 0.999f);

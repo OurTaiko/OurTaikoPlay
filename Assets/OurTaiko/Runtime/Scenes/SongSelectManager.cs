@@ -17,7 +17,7 @@ namespace OurTaiko
         public enum State { Browsing, CourseSelect, Decided }
         public enum ItemKind { Song, Folder, Back, Search }
         public enum Sound { Don, Ka, UraSwitch, Skip }
-        public enum Voice { StartSong, Options }
+        public enum Voice { StartSong, Options, StartSong2P, Options2P, SecondJoined }
         public enum FocusReason { Navigate, FolderOpened, FolderClosed }
 
         // One board on the wheel. Folder is the folders[] index of a folder board, of the folder a
@@ -70,12 +70,23 @@ namespace OurTaiko
         // comes back from a song; ServerLogin closes every folder again (Reset).
         public string OpenFolderKey { get; private set; }
         public State Phase { get; private set; } = State.Browsing;
-        public DifficultyCursor Cursor { get; private set; }
-        // The open 演奏オプション menu; it stays set while the panel slides out (IsOptionsClosing).
-        public OptionMenu OptionMenu { get; private set; }
-        public bool IsOptionPanelOpen => OptionMenu != null;
-        public bool IsOptionsClosing => OptionMenu != null && OptionMenu.IsConfirmed;
+        // Each seat's course cursor (2P's only once it has joined), 演奏オプション menu and decision.
+        // The menu stays set while its panel slides out (IsOptionsClosing).
+        readonly DifficultyCursor[] cursors = new DifficultyCursor[2];
+        readonly OptionMenu[] menus = new OptionMenu[2];
+        readonly bool[] ready = new bool[2];
+        public DifficultyCursor Cursor => cursors[0];
+        public DifficultyCursor CursorOf(int seat) => cursors[seat];
+        public OptionMenu OptionMenu => menus[0];
+        public OptionMenu OptionMenuOf(int seat) => menus[seat];
+        public bool IsOptionPanelOpen => menus[0] != null;
+        public bool IsOptionPanelOpenFor(int seat) => menus[seat] != null;
+        public bool IsOptionsClosing => menus[0] != null && menus[0].IsConfirmed;
+        public bool IsReady(int seat) => ready[seat];
         public bool AutoPlay => PlayOptions.Shared.auto;
+        // 2P has joined (on Entry or here) for a play; practice is single-player.
+        public bool TwoPlayers => Switcher.PlaysTwo;
+        int Seats => TwoPlayers ? 2 : 1;
         // The view: whether the course panel has faded in (it ignores input until then).
         public Func<bool> CourseReady { get; set; }
         // The view: whether the wheel is still sliding from the last move (a ka now skips).
@@ -87,9 +98,10 @@ namespace OurTaiko
         public event Action<WheelItem, FocusReason> FocusChanged;   // the previously focused item
         public event Action<State> PhaseChanged;                      // the previous phase
         public event Action UraToggled;
-        public event Action<OptionMenu> OptionsOpened;
-        public event Action<int> OptionChanged;                       // the arrow direction
-        public event Action OptionsClosing;
+        public event Action SecondJoined;
+        public event Action<int, OptionMenu> OptionsOpened;           // the seat
+        public event Action<int, int> OptionChanged;                  // the seat, the arrow direction
+        public event Action<int> OptionsClosing;                      // the seat
 
         readonly List<WheelItem> items = new List<WheelItem>();
         SongFolder[] folders = Array.Empty<SongFolder>();
@@ -145,8 +157,9 @@ namespace OurTaiko
         {
             hitSoundCount = hitSounds;
             Phase = State.Browsing;
-            Cursor = null;
-            OptionMenu = null;
+            Array.Clear(cursors, 0, cursors.Length);
+            Array.Clear(menus, 0, menus.Length);
+            Array.Clear(ready, 0, ready.Length);
             CourseReady = null;
             var library = LocalSongLibrary.EnsureInstance();
             var online = Online.OnlineManager.EnsureInstance();
@@ -221,6 +234,24 @@ namespace OurTaiko
             else if (InputManager.GetKeyDown(InputKey.MenuLeft)) Left();
             else if (InputManager.GetKeyDown(InputKey.MenuRight)) Right();
             else if (donHit) Confirm();
+            // 2P's drum: a don joins; once in, it browses like 1P and works its own course cursor.
+            var p2 = InputManager.P2;
+            if (!TwoPlayers) { if (p2.DonDown) JoinSecond(); }
+            else if (p2.GetKeyDown(InputKey.LeftKa)) Ka(-1, 1);
+            else if (p2.GetKeyDown(InputKey.RightKa)) Ka(+1, 1);
+            else if (p2.DonDown) Confirm(1);
+        }
+
+        // SongSelect2PScreen: 2P joins with its don while 1P is choosing (not in practice).
+        public bool CanJoinSecond => !TwoPlayers && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
+
+        public void JoinSecond()
+        {
+            if (!CanJoinSecond) return;
+            Switcher.TwoPlayers = true;
+            if (Phase == State.CourseSelect) cursors[1] = NewCursor(1);
+            VoiceRequested?.Invoke(Voice.SecondJoined);
+            SecondJoined?.Invoke();
         }
 
         public bool AcceptsInput()
@@ -235,26 +266,29 @@ namespace OurTaiko
             if (SearchDialogOpen) return;
             if (Phase == State.Browsing && SearchActive && open.Count == 0) { ClearSearch(); return; }
             if (IsOptionPanelOpen) CloseOptions();
+            else if (Phase == State.CourseSelect && TwoPlayers && IsOptionPanelOpenFor(1)) CloseOptions(1);
             else if (Phase == State.Browsing && open.Count > 0) { if (AcceptsInput()) { Play(Sound.Don); CloseFolder(); } }
             else Switcher.SwitchScene(SceneSwitcher.EntryScene);
         }
 
-        public void Left()
+        // Browsing, either seat moves the wheel; choosing a course, each seat moves its own cursor or
+        // menu until it has decided.
+        public void Left(int seat = 0)
         {
-            if (!AcceptsInput()) return;
+            if (!AcceptsInput() || Phase == State.CourseSelect && ready[seat]) return;
             Play(Sound.Ka);
-            if (IsOptionPanelOpen) ChangeOption(-1);
+            if (menus[seat] != null) ChangeOption(seat, -1);
             else if (Phase == State.Browsing) Navigate(-1);
-            else Cursor.Left();
+            else cursors[seat].Left();
         }
 
-        public void Right()
+        public void Right(int seat = 0)
         {
-            if (!AcceptsInput()) return;
+            if (!AcceptsInput() || Phase == State.CourseSelect && ready[seat]) return;
             Play(Sound.Ka);
-            if (IsOptionPanelOpen) ChangeOption(+1);
+            if (menus[seat] != null) ChangeOption(seat, +1);
             else if (Phase == State.Browsing) Navigate(+1);
-            else if (Cursor.Right()) ToggledUra();
+            else if (cursors[seat].Right()) ToggledUra(seat);
         }
 
         // CStageSongSelect: a ka while the wheel is still scrolling skips seven boards that way
@@ -262,22 +296,22 @@ namespace OurTaiko
         // the menu arrows always move one board.
         public const int SkipBoards = 7;
 
-        public void Ka(int direction)
+        public void Ka(int direction, int seat = 0)
         {
             if (Phase == State.Browsing && !IsOptionPanelOpen && AcceptsInput() && WheelScrolling?.Invoke() == true)
             {
                 Play(Sound.Skip);
                 Navigate(direction * SkipBoards);
             }
-            else if (direction < 0) Left();
-            else Right();
+            else if (direction < 0) Left(seat);
+            else Right(seat);
         }
 
-        public void Confirm()
+        public void Confirm(int seat = 0)
         {
-            if (!AcceptsInput()) return;
+            if (!AcceptsInput() || Phase == State.CourseSelect && ready[seat]) return;
             Play(Sound.Don);
-            if (IsOptionPanelOpen) { OptionMenu.Confirm(); return; }
+            if (menus[seat] != null) { menus[seat].Confirm(); return; }
             if (Phase == State.Browsing)
             {
                 var focused = items[Focused];
@@ -289,14 +323,17 @@ namespace OurTaiko
                 else EnterCourseSelect();
                 return;
             }
-            switch (Cursor.Selected)
+            switch (cursors[seat].Selected)
             {
                 case Difficulty.Back: ExitCourseSelect(); break;
-                case Difficulty.Modifier: OpenOptions(); break;
+                case Difficulty.Modifier: OpenOptions(seat); break;
                 default:
-                    SetPhase(State.Decided);
-                    Switcher.LastDifficulty = (int)Cursor.Selected;
-                    VoiceRequested?.Invoke(Voice.StartSong);
+                    // Each seat decides on its own; the song starts once every seat has.
+                    ready[seat] = true;
+                    if (seat == 0) Switcher.LastDifficulty = (int)cursors[0].Selected;
+                    else Switcher.LastDifficulty2P = (int)cursors[1].Selected;
+                    VoiceRequested?.Invoke(seat == 0 ? Voice.StartSong : Voice.StartSong2P);
+                    if (Enumerable.Range(0, Seats).All(s => ready[s])) SetPhase(State.Decided);
                     break;
             }
         }
@@ -305,21 +342,25 @@ namespace OurTaiko
         public void StartSong()
         {
             if (Phase != State.Decided) return;
-            var course = items[Focused].Info.Course(Cursor.Selected);
-            Switcher.Play(FocusedSong, course.Course, AutoPlay);
+            var info = items[Focused].Info;
+            string course2P = TwoPlayers ? info.Course(cursors[1].Selected).Course : null;
+            Switcher.Play(FocusedSong, info.Course(cursors[0].Selected).Course, AutoPlay, course2P, PlayOptions.Second.auto);
         }
 
         // Leaving the scene keeps option changes made with the panel still open.
         public void Leave()
         {
             if (IsOptionPanelOpen) PlayOptions.Shared.Save();
+            if (menus[1] != null) PlayOptions.Second.Save();
         }
 
         void Play(Sound sound) => SoundRequested?.Invoke(sound);
 
-        void ToggledUra()
+        void ToggledUra(int seat = 0)
         {
-            // Both drum input and long presses use the same 90-frame card flip.
+            // Both drum input and long presses use the same 90-frame card flip; the other seat follows.
+            int other = 1 - seat;
+            if (cursors[other] != null && !ready[other]) cursors[other].SyncUra(cursors[seat].IsUra);
             Play(Sound.UraSwitch);
             UraToggled?.Invoke();
         }
@@ -518,49 +559,70 @@ namespace OurTaiko
 
         void EnterCourseSelect()
         {
+            Array.Clear(ready, 0, ready.Length);
+            cursors[0] = NewCursor(0);
+            cursors[1] = TwoPlayers ? NewCursor(1) : null;
+            SetPhase(State.CourseSelect);
+        }
+
+        // Starts at the seat's last course; 2P starts on the column (Oni or Ura) 1P shows.
+        DifficultyCursor NewCursor(int seat)
+        {
             var courses = items[Focused].Info.Courses.Select(c => c.Difficulty).ToList();
-            int preferred = Switcher.LastDifficulty;
+            int preferred = seat == 0 ? Switcher.LastDifficulty : Switcher.LastDifficulty2P;
             if (SearchActive)
             {
                 var matching = items[Focused].Info.Courses.Where(SearchQuery.Matches).Select(c => c.Difficulty).ToList();
                 if (matching.Count > 0 && !matching.Contains((Difficulty)preferred)) preferred = (int)matching[0];
             }
-            Cursor = new DifficultyCursor(courses, SearchActive ? preferred == (int)Difficulty.Ura : Cursor != null && Cursor.IsUra, preferred);
-            SetPhase(State.CourseSelect);
+            bool ura = seat == 1 && cursors[0] != null ? cursors[0].IsUra
+                : SearchActive ? preferred == (int)Difficulty.Ura : cursors[seat] != null && cursors[seat].IsUra;
+            return new DifficultyCursor(courses, ura, preferred);
         }
 
-        void ExitCourseSelect() => SetPhase(State.Browsing);
+        void ExitCourseSelect()
+        {
+            // 2P's panel may still be open when 1P walks back out (and the other way round).
+            for (int seat = 0; seat < menus.Length; seat++)
+                if (menus[seat] != null && !menus[seat].IsConfirmed) { menus[seat].ConfirmAll(); OptionsClosing?.Invoke(seat); }
+            SetPhase(State.Browsing);
+        }
 
         // ---------------------------------------------------------------- play options
 
         // SongSelectPlayer::handle_input_selecting: don on the option button opens ModifierSelector.
-        void OpenOptions()
+        // 2P's menu edits 2P's own options in the same panel on the right.
+        void OpenOptions(int seat)
         {
-            OptionMenu = new OptionMenu(PlayOptions.Shared, hitSoundCount);
-            OptionsOpened?.Invoke(OptionMenu);
-            VoiceRequested?.Invoke(Voice.Options);
+            menus[seat] = new OptionMenu(PlayOptions.ForSeat(seat), hitSoundCount);
+            OptionsOpened?.Invoke(seat, menus[seat]);
+            VoiceRequested?.Invoke(seat == 0 ? Voice.Options : Voice.Options2P);
         }
 
-        public void CloseOptions()
+        public void CloseOptions() => CloseOptions(0);
+
+        public void CloseOptions(int seat)
         {
-            if (!AcceptsInput() || !IsOptionPanelOpen || IsOptionsClosing) return;
+            var menu = menus[seat];
+            if (!AcceptsInput() || menu == null || menu.IsConfirmed) return;
             Play(Sound.Don);
-            OptionMenu.ConfirmAll();
-            OptionsClosing?.Invoke();
+            menu.ConfirmAll();
+            OptionsClosing?.Invoke(seat);
         }
 
         // Player::update: the options are saved once the panel has slid out.
-        public void OptionsHidden()
+        public void OptionsHidden(int seat = 0)
         {
-            if (OptionMenu == null) return;
-            OptionMenu = null;
-            PlayOptions.Shared.Save();
+            if (menus[seat] == null) return;
+            menus[seat] = null;
+            PlayOptions.ForSeat(seat).Save();
         }
 
-        void ChangeOption(int direction)
+        void ChangeOption(int seat, int direction)
         {
-            if (!(direction < 0 ? OptionMenu.Left() : OptionMenu.Right())) return;
-            OptionChanged?.Invoke(direction);
+            var menu = menus[seat];
+            if (!(direction < 0 ? menu.Left() : menu.Right())) return;
+            OptionChanged?.Invoke(seat, direction);
         }
 
         // A tap on an option row (direction 0) or on one of its arrows (-1/+1).
