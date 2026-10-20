@@ -89,9 +89,15 @@ namespace OurTaiko.Tests
             Assert.That(first.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.Zero, "1P reads the P1 block.");
             Assert.That(second.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.EqualTo(1), "2P reads the P2 block.");
             Assert.That(play.dancers, Is.Null, "Two players have no dancers.");
+            // SoulGaugeView places the gold zone every frame: 2P's mirrored gauge keeps its own heights.
+            var gauge2P = play.secondLane.soulGauge;
+            Assert.That(gauge2P.goldTopY, Is.Not.EqualTo(play.soulGauge.goldTopY));
+            Assert.That(gauge2P.goldTopY, Is.EqualTo(((RectTransform)gauge2P.transform.Find("GoldTop")).anchoredPosition.y));
             // 2P's timing feedback and judge counter mirror 1P's across the line between the lanes.
             float split = (Corners(play.noteLayer.parent.parent).yMin + Corners(play.secondLane.transform).yMax) / 2;
-            foreach (var (one, two) in new[] { ((Component)play.timingFeedback, (Component)play.secondLane.timingFeedback), (play.judgeCounter, play.secondLane.judgeCounter) })
+            // So does the play ScoreRank, which would otherwise cover 2P's nameplate.
+            foreach (var (one, two) in new[] { ((Component)play.timingFeedback, (Component)play.secondLane.timingFeedback), (play.judgeCounter, play.secondLane.judgeCounter),
+                (play.scoreCounter.scoreRank.transform.Find("ScoreRank"), play.secondLane.scoreCounter.scoreRank.transform.Find("ScoreRank")) })
             {
                 Assert.That(two, Is.Not.Null);
                 var a = Corners(one.transform); var b = Corners(two.transform);

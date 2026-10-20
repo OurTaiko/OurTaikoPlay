@@ -127,6 +127,13 @@ namespace OurTaiko.Editor
             }
             if (views.judgeCounter != null) MirrorAcross(viewport, play.judgeCounter.transform, views.judgeCounter.transform, split);
             if (views.timingFeedback != null) MirrorAcross(viewport, play.timingFeedback.transform, views.timingFeedback.transform, split);
+            // The play ScoreRank (user request): under the 2P lane so it leaves 2P's nameplate clear. Its clip
+            // moves the inner badge, so the box is the badge's and the move is the holder's.
+            var rank = play.scoreCounter.scoreRank; var rank2P = views.scoreCounter.scoreRank;
+            if (rank != null && rank2P != null)
+                MirrorAcross(viewport, rank.transform.Find("ScoreRank") ?? rank.transform, rank2P.transform.Find("ScoreRank") ?? rank2P.transform, split, rank2P.transform);
+            // Gauges built before SoulGaugeView took these from the scene still have 1P's.
+            if (Mathf.Approximately(views.soulGauge.goldTopY, 60)) KeepGauge2PHeights(views.soulGauge);
             EditorUtility.SetDirty(views);
         }
 
@@ -140,12 +147,12 @@ namespace OurTaiko.Editor
 
         // Moves target (a copy of source) so its box is source's box reflected across y = split; the
         // contents keep their upright layout.
-        static void MirrorAcross(RectTransform space, Transform source, Transform target, float split)
+        static void MirrorAcross(RectTransform space, Transform source, Transform target, float split, Transform moved = null)
         {
             var from = Bounds(space, source);
             var at = Bounds(space, target);
             var wanted = new Vector2(from.center.x, 2 * split - from.center.y);
-            target.position += space.TransformVector(wanted - at.center);
+            (moved ?? target).position += space.TransformVector(wanted - at.center);
         }
 
         static void MapHierarchy(Transform source, Transform copy, Dictionary<Object, Object> map)
@@ -239,10 +246,23 @@ namespace OurTaiko.Editor
                 else Mirror(rect);
             }
             gauge.clearLabelY = 68;
+            KeepGauge2PHeights(gauge);
             foreach (var style in gauge.styles) style.empty = SecondArt(style.empty);
             gauge.red.sprite = SecondArt(gauge.red.sprite);
             gauge.empty.sprite = SecondArt(gauge.empty.sprite);
             gauge.redFade = SecondArt(gauge.redFade);
+            EditorUtility.SetDirty(gauge);
+        }
+
+        // SoulGaugeView places the clear cap, gold zone and fading cell every frame, so 2P's gauge keeps
+        // their 2P (index 1, mirrored) y from its saved layout.
+        static void KeepGauge2PHeights(SoulGaugeView gauge)
+        {
+            gauge.clearCapY = ((RectTransform)gauge.transform.Find("ClearCap")).anchoredPosition.y;
+            gauge.goldTopY = ((RectTransform)gauge.transform.Find("GoldTop")).anchoredPosition.y;
+            gauge.goldBottomY = ((RectTransform)gauge.transform.Find("GoldBottom")).anchoredPosition.y;
+            // bar_fade, bar_clear_fade and bar_clear_transition_fade all sit at y -84 in index 1.
+            gauge.redFadeY = gauge.goldFadeY = ((RectTransform)gauge.transform.Find("CellFade")).anchoredPosition.y;
             EditorUtility.SetDirty(gauge);
         }
 

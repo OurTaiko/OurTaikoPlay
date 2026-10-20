@@ -9434,6 +9434,11 @@ MonoBehaviour:
   soulLit: {fileID: 21300000, guid: 23a9030b06ec94d308648462ca8fc08d, type: 3}
   soulDark: {fileID: 21300000, guid: 90ac4b03a536a446fb0c042a85249783, type: 3}
   clearLabelY: 74
+  clearCapY: 63
+  goldTopY: 60
+  goldBottomY: 26
+  redFadeY: 27
+  goldFadeY: 60
 --- !u!1 &677743308
 GameObject:
   m_ObjectHideFlags: 0
@@ -19924,6 +19929,11 @@ MonoBehaviour:
   soulLit: {fileID: 21300000, guid: 23a9030b06ec94d308648462ca8fc08d, type: 3}
   soulDark: {fileID: 21300000, guid: 90ac4b03a536a446fb0c042a85249783, type: 3}
   clearLabelY: 68
+  clearCapY: 15
+  goldTopY: 18
+  goldBottomY: 84
+  redFadeY: 84
+  goldFadeY: 84
 --- !u!1 &1460331741
 GameObject:
   m_ObjectHideFlags: 0
@@ -22178,7 +22188,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 152, y: 118}
+  m_AnchoredPosition: {x: 152, y: -187}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &1596602291
