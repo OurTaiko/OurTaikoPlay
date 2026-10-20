@@ -7,11 +7,13 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace OurTaiko
 {
-    // Logical inputs. Scenes ask for these instead of reading physical keys.
+    // Logical inputs. Scenes ask for these instead of reading physical keys. The 2P drum is
+    // keyboard only and appended, so saved bindings keep their values.
     public enum InputKey
     {
         LeftDon, RightDon, LeftKa, RightKa,
         Confirm, Back, Pause, Restart, MenuLeft, MenuRight, MenuUp, MenuDown,
+        P2LeftDon, P2RightDon, P2LeftKa, P2RightKa,
     }
 
     public readonly struct InputPress
@@ -24,15 +26,41 @@ namespace OurTaiko
 
     public static class InputKeyExtensions
     {
-        public static bool IsDrum(this InputKey key) => key <= InputKey.RightKa;
-        public static bool IsKa(this InputKey key) => key == InputKey.LeftKa || key == InputKey.RightKa;
-        public static bool IsRight(this InputKey key) => key == InputKey.RightDon || key == InputKey.RightKa;
+        public const int Seats = 2;
+        public static bool IsDrum(this InputKey key) => key <= InputKey.RightKa || key >= InputKey.P2LeftDon;
+        public static bool IsKa(this InputKey key) => key.Face() == InputKey.LeftKa || key.Face() == InputKey.RightKa;
+        public static bool IsRight(this InputKey key) => key.Face() == InputKey.RightDon || key.Face() == InputKey.RightKa;
+        // 0 for 1P, 1 for the 2P drum; menu keys belong to 1P.
+        public static int Seat(this InputKey key) => key >= InputKey.P2LeftDon ? 1 : 0;
+        // The drum face as 1P names it (LeftDon..RightKa), whichever seat struck it.
+        public static InputKey Face(this InputKey key) => key >= InputKey.P2LeftDon ? (InputKey)(key - InputKey.P2LeftDon) : key;
+        // A seat's key for a drum face.
+        public static InputKey OfSeat(this InputKey face, int seat) => seat == 1 && face <= InputKey.RightKa ? face + (int)InputKey.P2LeftDon : face;
+    }
+
+    // One seat's drum: its presses of the frame (keys named as 1P's faces) and its input lock.
+    // Each seat judges its own earliest press per frame; the seats never block each other.
+    public sealed class PlayerInput
+    {
+        public int Seat { get; }
+        internal readonly List<InputPress> frame = new List<InputPress>();
+        internal readonly List<InputPress> leads = new List<InputPress>();
+        internal PlayerInput(int seat) => Seat = seat;
+
+        // This seat's drum presses of this frame in the order they happened.
+        public IReadOnlyList<InputPress> PressesThisFrame => frame;
+        // InputManager.DrumLeadsThisFrame for this seat alone.
+        public IReadOnlyList<InputPress> DrumLeadsThisFrame => leads;
+        public bool GetKeyDown(InputKey face) => InputManager.GetKeyDown(face.OfSeat(Seat));
+        public bool GetKey(InputKey face) => InputManager.GetKey(face.OfSeat(Seat));
+        public bool DonDown => GetKeyDown(InputKey.LeftDon) || GetKeyDown(InputKey.RightDon);
     }
 
     // Single entry point for game input, after MajdataPlay's IO/InputManager:
     // raw keyboard events are collected as they arrive; once per frame (before any scene Update)
     // they are merged with the touch/mouse presses on registered DrumPad zones and published
-    // as one time-ordered list of presses plus per-key flags.
+    // as one time-ordered list of presses plus per-key flags. Players[seat] splits the drum
+    // presses by seat; touch and mouse drum zones always strike 1P.
     public static class InputManager
     {
         static readonly int KeyCount = Enum.GetValues(typeof(InputKey)).Length;
@@ -48,7 +76,12 @@ namespace OurTaiko
         static readonly bool[] recorded = new bool[KeyCount];
         static readonly bool[] held = new bool[KeyCount];
         static readonly List<DrumPad> pads = new List<DrumPad>();
+        static readonly PlayerInput[] players = { new PlayerInput(0), new PlayerInput(1) };
         static bool installed;
+
+        public static IReadOnlyList<PlayerInput> Players => players;
+        public static PlayerInput P1 => players[0];
+        public static PlayerInput P2 => players[1];
 
         // Presses of this frame in the order they happened.
         public static IReadOnlyList<InputPress> PressesThisFrame => frame;
@@ -57,10 +90,10 @@ namespace OurTaiko
         // Seconds a drum press waits before it is published, like the arcade's input delay.
         // The play scene sets it for its lifetime; other keys and GetKey are never delayed.
         public static double DrumDelay { get; set; }
-        // Drum presses first seen this frame that will be the earliest drum press of the frame that
-        // publishes them, so a scene can sound them before the delay ends. That frame is certain while
-        // DrumDelay is no longer than a frame; with a longer delay every later frame counts as one and
-        // a press may be left out here although it ends up first in its frame.
+        // Drum presses first seen this frame that will be the earliest drum press of their seat in the
+        // frame that publishes them, so a scene can sound them before the delay ends. That frame is
+        // certain while DrumDelay is no longer than a frame; with a longer delay every later frame
+        // counts as one and a press may be left out here although it ends up first in its frame.
         public static IReadOnlyList<InputPress> DrumLeadsThisFrame => leads;
 
         static InputManager() => ResetBindings();
@@ -94,6 +127,7 @@ namespace OurTaiko
         static void ResetStatics()
         {
             pending.Clear(); frame.Clear(); pads.Clear(); leads.Clear(); waiting = 0;
+            foreach (var player in players) { player.frame.Clear(); player.leads.Clear(); }
             Array.Clear(pressedThisFrame, 0, KeyCount); Array.Clear(held, 0, KeyCount);
             Array.Clear(recorded, 0, KeyCount);
             DrumDelay = 0;
@@ -136,6 +170,16 @@ namespace OurTaiko
             FindDrumLeads(now);
             PublishDue(now);
             Sort(frame, 0);
+            SplitBySeat();
+        }
+
+        static void SplitBySeat()
+        {
+            foreach (var player in players) { player.frame.Clear(); player.leads.Clear(); }
+            foreach (var press in frame)
+                if (press.Key.IsDrum()) players[press.Key.Seat()].frame.Add(new InputPress(press.Key.Face(), press.Time));
+            foreach (var press in leads)
+                players[press.Key.Seat()].leads.Add(new InputPress(press.Key.Face(), press.Time));
         }
 
         static bool IsDue(InputPress press, double now) => !press.Key.IsDrum() || now - press.Time >= DrumDelay;
@@ -144,19 +188,23 @@ namespace OurTaiko
         {
             leads.Clear();
             // A press that was already waiting comes before any new one in the frame that publishes it.
-            bool takenNow = false, takenLater = false;
+            // Each seat has its own lock.
+            Span<bool> takenNow = stackalloc bool[InputKeyExtensions.Seats], takenLater = stackalloc bool[InputKeyExtensions.Seats];
             for (int i = 0; i < waiting; i++)
             {
-                if (IsDue(pending[i], now)) takenNow = true; else takenLater = true;
+                if (!pending[i].Key.IsDrum()) continue;
+                int seat = pending[i].Key.Seat();
+                if (IsDue(pending[i], now)) takenNow[seat] = true; else takenLater[seat] = true;
             }
             Sort(pending, waiting);
             for (int i = waiting; i < pending.Count; i++)
             {
                 var press = pending[i];
                 if (!press.Key.IsDrum()) continue;
+                int seat = press.Key.Seat();
                 bool due = IsDue(press, now);
-                if (!(due ? takenNow : takenLater)) leads.Add(press);
-                if (due) takenNow = true; else takenLater = true;
+                if (!(due ? takenNow[seat] : takenLater[seat])) leads.Add(press);
+                if (due) takenNow[seat] = true; else takenLater[seat] = true;
             }
         }
 

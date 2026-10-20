@@ -10,7 +10,7 @@ namespace OurTaiko.Tests
     public sealed class NoteArcFlowTests
     {
         static readonly System.Reflection.FieldInfo HitKa =
-            typeof(PlayScene).GetField("hitKa", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            typeof(PlayerLane).GetField("hitKa", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 
         [UnityTest]
         public IEnumerator HitNotesFlyToSoulBadgeAndBurst()
@@ -41,8 +41,8 @@ namespace OurTaiko.Tests
                 Assert.That(arcs.ActiveCount, Is.Zero);
                 session.Hit(true, 0.5); session.Hit(false, 1.0); session.Hit(true, 1.55);
                 // Small drumroll hits fly a small note of the drum that was hit.
-                HitKa.SetValue(play, true); session.Hit(true, 2.5);
-                HitKa.SetValue(play, false); session.Hit(false, 2.6);
+                HitKa.SetValue(play.Lane1, true); session.Hit(true, 2.5);
+                HitKa.SetValue(play.Lane1, false); session.Hit(false, 2.6);
                 // A balloon flies once as a big don when it pops; a kusudama never does.
                 session.Hit(false, 4.1);
                 Assert.That(arcs.ActiveCount, Is.EqualTo(5));
@@ -102,7 +102,7 @@ namespace OurTaiko.Tests
                 foreach (bool isKa in new[] { false, true })
                 {
                     arcs.ResetDisplay();
-                    HitKa.SetValue(play, isKa);
+                    HitKa.SetValue(play.Lane1, isKa);
                     Assert.That(session.Hit(isKa, isKa ? 8.2 : 8.1), Is.EqualTo(Judgment.Roll));
                     Assert.That(arcs.ActiveCount, Is.EqualTo(1));
                     var expected = play.noteSprites[isKa ? 4 : 3];
