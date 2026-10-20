@@ -20,6 +20,8 @@ namespace OurTaiko
         [Tooltip("The Rainbow group holding RainbowA and RainbowB.")]
         public ClipSampler rainbowSampler;
         public Sprite redFade, capFade, goldFade, clearLit, clearDark, soulLit, soulDark;
+        [Tooltip("The クリア label's y: gauge/clear_ja index 0 (74) for 1P, index 3 (68) for 2P.")]
+        public float clearLabelY = 74;
 
         public const int Cells = 50, CellWidth = 21;
         // The rainbow clip: a 0.6 s intro (the 450 ms fade-in over the 75 ms crossfades), then a
@@ -41,7 +43,7 @@ namespace OurTaiko
             empty.sprite = style.empty;
             grid.sprite = style.grid;
             rainbowSampler.clip = style.rainbow;
-            clearLabel.rectTransform.anchoredPosition = new Vector2(style.clearLabelX, 74);
+            clearLabel.rectTransform.anchoredPosition = new Vector2(style.clearLabelX, clearLabelY);
             points = previousPoints = 0;
             cellChangedAt = double.NegativeInfinity;
             rainbowStartedAt = double.NaN;

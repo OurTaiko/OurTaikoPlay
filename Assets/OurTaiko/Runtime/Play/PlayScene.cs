@@ -119,7 +119,8 @@ namespace OurTaiko
             pausePanel.SetActive(false); resultPanel.SetActive(false);
             // Disabled and hidden together: an inactive pad neither draws nor registers with InputManager,
             // and pause/resume only re-enables the pads it disabled itself.
-            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad);
+            // The touch drum is a single-player setting; two players use the keyboard.
+            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad && !IsTwoPlayer);
             try
             {
                 // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.
