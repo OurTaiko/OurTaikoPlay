@@ -12,7 +12,7 @@ namespace OurTaiko
     public sealed partial class PlayScene : LaneViews
     {
         public AudioSource music, hitAudio;
-        public AudioClip don, ka, balloonPop;
+        public AudioClip don, ka, balloonPop, kusudamaPop;
         public HitSoundLibrary hitSounds;
         public Sprite[] laneDifficultySprites;
         public Sprite[] noteSprites;
@@ -33,6 +33,8 @@ namespace OurTaiko
         public UnityEngine.UI.Button pauseButton, restartButton, backButton, resumeButton, resultRestart, resultBack;
         [Tooltip("The backdrop's dancers, on the chart's tempo and the soul gauge. DoublePlayScene has none.")]
         public DancerTroupeView dancers;
+        [Tooltip("The kusudama ball over the whole screen, shared by both seats.")]
+        public KusudamaView kusudama;
 
         // One lane per seat: 1P, then 2P in DoublePlayScene.
         public IReadOnlyList<PlayerLane> Lanes => lanes;
@@ -125,15 +127,19 @@ namespace OurTaiko
             {
                 // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.
                 practiceBranch = BranchRoute.Normal;
-                AddLane(0, this);
-                if (secondLane != null) AddLane(1, secondLane);
+                if (kusudama != null) kusudama.ResetDisplay();
+                var sessions = new List<PlaySession> { AddLane(0, this) };
+                if (secondLane != null) sessions.Add(AddLane(1, secondLane));
+                // Both seats' kusudama at the same time are one ball; a lone one is a balloon.
+                if (sessions.Count > 1) Kusudama.Share(sessions[0], sessions[1]);
+                for (int i = 0; i < lanes.Count; i++) lanes[i].Prepare(sessions[i]);
                 // The single-player scenes' don/ka are 1P's neiro (tests read them).
                 don = Lane1.Don; ka = Lane1.Ka;
                 displayInfo = song.ReadDisplayInfo();
                 title.text = displayInfo.Title;
                 ShowSubtitleLines(displayInfo);
                 music.SetAudioSong(song);
-                hitAudio.PrepareAudioEffects(balloonPop);
+                hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop);
             }
             catch (Exception error)
             {
@@ -151,8 +157,9 @@ namespace OurTaiko
         }
 
         // SongLoadingScene parsed each seat's chart behind the curtain; restarts and direct runs parse
-        // here. 2P reads its own block of the course (ChartSide) with its own options.
-        void AddLane(int seat, LaneViews views)
+        // here. 2P reads its own block of the course (ChartSide) with its own options. The lane is
+        // prepared with the returned session once every seat has one.
+        PlaySession AddLane(int seat, LaneViews views)
         {
             string course = switcher.CourseOf(seat);
             var options = PlayOptions.ForSeat(seat);
@@ -167,7 +174,7 @@ namespace OurTaiko
             lanes.Add(lane);
             var session = new PlaySession(chart, judgeOffset, IsPractice ? practiceBranch : (BranchRoute?)null);
             foreach (string warning in session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
-            lane.Prepare(session);
+            return session;
         }
 
         void ShowSubtitleLines(SongInfo info)
@@ -242,6 +249,7 @@ namespace OurTaiko
         {
             bool preview = IsPractice && IsPaused, hideSkipped = IsPractice && (!IsPaused || practiceRewinding);
             foreach (var lane in lanes) lane.ShowVisuals(time, time - visualOffset, preview, hideSkipped);
+            if (kusudama != null) kusudama.ShowTime(time);
             SampleDancers(time);
         }
 

@@ -6,6 +6,13 @@
     "destination": "Assets/OurTaiko/Art/game/drumroll_counter",
     "notes": "Original PNG bytes preserved. The 96x112 counter sprites are shared by the fan (96x112, 80-unit advance) and balloon (77x90, 64-unit advance). Mipmaps and trilinear filtering support smaller UI rendering. The redundant game/balloon/counter.png was removed. Placement and animation IDs 8/9 follow the Nijiiro skin."
   },
+  "kusudama": {
+    "source": "../../YataiDON/Skins/YataiDONNijiiro",
+    "graphics": ["Graphics/game/kusudama/kusudama/0.png", "Graphics/game/kusudama/kusudama/1.png", "Graphics/game/kusudama/kusudama/2.png", "Graphics/game/kusudama/kusudama/3.png", "Graphics/game/kusudama/kusudama/4.png", "Graphics/game/kusudama/renda.png", "Graphics/game/kusudama/counter.png"],
+    "sounds": ["Sounds/game/kusudama_pop.ogg -> Assets/OurTaiko/Audio/kusudama_pop.ogg"],
+    "destination": "Assets/OurTaiko/Art/game/kusudama",
+    "notes": "Original PNG and OGG bytes preserved. Ball frames and renda import as Single/FullRect sprites without mipmaps; counter.png is sliced into ten 240x312 sprites KusudamaDigit0-9. Placement follows texture.json (kusudama -60,-1527; renda 780,420; counter 960,219, margin 240) and the motion animation.json ids 11, 13-17 and 19-21, computed by KusudamaMotion (no clips)."
+  },
   "skin": "YataiDONNijiiro",
   "graphics": [
     "Skins/PyTaikoGreen/Graphics/background/donbg/0_1/footer/1.png",

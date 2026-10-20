@@ -234,6 +234,11 @@ namespace OurTaiko
                     ChartTime);
                 if (Session.LongHits[index] == judged.BalloonHits) scene.hitAudio.PlayAudioOneShot(scene.balloonPop);
             }
+            else if (judged.Kind == NoteKind.Kusudama && Session.KusudamaOf(index) is Kusudama ball)
+            {
+                if (scene.kusudama != null) scene.kusudama.RecordHit(ball);
+                if (ball.IsBroken && ball.BrokenBy == Session) scene.hitAudio.PlayAudioOneShot(scene.kusudamaPop);
+            }
             else if (judged.IsDrumroll)
                 v.drumrollCounter.RecordHit(index, Session.LongHits[index], judgedAt);
             UpdateHud();
@@ -299,6 +304,7 @@ namespace OurTaiko
             lastCombo = 0;
             v.balloonCounter.ResetDisplay(); v.comboAnnounce.Hide();
             v.drumrollCounter.ResetDisplay();
+            if (scene.kusudama != null) scene.kusudama.ResetDisplay();
             if (v.timingFeedback != null) v.timingFeedback.Clear();
             v.soulGauge.Initialize(Session.ClearThreshold);
             v.hitFace.ResetDisplay(); v.hitRing.ResetDisplay();
