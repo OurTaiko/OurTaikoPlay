@@ -23,9 +23,11 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
             Assert.That(select.Manager.Songs.Length, Is.EqualTo(3));
+            // The local songs are in the Local folder: open it on the first one.
+            select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
             Assert.That(select.Manager.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
             Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.Browsing));
-            yield return new WaitForSecondsRealtime(0.5f);
+            yield return new WaitForSecondsRealtime(1f);
             Assert.That(select.IsPreviewPlaying, Is.True, "The focused song previews from DEMOSTART once its board is open.");
             Capture("SongSelectBrowse.png");
 

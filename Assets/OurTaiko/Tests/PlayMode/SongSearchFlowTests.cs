@@ -12,6 +12,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using System.Collections.Generic;
 using UnityEngine.TestTools;
+using K = OurTaiko.SongSelectManager.ItemKind;
 using Object = UnityEngine.Object;
 
 namespace OurTaiko.Tests
@@ -44,6 +45,8 @@ namespace OurTaiko.Tests
             var online = OnlineManager.Instance;
             var connect = System.Threading.Tasks.Task.WhenAll(online.Client.ConnectAsync(online.Client.Add(first.Server()), true), online.Client.ConnectAsync(online.Client.Add(second.Server()), true));
             yield return Await(connect); online.RefreshSongs();
+            string IdOf(FanmadeFixture fixture) => online.Client.Endpoints.First(e => e.Config.baseUrl.TrimEnd('/') == fixture.Server().baseUrl.TrimEnd('/')).Id;
+            string firstId = IdOf(first), secondId = IdOf(second);
             root = Path.Combine(Application.temporaryCachePath, "search-songs-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(Path.Combine(root, "Folder"));
             File.WriteAllText(Path.Combine(root, "Folder", "box.def"), "#TITLE:Folder\n#GENRE:GAME\n");
@@ -106,11 +109,19 @@ namespace OurTaiko.Tests
             float end = Time.realtimeSinceStartup + 15;
             while (view.IsOpen && Time.realtimeSinceStartup < end) yield return null;
             Assert.That(view.IsOpen, Is.False); Assert.That(manager.SearchCount, Is.EqualTo(3));
-            Assert.That(manager.Items.Count(i => i.Kind == SongSelectManager.ItemKind.Song), Is.EqualTo(3));
-            Assert.That(manager.Items.Where(i => i.Song != null && i.Song.onlineChart != null).All(i => online.IsOnline(i.Song)), Is.True);
+            // One closed folder per source, Local first.
+            Assert.That(manager.Items.Select(i => i.Kind), Is.EqualTo(new[]
+                { K.Folder, K.Folder, K.Folder, K.Search, K.Back }));
+            Assert.That(manager.Folders.Select(f => f.Songs.Length), Is.EqualTo(new[] { 1, 1, 1 }));
+            Assert.That(manager.Folders[0].Title, Does.StartWith(SongSelectManager.LocalTitle));
+            Assert.That(manager.Folders[0].Songs[0].onlineChart, Is.Null);
+            Assert.That(manager.Folders.Skip(1).Select(f => f.Server), Is.EqualTo(new[] { firstId, secondId }));
+            Assert.That(manager.Folders.SelectMany(f => f.Songs).Where(s => s.onlineChart != null).All(online.IsOnline), Is.True);
             yield return new WaitForSeconds(.5f);
             TestCapture.Capture("SongSearchResults.png");
+            manager.OpenFolderAt(1); manager.Navigate(1); yield return null;
             var selected = manager.FocusedSong;
+            Assert.That(selected.onlineChart.Server, Is.EqualTo(firstId));
             manager.Confirm(); Assert.That(manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
             // A scene reload represents returning from play and keeps the result selection.
             SceneSwitcher.Instance.Select(selected);
@@ -121,11 +132,34 @@ namespace OurTaiko.Tests
             manager.SelectItem(searchEntry); manager.SelectItem(searchEntry); yield return null;
             Assert.That(view.IsOpen, Is.True, "Results also contain the search folder for editing the query.");
             view.Close(); yield return null;
-            var back = manager.Items.Single(i => i.Kind == SongSelectManager.ItemKind.Back);
+            // The result folder's もどる closes it; only the root もどる ends the search.
+            var back = manager.Items.Single(i => i.Kind == K.Back);
             manager.SelectItem(back); manager.SelectItem(back); yield return null;
-            Assert.That(manager.FocusedKind, Is.EqualTo(SongSelectManager.ItemKind.Search));
+            Assert.That(manager.SearchActive, Is.True); Assert.That(manager.OpenFolder, Is.Null);
+            back = manager.Items.Single(i => i.Kind == K.Back && i.Folder < 0);
+            manager.SelectItem(back); manager.SelectItem(back); yield return null;
+            Assert.That(manager.FocusedKind, Is.EqualTo(K.Search));
             Assert.That(manager.SearchActive, Is.False); Assert.That(manager.BoardCount, Is.EqualTo(initial));
             Assert.That(manager.SearchDialogOpen, Is.False);
+
+            // A source folder's own search covers that source alone and ends back on it.
+            Assert.That(manager.Folders.Where(f => manager.Items.Any(i => i.Kind == K.Folder && manager.Folders[i.Folder] == f)).Select(f => f.Key),
+                Is.EqualTo(new[] { SongSelectManager.LocalKey, SongSelectManager.ServerKey(firstId), SongSelectManager.ServerKey(secondId) }),
+                "Local, then each server's folder.");
+            manager.OpenFolderAt(manager.Items.ToList().FindIndex(i => i.Kind == K.Folder && manager.Folders[i.Folder].Server == firstId));
+            var scoped = manager.Items.Single(i => i.Kind == K.Search && i.Folder >= 0);
+            Assert.That(manager.SearchDescription(scoped), Does.StartWith(manager.Folders[scoped.Folder].Title));
+            manager.SelectItem(scoped); manager.SelectItem(scoped); yield return null;
+            Assert.That(view.IsOpen, Is.True); view.Close(); yield return null;
+            yield return Await(manager.SearchAsync(new SongSearchQuery("Keyword"), CancellationToken.None));
+            Assert.That(manager.SearchCount, Is.EqualTo(1));
+            Assert.That(manager.Folders.Single().Server, Is.EqualTo(firstId));
+            Assert.That(manager.FocusedSong.onlineChart.Server, Is.EqualTo(firstId), "A single source opens at once.");
+            manager.ClearSearch();
+            Assert.That(manager.OpenFolder, Is.EqualTo(SongSelectManager.ServerKey(firstId)));
+            Assert.That(manager.FocusedItem, Is.Not.SameAs(scoped));
+            Assert.That(manager.FocusedKind == K.Search && manager.FocusedItem.Folder >= 0, Is.True);
+            manager.CloseFolder();
             yield return Await(manager.SearchAsync(new SongSearchQuery("nothing matches"), CancellationToken.None));
             Assert.That(manager.SearchCount, Is.Zero); Assert.That(manager.BoardCount, Is.EqualTo(2));
             manager.Navigate(1); manager.Confirm(); Assert.That(manager.SearchActive, Is.False);

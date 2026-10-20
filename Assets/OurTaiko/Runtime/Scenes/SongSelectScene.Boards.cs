@@ -16,20 +16,17 @@ namespace OurTaiko
     {
         // ---------------------------------------------------------------- saved view binding
 
-        // Every wheel item gets a board; the authored boards stay bound to the first local songs and
-        // later songs borrow pooled prefabs on screen.
+        // Every wheel item gets a board; the authored boards draw the first local songs (Manager.Songs)
+        // wherever they are on the wheel, and other songs borrow pooled prefabs on screen.
         void BindBoards()
         {
             var saved = view.songBoards ?? Array.Empty<SongBoardView>();
-            int next = 0;
-            foreach (var item in Manager.Items)
-            {
-                var board = new Board { Item = item };
-                visuals[item] = board;
-                if (item.Kind == ItemKind.Song && item.Folder < 0 && next < saved.Length) Bind(board, NewSlot(saved[next++], true));
-            }
+            savedSlots = saved.Select(item => NewSlot(item, true)).ToArray();
+            foreach (var item in Manager.Items) visuals[item] = new Board { Item = item };
             for (int i = 0; i < saved.Length; i++) saved[i].gameObject.SetActive(false);
         }
+
+        Slot[] savedSlots = Array.Empty<Slot>();
 
         // Later songs draw over earlier ones, as when every song had its own board: the bound views
         // trade their sibling slots so they follow song order (other wheel children keep theirs).
@@ -72,7 +69,9 @@ namespace OurTaiko
                 return;
             }
             if (board.Slot != null) return;
-            var slot = boardPool.Count > 0 ? boardPool.Pop() : NewSlot(Instantiate(view.boardPrefab, wheel), false);
+            int authored = Array.IndexOf(Manager.Songs, board.Song);
+            var slot = authored >= 0 && authored < savedSlots.Length ? savedSlots[authored]
+                : boardPool.Count > 0 ? boardPool.Pop() : NewSlot(Instantiate(view.boardPrefab, wheel), false);
             Bind(board, slot);
         }
 
@@ -108,7 +107,7 @@ namespace OurTaiko
             item.charaLeft.enabled = item.charaRight.enabled = false;
             item.title.text = back ? SongSelectManager.BackLabel : search ? Manager.SearchFolderTitle : folder.Title;
             item.title.Squeeze(860);
-            item.count.text = back ? "" : search ? Manager.SearchFolderDescription : $"{folder.SongCount} songs　{folder.ServerName}";
+            item.count.text = back ? "" : search ? Manager.SearchDescription(board.Item) : $"{folder.SongCount} songs　{folder.ServerName}";
             if (!back)
             {
                 item.panelOpen.sprite = folderBoards[board.Genre];

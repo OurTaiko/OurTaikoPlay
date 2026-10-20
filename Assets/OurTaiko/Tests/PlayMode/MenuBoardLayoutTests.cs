@@ -67,8 +67,11 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
-            yield return new WaitForSecondsRealtime(2);
+            yield return null;
             var select = Object.FindFirstObjectByType<SongSelectScene>();
+            // The local songs are in the Local folder: open it on the first one.
+            select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
+            yield return new WaitForSecondsRealtime(2);
             var back = select.wheel.GetComponentsInChildren<FolderBoardView>().Single(b => b.title.text == SongSelectManager.BackLabel);
             var song = select.view.songBoards[0];
             Assert.That(back.panelClosed.type, Is.EqualTo(UnityEngine.UI.Image.Type.Sliced));

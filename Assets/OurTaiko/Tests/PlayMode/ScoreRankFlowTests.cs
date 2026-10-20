@@ -23,8 +23,9 @@ namespace OurTaiko.Tests
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
-                yield return new WaitForSecondsRealtime(.6f);
                 var select = Object.FindFirstObjectByType<SongSelectScene>();
+                select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
+                yield return new WaitForSecondsRealtime(1f);
                 song = select.Manager.FocusedSong; original = song.chart; song.chart = chart;
                 var board = select.view.songBoards[System.Array.IndexOf(select.Manager.Songs, song)].scoreRank;
                 var session = new PlaySession(song.Parse("Oni"));
@@ -80,8 +81,9 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
-            yield return new WaitForSecondsRealtime(.6f);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
+            select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
+            yield return new WaitForSecondsRealtime(1f);
             var song = select.Manager.FocusedSong;
             // Saved board i shows local song i.
             var board = select.view.songBoards[System.Array.IndexOf(select.Manager.Songs, song)];

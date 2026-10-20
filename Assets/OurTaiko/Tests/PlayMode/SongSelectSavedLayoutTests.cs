@@ -74,6 +74,10 @@ namespace OurTaiko.Tests
                 Assert.That(TestSongs.Load(TestSongs.Calibration), Is.SameAs(calibration));
                 Assert.That(calibration.ReadInfo().Has(Difficulty.Easy), Is.True);
 
+                // The local songs are in the Local folder: the copy reopens it on Triple Helix, as when
+                // coming back from that song.
+                SongSelectManager.Instance.OpenFolderAt(0);
+                SceneSwitcher.Instance.Select(TestSongs.Load(TestSongs.TripleHelix));
                 copy.SetActive(true);
                 yield return new WaitForSecondsRealtime(0.4f);
                 Assert.That(select.view, Is.SameAs(view));

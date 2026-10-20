@@ -16,9 +16,10 @@ namespace OurTaiko.Online
 
     public sealed partial class FanmadeClient
     {
-        // Endpoints run concurrently; one failure never discards the other servers' results.
-        public Task<FanmadeSearchResult[]> SearchAsync(SongSearchQuery query, CancellationToken cancel = default)
-            => Task.WhenAll(Endpoints.Where(e => e.IsConnected).Select(e => SearchEndpointAsync(e, query, cancel)));
+        // Endpoints run concurrently; one failure never discards the other servers' results. With
+        // `server`, only that endpoint is searched.
+        public Task<FanmadeSearchResult[]> SearchAsync(SongSearchQuery query, CancellationToken cancel = default, string server = null)
+            => Task.WhenAll(Endpoints.Where(e => e.IsConnected && (server == null || e.Id == server)).Select(e => SearchEndpointAsync(e, query, cancel)));
 
         async Task<FanmadeSearchResult> SearchEndpointAsync(FanmadeEndpoint endpoint, SongSearchQuery query, CancellationToken cancel)
         {

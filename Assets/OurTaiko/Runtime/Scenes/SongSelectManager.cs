@@ -46,8 +46,13 @@ namespace OurTaiko
 
         public static SongSelectManager Instance { get; private set; }
 
-        // The local songs (LocalSongLibrary) ahead of the folders: local box.def folders, then server categories.
+        // The local songs (LocalSongLibrary) at the top of the Local folder.
         public SongDefinition[] Songs { get; private set; } = Array.Empty<SongDefinition>();
+        // The root lists one folder per source: Local (the local songs and box.def folders), then each
+        // server (its categories and playlists). A source with nothing to show has no folder.
+        public const string LocalKey = "source:local";
+        public static string ServerKey(string server) => "source:server/" + server;
+        public static string LocalTitle => Words("Local", "ローカル", "本地谱面");
         // Every folder, each followed by the folders inside it (WheelItem.Folder indexes it).
         public IReadOnlyList<SongFolder> Folders => folders;
         public IReadOnlyList<WheelItem> Items => items;
@@ -154,19 +159,18 @@ namespace OurTaiko
                 all.Add(folder); holders.Add(parent);
                 foreach (var sub in folder.Folders) AddFolder(sub, index);
             }
-            foreach (var folder in library.Folders.Concat(online.Folders)) AddFolder(folder, -1);
+            foreach (var source in Sources(library, online)) AddFolder(source, -1);
             folders = all.ToArray();
             parents = holders.ToArray();
             items.Clear();
             open.Clear();
-            foreach (var song in Songs) items.Add(SongItem(song, -1));
             for (int f = 0; f < folders.Length; f++) if (parents[f] < 0) items.Add(FolderItem(f));
             items.Add(NewSearchItem());
             // The root もどる, which returns to Entry.
             items.Add(new WheelItem { Kind = ItemKind.Back });
 
             var selected = Switcher.SelectedSong;
-            int remembered = Array.IndexOf(Songs, selected);
+            int remembered = -1;
             int reopen = Array.FindIndex(folders, f => f.Key == OpenFolderKey);
             if (reopen >= 0)
             {
@@ -179,6 +183,17 @@ namespace OurTaiko
             }
             Focused = remembered >= 0 ? remembered : 0;
             if (SearchActive) BuildSearchWheel(selected);
+        }
+
+        static IEnumerable<SongFolder> Sources(LocalSongLibrary library, Online.OnlineManager online)
+        {
+            if (library.Songs.Count > 0 || library.Folders.Count > 0)
+                yield return new SongFolder { Key = LocalKey, Title = LocalTitle, Songs = library.Songs.ToArray(), Folders = library.Folders.ToArray() };
+            foreach (var server in online.Folders.Where(f => f.Server != null).GroupBy(f => f.Server))
+                yield return new SongFolder
+                {
+                    Key = ServerKey(server.Key), Title = server.First().ServerName, Server = server.Key, Folders = server.ToArray(),
+                };
         }
 
         // A song wears its folder's genre (the box.def or category it came from) when the folder has
@@ -218,7 +233,7 @@ namespace OurTaiko
         public void Back()
         {
             if (SearchDialogOpen) return;
-            if (Phase == State.Browsing && SearchActive) { ClearSearch(); return; }
+            if (Phase == State.Browsing && SearchActive && open.Count == 0) { ClearSearch(); return; }
             if (IsOptionPanelOpen) CloseOptions();
             else if (Phase == State.Browsing && open.Count > 0) { if (AcceptsInput()) { Play(Sound.Don); CloseFolder(); } }
             else Switcher.SwitchScene(SceneSwitcher.EntryScene);
@@ -266,9 +281,9 @@ namespace OurTaiko
             if (Phase == State.Browsing)
             {
                 var focused = items[Focused];
-                if (focused.Kind == ItemKind.Search) SearchRequested?.Invoke();
+                if (focused.Kind == ItemKind.Search) RequestSearch(focused);
                 else if (focused.Kind == ItemKind.Folder) OpenFolderAt(Focused);
-                else if (focused.Kind == ItemKind.Back && SearchActive) ClearSearch();
+                else if (focused.Kind == ItemKind.Back && focused.Folder < 0 && SearchActive) ClearSearch();
                 else if (focused.Kind == ItemKind.Back && focused.Folder < 0) Switcher.SwitchScene(SceneSwitcher.EntryScene);
                 else if (focused.Kind == ItemKind.Back) CloseFolder();
                 else EnterCourseSelect();
@@ -456,6 +471,8 @@ namespace OurTaiko
                 if (rootBack < Focused) Focused--;
             }
             var boards = new List<WheelItem>();
+            // A source folder starts with a search of that source alone.
+            if (parents[folder] < 0 && !SearchActive) boards.Add(new WheelItem { Kind = ItemKind.Search, Folder = folder, Genre = folders[folder].Genre });
             for (int f = 0; f < folders.Length; f++) if (parents[f] == folder) boards.Add(FolderItem(f));
             boards.AddRange(folders[folder].Songs.Select(song => SongItem(song, folder)));
             for (int i = 0; i <= boards.Count; i++)

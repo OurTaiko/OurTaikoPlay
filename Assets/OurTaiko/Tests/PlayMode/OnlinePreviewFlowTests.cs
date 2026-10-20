@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -66,8 +67,11 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(1);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
+            // The server's folder, then its first category.
+            select.Manager.OpenFolderAt(select.Manager.Items.ToList().FindIndex(i => i.Kind == SongSelectManager.ItemKind.Folder && select.Manager.Folders[i.Folder].Server != null));
+            yield return null;
             int folder = -1;
-            for (int i = 0; i < select.Manager.BoardCount; i++) if (select.Manager.KindAt(i) == SongSelectManager.ItemKind.Folder) { folder = i; break; }
+            for (int i = select.Manager.Focused; i < select.Manager.BoardCount; i++) if (select.Manager.KindAt(i) == SongSelectManager.ItemKind.Folder) { folder = i; break; }
             Assert.That(folder, Is.GreaterThanOrEqualTo(0));
             for (int i = 0; i < select.Manager.BoardCount && select.Manager.Focused != folder; i++) { select.Manager.Right(); yield return new WaitForSecondsRealtime(.3f); }
             Assert.That(select.Manager.Focused, Is.EqualTo(folder));
@@ -100,8 +104,11 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(1);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
+            // The server's folder, then its first category.
+            select.Manager.OpenFolderAt(select.Manager.Items.ToList().FindIndex(i => i.Kind == SongSelectManager.ItemKind.Folder && select.Manager.Folders[i.Folder].Server != null));
+            yield return null;
             int folder = -1;
-            for (int i = 0; i < select.Manager.BoardCount; i++) if (select.Manager.KindAt(i) == SongSelectManager.ItemKind.Folder) { folder = i; break; }
+            for (int i = select.Manager.Focused; i < select.Manager.BoardCount; i++) if (select.Manager.KindAt(i) == SongSelectManager.ItemKind.Folder) { folder = i; break; }
             Assert.That(folder, Is.GreaterThanOrEqualTo(0));
             for (int i = 0; i < select.Manager.BoardCount && select.Manager.Focused != folder; i++) { select.Manager.Right(); yield return new WaitForSecondsRealtime(.3f); }
             Assert.That(select.Manager.Focused, Is.EqualTo(folder));

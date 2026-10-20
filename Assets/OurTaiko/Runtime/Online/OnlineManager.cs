@@ -306,7 +306,7 @@ namespace OurTaiko.Online
             foreach (var category in Client.Categories)
                 folders.Add(new SongFolder
                 {
-                    Key = category.Server + "/" + category.Id, Title = category.Title, ServerName = category.ServerName,
+                    Key = category.Server + "/" + category.Id, Title = category.Title, ServerName = category.ServerName, Server = category.Server,
                     Genre = GenreFrame(category.Genre), Songs = SongsOf(category.Server, category.ChartIds),
                 });
             // Playlists follow the categories as further folders, drawn in their own genre.
@@ -314,7 +314,7 @@ namespace OurTaiko.Online
             {
                 var folder = new SongFolder
                 {
-                    Key = playlist.Server + "/playlist/" + playlist.Id, Title = playlist.Title, ServerName = playlist.ServerName,
+                    Key = playlist.Server + "/playlist/" + playlist.Id, Title = playlist.Title, ServerName = playlist.ServerName, Server = playlist.Server,
                     Genre = GenreFrame(playlist.Genre), Songs = SongsOf(playlist.Server, playlist.ChartIds),
                 };
                 folders.Add(folder);

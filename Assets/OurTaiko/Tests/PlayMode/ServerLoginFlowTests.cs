@@ -87,15 +87,24 @@ namespace OurTaiko.Tests
             Assert.That(online.Servers.servers[0].autoLogin, Is.True, "A successful login is remembered for next time.");
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
 
-            // The categories follow the local songs as closed folders: Game (1 song) and Pop (empty).
+            // The server's folder follows Local; inside it the categories are closed folders: Game (1 song) and Pop (empty).
             var select = Object.FindFirstObjectByType<SongSelectScene>();
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(7), "3 songs, 2 category folders, search and the root もどる.");
-            Assert.That(select.Manager.KindAt(6), Is.EqualTo(SongSelectManager.ItemKind.Back));
-            Assert.That(select.Manager.KindAt(3), Is.EqualTo(SongSelectManager.ItemKind.Folder));
-            Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Folder));
+            Assert.That(select.Manager.Items.Select(i => i.Kind), Is.EqualTo(new[]
+                { SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Search, SongSelectManager.ItemKind.Back }),
+                "Local, the server, search and the root もどる.");
             Assert.That(select.Manager.OpenFolder, Is.Null, "Folders start closed.");
-            Assert.That(select.Manager.Folders.Select(f => f.Title), Is.EqualTo(new[] { "Game", "Pop" }));
-            Assert.That(select.Manager.Folders[0].Genre, Is.EqualTo(3), "Category genre GAME uses the game-music board.");
+            Assert.That(select.Manager.Focused, Is.Zero, "Local is focused.");
+            Assert.That(select.Manager.Folders[0].Key, Is.EqualTo(SongSelectManager.LocalKey));
+            Assert.That(select.Manager.Folders[1].Server, Is.Not.Null);
+            Assert.That(select.Manager.Folders.Skip(2).Select(f => f.Title), Is.EqualTo(new[] { "Game", "Pop" }));
+            Assert.That(select.Manager.Folders[2].Genre, Is.EqualTo(3), "Category genre GAME uses the game-music board.");
+            yield return Focus(select, 1);
+            select.Manager.Confirm();
+            Assert.That(select.Manager.Items.Select(i => i.Kind), Is.EqualTo(new[]
+            {
+                SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Back, SongSelectManager.ItemKind.Search,
+                SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Search,
+            }), "The server opens on もどる, its own search and its categories.");
             yield return Focus(select, 3);
             yield return new WaitForSecondsRealtime(0.8f);
             var folderView = select.wheel.GetComponentsInChildren<FolderBoardView>(false).Single(v => v.title.text == "Game");
@@ -218,6 +227,7 @@ namespace OurTaiko.Tests
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
 
             var select = Object.FindFirstObjectByType<SongSelectScene>();
+            select.Manager.OpenFolderAt(1);
             select.Manager.OpenFolderAt(3);
             yield return Focus(select, 4);
             yield return new WaitForSecondsRealtime(.8f);
@@ -265,6 +275,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(.6f);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
+            select.Manager.OpenFolderAt(1);
             select.Manager.OpenFolderAt(3);
             yield return Focus(select, 4);
             yield return new WaitForSecondsRealtime(.8f);
@@ -336,7 +347,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
                 yield return WaitForScene(SceneSwitcher.SongSelectScene);
                 Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/catalog"), Is.EqualTo(1), "Song select does not load the list again.");
-                Assert.That(Object.FindFirstObjectByType<SongSelectScene>().Manager.Folders.Select(f => f.Title), Is.EqualTo(new[] { "Game", "Pop" }));
+                Assert.That(Object.FindFirstObjectByType<SongSelectScene>().Manager.Folders.Skip(2).Select(f => f.Title), Is.EqualTo(new[] { "Game", "Pop" }));
             }
             finally
             {
@@ -393,12 +404,14 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
             Assert.That(login.Outcomes, Is.EqualTo(new[] { ServerLoginScene.Outcome.Guest, ServerLoginScene.Outcome.Skipped }));
 
-            // Only one folder at a time: opening Pop closes Game; もどる closes Pop again.
+            // Only one category at a time: opening Pop closes Game; もどる closes Pop again.
             var select = Object.FindFirstObjectByType<SongSelectScene>();
+            yield return Focus(select, 1);
+            select.Manager.Confirm();
             yield return Focus(select, 3);
             select.Manager.Confirm();
             Assert.That(select.Manager.BoardCount, Is.EqualTo(7));
-            Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).All(item => item.Folder == 0), Is.True);
+            Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).Select(item => item.Folder), Is.EqualTo(new[] { 1, 2 }));
             yield return Focus(select, 5);
             Assert.That(select.Manager.KindAt(5), Is.EqualTo(SongSelectManager.ItemKind.Folder));
             select.Manager.Confirm();
@@ -407,13 +420,19 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Back), "The empty Pop folder holds only もどる.");
             Assert.That(select.Manager.Focused, Is.EqualTo(4));
             Assert.That(select.Manager.BoardCount, Is.EqualTo(6));
-            Assert.That(select.Manager.Items.Single(item => item.Kind == SongSelectManager.ItemKind.Back).Folder, Is.EqualTo(1));
+            Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).Select(item => item.Folder), Is.EqualTo(new[] { 1, 3 }));
             yield return new WaitForSecondsRealtime(0.4f);
             select.Manager.Confirm();
-            Assert.That(select.Manager.OpenFolder, Is.Null);
+            Assert.That(select.Manager.OpenFolder, Is.EqualTo(select.Manager.Folders[1].Key));
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Folder));
             Assert.That(select.Manager.Focused, Is.EqualTo(4), "Closing focuses the folder board.");
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(7));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(6));
+            // The server's もどる closes it too.
+            yield return Focus(select, 1);
+            select.Manager.Confirm();
+            Assert.That(select.Manager.OpenFolder, Is.Null);
+            Assert.That(select.Manager.Focused, Is.EqualTo(1));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(4));
             Assert.That(select.Manager.Items.Single(item => item.Kind == SongSelectManager.ItemKind.Back).Folder, Is.EqualTo(-1),
                 "Closing the folder restores exactly one Entry back board.");
 
@@ -468,9 +487,12 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
 
             var select = Object.FindFirstObjectByType<SongSelectScene>();
-            Assert.That(select.Manager.Folders.Select(f => (f.Title, f.Genre, f.Songs.Length)),
+            Assert.That(select.Manager.Folders.Skip(2).Select(f => (f.Title, f.Genre, f.Songs.Length)),
                 Is.EqualTo(new[] { ("Game", 3, 1), ("Pop", 1, 0), ("Festival Set", 8, 1), ("Daily Challenge", 6, 1) }));
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(9), "3 songs, 2 categories, 2 playlists, search and the root もどる.");
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(4));
+            yield return Focus(select, 1);
+            select.Manager.Confirm();
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(8), "Local, the server's もどる and search, 2 categories, 2 playlists and search.");
             yield return WaitUntil(() => online.Folders[2].Cover != null, 10);
             Assert.That(online.Folders[2].Cover.rect.size, Is.EqualTo(new Vector2(320, 200)));
             Assert.That(online.Folders[3].Cover, Is.Null);
@@ -521,10 +543,13 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.SongSelectScene, 30);
 
             var select = Object.FindFirstObjectByType<SongSelectScene>();
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(7));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(4));
+            yield return Focus(select, 1);
+            select.Manager.Confirm();
             yield return Focus(select, 4);
             select.Manager.Confirm();
             // Pop holds the 1500 odd charts: もどる, then one more もどる after every seven songs (OpenTaiko).
+            // Around it: Local, the server's もどる, its search and Game, and the root search after.
             Assert.That(select.Manager.BoardCount, Is.EqualTo(4 + 1 + 1500 + 214 + 1));
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Back));
             Assert.That(select.Manager.SongAt(5).ReadDisplayInfo().Title, Is.EqualTo("Bulk 1"));
@@ -554,9 +579,9 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
             var select = Object.FindFirstObjectByType<SongSelectScene>();
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(5), "Local songs, the search folder and the root もどる.");
-            Assert.That(select.Manager.Focused, Is.Zero, "The first song is focused, not もどる.");
-            // The wheel wraps: one step back from the first song is the root もどる, which leaves for Entry.
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(3), "The Local folder, the search folder and the root もどる.");
+            Assert.That(select.Manager.Focused, Is.Zero, "Local is focused, not もどる.");
+            // The wheel wraps: one step back from Local is the root もどる, which leaves for Entry.
             yield return new WaitForSecondsRealtime(0.3f);
             select.Manager.Left();
             Assert.That(select.Manager.KindAt(select.Manager.Focused), Is.EqualTo(SongSelectManager.ItemKind.Back));

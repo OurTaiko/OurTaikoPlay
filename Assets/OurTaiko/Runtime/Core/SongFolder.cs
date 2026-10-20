@@ -9,6 +9,8 @@ namespace OurTaiko
     public sealed class SongFolder
     {
         public string Key = "", Title = "", ServerName = "";
+        // The endpoint id of a server folder; null for local folders.
+        public string Server;
         public int Genre;
         // The box.def folders inside a local folder (OpenTaiko's nested BOX); server folders have none.
         public SongFolder[] Folders = Array.Empty<SongFolder>();
