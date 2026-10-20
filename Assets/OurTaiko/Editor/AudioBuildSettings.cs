@@ -17,7 +17,7 @@ namespace OurTaiko.Editor
             Configure();
         }
 
-        [MenuItem("OurTaiko/Configure Native Audio")]
+        // Runs before every player build (OnPreprocessBuild).
         public static void Configure()
         {
             var targetName = UnityEditor.Build.NamedBuildTarget.iOS;

@@ -167,7 +167,7 @@ namespace OurTaiko
             uraLoop = LumenClip.Parse(uraLoopTimeline.text);
             folderClip = folderBoardTimeline != null ? LumenClip.Parse(folderBoardTimeline.text) : LumenClip.Empty;
             switcher.SceneChanging += OnSceneChanging;
-            if (view == null) throw new InvalidOperationException("SongSelect requires a saved layout. Run OurTaiko/Apply Song Select Layout in the Editor.");
+            if (view == null) throw new InvalidOperationException("SongSelect requires its saved layout (SongSelectScene.view).");
             wheel.gameObject.SetActive(true);
             Manager = SongSelectManager.EnsureInstance();
             Manager.Load(optionArt.hitSounds != null ? optionArt.hitSounds.Count : 0);

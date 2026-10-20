@@ -5,8 +5,8 @@ using UnityEngine.UI;
 
 namespace OurTaiko
 {
-    // ServerLogin's saved hierarchy (built by ProjectBuilder.CreateServerLoginScene): the server
-    // panel with its name and address, the account fields, a message line and the action buttons.
+    // ServerLogin's saved hierarchy: the server panel with its name and address, the account
+    // fields, a message line and the action buttons.
     // ServerLoginScene only fills texts, swaps the focus sprites and wires the clicks.
     public sealed class ServerLoginView : MonoBehaviour
     {

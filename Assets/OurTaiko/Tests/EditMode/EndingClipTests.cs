@@ -18,7 +18,7 @@ namespace OurTaiko.Tests
         [TestCase("donderful", "EndingDonderful", true, 0, 0, 325)]
         public void SavedClipsReproduceEverySourceFrame(string kind, string clipName, bool clear, int ok, int bad, int count)
         {
-            var data = JObject.Parse(File.ReadAllText("Assets/OurTaiko/Editor/EndingTimelines/" + kind + ".json"));
+            var data = JObject.Parse(File.ReadAllText("Assets/OurTaiko/Tests/EditMode/EndingTimelines/" + kind + ".json"));
             var shapes = data["shapes"].ToDictionary(s => (int)s["id"]);
             foreach (var shape in shapes.Values)
             {
