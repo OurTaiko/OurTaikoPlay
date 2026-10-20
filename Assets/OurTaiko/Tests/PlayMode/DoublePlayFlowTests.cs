@@ -89,6 +89,10 @@ namespace OurTaiko.Tests
             Assert.That(first.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.Zero, "1P reads the P1 block.");
             Assert.That(second.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.EqualTo(1), "2P reads the P2 block.");
             Assert.That(play.dancers, Is.Null, "Two players have no dancers.");
+            // The play option badges sit where 1P's do on its own lane, flipped inside the mirrored score cover.
+            Assert.That(play.secondLane.modifierBadges.flipped && !play.modifierBadges.flipped, Is.True);
+            Assert.That(Corners(play.secondLane.modifierBadges.transform).center.y - Corners(play.secondLane.transform).yMax,
+                Is.EqualTo(Corners(play.modifierBadges.transform).center.y - Corners(play.noteLayer.parent.parent).yMax).Within(0.01f));
             // SoulGaugeView places the gold zone every frame: 2P's mirrored gauge keeps its own heights.
             var gauge2P = play.secondLane.soulGauge;
             Assert.That(gauge2P.goldTopY, Is.Not.EqualTo(play.soulGauge.goldTopY));
@@ -104,6 +108,12 @@ namespace OurTaiko.Tests
                 Assert.That(b.center.y, Is.EqualTo(2 * split - a.center.y).Within(0.5f), two.name + " mirrors " + one.name);
                 Assert.That(b.center.x, Is.EqualTo(a.center.x).Within(0.5f));
             }
+            // 2P's score additions rise below its lane: the row's digit line mirrors 1P's (DigitTop - 58.5 below the row's top).
+            float below = ScoreCounterLayout.DigitTop - 58.5f + ScoreCounterLayout.DigitHeight / 2;
+            float scale = Corners(play.noteLayer.parent.parent).height / 264;
+            float line1 = Corners(play.scoreCounter.additionTemplate.transform).yMax - below * scale;
+            float line2 = Corners(play.secondLane.scoreCounter.additionTemplate.transform).yMax - below * scale;
+            Assert.That(line2, Is.EqualTo(2 * split - line1).Within(0.5f));
 
             float deadline = Time.realtimeSinceStartup + 10;
             while (play.SongTime < 0.5)

@@ -132,6 +132,33 @@ namespace OurTaiko.Editor
             var rank = play.scoreCounter.scoreRank; var rank2P = views.scoreCounter.scoreRank;
             if (rank != null && rank2P != null)
                 MirrorAcross(viewport, rank.transform.Find("ScoreRank") ?? rank.transform, rank2P.transform.Find("ScoreRank") ?? rank2P.transform, split, rank2P.transform);
+            // The score additions (user request) also mirror 1P's: under the 2P lane. ScoreAdditionView lays
+            // its digits out at play time, DigitTop + verticalOffset below the row's top (ScoreAddition.anim
+            // rests at -58.5), so the row is placed from that line rather than the saved preview digits.
+            var addition = play.scoreCounter.additionTemplate; var addition2P = views.scoreCounter.additionTemplate;
+            if (addition != null && addition2P != null)
+            {
+                const float AdditionRestOffset = -58.5f;
+                float below = ScoreCounterLayout.DigitTop + AdditionRestOffset + ScoreCounterLayout.DigitHeight / 2;
+                float centre1 = Bounds(viewport, addition.transform).yMax - below;
+                float top2 = 2 * split - centre1 + below;
+                var at = Bounds(viewport, addition2P.transform);
+                addition2P.transform.position += viewport.TransformVector(new Vector3(Bounds(viewport, addition.transform).xMin - at.xMin, top2 - at.yMax, 0));
+            }
+            // The play option badges: where 1P's are on its own lane (an earlier build moved them with the
+            // score), their grid flipped inside the mirrored score cover like draw_modifiers with is_2p.
+            if (play.modifierBadges != null && views.modifierBadges != null)
+            {
+                var badges = views.modifierBadges;
+                ((RectTransform)badges.transform).anchoredPosition = ((RectTransform)play.modifierBadges.transform).anchoredPosition;
+                var cover1 = Bounds(viewport, play.scoreCounter.cover.transform);
+                var cover2 = Bounds(viewport, views.scoreCounter.cover.transform);
+                float top1 = Bounds(viewport, play.modifierBadges.transform).yMax - cover1.yMax;
+                float top2 = Bounds(viewport, badges.transform).yMax - cover2.yMax;
+                badges.flipped = true;
+                badges.flipSum = top1 + top2 + cover1.height;
+                EditorUtility.SetDirty(badges);
+            }
             // Gauges built before SoulGaugeView took these from the scene still have 1P's.
             if (Mathf.Approximately(views.soulGauge.goldTopY, 60)) KeepGauge2PHeights(views.soulGauge);
             EditorUtility.SetDirty(views);
@@ -208,10 +235,8 @@ namespace OurTaiko.Editor
             }
             Shift(views.drumrollCounter.transform, -Announce2PY);
             // ScoreCounter::draw with is_2p: the cover mirrored and everything score_counter_2p_y_offset lower.
-            // The modifier badges follow the cover down (Player::draw_modifiers mirrors their rows too).
             Shift(views.scoreCounter.transform, -Score2PY);
             if (views.scoreCounter.cover != null) Mirror(views.scoreCounter.cover.rectTransform);
-            if (views.modifierBadges != null) Shift(views.modifierBadges.transform, -Score2PY);
 
             SetY(views.soulGauge.transform, -(Lane2PY + Gauge2PY));
             Gauge2P(views.soulGauge);
