@@ -266,8 +266,8 @@ namespace OurTaiko
                 Flow = new DanSelectFlow(courses.Count, i => courses[i].IsPlayable, Flow.Selected);
                 return;
             }
-            HasLeft = true;
-            switcher.SwitchScene(SceneSwitcher.DanPlayScene);
+            if (switcher.PlayDan(entry)) HasLeft = true;
+            else Flow = new DanSelectFlow(courses.Count, i => courses[i].IsPlayable, Flow.Selected);
         }
 
         static void Play(AudioSource source, AudioClip clip, bool oneShot = false)

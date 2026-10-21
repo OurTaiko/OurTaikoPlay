@@ -9,6 +9,8 @@ namespace OurTaiko
     // LaneViews. PlayScene owns the shared song clock, music, pause and title, and drives one lane
     // (single play, practice) or two (DoublePlayScene). Each lane reads only its seat's drum, so the
     // input lock (one judged press per frame) holds per player and the players never block each other.
+    // DanPlayScene prepares one lane again for each song of a course: the course's own gauge and
+    // the counts of the songs before (Carry) stay on its HUD, as YataiDON's Player keeps them.
     public sealed class PlayerLane
     {
         public int Seat { get; }
@@ -25,8 +27,19 @@ namespace OurTaiko
         public double RenderedTime => renderer?.RenderedTime ?? 0;
         // 音色: hit_sounds/<neiro>/don.ogg and ka.ogg; 無音 leaves both empty.
         public AudioClip Don, Ka;
+        // 段位道場: the course's soul gauge, fed every judgment instead of the session's own.
+        public SoulGauge SharedGauge { get; set; }
+        // 段位道場: what the songs before this one counted (score, judgments, rolls) and the combo
+        // running into it, which goes on until this song's first 不可.
+        public DanSongStats Carry { get; set; }
+        public int ComboCarry { get; set; }
+        public int KiwamiCarry { get; set; }
+        bool comboCarried;
+        public int DisplayCombo => comboCarried ? ComboCarry + Session.Combo : Session.Combo;
+        public double GaugePoints => SharedGauge?.Points ?? Session.GaugePoints;
+        double GaugeThreshold => SharedGauge?.ClearThreshold ?? Session.ClearThreshold;
 
-        readonly PlayScene scene;
+        readonly PlaySceneBase scene;
         NoteLaneRenderer renderer;
         // Drum presses whose sound already played while they wait out the input delay.
         readonly List<InputPress> heard = new List<InputPress>();
@@ -37,7 +50,7 @@ namespace OurTaiko
         ClipSampler judgmentFade;
         int lastCombo;
 
-        public PlayerLane(PlayScene scene, int seat, LaneViews views, PlayOptions options, bool autoPlay, Online.PlayRecord record)
+        public PlayerLane(PlaySceneBase scene, int seat, LaneViews views, PlayOptions options, bool autoPlay, Online.PlayRecord record)
         {
             this.scene = scene; Seat = seat; Views = views; Options = options; AutoPlay = autoPlay; Record = record;
         }
@@ -48,22 +61,28 @@ namespace OurTaiko
 
         double ChartTime => scene.ChartTimeNow;
 
+        // Called once per play, or once per song of a 段位 course (the renderer is kept and cleared).
         public void Prepare(PlaySession session)
         {
+            if (Session != null) Session.Judged -= OnJudged;
             Session = session;
+            comboCarried = ComboCarry > 0;
+            lastCombo = DisplayCombo;
             var v = Views;
-            v.combo.gameObject.SetActive(false); v.comboAnnounce.Hide();
+            v.combo.gameObject.SetActive(false); v.combo.ResetDisplay(); v.comboAnnounce.Hide();
             if (v.modifierBadges != null) v.modifierBadges.Show(Options, AutoPlay);
             ShowDifficulty(session.Chart.Course);
             Don = scene.don; Ka = scene.ka;
             if (scene.hitSounds != null) scene.hitSounds.TryGet(Options.neiro, out Don, out Ka);
             v.balloonCounter.ResetDisplay();
             v.drumrollCounter.ResetDisplay();
-            v.soulGauge.Initialize(Session.ClearThreshold);
+            v.soulGauge.Initialize(GaugeThreshold);
+            // A course's gauge carries on from the song before, without the newly-filled-cell fade.
+            if (SharedGauge != null && SharedGauge.Points > 0) v.soulGauge.SetPoints(SharedGauge.Points, -1e6);
             PutSoulGaugeUnderNotes();
             Session.Judged += OnJudged;
             if (v.branchLane != null) v.branchLane.Initialize(Session.Chart.Branches.Count > 0);
-            renderer = new NoteLaneRenderer(new NoteLaneRenderer.Assets
+            renderer ??= new NoteLaneRenderer(new NoteLaneRenderer.Assets
             {
                 NoteLayer = v.noteLayer, BarLayer = v.barLayer, MojiLayer = v.mojiLayer,
                 NoteSprites = scene.noteSprites, AlternateNoteSprites = scene.alternateNoteSprites,
@@ -201,8 +220,12 @@ namespace OurTaiko
         void OnJudged(int index, Judgment result)
         {
             var v = Views;
+            if (result == Judgment.Bad) comboCarried = false;
             if (result != Judgment.Roll)
-                v.soulGauge.SetPoints(Session.GaugePoints, ChartTime);
+            {
+                SharedGauge?.ApplyJudgment(result);
+                v.soulGauge.SetPoints(GaugePoints, ChartTime);
+            }
             if (AutoPlay)
             {
                 // Alternate actual strikes, including every hit within the same long note.
@@ -272,16 +295,18 @@ namespace OurTaiko
         public void UpdateHud()
         {
             var v = Views;
-            v.scoreCounter.Show(Session.Score, Session.KiwamiThreshold);
-            if (v.judgeCounter != null) v.judgeCounter.Show(Session.Good, Session.Ok, Session.Bad, Session.Rolls);
-            v.combo.Show(Session.Combo);
+            var c = Carry;
+            v.scoreCounter.Show(c.Score + Session.Score, KiwamiCarry + Session.KiwamiThreshold);
+            if (v.judgeCounter != null) v.judgeCounter.Show(c.Good + Session.Good, c.Ok + Session.Ok, c.Bad + Session.Bad, c.Rolls + Session.Rolls);
+            int combo = DisplayCombo;
+            v.combo.Show(combo);
             // Announce at 50, then at each 100th combo, once per combo change.
-            if (Session.Combo != lastCombo && (Session.Combo == 50 || Session.Combo > 0 && Session.Combo % 100 == 0))
+            if (combo != lastCombo && (combo == 50 || combo > 0 && combo % 100 == 0))
             {
-                var voice = v.comboAnnounce.Announce(Session.Combo, ChartTime);
+                var voice = v.comboAnnounce.Announce(combo, ChartTime);
                 if (voice != null) scene.hitAudio.PlayAudioOneShot(voice, AudioGroup.Voice);
             }
-            lastCombo = Session.Combo;
+            lastCombo = combo;
         }
 
         void UpdateBranchLane(double time)
@@ -302,18 +327,27 @@ namespace OurTaiko
             Record.Inputs.Clear();
             nextAutoRight = true;
             lastCombo = 0;
-            v.balloonCounter.ResetDisplay(); v.comboAnnounce.Hide();
+            v.comboAnnounce.Hide();
+            ResetEffects();
+            v.soulGauge.Initialize(GaugeThreshold);
+            UpdateHud();
+        }
+
+        // The effects timed on the chart clock (counters, kusudama, judgment text and faces, flying
+        // notes, drum flashes); a new attempt or a 段位 course's next song starts its clock over.
+        public void ResetEffects()
+        {
+            var v = Views;
+            v.balloonCounter.ResetDisplay();
             v.drumrollCounter.ResetDisplay();
             if (scene.kusudama != null) scene.kusudama.ResetDisplay();
             if (v.timingFeedback != null) v.timingFeedback.Clear();
-            v.soulGauge.Initialize(Session.ClearThreshold);
             v.hitFace.ResetDisplay(); v.hitRing.ResetDisplay();
             if (v.noteArcs != null) v.noteArcs.ResetDisplay();
             feedbackTime = double.NegativeInfinity;
             judgmentFade ??= v.judgment.GetComponent<ClipSampler>();
             judgmentFade.Sample(judgmentFade.clip.length);
             for (int i = 0; i < flashedAt.Length; i++) { flashedAt[i] = double.NegativeInfinity; ShowFlash(i); }
-            UpdateHud();
         }
 
         public void ResetBranchLane(double time)

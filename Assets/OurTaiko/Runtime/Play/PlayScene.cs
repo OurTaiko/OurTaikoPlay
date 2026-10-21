@@ -9,20 +9,9 @@ namespace OurTaiko
 {
     // The play scenes' driver: the song clock, music, pause, title and ending around one PlayerLane per
     // seat. The 1P lane's views are this component's own (LaneViews); DoublePlayScene adds secondLane.
-    public sealed partial class PlayScene : LaneViews
+    // The art and sounds the lanes draw with are PlaySceneBase's.
+    public sealed partial class PlayScene : PlaySceneBase
     {
-        public AudioSource music, hitAudio;
-        public AudioClip don, ka, balloonPop, kusudamaPop;
-        public HitSoundLibrary hitSounds;
-        public Sprite[] laneDifficultySprites;
-        public Sprite[] noteSprites;
-        [Tooltip("Nijiiro expression frame 1, indexed by NoteKind like noteSprites; alternates every eighth note at 50 combo.")]
-        public Sprite[] alternateNoteSprites;
-        public Sprite[] rollBodySprites, rollTailSprites;
-        public Sprite balloonTailSprite;
-        public Sprite[] mojiSprites;
-        public Sprite mojiRollSprite;
-        public Sprite[] judgmentSprites;
         [Tooltip("The touch drum; Settings > Play > Enable Drumpad for Single Player Mode turns it on or off. It strikes 1P.")]
         public DrumPad drumPad;
         public TMP_Text title, subtitle, resultText;
@@ -33,8 +22,6 @@ namespace OurTaiko
         public UnityEngine.UI.Button pauseButton, restartButton, backButton, resumeButton, resultRestart, resultBack;
         [Tooltip("The backdrop's dancers, on the chart's tempo and the soul gauge. DoublePlayScene has none.")]
         public DancerTroupeView dancers;
-        [Tooltip("The kusudama ball over the whole screen, shared by both seats.")]
-        public KusudamaView kusudama;
 
         // One lane per seat: 1P, then 2P in DoublePlayScene.
         public IReadOnlyList<PlayerLane> Lanes => lanes;
@@ -74,9 +61,9 @@ namespace OurTaiko
         int playedAudioOffsetMs;
         // OpenTaiko judges and draws at a whole millisecond of the play clock (cut toward zero).
         double ChartTime => TjaTime.Truncate(SongTime - audioOffset);
-        internal double ChartTimeNow => ChartTime;
-        internal double JudgeOffset => judgeOffset;
-        internal bool AcceptsHits => songClock.Started && !switcher.IsInputBlocked && !IsPaused && !IsFinished;
+        internal override double ChartTimeNow => ChartTime;
+        internal override double JudgeOffset => judgeOffset;
+        internal override bool AcceptsHits => songClock.Started && !switcher.IsInputBlocked && !IsPaused && !IsFinished;
         SongInfo displayInfo;
         // The subtitle line shows the SUBTITLE and, when the chart names one, the MAKER in turn.
         const float SubtitleRotationSeconds = 4f;

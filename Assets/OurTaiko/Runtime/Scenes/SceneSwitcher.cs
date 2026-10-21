@@ -37,6 +37,9 @@ namespace OurTaiko
         public const string DanSelectScene = "DanSelect", DanPlayScene = "DanPlayScene";
         // The course chosen on DanSelect, for DanPlayScene and the dan result; the ribbon returns to it.
         public DanCourseEntry SelectedDan { get; set; }
+        // The course being played: SongLoadingScene fills its charts, DanPlayScene plays it.
+        public DanRun CurrentDan { get; private set; }
+        bool danLoadPending;
         public static SceneSwitcher Instance { get; private set; }
         public static Camera MainCamera { get; private set; }
         public static string CurrentScene { get; private set; } = "";
@@ -145,6 +148,7 @@ namespace OurTaiko
         public void Play(SongDefinition song, string course, bool autoPlay, string course2P = null, bool autoPlay2P = false)
         {
             if (IsInputBlocked || song == null) return;
+            danLoadPending = false;
             Select(song, course, autoPlay, course2P, autoPlay2P);
             completedSong = null; completedRecord = completedRecord2P = null;
             Array.Clear(preparedCharts, 0, preparedCharts.Length);
@@ -154,6 +158,46 @@ namespace OurTaiko
             if (songTransition == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(SelectedPlayScene); return; }
             ShowSongOnCurtain(song);
             SwitchScene(SongLoadingScene, TransitionStyle.Curtain, false);
+        }
+
+        // 段位道場: the curtain closes over the course's title and SongLoadingScene prepares every
+        // song (downloading a server's first) before DanPlayScene opens it.
+        public bool PlayDan(DanCourseEntry entry)
+        {
+            if (IsInputBlocked || entry == null || !entry.IsPlayable) return false;
+            CurrentDan?.Release();
+            SelectedDan = entry;
+            CurrentDan = new DanRun(entry);
+            TwoPlayers = false; PracticeMode = false;
+            Select(entry.Songs[0].Song, entry.Songs[0].Course, PlayOptions.ForSeat(0).auto);
+            completedSong = null; completedRecord = completedRecord2P = null;
+            Array.Clear(preparedCharts, 0, preparedCharts.Length);
+            ReturnScene = DanSelectScene;
+            if (songTransition == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(DanPlayScene); return true; }
+            danLoadPending = true;
+            string language = SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language : "ja";
+            songTransition.SetSong(entry.Course.Title(language), "");
+            SwitchScene(SongLoadingScene, TransitionStyle.Curtain, false);
+            return true;
+        }
+
+        // The last course played, for DanResult (P4); without that scene the course select follows.
+        public const string DanResultScene = "DanResult";
+        public DanPlayResult LastDan { get; private set; }
+
+        public void ShowDanResult(DanPlayResult result)
+        {
+            if (result == null || IsSwitching) return;
+            LastDan = result;
+            SwitchScene(Application.CanStreamedLevelBeLoaded(DanResultScene) ? DanResultScene : DanSelectScene);
+        }
+
+        // SongLoadingScene asks once whether it is loading a course.
+        public DanRun TakeDanLoad()
+        {
+            if (!danLoadPending) return null;
+            danLoadPending = false;
+            return CurrentDan;
         }
 
         // The song the play scenes load next; Play() sets it before switching.

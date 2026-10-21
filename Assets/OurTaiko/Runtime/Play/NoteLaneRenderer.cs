@@ -86,14 +86,21 @@ namespace OurTaiko
         static int MojiShapeOf(ChartNote note) => ShapeOf(note) == RollShape ? RollShape - 1 : PlainShape;
 
         // Only the notes on the lane own views; prewarm enough that the first screens do not allocate.
+        // A 段位 course prepares the same renderer again for its next song: what the song before left
+        // on the lane goes back to the pools first, and the lane windows are built for the new chart.
         public void Prepare(PlaySession session)
         {
+            for (int i = 0; i < shownNotes.Length; i++) { if (shownNotes[i] != null) ReleaseNote(i); if (shownMoji[i] != null) ReleaseMoji(i); }
+            for (int i = 0; i < shownBars.Length; i++) if (shownBars[i] != null) ReleaseBar(i);
+            noteWindow = barWindow = null; rendered = false; renderedSession = null;
+            bool warm = notePool[PlainShape].Count > 0;
             Session = session;
             clocks = new ScrollClockTimeline(session.Chart);
             judgeTravel = JudgeShift.MaxAcross(session.Chart.JudgeMoves);
             shownNotes = new NoteView[Session.Chart.Notes.Count];
             shownMoji = new MojiView[Session.Chart.Notes.Count];
             shownBars = new RectTransform[Session.Chart.Bars.Count];
+            if (warm) return;
             for (int i = 0; i < 32; i++) notePool[PlainShape].Push(NewNote(PlainShape));
             for (int i = 0; i < 2; i++) notePool[RollShape].Push(NewNote(RollShape));
             notePool[BalloonShape].Push(NewNote(BalloonShape));

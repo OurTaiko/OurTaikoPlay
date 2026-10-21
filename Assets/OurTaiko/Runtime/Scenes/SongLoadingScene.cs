@@ -26,6 +26,7 @@ namespace OurTaiko
         IEnumerator Start()
         {
             var switcher = SceneSwitcher.EnsureInstance();
+            if (switcher.TakeDanLoad() is DanRun dan) { yield return LoadDan(switcher, dan); yield break; }
             var song = switcher.SelectedSong;
             string course = switcher.SelectedCourse;
             if (song == null)
@@ -65,25 +66,7 @@ namespace OurTaiko
                     switcher.SetPreparedChart(song, switcher.SelectedCourse2P, PlayScene.PrepareChart(song, switcher.SelectedCourse2P, 1), 1);
             }
             catch (Exception error) { Debug.LogException(error, this); }  // The play scene parses again and shows it.
-            var engine = AudioEngine.EnsureInstance();
-            // Without BASS the song plays silently; the chart clock does not need the audio.
-            if (engine.Available && song != null && (song.music != null || !string.IsNullOrEmpty(song.audioPath)))
-            {
-                byte[] encoded = null;
-                try { if (string.IsNullOrEmpty(song.audioPath)) encoded = AudioAssetCatalog.Read(song.music); }
-                catch (Exception error) { Error = "AUDIO_LOAD_FAILED"; Debug.LogException(error); }
-                if (Error == null)
-                {
-                    string path = song.audioPath;
-                    // A cancelled scene still releases a completed native decode.
-                    using (var decode = new BackgroundAudioDecode(() => encoded ?? System.IO.File.ReadAllBytes(path), engine, true))
-                    {
-                        while (!decode.IsDone) yield return null;
-                        if (decode.Succeeded) song.SetPreparedAudio(decode.Take());
-                        else { Error = "AUDIO_DECODE_FAILED"; Debug.LogException(decode.Error); }
-                    }
-                }
-            }
+            yield return DecodeAudio(song);
             if (Error != null)
             {
                 switcher.Curtain?.SetStatus(Error, new Color(1, 0.35f, 0.35f));
@@ -99,7 +82,70 @@ namespace OurTaiko
             switcher.SwitchScene(switcher.SelectedPlayScene);
         }
 
-        IEnumerator Download(SceneSwitcher switcher, OnlineManager online, SongDefinition song)
+        // Decodes the song's audio into memory for the play scene; Error is set when it cannot.
+        IEnumerator DecodeAudio(SongDefinition song)
+        {
+            var engine = AudioEngine.EnsureInstance();
+            // Without BASS the song plays silently; the chart clock does not need the audio.
+            if (!engine.Available || song == null || (song.music == null && string.IsNullOrEmpty(song.audioPath))) yield break;
+            byte[] encoded = null;
+            try { if (string.IsNullOrEmpty(song.audioPath)) encoded = AudioAssetCatalog.Read(song.music); }
+            catch (Exception error) { Error = "AUDIO_LOAD_FAILED"; Debug.LogException(error); }
+            if (Error != null) yield break;
+            string path = song.audioPath;
+            // A cancelled scene still releases a completed native decode.
+            using (var decode = new BackgroundAudioDecode(() => encoded ?? System.IO.File.ReadAllBytes(path), engine, true))
+            {
+                while (!decode.IsDone) yield return null;
+                if (decode.Succeeded) song.SetPreparedAudio(decode.Take());
+                else { Error = "AUDIO_DECODE_FAILED"; Debug.LogException(decode.Error); }
+            }
+        }
+
+        // 段位道場: every song of the course, in order: a server's song is downloaded first, then
+        // each chart is parsed with the play options and its audio decoded. Any failure returns to
+        // the course select with the reason on the curtain.
+        IEnumerator LoadDan(SceneSwitcher switcher, DanRun dan)
+        {
+            if (!switcher.IsCovered) switcher.ParkCurtain();
+            double started = GameTimeline.FrameTime;
+            var online = OnlineManager.EnsureInstance();
+            for (int i = 0; i < dan.Count && Error == null; i++)
+            {
+                var song = dan.Song(i);
+                bool repeat = System.Array.IndexOf(Songs(dan), song) < i;
+                if (online.IsOnline(song) && !repeat) yield return Download(switcher, online, song, false);
+                if (Error != null) break;
+                try { dan.Charts[i] = PlayScene.PrepareChart(song, dan.Course(i)); }
+                catch (Exception error) { Error = "CHART_LOAD_FAILED"; Debug.LogException(error, this); break; }
+                // Each entry keeps its own decoded audio, so a song played twice starts at once both times.
+                yield return DecodeAudio(song);
+                dan.Audio[i] = song.TakePreparedAudio();
+            }
+            if (Error != null)
+            {
+                dan.Release();
+                switcher.Curtain?.SetStatus(Error, new Color(1, 0.35f, 0.35f));
+                double failedAt = GameTimeline.FrameTime;
+                while (GameTimeline.FrameTime - failedAt < errorSeconds || switcher.IsSwitching) yield return null;
+                switcher.SwitchScene(SceneSwitcher.DanSelectScene);
+                yield break;
+            }
+            IsLoaded = true;
+            while (GameTimeline.FrameTime - started < minimumSeconds || switcher.IsSwitching) yield return null;
+            switcher.Curtain?.SetStatus("");
+            switcher.SwitchScene(SceneSwitcher.DanPlayScene);
+        }
+
+        static SongDefinition[] Songs(DanRun dan)
+        {
+            var songs = new SongDefinition[dan.Count];
+            for (int i = 0; i < songs.Length; i++) songs[i] = dan.Song(i);
+            return songs;
+        }
+
+        // titleSong: the curtain shows the downloaded song's title (a course keeps its own).
+        IEnumerator Download(SceneSwitcher switcher, OnlineManager online, SongDefinition song, bool titleSong = true)
         {
             var cancel = downloadCancellation = new CancellationTokenSource();
             DownloadProgress latest = null;
@@ -125,7 +171,7 @@ namespace OurTaiko
             switcher.Curtain?.SetStatus("音源を読み込み中…");
             online.SetPrepared(song, chart, text, null);
             song.audioPath = audio;
-            switcher.ShowSongOnCurtain(song);
+            if (titleSong) switcher.ShowSongOnCurtain(song);
             switcher.Curtain?.SetStatus("");
         }
 
