@@ -13,10 +13,13 @@ namespace OurTaiko
     // (OpenTaiko resets them at every #NEXTSONG too), while the course's soul gauge, score,
     // judgments and the running combo carry on (PlayerLane.SharedGauge / Carry). The exams are
     // judged by DanProgress: a less exam fails the moment its allowance is used up, a more exam
-    // when its song (or the course) ends; a failed exam ends the course once that song is over.
+    // when its song (or the course) ends. Every song plays out, music and all, even after an exam
+    // has failed; once its music has finished the course goes on to the next song, or, when it is
+    // over (the last song, or an exam failed), shows 合格 / 不合格 a second later and then the result.
     // Before each song the doors close over the lane with its title (DanBetween), and the song
-    // begins once they have parted and its title has gone from the lane. Pause offers resume, restart (the whole course) and back (the course
-    // select); the doors, the music's tail and the delays to the result wait while it is paused.
+    // begins once they have parted and its title has gone from the lane. Pause offers resume,
+    // restart (the whole course) and back (the course select); the doors, the music's tail and the
+    // delays to the result wait while it is paused.
     public sealed class DanPlayScene : PlaySceneBase
     {
         public DanPlayView view;
@@ -30,8 +33,9 @@ namespace OurTaiko
         [Tooltip("anim/dani_between (Nijiiro): the doors' and the title's clip.")]
         public TextAsset betweenTimeline;
 
-        // After the course's last judgment, or the song a failed exam ended it on: the ending
-        // (合格 / 不合格, as on the cabinet) starts a second later.
+        // The course's last song (or the song a failed exam ended it on) has its ending (合格 /
+        // 不合格) a second after its music has finished, as a normal play's ending follows its
+        // audio; a song's music waits at most 20 s past its last note (a long silent tail).
         const double EndingDelay = 1, MaxTail = 20;
 
         public PlayerLane Lane { get; private set; }
@@ -47,7 +51,7 @@ namespace OurTaiko
         public double BetweenStartedAt { get; private set; } = double.NaN;
         // Milliseconds since the doors started, on the pause-aware clock.
         public double BetweenElapsedMs => PlayNow * 1000 - BetweenStartedAt;
-        // A failed exam ended the course after its song: the music stops and the lane holds still.
+        // A failed exam ended the course with this song: it plays out, then 不合格 and the result.
         public bool FailedOut { get; private set; }
 
         readonly SongClock songClock = new SongClock();
@@ -59,7 +63,7 @@ namespace OurTaiko
         double audioOffset, visualOffset, judgeOffset;
         int playedAudioOffsetMs, songMaxCombo;
         bool autoPlay, closingPauseMenu, betweenOpened;
-        double songEndedAt, lastNoteEnd;
+        double songEndedAt, lastNoteEnd, musicEndedAt = double.NaN;
         // Real time less the time spent paused, in seconds.
         double pausedTotal, pausedAt = double.NaN;
         double PlayNow => (double.IsNaN(pausedAt) ? GameTimeline.FrameTime : pausedAt) - pausedTotal;
@@ -150,7 +154,7 @@ namespace OurTaiko
             var audio = Run.TakeAudio(index);
             if (audio != null) song.SetPreparedAudio(audio);
             music.SetAudioSong(song);
-            SongEnded = false; songMaxCombo = 0;
+            SongEnded = false; songMaxCombo = 0; musicEndedAt = double.NaN;
             Progress.Update(default, Gauge.Percent);
             ShowExams();
         }
@@ -194,11 +198,8 @@ namespace OurTaiko
             if (IsPaused) { pauseMenu.HandleInput(); return; }
             double time = ChartTime;
             if (!SongEnded) Lane.Advance(time);
-            if (!FailedOut)
-            {
-                Lane.ShowVisuals(time, time - visualOffset, false, false);
-                if (kusudama != null) kusudama.ShowTime(time);
-            }
+            Lane.ShowVisuals(time, time - visualOffset, false, false);
+            if (kusudama != null) kusudama.ShowTime(time);
             if (!SongEnded)
             {
                 songMaxCombo = Math.Max(songMaxCombo, Lane.DisplayCombo);
@@ -207,17 +208,21 @@ namespace OurTaiko
                 // its music plays out before the next one (capped, for a long silent tail).
                 if (time > lastNoteEnd + Math.Max(0, judgeOffset) + PlaySession.BadWindow) EndSong();
             }
-            else if (Progress.IsEnded)
+            else if (double.IsNaN(musicEndedAt))
             {
-                double since = PlayNow - songEndedAt;
-                if (since >= EndingDelay) Finish();
+                if (MusicOver()) musicEndedAt = PlayNow;
             }
-            else
-            {
-                double audio = music.AudioLength();
-                if (audio <= 0 || SongTime >= audio || PlayNow - songEndedAt >= MaxTail) NextSong();
-            }
+            // The music has finished: the next song, or (the course over) its ending a second on.
+            else if (!Progress.IsEnded) NextSong();
+            else if (PlayNow - musicEndedAt >= EndingDelay) Finish();
             ShowExams();
+        }
+
+        // The song's music has played out (or it has none), or its tail has run 20 s past the last note.
+        bool MusicOver()
+        {
+            double audio = music.AudioLength();
+            return audio <= 0 || SongTime >= audio || PlayNow - songEndedAt >= MaxTail;
         }
 
         DanSongStats Stats() => new DanSongStats
@@ -231,8 +236,8 @@ namespace OurTaiko
             songEndedAt = PlayNow;
             Progress.Update(Stats(), Gauge.Percent);
             if (Progress.EndSong().Count > 0) hitAudio.PlayAudioOneShot(danFailed);
-            // trigger_fail_out: a failed exam before the last song stops the course at once.
-            if (Progress.IsEnded && !Progress.IsLastSong) { FailedOut = true; music.StopAudio(); }
+            // A failed exam before the last song ends the course with this one; it still plays out.
+            if (Progress.IsEnded && !Progress.IsLastSong) FailedOut = true;
             var result = PlayResult.From(Session, song.ScoreKey, autoPlay, playedAudioOffsetMs);
             result.Title = displayInfo.Title; result.Subtitle = displayInfo.Subtitle;
             // save_song_score: a song counts as cleared unless the course failed out on it.
@@ -279,8 +284,7 @@ namespace OurTaiko
                 while (GameTimeline.FrameTime - started < ending.Duration)
                 {
                     double elapsed = GameTimeline.FrameTime - started;
-                    // A course that failed out keeps its lane still.
-                    if (!FailedOut) Lane.ShowVisuals(chartTime + elapsed, chartTime + elapsed - visualOffset, false, false);
+                    Lane.ShowVisuals(chartTime + elapsed, chartTime + elapsed - visualOffset, false, false);
                     ending.ShowTime(elapsed);
                     yield return null;
                 }
