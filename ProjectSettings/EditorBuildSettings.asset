@@ -41,6 +41,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/DanPlayScene.unity
     guid: c12910f8842254e9a85d4d1c241004fb
+  - enabled: 1
+    path: Assets/Scenes/DanResult.unity
+    guid: b92c75b27b500416b86a187f06614ab9
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

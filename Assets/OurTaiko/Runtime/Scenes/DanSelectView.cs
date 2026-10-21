@@ -58,6 +58,8 @@ namespace OurTaiko
         [Tooltip("yellow_box/frame/0..6, by the course's color.")]
         public Sprite[] frames;
         public TextMeshProUGUI horiName;
+        [Tooltip("The course's best local record (DanRecordStore), under its plate.")]
+        public TextMeshProUGUI record;
         public SongRowView[] songs;
         public Sprite[] genreBanners, songLabels, difficulties, levelDigits;
         public TextMeshProUGUI error;

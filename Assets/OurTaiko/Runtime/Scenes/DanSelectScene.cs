@@ -387,6 +387,7 @@ namespace OurTaiko
             view.frame.sprite = view.frames[Mathf.Clamp(course.Color, 0, view.frames.Length - 1)];
             view.horiName.text = course.Title(language);
             view.horiName.Squeeze(240);
+            ShowRecord(entry);
             for (int i = 0; i < view.songs.Length; i++)
             {
                 var row = view.songs[i];
@@ -398,6 +399,17 @@ namespace OurTaiko
             view.error.text = entry.Error ?? "";
             view.exams.gameObject.SetActive(entry.IsPlayable);
             if (entry.IsPlayable) ShowExams(course);
+        }
+
+        // The best of the attempts played for real: verdict, score and how far the course went.
+        void ShowRecord(DanCourseEntry entry)
+        {
+            if (view.record == null) return;
+            var best = entry.IsPlayable ? DanRecordStore.Shared.Get(DanRecordStore.Key(entry)) : null;
+            view.record.gameObject.SetActive(best.HasValue);
+            if (!best.HasValue) return;
+            var b = best.Value;
+            view.record.text = $"最高記録\n{DanResultFlow.VerdictName(b.Verdict)}\n{b.Score:N0}点　{b.Arrival}曲";
         }
 
         void ShowSong(DanSelectView.SongRowView row, int index, DanSongRef reference, DanResolvedSong resolved)

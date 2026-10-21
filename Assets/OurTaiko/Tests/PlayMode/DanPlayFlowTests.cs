@@ -92,7 +92,7 @@ namespace OurTaiko.Tests
             Assert.That(scene.Session.CurrentBranch, Is.EqualTo(BranchRoute.Normal), "The branch counters start over with each song.");
             yield return WaitUntil(() => scene.view.between.gameObject.activeSelf == false, 5);
 
-            yield return WaitForScene(SceneSwitcher.DanSelectScene, 40);
+            yield return WaitForScene(SceneSwitcher.DanResultScene, 40);
             var result = SceneSwitcher.Instance.LastDan;
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Songs.Length, Is.EqualTo(2));
@@ -100,6 +100,28 @@ namespace OurTaiko.Tests
             Assert.That(result.Progress.Total.Good, Is.EqualTo(16));
             Assert.That(result.MaxCombo, Is.EqualTo(16));
             Assert.That(result.Verdict, Is.EqualTo(6), "Gold, no 可, no 不可.");
+
+            // The result: under オート nothing is recorded, and the plate says so.
+            var screen = Object.FindFirstObjectByType<DanResultScene>();
+            Assert.That(screen.Recorded, Is.False);
+            Assert.That(screen.view.noSave.gameObject.activeSelf, Is.True);
+            Assert.That(DanRecordStore.Shared.Get(DanRecordStore.Key(entry)), Is.Null);
+            yield return new WaitForSecondsRealtime(2.5f);
+            Assert.That(screen.view.plates[0].title.text, Is.EqualTo("Dan Branch A"));
+            Assert.That(screen.view.plates[1].unreached.enabled, Is.False);
+            TestCapture.Capture("DanResultSongs.png");
+            screen.Don();
+            yield return new WaitForSecondsRealtime(0.4f);
+            Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Totals));
+            Assert.That(screen.view.exams[0].gauge.gameObject.activeSelf, Is.True, "The gauge exam is the soul gauge row.");
+            Assert.That(screen.view.exams[2].songs[1].root.gameObject.activeSelf, Is.True, "A per-song exam shows both songs.");
+            yield return new WaitForSecondsRealtime(1.2f);
+            Assert.That(screen.view.stamp.enabled, Is.True);
+            Assert.That(screen.view.stamp.sprite.name, Is.EqualTo("gold_clear_03"));
+            TestCapture.Capture("DanResultTotals.png");
+            yield return new WaitForSecondsRealtime(0.6f);
+            screen.Don();
+            yield return WaitForScene(SceneSwitcher.DanSelectScene, 10);
         }
 
         [UnityTest]
@@ -116,10 +138,30 @@ namespace OurTaiko.Tests
             Assert.That(scene.SongEnded, Is.False);
             Assert.That(scene.view.rows[0].failed.enabled, Is.True);
             TestCapture.Capture("DanPlayFailed.png");
-            yield return WaitForScene(SceneSwitcher.DanSelectScene, 30);
+            yield return WaitForScene(SceneSwitcher.DanResultScene, 30);
             var result = SceneSwitcher.Instance.LastDan;
             Assert.That(result.Songs.Length, Is.EqualTo(1), "The course stopped after its first song.");
             Assert.That(result.Verdict, Is.Zero);
+
+            // Played for real: the attempt is recorded, and song A's score with it.
+            var screen = Object.FindFirstObjectByType<DanResultScene>();
+            Assert.That(screen.Recorded, Is.True);
+            var best = DanRecordStore.Shared.Get(DanRecordStore.Key(entry));
+            Assert.That(best.HasValue, Is.True);
+            Assert.That((best.Value.Verdict, best.Value.Arrival), Is.EqualTo((0, 1)));
+            var songA = entry.Songs[0].Song;
+            Assert.That(ScoreStore.Shared.Get(songA.ScoreKey, Difficulty.Oni)?.bad, Is.EqualTo(9), "Unplayed on the normal route: 4 + 1 + 4 不可.");
+            yield return new WaitForSecondsRealtime(2.5f);
+            Assert.That(screen.view.plates[1].unreached.enabled, Is.True, "Song B was never reached.");
+            screen.Don();
+            yield return new WaitForSecondsRealtime(0.6f);
+            screen.Don();
+            yield return new WaitForSecondsRealtime(0.6f);
+            Assert.That(screen.view.stamp.enabled, Is.True);
+            Assert.That(screen.view.stamp.sprite.name, Is.EqualTo("fail"));
+            TestCapture.Capture("DanResultFailed.png");
+            screen.Don();
+            yield return WaitForScene(SceneSwitcher.DanSelectScene, 10);
         }
 
         [UnityTest]

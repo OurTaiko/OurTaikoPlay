@@ -123,7 +123,7 @@ namespace OurTaiko
         // Local charts keep every seat's best in the one score database. Online, each seat uploads
         // its own course and block with its own account; a seat without a login is skipped (2P has
         // none yet).
-        static void SaveScore(SongDefinition song, PlayResult result, Online.PlayRecord record, int seat)
+        internal static void SaveScore(SongDefinition song, PlayResult result, Online.PlayRecord record, int seat)
         {
             if (result.AutoPlay) return;
             if (!SongScores.IsOnline(song)) { ScoreStore.Shared.Save(result); return; }

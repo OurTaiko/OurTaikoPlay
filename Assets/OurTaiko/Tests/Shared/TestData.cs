@@ -16,6 +16,7 @@ namespace OurTaiko.Tests
         {
             if (File.Exists(ScorePath)) File.Delete(ScorePath);
             ScoreStore.Shared = new ScoreStore(ScorePath);
+            DanRecordStore.Shared = new DanRecordStore(ScorePath);
             PlayOptions.Shared = new PlayOptions();
             PlayerInfoController.EnsureInstance().UseUnsaved(new PlayerInfo());
             SettingManager.EnsureInstance().UseUnsaved(new GameSettings());
@@ -36,6 +37,7 @@ namespace OurTaiko.Tests
         public static void Restore()
         {
             ScoreStore.Shared = null;
+            DanRecordStore.Shared = null;
             PlayOptions.Shared = null;
             TestSongs.Uninstall();
             if (File.Exists(ScorePath)) File.Delete(ScorePath);

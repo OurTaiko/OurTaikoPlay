@@ -45,8 +45,12 @@ namespace OurTaiko
         public DanProgress Progress;
         public int Verdict;
         public PlayResult[] Songs;
+        // Each played song's drum inputs, for its online score.
+        public Online.PlayRecord[] Records;
         public int Score, MaxCombo;
         public double GaugePoints;
         public bool AutoPlay;
+        // Set once DanResult has recorded it, so showing it again saves nothing twice.
+        public bool Saved;
     }
 }

@@ -52,6 +52,7 @@ namespace OurTaiko
 
         readonly SongClock songClock = new SongClock();
         readonly List<PlayResult> songResults = new List<PlayResult>();
+        readonly List<Online.PlayRecord> songRecords = new List<Online.PlayRecord>();
         SceneSwitcher switcher;
         SongDefinition song;
         SongInfo displayInfo;
@@ -232,7 +233,12 @@ namespace OurTaiko
             if (Progress.IsEnded && !Progress.IsLastSong) { FailedOut = true; music.StopAudio(); }
             var result = PlayResult.From(Session, song.ScoreKey, autoPlay, playedAudioOffsetMs);
             result.Title = displayInfo.Title; result.Subtitle = displayInfo.Subtitle;
+            // save_song_score: a song counts as cleared unless the course failed out on it.
+            result.IsClear = !FailedOut;
             songResults.Add(result);
+            var record = new Online.PlayRecord { AudioOffsetMs = Lane.Record.AudioOffsetMs, VisualOffsetMs = Lane.Record.VisualOffsetMs };
+            record.Inputs.AddRange(Lane.Record.Inputs);
+            songRecords.Add(record);
         }
 
         void NextSong()
@@ -257,7 +263,7 @@ namespace OurTaiko
             var total = Progress.Total;
             var result = new DanPlayResult
             {
-                Run = Run, Progress = Progress, Verdict = Progress.Verdict(), Songs = songResults.ToArray(),
+                Run = Run, Progress = Progress, Verdict = Progress.Verdict(), Songs = songResults.ToArray(), Records = songRecords.ToArray(),
                 Score = total.Score, MaxCombo = total.MaxCombo, GaugePoints = Gauge.Points, AutoPlay = autoPlay,
             };
             StartCoroutine(ShowEnding(result));
