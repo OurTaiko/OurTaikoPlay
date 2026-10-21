@@ -11,9 +11,6 @@ namespace OurTaiko
     {
         public const double Fps = 60, Start = 2, Open = 201, End = 366, ClipLead = 3;
         public const double OpenMs = (Open - Start) * 1000 / Fps;
-        // game_dan.cpp start_delay: the song (music and chart) begins 4 s after the doors part; its
-        // title shows on the lane under them until then.
-        public const double SongDelayMs = 4000;
         public const double TotalMs = (End - Start) * 1000 / Fps;
 
         public static double Frame(double ms) => Math.Min(End, Start + Math.Max(0, ms) * Fps / 1000);

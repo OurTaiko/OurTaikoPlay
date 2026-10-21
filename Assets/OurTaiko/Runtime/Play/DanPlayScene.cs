@@ -15,7 +15,7 @@ namespace OurTaiko
     // judged by DanProgress: a less exam fails the moment its allowance is used up, a more exam
     // when its song (or the course) ends; a failed exam ends the course once that song is over.
     // Before each song the doors close over the lane with its title (DanBetween), and the song
-    // starts 4 s after they part, once the lane's black has cleared. Pause offers resume, restart (the whole course) and back (the course
+    // begins once they have parted and its title has gone from the lane. Pause offers resume, restart (the whole course) and back (the course
     // select); the doors, the music's tail and the delays to the result wait while it is paused.
     public sealed class DanPlayScene : PlaySceneBase
     {
@@ -155,13 +155,14 @@ namespace OurTaiko
             ShowExams();
         }
 
-        // The doors close with the song's title (hidden songs keep it back) and part again; the song
-        // starts 4 s after that (YataiDON reset_song_clock(SONG_OPEN_MS) with start_delay 4000), once
-        // the lane's black fill and the title have gone, or later when its OFFSET asks for more.
+        // The doors close and part again over the song's title (hidden songs keep it back), which
+        // stays on the lane until their animation ends (frame 366); only then does the song begin,
+        // with the same lead as a normal play (2 s, or more when its OFFSET asks for it), so no note
+        // shows while the title does.
         void StartSong()
         {
             var session = Session;
-            double lead = Math.Max((DanBetween.OpenMs + DanBetween.SongDelayMs) / 1000, session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset));
+            double lead = DanBetween.TotalMs / 1000 + Math.Max(2, session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset));
             BetweenStartedAt = PlayNow * 1000; betweenOpened = false;
             bool hidden = Run.Entry.Songs[SongIndex].Ref.Hidden;
             ShowBetweenText(hidden ? "？？？" : displayInfo.Title, hidden ? "" : displayInfo.Subtitle);
@@ -417,14 +418,14 @@ namespace OurTaiko
         }
 
         // The doors close over the lane and part again (no black behind them); the song's title is
-        // written on the lane under them, so it shows once they have parted, and stays until the
-        // song starts.
+        // written on the lane under them, so it shows once they have parted, until their animation
+        // ends and the song begins.
         void ShowBetween()
         {
             double elapsed = BetweenElapsedMs;
             bool started = !double.IsNaN(BetweenStartedAt);
             bool doors = started && DanBetween.IsShown(elapsed);
-            bool title = started && songClock.Started && songClock.Time < 0;
+            bool title = doors;
             view.between.gameObject.SetActive(doors || title);
             if (!started) return;
             if (!betweenOpened && !IsPaused && elapsed >= DanBetween.OpenMs) { betweenOpened = true; hitAudio.PlayAudioOneShot(fusumaOpen); }

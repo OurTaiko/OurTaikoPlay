@@ -87,12 +87,18 @@ namespace OurTaiko.Tests
             Assert.That(scene.view.betweenTitle.gameObject.activeInHierarchy, Is.True);
             Assert.That(scene.view.betweenTitle.color.a, Is.EqualTo(1));
             TestCapture.Capture("DanPlayTitle.png");
+            // No note shows while the title is up; the song begins once it has gone.
+            while (scene.view.betweenTitle.gameObject.activeInHierarchy)
+            {
+                Assert.That(scene.noteLayer.Cast<Transform>().Count(t => t.gameObject.activeSelf), Is.Zero, "A note under the title.");
+                yield return null;
+            }
 
             // Song A: its first measure (auto, all 良) takes it to 達人.
             yield return WaitUntil(() => scene.ChartTime > 1.6, 15);
             Assert.That(scene.Session.CurrentBranch, Is.EqualTo(BranchRoute.Master));
             Assert.That(scene.view.between.gameObject.activeSelf, Is.False, "The song starts once the doors' black fill and title have cleared.");
-            Assert.That(scene.BetweenElapsedMs, Is.GreaterThan(DanBetween.OpenMs + DanBetween.SongDelayMs));
+            Assert.That(scene.BetweenElapsedMs, Is.GreaterThan(DanBetween.TotalMs + 2000), "The title goes, then the song's 2 s lead.");
             var first = scene.Session;
             Assert.That(band.layers[0].image.uvRect.x, Is.Not.EqualTo(cloud));
             TestCapture.Capture("DanPlay.png");
