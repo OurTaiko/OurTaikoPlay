@@ -126,8 +126,8 @@ namespace OurTaiko.Tests
             if (branch.Condition == BranchCondition.Accuracy)
                 value = branchNotes == 0 ? 0 : Math.Max(0, Math.Min(100, (int)(branchPoints / branchNotes * 100)));
             else value = branchRolls;
-            var chosen = value >= branch.ExpertThreshold && value < branch.MasterThreshold && branch.ExpertThreshold >= 0
-                ? BranchRoute.Expert : value >= branch.MasterThreshold ? BranchRoute.Master : BranchRoute.Normal;
+            var chosen = value >= branch.MasterThreshold ? BranchRoute.Master
+                : value >= branch.ExpertThreshold ? BranchRoute.Expert : BranchRoute.Normal;
             selectedRoutes[branch.Id] = (int)chosen;
             CurrentBranch = chosen; LastBranchValue = value; branchHistory.Add(chosen);
             BranchSelected?.Invoke(branch, chosen);

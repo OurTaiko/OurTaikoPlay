@@ -251,8 +251,10 @@ namespace OurTaiko
             // `l`: OpenTaiko's lower bounds — below master → 達人, below expert → 玄人.
             else if (branch.Less) chosen = value < branch.MasterThreshold ? BranchRoute.Master
                 : value < branch.ExpertThreshold ? BranchRoute.Expert : BranchRoute.Normal;
-            else chosen = value >= branch.ExpertThreshold && value < branch.MasterThreshold && branch.ExpertThreshold >= 0
-                ? BranchRoute.Expert : value >= branch.MasterThreshold ? BranchRoute.Master : BranchRoute.Normal;
+            // OpenTaiko tBranchJudge: master first, then expert; a negative threshold is reachable
+            // with no notes played (`p,-1,101` always picks 玄人).
+            else chosen = value >= branch.MasterThreshold ? BranchRoute.Master
+                : value >= branch.ExpertThreshold ? BranchRoute.Expert : BranchRoute.Normal;
             chosen = branch.ResolveRoute(ForcedBranch ?? chosen);
             if (branch.HoldRoutes[(int)chosen]) IsLevelHeld = true;
             selectedRoutes[branch.Id] = (int)chosen;

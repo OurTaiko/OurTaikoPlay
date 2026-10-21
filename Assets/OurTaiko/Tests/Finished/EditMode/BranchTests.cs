@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
@@ -158,15 +159,30 @@ namespace OurTaiko.Tests
             Assert.That(session.Chart.Notes.Where(n => n.BranchId == 0 && session.IsActive(n)).All(n => n.Route == expected), Is.True);
         }
 
-        [Test] public void PercentageIsTruncatedAndNegativeExpertThresholdIsSkipped()
+        [Test] public void PercentageIsTruncatedAndNegativeExpertThresholdIsReachable()
         {
             var session = new PlaySession(Accuracy("p,66.5,90", "1110,\n0000,\n0000,"));
             session.Hit(false, 0); session.Hit(false, 0.5); session.Advance(4, false);
             Assert.That(session.LastBranchValue, Is.EqualTo(66)); Assert.That(session.CurrentBranch, Is.EqualTo(BranchRoute.Normal));
             var forced = new PlaySession(Accuracy("p,-1,0")); forced.Advance(4, false);
             Assert.That(forced.CurrentBranch, Is.EqualTo(BranchRoute.Master));
+            // OpenTaiko tBranchJudge compares only `value >= threshold`: with no notes (0%) a
+            // negative expert threshold still picks 玄人.
             var empty = new PlaySession(Accuracy("p,-1,100", "0000,\n0000,\n0000,")); empty.Advance(4, false);
-            Assert.That(empty.CurrentBranch, Is.EqualTo(BranchRoute.Normal));
+            Assert.That(empty.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
+        }
+
+        // BRAINIAC MANIAC (MZ72): `p,-1,101` forces 玄人 and `p,101,102` forces 普通, whatever the play.
+        [TestCase(true)]
+        [TestCase(false)]
+        public void UnreachableThresholdsForceARoute(bool auto)
+        {
+            var chart = Parse("1111,\n0000,\n0000,\n#BRANCHSTART p,-1,101" + Routes + "0000,\n#BRANCHSTART p,101,102" + Routes);
+            var session = new PlaySession(chart);
+            var routes = new List<BranchRoute>();
+            session.BranchSelected += (branch, route) => routes.Add(route);
+            for (double t = 0; t <= chart.Duration + 1; t += 1 / 60.0) session.Advance(t, auto);
+            Assert.That(routes, Is.EqualTo(new[] { BranchRoute.Expert, BranchRoute.Normal }));
         }
 
         [TestCase(0, BranchRoute.Normal)]
