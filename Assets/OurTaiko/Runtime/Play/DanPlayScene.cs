@@ -306,11 +306,14 @@ namespace OurTaiko
             // dan_info.lua: the gauge's border plate overhangs its threshold cell by 24 px.
             var gauge = course.Exams.FirstOrDefault(e => e.Type == DanExamType.Gauge);
             view.gaugePlate.gameObject.SetActive(gauge != null && gauge.Course.Red > 0);
+            if (view.gaugeCell != null) view.gaugeCell.gameObject.SetActive(view.gaugePlate.gameObject.activeSelf);
             if (gauge != null && gauge.Course.Red > 0)
             {
                 int cell = Math.Max(1, Math.Min(SoulGaugeView.Cells, gauge.Course.Red / 2));
                 double x = 738 + SoulGaugeView.CellWidth * cell - SoulGaugeView.CellWidth / 2.0 - 1;
                 view.gaugePlate.anchoredPosition = new Vector2(Mathf.Max(0, Mathf.Floor((float)(x - 586 + 24) + 0.5f)), view.gaugePlate.anchoredPosition.y);
+                // The cabinet's white strip, centred on that cell over the bar (YataiDON ships it but does not draw it).
+                if (view.gaugeCell != null) view.gaugeCell.anchoredPosition = new Vector2(Mathf.Floor((float)x - 14 + 0.5f), view.gaugeCell.anchoredPosition.y);
                 view.gaugeValue.text = $"{gauge.Course.Red} ％{(gauge.Range == DanExamRange.Less ? "未満" : "以上")}";
             }
             view.between.gameObject.SetActive(false);

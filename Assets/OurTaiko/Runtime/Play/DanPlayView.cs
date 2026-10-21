@@ -51,6 +51,8 @@ namespace OurTaiko
 
         [Header("Gauge border plate")]
         public RectTransform gaugePlate;
+        [Tooltip("dan_info/gauge_border_cell: the white strip over the gauge's border cell, under the plate's arrow (as on the cabinet).")]
+        public RectTransform gaugeCell;
         public TextMeshProUGUI gaugeName, gaugeValue;
 
         [Header("Between songs")]
