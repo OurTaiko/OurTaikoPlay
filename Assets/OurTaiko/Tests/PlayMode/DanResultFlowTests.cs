@@ -81,8 +81,7 @@ namespace OurTaiko.Tests
             var screen = Object.FindFirstObjectByType<DanResultScene>();
             Assert.That(screen.Recorded, Is.True);
             Assert.That(screen.PreviousBest?.Score, Is.EqualTo(1000000));
-            Assert.That(screen.transition, Is.Not.Null);
-            Assert.That(screen.voice.clip, Is.SameAs(screen.transition), "dan_transition plays as the result opens, before the announce.");
+            Assert.That(screen.voice.clip, Is.SameAs(screen.announce), "The announce, once, as the result opens.");
 
             // The drum waits 500 ms after each change.
             yield return new WaitForSecondsRealtime(0.6f);

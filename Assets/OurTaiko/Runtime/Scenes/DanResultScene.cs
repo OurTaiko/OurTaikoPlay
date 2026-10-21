@@ -19,8 +19,6 @@ namespace OurTaiko
     {
         public DanResultView view;
         public AudioSource bgm, sfx, voice;
-        [Tooltip("game/dan_transition: the voice as the result opens, before its announce.")]
-        public AudioClip transition;
         public AudioClip don, announce, partialIntro, partialPlate, totalIntro, countUp, achieveTamashii, gaugeUp, gaugeDown, gaugeJudgement;
         public AudioClip stampClear, stampClearGold, stampFail, atmosClear, voiceClear, voiceClearGold, voiceFail;
         public AudioClip advanceIntro, voiceAdvance, advanceShogo, voiceGlad, popupSuperlative;
@@ -37,7 +35,6 @@ namespace OurTaiko
         public bool Congratulates { get; private set; }
 
         SceneSwitcher switcher;
-        double announceAt = double.NaN;
         int platesLanded;
         bool countUpPlayed, tamashiiPlayed, stampPlayed, voicePlayed, advancePlayed, shogoPlayed, congratsPlayed;
         bool[] rowFillPlayed = Array.Empty<bool>(), rowJudgePlayed = Array.Empty<bool>();
@@ -74,11 +71,11 @@ namespace OurTaiko
             voice.SetAudioGroup(AudioGroup.Voice);
             sfx.PrepareAudioEffects(don, partialIntro, partialPlate, totalIntro, countUp, achieveTamashii, gaugeUp, gaugeDown, gaugeJudgement,
                 stampClear, stampClearGold, stampFail, atmosClear, advanceIntro, advanceShogo, popupSuperlative);
-            voice.PrepareAudioTracks(transition, announce, voiceClear, voiceClearGold, voiceFail, voiceAdvance, voiceGlad);
+            voice.PrepareAudioTracks(announce, voiceClear, voiceClearGold, voiceFail, voiceAdvance, voiceGlad);
             if (bgm.clip != null) { bgm.loop = true; bgm.PlayAudio(); }
-            // Only here: dan_transition as the screen opens, then the announce once it has finished.
-            if (transition != null) { Play(voice, transition); announceAt = Now + transition.length * 1000; }
-            else Play(voice, announce);
+            // The announce, once, as the screen opens (game/dan_transition is the same line, so it is
+            // not played anywhere).
+            Play(voice, announce);
             Play(sfx, partialIntro, true);
         }
 
@@ -103,7 +100,6 @@ namespace OurTaiko
         {
             if (Result == null) return;
             double now = Now;
-            if (!double.IsNaN(announceAt) && now >= announceAt) { announceAt = double.NaN; Play(voice, announce); }
             // The pages start once the cover has opened (ResultScene's clock does too).
             if (Flow == null)
             {
