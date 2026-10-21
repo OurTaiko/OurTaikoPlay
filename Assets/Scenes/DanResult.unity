@@ -6326,6 +6326,7 @@ MonoBehaviour:
   bgm: {fileID: 510621119}
   sfx: {fileID: 503238295}
   voice: {fileID: 817869708}
+  transition: {fileID: 8300000, guid: 8c6b14420263946c482b6b59103c9309, type: 3}
   don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}
   announce: {fileID: 8300000, guid: 038dba3208c0f46ceac56d22a8f87679, type: 3}
   partialIntro: {fileID: 8300000, guid: 8a774387933f24a4dac74c927ced967a, type: 3}

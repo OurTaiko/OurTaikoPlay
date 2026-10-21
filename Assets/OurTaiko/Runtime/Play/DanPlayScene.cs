@@ -26,7 +26,7 @@ namespace OurTaiko
         public GameObject pausePanel, resultPanel;
         public PauseMenuView pauseMenu;
         public Button pauseButton, restartButton, backButton, resumeButton, resultRestart, resultBack;
-        public AudioClip danFailed, fusumaClose, fusumaOpen, danTransition;
+        public AudioClip danFailed, fusumaClose, fusumaOpen;
         [Tooltip("anim/dani_between (Nijiiro): the doors' and the title's clip.")]
         public TextAsset betweenTimeline;
 
@@ -99,7 +99,7 @@ namespace OurTaiko
             resultBack.onClick.AddListener(Back);
             pausePanel.SetActive(false); resultPanel.SetActive(false);
             if (drumPad != null) drumPad.gameObject.SetActive(playSettings.singlePlayerDrumPad);
-            hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, danFailed, fusumaClose, fusumaOpen, danTransition);
+            hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, danFailed, fusumaClose, fusumaOpen);
             betweenClip = betweenTimeline != null ? LumenClip.Parse(betweenTimeline.text) : LumenClip.Empty;
             try
             {
@@ -286,10 +286,7 @@ namespace OurTaiko
                 }
             }
             music.StopAudio();
-            // The transition voice plays out before the result (it would be cut by the scene change).
-            hitAudio.PlayAudioOneShot(danTransition, AudioGroup.Voice);
-            double voiceStarted = GameTimeline.FrameTime;
-            while (danTransition != null && GameTimeline.FrameTime - voiceStarted < danTransition.length) yield return null;
+            // dan_transition is the result screen's to play, as it opens.
             switcher.ShowDanResult(result);
         }
 
