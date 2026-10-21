@@ -193,6 +193,8 @@ namespace OurTaiko
                 return;
             }
             if (!Flow.IsModeReady(now) || Flow.IsSelected) return;
+            // 段位道場 is single-player only (box_manager.cpp leaves its board out once 2P is in).
+            if (Joined2P && Modes[Flow.SelectedMode].Scene == SceneSwitcher.DanSelectScene) return;
             Play(sfx, don, oneShot: true);
             Flow.Select(now);
         }
@@ -200,7 +202,8 @@ namespace OurTaiko
         // 2P's don: 2P joins (entry_start_2p), once.
         public void Join2P()
         {
-            if (switcher.IsInputBlocked || HasLeft || Joined2P) return;
+            // Once a board is picked the players are settled (段位道場 must not take a late 2P).
+            if (switcher.IsInputBlocked || HasLeft || Joined2P || Flow.IsSelected) return;
             joined2PAt = Now;
             Play(sfx, don, oneShot: true);
             Play(voice, entryStart2P);
@@ -215,6 +218,13 @@ namespace OurTaiko
             if (Flow.State != EntryFlow.Phase.SelectMode || !Flow.IsModeReady(now) || Flow.IsSelected) return;
             Play(sfx, ka, oneShot: true);
             Flow.MoveMode(delta, now);
+        }
+
+        static void Grey(EntryView.BoardView board, bool grey)
+        {
+            float v = grey ? 0.45f : 1;
+            foreach (var graphic in new Graphic[] { board.closed, board.open, board.title })
+                if (graphic != null) graphic.color = new Color(v, v, v, graphic.color.a);
         }
 
         static void Play(AudioSource source, AudioClip clip, bool oneShot = false)
@@ -234,6 +244,9 @@ namespace OurTaiko
             Board.Root.gameObject.SetActive(modeReady);
             if (modeReady)
                 Board.Show(now, now - modeShownAt, Flow.SelectedMode, Flow.BoardFade(now), Flow.SelectedAt.HasValue ? now - Flow.SelectedAt.Value : -1);
+            // With 2P in, the 段位道場 board stays greyed and cannot be picked.
+            for (int i = 0; i < view.boards.Length; i++)
+                if (view.boards[i].scene == SceneSwitcher.DanSelectScene) Grey(view.boards[i], Joined2P);
 
             if (Flow.State == EntryFlow.Phase.SelectSide) Credit.ShowWaiting(now - Flow.StartedAt, now - Flow.StartedAt);
             else if (!creditGone) creditGone = !Credit.ShowDecided(now - Flow.JoinedAt.Value, 0);

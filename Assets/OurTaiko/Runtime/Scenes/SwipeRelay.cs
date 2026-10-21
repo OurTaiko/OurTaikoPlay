@@ -11,6 +11,8 @@ namespace OurTaiko
     {
         [Tooltip("Design pixels of drag per row.")]
         public float step = 120;
+        [Tooltip("Swipe along x (a ribbon): dragging left brings the next item in, like dragging up.")]
+        public bool horizontal;
         public Action<int> Swiped;
 
         float pending;
@@ -26,7 +28,7 @@ namespace OurTaiko
         {
             var canvas = GetComponentInParent<Canvas>();
             float scale = canvas != null ? canvas.rootCanvas.scaleFactor : 1;
-            pending += eventData.delta.y / Mathf.Max(0.0001f, scale);
+            pending += (horizontal ? -eventData.delta.x : eventData.delta.y) / Mathf.Max(0.0001f, scale);
             while (Mathf.Abs(pending) >= step)
             {
                 int direction = pending > 0 ? 1 : -1;

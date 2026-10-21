@@ -93,6 +93,7 @@ namespace OurTaiko.Tests
             Assert.That(Assert.Throws<FormatException>(() => Parse(Songs(1), "[{\"type\":\"bad\",\"range\":\"under\",\"value\":[9]}]")).Message, Does.Contain("range"));
             Assert.That(Assert.Throws<FormatException>(() => Parse(Songs(2), "[{\"type\":\"bad\",\"range\":\"less\",\"value\":[[9],[9],[9]]}]")).Message, Does.Contain("per-song"));
             Assert.That(Assert.Throws<FormatException>(() => Parse(Songs(1), "[{\"type\":\"bad\",\"range\":\"less\",\"value\":[1,2,3]}]")).Message, Does.Contain("borders"));
+            Assert.That(Assert.Throws<FormatException>(() => Parse(Songs(2), "[{\"type\":\"gauge\",\"range\":\"more\",\"value\":[[80],[90]]}]")).Message, Does.Contain("gauge"));
             Assert.That(Assert.Throws<FormatException>(() => DanCourse.Parse(Course("[{\"chart\":{\"course\":\"Oni\"}}]"))).Message, Does.Contain("sha256"));
             Assert.That(Assert.Throws<FormatException>(() => DanCourse.Parse(Course("[{\"chart\":{\"sha256\":\"" + Hash1 + "\",\"course\":\"Tower\"}}]"))).Message, Does.Contain("course"));
         }

@@ -33,6 +33,10 @@ namespace OurTaiko
         public const string ServerLoginScene = "ServerLogin";
         // The first scene: the title card shown while the built-in servers connect.
         public const string PresentedScene = "Presented";
+        // 段位道場: Entry's board opens the course select; a course is played in DanPlayScene.
+        public const string DanSelectScene = "DanSelect", DanPlayScene = "DanPlayScene";
+        // The course chosen on DanSelect, for DanPlayScene and the dan result; the ribbon returns to it.
+        public DanCourseEntry SelectedDan { get; set; }
         public static SceneSwitcher Instance { get; private set; }
         public static Camera MainCamera { get; private set; }
         public static string CurrentScene { get; private set; } = "";

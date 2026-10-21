@@ -35,6 +35,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/DoublePlayScene.unity
     guid: fdba4a4b8842044039db27322e5b14f1
+  - enabled: 1
+    path: Assets/Scenes/DanSelect.unity
+    guid: 05338dac91da540848d191b623e7ffac
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

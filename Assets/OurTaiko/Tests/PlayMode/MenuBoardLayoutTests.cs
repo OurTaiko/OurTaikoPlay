@@ -18,20 +18,23 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator AllThreeEntryModesStayVisibleAndClickable()
+        public IEnumerator TheThreeVisibleEntryModesStayInsideAndClickable()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
             var entry = Object.FindFirstObjectByType<EntryScene>();
             entry.Don(); yield return new WaitForSecondsRealtime(2);
-            Assert.That(entry.Board.Boards.Count, Is.EqualTo(3));
-            for (int selected = 0; selected < 3; selected++)
+            int count = entry.Board.Boards.Count;
+            Assert.That(count, Is.EqualTo(4));
+            for (int selected = 0; selected < count; selected++)
             {
                 if (selected > 0) entry.Ka(1);
                 yield return new WaitForSecondsRealtime(.7f);
                 Canvas.ForceUpdateCanvases();
-                foreach (var board in entry.Board.Boards)
+                // Three boards show at a time, the selected one among them.
+                int first = EntryModeList.FirstVisible(selected, count);
+                foreach (var board in entry.Board.Boards.Skip(first).Take(3))
                 {
                     Assert.That(board.Root.gameObject.activeInHierarchy, Is.True);
                     Assert.That(board.Fade, Is.GreaterThan(.99));
@@ -53,9 +56,9 @@ namespace OurTaiko.Tests
             entry.view.boards[0].hitRelay.Clicked();
             yield return new WaitForSecondsRealtime(.7f);
             Assert.That(entry.Flow.SelectedMode, Is.Zero);
-            entry.view.boards[2].hitRelay.Clicked();
+            entry.view.boards[3].hitRelay.Clicked();
             yield return new WaitForSecondsRealtime(.7f);
-            entry.view.boards[2].hitRelay.Clicked();
+            entry.view.boards[3].hitRelay.Clicked();
             float end = Time.realtimeSinceStartup + 15;
             while (SceneManager.GetActiveScene().name != SceneSwitcher.SettingScene || SceneSwitcher.Instance.IsInputBlocked)
             { Assert.That(Time.realtimeSinceStartup, Is.LessThan(end)); yield return null; }

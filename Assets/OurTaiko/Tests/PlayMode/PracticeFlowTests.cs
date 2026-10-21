@@ -256,10 +256,10 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
             var entry = Object.FindFirstObjectByType<EntryScene>();
             Assert.That(entry.view.boards.Count(b => b.practice), Is.EqualTo(1));
-            Assert.That(entry.view.boards[1].practice, Is.True);
-            Assert.That(entry.view.boards[1].scene, Is.EqualTo(SceneSwitcher.ServerLoginScene));
+            Assert.That(entry.view.boards[2].practice, Is.True, "練習モード follows 演奏ゲーム and 段位道場.");
+            Assert.That(entry.view.boards[2].scene, Is.EqualTo(SceneSwitcher.ServerLoginScene));
             entry.Don(); yield return new WaitForSecondsRealtime(1.5f);
-            entry.Ka(1); yield return new WaitForSecondsRealtime(0.3f); entry.Don();
+            entry.Ka(2); yield return new WaitForSecondsRealtime(0.3f); entry.Don();
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
             song = ScriptableObject.CreateInstance<SongDefinition>(); song.name = "Practice Test";

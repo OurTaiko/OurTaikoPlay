@@ -214,7 +214,7 @@ namespace OurTaiko.Tests
             var entry = Object.FindFirstObjectByType<EntryScene>();
             entry.Don();
             yield return new WaitForSecondsRealtime(1.5f);
-            entry.Ka(1);
+            entry.Ka(2);
             yield return new WaitForSecondsRealtime(.3f);
             entry.Don();
             yield return WaitForScene(SceneSwitcher.ServerLoginScene);

@@ -122,6 +122,8 @@ namespace OurTaiko
             if (value.Any(v => v.Type == JTokenType.Array || v.Type == JTokenType.Null))
             {
                 if (value.Count != songCount) throw new FormatException($"Exam '{type}' has {value.Count} per-song values for {songCount} songs.");
+                // The soul gauge is the course's: one value for every song makes no sense.
+                if (examType == DanExamType.Gauge) throw new FormatException("A gauge exam takes one [red, gold] for the course.");
                 exam.Songs = value.Select(v => v.Type == JTokenType.Null ? (DanBorder?)null : Pair(exam, v as JArray, type)).ToArray();
                 if (exam.Songs.All(s => s == null)) throw new FormatException($"Exam '{type}' has no border for any song.");
                 exam.Course = exam.Songs.First(s => s != null).Value;
