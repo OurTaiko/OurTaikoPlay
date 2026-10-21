@@ -63,11 +63,16 @@ namespace OurTaiko
         public SongPlateView[] plates;
         public Sprite[] genreBanners, songNumbers, difficulties, levelDigits, countDigits;
 
-        [Header("Page 2")]
-        public CanvasGroup totalsPage;
+        [Header("Plate (both pages)")]
         public Image emblem;
         public Sprite[] emblems;
+        [Tooltip("The course's name top to bottom across the plate (the arcade's large name), on both pages.")]
+        public TextMeshProUGUI danName;
+        [Tooltip("The course's name across the plate's foot.")]
         public TextMeshProUGUI horiName;
+
+        [Header("Page 2")]
+        public CanvasGroup totalsPage;
         public Image[] scoreDigits;
         public Sprite[] scoreDigitSprites;
         [Tooltip("良, 可, 不可, 連打, 最大コンボ, 叩けた数.")]

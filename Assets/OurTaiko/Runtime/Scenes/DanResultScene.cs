@@ -249,7 +249,10 @@ namespace OurTaiko
             }
 
             view.emblem.sprite = view.emblems[Mathf.Clamp(course.Color, 0, view.emblems.Length - 1)];
-            view.horiName.text = course.Title(language);
+            // The arcade plate: the name large and top to bottom, and again small across its foot.
+            string title = course.Title(language);
+            if (view.danName != null) view.danName.text = string.Join("\n", title.Where(c => !char.IsWhiteSpace(c)).Select(c => c.ToString()));
+            view.horiName.text = title;
             view.horiName.Squeeze(240);
             var total = Result.Progress.Total;
             int[] totals = { total.Good, total.Ok, total.Bad, total.Rolls, Result.MaxCombo, total.Good + total.Ok + total.Bad + total.Rolls };
