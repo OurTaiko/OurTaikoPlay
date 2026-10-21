@@ -30,9 +30,9 @@ namespace OurTaiko
         [Tooltip("anim/dani_between (Nijiiro): the doors' and the title's clip.")]
         public TextAsset betweenTimeline;
 
-        // After the course's last judgment: the ending starts a second later; a course that failed
-        // out before its last song goes to the result 2.8 s after that song (YataiDON update()).
-        const double EndingDelay = 1, FailOutDelay = 2.8, MaxTail = 20;
+        // After the course's last judgment, or the song a failed exam ended it on: the ending
+        // (合格 / 不合格, as on the cabinet) starts a second later.
+        const double EndingDelay = 1, MaxTail = 20;
 
         public PlayerLane Lane { get; private set; }
         public PlaySession Session => Lane?.Session;
@@ -209,7 +209,7 @@ namespace OurTaiko
             else if (Progress.IsEnded)
             {
                 double since = PlayNow - songEndedAt;
-                if (FailedOut ? since >= FailOutDelay : since >= EndingDelay) Finish();
+                if (since >= EndingDelay) Finish();
             }
             else
             {
@@ -253,8 +253,7 @@ namespace OurTaiko
             StartSong();
         }
 
-        // The course is over: the ending plays after its last song (a fail-out goes straight on),
-        // and the result follows.
+        // The course is over: 合格 or 不合格 plays over the lane, and the result follows.
         void Finish()
         {
             IsFinished = true;
@@ -272,17 +271,15 @@ namespace OurTaiko
 
         IEnumerator ShowEnding(DanPlayResult result)
         {
-            var total = Progress.Total;
-            if (ending != null && !FailedOut)
+            if (ending != null)
             {
-                // The course's crown: passed (any verdict) and how cleanly.
-                var crown = new PlayResult { IsClear = result.Verdict > 0, Ok = total.Ok, Bad = total.Bad };
-                ending.Begin(crown);
+                ending.BeginDan(result.Verdict > 0);
                 double started = GameTimeline.FrameTime, chartTime = ChartTime;
                 while (GameTimeline.FrameTime - started < ending.Duration)
                 {
                     double elapsed = GameTimeline.FrameTime - started;
-                    Lane.ShowVisuals(chartTime + elapsed, chartTime + elapsed - visualOffset, false, false);
+                    // A course that failed out keeps its lane still.
+                    if (!FailedOut) Lane.ShowVisuals(chartTime + elapsed, chartTime + elapsed - visualOffset, false, false);
                     ending.ShowTime(elapsed);
                     yield return null;
                 }

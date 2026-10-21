@@ -109,6 +109,13 @@ namespace OurTaiko.Tests
             Assert.That(scene.Session.CurrentBranch, Is.EqualTo(BranchRoute.Normal), "The branch counters start over with each song.");
             yield return WaitUntil(() => scene.view.between.gameObject.activeSelf == false, 5);
 
+            // The course passed: 合格 over the lane, on the clear ending's dancers.
+            yield return WaitUntil(() => scene.IsFinished, 30);
+            yield return new WaitForSecondsRealtime(1.7f);
+            Assert.That(scene.ending.danWord.enabled, Is.True, "合格");
+            Assert.That(scene.ending.GetComponentsInChildren<UnityEngine.UI.Image>().Any(i => i.enabled && System.Array.IndexOf(scene.ending.clearText, i.sprite) >= 0), Is.False, "No クリア成功.");
+            TestCapture.Capture("DanPlayPass.png");
+
             yield return WaitForScene(SceneSwitcher.DanResultScene, 40);
             var result = SceneSwitcher.Instance.LastDan;
             Assert.That(result, Is.Not.Null);
@@ -164,6 +171,12 @@ namespace OurTaiko.Tests
             Assert.That(scene.SongEnded, Is.False);
             Assert.That(scene.view.rows[0].failed.enabled, Is.True);
             TestCapture.Capture("DanPlayFailed.png");
+            // The course failed: 不合格 over the still lane, on the fail ending.
+            yield return WaitUntil(() => scene.IsFinished, 30);
+            yield return new WaitForSecondsRealtime(1.2f);
+            Assert.That(scene.ending.GetComponentsInChildren<UnityEngine.UI.Image>().Any(i => i.enabled && i.sprite == scene.ending.danFail), Is.True, "不合格");
+            Assert.That(scene.ending.danWord.gameObject.activeSelf, Is.False);
+            TestCapture.Capture("DanPlayFailEnding.png");
             yield return WaitForScene(SceneSwitcher.DanResultScene, 30);
             var result = SceneSwitcher.Instance.LastDan;
             Assert.That(result.Songs.Length, Is.EqualTo(1), "The course stopped after its first song.");
