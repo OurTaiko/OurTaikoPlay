@@ -50,7 +50,9 @@ namespace OurTaiko
         public int Score, MaxCombo;
         public double GaugePoints;
         public bool AutoPlay;
-        // Set once DanResult has recorded it, so showing it again saves nothing twice.
+        // Set once DanResult has recorded it, so showing it again saves nothing twice; the best
+        // before this attempt is kept for the celebration and the best-score pill.
         public bool Saved;
+        public DanRecordStore.Best? PreviousBest;
     }
 }

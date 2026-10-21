@@ -5,15 +5,19 @@ using UnityEngine.SceneManagement;
 
 namespace OurTaiko.Tests
 {
-    // Renders the active scene's Canvas through the main camera into TestResults/<name>.
+    // Renders the active scene's Canvas (or the given one) through the main camera into
+    // TestResults/<name>; a scene without a camera borrows a temporary one.
     public static class TestCapture
     {
         public static Canvas SceneCanvas() => Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None)
             .Single(canvas => canvas.isRootCanvas && canvas.gameObject.scene == SceneManager.GetActiveScene());
 
-        public static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null)
+        public static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null, Canvas canvas = null)
         {
-            var canvas = SceneCanvas(); var camera = Camera.main;
+            canvas ??= SceneCanvas();
+            var camera = Camera.main;
+            var borrowed = camera == null ? new GameObject("CaptureCamera", typeof(Camera)) : null;
+            if (borrowed != null) { camera = borrowed.GetComponent<Camera>(); camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = Color.black; }
             var scaler = canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
             var previous = RenderTexture.active; var previousTarget = camera.targetTexture;
             var previousMode = canvas.renderMode; var previousCamera = canvas.worldCamera; float previousDistance = canvas.planeDistance;
@@ -37,6 +41,7 @@ namespace OurTaiko.Tests
                 canvas.renderMode = previousMode; canvas.worldCamera = previousCamera; canvas.planeDistance = previousDistance;
                 scaler.SendMessage("Handle"); Canvas.ForceUpdateCanvases();
                 Object.Destroy(texture); Object.Destroy(target);
+                if (borrowed != null) Object.Destroy(borrowed);
             }
         }
     }

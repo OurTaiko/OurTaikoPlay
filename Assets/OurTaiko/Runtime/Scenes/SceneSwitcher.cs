@@ -8,8 +8,9 @@ using UnityEngine.SceneManagement;
 
 namespace OurTaiko
 {
-    // How a switch covers the screen: the default dark fade, or the Nijiiro song-loading curtain.
-    public enum TransitionStyle { Fade, Curtain }
+    // How a switch covers the screen: the default dark fade, the Nijiiro song-loading curtain, or
+    // 段位道場's loading cover (DanLoadingCover).
+    public enum TransitionStyle { Fade, Curtain, Dan }
 
     // Global UI control, created before the first scene and retained across every load.
     public sealed class SceneSwitcher : MonoBehaviour
@@ -37,6 +38,9 @@ namespace OurTaiko
         public const string DanSelectScene = "DanSelect", DanPlayScene = "DanPlayScene";
         // The course chosen on DanSelect, for DanPlayScene and the dan result; the ribbon returns to it.
         public DanCourseEntry SelectedDan { get; set; }
+        // The highest rank among the listed courses (DanCourse.DanIndex): passing that one first
+        // shows the result's 祝 popup.
+        public int DanIndexMax { get; set; } = -1;
         // The course being played: SongLoadingScene fills its charts, DanPlayScene plays it.
         public DanRun CurrentDan { get; private set; }
         bool danLoadPending;
@@ -45,10 +49,13 @@ namespace OurTaiko
         public static string CurrentScene { get; private set; } = "";
         public static string LastScene { get; private set; } = "";
         public static event EventHandler<(string NewScene, string OldScene)> OnSceneChanged;
+        // The scene the last switch left (DanSelect plays its whole door intro only after Entry).
+        public string FromScene { get; private set; } = "";
 
         [SerializeField] CanvasGroup transition;
         [SerializeField] TMP_Text loadingText;
         [SerializeField] SongTransition songTransition;
+        [SerializeField] DanLoadingCover danCover;
         [SerializeField, Min(0.01f)] float closeDuration = 0.9f;
         [SerializeField, Min(0.01f)] float openDuration = 0.8f;
 
@@ -75,8 +82,9 @@ namespace OurTaiko
         public int SongsPlayed { get; private set; }
         public bool IsSwitching { get; private set; }
         public bool IsCovered => IsCurtainClosed || (transition != null && transition.alpha >= 0.999f);
-        public bool IsCurtainClosed => songTransition != null && songTransition.IsClosed;
+        public bool IsCurtainClosed => songTransition != null && songTransition.IsClosed || danCover != null && danCover.IsClosed;
         public SongTransition Curtain => songTransition;
+        public DanLoadingCover DanCover => danCover;
         public bool IsInputBlocked => IsSwitching || IsCovered || (transitionTask != null && !transitionTask.IsCompleted);
         public event Action<string> SceneChanging;
 
@@ -126,6 +134,7 @@ namespace OurTaiko
             MainCamera = Camera.main;
             SetTransitionState(false);
             if (songTransition != null) songTransition.Hide();
+            if (danCover != null) danCover.Hide();
             var settings = SettingManager.EnsureInstance();
             settings.Changed -= ApplyDisplay;
             settings.Changed += ApplyDisplay;
@@ -160,8 +169,8 @@ namespace OurTaiko
             SwitchScene(SongLoadingScene, TransitionStyle.Curtain, false);
         }
 
-        // 段位道場: the curtain closes over the course's title and SongLoadingScene prepares every
-        // song (downloading a server's first) before DanPlayScene opens it.
+        // 段位道場: the loading cover closes over the course select (with the course's plaque) and
+        // SongLoadingScene prepares every song (downloading a server's first) before DanPlayScene opens it.
         public bool PlayDan(DanCourseEntry entry)
         {
             if (IsInputBlocked || entry == null || !entry.IsPlayable) return false;
@@ -173,11 +182,12 @@ namespace OurTaiko
             completedSong = null; completedRecord = completedRecord2P = null;
             Array.Clear(preparedCharts, 0, preparedCharts.Length);
             ReturnScene = DanSelectScene;
-            if (songTransition == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(DanPlayScene); return true; }
+            if (songTransition == null && danCover == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(DanPlayScene); return true; }
             danLoadPending = true;
             string language = SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language : "ja";
-            songTransition.SetSong(entry.Course.Title(language), "");
-            SwitchScene(SongLoadingScene, TransitionStyle.Curtain, false);
+            if (danCover != null) danCover.SetCourse(entry.Course.Title(language), entry.Course.Color);
+            else songTransition.SetSong(entry.Course.Title(language), "");
+            SwitchScene(SongLoadingScene, danCover != null ? TransitionStyle.Dan : TransitionStyle.Curtain, false);
             return true;
         }
 
@@ -224,6 +234,21 @@ namespace OurTaiko
         {
             if (songTransition == null || IsCovered) return;
             songTransition.Park();
+        }
+
+        // The same for a course: its loading cover, closed at once.
+        public void ParkDanCover()
+        {
+            if (IsCovered) return;
+            if (danCover != null) danCover.Park();
+            else ParkCurtain();
+        }
+
+        // Download progress and errors on whichever cover is up.
+        public void SetCoverStatus(string text, Color color)
+        {
+            if (danCover != null && danCover.IsVisible) danCover.SetStatus(text, color);
+            else songTransition?.SetStatus(text, color);
         }
 
         public void SetPreparedChart(SongDefinition song, string course, TaikoChart chart, int seat = 0)
@@ -317,6 +342,7 @@ namespace OurTaiko
                 await preparation;
                 if (afterFade != null) await afterFade();
                 lifetime.ThrowIfCancellationRequested();
+                FromScene = CurrentScene;
                 var operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
                 if (operation == null) throw new InvalidOperationException("Could not load scene: " + sceneName);
                 while (!operation.isDone) await Awaitable.NextFrameAsync(lifetime);
@@ -371,6 +397,8 @@ namespace OurTaiko
             transitionCancellation?.Cancel();
             transitionCancellation?.Dispose();
             transitionCancellation = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+            bool dan = danCover != null && (closing ? style == TransitionStyle.Dan : danCover.IsVisible);
+            if (dan) return transitionTask = danCover.PlayAsync(closing, transitionCancellation.Token);
             bool curtain = songTransition != null && (closing ? style == TransitionStyle.Curtain : songTransition.IsVisible);
             // The curtain's own full-screen raycast target blocks clicks while it is shown.
             return transitionTask = curtain ? songTransition.PlayAsync(closing, transitionCancellation.Token)

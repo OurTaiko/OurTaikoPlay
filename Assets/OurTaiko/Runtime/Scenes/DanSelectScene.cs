@@ -13,8 +13,9 @@ namespace OurTaiko
     // library root's Dan/*.otdan.json, then the DanServerTest/ stand-in for server courses. The
     // ribbon of course chips runs along the top, the selected course's songs and exams sit on the
     // yellow board, and a don opens the confirmation (オプション / はい / いいえ). Courses that cannot
-    // be played (a song not found, a broken file) are listed greyed out with the reason. No timer
-    // (user decision: the simulator does not limit the player's time).
+    // be played (a song not found, a broken file) are listed greyed out with the reason. The 段位道場
+    // doors (DanIntroView) open over it first, the whole intro after Entry, and the screen takes input
+    // once they have. No timer (user decision: the simulator does not limit the player's time).
     public sealed class DanSelectScene : MonoBehaviour
     {
         // The ribbon: chips every RibbonSpacing px around the centre (Nijiiro dan_ribbon x 960).
@@ -26,22 +27,28 @@ namespace OurTaiko
 
         public DanSelectView view;
         public OptionPanelArt optionArt;
+        public DanIntroView intro;
 
         [Header("Audio")]
         public AudioSource bgm;
         public AudioSource sfx, voice;
         public AudioClip don, ka, cancel, confirmBox, confirmVoice, enterVoice, optionsVoice;
+        [Tooltip("song_select/dan_intro: the stamps of the whole door intro.")]
+        public AudioClip introSound;
 
         public DanSelectFlow Flow { get; private set; }
         public IReadOnlyList<DanCourseEntry> Courses => courses;
         public bool HasLeft { get; private set; }
         public OptionMenu Options { get; private set; }
+        // The doors play once the cover has opened; the screen takes input after them.
+        public bool FullIntro { get; private set; }
+        public bool IntroDone => intro == null || !intro.IsPlaying && !double.IsNaN(introStartedAt);
 
         readonly List<DanCourseEntry> courses = new List<DanCourseEntry>();
         readonly Dictionary<SongDefinition, SongInfo> displayInfo = new Dictionary<SongDefinition, SongInfo>();
         SceneSwitcher switcher;
         OptionPanel optionPanel;
-        double ribbonFrom, ribbonTo, ribbonMovedAt = double.NegativeInfinity, boardShownAt;
+        double ribbonFrom, ribbonTo, ribbonMovedAt = double.NegativeInfinity, boardShownAt, introStartedAt = double.NaN;
         int shownCourse = -1;
         string language = "ja";
 
@@ -54,11 +61,14 @@ namespace OurTaiko
             switcher.TwoPlayers = false;
             language = SettingManager.EnsureInstance().Settings.general.Language;
             Load();
+            switcher.DanIndexMax = courses.Count > 0 ? courses.Max(c => c.Course.DanIndex) : -1;
             int start = switcher.SelectedDan != null ? Math.Max(0, courses.FindIndex(c => Same(c, switcher.SelectedDan))) : 0;
             Flow = new DanSelectFlow(courses.Count, i => courses[i].IsPlayable, start);
             ribbonFrom = ribbonTo = Flow.Selected;
             Bind();
             switcher.SceneChanging += OnSceneChanging;
+            FullIntro = switcher.FromScene == SceneSwitcher.EntryScene;
+            if (intro != null) intro.Show(DanIntroView.Frame(FullIntro, 0));
             Show(Now);
         }
 
@@ -66,7 +76,7 @@ namespace OurTaiko
         {
             bgm.SetAudioGroup(AudioGroup.Bgm);
             voice.SetAudioGroup(AudioGroup.Voice);
-            sfx.PrepareAudioEffects(don, ka, cancel, confirmBox);
+            sfx.PrepareAudioEffects(don, ka, cancel, confirmBox, introSound);
             voice.PrepareAudioTracks(confirmVoice, enterVoice, optionsVoice);
             if (bgm.clip != null) { bgm.loop = true; bgm.PlayAudio(); }
             Play(voice, enterVoice);
@@ -130,8 +140,21 @@ namespace OurTaiko
         void Update()
         {
             double now = Now;
-            if (!switcher.IsInputBlocked && !HasLeft) HandleInput(now);
+            ShowIntro(now);
+            if (!switcher.IsInputBlocked && !HasLeft && IntroDone) HandleInput(now);
             Show(now);
+        }
+
+        void ShowIntro(double now)
+        {
+            if (intro == null || !intro.IsPlaying) return;
+            if (double.IsNaN(introStartedAt))
+            {
+                if (switcher.IsInputBlocked) return;
+                introStartedAt = now;
+                if (FullIntro) Play(sfx, introSound, true);
+            }
+            intro.Show(DanIntroView.Frame(FullIntro, now - introStartedAt));
         }
 
         void HandleInput(double now)
@@ -156,7 +179,7 @@ namespace OurTaiko
         // A drum face hit: the confirmation opens on a playable course, or decides there.
         public void Don()
         {
-            if (switcher.IsInputBlocked || HasLeft) return;
+            if (switcher.IsInputBlocked || HasLeft || !IntroDone) return;
             double now = Now;
             if (Flow.State == DanSelectFlow.Phase.Browsing)
             {
@@ -189,7 +212,7 @@ namespace OurTaiko
         // A rim hit: the ribbon moves (wrapping), or the confirmation's cursor does.
         public void Ka(int delta)
         {
-            if (switcher.IsInputBlocked || HasLeft) return;
+            if (switcher.IsInputBlocked || HasLeft || !IntroDone) return;
             double now = Now;
             if (Flow.State == DanSelectFlow.Phase.Browsing)
             {
@@ -203,7 +226,7 @@ namespace OurTaiko
 
         public void Back()
         {
-            if (switcher.IsInputBlocked || HasLeft) return;
+            if (switcher.IsInputBlocked || HasLeft || !IntroDone) return;
             if (!Flow.Back()) return;
             Play(sfx, cancel, true);
             if (Flow.State != DanSelectFlow.Phase.Left) return;

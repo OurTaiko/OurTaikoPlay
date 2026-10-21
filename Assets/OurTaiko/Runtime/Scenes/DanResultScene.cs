@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,25 +9,41 @@ namespace OurTaiko
     // 段位道場's result (YataiDON DanResultScreen with Nijiiro's dan_result art). On arrival the
     // attempt is recorded locally (DanRecordStore; not under オート) and each song played is saved
     // as a normal score: local songs in ScoreStore, a server's songs queued for upload with their
-    // drum inputs. Page 1 shows each song's plate (unreached ones dimmed), page 2 the totals, every
-    // exam as it ended and the 合格 / 不合格 stamp; a course grants no title or dan here (local
-    // courses never do; a server's come in the online stage). The count-up and bar-fill animations
-    // and the rank-up / congratulation screens are not ported.
+    // drum inputs. Page 1 slides in each song's plate (unreached ones dimmed); page 2 counts up the
+    // totals, fills the soul gauge and each exam's bar in turn and stamps 合格 / 不合格 (timeline in
+    // DanResultFlow). A pass better than any before shows the 昇段 celebration (with the course's
+    // rank when a server's course names one, else 合格 alone), and the first pass of the highest
+    // listed rank the 祝 popup; neither grants anything (local courses never do, a server's will in
+    // the online stage), so the nameplate stays as it is.
     public sealed class DanResultScene : MonoBehaviour
     {
         public DanResultView view;
         public AudioSource bgm, sfx, voice;
-        public AudioClip don, announce, partialPlate, totalIntro, stampClear, stampClearGold, stampFail, voiceClear, voiceClearGold, voiceFail;
+        public AudioClip don, announce, partialIntro, partialPlate, totalIntro, countUp, achieveTamashii, gaugeUp, gaugeDown, gaugeJudgement;
+        public AudioClip stampClear, stampClearGold, stampFail, atmosClear, voiceClear, voiceClearGold, voiceFail;
+        public AudioClip advanceIntro, voiceAdvance, advanceShogo, voiceGlad, popupSuperlative;
+
+        // The celebration and the popup move the nameplate here (dan_result_draw.lua nameplate_pos).
+        static readonly Vector2 CelebrationPlate = new Vector2(763, -912);
 
         public DanPlayResult Result { get; private set; }
         public DanResultFlow Flow { get; private set; }
         public DanRecordStore.Best? PreviousBest { get; private set; }
         public bool Recorded { get; private set; }
         public bool HasLeft { get; private set; }
+        public bool Celebrates { get; private set; }
+        public bool Congratulates { get; private set; }
 
         SceneSwitcher switcher;
         int platesLanded;
-        bool totalsShown;
+        bool countUpPlayed, tamashiiPlayed, stampPlayed, voicePlayed, advancePlayed, shogoPlayed, congratsPlayed;
+        bool[] rowFillPlayed = Array.Empty<bool>(), rowJudgePlayed = Array.Empty<bool>();
+        int gaugeIndex = -1, gaugeValue;
+        DanResultFlow.Page page;
+        string[] totalValues = Array.Empty<string>();
+        float[] totalRights = Array.Empty<float>();
+        float bestScoreY;
+        CanvasGroup plateGroup;
 
         double Now => GameTimeline.FrameTime * 1000;
 
@@ -52,23 +69,25 @@ namespace OurTaiko
             if (Result == null) return;
             bgm.SetAudioGroup(AudioGroup.Bgm);
             voice.SetAudioGroup(AudioGroup.Voice);
-            sfx.PrepareAudioEffects(don, partialPlate, totalIntro, stampClear, stampClearGold, stampFail);
-            voice.PrepareAudioTracks(announce, voiceClear, voiceClearGold, voiceFail);
+            sfx.PrepareAudioEffects(don, partialIntro, partialPlate, totalIntro, countUp, achieveTamashii, gaugeUp, gaugeDown, gaugeJudgement,
+                stampClear, stampClearGold, stampFail, atmosClear, advanceIntro, advanceShogo, popupSuperlative);
+            voice.PrepareAudioTracks(announce, voiceClear, voiceClearGold, voiceFail, voiceAdvance, voiceGlad);
             if (bgm.clip != null) { bgm.loop = true; bgm.PlayAudio(); }
             Play(voice, announce);
+            Play(sfx, partialIntro, true);
         }
 
         // Once per result: the attempt and each song's score.
         void Save()
         {
-            if (Result.Saved) { Recorded = !Result.AutoPlay; return; }
+            if (Result.Saved) { Recorded = !Result.AutoPlay; PreviousBest = Result.PreviousBest; return; }
             Result.Saved = true;
             Recorded = !Result.AutoPlay;
             if (Recorded)
             {
                 var entry = Result.Run.Entry;
                 string language = SettingManager.EnsureInstance().Settings.general.Language;
-                PreviousBest = DanRecordStore.Shared.Save(DanRecordStore.Key(entry), entry.Course.Title(language), Result.Verdict,
+                PreviousBest = Result.PreviousBest = DanRecordStore.Shared.Save(DanRecordStore.Key(entry), entry.Course.Title(language), Result.Verdict,
                     Result.Score, Result.MaxCombo, Result.GaugePoints, Result.Songs.Length);
             }
             for (int i = 0; i < Result.Songs.Length; i++)
@@ -83,23 +102,31 @@ namespace OurTaiko
             if (Flow == null)
             {
                 if (switcher.IsInputBlocked) { Show(now); return; }
-                Flow = new DanResultFlow(Result.Run.Count, now);
+                Flow = new DanResultFlow(Result.Run.Count, now, page, Celebrates, Congratulates);
             }
             if (!switcher.IsInputBlocked && !HasLeft)
             {
                 if (InputManager.GetKeyDown(InputKey.Back)) Leave();
                 else if (InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Don();
             }
-            if (Flow.Update(now)) Stamp();
+            if (Flow.Update(now)) Leave();
+            Sounds(now);
             Show(now);
         }
 
-        // A drum face hit: shows the plates, turns the page, stamps, then leaves.
+        // A drum face hit: shows the plates, turns the page, lands page 2, then celebrates or leaves.
         public void Don()
         {
             if (switcher.IsInputBlocked || HasLeft || Flow == null) return;
             var before = Flow.State;
-            if (!Flow.Hit(Now)) return;
+            double now = Now;
+            if (!Flow.Hit(now))
+            {
+                // handle_input sounds every hit past the lock, even one that changes nothing (not on the popup).
+                if (now - Flow.ChangedAt >= DanResultFlow.InputLockMs && before != DanResultFlow.Phase.Congrats && before != DanResultFlow.Phase.Left)
+                    Play(sfx, don, true);
+                return;
+            }
             Play(sfx, don, true);
             // The plates shown at once land without a sound each (page1_plates_played = song_count).
             if (before == DanResultFlow.Phase.Songs) platesLanded = Result.Run.Count;
@@ -115,11 +142,49 @@ namespace OurTaiko
             switcher.SwitchScene(SceneSwitcher.DanSelectScene);
         }
 
-        void Stamp()
+        // update_sounds: page 2's count-up, fills and judgements as they happen (not after a skip),
+        // the stamp and its voice, then the celebration's and the popup's.
+        void Sounds(double now)
         {
-            bool passed = Result.Verdict > 0, gold = Result.Verdict >= 4;
-            Play(sfx, !passed ? stampFail : gold ? stampClearGold : stampClear, true);
-            Play(voice, !passed ? voiceFail : gold ? voiceClearGold : voiceClear);
+            if (Flow.State == DanResultFlow.Phase.Congrats)
+            {
+                if (!congratsPlayed) { congratsPlayed = true; Play(voice, voiceGlad); Play(sfx, popupSuperlative, true); }
+                return;
+            }
+            if (Flow.State == DanResultFlow.Phase.Celebrating)
+            {
+                if (!advancePlayed) { advancePlayed = true; Play(sfx, advanceIntro, true); Play(voice, voiceAdvance); }
+                if (!shogoPlayed && now - Flow.CelebratedAt >= DanResultFlow.ShogoMs) { shogoPlayed = true; Play(sfx, advanceShogo, true); }
+                return;
+            }
+            if (double.IsNaN(Flow.TotalsAt) || Flow.State == DanResultFlow.Phase.Left) return;
+            double on = Flow.PageTime(now);
+            if (!countUpPlayed && on >= Flow.TotalsStart && !Flow.Skipped) { countUpPlayed = true; Play(sfx, countUp, true); }
+            if (!tamashiiPlayed && gaugeIndex >= 0 && gaugeValue >= 100 && on >= Flow.TotalsStart + gaugeValue * DanResultFlow.GaugeUnitMs)
+            {
+                tamashiiPlayed = true;
+                Play(sfx, achieveTamashii, true);
+            }
+            var exams = Result.Run.Entry.Course.Exams;
+            for (int i = 0; i < Flow.Rows.Length; i++)
+            {
+                if (i == gaugeIndex) continue;
+                var row = Flow.Rows[i];
+                if (!rowFillPlayed[i] && on >= row.Fill && row.FillMs > 0 && !Flow.Skipped)
+                {
+                    rowFillPlayed[i] = true;
+                    Play(sfx, exams[i].Range == DanExamRange.Less ? gaugeDown : gaugeUp, true);
+                }
+                if (!rowJudgePlayed[i] && on >= row.Number && !Flow.Skipped) { rowJudgePlayed[i] = true; Play(sfx, gaugeJudgement, true); }
+            }
+            int verdict = Result.Verdict;
+            if (!stampPlayed && on >= Flow.StampAt) { stampPlayed = true; Play(sfx, verdict == 0 ? stampFail : verdict <= 3 ? stampClear : stampClearGold, true); }
+            if (!voicePlayed && on >= Flow.VoiceAt)
+            {
+                voicePlayed = true;
+                if (verdict == 0) Play(voice, voiceFail);
+                else { Play(sfx, atmosClear, true); Play(voice, verdict <= 3 ? voiceClear : voiceClearGold); }
+            }
         }
 
         static void Play(AudioSource source, AudioClip clip, bool oneShot = false)
@@ -131,7 +196,7 @@ namespace OurTaiko
             source.PlayAudio();
         }
 
-        // ---------------------------------------------------------------- drawing
+        // ---------------------------------------------------------------- binding
 
         void Bind()
         {
@@ -186,12 +251,18 @@ namespace OurTaiko
             view.emblem.sprite = view.emblems[Mathf.Clamp(course.Color, 0, view.emblems.Length - 1)];
             view.horiName.text = course.Title(language);
             view.horiName.Squeeze(240);
-            view.scoreDigits = Digits(view.scoreDigits, Result.Score.ToString(), view.scoreDigitSprites, 782, 46);
             var total = Result.Progress.Total;
             int[] totals = { total.Good, total.Ok, total.Bad, total.Rolls, Result.MaxCombo, total.Good + total.Ok + total.Bad + total.Rolls };
-            for (int k = 0; k < view.totals.Length && k < totals.Length; k++)
-                view.totals[k].digits = Digits(view.totals[k].digits, totals[k].ToString(), view.countDigits, RightEdge(view.totals[k].digits), 28);
-            ShowExams();
+            totalValues = totals.Select(v => v.ToString()).ToArray();
+            totalRights = view.totals.Select(row => RightEdge(row.digits)).ToArray();
+            BindExams();
+            page = new DanResultFlow.Page
+            {
+                Digits = totalValues.Append(Result.Score.ToString()).Max(v => v.Length),
+                GaugeRow = gaugeIndex, GaugeValue = gaugeValue, Travel = ExamTravel(),
+            };
+            rowFillPlayed = new bool[page.Travel.Length];
+            rowJudgePlayed = new bool[page.Travel.Length];
             view.stamp.sprite = view.stamps[Mathf.Clamp(Result.Verdict, 0, view.stamps.Length - 1)];
             view.stamp.rectTransform.sizeDelta = view.stamp.sprite.rect.size;
             view.stamp.rectTransform.anchoredPosition = Result.Verdict > 0 ? new Vector2(7, -396) : new Vector2(10, -476);
@@ -199,8 +270,41 @@ namespace OurTaiko
             bool best = Recorded && PreviousBest.HasValue && Result.Verdict > 0 && Result.Verdict >= PreviousBest.Value.Verdict
                 && Result.Score > PreviousBest.Value.Score;
             view.bestScore.gameObject.SetActive(best);
+            bestScoreY = view.bestScore.anchoredPosition.y;
             if (best) view.bestScoreDigits = Digits(view.bestScoreDigits, (Result.Score - PreviousBest.Value.Score).ToString(), view.bestScoreDigitSprites, RightEdge(view.bestScoreDigits), 14.17f);
             view.noSave.gameObject.SetActive(!Recorded);
+            BindCelebration(course);
+        }
+
+        // apply_reward: 昇段 is a pass better than every attempt before (rank = verdict + 1, a failed
+        // attempt is 1); the 祝 popup follows for the first pass of the highest-ranked course listed.
+        // An オート play records nothing, so it has nothing to celebrate.
+        void BindCelebration(DanCourse course)
+        {
+            int previous = PreviousBest.HasValue ? PreviousBest.Value.Verdict + 1 : 0;
+            Celebrates = Recorded && Result.Verdict > 0 && Result.Verdict + 1 > previous;
+            int rank = course.DanIndex, highest = switcher.DanIndexMax;
+            Congratulates = Celebrates && rank >= 0 && highest >= 0 && rank == highest && previous <= 1;
+            view.celebration.gameObject.SetActive(false);
+            if (!Celebrates) return;
+            int verdict = Result.Verdict;
+            view.shoudanBackground.sprite = verdict == 2 || verdict == 5 ? view.shoudanGold : verdict == 3 || verdict == 6 ? view.shoudanRainbow : view.shoudanWhite;
+            var text = verdict > 3 ? view.textGold : view.textWhite;
+            var named = DanResultFlow.RankGlyphs(rank);
+            int[] frames = { named?.Left ?? -1, named?.Right ?? -1, 18, 19 };
+            for (int i = 0; i < view.glyphs.Length; i++)
+            {
+                bool on = frames[i] >= 0 && frames[i] < text.Length;
+                view.glyphs[i].sprite = on ? text[frames[i]] : null;
+                view.glyphGhosts[i].sprite = view.glyphs[i].sprite;
+                view.glyphs[i].gameObject.SetActive(on);
+                view.glyphGhosts[i].gameObject.SetActive(on);
+            }
+            // The popup's text in Japanese (frame 0), as every Nijiiro screen here is.
+            var popup = rank == 24 ? view.congratsText2 : view.congratsText1;
+            if (popup != null && popup.Length > 0) view.congratsText.sprite = popup[0];
+            plateGroup = view.nameplate.GetComponent<CanvasGroup>();
+            if (plateGroup == null) plateGroup = view.nameplate.gameObject.AddComponent<CanvasGroup>();
         }
 
         // genre_banner's frame_order: 0 for the default and pops, then one per genre.
@@ -226,16 +330,20 @@ namespace OurTaiko
 
         // Right-aligned digits whose last one sits at `right` (draw_digit_counter with x_off = margin).
         static Image[] Digits(Image[] digits, string value, Sprite[] sprites, float right, float margin)
+            => RollDigits(digits, value, sprites, right, margin, -1, true);
+
+        // The same, counting up (DanResultFlow.RollDigit): the ones first, a place every 500 ms.
+        static Image[] RollDigits(Image[] digits, string value, Sprite[] sprites, float right, float margin, double roll, bool shown)
         {
             int n = value.Length;
             digits = Grow(digits, n);
             for (int k = 0; k < digits.Length; k++)
             {
                 int index = k - (digits.Length - n);
-                bool on = index >= 0;
-                digits[k].enabled = on;
-                if (!on) continue;
-                digits[k].sprite = sprites[value[index] - '0'];
+                int digit = shown && index >= 0 ? DanResultFlow.RollDigit(value[index] - '0', n - 1 - index, roll) : -1;
+                digits[k].enabled = digit >= 0;
+                if (digit < 0) continue;
+                digits[k].sprite = sprites[digit];
                 digits[k].rectTransform.anchoredPosition = new Vector2(right - (n - 1 - index) * margin, digits[k].rectTransform.anchoredPosition.y);
             }
             return digits;
@@ -256,13 +364,14 @@ namespace OurTaiko
             return digits;
         }
 
-        // draw_exam_info: the gauge exam as the soul gauge row, the others as bars (one per song
-        // reached for a per-song exam), as they stood when the course ended.
-        void ShowExams()
+        // The rows as the course ended: the first gauge exam as the soul gauge row, the others as
+        // bars (one per song reached for a per-song exam). Their animation is in ShowExams.
+        void BindExams()
         {
             var course = Result.Run.Entry.Course;
-            var progress = Result.Progress;
-            int gaugeIndex = course.Exams.FindIndex(e => e.Type == DanExamType.Gauge);
+            gaugeIndex = course.Exams.FindIndex(e => e.Type == DanExamType.Gauge);
+            if (gaugeIndex >= view.exams.Length) gaugeIndex = -1;
+            gaugeValue = gaugeIndex >= 0 ? Math.Max(0, Math.Min(100, Result.Progress.Value(course.Exams[gaugeIndex], -1))) : 0;
             for (int i = 0; i < view.exams.Length; i++)
             {
                 var row = view.exams[i];
@@ -270,19 +379,22 @@ namespace OurTaiko
                 row.root.gameObject.SetActive(shown);
                 if (!shown) continue;
                 var exam = course.Exams[i];
-                var state = progress.View(i, live: false);
+                var state = Result.Progress.View(i, live: false);
                 row.icon.sprite = view.examIcons[(int)exam.Type];
                 bool gauge = i == gaugeIndex;
                 row.gauge.gameObject.SetActive(gauge);
                 row.all.gameObject.SetActive(!gauge && !exam.PerSong);
-                if (gauge) ShowGauge(row, exam, progress.Value(exam, -1));
-                else if (!exam.PerSong)
+                if (gauge)
                 {
-                    Fill(row.allBar, row.allRainbow, Bar(state.BarState, false), view.rainbow, 972 * state.Progress, state.BarState);
-                    row.allCaption.text = Caption(exam, state.Red);
-                    row.allDigits = DigitsLeft(row.allDigits, state.Counter.ToString(), state.BarState == "max" ? view.valueDigitsMax : view.valueDigits, 807, 52);
+                    int border = exam.Course.Red;
+                    row.norma.rectTransform.sizeDelta = new Vector2(21 * (border / 2), row.norma.rectTransform.sizeDelta.y);
+                    row.norma.enabled = border / 2 > 0;
+                    row.marker.rectTransform.anchoredPosition = new Vector2(533 + 21 * (border / 2), row.marker.rectTransform.anchoredPosition.y);
+                    row.gaugeCaption.text = Caption(exam, border);
+                    row.gaugeCaption.rectTransform.anchoredPosition = new Vector2(498 + 21 * (border / 2) + 52, row.gaugeCaption.rectTransform.anchoredPosition.y);
                 }
-                int reached = exam.PerSong && !gauge ? Math.Min(Math.Max(1, Result.Songs.Length), row.songs.Length) : 0;
+                else if (!exam.PerSong) row.allCaption.text = Caption(exam, state.Red);
+                int reached = Reached(exam, gauge);
                 for (int j = 0; j < row.songs.Length; j++)
                 {
                     var song = row.songs[j];
@@ -290,40 +402,27 @@ namespace OurTaiko
                     song.root.gameObject.SetActive(on);
                     if (!on) continue;
                     song.badge.sprite = view.badges[Math.Min(j + 1, view.badges.Length - 1)];
-                    bool border = exam.BorderFor(j) != null;
-                    Fill(song.bar, song.rainbow, Bar(state.SongState[j], true), view.songRainbow, border ? 324 * state.SongProgress[j] : 0, border ? state.SongState[j] : "empty");
                     song.caption.text = exam.BorderFor(j) is DanBorder b ? Caption(exam, b.Red) : "―";
-                    song.digits = DigitsLeft(song.digits, border ? state.SongCounter[j].ToString() : "", state.SongState[j] == "max" ? view.songDigitsMax : view.songDigits, 527 + 465 * j, 27);
                 }
             }
         }
 
-        void ShowGauge(DanResultView.ExamRowView row, DanExam exam, int value)
+        int Reached(DanExam exam, bool gauge) => exam.PerSong && !gauge ? Math.Min(Math.Max(1, Result.Songs.Length), 3) : 0;
+
+        double[] ExamTravel()
         {
-            int border = exam.Course.Red, borderCells = border / 2, cells = Math.Min(50, value / 2);
-            bool clear = value >= border && border > 0;
-            row.norma.rectTransform.sizeDelta = new Vector2(21 * borderCells, row.norma.rectTransform.sizeDelta.y);
-            row.norma.enabled = borderCells > 0;
-            row.fill.sprite = clear ? view.gaugeFillClear : view.gaugeFill;
-            row.fill.rectTransform.sizeDelta = new Vector2(21 * cells, row.fill.rectTransform.sizeDelta.y);
-            row.fill.enabled = cells > 0;
-            row.soul.sprite = clear ? view.soulLit : view.soulDark;
-            row.marker.rectTransform.anchoredPosition = new Vector2(533 + 21 * borderCells, row.marker.rectTransform.anchoredPosition.y);
-            var numbers = value >= 100 ? view.gaugeNumbersMax : clear ? view.gaugeNumbersClear : view.gaugeNumbersNoClear;
-            var percent = value >= 100 ? view.percentMax : clear ? view.percentClear : view.percentNoClear;
-            string text = value.ToString();
-            int n = text.Length + 1;
-            for (int k = 0; k < row.gaugeDigits.Length; k++)
+            var exams = Result.Run.Entry.Course.Exams;
+            var travel = new double[Math.Min(exams.Count, view.exams.Length)];
+            for (int i = 0; i < travel.Length; i++)
             {
-                bool on = k < n;
-                var digit = row.gaugeDigits[k];
-                digit.enabled = on;
-                if (!on) continue;
-                digit.sprite = k < n - 1 ? numbers[text[k] - '0'] : percent;
-                digit.rectTransform.anchoredPosition = new Vector2(822 + (float)(k - (n - 1) / 2.0) * 34, digit.rectTransform.anchoredPosition.y);
+                if (i == gaugeIndex) continue;
+                var state = Result.Progress.View(i, live: false);
+                if (!exams[i].PerSong) { travel[i] = DanResultFlow.Travel(exams[i], state.Progress); continue; }
+                var songs = new List<double>();
+                for (int j = 0; j < Reached(exams[i], false); j++) if (exams[i].BorderFor(j) != null) songs.Add(state.SongProgress[j]);
+                travel[i] = DanResultFlow.Travel(exams[i], 0, songs);
             }
-            row.gaugeCaption.text = Caption(exam, border);
-            row.gaugeCaption.rectTransform.anchoredPosition = new Vector2(498 + 21 * borderCells + 52, row.gaugeCaption.rectTransform.anchoredPosition.y);
+            return travel;
         }
 
         static string Caption(DanExam exam, int red)
@@ -367,6 +466,8 @@ namespace OurTaiko
             rainbow.uvRect = new Rect(phase / tw, 0, width / tw, 1);
         }
 
+        // ---------------------------------------------------------------- drawing
+
         void Show(double now)
         {
             if (Flow == null)
@@ -375,6 +476,14 @@ namespace OurTaiko
                 view.totalsPage.gameObject.SetActive(false);
                 return;
             }
+            bool covered = Flow.State == DanResultFlow.Phase.Celebrating || Flow.State == DanResultFlow.Phase.Congrats
+                || Flow.State == DanResultFlow.Phase.Left && (!double.IsNaN(Flow.CelebratedAt) || !double.IsNaN(Flow.CongratsAt));
+            view.songsPage.gameObject.SetActive(!covered);
+            if (covered) view.totalsPage.gameObject.SetActive(false);
+            view.noSave.gameObject.SetActive(!Recorded && !covered);
+            ShowCelebration(now);
+            if (covered) return;
+
             double t = Flow.SongsTime(now);
             for (int i = 0; i < view.plates.Length && i < Result.Run.Count; i++)
             {
@@ -384,19 +493,177 @@ namespace OurTaiko
                 plate.root.anchoredPosition = new Vector2((float)DanResultFlow.SlideOffset(since), plate.root.anchoredPosition.y);
                 if (since >= 0 && i >= platesLanded && Flow.State == DanResultFlow.Phase.Songs) { platesLanded = i + 1; Play(sfx, partialPlate, true); }
             }
-            bool totals = Flow.State != DanResultFlow.Phase.Songs;
-            float fade = totals ? (float)Math.Min(1, Math.Max(0, (now - Flow.TotalsAt) / DanResultFlow.PageFadeMs)) : 0;
+            // Page 2 fades in over page 1, whose plates stay under its board.
+            bool totals = !double.IsNaN(Flow.TotalsAt);
             view.totalsPage.gameObject.SetActive(totals);
-            view.totalsPage.alpha = fade;
-            view.songsPage.alpha = 1 - fade;
-            if (totals && !totalsShown) totalsShown = true;
+            view.songsPage.alpha = 1;
+            if (!totals) return;
+            double on = Flow.PageTime(now);
+            view.totalsPage.alpha = (float)Math.Min(1, Math.Max(0, on / DanResultFlow.PageFadeMs));
+            ShowTotals(on);
+            ShowExams(on);
+            ShowBestScore(on);
             view.stamp.enabled = Flow.StampShown(now);
-            foreach (var row in view.exams)
+        }
+
+        // The six totals and the score count up from the totals' start (their labels show at once).
+        void ShowTotals(double on)
+        {
+            bool shown = Flow.Skipped || on >= Flow.TotalsStart;
+            double roll = Flow.RollTime(on);
+            for (int k = 0; k < view.totals.Length && k < totalValues.Length; k++)
+                view.totals[k].digits = RollDigits(view.totals[k].digits, totalValues[k], view.countDigits, totalRights[k], 28, roll, shown);
+            view.scoreDigits = RollDigits(view.scoreDigits, Result.Score.ToString(), view.scoreDigitSprites, 782, 46, roll, shown);
+        }
+
+        void ShowExams(double on)
+        {
+            var course = Result.Run.Entry.Course;
+            for (int i = 0; i < view.exams.Length && i < course.Exams.Count; i++)
             {
-                if (!row.root.gameObject.activeSelf) continue;
+                var row = view.exams[i];
+                if (i == gaugeIndex) { ShowGauge(row, course.Exams[i], on); continue; }
+                var exam = course.Exams[i];
+                var r = Flow.Rows[i];
+                bool landed = Flow.Skipped || on >= r.Land;
+                row.root.gameObject.SetActive(landed);
+                if (!landed) continue;
+                double share = Flow.FillShare(i, on);
+                bool numbers = Flow.Skipped || on >= r.Number;
+                var state = Result.Progress.View(i, live: false);
+                if (!exam.PerSong)
+                {
+                    double p = DanResultFlow.FillProgress(exam, state.Progress, share);
+                    string bar = share < 1 ? DanResultFlow.FillState(p) : state.BarState;
+                    Fill(row.allBar, row.allRainbow, Bar(bar, false), view.rainbow, (float)(972 * p), bar);
+                    bool max = share >= 1 && state.BarState == "max";
+                    row.allDigits = DigitsLeft(row.allDigits, numbers ? state.Counter.ToString() : "", max ? view.valueDigitsMax : view.valueDigits, 807, 52);
+                }
+                for (int j = 0; j < row.songs.Length; j++)
+                {
+                    var song = row.songs[j];
+                    if (!song.root.gameObject.activeSelf) continue;
+                    bool border = exam.BorderFor(j) != null;
+                    double p = border ? DanResultFlow.FillProgress(exam, state.SongProgress[j], share) : 0;
+                    string bar = !border ? "empty" : share < 1 ? DanResultFlow.FillState(p) : state.SongState[j];
+                    Fill(song.bar, song.rainbow, Bar(bar, true), view.songRainbow, (float)(324 * p), bar);
+                    bool max = share >= 1 && state.SongState[j] == "max";
+                    song.digits = DigitsLeft(song.digits, border && numbers ? state.SongCounter[j].ToString() : "", max ? view.songDigitsMax : view.songDigits, 527 + 465 * j, 27);
+                }
                 ScrollRainbow(row.allRainbow);
                 foreach (var song in row.songs) ScrollRainbow(song.rainbow);
             }
+        }
+
+        // draw_gauge_row: the cells fill 25 ms a percent; the number shows once they have, and a
+        // full gauge's soul then burns (flame, flicker and glow).
+        void ShowGauge(DanResultView.ExamRowView row, DanExam exam, double on)
+        {
+            int border = exam.Course.Red;
+            int value = Flow.GaugeAt(on, out bool landed);
+            int cells = Math.Min(50, value / 2);
+            bool clear = value >= border && border > 0;
+            row.fill.sprite = clear ? view.gaugeFillClear : view.gaugeFill;
+            row.fill.rectTransform.sizeDelta = new Vector2(21 * cells, row.fill.rectTransform.sizeDelta.y);
+            row.fill.enabled = cells > 0;
+
+            bool numbers = Flow.Skipped || on >= Flow.Rows[gaugeIndex].Number;
+            var digits = gaugeValue >= 100 ? view.gaugeNumbersMax : clear ? view.gaugeNumbersClear : view.gaugeNumbersNoClear;
+            var percent = gaugeValue >= 100 ? view.percentMax : clear ? view.percentClear : view.percentNoClear;
+            string text = gaugeValue.ToString();
+            int n = text.Length + 1;
+            for (int k = 0; k < row.gaugeDigits.Length; k++)
+            {
+                bool shown = numbers && k < n;
+                var digit = row.gaugeDigits[k];
+                digit.enabled = shown;
+                if (!shown) continue;
+                digit.sprite = k < n - 1 ? digits[text[k] - '0'] : percent;
+                digit.rectTransform.anchoredPosition = new Vector2(822 + (float)(k - (n - 1) / 2.0) * 34, digit.rectTransform.anchoredPosition.y);
+            }
+
+            bool fever = gaugeValue >= 100 && landed;
+            if (row.flame != null) row.flame.enabled = false;
+            if (row.feverGlow != null) row.feverGlow.enabled = false;
+            if (!fever) { row.soul.sprite = clear && landed ? view.soulLit : view.soulDark; return; }
+            double t0 = Flow.Skipped ? 0 : Flow.TotalsStart + gaugeValue * DanResultFlow.GaugeUnitMs;
+            double f = 20 + Math.Max(0, on - t0) / DanResultFlow.FrameMs;
+            bool tick = Math.Floor((f - 29) / 2) % 2 == 0;
+            if (row.flame != null && view.flames != null && view.flames.Length > 0)
+            {
+                int cel = f < 29 ? 0 : (int)(Math.Floor((f - 29) / 3) % 8);
+                row.flame.sprite = view.flames[Math.Min(cel, view.flames.Length - 1)];
+                row.flame.Alpha((float)Math.Min(1, (f - 20) / 4));
+            }
+            row.soul.sprite = f >= 29 && tick ? view.soulDark : view.soulLit;
+            if (row.feverGlow != null && f >= 24 && (f < 29 || tick)) row.feverGlow.Alpha(0.6f);
+        }
+
+        // draw_best_score: the pill drops in as the totals start counting, its number follows, and a
+        // glow swells off it once.
+        void ShowBestScore(double on)
+        {
+            if (!view.bestScore.gameObject.activeSelf) return;
+            double f = Flow.Skipped ? 52 : Math.Min(52, 5 + Math.Max(0, on - Flow.TotalsStart) / DanResultFlow.FrameMs);
+            bool shown = f >= 5 && (Flow.Skipped || on >= Flow.TotalsStart);
+            var (y, alpha) = DanResultFlow.BestScorePill(f);
+            view.bestScore.anchoredPosition = new Vector2(view.bestScore.anchoredPosition.x, bestScoreY - (float)y);
+            var pill = view.bestScore.GetComponent<Image>();
+            if (pill != null) pill.color = new Color(1, 1, 1, shown ? (float)alpha : 0);
+            float number = shown ? (float)Math.Min(1, Math.Max(0, (f - 18) / 3)) : 0;
+            foreach (var digit in view.bestScoreDigits) digit.color = new Color(1, 1, 1, number);
+            if (view.bestScoreGlow == null) return;
+            bool glow = shown && f >= 23 && f < 34;
+            view.bestScoreGlow.enabled = glow;
+            if (!glow) return;
+            double u = (f - 23) / 11;
+            view.bestScoreGlow.rectTransform.localScale = Vector3.one * (float)(1 + 0.6 * u);
+            view.bestScoreGlow.color = new Color(1, 1, 1, (float)(1 - u));
+        }
+
+        // draw_celebration / draw_congrats: the 昇段 glyphs pop in (the rank at 35 frames, 合格 at 63),
+        // throw a ghost as they settle and again at 110; the nameplate comes up beside them. The popup
+        // fades its band and text in over the same background.
+        void ShowCelebration(double now)
+        {
+            bool celebrating = Flow.State == DanResultFlow.Phase.Celebrating || Flow.State == DanResultFlow.Phase.Left && !double.IsNaN(Flow.CelebratedAt) && double.IsNaN(Flow.CongratsAt);
+            bool congrats = Flow.State == DanResultFlow.Phase.Congrats || Flow.State == DanResultFlow.Phase.Left && !double.IsNaN(Flow.CongratsAt);
+            view.celebration.gameObject.SetActive(celebrating || congrats);
+            if (!celebrating && !congrats) return;
+            var plate = view.nameplate.GetComponent<RectTransform>();
+            plate.anchoredPosition = CelebrationPlate;
+            view.congratsBackground.gameObject.SetActive(congrats);
+            view.congratsText.gameObject.SetActive(congrats);
+            if (congrats)
+            {
+                double f = (now - Flow.CongratsAt) / DanResultFlow.FrameMs;
+                foreach (var glyph in view.glyphs.Concat(view.glyphGhosts)) glyph.enabled = false;
+                view.congratsBackground.Alpha((float)Math.Min(1, f / 19));
+                view.congratsText.Alpha((float)Math.Min(1, Math.Max(0, (f - 20) / 14)));
+                plateGroup.alpha = 1;
+                return;
+            }
+            double fF = (now - Flow.CelebratedAt) / DanResultFlow.FrameMs;
+            double[] starts = { 35, 35, 63, 63 };
+            for (int i = 0; i < view.glyphs.Length; i++)
+            {
+                var glyph = view.glyphs[i];
+                var ghost = view.glyphGhosts[i];
+                glyph.enabled = ghost.enabled = false;
+                if (!glyph.gameObject.activeSelf || fF < starts[i]) continue;
+                double t0 = starts[i];
+                double pop = fF < t0 + 7 ? 1.5 - 0.5 * ((fF - t0) / 7) : 1;
+                glyph.enabled = true;
+                glyph.rectTransform.localScale = Vector3.one * (float)pop;
+                double e0 = t0 + 7, u = -1, grow = 0;
+                if (fF >= e0 && fF < e0 + 6) { u = (fF - e0) / 6; grow = 0.25; }
+                else if (fF >= 110 && fF < 133) { u = (fF - 110) / 23; grow = 0.96; }
+                if (u < 0) continue;
+                ghost.enabled = true;
+                ghost.rectTransform.localScale = Vector3.one * (float)(1 + grow * u);
+                ghost.color = new Color(1, 1, 1, (float)(1 - u));
+            }
+            plateGroup.alpha = (float)Math.Min(1, Math.Max(0, (fF - 21) / 8));
         }
     }
 }

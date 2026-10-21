@@ -64,6 +64,15 @@ namespace OurTaiko.Tests
 
             var scene = Object.FindFirstObjectByType<DanSelectScene>();
             var view = scene.view;
+            // After Entry the whole 段位道場 intro plays: the four kanji are stamped on the shut doors.
+            Assert.That(scene.FullIntro, Is.True);
+            Assert.That(scene.intro.IsPlaying, Is.True);
+            yield return WaitUntil(() => scene.intro.kanji.Count(k => k.enabled) == 4, 5);
+            TestCapture.Capture("DanSelectIntro.png");
+            scene.Ka(1);
+            Assert.That(scene.Flow.Selected, Is.Zero, "No input while the doors play.");
+            yield return WaitUntil(() => scene.IntroDone, 4);
+            Assert.That(scene.intro.gameObject.activeSelf, Is.False);
             Assert.That(scene.Courses.Count, Is.EqualTo(3));
             Assert.That(scene.Courses[0].IsPlayable, Is.True, scene.Courses[0].Error);
             Assert.That(scene.Courses[1].Error, Is.EqualTo("Song not found: Nowhere"));
@@ -167,7 +176,9 @@ namespace OurTaiko.Tests
             var scene = Object.FindFirstObjectByType<DanSelectScene>();
             var view = scene.view;
             Assert.That(scene.Courses.Count, Is.EqualTo(7));
-            yield return new WaitForSecondsRealtime(0.3f);
+            // Not from Entry: only the doors' opening plays.
+            Assert.That(scene.FullIntro, Is.False);
+            yield return WaitUntil(() => scene.IntroDone, 3);
             // The chip three to the right of the selected one.
             var target = view.chips.First(c => c.root.gameObject.activeSelf
                 && Mathf.Abs(c.root.anchoredPosition.x - (DanSelectScene.RibbonCenter + 3 * DanSelectScene.RibbonSpacing)) < 0.5f);

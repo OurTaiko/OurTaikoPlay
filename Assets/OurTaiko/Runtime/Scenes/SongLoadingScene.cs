@@ -49,7 +49,7 @@ namespace OurTaiko
                 yield return Download(switcher, online, song);
                 if (Error != null)
                 {
-                    switcher.Curtain?.SetStatus(Error, new Color(1, 0.35f, 0.35f));
+                    switcher.SetCoverStatus(Error, new Color(1, 0.35f, 0.35f));
                     double failedAt = GameTimeline.FrameTime;
                     while (GameTimeline.FrameTime - failedAt < errorSeconds || switcher.IsSwitching) yield return null;
                     switcher.SwitchScene(switcher.ReturnScene);
@@ -69,7 +69,7 @@ namespace OurTaiko
             yield return DecodeAudio(song);
             if (Error != null)
             {
-                switcher.Curtain?.SetStatus(Error, new Color(1, 0.35f, 0.35f));
+                switcher.SetCoverStatus(Error, new Color(1, 0.35f, 0.35f));
                 yield return new WaitForSecondsRealtime(errorSeconds);
                 while (switcher.IsSwitching) yield return null;
                 switcher.SwitchScene(switcher.ReturnScene);
@@ -78,7 +78,7 @@ namespace OurTaiko
             IsLoaded = true;
 
             while (GameTimeline.FrameTime - started < minimumSeconds || switcher.IsSwitching) yield return null;
-            switcher.Curtain?.SetStatus("");
+            switcher.SetCoverStatus("", Color.white);
             switcher.SwitchScene(switcher.SelectedPlayScene);
         }
 
@@ -102,12 +102,12 @@ namespace OurTaiko
             }
         }
 
-        // 段位道場: every song of the course, in order: a server's song is downloaded first, then
+        // 段位道場 (under its own loading cover): every song of the course, in order: a server's song is downloaded first, then
         // each chart is parsed with the play options and its audio decoded. Any failure returns to
         // the course select with the reason on the curtain.
         IEnumerator LoadDan(SceneSwitcher switcher, DanRun dan)
         {
-            if (!switcher.IsCovered) switcher.ParkCurtain();
+            if (!switcher.IsCovered) switcher.ParkDanCover();
             double started = GameTimeline.FrameTime;
             var online = OnlineManager.EnsureInstance();
             for (int i = 0; i < dan.Count && Error == null; i++)
@@ -125,7 +125,7 @@ namespace OurTaiko
             if (Error != null)
             {
                 dan.Release();
-                switcher.Curtain?.SetStatus(Error, new Color(1, 0.35f, 0.35f));
+                switcher.SetCoverStatus(Error, new Color(1, 0.35f, 0.35f));
                 double failedAt = GameTimeline.FrameTime;
                 while (GameTimeline.FrameTime - failedAt < errorSeconds || switcher.IsSwitching) yield return null;
                 switcher.SwitchScene(SceneSwitcher.DanSelectScene);
@@ -133,7 +133,7 @@ namespace OurTaiko
             }
             IsLoaded = true;
             while (GameTimeline.FrameTime - started < minimumSeconds || switcher.IsSwitching) yield return null;
-            switcher.Curtain?.SetStatus("");
+            switcher.SetCoverStatus("", Color.white);
             switcher.SwitchScene(SceneSwitcher.DanPlayScene);
         }
 
@@ -155,7 +155,7 @@ namespace OurTaiko
                 // The parked curtain blocks scene input, so Back is read directly.
                 if (InputManager.GetKeyDown(InputKey.Back)) cancel.Cancel();
                 var progress = Volatile.Read(ref latest);
-                if (progress != null) switcher.Curtain?.SetStatus(Describe(progress));
+                if (progress != null) switcher.SetCoverStatus(Describe(progress), Color.white);
                 yield return null;
             }
             downloadCancellation = null;
@@ -168,11 +168,11 @@ namespace OurTaiko
                 yield break;
             }
             var (text, audio, chart) = task.Result;
-            switcher.Curtain?.SetStatus("音源を読み込み中…");
+            switcher.SetCoverStatus("音源を読み込み中…", Color.white);
             online.SetPrepared(song, chart, text, null);
             song.audioPath = audio;
             if (titleSong) switcher.ShowSongOnCurtain(song);
-            switcher.Curtain?.SetStatus("");
+            switcher.SetCoverStatus("", Color.white);
         }
 
         // The download card's two lines (chart / audio) as one status text.

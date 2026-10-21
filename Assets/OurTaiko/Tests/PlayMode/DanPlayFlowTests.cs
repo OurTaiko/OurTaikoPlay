@@ -56,9 +56,23 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.DanSelectScene);
             yield return null;
             SceneSwitcher.EnsureInstance().PlayDan(entry);
+            // The course's loading cover: black, then the night sky with its plaque and name.
+            yield return WaitUntil(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongLoadingScene, 10);
+            var cover = SceneSwitcher.Instance.DanCover;
+            Assert.That(cover.IsVisible && SceneSwitcher.Instance.IsCovered, Is.True);
+            Assert.That(SceneSwitcher.Instance.Curtain.IsVisible, Is.False, "Not the rainbow curtain.");
+            yield return new WaitForSecondsRealtime(1f);
+            Assert.That(cover.rank.text, Is.EqualTo("十\n段"));
+            Assert.That(cover.plaque.color.a, Is.EqualTo(1));
+            TestCapture.Capture("DanLoading.png", canvas: cover.GetComponentInParent<Canvas>().rootCanvas);
             yield return WaitForScene(SceneSwitcher.DanPlayScene, 30);
+            Assert.That(cover.IsVisible, Is.False, "It fades away over the play scene.");
             var scene = Object.FindFirstObjectByType<DanPlayScene>();
             Assert.That(scene.SongIndex, Is.Zero);
+            // The dojo's own top band: its cloud layers slide.
+            var band = Object.FindFirstObjectByType<DanBackgroundView>();
+            Assert.That(band, Is.Not.Null);
+            float cloud = band.layers[0].image.uvRect.x;
             Assert.That(scene.view.rows.Count(r => r.root.gameObject.activeSelf), Is.EqualTo(2), "The gauge exam has its plate, not a row.");
             Assert.That(scene.view.gaugePlate.gameObject.activeSelf, Is.True);
             Assert.That(scene.view.gaugeValue.text, Is.EqualTo("10 ％以上"));
@@ -71,6 +85,7 @@ namespace OurTaiko.Tests
             yield return WaitUntil(() => scene.ChartTime > 1.6, 15);
             Assert.That(scene.Session.CurrentBranch, Is.EqualTo(BranchRoute.Master));
             var first = scene.Session;
+            Assert.That(band.layers[0].image.uvRect.x, Is.Not.EqualTo(cloud));
             TestCapture.Capture("DanPlay.png");
 
             // The doors close over the lane with song B's title.
@@ -114,12 +129,21 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.4f);
             Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Totals));
             Assert.That(screen.view.exams[0].gauge.gameObject.activeSelf, Is.True, "The gauge exam is the soul gauge row.");
-            Assert.That(screen.view.exams[2].songs[1].root.gameObject.activeSelf, Is.True, "A per-song exam shows both songs.");
-            yield return new WaitForSecondsRealtime(1.2f);
+            Assert.That(screen.view.exams[2].root.gameObject.activeSelf, Is.False, "The rows land after the totals have counted up.");
+            // The totals count up from the ones; the soul gauge fills alongside.
+            yield return new WaitForSecondsRealtime(1.9f);
+            Assert.That(screen.view.scoreDigits.Count(d => d.enabled), Is.InRange(1, 6));
+            Assert.That(screen.view.exams[0].fill.rectTransform.sizeDelta.x, Is.GreaterThan(0));
+            TestCapture.Capture("DanResultCountUp.png");
+            // Left alone, the rows land and fill one by one and the stamp follows.
+            yield return WaitUntil(() => screen.Flow.StampShown(GameTimeline.FrameTime * 1000), 25);
+            Assert.That(screen.view.exams[2].songs[1].root.gameObject.activeInHierarchy, Is.True, "A per-song exam shows both songs.");
             Assert.That(screen.view.stamp.enabled, Is.True);
             Assert.That(screen.view.stamp.sprite.name, Is.EqualTo("gold_clear_03"));
-            TestCapture.Capture("DanResultTotals.png");
+            Assert.That(screen.view.exams[0].flame.enabled, Is.True, "A full gauge's soul burns.");
+            Assert.That(screen.Celebrates, Is.False, "オート records nothing, so nothing to celebrate.");
             yield return new WaitForSecondsRealtime(0.6f);
+            TestCapture.Capture("DanResultTotals.png");
             screen.Don();
             yield return WaitForScene(SceneSwitcher.DanSelectScene, 10);
         }
@@ -159,7 +183,9 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.6f);
             Assert.That(screen.view.stamp.enabled, Is.True);
             Assert.That(screen.view.stamp.sprite.name, Is.EqualTo("fail"));
+            Assert.That(screen.Flow.Skipped, Is.True, "The second hit landed page 2 at once.");
             TestCapture.Capture("DanResultFailed.png");
+            yield return new WaitForSecondsRealtime(0.5f);
             screen.Don();
             yield return WaitForScene(SceneSwitcher.DanSelectScene, 10);
         }

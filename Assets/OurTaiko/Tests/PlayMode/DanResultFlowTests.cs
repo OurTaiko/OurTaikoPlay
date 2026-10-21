@@ -29,13 +29,16 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
         }
 
-        static DanCourseEntry Course(string exams)
+        static DanCourseEntry Course(string exams, string server = null, string rewards = "")
         {
             var library = LocalSongLibrary.EnsureInstance();
+            var songs = library.Songs.Concat(library.Folders.SelectMany(f => f.AllSongs())).ToList();
+            string Chart(string title) => server == null ? "{\"course\":\"Oni\"}" : "{\"id\":\"" + title + "\",\"course\":\"Oni\"}";
             var course = DanCourse.Parse("{\"id\":\"local:result-test\",\"title\":\"名人\",\"color\":5,\"songs\":["
-                + "{\"chart\":{\"course\":\"Oni\"},\"title\":\"Result A\"},{\"chart\":{\"course\":\"Oni\"},\"title\":\"Result B\",\"hidden\":true}],"
-                + "\"exams\":" + exams + "}");
-            var entry = new DanCourseResolver(library.Songs.Concat(library.Folders.SelectMany(f => f.AllSongs())).ToList(), null).Resolve(course);
+                + "{\"chart\":" + Chart("Result A") + ",\"title\":\"Result A\"},{\"chart\":" + Chart("Result B") + ",\"title\":\"Result B\",\"hidden\":true}],"
+                + "\"exams\":" + exams + rewards + "}", server);
+            // A server's songs by id: the test names them by their titles.
+            var entry = new DanCourseResolver(songs, (_, id) => songs.FirstOrDefault(s => s.ReadDisplayInfo().Title == id)).Resolve(course);
             Assert.That(entry.IsPlayable, Is.True, entry.Error);
             return entry;
         }
@@ -88,10 +91,16 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.6f);
             screen.Don();
             Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Totals));
-            yield return new WaitForSecondsRealtime(1.5f);
-
+            // The best score's pill drops in as the totals start to count.
             var view = screen.view;
             Assert.That(view.bestScore.gameObject.activeSelf, Is.True);
+            // The glow swells off it once.
+            yield return WaitUntil(() => view.bestScoreGlow.enabled, 4);
+            TestCapture.Capture("DanResultBestScoreGlow.png");
+            // A hit before the stamp lands everything.
+            screen.Don();
+            Assert.That(screen.Flow.Skipped, Is.True);
+            yield return new WaitForSecondsRealtime(0.1f);
             var digits = view.bestScoreDigits.Where(d => d.enabled).ToArray();
             Assert.That(digits.Length, Is.EqualTo(6), "1,700,000 - 1,000,000 = 700000.");
             Assert.That(digits.Last().rectTransform.anchoredPosition.x, Is.EqualTo(844 - 459).Within(0.5f), "The last digit sits on the pill's own x.");
@@ -100,6 +109,66 @@ namespace OurTaiko.Tests
             Assert.That(string.Concat(scoreRow.allDigits.Where(d => d.enabled).Select(d => d.sprite.name)), Is.EqualTo("1700000"));
             Assert.That(view.plates[1].title.text, Is.EqualTo("Result B"), "Reached: its title shows.");
             TestCapture.Capture("DanResultBestScore.png");
+
+            // Better than the 金合格 before: 昇段, with 合格 alone (a local course names no rank).
+            Assert.That(screen.Celebrates, Is.True);
+            Assert.That(screen.Congratulates, Is.False);
+            yield return new WaitForSecondsRealtime(1.0f);
+            screen.Don();
+            Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Celebrating));
+            yield return new WaitForSecondsRealtime(1.6f);
+            Assert.That(view.celebration.gameObject.activeSelf, Is.True);
+            Assert.That(view.totalsPage.gameObject.activeSelf, Is.False);
+            Assert.That(view.glyphs.Select(g => g.gameObject.activeSelf), Is.EqualTo(new[] { false, false, true, true }));
+            Assert.That(view.glyphs[2].sprite.name, Is.EqualTo("18"));
+            Assert.That(view.shoudanBackground.sprite.name, Is.EqualTo("bg_r"), "金合格・全良.");
+            Assert.That(view.nameplate.GetComponent<CanvasGroup>().alpha, Is.EqualTo(1));
+            TestCapture.Capture("DanResultCelebration.png");
+            screen.Don();
+            Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Celebrating), "3.5 s before a hit ends it.");
+            yield return new WaitForSecondsRealtime(2.0f);
+            screen.Don();
+            yield return WaitForScene(SceneSwitcher.DanSelectScene);
+        }
+
+        [UnityTest]
+        public IEnumerator TheHighestRanksFirstPassShowsThePopup()
+        {
+            var entry = Course("[{\"type\":\"gauge\",\"range\":\"more\",\"value\":[10]}]", "https://dan.test", ",\"rewards\":{\"dan\":24}");
+            Assert.That(entry.Course.DanIndex, Is.EqualTo(24));
+            var result = Played(entry, failOut: false);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.DanSelectScene);
+            yield return null;
+            var switcher = SceneSwitcher.EnsureInstance();
+            switcher.DanIndexMax = 24;
+            switcher.ShowDanResult(result);
+            yield return WaitForScene(SceneSwitcher.DanResultScene);
+            var screen = Object.FindFirstObjectByType<DanResultScene>();
+            Assert.That(screen.Celebrates && screen.Congratulates, Is.True);
+            yield return new WaitForSecondsRealtime(0.6f);
+            screen.Don();
+            yield return new WaitForSecondsRealtime(0.6f);
+            screen.Don();
+            yield return new WaitForSecondsRealtime(0.6f);
+            screen.Don();
+            yield return new WaitForSecondsRealtime(1.1f);
+            screen.Don();
+            Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Celebrating));
+            yield return new WaitForSecondsRealtime(1.6f);
+            var view = screen.view;
+            Assert.That(view.glyphs.Select(g => g.sprite.name), Is.EqualTo(new[] { "16", "17", "18", "19" }), "達人 合格.");
+            TestCapture.Capture("DanResultCelebrationRank.png");
+            yield return new WaitForSecondsRealtime(2.0f);
+            screen.Don();
+            Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Congrats));
+            yield return new WaitForSecondsRealtime(1.0f);
+            Assert.That(view.congratsText.sprite.name, Is.EqualTo("0"), "Japanese, as the rest of the screens.");
+            Assert.That(view.congratsText.color.a, Is.EqualTo(1));
+            TestCapture.Capture("DanResultCongrats.png");
+            screen.Don();
+            Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Congrats), "The popup takes no hit.");
+            screen.Leave();
+            yield return WaitForScene(SceneSwitcher.DanSelectScene);
         }
 
         [UnityTest]
@@ -119,6 +188,16 @@ namespace OurTaiko.Tests
             Assert.That(screen.view.plates[1].banner.color.a, Is.EqualTo(0.45f).Within(1e-3));
             Assert.That(screen.view.plates[1].unreached.color.a, Is.EqualTo(1), "The 未到達 mark itself is not dimmed.");
             Assert.That(screen.view.bestScore.gameObject.activeSelf, Is.False);
+        }
+
+        static IEnumerator WaitUntil(System.Func<bool> condition, float seconds)
+        {
+            float deadline = Time.realtimeSinceStartup + seconds;
+            while (!condition())
+            {
+                yield return null;
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+            }
         }
 
         static IEnumerator WaitForScene(string scene)

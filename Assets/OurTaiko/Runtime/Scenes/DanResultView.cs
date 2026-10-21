@@ -6,7 +6,8 @@ using UnityEngine.UI;
 namespace OurTaiko
 {
     // The 段位道場 result's saved hierarchy (Nijiiro dan_result art, dan_result_draw.lua layout in
-    // 1920×1080 pixels): page 1 holds a plate per song, page 2 the totals, the exams and the stamp.
+    // 1920×1080 pixels): page 1 holds a plate per song, page 2 the totals, the exams and the stamp,
+    // and the 昇段 celebration / 祝 popup cover both.
     public sealed class DanResultView : MonoBehaviour
     {
         [Serializable]
@@ -51,6 +52,8 @@ namespace OurTaiko
             public ExamSongView[] songs;
             public RectTransform gauge;
             public Image norma, fill, soul, marker;
+            [Tooltip("tamashii/flame behind the soul and fever_glow over it, at a full gauge.")]
+            public Image flame, feverGlow;
             public Image[] gaugeDigits;
             public TextMeshProUGUI gaugeCaption;
         }
@@ -78,12 +81,28 @@ namespace OurTaiko
         public Sprite gaugeFill, gaugeFillClear, soulLit, soulDark;
         public Sprite[] gaugeNumbersNoClear, gaugeNumbersClear, gaugeNumbersMax;
         public Sprite percentNoClear, percentClear, percentMax;
+        [Tooltip("tamashii/flame 0..7.")]
+        public Sprite[] flames;
         public Image stamp;
         [Tooltip("fail, red_clear, red_clear_02, red_clear_03, gold_clear, gold_clear_02, gold_clear_03 (by verdict 0..6).")]
         public Sprite[] stamps;
         public RectTransform bestScore;
         public Image[] bestScoreDigits;
         public Sprite[] bestScoreDigitSprites;
+        public Image bestScoreGlow;
+
+        [Header("昇段 / 祝")]
+        public RectTransform celebration;
+        [Tooltip("shoudan/bg_w, bg_g (フルコンボ), bg_r (全良).")]
+        public Image shoudanBackground;
+        public Sprite shoudanWhite, shoudanGold, shoudanRainbow;
+        [Tooltip("The four glyphs (rank left, rank right, 合, 格) and the ghost each throws.")]
+        public Image[] glyphs, glyphGhosts;
+        [Tooltip("shoudan/text_white and text_gold 0..19.")]
+        public Sprite[] textWhite, textGold;
+        public Image congratsBackground, congratsText;
+        [Tooltip("congrats/text_01 and text_02 (達人) 0..3: ja, en, ko, zh.")]
+        public Sprite[] congratsText1, congratsText2;
 
         [Header("Global chrome")]
         public RectTransform noSave;
