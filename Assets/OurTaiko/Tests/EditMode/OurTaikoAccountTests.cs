@@ -196,6 +196,53 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void ServerCoursesComeWithTheCatalogAndAttemptsGoUpWithTheirAward()
+        {
+            fixture.Dans = Newtonsoft.Json.Linq.JArray.Parse("[{\"format\":1,\"id\":\"7\",\"title\":{\"ja\":\"十段\"},\"color\":3,\"official\":true," +
+                "\"songs\":[{\"chart\":{\"id\":\"" + chart.Id + "\",\"course\":\"Oni\"},\"title\":\"Fixture Song\"}]," +
+                "\"exams\":[{\"type\":\"gauge\",\"range\":\"more\",\"value\":[100]}],\"rewards\":{\"dan\":20}}]");
+            fixture.DanProfileReply = Newtonsoft.Json.Linq.JObject.Parse("{\"granted\":{\"dan\":{\"index\":20,\"verdict\":4,\"upgraded\":true},\"titles\":[{\"id\":\"m\",\"name\":\"太鼓の達人\",\"new\":true}]},\"nameplate\":{}}");
+            var e = Catalog();
+            var listed = client.Dans.Single();
+            Assert.That(listed.Server, Is.EqualTo(fixture.BaseUrl));
+            Assert.That((string)listed.Dans[0]["id"], Is.EqualTo("7"));
+            var entries = DanCourseLoader.LoadServer(listed.Server, listed.Dans, new DanCourseResolver(Array.Empty<SongDefinition>(), (server, id) => null));
+            Assert.That(entries.Single().Course.Id, Is.EqualTo("7"));
+            Assert.That(entries.Single().Course.DanIndex, Is.EqualTo(20));
+
+            Assert.That(client.SubmitDanAttempt(fixture.BaseUrl, "7", 4, 1), Is.Null, "A guest uploads nothing.");
+            SignIn(e, 0, "don", "katsu");
+            string key = client.SubmitDanAttempt(fixture.BaseUrl + "/", "7", 4, 1);
+            Assert.That(key, Is.Not.Null);
+            Drain();
+            var sent = fixture.DanAttempts.Single();
+            Assert.That(sent.User, Is.EqualTo("don"));
+            Assert.That((string)sent.Body["courseId"], Is.EqualTo("7"));
+            Assert.That((int)sent.Body["verdict"], Is.EqualTo(4));
+            Assert.That((int)sent.Body["songsPlayed"], Is.EqualTo(1));
+            var award = client.Award(key);
+            Assert.That((int)award.Profile["granted"]["dan"]["index"], Is.EqualTo(20));
+            Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);
+
+            // A server that cannot reach Profile still records the attempt; the game says it comes later.
+            fixture.DanProfileReply = null;
+            string later = client.SubmitDanAttempt(fixture.BaseUrl, "7", 1, 1);
+            Drain();
+            Assert.That(client.Award(later).Profile, Is.Null);
+            Assert.That(client.Award(later).Error, Does.Contain("unreachable"));
+
+            // While the server is down the attempt waits in the queue.
+            fixture.Fail["/api/v1/game/dan-attempts"] = 503;
+            string waiting = client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 1);
+            Drain();
+            Assert.That(client.Award(waiting), Is.Null);
+            Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)).Length, Is.EqualTo(1));
+            fixture.Fail.TryRemove("/api/v1/game/dan-attempts", out _);
+            Drain();
+            Assert.That(client.Award(waiting), Is.Not.Null);
+        }
+
+        [Test]
         public void TheAccountCenterAnswersAreChecked()
         {
             Assert.That(Assert.Catch<HttpStatusException>(() => Run(() => center.LoginAsync("don", "wrong", "Test"))).Status, Is.EqualTo(401));

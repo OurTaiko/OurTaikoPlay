@@ -54,5 +54,8 @@ namespace OurTaiko
         // before this attempt is kept for the celebration and the best-score pill.
         public bool Saved;
         public DanRecordStore.Best? PreviousBest;
+        // The server course's attempt upload (FanmadeClient queue key), so showing the result again
+        // does not upload it twice.
+        public string Upload;
     }
 }

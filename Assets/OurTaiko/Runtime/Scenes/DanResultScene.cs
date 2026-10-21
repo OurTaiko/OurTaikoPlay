@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,8 +15,10 @@ namespace OurTaiko
     // totals, fills the soul gauge and each exam's bar in turn and stamps 合格 / 不合格 (timeline in
     // DanResultFlow). A pass better than any before shows the 昇段 celebration (with the course's
     // rank when a server's course names one, else 合格 alone), and the first pass of the highest
-    // listed rank the 祝 popup; neither grants anything (local courses never do, a server's will in
-    // the online stage), so the nameplate stays as it is.
+    // listed rank the 祝 popup. Those are only shown: what a server's course grants comes from its
+    // server, which the attempt is uploaded to (not under オート) and which asks OurTaikoProfile;
+    // a line at the bottom says what was granted, and 1P's nameplate is read again. Local courses
+    // grant nothing.
     public sealed class DanResultScene : MonoBehaviour
     {
         public DanResultView view;
@@ -33,6 +37,12 @@ namespace OurTaiko
         public bool HasLeft { get; private set; }
         public bool Celebrates { get; private set; }
         public bool Congratulates { get; private set; }
+        // The upload of a server course's attempt (FanmadeClient queue key), null for none.
+        public string DanUpload { get; private set; }
+        public string AwardText => awardLine != null ? awardLine.text : "";
+
+        TextMeshProUGUI awardLine;
+        bool awardShown;
 
         SceneSwitcher switcher;
         int platesLanded;
@@ -94,11 +104,38 @@ namespace OurTaiko
             }
             for (int i = 0; i < Result.Songs.Length; i++)
                 ResultScene.SaveScore(Result.Run.Song(i), Result.Songs[i], Result.Records != null && i < Result.Records.Length ? Result.Records[i] : null, 0);
+            var course = Result.Run.Entry.Course;
+            if (Recorded && !course.IsLocal)
+                DanUpload = Result.Upload = Online.OnlineManager.EnsureInstance().Client?.SubmitDanAttempt(course.Server, course.Id, Result.Verdict, Result.Songs.Length);
+        }
+
+        // The bottom line of a server course's result: what the upload granted, or that it waits.
+        void ShowAward()
+        {
+            if (awardLine == null || awardShown) return;
+            var online = Online.OnlineManager.EnsureInstance();
+            var award = online.Client?.Award(DanUpload);
+            if (award == null) { awardLine.text = "報酬はアップロード後に付与されます"; return; }
+            awardShown = true;
+            if (!(award.Profile?["granted"] is JObject granted)) { awardLine.text = "報酬は後で付与されます"; return; }
+            var parts = new List<string>();
+            if (granted["dan"] is JObject dan && dan["index"]?.Type == JTokenType.Integer)
+            {
+                int index = (int)dan["index"], verdict = (int?)dan["verdict"] ?? 0;
+                string name = DanResultFlow.RankName(index);
+                parts.Add((dan["upgraded"]?.Type == JTokenType.Boolean && (bool)dan["upgraded"] ? "段位獲得：" : "段位：") + name + " " + DanResultFlow.VerdictName(verdict));
+            }
+            if (granted["titles"] is JArray titles)
+                foreach (var title in titles.OfType<JObject>().Where(t => t["new"]?.Type == JTokenType.Boolean && (bool)t["new"]))
+                    parts.Add("称号獲得：「" + (string)title["name"] + "」");
+            awardLine.text = parts.Count > 0 ? string.Join("　", parts) : "新しい報酬はありません";
+            if (parts.Count > 0) _ = online.RefreshNameplateAsync(0);
         }
 
         void Update()
         {
             if (Result == null) return;
+            ShowAward();
             double now = Now;
             // The pages start once the cover has opened (ResultScene's clock does too).
             if (Flow == null)
@@ -204,6 +241,17 @@ namespace OurTaiko
         {
             var run = Result.Run;
             var course = run.Entry.Course;
+            DanUpload ??= Result.Upload;
+            if (DanUpload != null && view.noSave != null)
+            {
+                // Where 記録されません would be: a recorded result never shows that.
+                awardLine = SkinUi.Text("Award", view.noSave.parent, 30);
+                awardLine.rectTransform.anchorMin = view.noSave.anchorMin;
+                awardLine.rectTransform.anchorMax = view.noSave.anchorMax;
+                awardLine.rectTransform.anchoredPosition = view.noSave.anchoredPosition;
+                awardLine.rectTransform.sizeDelta = new Vector2(1600, 48);
+                ShowAward();
+            }
             string language = SettingManager.EnsureInstance().Settings.general.Language;
             for (int i = 0; i < view.plates.Length; i++)
             {

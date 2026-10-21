@@ -94,7 +94,8 @@ namespace OurTaiko
 
         static bool Same(DanCourseEntry a, DanCourseEntry b) => a.Course.Id == b.Course.Id && a.Course.Server == b.Course.Server && a.Path == b.Path;
 
-        // Local courses first (each library root in order), then the server stand-in's.
+        // Local courses first (each library root in order), then each connected server's, then the
+        // server stand-in's.
         void Load()
         {
             var library = LocalSongLibrary.EnsureInstance();
@@ -102,6 +103,8 @@ namespace OurTaiko
             var online = Online.OnlineManager.EnsureInstance();
             var resolver = new DanCourseResolver(local, (server, id) => FindServerSong(online, server, id));
             courses.AddRange(DanCourseLoader.LoadLocal(library.Roots, resolver));
+            if (online.Client != null)
+                foreach (var (server, dans) in online.Client.Dans) courses.AddRange(DanCourseLoader.LoadServer(server, dans, resolver));
             courses.AddRange(DanCourseLoader.LoadServerTest(Path.Combine(GamePaths.Root, DanCourseLoader.ServerTestFolder), resolver));
             foreach (var entry in courses)
             {

@@ -49,4 +49,42 @@ namespace OurTaiko.Online
             lock (sync) { using var db = Open(); db.Execute("UPDATE PendingScoreUploads SET Rejected = 1 WHERE Key = ?", key); }
         }
     }
+
+    // 段位 attempts waiting for their server (POST /api/v1/game/dan-attempts), in the same file as
+    // the scores. Endpoint is the account's queue key (FanmadeEndpoint.AccountIdOf).
+    public sealed class PendingDanQueue
+    {
+        [UnityEngine.Scripting.Preserve, Table("PendingDanAttempts")]
+        public sealed class Entry
+        {
+            [PrimaryKey] public string Key { get; set; }
+            [Indexed] public string Endpoint { get; set; }
+            public string Body { get; set; }
+            public bool Rejected { get; set; }
+            public long Created { get; set; }
+        }
+        readonly string path;
+        readonly object sync = new();
+        public PendingDanQueue(string path)
+        {
+            this.path = path;
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
+            using var db = Open();
+            db.CreateTable<Entry>();
+        }
+        SQLiteConnection Open() => new SQLiteConnection(path) { BusyTimeout = TimeSpan.FromSeconds(5) };
+        public void Enqueue(string endpoint, string key, string body)
+        {
+            lock (sync) { using var db = Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, Created = DateTime.UtcNow.Ticks }); }
+        }
+        public Entry[] Pending(string endpoint)
+        {
+            lock (sync) { using var db = Open(); return db.Table<Entry>().Where(x => x.Endpoint == endpoint && !x.Rejected).OrderBy(x => x.Created).ToArray(); }
+        }
+        public void Remove(string key) { lock (sync) { using var db = Open(); db.Delete<Entry>(key); } }
+        public void Reject(string key)
+        {
+            lock (sync) { using var db = Open(); db.Execute("UPDATE PendingDanAttempts SET Rejected = 1 WHERE Key = ?", key); }
+        }
+    }
 }

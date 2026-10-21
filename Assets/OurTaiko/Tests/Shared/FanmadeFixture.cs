@@ -78,6 +78,12 @@ namespace OurTaiko.Tests
         // a server that only takes a password.
         public bool AccountCenter = true;
         public const string Service = "fixture";
+        // GET /game/dans; null: a server without 段位 courses (no danVersion in the catalog).
+        public JArray Dans;
+        // POST /game/dan-attempts: what was sent (body and user), and OurTaikoProfile's reply the
+        // server passes back (null: Profile unreachable).
+        public readonly ConcurrentQueue<(string User, JObject Body)> DanAttempts = new ConcurrentQueue<(string, JObject)>();
+        public JObject DanProfileReply = JObject.Parse("{\"granted\":{\"dan\":null,\"titles\":[]},\"nameplate\":{}}");
         // OurTaikoProfile's public nameplates by user id (GET /api/v1/users/{id}/nameplate); a user
         // without one has the plain plate.
         public readonly ConcurrentDictionary<string, JObject> Nameplates = new ConcurrentDictionary<string, JObject>();
@@ -250,6 +256,26 @@ namespace OurTaiko.Tests
                     return;
                 }
                 if (request.HttpMethod == "POST" && path == "/api/v1/game/scores") { Score(context, user, request.Headers["Idempotency-Key"], JObject.Parse(body)); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v1/game/dans")
+                {
+                    if (Dans == null) Reply(context, 404, new JObject());
+                    else Reply(context, 200, new JObject { ["dans"] = Dans, ["danVersion"] = 1 });
+                    return;
+                }
+                if (request.HttpMethod == "POST" && path == "/api/v1/game/dan-attempts")
+                {
+                    if (user == null) { Reply(context, 401, new JObject()); return; }
+                    if (string.IsNullOrEmpty(request.Headers["Idempotency-Key"])) { Reply(context, 400, new JObject()); return; }
+                    var attempt = JObject.Parse(body);
+                    DanAttempts.Enqueue((user, attempt));
+                    Reply(context, 200, new JObject
+                    {
+                        ["attempt"] = new JObject { ["id"] = Hex(32), ["courseId"] = attempt["courseId"], ["verdict"] = attempt["verdict"] },
+                        ["profile"] = DanProfileReply ?? (JToken)JValue.CreateNull(),
+                        ["profileError"] = DanProfileReply == null ? "OurTaikoProfile unreachable" : null,
+                    });
+                    return;
+                }
                 Reply(context, 404, new JObject());
             }
             catch (Exception error) { Reply(context, 500, new JObject { ["error"] = error.Message }); }
@@ -328,6 +354,7 @@ namespace OurTaiko.Tests
             };
             reply.Merge(Protocol);
             if (AccountCenter) reply["sso"] = new JObject { ["issuer"] = BaseUrl, ["service"] = Service };
+            if (Dans != null) reply["danVersion"] = 1;
             ChangeBootstrap?.Invoke(reply);
             Reply(context, 200, reply);
         }

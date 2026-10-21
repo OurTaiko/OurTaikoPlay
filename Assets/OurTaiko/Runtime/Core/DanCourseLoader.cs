@@ -59,6 +59,20 @@ namespace OurTaiko
             return entries;
         }
 
+        // A connected server's courses as GET /api/v1/game/dans lists them; path names the list
+        // for the entries (and their errors).
+        public static List<DanCourseEntry> LoadServer(string server, JArray dans, DanCourseResolver resolver)
+        {
+            var entries = new List<DanCourseEntry>();
+            string path = server.TrimEnd('/') + "/api/v1/game/dans";
+            foreach (var item in dans)
+            {
+                try { entries.Add(resolver.Resolve(DanCourse.From(item as JObject ?? throw new FormatException("A course must be an object."), server.TrimEnd('/')), path)); }
+                catch (FormatException error) { entries.Add(Broken(path, error.Message, server)); }
+            }
+            return entries;
+        }
+
         static string ReadText(string file) => LocalSongScanner.ReadText(File.ReadAllBytes(file));
 
         static DanCourseEntry Broken(string file, string error, string server = null)

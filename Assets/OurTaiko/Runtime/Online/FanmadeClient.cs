@@ -39,17 +39,43 @@ namespace OurTaiko.Online
         // once both are there (either may arrive first).
         readonly Dictionary<string, JToken> personalPlaylists = new Dictionary<string, JToken>();
         readonly Dictionary<string, List<FanmadePlaylist>> personalLists = new Dictionary<string, List<FanmadePlaylist>>();
+        // Each server's 段位 courses (GET /game/dans), as it sent them.
+        readonly Dictionary<string, JArray> danLists = new Dictionary<string, JArray>();
+        // What each uploaded 段位 attempt (by its queue key) got back: OurTaikoProfile's reply, or why it has none.
+        readonly Dictionary<string, DanAward> danAwards = new Dictionary<string, DanAward>();
         string status = "";
         (int, int) catalogProgress;
         long revision;
         Task uploads;
         DateTime retryAt = DateTime.MinValue;
+        // Work queued while a pass runs: that pass goes round once more instead of leaving it for the next one.
+        volatile bool rerun;
 
         public PendingScoreQueue UploadQueue { get; }
+        public PendingDanQueue DanQueue { get; }
         public FanmadeClient(string cacheRoot, string databasePath = null)
         {
             CacheRoot = Path.GetFullPath(cacheRoot);
             UploadQueue = new PendingScoreQueue(databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3"));
+            DanQueue = new PendingDanQueue(databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3"));
+        }
+
+        // A 段位 attempt's answer: Profile is OurTaikoProfile's reply ({granted, nameplate}) or null
+        // when the server could not reach it (Error says why).
+        public sealed class DanAward
+        {
+            public JObject Profile;
+            public string Error = "";
+        }
+
+        // Every connected server's 段位 courses: its base URL and the courses as GET /game/dans lists them.
+        public IReadOnlyList<(string Server, JArray Dans)> Dans
+        {
+            get
+            {
+                lock (sync)
+                    return endpoints.Where(e => danLists.ContainsKey(e.Id)).Select(e => (e.Config.baseUrl, danLists[e.Id])).ToArray();
+            }
         }
 
         public IReadOnlyList<FanmadeEndpoint> Endpoints { get { lock (sync) return endpoints.ToArray(); } }
@@ -105,7 +131,7 @@ namespace OurTaiko.Online
             {
                 ResetRankThresholds();
                 foreach (var e in endpoints) e.Dispose();
-                endpoints.Clear(); charts.Clear(); categoryLists.Clear(); playlistLists.Clear();
+                endpoints.Clear(); charts.Clear(); categoryLists.Clear(); playlistLists.Clear(); danLists.Clear();
                 personalPlaylists.Clear(); personalLists.Clear();
                 retryAt = DateTime.MinValue;
             }
@@ -136,7 +162,7 @@ namespace OurTaiko.Online
             {
                 foreach (var e in endpoints.FindAll(match))
                 {
-                    charts.Remove(e.Id); categoryLists.Remove(e.Id); playlistLists.Remove(e.Id);
+                    charts.Remove(e.Id); categoryLists.Remove(e.Id); playlistLists.Remove(e.Id); danLists.Remove(e.Id);
                     personalPlaylists.Remove(e.Id); personalLists.Remove(e.Id);
                     e.Dispose();
                 }
@@ -389,12 +415,55 @@ namespace OurTaiko.Online
                 }
                 Interlocked.Increment(ref revision);
                 SetStatus(e.Config.DisplayName + ": " + list.Count + " songs ready" + (e.IsAuthenticated ? "" : " (guest; scores disabled)"));
+                if (snapshot["danVersion"]?.Type == JTokenType.Integer && (long)snapshot["danVersion"] == 1) await LoadDansAsync(e, cancel);
+                else lock (sync) danLists.Remove(e.Id);
             }
             catch (Exception error)
             {
                 SetStatus(e.Config.DisplayName + ": " + error.Message);
                 throw;
             }
+        }
+
+        // The server's 段位 courses; a failure keeps the ones loaded before and the catalog.
+        async Task LoadDansAsync(FanmadeEndpoint e, CancellationToken cancel)
+        {
+            try
+            {
+                var reply = Json.Parse(await e.RequestAsync("/api/v1/game/dans", cancel: cancel));
+                if (!(reply["dans"] is JArray dans)) throw new FanmadeException("API_DANS_INVALID");
+                lock (sync) danLists[e.Id] = dans;
+                Interlocked.Increment(ref revision);
+            }
+            catch (Exception error) when (!(error is OperationCanceledException) && !cancel.IsCancellationRequested)
+            {
+                SetStatus(e.Config.DisplayName + ": 段位 courses unavailable (" + error.Message + ")");
+            }
+        }
+
+        // Queues a 段位 attempt of a server's course for 1P's account, then sends it in the
+        // background like scores; the server asks OurTaikoProfile for its rewards. The queue key,
+        // or null when 1P is not signed in there.
+        public string SubmitDanAttempt(string server, string courseId, int verdict, int songsPlayed)
+        {
+            FanmadeEndpoint e;
+            lock (sync) e = endpoints.Find(x => string.Equals(x.Config.baseUrl, server.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) && x.IsConnected);
+            if (e == null || !HasAccount(e, 0)) return null;
+            var body = new JObject { ["courseId"] = courseId, ["verdict"] = verdict, ["songsPlayed"] = songsPlayed };
+            string key = RandomKey();
+            try
+            {
+                DanQueue.Enqueue(e.AccountIdOf(0), key, body.ToString(Newtonsoft.Json.Formatting.None));
+                RetryNow();
+                return key;
+            }
+            catch (Exception error) { SetStatus("段位 queue error: " + error.Message); return null; }
+        }
+
+        // The answer an uploaded attempt got; null while it waits in the queue.
+        public DanAward Award(string key)
+        {
+            lock (sync) return key != null && danAwards.TryGetValue(key, out var award) ? award : null;
         }
 
         // Blocks as slots of course × side with their ids (Fanmade 042), signed resource links and replay uploads.
@@ -458,8 +527,7 @@ namespace OurTaiko.Online
             try
             {
                 UploadQueue.Enqueue(e.AccountIdOf(seat), RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), chart.TjaHash, chart.AudioHash, chart.Id);
-                lock (sync) retryAt = DateTime.MinValue;
-                Update();
+                RetryNow();
                 return true;
             }
             catch (Exception error) { SetStatus("Score queue error: " + error.Message); return false; }
@@ -482,13 +550,23 @@ namespace OurTaiko.Online
         // Starts the next upload pass at once instead of after the 30 s retry interval.
         public void RetryNow()
         {
-            lock (sync) retryAt = DateTime.MinValue;
+            lock (sync) { retryAt = DateTime.MinValue; rerun = true; }
             Update();
         }
 
         public Task WaitForUploadsAsync() => uploads ?? Task.CompletedTask;
 
         async Task DrainAsync()
+        {
+            do
+            {
+                rerun = false;
+                await DrainScoresAsync();
+                foreach (var e in Endpoints) await DrainDansAsync(e);
+            } while (rerun);
+        }
+
+        async Task DrainScoresAsync()
         {
             foreach (var e in Endpoints)
             for (int seat = 0; seat < FanmadeEndpoint.SeatCount; seat++)
@@ -550,6 +628,41 @@ namespace OurTaiko.Online
         }
 
         public int PendingCount(FanmadeEndpoint e) => UploadQueue.Pending(e.AccountId).Length;
+
+        // 1P's queued 段位 attempts on a connected server, after its scores.
+        async Task DrainDansAsync(FanmadeEndpoint e)
+        {
+            if (!e.IsConnected || !e.IsAuthenticated) return;
+            foreach (var queued in DanQueue.Pending(e.AccountIdOf(0)))
+            {
+                try
+                {
+                    JObject reply;
+                    await e.Transport.WaitAsync();
+                    try { reply = Json.Parse(await e.AuthorizedAsync("/api/v1/game/dan-attempts", queued.Body, queued.Key)); }
+                    finally { e.Transport.Release(); }
+                    var award = new DanAward
+                    {
+                        Profile = reply["profile"] as JObject,
+                        Error = reply["profileError"]?.Type == JTokenType.String ? (string)reply["profileError"] : "",
+                    };
+                    lock (sync) { danAwards[queued.Key] = award; status = e.Config.DisplayName + ": 段位 result uploaded"; }
+                    Interlocked.Increment(ref revision);
+                    DanQueue.Remove(queued.Key);
+                }
+                catch (HttpStatusException error)
+                {
+                    SetStatus(e.Config.DisplayName + ": 段位 result pending (" + error.Message + ")");
+                    if (error.Status >= 400 && error.Status < 500 && error.Status != 401 && error.Status != 408 && error.Status != 429)
+                    {
+                        DanQueue.Reject(queued.Key);
+                        lock (sync) danAwards[queued.Key] = new DanAward { Error = error.Message };
+                    }
+                    else break;
+                }
+                catch (Exception error) { SetStatus(e.Config.DisplayName + ": 段位 result pending (" + error.Message + ")"); break; }
+            }
+        }
 
         static string RandomKey()
         {

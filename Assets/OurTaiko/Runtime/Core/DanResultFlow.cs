@@ -266,6 +266,16 @@ namespace OurTaiko
             return null;
         }
 
+        static readonly string[] RankNames =
+        {
+            "初級", "十級", "九級", "八級", "七級", "六級", "五級", "四級", "三級", "二級", "一級",
+            "初段", "二段", "三段", "四段", "五段", "六段", "七段", "八段", "九段", "十段",
+            "玄人", "名人", "超人", "達人",
+        };
+
+        // A 段位's name (0 初級 .. 24 達人), as OurTaikoProfile and the websites number them.
+        public static string RankName(int danIndex) => danIndex >= 0 && danIndex < RankNames.Length ? RankNames[danIndex] : "";
+
         // YataiDON odai_result as the result and the course select name it.
         public static string VerdictName(int verdict) => verdict switch
         {
