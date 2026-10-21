@@ -224,12 +224,22 @@ namespace OurTaiko.Tests
             Assert.That((int)award.Profile["granted"]["dan"]["index"], Is.EqualTo(20));
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);
 
-            // A server that cannot reach Profile still records the attempt; the game says it comes later.
+            // A server that cannot reach Profile still records the attempt; the game says it comes later
+            // and sends the attempt again, so that the server asks Profile again.
+            var granted = fixture.DanProfileReply;
             fixture.DanProfileReply = null;
             string later = client.SubmitDanAttempt(fixture.BaseUrl, "7", 1, 1);
             Drain();
             Assert.That(client.Award(later).Profile, Is.Null);
             Assert.That(client.Award(later).Error, Does.Contain("unreachable"));
+            Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)).Single().Key, Is.EqualTo(later));
+            int uploads = fixture.DanAttempts.Count;
+            fixture.DanProfileReply = granted;
+            Drain();
+            Assert.That(fixture.DanAttempts.Count, Is.GreaterThan(uploads));
+            Assert.That((int)fixture.DanAttempts.Last().Body["verdict"], Is.EqualTo(1));
+            Assert.That(client.Award(later).Profile, Is.Not.Null);
+            Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);
 
             // While the server is down the attempt waits in the queue.
             fixture.Fail["/api/v1/game/dan-attempts"] = 503;

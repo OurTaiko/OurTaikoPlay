@@ -21,6 +21,8 @@ namespace OurTaiko.Online
     public sealed partial class FanmadeClient : IDisposable
     {
         public static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(30);
+        // How long a 段位 attempt the server kept, but could not get OurTaikoProfile's answer for, is sent again.
+        public static readonly TimeSpan DanAwardRetryPeriod = TimeSpan.FromDays(7);
         public readonly string CacheRoot;
         public string Status { get { lock (sync) return status; } }
         // Bumped whenever charts or scores change, so views know to refresh.
@@ -646,8 +648,12 @@ namespace OurTaiko.Online
                         Profile = reply["profile"] as JObject,
                         Error = reply["profileError"]?.Type == JTokenType.String ? (string)reply["profileError"] : "",
                     };
-                    lock (sync) { danAwards[queued.Key] = award; status = e.Config.DisplayName + ": 段位 result uploaded"; }
+                    // The server kept the attempt but OurTaikoProfile did not answer. The server asks it
+                    // again when the same attempt (key) comes again, so it stays queued for a while.
+                    bool again = award.Profile == null && award.Error.Length > 0 && DateTime.UtcNow.Ticks - queued.Created < DanAwardRetryPeriod.Ticks;
+                    lock (sync) { danAwards[queued.Key] = award; status = e.Config.DisplayName + (again ? ": 段位 result uploaded, reward pending" : ": 段位 result uploaded"); }
                     Interlocked.Increment(ref revision);
+                    if (again) continue;
                     DanQueue.Remove(queued.Key);
                 }
                 catch (HttpStatusException error)
