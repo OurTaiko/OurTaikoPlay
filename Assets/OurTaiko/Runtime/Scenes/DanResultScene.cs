@@ -73,8 +73,8 @@ namespace OurTaiko
                 stampClear, stampClearGold, stampFail, atmosClear, advanceIntro, advanceShogo, popupSuperlative);
             voice.PrepareAudioTracks(announce, voiceClear, voiceClearGold, voiceFail, voiceAdvance, voiceGlad);
             if (bgm.clip != null) { bgm.loop = true; bgm.PlayAudio(); }
-            // The announce, once, as the screen opens (game/dan_transition is the same line, so it is
-            // not played anywhere).
+            // The announce, once, as the screen opens (YataiDON's game/dan_transition is the same
+            // line; it is not imported).
             Play(voice, announce);
             Play(sfx, partialIntro, true);
         }

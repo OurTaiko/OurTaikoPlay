@@ -290,7 +290,7 @@ namespace OurTaiko
                 }
             }
             music.StopAudio();
-            // dan_transition is the result screen's to play, as it opens.
+            // The result screen says its announce as it opens.
             switcher.ShowDanResult(result);
         }
 
