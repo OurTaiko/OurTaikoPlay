@@ -310,9 +310,10 @@ namespace OurTaiko.Tests
             }
         }
 
-        // The built-in servers connect on the Presented card before Entry: one sign-in with the
-        // settings' account, one song list, the nickname on the nameplate. ServerLogin then has
-        // nothing to ask and keeps those songs.
+        // The built-in servers connect on the Presented card before Entry: one song list, then the
+        // password an older version left in the settings signs in once at the account center and
+        // is erased; the account's session for the server is traded there, and the nickname goes
+        // on the nameplate. ServerLogin then has nothing to ask and keeps those songs.
         [UnityTest]
         public IEnumerator PresentedSignsInAndLoadsTheBuiltInSongListBeforeEntry()
         {
@@ -327,6 +328,7 @@ namespace OurTaiko.Tests
                 manager.UseUnsaved(settings);
                 TestData.UseServers(new ServerList());
                 online.UseUnsaved(new ServerList(), TestData.OnlineCache, ("Built-in", fixture.BaseUrl));
+                online.UseAccounts(new AccountStore(null, "test"), new AccountCenter(fixture.BaseUrl));
                 Assert.That(online.Servers.servers, Is.Empty, "Built-in servers are not part of servers.json.");
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.PresentedScene);
                 yield return null;
@@ -335,9 +337,14 @@ namespace OurTaiko.Tests
                 yield return null;
                 TestCapture.Capture("Presented.png");
                 yield return WaitForScene(SceneSwitcher.EntryScene);
-                Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/login"), Is.EqualTo(1));
+                Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"), "No password goes to the game server.");
+                Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/account/login"), Is.EqualTo(1));
+                Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens"), Is.EqualTo(1));
                 Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/catalog"), Is.EqualTo(1));
                 Assert.That(online.Client.Endpoints.Single().IsAuthenticated, Is.True);
+                Assert.That(online.Accounts.Seats[0].IsSignedIn, Is.True);
+                Assert.That(manager.Settings.accounts.p1Password, Is.Empty, "The old saved password is erased.");
+                Assert.That(manager.Settings.accounts.p1Username, Is.EqualTo("don"));
                 Assert.That(PlayerInfoController.Instance.Info.name, Is.EqualTo("DON"));
                 Assert.That(online.Songs, Is.Not.Empty);
                 TestCapture.Capture("EntryNickname.png");

@@ -11,7 +11,10 @@ namespace OurTaiko.Tests
             var menu = new SettingsMenu(SettingsMenu.Catalog(), new GameSettings());
             menu.Ka(4);
             Assert.That(menu.CurrentType.Label, Is.EqualTo("OurTaiko Accounts"));
-            Assert.That(menu.CurrentType.Items.Select(i => i.Label), Is.EqualTo(new[] { "1P Username", "1P Password", "Refresh Song List", "Refresh Login Status" }), "2P is not listed yet.");
+            Assert.That(menu.CurrentType.Items.Select(i => i.Label), Is.EqualTo(new[]
+            {
+                "1P Username", "1P Password", "1P Sign Out", "2P Username", "2P Password", "2P Sign Out", "Refresh Song List", "Refresh Login Status",
+            }));
             menu.Don();
             Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("Not set"));
             Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Entered));
@@ -25,10 +28,17 @@ namespace OurTaiko.Tests
             Assert.That(menu.SubmitText(" don "), Is.EqualTo(SettingsMenu.Result.Changed));
             Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
             Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("don"));
+            // The password signs in (the scene runs SubmitActionId with the text) and is never kept.
             menu.Ka(1); menu.Don();
             Assert.That(menu.CurrentItem.IsSecret, Is.True);
-            menu.SubmitText("katsu");
-            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("*****"), "A password is never shown.");
+            Assert.That(menu.CurrentItem.SubmitActionId, Is.EqualTo(SettingsMenu.SignInAction + "0"));
+            Assert.That(menu.SubmitText("katsu"), Is.EqualTo(SettingsMenu.Result.Changed));
+            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("Type to sign in"));
+            Assert.That(menu.Settings.ToJson(), Does.Not.Contain("katsu"));
+            menu.Ka(1);
+            Assert.That(menu.CurrentItem.ActionId, Is.EqualTo(SettingsMenu.SignOutAction + "0"));
+            menu.Ka(3);
+            Assert.That(menu.CurrentItem.ActionId, Is.EqualTo(SettingsMenu.SignOutAction + "1"));
 
             // The buttons open nothing: the scene runs them and writes their status.
             menu.Ka(1);
@@ -39,10 +49,12 @@ namespace OurTaiko.Tests
             Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("Done"));
 
             string json = menu.Settings.ToJson();
-            Assert.That(json, Does.Contain("p2Username").And.Contain("p2Password"), "2P is kept in the file.");
+            Assert.That(json, Does.Contain("p2Username"));
             var restored = GameSettings.FromJson(json);
             Assert.That(restored.accounts.p1Username, Is.EqualTo("don"));
-            Assert.That(restored.accounts.p1Password, Is.EqualTo("katsu"));
+            Assert.That(restored.accounts.p1Password, Is.Empty);
+            // What an older version saved is still read, for the one sign-in that erases it.
+            Assert.That(GameSettings.FromJson("{\"accounts\":{\"p1Password\":\"old\"}}").accounts.p1Password, Is.EqualTo("old"));
             Assert.That(GameSettings.FromJson("{}").accounts.p1Username, Is.Empty);
         }
 

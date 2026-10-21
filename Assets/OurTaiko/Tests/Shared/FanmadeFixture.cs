@@ -16,7 +16,8 @@ namespace OurTaiko.Tests
     // A local stand-in for the Fanmade backend's game API (Fanmade/backend internal/httpapi
     // server.go + game.go), as tests/fanmade/fixture.py is for OurTaikoPlayer: login, bootstrap,
     // category lists, chart details, signed resource manifests (served by the fixture itself
-    // unless a test replaces Manifest) and idempotent score submission.
+    // unless a test replaces Manifest) and idempotent score submission. It is also the account
+    // center its catalog names (OurTaikoSSO's /api/v1/game/account/* and /api/v1/game/tokens).
     public sealed class FanmadeFixture : IDisposable
     {
         public sealed class Chart
@@ -73,12 +74,22 @@ namespace OurTaiko.Tests
             ["chartSlotVersion"] = 1, ["resourceDownloadVersion"] = 1,
             ["scoreReplayVersion"] = 1, ["audioPreviewVersion"] = 1,
         };
+        // The catalog's "sso": this fixture is the account center and "fixture" the service. False:
+        // a server that only takes a password.
+        public bool AccountCenter = true;
+        public const string Service = "fixture";
+        // Account sign-ins issued by /api/v1/game/account/login and still valid.
+        public readonly ConcurrentDictionary<string, string> AccountTokens = new ConcurrentDictionary<string, string>();
+        // The account center's user id of a fixture user.
+        public static string UserId(string username) => FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(username)).Substring(0, 32);
         public Func<Chart, JObject> Manifest;
         public Action<JObject> ChangeBootstrap;
         public Func<HttpListenerContext, bool> CustomRequest;
         // Status codes returned (and consumed) before the next score submissions succeed.
         public readonly ConcurrentQueue<int> ScoreFailures = new ConcurrentQueue<int>();
         public readonly ConcurrentQueue<JObject> AcceptedScores = new ConcurrentQueue<JObject>();
+        // Who sent each accepted score, in the same order.
+        public readonly ConcurrentQueue<string> AcceptedUsers = new ConcurrentQueue<string>();
         public readonly ConcurrentDictionary<string, JObject> Idempotent = new ConcurrentDictionary<string, JObject>();
         public readonly ConcurrentBag<string> Requests = new ConcurrentBag<string>();
         public readonly List<JObject> AccountScores = new List<JObject>();
@@ -169,6 +180,8 @@ namespace OurTaiko.Tests
                 if (Fail.TryGetValue(path, out int failure)) { Reply(context, failure, new JObject { ["error"] = "FIXTURE" }); return; }
                 string body = new StreamReader(request.InputStream, Encoding.UTF8).ReadToEnd();
                 string auth = request.Headers["Authorization"] ?? "";
+                if (path.StartsWith("/api/v1/game/account/", StringComparison.Ordinal) || path == "/api/v1/game/tokens")
+                { Account(context, path, auth, body); return; }
                 string user = null;
                 if (auth.StartsWith("Bearer ", StringComparison.Ordinal) && !tokens.TryGetValue(auth.Substring(7), out user))
                 { Reply(context, 401, new JObject { ["error"] = "SESSION" }); return; }
@@ -246,6 +259,51 @@ namespace OurTaiko.Tests
             });
         }
 
+        // The account center: sign in once, check, sign out, and trade the sign-in for a session here.
+        void Account(HttpListenerContext context, string path, string auth, string body)
+        {
+            string bearer = auth.StartsWith("Bearer ", StringComparison.Ordinal) ? auth.Substring(7) : "";
+            AccountTokens.TryGetValue(bearer, out string username);
+            JObject User(string name) => new JObject
+            {
+                ["id"] = UserId(name), ["username"] = name, ["nickname"] = name.ToUpperInvariant(), ["avatarUrl"] = "", ["preferredLanguage"] = "en",
+            };
+            switch (path)
+            {
+                case "/api/v1/game/account/login":
+                {
+                    var request = JObject.Parse(body);
+                    string name = (string)request["username"], password = (string)request["password"];
+                    if (!Users.TryGetValue(name ?? "", out var expected) || expected != password)
+                    { Reply(context, 401, new JObject { ["code"] = "LOGIN_INVALID" }); return; }
+                    string token = Hex(64);
+                    AccountTokens[token] = name;
+                    Reply(context, 200, new JObject { ["token"] = token, ["expiresAt"] = "2099-01-01T00:00:00+00:00", ["user"] = User(name) });
+                    return;
+                }
+                case "/api/v1/game/account/session":
+                    if (username == null) Reply(context, 401, new JObject { ["code"] = "UNAUTHORIZED" });
+                    else Reply(context, 200, new JObject { ["expiresAt"] = "2099-01-01T00:00:00+00:00", ["user"] = User(username) });
+                    return;
+                case "/api/v1/game/account/logout":
+                    AccountTokens.TryRemove(bearer, out _);
+                    Reply(context, 200, new JObject { ["ok"] = true });
+                    return;
+                default:
+                {
+                    if (username == null) { Reply(context, 401, new JObject { ["code"] = "UNAUTHORIZED" }); return; }
+                    if ((string)JObject.Parse(body)["service"] != Service) { Reply(context, 403, new JObject { ["code"] = "SERVICE_FORBIDDEN" }); return; }
+                    string token = Hex(64);
+                    tokens[token] = username;
+                    Reply(context, 200, new JObject { ["user"] = User(username), ["accessToken"] = token, ["expiresIn"] = 3600 });
+                    return;
+                }
+            }
+        }
+
+        // Every game session (traded or logged in) ends, as when they expire: the next request is 401.
+        public void ExpireSessions() => tokens.Clear();
+
         // GET /game/catalog: public, the same for every caller.
         void Bootstrap(HttpListenerContext context)
         {
@@ -259,6 +317,7 @@ namespace OurTaiko.Tests
                 ["charts"] = new JArray(Charts.Select(c => c.ToJson())),
             };
             reply.Merge(Protocol);
+            if (AccountCenter) reply["sso"] = new JObject { ["issuer"] = BaseUrl, ["service"] = Service };
             ChangeBootstrap?.Invoke(reply);
             Reply(context, 200, reply);
         }
@@ -284,6 +343,7 @@ namespace OurTaiko.Tests
                 ["ClearStatus"] = body["ClearStatus"] ?? new JValue(0),
             };
             Idempotent[key] = score;
+            AcceptedUsers.Enqueue(user);
             AcceptedScores.Enqueue(body);
             Reply(context, 200, score);
         }

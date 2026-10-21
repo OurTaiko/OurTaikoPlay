@@ -1,0 +1,189 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using NUnit.Framework;
+using OurTaiko.Online;
+
+namespace OurTaiko.Tests
+{
+    // OurTaiko accounts: the encrypted account file, signing both seats in through the account
+    // center (the fixture plays it) and per-seat scores and uploads.
+    public sealed class OurTaikoAccountTests
+    {
+        FanmadeFixture fixture;
+        FanmadeClient client;
+        AccountCenter center;
+        string cache;
+        FanmadeFixture.Chart chart;
+
+        [SetUp]
+        public void SetUp()
+        {
+            fixture = new FanmadeFixture();
+            fixture.Users["ka"] = "don";
+            chart = new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3 } };
+            chart.Difficulties.Add(("Oni", 8, "P2"));
+            fixture.Charts.Add(chart);
+            cache = Path.Combine(Path.GetTempPath(), "ourtaiko-accounts-" + Guid.NewGuid().ToString("N"));
+            client = new FanmadeClient(cache);
+            center = new AccountCenter(fixture.BaseUrl);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            center.Dispose();
+            client.Dispose();
+            fixture.Dispose();
+            if (Directory.Exists(cache)) Directory.Delete(cache, true);
+        }
+
+        static T Run<T>(Func<Task<T>> body) => Task.Run(body).GetAwaiter().GetResult();
+        static void Run(Func<Task> body) => Task.Run(body).GetAwaiter().GetResult();
+
+        // A built-in style server: the catalog first, then the seat signed in with a traded session.
+        FanmadeEndpoint Catalog()
+        {
+            var e = client.Add(new ServerConfig { name = "Built-in", baseUrl = fixture.BaseUrl });
+            Run(() => client.LoadCatalogAsync(e));
+            return e;
+        }
+
+        OurTaikoAccount SignIn(FanmadeEndpoint e, int seat, string user, string password)
+        {
+            var account = Run(() => center.LoginAsync(user, password, "Test"));
+            string session = Run(() => center.TradeAsync(account.Token, e.SsoService));
+            Run(() => client.UseAccountAsync(e, seat, session, account.UserId, account.Nickname, c => center.TradeAsync(account.Token, e.SsoService, c)));
+            return account;
+        }
+
+        // A score queued while a pass is running goes up with the next one.
+        void Drain()
+        {
+            Run(() => client.WaitForUploadsAsync());
+            client.RetryNow();
+            Run(() => client.WaitForUploadsAsync());
+        }
+
+        [Test]
+        public void TheAccountFileKeepsNoPasswordAndOnlyThisDeviceCanReadIt()
+        {
+            Directory.CreateDirectory(cache);
+            string path = Path.Combine(cache, AccountStore.FileName);
+            var store = new AccountStore(path, "device-a");
+            var account = Run(() => center.LoginAsync("don", "katsu", "Test"));
+            store.Seats[1] = account;
+            store.Save();
+            string raw = Encoding.UTF8.GetString(File.ReadAllBytes(path));
+            Assert.That(raw, Does.Not.Contain(account.Token).And.Not.Contain("katsu").And.Not.Contain("don"));
+
+            var again = new AccountStore(path, "device-a");
+            again.Load();
+            Assert.That(again.Seats[0].IsSignedIn, Is.False);
+            Assert.That(again.Seats[1].Token, Is.EqualTo(account.Token));
+            Assert.That(again.Seats[1].UserId, Is.EqualTo(FanmadeFixture.UserId("don")));
+            Assert.That(again.Seats[1].Nickname, Is.EqualTo("DON"));
+
+            var elsewhere = new AccountStore(path, "device-b");
+            elsewhere.Load();
+            Assert.That(elsewhere.Seats.All(s => !s.IsSignedIn), Is.True, "A copy on another device reads as no account.");
+
+            var bytes = File.ReadAllBytes(path);
+            bytes[20] ^= 1;
+            File.WriteAllBytes(path, bytes);
+            again.Load();
+            Assert.That(again.Seats.All(s => !s.IsSignedIn), Is.True, "A damaged file is no account.");
+        }
+
+        [Test]
+        public void TheCatalogNamesTheAccountCenterOnlyWhenItIsUsable()
+        {
+            var e = Catalog();
+            Assert.That(e.SsoIssuer, Is.EqualTo(fixture.BaseUrl));
+            Assert.That(e.SsoService, Is.EqualTo(FanmadeFixture.Service));
+            foreach (var issuer in new[] { "http://example.org", "ftp://127.0.0.1", "https://user@example.org", "nonsense" })
+            {
+                fixture.ChangeBootstrap = reply => reply["sso"]["issuer"] = issuer;
+                Run(() => client.LoadCatalogAsync(e));
+                Assert.That(e.SsoService, Is.Empty, issuer);
+            }
+            fixture.ChangeBootstrap = null;
+            fixture.AccountCenter = false;
+            Run(() => client.LoadCatalogAsync(e));
+            Assert.That(e.SsoIssuer, Is.Empty);
+        }
+
+        [Test]
+        public void EachSeatHasItsOwnScoresAndUploadsWithItsOwnSession()
+        {
+            fixture.AddAccountScore("don", chart, "Oni", 900000);
+            fixture.AddAccountScore("ka", chart, "Oni", 800000, player: "P2");
+            var e = Catalog();
+            SignIn(e, 0, "don", "katsu");
+            SignIn(e, 1, "ka", "don");
+            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"), "No password goes to the game server.");
+            var listed = client.Chart(e.Id, chart.Id);
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0)?.Score, Is.EqualTo(900000));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1)?.Score, Is.EqualTo(800000), "2P reads its own account's p2 block.");
+
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1000000, Good = 4, MaxCombo = 4 }, seat: 1), Is.True);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 950000, Good = 4, MaxCombo = 4 }, seat: 0), Is.True);
+            Drain();
+            Assert.That(fixture.AcceptedUsers.ToArray(), Is.EquivalentTo(new[] { "don", "ka" }));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1)?.Score, Is.EqualTo(1000000));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0)?.Score, Is.EqualTo(950000));
+
+            client.SignOut(e, 1);
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1), Is.Null);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, seat: 1), Is.False, "A guest seat uploads nothing.");
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0)?.Score, Is.EqualTo(950000), "1P is untouched.");
+        }
+
+        [Test]
+        public void AnExpiredSessionIsTradedAgainAndTheScoreStillGoesUp()
+        {
+            var e = Catalog();
+            SignIn(e, 0, "don", "katsu");
+            fixture.ExpireSessions();
+            var listed = client.Chart(e.Id, chart.Id);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1000, Good = 1, MaxCombo = 1 }), Is.True);
+            Run(() => client.WaitForUploadsAsync());
+            Assert.That(fixture.AcceptedUsers.ToArray(), Is.EqualTo(new[] { "don" }));
+            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens"), Is.EqualTo(2));
+            Assert.That(client.PendingCount(e), Is.Zero);
+        }
+
+        [Test]
+        public void BothSeatsOnOneAccountUploadItsScoresOnce()
+        {
+            var e = Catalog();
+            SignIn(e, 0, "don", "katsu");
+            SignIn(e, 1, "don", "katsu");
+            Assert.That(e.AccountIdOf(0), Is.EqualTo(e.AccountIdOf(1)));
+            var listed = client.Chart(e.Id, chart.Id);
+            client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 10, Good = 1, MaxCombo = 1 }, seat: 0);
+            client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 20, Good = 1, MaxCombo = 1 }, seat: 1);
+            Drain();
+            Assert.That(fixture.AcceptedScores.Select(s => (long)s["score"]), Is.EquivalentTo(new[] { 10L, 20L }));
+            // Each seat played its own block (2P the P2 one); both seats see both plays.
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0)?.Score, Is.EqualTo(10));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1)?.Score, Is.EqualTo(20));
+            Assert.That(e.Seats[0].ScoreCount, Is.EqualTo(2));
+            Assert.That(e.Seats[1].ScoreCount, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void TheAccountCenterAnswersAreChecked()
+        {
+            Assert.That(Assert.Catch<HttpStatusException>(() => Run(() => center.LoginAsync("don", "wrong", "Test"))).Status, Is.EqualTo(401));
+            var account = Run(() => center.LoginAsync("don", "katsu", "Test"));
+            Run(() => center.RefreshAsync(account));
+            Assert.That(account.Username, Is.EqualTo("don"));
+            Run(() => center.LogoutAsync(account.Token));
+            Assert.That(Assert.Catch<HttpStatusException>(() => Run(() => center.RefreshAsync(account))).Status, Is.EqualTo(401));
+            Assert.That(Assert.Catch<HttpStatusException>(() => Run(() => center.TradeAsync(account.Token, FanmadeFixture.Service))).Status, Is.EqualTo(401));
+        }
+    }
+}

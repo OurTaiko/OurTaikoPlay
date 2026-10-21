@@ -49,12 +49,13 @@ namespace OurTaiko
         public string Language => Array.IndexOf(Languages, language) >= 0 ? language : "en";
     }
 
-    // The OurTaiko account of each player, used by the built-in servers.
+    // The username of each player's OurTaiko account, filled in on the settings page. Passwords
+    // are not kept: the sign-in itself lives in account.dat (OnlineManager.Accounts). The password
+    // fields only carry what older versions saved, until it signs in once and is erased.
     [Serializable]
     public sealed class AccountSettings
     {
         public string p1Username = "", p1Password = "";
-        // File-only until two players can play online.
         public string p2Username = "", p2Password = "";
     }
 

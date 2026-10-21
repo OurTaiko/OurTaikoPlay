@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading;
 using OurTaiko.Online;
 using UnityEngine;
@@ -41,12 +42,31 @@ namespace OurTaiko
                 d => { if (Menu.Focus == SettingsFocus.Choice) Ka(d); });
             if (view.textField != null)
             {
-                view.textField.onSubmit.AddListener(text => { textKeyFrame = Time.frameCount; Handle(Menu.SubmitText(text)); });
+                view.textField.onSubmit.AddListener(text =>
+                {
+                    textKeyFrame = Time.frameCount;
+                    var item = Menu.CurrentItem;
+                    Handle(Menu.SubmitText(text));
+                    if (item?.SubmitActionId != null && Menu.CurrentItem == item) RunAction(item, item.SubmitActionId, text);
+                });
                 // Ending the edit any other way (Esc, a tap elsewhere) leaves the value as it was.
                 view.textField.onEndEdit.AddListener(_ => { textKeyFrame = Time.frameCount; if (Menu.EditingText) Handle(Menu.Back()); });
             }
+            ShowAccounts();
             view.Show(Menu);
             switcher.SceneChanging += OnSceneChanging;
+        }
+
+        // The sign-out rows show who is signed in.
+        void ShowAccounts()
+        {
+            var accounts = OnlineManager.EnsureInstance().Accounts;
+            foreach (var item in Menu.Types.SelectMany(t => t.Items))
+                if (item.ActionId != null && item.ActionId.StartsWith(SettingsMenu.SignOutAction) && item != running)
+                {
+                    var account = accounts.Seats[item.ActionId[SettingsMenu.SignOutAction.Length] - '0'];
+                    item.Status = account.IsSignedIn ? "Signed in: " + (account.Nickname.Length > 0 ? account.Nickname : account.Username) : "Not signed in";
+                }
         }
 
         void Start()
@@ -119,7 +139,7 @@ namespace OurTaiko
                 else Play(don);
             }
             else Play(result == SettingsMenu.Result.Moved ? ka : don);
-            if (result == SettingsMenu.Result.Action) RunAction(Menu.CurrentItem);
+            if (result == SettingsMenu.Result.Action) RunAction(Menu.CurrentItem, Menu.CurrentItem.ActionId);
             if (result == SettingsMenu.Result.Exit)
             {
                 HasLeft = true;
@@ -128,21 +148,50 @@ namespace OurTaiko
             view.Show(Menu);
         }
 
-        // The account typed above was saved when it was entered, so the manager reads the current one.
-        async void RunAction(SettingItem item)
+        // The username typed above was saved when it was entered, so the manager reads the current
+        // one. text is what a password row was given; it is passed on and not kept.
+        async void RunAction(SettingItem item, string action, string text = null)
         {
             var online = OnlineManager.EnsureInstance();
-            if (running != null || online.IsBusy) { view.status = "Still busy with the previous request."; return; }
+            if (running != null || online.IsBusy) { view.status = "Still busy with the previous request."; view.Show(Menu); return; }
+            bool account = action.StartsWith(SettingsMenu.SignInAction) || action.StartsWith(SettingsMenu.SignOutAction);
+            int seat = account ? action[action.Length - 1] - '0' : 0;
+            string username = seat == 0 ? Menu.Settings.accounts.p1Username : Menu.Settings.accounts.p2Username;
+            if (action.StartsWith(SettingsMenu.SignInAction) && (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(text)))
+            {
+                view.status = string.IsNullOrEmpty(username) ? $"Enter {seat + 1}P's username first." : "";
+                view.Show(Menu);
+                return;
+            }
             running = item;
             item.Status = "Working…";
+            view.Show(Menu);
             actionCancel = new CancellationTokenSource();
             var cancel = actionCancel;
             try
             {
-                if (item.ActionId == SettingsMenu.RefreshSongListAction)
+                if (action == SettingsMenu.RefreshSongListAction)
                 {
                     await online.LoadSongListAsync(cancel.Token);
                     view.status = online.SongListSummary;
+                }
+                else if (action.StartsWith(SettingsMenu.SignInAction))
+                {
+                    try
+                    {
+                        await online.SignInAsync(seat, username, text, cancel.Token);
+                        view.status = $"{seat + 1}P signed in as {online.Accounts.Seats[seat].Nickname}.   •   {online.LoginSummary}";
+                    }
+                    catch (System.Exception error) when (!cancel.IsCancellationRequested)
+                    {
+                        view.status = $"{seat + 1}P: " + OnlineManager.Describe(error);
+                    }
+                }
+                else if (action.StartsWith(SettingsMenu.SignOutAction))
+                {
+                    bool was = online.Accounts.Seats[seat].IsSignedIn;
+                    await online.SignOutAsync(seat, cancel.Token);
+                    view.status = was ? $"{seat + 1}P signed out." : $"{seat + 1}P is not signed in.";
                 }
                 else
                 {
@@ -154,7 +203,8 @@ namespace OurTaiko
             finally { cancel.Dispose(); if (actionCancel == cancel) actionCancel = null; }
             if (this == null) return;
             running = null;
-            item.Status = "Done";
+            item.Status = account ? "" : "Done";
+            ShowAccounts();
             view.Show(Menu);
         }
 

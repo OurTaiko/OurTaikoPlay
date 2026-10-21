@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using OurTaiko.Online;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -45,6 +47,10 @@ namespace OurTaiko
         public NameplateView Nameplate { get; private set; }
         public bool HasLeft { get; private set; }
         public bool Joined2P => joined2PAt.HasValue;
+        // "1P's OurTaiko sign-in has expired…" when the account center refused a remembered
+        // sign-in since the last Entry; empty otherwise.
+        public string AccountNotice { get; private set; } = "";
+        public const double AccountNoticeMs = 8000;
 
         SceneSwitcher switcher;
         EntryBackground backdrop;
@@ -52,6 +58,8 @@ namespace OurTaiko
         double? joined2PAt;
         bool announced, creditGone;
         double modeShownAt = double.NaN;
+        CanvasGroup accountNotice;
+        double accountNoticeAt;
 
         public double Now => GameTimeline.FrameTime * 1000;
 
@@ -66,6 +74,7 @@ namespace OurTaiko
             Bind();
             Flow = new EntryFlow(now, Modes.Length);
             switcher.SceneChanging += OnSceneChanging;
+            ShowExpiredAccounts(now);
             Show(now);
         }
 
@@ -87,6 +96,26 @@ namespace OurTaiko
         void OnSceneChanging(string scene)
         {
             bgm.StopAudio(); voice.StopAudio();
+        }
+
+        // A seat whose sign-in expired plays as a guest; a bar at the top says so for a while.
+        void ShowExpiredAccounts(double now)
+        {
+            var online = OnlineManager.Instance;
+            if (online == null) return;
+            var seats = Enumerable.Range(0, FanmadeEndpoint.SeatCount).Where(online.TakeExpired).Select(s => (s + 1) + "P").ToArray();
+            if (seats.Length == 0) return;
+            AccountNotice = string.Join(" and ", seats) + "'s OurTaiko sign-in has expired. Sign in again in the game settings.";
+            var bar = SkinUi.Image("AccountNotice", stage, null, 1500, 84);
+            bar.color = new Color(0, 0, 0, 0.72f);
+            bar.rectTransform.Center(960, 150);
+            var text = SkinUi.Text("Message", bar.transform, 40);
+            text.text = AccountNotice;
+            text.rectTransform.anchorMin = text.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            text.rectTransform.anchoredPosition = Vector2.zero;
+            accountNotice = bar.gameObject.AddComponent<CanvasGroup>();
+            accountNotice.blocksRaycasts = false;
+            accountNoticeAt = now;
         }
 
         // The boards (box_manager.cpp's order: 演奏ゲーム first, ゲーム設定 last), their texts and the
@@ -261,6 +290,9 @@ namespace OurTaiko
                 nameplateGroup2P.alpha = joined2PAt.HasValue ? (float)Math.Min(1, (now - joined2PAt.Value) / EntryFlow.NameplateFadeMs) : 0;
             // coin_overlay: the 2P invite appears once the credit rows are gone and only 1P is in.
             Coins.ShowInvite(Flow.JoinedAt.HasValue && creditGone && !Joined2P, now - Flow.StartedAt);
+            // The expiry notice holds, then fades out over its last half second.
+            if (accountNotice != null)
+                accountNotice.alpha = (float)Math.Max(0, Math.Min(1, (AccountNoticeMs - (now - accountNoticeAt)) / 500));
         }
     }
 }

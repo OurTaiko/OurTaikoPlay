@@ -24,6 +24,8 @@ namespace OurTaiko
         public bool IsSecret { get; private set; }
         // Which action the settings scene runs for this row; null for a field.
         public string ActionId { get; private set; }
+        // A text field the scene acts on with the typed text instead of saving it (a password).
+        public string SubmitActionId { get; private set; }
         public bool IsAction => ActionId != null;
         public string Status { get; set; } = "";
         Func<GameSettings, string> getText;
@@ -45,7 +47,7 @@ namespace OurTaiko
             Array.Empty<string>(), _ => 0, (_, __) => { }) { BindingKey = key };
 
         public string Format(GameSettings settings) => BindingKey.HasValue ? settings.general.keyboard.Format(BindingKey.Value)
-            : IsText ? FormatText(GetText(settings)) : IsAction ? Status : Format(Get(settings));
+            : SubmitActionId != null ? "Type to sign in" : IsText ? FormatText(GetText(settings)) : IsAction ? Status : Format(Get(settings));
 
         string FormatText(string text) => text.Length == 0 ? "Not set" : IsSecret ? new string('*', Math.Min(text.Length, 12)) : text;
         public string GetText(GameSettings settings) => getText(settings) ?? "";
@@ -74,6 +76,11 @@ namespace OurTaiko
         public static SettingItem Text(string label, string description, Func<GameSettings, string> get, Action<GameSettings, string> set, bool secret = false)
             => new SettingItem(label, description, Array.Empty<string>(), _ => 0, (_, __) => { })
                 { IsText = true, IsSecret = secret, getText = get, setText = set };
+
+        // A text field whose value is never kept: the scene runs submitAction with what was typed.
+        public static SettingItem Input(string label, string description, string submitAction, bool secret = false)
+            => new SettingItem(label, description, Array.Empty<string>(), _ => 0, (_, __) => { })
+                { IsText = true, IsSecret = secret, getText = _ => "", setText = (_, __) => { }, SubmitActionId = submitAction };
 
         public static SettingItem Action(string label, string description, string id)
             => new SettingItem(label, description, Array.Empty<string>(), _ => 0, (_, __) => { }) { ActionId = id };
@@ -170,6 +177,26 @@ namespace OurTaiko
         }
 
         public const string RefreshSongListAction = "refresh-song-list", RefreshLoginAction = "refresh-login";
+        // Followed by the seat: sign-in-0 is 1P's.
+        public const string SignInAction = "sign-in-", SignOutAction = "sign-out-";
+
+        // A seat's OurTaiko account rows: the username is saved; the password signs in as soon as
+        // it is entered and is not saved.
+        static SettingItem[] AccountItems(int seat)
+        {
+            string player = (seat + 1) + "P";
+            return new[]
+            {
+                SettingItem.Text(player + " Username",
+                    player + "'s OurTaiko account (sso.ourtaiko.org). Enter the password below to sign in.",
+                    s => seat == 0 ? s.accounts.p1Username : s.accounts.p2Username,
+                    (s, text) => { if (seat == 0) s.accounts.p1Username = text.Trim(); else s.accounts.p2Username = text.Trim(); }),
+                SettingItem.Input(player + " Password",
+                    "Signs in as soon as it is entered. The password is not saved; the sign-in lasts while " + player + " plays at least once every 30 days.",
+                    SignInAction + seat, secret: true),
+                SettingItem.Action(player + " Sign Out", "Sign " + player + " out of its OurTaiko account on this device.", SignOutAction + seat),
+            };
+        }
 
         public static IReadOnlyList<SettingType> Catalog() => new[]
         {
@@ -212,20 +239,13 @@ namespace OurTaiko
                     s => s.display.vSync, (s, on) => s.display.vSync = on),
             }),
             new SettingType("Sound", s => SoundSettings.Catalog(SoundSettings.Platform, s.audio.Backend)),
-            // The 2P account is saved in the file but not listed until two players can play online.
-            new SettingType("OurTaiko Accounts", new[]
+            new SettingType("OurTaiko Accounts", AccountItems(0).Concat(AccountItems(1)).Concat(new[]
             {
-                SettingItem.Text("1P Username",
-                    "1P's OurTaiko account for the built-in servers. Empty: guest, scores are not saved.",
-                    s => s.accounts.p1Username, (s, text) => s.accounts.p1Username = text.Trim()),
-                SettingItem.Text("1P Password",
-                    "The password of 1P's OurTaiko account, saved in the settings file on this device.",
-                    s => s.accounts.p1Password, (s, text) => s.accounts.p1Password = text, secret: true),
                 SettingItem.Action("Refresh Song List",
                     "Load the built-in servers' song lists again.", RefreshSongListAction),
                 SettingItem.Action("Refresh Login Status",
-                    "Sign in to the built-in servers again with the account above.", RefreshLoginAction),
-            }),
+                    "Check both accounts and sign them in to the built-in servers again.", RefreshLoginAction),
+            }).ToArray()),
         };
 
         public int TypeCount => Types.Count + 1;

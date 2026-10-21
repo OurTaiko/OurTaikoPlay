@@ -7,7 +7,7 @@ namespace OurTaiko
     // Nijiiro Scripts/global/nameplate.lua on the 408x96 plate canvas. The children are drawn in the
     // original's order: plate, title band, band outline, dan chip, 1P/2P badge, title, name. The 1P
     // plate follows PlayerInfoController, so an info change updates every plate on screen; the 2P
-    // plate shows PlayerInfo.SecondPlayer with the 2p badge.
+    // plate follows its SecondInfo (2P's account, else the "2P" guest plate) with the 2p badge.
     [RequireComponent(typeof(RectTransform), typeof(ClipSampler))]
     public sealed class NameplateView : MonoBehaviour
     {
@@ -34,15 +34,16 @@ namespace OurTaiko
         {
             controller = PlayerInfoController.EnsureInstance();
             if (seat == 0) controller.Changed += Show;
+            else controller.SecondChanged += Show;
             rainbowStart = GameTimeline.FrameTime;
             renderedCanvasScale = float.NaN;
             Canvas.willRenderCanvases += RefreshCanvasScale;
-            Show(seat == 0 ? controller.Info : PlayerInfo.SecondPlayer);
+            Show(seat == 0 ? controller.Info : controller.SecondInfo);
         }
 
         void OnDisable()
         {
-            if (controller != null) controller.Changed -= Show;
+            if (controller != null) { controller.Changed -= Show; controller.SecondChanged -= Show; }
             Canvas.willRenderCanvases -= RefreshCanvasScale;
         }
 

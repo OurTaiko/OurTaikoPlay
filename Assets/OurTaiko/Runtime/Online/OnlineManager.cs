@@ -63,13 +63,18 @@ namespace OurTaiko.Online
             UseCache(Path.Combine(GamePaths.Root, "cache", "fanmade"),
                 Path.Combine(GamePaths.Root, "scores.sqlite3"));
             Load(Path.Combine(GamePaths.Root, ServerList.FileName));
+            UseAccounts(new AccountStore(Path.Combine(GamePaths.Root, AccountStore.FileName), DeviceSecret()), new AccountCenter());
         }
+
+        // What the account file is encrypted with: something of this device and this game.
+        static string DeviceSecret() => SystemInfo.deviceUniqueIdentifier + "\n" + Application.identifier;
 
         void Update() => Client?.Update();
 
         void OnDestroy()
         {
             if (Instance != this) return;
+            Center?.Dispose();
             Client?.Dispose();
             ClearSongs();
             Instance = null;
@@ -77,15 +82,15 @@ namespace OurTaiko.Online
 
         (string Name, string Url)[] builtIn = ServerList.BuiltIn;
 
-        // The built-in servers with the 1P OurTaiko account of the settings (a guest while it is empty).
-        public IReadOnlyList<ServerConfig> BuiltInServers
-        {
-            get
-            {
-                var account = SettingManager.EnsureInstance().Settings.accounts;
-                return builtIn.Select(b => new ServerConfig { name = b.Name, baseUrl = b.Url, username = account.p1Username, password = account.p1Password }).ToArray();
-            }
-        }
+        // The built-in servers. Players sign in to them through their OurTaiko accounts.
+        public IReadOnlyList<ServerConfig> BuiltInServers => builtIn.Select(b => new ServerConfig { name = b.Name, baseUrl = b.Url }).ToArray();
+
+        // 1P's and 2P's OurTaiko accounts on this device, and the account center they sign in at.
+        public AccountStore Accounts { get; private set; }
+        public AccountCenter Center { get; private set; }
+        // Seats whose sign-in the account center refused (expired, signed out elsewhere, password
+        // changed) since Entry last said so.
+        readonly bool[] expired = new bool[FanmadeEndpoint.SeatCount];
 
         // What the running sign-in or song list request is doing, for the screen that started it,
         // and how the last one of each ended.
@@ -96,54 +101,183 @@ namespace OurTaiko.Online
         // The built-in servers' connections, kept while ServerLogin reconnects the others.
         readonly List<FanmadeEndpoint> builtInEndpoints = new List<FanmadeEndpoint>();
 
-        // Startup: load every built-in song list, then sign in, then (as part of signing in) load
-        // the account's scores. Cancelling stops at the current request and keeps what has arrived.
+        // Startup: load every built-in song list, then sign the accounts in (which loads their
+        // scores). Cancelling stops at the current request and keeps what has arrived.
         public async Task StartUpAsync(CancellationToken cancel = default)
         {
             // One rebuild of the song list for both steps, also when the startup is cancelled midway.
             await LoadSongListAsync(cancel, refresh: false);
+            if (!cancel.IsCancellationRequested) await MigrateSettingsPasswordsAsync(cancel);
             if (!cancel.IsCancellationRequested) await LoginAsync(cancel, refresh: false);
             if (this != null) RefreshSongs();
         }
 
-        // Signs 1P in to the built-in servers with the settings' OurTaiko account and loads its
-        // scores; no song list is requested. The nickname of the first server that accepts the account goes on the nameplate.
-        // 2P has no online play yet and is not signed in. True when a server accepted the account.
+        // Tests use an account file and account center of their own.
+        public void UseAccounts(AccountStore accounts, AccountCenter center)
+        {
+            Center?.Dispose();
+            Accounts = accounts;
+            Center = center;
+            Accounts.Load();
+            Array.Clear(expired, 0, expired.Length);
+        }
+
+        // True once after the account center refused this seat's sign-in; Entry tells the player.
+        public bool TakeExpired(int seat)
+        {
+            bool was = expired[seat];
+            expired[seat] = false;
+            return was;
+        }
+
+        // Versions before game accounts kept the passwords in settings.json: they sign in once
+        // and are erased from the file.
+        async Task MigrateSettingsPasswordsAsync(CancellationToken cancel)
+        {
+            var manager = SettingManager.EnsureInstance();
+            var settings = manager.Settings.Clone();
+            var account = settings.accounts;
+            string[] usernames = { account.p1Username, account.p2Username }, passwords = { account.p1Password, account.p2Password };
+            if (string.IsNullOrEmpty(passwords[0]) && string.IsNullOrEmpty(passwords[1])) return;
+            for (int seat = 0; seat < usernames.Length; seat++)
+            {
+                if (string.IsNullOrEmpty(usernames[seat]) || string.IsNullOrEmpty(passwords[seat]) || Accounts.Seats[seat].IsSignedIn) continue;
+                try { await SignInAsync(seat, usernames[seat], passwords[seat], cancel, connect: false); }
+                catch (Exception error) { Debug.LogWarning($"Signing {seat + 1}P in with the saved password failed: {error.Message}"); }
+            }
+            account.p1Password = ""; account.p2Password = "";
+            manager.Set(settings);
+        }
+
+        // Signs a seat in with a username and password at the account center and remembers the
+        // account (never the password); then signs it in to the built-in servers. Throws what the
+        // account center answered (HTTP 401: wrong username or password, 429: too many attempts).
+        public async Task SignInAsync(int seat, string username, string password, CancellationToken cancel = default, bool connect = true)
+        {
+            var account = await Center.LoginAsync(username, password, DeviceName(seat), cancel);
+            Accounts.Seats[seat] = account;
+            SaveAccounts();
+            expired[seat] = false;
+            ShowAccount(seat);
+            if (connect && this != null) await LoginAsync(cancel);
+        }
+
+        // Signs a seat out on this device: the account center forgets the token and the built-in
+        // servers forget the seat's session. Pending scores stay queued for when it signs in again.
+        public async Task SignOutAsync(int seat, CancellationToken cancel = default)
+        {
+            string token = Accounts.Seats[seat].Token;
+            Accounts.Seats[seat] = new OurTaikoAccount();
+            SaveAccounts();
+            foreach (var e in builtInEndpoints) Client.SignOut(e, seat);
+            ShowAccount(seat);
+            if (this != null) RefreshSongs();
+            if (token.Length == 0) return;
+            try { await Center.LogoutAsync(token, cancel); }
+            catch (Exception error) { Debug.LogWarning("Account center sign-out failed: " + error.Message); }
+        }
+
+        // Checks each remembered account at the account center and signs it in to every built-in
+        // server whose catalog names that account center; no song list is requested. A seat the
+        // account center refuses is signed out and marked expired; one that cannot be reached
+        // stays remembered and plays offline. True when some seat is signed in somewhere.
         public async Task<bool> LoginAsync(CancellationToken cancel = default, bool refresh = true)
         {
             if (IsBusy) return false;
             IsBusy = true;
             var results = new List<string>();
-            string nickname = null;
+            bool any = false;
             try
             {
-                var account = SettingManager.EnsureInstance().Settings.accounts;
-                foreach (var e in BuiltInEndpoints())
+                var endpoints = BuiltInEndpoints();
+                for (int seat = 0; seat < Accounts.Seats.Length; seat++)
                 {
-                    string name = e.Config.DisplayName;
-                    Client.SetAccount(e, account.p1Username, account.p1Password);
-                    if (!e.Config.HasCredentials) { results.Add(name + ": guest (no account set)"); continue; }
-                    if (cancel.IsCancellationRequested) { results.Add(name + ": cancelled"); continue; }
-                    Activity = "Signing in to " + name + "…";
+                    var account = Accounts.Seats[seat];
+                    string who = (seat + 1) + "P";
+                    if (!account.IsSignedIn)
+                    {
+                        foreach (var e in endpoints) Client.SignOut(e, seat);
+                        if (seat == 0) results.Add(who + ": guest (not signed in)");
+                        continue;
+                    }
+                    if (cancel.IsCancellationRequested) { results.Add(who + ": cancelled"); continue; }
+                    Activity = $"Checking {who}'s OurTaiko account…";
                     try
                     {
-                        await Client.LoginAsync(e, cancel);
-                        nickname ??= e.Nickname;
-                        results.Add(name + ": signed in as " + e.Nickname);
+                        await Center.RefreshAsync(account, cancel);
+                        SaveAccounts();
+                        ShowAccount(seat);
+                    }
+                    catch (HttpStatusException error) when (error.Status == 401)
+                    {
+                        Expire(seat, endpoints);
+                        results.Add(who + ": sign-in expired");
+                        continue;
                     }
                     catch (Exception error)
                     {
-                        Debug.LogWarning($"Sign-in to {name} failed: {error.Message}");
-                        results.Add(name + ": " + (cancel.IsCancellationRequested ? "cancelled" : Describe(error)));
+                        Debug.LogWarning($"{who}'s account check failed: {error.Message}");
+                        results.Add(who + ": " + (cancel.IsCancellationRequested ? "cancelled" : "offline (" + error.Message + ")"));
+                        continue;
+                    }
+                    foreach (var e in endpoints)
+                    {
+                        string name = e.Config.DisplayName;
+                        if (cancel.IsCancellationRequested) { results.Add(who + " " + name + ": cancelled"); continue; }
+                        if (e.SsoService.Length == 0 || e.SsoIssuer != Center.Issuer)
+                        {
+                            Client.SignOut(e, seat);
+                            results.Add(who + " " + name + ": " + (e.IsConnected ? "no OurTaiko account sign-in" : "song list not loaded"));
+                            continue;
+                        }
+                        Activity = $"Signing {who} in to {name}…";
+                        try
+                        {
+                            string service = e.SsoService, accountToken = account.Token;
+                            var center = Center;
+                            string session = await center.TradeAsync(accountToken, service, cancel);
+                            await Client.UseAccountAsync(e, seat, session, account.UserId, account.Nickname,
+                                c => center.TradeAsync(accountToken, service, c), cancel);
+                            any = true;
+                            results.Add(who + " " + name + ": signed in as " + account.Nickname);
+                        }
+                        catch (HttpStatusException error) when (error.Status == 401)
+                        {
+                            Expire(seat, endpoints);
+                            results.Add(who + ": sign-in expired");
+                            break;
+                        }
+                        catch (Exception error)
+                        {
+                            Debug.LogWarning($"{who}'s sign-in to {name} failed: {error.Message}");
+                            results.Add(who + " " + name + ": " + (cancel.IsCancellationRequested ? "cancelled" : Describe(error)));
+                        }
                     }
                 }
-                if (this != null && nickname != null) ShowNickname(nickname);
                 // The account's own playlists are folders too.
                 if (this != null && refresh) RefreshSongs();
             }
             finally { Activity = ""; LoginSummary = string.Join("   •   ", results); IsBusy = false; }
-            return nickname != null;
+            return any;
         }
+
+        void Expire(int seat, IEnumerable<FanmadeEndpoint> endpoints)
+        {
+            Accounts.Seats[seat] = new OurTaikoAccount();
+            SaveAccounts();
+            expired[seat] = true;
+            foreach (var e in endpoints) Client.SignOut(e, seat);
+            ShowAccount(seat);
+        }
+
+        void SaveAccounts()
+        {
+            try { Accounts.Save(); }
+            catch (Exception error) { Debug.LogWarning("Could not save the OurTaiko accounts: " + error.Message); }
+        }
+
+        // What the account center lists under 登录设备 for this sign-in.
+        static string DeviceName(int seat) => $"OurTaikoPlay {seat + 1}P · {SystemInfo.deviceName}";
 
         // Loads the built-in servers' song lists again; accounts and scores stay as they are. A
         // server that fails keeps the list it had.
@@ -177,12 +311,12 @@ namespace OurTaiko.Online
             finally { Activity = ""; SongListSummary = string.Join("   •   ", results); IsBusy = false; }
         }
 
-        static string Describe(Exception error) =>
+        public static string Describe(Exception error) =>
             error is HttpStatusException status && (status.Status == 401 || status.Status == 403) ? "wrong username or password"
             : error is HttpStatusException { Status: 429 } ? "too many sign-in attempts, try again later"
             : "failed (" + error.Message + ")";
 
-        // One connection per built-in server, created signed out; the account is set when signing in.
+        // One connection per built-in server, created signed out; the accounts are set when signing in.
         IReadOnlyList<FanmadeEndpoint> BuiltInEndpoints()
         {
             var current = Client.Endpoints;
@@ -195,12 +329,23 @@ namespace OurTaiko.Online
             return builtInEndpoints.ToArray();
         }
 
-        void ShowNickname(string nickname)
+        // The account's nickname goes on its seat's plate: 1P's into player.json, 2P's for this run.
+        void ShowAccount(int seat)
         {
+            if (this == null) return;
+            var account = Accounts.Seats[seat];
             var player = PlayerInfoController.EnsureInstance();
-            if (player.Info.name == nickname) return;
+            if (seat == 1)
+            {
+                var second = PlayerInfo.SecondPlayer;
+                if (account.IsSignedIn && account.Nickname.Length > 0) second.name = account.Nickname;
+                player.SetSecond(second);
+                return;
+            }
+            string name = account.IsSignedIn && account.Nickname.Length > 0 ? account.Nickname : PlayerInfo.DefaultName;
+            if (player.Info.name == name) return;
             var info = player.Info.Clone();
-            info.name = nickname;
+            info.name = name;
             player.Set(info);
         }
 
@@ -228,6 +373,8 @@ namespace OurTaiko.Online
             FilePath = null;
             builtIn = builtInServers ?? Array.Empty<(string, string)>();
             builtInEndpoints.Clear();
+            // Nothing listens there: a test that signs in names its own account center.
+            UseAccounts(new AccountStore(null, "test"), new AccountCenter("http://127.0.0.1:9"));
             Servers = list ?? new ServerList();
             if (cacheRoot != null) UseCache(cacheRoot);
             else Disconnect();
