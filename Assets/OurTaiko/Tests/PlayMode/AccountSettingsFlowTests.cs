@@ -40,6 +40,17 @@ namespace OurTaiko.Tests
             TestData.UseServers(new ServerList());
             online.UseUnsaved(new ServerList(), TestData.OnlineCache, ("Built-in", fixture.BaseUrl));
             online.UseAccounts(new AccountStore(null, "test"), new AccountCenter(fixture.BaseUrl));
+            online.UseProfiles(new ProfileCenter(fixture.BaseUrl));
+            fixture.Nameplates[FanmadeFixture.UserId("don")] = new Newtonsoft.Json.Linq.JObject
+            {
+                ["title"] = new Newtonsoft.Json.Linq.JObject { ["id"] = "master", ["name"] = "太鼓の達人", ["nameTranslations"] = new Newtonsoft.Json.Linq.JObject { ["en"] = "Taiko Master" }, ["style"] = "gold" },
+                ["dan"] = new Newtonsoft.Json.Linq.JObject { ["index"] = 20, ["verdict"] = 5, ["gold"] = true },
+            };
+            fixture.Nameplates[FanmadeFixture.UserId("ka")] = new Newtonsoft.Json.Linq.JObject
+            {
+                ["title"] = new Newtonsoft.Json.Linq.JObject { ["id"] = "rainbow", ["name"] = "虹", ["nameTranslations"] = new Newtonsoft.Json.Linq.JObject(), ["style"] = "rainbow" },
+                ["dan"] = null,
+            };
         }
 
         [TearDown]
@@ -118,7 +129,13 @@ namespace OurTaiko.Tests
             Assert.That(view.outputStatus.text, Does.StartWith("1P signed in as DON."));
             Assert.That(view.itemRows[1].value.text, Is.EqualTo("Type to sign in"), "The password row keeps nothing.");
             Assert.That(view.itemRows[2].value.text, Is.EqualTo("Signed in: DON"));
-            Assert.That(PlayerInfoController.Instance.Info.name, Is.EqualTo("DON"), "The nickname goes on the nameplate.");
+            var plate = PlayerInfoController.Instance.Info;
+            Assert.That(plate.name, Is.EqualTo("DON"), "The nickname goes on the nameplate.");
+            Assert.That(plate.title, Is.EqualTo("Taiko Master"), "The title Profile says 1P wears, in the song language (English by default).");
+            Assert.That(plate.titleBackground, Is.EqualTo(4));
+            Assert.That(plate.rainbow, Is.False);
+            Assert.That(plate.dan, Is.EqualTo(20));
+            Assert.That(plate.gold, Is.True);
             Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"), "No password goes to the game server.");
             Assert.That(online.Client.Endpoints.Single().IsAuthenticated, Is.True);
             var listed = online.ChartOf(online.Songs[0]);
@@ -138,7 +155,11 @@ namespace OurTaiko.Tests
             yield return Type(scene, 3, "ka");
             yield return Type(scene, 4, "don");
             yield return WaitUntil(() => online.Accounts.Seats[1].IsSignedIn && !online.IsBusy && scene.Menu.Types[4].Items[5].Status.StartsWith("Signed in"));
-            Assert.That(PlayerInfoController.Instance.SecondInfo.name, Is.EqualTo("KA"));
+            var second = PlayerInfoController.Instance.SecondInfo;
+            Assert.That(second.name, Is.EqualTo("KA"));
+            Assert.That(second.title, Is.EqualTo("虹"));
+            Assert.That(second.rainbow, Is.True);
+            Assert.That(second.dan, Is.EqualTo(-1), "No 段位 shown.");
             Assert.That(online.Client.Endpoints.Single().Seats[1].IsAuthenticated, Is.True);
             Assert.That(online.Client.Best(listed, (int)Difficulty.Oni, 1), Is.Null, "2P has none of 1P's scores.");
 
@@ -150,6 +171,7 @@ namespace OurTaiko.Tests
             Assert.That(online.Client.Best(listed, (int)Difficulty.Oni), Is.Null, "A guest has no scores.");
             Assert.That(online.Client.Playlists, Is.Empty, "A guest has no playlists of its own.");
             Assert.That(PlayerInfoController.Instance.Info.name, Is.EqualTo(PlayerInfo.DefaultName));
+            Assert.That(PlayerInfoController.Instance.Info.IsCoin, Is.True, "Signed out: the guest plate.");
             Assert.That(fixture.AccountTokens.Values, Is.EqualTo(new[] { "ka" }));
             Assert.That(online.Client.Endpoints.Single().Seats[1].IsAuthenticated, Is.True);
         }

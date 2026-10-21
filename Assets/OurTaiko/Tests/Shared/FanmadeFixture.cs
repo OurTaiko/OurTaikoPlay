@@ -78,6 +78,9 @@ namespace OurTaiko.Tests
         // a server that only takes a password.
         public bool AccountCenter = true;
         public const string Service = "fixture";
+        // OurTaikoProfile's public nameplates by user id (GET /api/v1/users/{id}/nameplate); a user
+        // without one has the plain plate.
+        public readonly ConcurrentDictionary<string, JObject> Nameplates = new ConcurrentDictionary<string, JObject>();
         // Account sign-ins issued by /api/v1/game/account/login and still valid.
         public readonly ConcurrentDictionary<string, string> AccountTokens = new ConcurrentDictionary<string, string>();
         // The account center's user id of a fixture user.
@@ -182,6 +185,13 @@ namespace OurTaiko.Tests
                 string auth = request.Headers["Authorization"] ?? "";
                 if (path.StartsWith("/api/v1/game/account/", StringComparison.Ordinal) || path == "/api/v1/game/tokens")
                 { Account(context, path, auth, body); return; }
+                if (request.HttpMethod == "GET" && path.StartsWith("/api/v1/users/", StringComparison.Ordinal) && path.EndsWith("/nameplate", StringComparison.Ordinal))
+                {
+                    string id = path.Substring("/api/v1/users/".Length, path.Length - "/api/v1/users/".Length - "/nameplate".Length);
+                    Reply(context, 200, Nameplates.TryGetValue(id, out var plate) ? plate
+                        : new JObject { ["userId"] = id, ["nickname"] = "", ["title"] = null, ["dan"] = null, ["showDan"] = true });
+                    return;
+                }
                 string user = null;
                 if (auth.StartsWith("Bearer ", StringComparison.Ordinal) && !tokens.TryGetValue(auth.Substring(7), out user))
                 { Reply(context, 401, new JObject { ["error"] = "SESSION" }); return; }

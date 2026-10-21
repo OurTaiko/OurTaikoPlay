@@ -64,6 +64,7 @@ namespace OurTaiko.Online
                 Path.Combine(GamePaths.Root, "scores.sqlite3"));
             Load(Path.Combine(GamePaths.Root, ServerList.FileName));
             UseAccounts(new AccountStore(Path.Combine(GamePaths.Root, AccountStore.FileName), DeviceSecret()), new AccountCenter());
+            UseProfiles(new ProfileCenter());
         }
 
         // What the account file is encrypted with: something of this device and this game.
@@ -75,6 +76,7 @@ namespace OurTaiko.Online
         {
             if (Instance != this) return;
             Center?.Dispose();
+            Profiles?.Dispose();
             Client?.Dispose();
             ClearSongs();
             Instance = null;
@@ -88,6 +90,8 @@ namespace OurTaiko.Online
         // 1P's and 2P's OurTaiko accounts on this device, and the account center they sign in at.
         public AccountStore Accounts { get; private set; }
         public AccountCenter Center { get; private set; }
+        // Where the signed-in seats' nameplates (title and 段位) come from.
+        public ProfileCenter Profiles { get; private set; }
         // Seats whose sign-in the account center refused (expired, signed out elsewhere, password
         // changed) since Entry last said so.
         readonly bool[] expired = new bool[FanmadeEndpoint.SeatCount];
@@ -120,6 +124,12 @@ namespace OurTaiko.Online
             Center = center;
             Accounts.Load();
             Array.Clear(expired, 0, expired.Length);
+        }
+
+        public void UseProfiles(ProfileCenter profiles)
+        {
+            Profiles?.Dispose();
+            Profiles = profiles;
         }
 
         // True once after the account center refused this seat's sign-in; Entry tells the player.
@@ -206,7 +216,7 @@ namespace OurTaiko.Online
                     {
                         await Center.RefreshAsync(account, cancel);
                         SaveAccounts();
-                        ShowAccount(seat);
+                        ShowAccount(seat, await NameplateAsync(account, cancel));
                     }
                     catch (HttpStatusException error) when (error.Status == 401)
                     {
@@ -329,24 +339,47 @@ namespace OurTaiko.Online
             return builtInEndpoints.ToArray();
         }
 
-        // The account's nickname goes on its seat's plate: 1P's into player.json, 2P's for this run.
-        void ShowAccount(int seat)
+        // The seat's nameplate from Profile, or null while Profile does not answer (the plate keeps
+        // what it showed).
+        async Task<ProfileNameplate> NameplateAsync(OurTaikoAccount account, CancellationToken cancel)
+        {
+            try { return await Profiles.NameplateAsync(account.UserId, SettingManager.EnsureInstance().Settings.general.Language, cancel); }
+            catch (Exception error)
+            {
+                Debug.LogWarning("Nameplate unavailable: " + error.Message);
+                return null;
+            }
+        }
+
+        // Reads a seat's nameplate from Profile again, e.g. after a 段位 gave it something new.
+        public async Task RefreshNameplateAsync(int seat, CancellationToken cancel = default)
+        {
+            var account = Accounts.Seats[seat];
+            if (account.IsSignedIn) ShowAccount(seat, await NameplateAsync(account, cancel));
+        }
+
+        // A seat's plate: its account's nickname, with the title and 段位 Profile gives it (plate
+        // null keeps the ones shown). A seat without an account wears the guest plate. 1P's goes
+        // into player.json, 2P's lasts this run.
+        void ShowAccount(int seat, ProfileNameplate plate = null)
         {
             if (this == null) return;
             var account = Accounts.Seats[seat];
             var player = PlayerInfoController.EnsureInstance();
-            if (seat == 1)
+            var info = !account.IsSignedIn ? (seat == 0 ? new PlayerInfo() : PlayerInfo.SecondPlayer)
+                : seat == 0 ? player.Info.Clone() : player.SecondInfo.Clone();
+            if (account.IsSignedIn)
             {
-                var second = PlayerInfo.SecondPlayer;
-                if (account.IsSignedIn && account.Nickname.Length > 0) second.name = account.Nickname;
-                player.SetSecond(second);
-                return;
+                if (account.Nickname.Length > 0) info.name = account.Nickname;
+                if (plate != null)
+                {
+                    info.title = plate.Title.Length > 0 ? plate.Title : PlayerInfo.DefaultTitle;
+                    info.titleBackground = plate.TitleBackground; info.rainbow = plate.Rainbow;
+                    info.dan = plate.Dan; info.gold = plate.Gold;
+                }
             }
-            string name = account.IsSignedIn && account.Nickname.Length > 0 ? account.Nickname : PlayerInfo.DefaultName;
-            if (player.Info.name == name) return;
-            var info = player.Info.Clone();
-            info.name = name;
-            player.Set(info);
+            if (seat == 1) player.SetSecond(info);
+            else if (player.Info.ToJson() != info.ToJson()) player.Set(info);
         }
 
         public IEnumerable<ServerConfig> EnabledServers => BuiltInServers.Concat(Servers.servers.Where(s => s.enabled));
@@ -375,6 +408,7 @@ namespace OurTaiko.Online
             builtInEndpoints.Clear();
             // Nothing listens there: a test that signs in names its own account center.
             UseAccounts(new AccountStore(null, "test"), new AccountCenter("http://127.0.0.1:9"));
+            UseProfiles(new ProfileCenter("http://127.0.0.1:9"));
             Servers = list ?? new ServerList();
             if (cacheRoot != null) UseCache(cacheRoot);
             else Disconnect();

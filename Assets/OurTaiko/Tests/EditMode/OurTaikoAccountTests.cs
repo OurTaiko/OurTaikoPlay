@@ -175,6 +175,27 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void ProfileNameplatesMapToTheGamesBandsAndLanguages()
+        {
+            string id = FanmadeFixture.UserId("don");
+            fixture.Nameplates[id] = Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"太鼓の達人\",\"nameTranslations\":{\"en\":\"Taiko Master\",\"zh-Hans\":\"太鼓达人\"},\"style\":\"purple\"},\"dan\":{\"index\":11,\"gold\":false}}");
+            using var profiles = new ProfileCenter(fixture.BaseUrl);
+            var english = Run(() => profiles.NameplateAsync(id, "en"));
+            Assert.That(english.Title, Is.EqualTo("Taiko Master"));
+            Assert.That(english.TitleBackground, Is.EqualTo(3));
+            Assert.That(english.Dan, Is.EqualTo(11));
+            Assert.That(english.Gold, Is.False);
+            Assert.That(Run(() => profiles.NameplateAsync(id, "zh")).Title, Is.EqualTo("太鼓达人"));
+            Assert.That(Run(() => profiles.NameplateAsync(id, "ko")).Title, Is.EqualTo("太鼓の達人"), "No translation: the title's own name.");
+            var plain = Run(() => profiles.NameplateAsync(FanmadeFixture.UserId("ka"), "en"));
+            Assert.That(plain.Title, Is.Empty);
+            Assert.That(plain.Dan, Is.EqualTo(-1));
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"rainbow\"},\"dan\":{\"index\":99}}"), "en").Rainbow, Is.True);
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"dan\":{\"index\":99}}"), "en").Dan, Is.EqualTo(-1));
+        }
+
+        [Test]
         public void TheAccountCenterAnswersAreChecked()
         {
             Assert.That(Assert.Catch<HttpStatusException>(() => Run(() => center.LoginAsync("don", "wrong", "Test"))).Status, Is.EqualTo(401));

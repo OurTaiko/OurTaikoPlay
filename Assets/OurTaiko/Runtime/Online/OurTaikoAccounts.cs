@@ -196,4 +196,72 @@ namespace OurTaiko.Online
             catch (IOException error) { throw new FanmadeException("NETWORK_ERROR", error); }
         }
     }
+
+    // A player's nameplate as OurTaikoProfile (profile.ourtaiko.org) keeps it: the title worn
+    // (its text and band) and the highest 段位 shown.
+    public sealed class ProfileNameplate
+    {
+        // The game's title bands: frame_top 0..4, and the rainbow band.
+        static readonly string[] Bands = { "wood", "teal", "wood2", "purple", "gold" };
+        public string Title = "";
+        public int TitleBackground;
+        public bool Rainbow;
+        public int Dan = -1;
+        public bool Gold;
+
+        // language: the settings' song language (en, ja, zh, zh_tw, ko).
+        public static ProfileNameplate From(JObject value, string language)
+        {
+            var plate = new ProfileNameplate();
+            if (value["title"] is JObject title && title["name"]?.Type == JTokenType.String)
+            {
+                string key = language == "zh" ? "zh-Hans" : language;
+                plate.Title = title["nameTranslations"]?[key]?.Type == JTokenType.String && ((string)title["nameTranslations"][key]).Length > 0
+                    ? (string)title["nameTranslations"][key] : (string)title["name"];
+                string style = title["style"]?.Type == JTokenType.String ? (string)title["style"] : "";
+                plate.Rainbow = style == "rainbow";
+                plate.TitleBackground = Math.Max(0, Array.IndexOf(Bands, style));
+            }
+            if (value["dan"] is JObject dan && dan["index"]?.Type == JTokenType.Integer)
+            {
+                int index = (int)dan["index"];
+                if (index >= 0 && index < 25) { plate.Dan = index; plate.Gold = dan["gold"]?.Type == JTokenType.Boolean && (bool)dan["gold"]; }
+            }
+            return plate;
+        }
+    }
+
+    // OurTaikoProfile's public reads the game needs.
+    public sealed class ProfileCenter : IDisposable
+    {
+        public const string DefaultBase = "https://profile.ourtaiko.org";
+        public readonly string Base;
+        readonly HttpClient http;
+
+        public ProfileCenter(string baseUrl = DefaultBase)
+        {
+            Base = (baseUrl ?? DefaultBase).TrimEnd('/');
+            var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false };
+            http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
+        }
+
+        public void Dispose() => http.Dispose();
+
+        public async Task<ProfileNameplate> NameplateAsync(string userId, string language, CancellationToken cancel = default)
+        {
+            if (!Json.HexId(userId ?? "", 32)) throw new FanmadeException("API_USER_INVALID");
+            try
+            {
+                using var response = await http.GetAsync(Base + "/api/v1/users/" + userId + "/nameplate", cancel);
+                int status = (int)response.StatusCode;
+                if (status < 200 || status >= 300) throw new HttpStatusException(status);
+                string text = await response.Content.ReadAsStringAsync();
+                if (text.Length > 64 * 1024) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");
+                return ProfileNameplate.From(Json.Parse(text), language);
+            }
+            catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw new FanmadeException("DOWNLOAD_CANCELLED"); }
+            catch (OperationCanceledException error) { throw new FanmadeException("NETWORK_TIMEOUT", error); }
+            catch (HttpRequestException error) { throw new FanmadeException("NETWORK_ERROR", error); }
+        }
+    }
 }
