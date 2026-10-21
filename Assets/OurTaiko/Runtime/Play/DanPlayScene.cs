@@ -15,7 +15,7 @@ namespace OurTaiko
     // judged by DanProgress: a less exam fails the moment its allowance is used up, a more exam
     // when its song (or the course) ends; a failed exam ends the course once that song is over.
     // Before each song the doors close over the lane with its title (DanBetween), and the song
-    // starts as they part. Pause offers resume, restart (the whole course) and back (the course
+    // starts 4 s after they part, once the lane's black has cleared. Pause offers resume, restart (the whole course) and back (the course
     // select); the doors, the music's tail and the delays to the result wait while it is paused.
     public sealed class DanPlayScene : PlaySceneBase
     {
@@ -155,12 +155,13 @@ namespace OurTaiko
             ShowExams();
         }
 
-        // The doors close with the song's title (hidden songs keep it back) and the chart starts
-        // as they part again (YataiDON song_may_start), or later when its OFFSET asks for more.
+        // The doors close with the song's title (hidden songs keep it back) and part again; the song
+        // starts 4 s after that (YataiDON reset_song_clock(SONG_OPEN_MS) with start_delay 4000), once
+        // the lane's black fill and the title have gone, or later when its OFFSET asks for more.
         void StartSong()
         {
             var session = Session;
-            double lead = Math.Max(DanBetween.OpenMs / 1000, session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset));
+            double lead = Math.Max((DanBetween.OpenMs + DanBetween.SongDelayMs) / 1000, session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset));
             BetweenStartedAt = PlayNow * 1000; betweenOpened = false;
             bool hidden = Run.Entry.Songs[SongIndex].Ref.Hidden;
             ShowBetweenText(hidden ? "？？？" : displayInfo.Title, hidden ? "" : displayInfo.Subtitle);
