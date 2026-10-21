@@ -11,8 +11,8 @@ namespace OurTaiko
     {
         public const double Fps = 60, Start = 2, Open = 201, End = 366, ClipLead = 3;
         public const double OpenMs = (Open - Start) * 1000 / Fps;
-        // game_dan.cpp start_delay: the song (music and chart) begins 4 s after the doors part, by
-        // which time the black lane fill and the title (gone at frame 366) have cleared.
+        // game_dan.cpp start_delay: the song (music and chart) begins 4 s after the doors part; its
+        // title shows on the lane under them until then.
         public const double SongDelayMs = 4000;
         public const double TotalMs = (End - Start) * 1000 / Fps;
 
@@ -30,13 +30,6 @@ namespace OurTaiko
             if (f <= 204) return 360;
             if (f < 219) return 360 + (1071 - 360) * (f - 204) / 15;
             return 1071;
-        }
-
-        public static double TitleAlpha(LumenClip clip, double frame)
-        {
-            double f = frame + ClipLead;
-            if (clip != null && !clip.IsEmpty) return clip.Get("next_song_name", f, "a", 0);
-            return f < 123 ? 0 : f < 340 ? 1 : Math.Max(0, Math.Min(1, (368 - f) / 28));
         }
     }
 }

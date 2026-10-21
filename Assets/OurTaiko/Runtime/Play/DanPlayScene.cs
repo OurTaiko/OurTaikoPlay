@@ -416,23 +416,28 @@ namespace OurTaiko
             view.betweenSubtitle.Squeeze(1300);
         }
 
-        // The doors close over the lane, the title shows, and they part again as the song starts.
+        // The doors close over the lane and part again (no black behind them); the song's title is
+        // written on the lane under them, so it shows once they have parted, and stays until the
+        // song starts.
         void ShowBetween()
         {
             double elapsed = BetweenElapsedMs;
-            bool shown = !double.IsNaN(BetweenStartedAt) && DanBetween.IsShown(elapsed);
-            view.between.gameObject.SetActive(shown);
-            if (double.IsNaN(BetweenStartedAt)) return;
+            bool started = !double.IsNaN(BetweenStartedAt);
+            bool doors = started && DanBetween.IsShown(elapsed);
+            bool title = started && songClock.Started && songClock.Time < 0;
+            view.between.gameObject.SetActive(doors || title);
+            if (!started) return;
             if (!betweenOpened && !IsPaused && elapsed >= DanBetween.OpenMs) { betweenOpened = true; hitAudio.PlayAudioOneShot(fusumaOpen); }
-            if (!shown) return;
+            view.doorLeft.gameObject.SetActive(doors);
+            view.doorRight.gameObject.SetActive(doors);
+            view.betweenTitle.gameObject.SetActive(title);
+            view.betweenSubtitle.gameObject.SetActive(title);
+            if (!doors) return;
             double frame = DanBetween.Frame(elapsed);
             float door = (float)DanBetween.DoorX(betweenClip, frame);
             // lane/dan_between_fusuma at x 849 (lane space); the left door is its mirror.
             view.doorRight.anchoredPosition = new Vector2(849 + door - 498, view.doorRight.anchoredPosition.y);
             view.doorLeft.anchoredPosition = new Vector2(849 - door + 720 - 498, view.doorLeft.anchoredPosition.y);
-            float alpha = (float)DanBetween.TitleAlpha(betweenClip, frame);
-            view.betweenTitle.Alpha(alpha);
-            view.betweenSubtitle.Alpha(alpha);
         }
 
         // ---------------------------------------------------------------- pause

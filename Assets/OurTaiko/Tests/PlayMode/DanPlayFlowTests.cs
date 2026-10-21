@@ -80,6 +80,13 @@ namespace OurTaiko.Tests
             yield return WaitUntil(() => scene.BetweenElapsedMs > 1500, 5);
             Assert.That(scene.view.between.gameObject.activeSelf, Is.True);
             Assert.That(scene.view.betweenTitle.text, Is.EqualTo("Dan Branch A"));
+            Assert.That(scene.view.doorRight.parent.Find("Fill"), Is.Null, "No black behind the doors.");
+            TestCapture.Capture("DanPlayDoors.png");
+            // Parted: the title is on the lane under them until the song starts.
+            yield return WaitUntil(() => scene.BetweenElapsedMs > DanBetween.OpenMs + 600, 6);
+            Assert.That(scene.view.betweenTitle.gameObject.activeInHierarchy, Is.True);
+            Assert.That(scene.view.betweenTitle.color.a, Is.EqualTo(1));
+            TestCapture.Capture("DanPlayTitle.png");
 
             // Song A: its first measure (auto, all 良) takes it to 達人.
             yield return WaitUntil(() => scene.ChartTime > 1.6, 15);
