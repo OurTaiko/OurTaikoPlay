@@ -1,82 +1,82 @@
 fileFormatVersion: 2
-guid: 385d93b9ce71294382f449674711d233
+guid: 9f434462bdb662713a116e49247e347d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1605432183
-    second: NameplateDanSilverGold00
+      213: -415527793
+    second: NameplateDanTextGold00
   - first:
-      213: 1518874630
-    second: NameplateDanSilverGold01
+      213: -2062372247
+    second: NameplateDanTextGold01
   - first:
-      213: -489705938
-    second: NameplateDanSilverGold02
+      213: -1528440765
+    second: NameplateDanTextGold02
   - first:
-      213: 1820729927
-    second: NameplateDanSilverGold03
+      213: -188009262
+    second: NameplateDanTextGold03
   - first:
-      213: 119913509
-    second: NameplateDanSilverGold04
+      213: 1568120443
+    second: NameplateDanTextGold04
   - first:
-      213: -1254167351
-    second: NameplateDanSilverGold05
+      213: 1666403881
+    second: NameplateDanTextGold05
   - first:
-      213: 1093533511
-    second: NameplateDanSilverGold06
+      213: 413513493
+    second: NameplateDanTextGold06
   - first:
-      213: -1898975440
-    second: NameplateDanSilverGold07
+      213: 1344224910
+    second: NameplateDanTextGold07
   - first:
-      213: 1584508410
-    second: NameplateDanSilverGold08
+      213: -531176456
+    second: NameplateDanTextGold08
   - first:
-      213: -1837386124
-    second: NameplateDanSilverGold09
+      213: -1512480457
+    second: NameplateDanTextGold09
   - first:
-      213: -554616552
-    second: NameplateDanSilverGold10
+      213: -895051325
+    second: NameplateDanTextGold10
   - first:
-      213: -1735588991
-    second: NameplateDanSilverGold11
+      213: 1020744265
+    second: NameplateDanTextGold11
   - first:
-      213: -869601896
-    second: NameplateDanSilverGold12
+      213: 1959366493
+    second: NameplateDanTextGold12
   - first:
-      213: 20131005
-    second: NameplateDanSilverGold13
+      213: -1914793575
+    second: NameplateDanTextGold13
   - first:
-      213: -1324459347
-    second: NameplateDanSilverGold14
+      213: -924112886
+    second: NameplateDanTextGold14
   - first:
-      213: -2122724663
-    second: NameplateDanSilverGold15
+      213: -1180447434
+    second: NameplateDanTextGold15
   - first:
-      213: -1714733118
-    second: NameplateDanSilverGold16
+      213: 320298210
+    second: NameplateDanTextGold16
   - first:
-      213: -1824735855
-    second: NameplateDanSilverGold17
+      213: -395485991
+    second: NameplateDanTextGold17
   - first:
-      213: -473865747
-    second: NameplateDanSilverGold18
+      213: -1028628607
+    second: NameplateDanTextGold18
   - first:
-      213: -1202726102
-    second: NameplateDanSilverGold19
+      213: 1469372377
+    second: NameplateDanTextGold19
   - first:
-      213: 297106071
-    second: NameplateDanSilverGold20
+      213: 1196937531
+    second: NameplateDanTextGold20
   - first:
-      213: 2121246090
-    second: NameplateDanSilverGold21
+      213: -541894187
+    second: NameplateDanTextGold21
   - first:
-      213: -57950894
-    second: NameplateDanSilverGold22
+      213: 902574474
+    second: NameplateDanTextGold22
   - first:
-      213: -87962154
-    second: NameplateDanSilverGold23
+      213: -735118759
+    second: NameplateDanTextGold23
   - first:
-      213: 540384827
-    second: NameplateDanSilverGold24
+      213: -1975536901
+    second: NameplateDanTextGold24
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -198,7 +198,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: NameplateDanSilverGold00
+      name: NameplateDanTextGold00
       rect:
         serializedVersion: 2
         x: 0
@@ -213,14 +213,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6a3856bd4a6a262c32c30b6ca9045200
-      internalID: -1605432183
+      spriteID: 8201fd48af656aead5ad159778577444
+      internalID: -415527793
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold01
+      name: NameplateDanTextGold01
       rect:
         serializedVersion: 2
         x: 72
@@ -235,14 +235,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 389919ebe183942fc6e6947a1d33783a
-      internalID: 1518874630
+      spriteID: 1c10055b78680be4eed6a975ee5efedc
+      internalID: -2062372247
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold02
+      name: NameplateDanTextGold02
       rect:
         serializedVersion: 2
         x: 144
@@ -257,14 +257,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 50bf4554d74d78c1fb4c54be737cdb80
-      internalID: -489705938
+      spriteID: 56f45f15bec9b4835070c7909a3399e1
+      internalID: -1528440765
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold03
+      name: NameplateDanTextGold03
       rect:
         serializedVersion: 2
         x: 216
@@ -279,14 +279,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2a3134444f5957ab39422384e027db1b
-      internalID: 1820729927
+      spriteID: d73f1fb1421ebb0efc84427e7b839b0d
+      internalID: -188009262
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold04
+      name: NameplateDanTextGold04
       rect:
         serializedVersion: 2
         x: 288
@@ -301,14 +301,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 94a8154ca22d9349da42e934fbbd700a
-      internalID: 119913509
+      spriteID: f94e1c1119d2138ed1fe8de6422fb606
+      internalID: 1568120443
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold05
+      name: NameplateDanTextGold05
       rect:
         serializedVersion: 2
         x: 0
@@ -323,14 +323,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6d629a09f5b8c0a4e2ceea618cd69ef8
-      internalID: -1254167351
+      spriteID: 2f965b763df7f3a315d45eeb33f75af0
+      internalID: 1666403881
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold06
+      name: NameplateDanTextGold06
       rect:
         serializedVersion: 2
         x: 72
@@ -345,14 +345,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 4d30634aeac2f4210d3e4a9407f6eb2b
-      internalID: 1093533511
+      spriteID: 471a26690379aa6f6dc6cab99c6743f6
+      internalID: 413513493
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold07
+      name: NameplateDanTextGold07
       rect:
         serializedVersion: 2
         x: 144
@@ -367,14 +367,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b8f3f8066354dc32c21872eec21f982b
-      internalID: -1898975440
+      spriteID: 93d059c26efd2a95078420c08bdf5c17
+      internalID: 1344224910
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold08
+      name: NameplateDanTextGold08
       rect:
         serializedVersion: 2
         x: 216
@@ -389,14 +389,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0031fd79d9a167019c51b236eaf971ea
-      internalID: 1584508410
+      spriteID: 7da80ff9b650cfd531f3a6a8528df63f
+      internalID: -531176456
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold09
+      name: NameplateDanTextGold09
       rect:
         serializedVersion: 2
         x: 288
@@ -411,14 +411,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: db2094211a54f9e5d3cacfefd2629bfc
-      internalID: -1837386124
+      spriteID: 76bca54c43af0c98bbddc909735db911
+      internalID: -1512480457
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold10
+      name: NameplateDanTextGold10
       rect:
         serializedVersion: 2
         x: 0
@@ -433,14 +433,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 196972fa4d7ebdf7da8624c8d7f2ef62
-      internalID: -554616552
+      spriteID: e9373e0ff37bd64df5c91c10a2c79a24
+      internalID: -895051325
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold11
+      name: NameplateDanTextGold11
       rect:
         serializedVersion: 2
         x: 72
@@ -455,14 +455,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 05d131ff05c30b8fc2512ad604c8d58c
-      internalID: -1735588991
+      spriteID: 5d128360b3088940027de02a227f2e0b
+      internalID: 1020744265
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold12
+      name: NameplateDanTextGold12
       rect:
         serializedVersion: 2
         x: 144
@@ -477,14 +477,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1e7bab24b1cdcd43edaad6a03b7735c4
-      internalID: -869601896
+      spriteID: ddf7a348a3ade9407554c287346999ec
+      internalID: 1959366493
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold13
+      name: NameplateDanTextGold13
       rect:
         serializedVersion: 2
         x: 216
@@ -499,14 +499,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a58f2f79996b8829fdde734cae5808ed
-      internalID: 20131005
+      spriteID: cc5d3d29580d93a77d05a3c0dd3cfc98
+      internalID: -1914793575
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold14
+      name: NameplateDanTextGold14
       rect:
         serializedVersion: 2
         x: 288
@@ -521,14 +521,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3e3bcc153ffc3e73d76e63bf607018b9
-      internalID: -1324459347
+      spriteID: d47bba6a6958abd31457d3299a4527fa
+      internalID: -924112886
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold15
+      name: NameplateDanTextGold15
       rect:
         serializedVersion: 2
         x: 0
@@ -543,14 +543,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 975e202d270b2aa6cd220989577f9d41
-      internalID: -2122724663
+      spriteID: d6c5611f22ff74fe028043de07e0ae42
+      internalID: -1180447434
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold16
+      name: NameplateDanTextGold16
       rect:
         serializedVersion: 2
         x: 72
@@ -565,14 +565,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 50292d16ca7b2c7db66e8e4874946065
-      internalID: -1714733118
+      spriteID: b0d144718ac7141775b2ae4be333bc8f
+      internalID: 320298210
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold17
+      name: NameplateDanTextGold17
       rect:
         serializedVersion: 2
         x: 144
@@ -587,14 +587,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1d255a3e8c8b55a212a8d06c84adb383
-      internalID: -1824735855
+      spriteID: 8fe6a17c1a21f9f2f6f511d3f471f060
+      internalID: -395485991
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold18
+      name: NameplateDanTextGold18
       rect:
         serializedVersion: 2
         x: 216
@@ -609,14 +609,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1e6ca1a7ab11040848d1751b581c4fc4
-      internalID: -473865747
+      spriteID: db3b1e93ea718f89e0b4141b6dcef2db
+      internalID: -1028628607
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold19
+      name: NameplateDanTextGold19
       rect:
         serializedVersion: 2
         x: 288
@@ -631,14 +631,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: acd5c90c064b5f768dfadaf251f70094
-      internalID: -1202726102
+      spriteID: 64789852a35b5b6e644fab401af87c98
+      internalID: 1469372377
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold20
+      name: NameplateDanTextGold20
       rect:
         serializedVersion: 2
         x: 0
@@ -653,14 +653,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8ba371dbd6930f9acc9f7fbc83662081
-      internalID: 297106071
+      spriteID: 26285ceb27235b6b71d5d1bfcd40cf66
+      internalID: 1196937531
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold21
+      name: NameplateDanTextGold21
       rect:
         serializedVersion: 2
         x: 72
@@ -675,14 +675,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a9e3086d14513ea5b16f96b904d48a35
-      internalID: 2121246090
+      spriteID: 7298b490d36c1e1d5cce228091da91ac
+      internalID: -541894187
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold22
+      name: NameplateDanTextGold22
       rect:
         serializedVersion: 2
         x: 144
@@ -697,14 +697,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 27a05dc90cb003526c9e5360d42124ca
-      internalID: -57950894
+      spriteID: 72c226378b71a309185952fa4deed976
+      internalID: 902574474
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold23
+      name: NameplateDanTextGold23
       rect:
         serializedVersion: 2
         x: 216
@@ -719,14 +719,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: bab971f668b12f42bbd20ec58e5e71fb
-      internalID: -87962154
+      spriteID: 424484f2b61ebe37d7ff0985a9857160
+      internalID: -735118759
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NameplateDanSilverGold24
+      name: NameplateDanTextGold24
       rect:
         serializedVersion: 2
         x: 288
@@ -741,8 +741,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 73c719c37f1e0c38bbd7e8be8565aff0
-      internalID: 540384827
+      spriteID: aea561bd20767fdbc8ed00c7605dd991
+      internalID: -1975536901
       vertices: []
       indices: 
       edges: []
@@ -761,31 +761,31 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      NameplateDanSilverGold00: -1605432183
-      NameplateDanSilverGold01: 1518874630
-      NameplateDanSilverGold02: -489705938
-      NameplateDanSilverGold03: 1820729927
-      NameplateDanSilverGold04: 119913509
-      NameplateDanSilverGold05: -1254167351
-      NameplateDanSilverGold06: 1093533511
-      NameplateDanSilverGold07: -1898975440
-      NameplateDanSilverGold08: 1584508410
-      NameplateDanSilverGold09: -1837386124
-      NameplateDanSilverGold10: -554616552
-      NameplateDanSilverGold11: -1735588991
-      NameplateDanSilverGold12: -869601896
-      NameplateDanSilverGold13: 20131005
-      NameplateDanSilverGold14: -1324459347
-      NameplateDanSilverGold15: -2122724663
-      NameplateDanSilverGold16: -1714733118
-      NameplateDanSilverGold17: -1824735855
-      NameplateDanSilverGold18: -473865747
-      NameplateDanSilverGold19: -1202726102
-      NameplateDanSilverGold20: 297106071
-      NameplateDanSilverGold21: 2121246090
-      NameplateDanSilverGold22: -57950894
-      NameplateDanSilverGold23: -87962154
-      NameplateDanSilverGold24: 540384827
+      NameplateDanTextGold00: -415527793
+      NameplateDanTextGold01: -2062372247
+      NameplateDanTextGold02: -1528440765
+      NameplateDanTextGold03: -188009262
+      NameplateDanTextGold04: 1568120443
+      NameplateDanTextGold05: 1666403881
+      NameplateDanTextGold06: 413513493
+      NameplateDanTextGold07: 1344224910
+      NameplateDanTextGold08: -531176456
+      NameplateDanTextGold09: -1512480457
+      NameplateDanTextGold10: -895051325
+      NameplateDanTextGold11: 1020744265
+      NameplateDanTextGold12: 1959366493
+      NameplateDanTextGold13: -1914793575
+      NameplateDanTextGold14: -924112886
+      NameplateDanTextGold15: -1180447434
+      NameplateDanTextGold16: 320298210
+      NameplateDanTextGold17: -395485991
+      NameplateDanTextGold18: -1028628607
+      NameplateDanTextGold19: 1469372377
+      NameplateDanTextGold20: 1196937531
+      NameplateDanTextGold21: -541894187
+      NameplateDanTextGold22: 902574474
+      NameplateDanTextGold23: -735118759
+      NameplateDanTextGold24: -1975536901
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

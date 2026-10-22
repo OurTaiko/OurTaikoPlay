@@ -82,8 +82,10 @@ namespace OurTaiko.Tests
                 // Title and dan: the band family with the gold 達人 on the rainbow ring and the *_dani name box.
                 Assert.That(plate.band.enabled && plate.outline.enabled && plate.badge.enabled, Is.True);
                 Assert.That(plate.band.sprite, Is.SameAs(plate.titleBackgrounds[3]));
-                Assert.That(plate.dan.enabled && plate.danBackground.enabled, Is.True);
-                Assert.That(plate.dan.sprite, Is.SameAs(plate.goldDanEmblemsAllGood[24]));
+                Assert.That(plate.dan.enabled && plate.danBackground.enabled && plate.danRing.enabled, Is.True);
+                Assert.That(plate.danRing.sprite, Is.SameAs(plate.danRings[2]));
+                Assert.That(plate.dan.sprite, Is.SameAs(plate.goldDanTexts[24]));
+                Assert.That(plate.danRing.transform.GetSiblingIndex(), Is.EqualTo(plate.dan.transform.GetSiblingIndex() - 1), "The ring is drawn under the rank.");
                 Assert.That(plate.title.gameObject.activeSelf, Is.True);
                 Assert.That(plate.title.text, Is.EqualTo("Taiko Master"));
                 Assert.That(plate.title.color, Is.EqualTo(Color.black));
@@ -123,7 +125,7 @@ namespace OurTaiko.Tests
 
                 // An info change reaches the plate already on screen: back to the coin plate.
                 Controller.UseUnsaved(new PlayerInfo { name = "Katsu-chan" });
-                Assert.That(plate.band.enabled || plate.outline.enabled || plate.dan.enabled, Is.False);
+                Assert.That(plate.band.enabled || plate.outline.enabled || plate.dan.enabled || plate.danRing.enabled, Is.False);
                 Assert.That(plate.title.gameObject.activeSelf, Is.False);
                 Assert.That(plate.playerName.text, Is.EqualTo("Katsu-chan"));
                 Assert.That(plate.playerName.fontSize, Is.EqualTo(30));
@@ -182,7 +184,8 @@ namespace OurTaiko.Tests
                 Assert.That(plate.transform.GetSiblingIndex(), Is.EqualTo(select.wheel.GetSiblingIndex() + 1));
                 Assert.That(plate.transform.GetSiblingIndex(), Is.LessThan(select.coursePanel.GetSiblingIndex()));
                 Assert.That(select.view.nameplate2P.transform.GetSiblingIndex(), Is.LessThan(select.coursePanel.GetSiblingIndex()));
-                Assert.That(plate.dan.sprite, Is.SameAs(plate.danEmblems[10]));
+                Assert.That(plate.dan.sprite, Is.SameAs(plate.danTexts[10]));
+                Assert.That(plate.danRing.sprite, Is.SameAs(plate.danRings[0]));
                 yield return new WaitForSecondsRealtime(0.5f);
                 TestCapture.Capture("NameplateSongSelect.png");
 
