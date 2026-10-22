@@ -35,10 +35,10 @@ namespace OurTaiko
 
         public bool IsLocal => Server == null;
 
-        // The rank a server's course names in rewards.dan (0 初級 .. 24 達人), or -1. The result's
-        // 昇段 text shows it; nothing is granted here (the online stage does that).
+        // The rank a server's course names in rewards.dan (五級 6 .. 24 達人; 0..5 are not offered), or
+        // -1. The result's 昇段 text shows it; nothing is granted here (the online stage does that).
         public int DanIndex => !IsLocal && Rewards is JObject rewards && rewards["dan"] is JValue { Type: JTokenType.Integer } dan
-            && (long)dan >= 0 && (long)dan <= 24 ? (int)(long)dan : -1;
+            && (long)dan >= PlayerInfo.DanFirst && (long)dan < PlayerInfo.DanCount ? (int)(long)dan : -1;
 
         public string Title(string language)
         {

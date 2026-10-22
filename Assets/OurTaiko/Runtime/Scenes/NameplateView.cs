@@ -15,8 +15,15 @@ namespace OurTaiko
         public TMP_Text title, playerName;
         [Tooltip("frame_top: the 5 title backgrounds.")]
         public Sprite[] titleBackgrounds;
-        [Tooltip("dan_emblem / dan_emblem_gold: 初級 .. 達人.")]
+        // dan_emblem_{silver,gold,rainbow}[_gold]: 初級 .. 達人 (0..5 blank). The ring follows the pass's
+        // combo like a song's crown (銀粋 / 金粋 full combo / 虹粋 all 良); the text is white for a red
+        // pass and gold for a gold pass.
+        [Tooltip("Silver ring: white text / gold text.")]
         public Sprite[] danEmblems, goldDanEmblems;
+        [Tooltip("Gold ring (full combo): white text / gold text.")]
+        public Sprite[] danEmblemsFullCombo, goldDanEmblemsFullCombo;
+        [Tooltip("Rainbow ring (all 良): white text / gold text.")]
+        public Sprite[] danEmblemsAllGood, goldDanEmblemsAllGood;
         [Tooltip("0 = 1P, 1 = 2P.")]
         public int seat;
         [Tooltip("global/nameplate/2p: the badge of a 2P plate.")]
@@ -84,7 +91,7 @@ namespace OurTaiko
             // *_dani labels only exist in the band family.
             bool hasDan = info.HasDan && hasBand;
             danBackground.enabled = dan.enabled = hasDan;
-            if (hasDan) dan.sprite = (info.gold ? goldDanEmblems : danEmblems)[info.dan];
+            if (hasDan) dan.sprite = DanEmblem(info);
             badge.enabled = true;
             if (seat == 1 && secondBadge != null) badge.sprite = secondBadge;
 
@@ -99,6 +106,18 @@ namespace OurTaiko
             var box = NameplateLayout.NameBox(info);
             playerName.fontSize = box.FontSize;
             SetText(playerName, info.name, box.FontSize, box.X, box.Y, NameplateLayout.NameBoxWidth);
+        }
+
+        // The emblem of a 段位 result: ring by combo tier, text by pass line.
+        public Sprite DanEmblem(PlayerInfo info)
+        {
+            var sheet = info.DanComboTier switch
+            {
+                2 => info.gold ? goldDanEmblemsAllGood : danEmblemsAllGood,
+                1 => info.gold ? goldDanEmblemsFullCombo : danEmblemsFullCombo,
+                _ => info.gold ? goldDanEmblems : danEmblems,
+            };
+            return sheet[info.dan];
         }
 
         // NameplateRainbow.anim: global animation 12 (texture_change), frame_top_rainbow 0-5 for 50 ms

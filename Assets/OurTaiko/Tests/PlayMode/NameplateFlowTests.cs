@@ -54,7 +54,7 @@ namespace OurTaiko.Tests
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:Plate\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#START\n1111,\n1111,\n#END");
-            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", titleBackground = 3, dan = 24, gold = true });
+            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", titleBackground = 3, dan = 24, gold = true, danCombo = 2 });
             try
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -79,11 +79,11 @@ namespace OurTaiko.Tests
                 Assert.That(lane.GetComponent<Canvas>().sortingOrder, Is.LessThan(play.balloonCounter.GetComponentInParent<Canvas>().sortingOrder),
                     "The balloon overlay draws above the lane containing the nameplate.");
 
-                // Title and dan: the band family with the gold 達人 chip and the *_dani name box.
+                // Title and dan: the band family with the gold 達人 on the rainbow ring and the *_dani name box.
                 Assert.That(plate.band.enabled && plate.outline.enabled && plate.badge.enabled, Is.True);
                 Assert.That(plate.band.sprite, Is.SameAs(plate.titleBackgrounds[3]));
                 Assert.That(plate.dan.enabled && plate.danBackground.enabled, Is.True);
-                Assert.That(plate.dan.sprite, Is.SameAs(plate.goldDanEmblems[24]));
+                Assert.That(plate.dan.sprite, Is.SameAs(plate.goldDanEmblemsAllGood[24]));
                 Assert.That(plate.title.gameObject.activeSelf, Is.True);
                 Assert.That(plate.title.text, Is.EqualTo("Taiko Master"));
                 Assert.That(plate.title.color, Is.EqualTo(Color.black));

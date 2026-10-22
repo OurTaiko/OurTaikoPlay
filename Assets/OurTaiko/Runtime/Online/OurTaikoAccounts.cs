@@ -208,6 +208,8 @@ namespace OurTaiko.Online
         public bool Rainbow;
         public int Dan = -1;
         public bool Gold;
+        // The ring of the emblem (PlayerInfo.danCombo): from the badge's verdict, 1..6.
+        public int Combo;
 
         // language: the settings' song language (en, ja, zh, zh_tw, ko).
         public static ProfileNameplate From(JObject value, string language)
@@ -225,7 +227,13 @@ namespace OurTaiko.Online
             if (value["dan"] is JObject dan && dan["index"]?.Type == JTokenType.Integer)
             {
                 int index = (int)dan["index"];
-                if (index >= 0 && index < 25) { plate.Dan = index; plate.Gold = dan["gold"]?.Type == JTokenType.Boolean && (bool)dan["gold"]; }
+                if (index >= PlayerInfo.DanFirst && index < PlayerInfo.DanCount)
+                {
+                    plate.Dan = index;
+                    int verdict = dan["verdict"]?.Type == JTokenType.Integer ? (int)dan["verdict"] : 0;
+                    plate.Gold = verdict >= 4 || (dan["gold"]?.Type == JTokenType.Boolean && (bool)dan["gold"]);
+                    plate.Combo = verdict >= 1 && verdict <= 6 ? (verdict - 1) % 3 : 0;
+                }
             }
             return plate;
         }

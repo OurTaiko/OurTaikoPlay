@@ -375,7 +375,7 @@ namespace OurTaiko.Online
                 {
                     info.title = plate.Title.Length > 0 ? plate.Title : PlayerInfo.DefaultTitle;
                     info.titleBackground = plate.TitleBackground; info.rainbow = plate.Rainbow;
-                    info.dan = plate.Dan; info.gold = plate.Gold;
+                    info.dan = plate.Dan; info.gold = plate.Gold; info.danCombo = plate.Combo;
                 }
             }
             if (seat == 1) player.SetSecond(info);
