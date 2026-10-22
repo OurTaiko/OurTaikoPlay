@@ -20,7 +20,7 @@ namespace OurTaiko
 
         public CanvasGroup group;
         public Image black, night, plaque;
-        [Tooltip("loading_dan/plaque 0..6, by the course's colour.")]
+        [Tooltip("By the course's colour 0..6, in the same order as dan_select's box/folder: the skin's plaque set is shifted one place against it (its 5 is a bronze frame no box has), so this array is plaque 0, 0, 1, 2, 3, 4, 6.")]
         public Sprite[] plaques;
         [Tooltip("The course's name, top to bottom on the plaque.")]
         public TMP_Text rank;

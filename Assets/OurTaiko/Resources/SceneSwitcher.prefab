@@ -2978,11 +2978,11 @@ MonoBehaviour:
   plaque: {fileID: 928585934788299822}
   plaques:
   - {fileID: 21300000, guid: 3e5ac86d1078140768cce24079fb83ff, type: 3}
+  - {fileID: 21300000, guid: 3e5ac86d1078140768cce24079fb83ff, type: 3}
   - {fileID: 21300000, guid: 57617ba26209e4aa5a4811ce1409e8b8, type: 3}
   - {fileID: 21300000, guid: aaa121184bb264e3d98ba6c0ec5d89e2, type: 3}
   - {fileID: 21300000, guid: b634e3e20f90643b4a9a0ce83ceba3d7, type: 3}
   - {fileID: 21300000, guid: 9ebed20a4deb947adbd50fd5f1b26794, type: 3}
-  - {fileID: 21300000, guid: b0d6400993b724eccb58be56f70dc225, type: 3}
   - {fileID: 21300000, guid: 15959d72c60fa4a75baff96ccd9266d7, type: 3}
   rank: {fileID: 2875881970314193248}
   status: {fileID: 8762501492830491808}
