@@ -39,7 +39,7 @@ namespace OurTaiko
             get => paused;
             private set
             {
-                if (paused != value) { InputManager.DropDelayed(); foreach (var lane in lanes) lane.ForgetHeard(); }
+                if (paused != value) InputManager.DropDelayed();
                 paused = value;
             }
         }
@@ -241,7 +241,7 @@ namespace OurTaiko
         }
 
         // 1P's drum (touch drum, tests); see PlayerLane.Hit.
-        public void Hit(bool isKa, bool right, bool sound = true) => Lane1?.Hit(isKa, right, sound);
+        public void Hit(bool isKa, bool right) => Lane1?.Hit(isKa, right);
 
         public void TogglePause()
         {

@@ -83,13 +83,15 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void InputDelayDefaultsToFiveAndStaysInRange()
+        public void InputDelayDefaultsToZeroAndStaysInRange()
         {
-            Assert.That(new GameSettings().play.inputDelayMs, Is.EqualTo(5));
-            Assert.That(GameSettings.FromJson("{\"play\":{\"judgeOffsetMs\":3}}").play.inputDelayMs, Is.EqualTo(5), "Older files get the default.");
+            Assert.That(new GameSettings().play.inputDelayMs, Is.Zero);
+            Assert.That(GameSettings.FromJson("{\"play\":{\"judgeOffsetMs\":3}}").play.inputDelayMs, Is.Zero, "Older files get the default.");
             var menu = new SettingsMenu(SettingsMenu.Catalog(), new GameSettings());
             menu.Ka(1); menu.Don(); menu.Ka(3); menu.Don();
             Assert.That(menu.CurrentItem.Label, Is.EqualTo("Input Delay"));
+            Assert.That(menu.ChoiceIndex, Is.Zero);
+            for (int i = 0; i < 5; i++) menu.Ka(1);
             Assert.That(menu.ChoiceIndex, Is.EqualTo(5));
             for (int i = 0; i < 8; i++) menu.Ka(-1);
             Assert.That(menu.ChoiceIndex, Is.Zero, "A delay cannot be negative.");

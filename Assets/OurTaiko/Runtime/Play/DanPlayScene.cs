@@ -444,7 +444,7 @@ namespace OurTaiko
 
         // ---------------------------------------------------------------- pause
 
-        public void Hit(bool isKa, bool right, bool sound = true) => Lane?.Hit(isKa, right, sound);
+        public void Hit(bool isKa, bool right) => Lane?.Hit(isKa, right);
 
         public void TogglePause()
         {
@@ -453,7 +453,7 @@ namespace OurTaiko
             songClock.Pause();
             IsPaused = true;
             pausedAt = GameTimeline.FrameTime;
-            InputManager.DropDelayed(); Lane.ForgetHeard();
+            InputManager.DropDelayed();
             pauseOpenedFrame = Time.frameCount;
             music.StopAudio(); hitAudio.StopAudio();
             DisableDrumPads();
@@ -470,7 +470,7 @@ namespace OurTaiko
                 IsPaused = false;
                 if (!double.IsNaN(pausedAt)) pausedTotal += GameTimeline.FrameTime - pausedAt;
                 pausedAt = double.NaN;
-                InputManager.DropDelayed(); Lane.ForgetHeard();
+                InputManager.DropDelayed();
                 resumeFrame = Time.frameCount;
                 StartDueMusic();
                 foreach (var pad in pausedPads) if (pad != null) pad.enabled = true;

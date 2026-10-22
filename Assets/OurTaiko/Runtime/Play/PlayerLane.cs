@@ -41,8 +41,6 @@ namespace OurTaiko
 
         readonly PlaySceneBase scene;
         NoteLaneRenderer renderer;
-        // Drum presses whose sound already played while they wait out the input delay.
-        readonly List<InputPress> heard = new List<InputPress>();
         bool hitKa, nextAutoRight = true;
         double feedbackTime = -10;
         readonly double[] flashedAt = { -10, -10, -10, -10 };
@@ -122,7 +120,7 @@ namespace OurTaiko
         {
             Session.Advance(time, AutoPlay);
             UpdateBranchLane(time);
-            if (!AutoPlay) { SoundDrumLeads(); HitFirstDrumPress(); }
+            if (!AutoPlay) HitFirstDrumPress();
         }
 
         // Presentation can keep running after the result is captured, without advancing judgment.
@@ -154,37 +152,12 @@ namespace OurTaiko
         // Input mutex: a frame judges only this seat's earliest drum press; later ones in the same frame are dropped.
         void HitFirstDrumPress()
         {
-            bool judged = false;
             foreach (var press in Input.PressesThisFrame)
             {
-                bool wasHeard = Forget(press);
-                if (judged) continue;
-                judged = true;
-                Hit(press.Key.IsKa(), press.Key.IsRight(), !wasHeard);
+                Hit(press.Key.IsKa(), press.Key.IsRight());
+                return;
             }
         }
-        // The drum sound does not wait for the input delay: a press that will be judged is heard in the
-        // frame it arrives, and only its judgment and effects come later.
-        void SoundDrumLeads()
-        {
-            foreach (var press in Input.DrumLeadsThisFrame)
-            {
-                PlayDrum(press.Key.IsKa());
-                heard.Add(press);
-            }
-        }
-        bool Forget(InputPress press)
-        {
-            for (int i = 0; i < heard.Count; i++)
-            {
-                if (heard[i].Key != press.Key || heard[i].Time != press.Time) continue;
-                heard.RemoveAt(i);
-                return true;
-            }
-            return false;
-        }
-        // A pause drops the presses still waiting out the input delay, so their sounds are forgotten too.
-        public void ForgetHeard() => heard.Clear();
 
         void PlayDrum(bool isKa)
         {
@@ -193,10 +166,11 @@ namespace OurTaiko
             DrumSounds++;
         }
 
-        public void Hit(bool isKa, bool right, bool sound = true)
+        // The drum sounds in the frame that judges the press, so it waits out the input delay with the judgment.
+        public void Hit(bool isKa, bool right)
         {
             if (Session == null || !scene.AcceptsHits || AutoPlay) return;
-            if (sound) PlayDrum(isKa);
+            PlayDrum(isKa);
             Feedback(isKa, right);
             hitKa = isKa;
             double time = ChartTime;

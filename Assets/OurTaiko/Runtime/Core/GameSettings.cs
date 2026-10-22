@@ -68,8 +68,8 @@ namespace OurTaiko
         // A shifts the chart relative to music; B shifts judgment only. Positive means later.
         public int audioOffsetMs = OffsetDefaultMs;
         public int judgeOffsetMs = OffsetDefaultMs;
-        public const int InputDelayDefaultMs = 5, InputDelayMaxMs = 100;
-        // How long a drum press waits before it is judged, heard and shown, like the arcade.
+        public const int InputDelayDefaultMs = 0, InputDelayMaxMs = 100;
+        // How long a drum press waits before it is judged, heard and shown, like the arcade. 0 is off.
         public int inputDelayMs = InputDelayDefaultMs;
     }
 
