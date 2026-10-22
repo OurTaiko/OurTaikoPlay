@@ -89,7 +89,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.title.gameObject.activeSelf, Is.True);
                 Assert.That(plate.title.text, Is.EqualTo("Taiko Master"));
                 Assert.That(plate.title.color, Is.EqualTo(Color.black));
-                Assert.That(plate.playerName.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(261, -67.5f)));
+                Assert.That(plate.playerName.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(261, -62.5f)));
                 Assert.That(plate.playerName.fontSize, Is.EqualTo(24));
                 AssertUiFont(plate.title);
                 AssertUiFont(plate.playerName);
@@ -130,7 +130,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.playerName.text, Is.EqualTo("Katsu-chan"));
                 Assert.That(plate.playerName.fontSize, Is.EqualTo(30));
                 AssertUiFont(plate.playerName);
-                Assert.That(plate.playerName.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(226, -53)));
+                Assert.That(plate.playerName.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(226, -46)));
                 yield return null;
                 TestCapture.Capture("NameplatePlayCoin.png");
 

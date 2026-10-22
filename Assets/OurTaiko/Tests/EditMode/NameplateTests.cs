@@ -19,7 +19,8 @@ namespace OurTaiko.Tests
         {
             Assert.That(new PlayerInfo { title = "" }.IsCoin, Is.True);
             Assert.That(new PlayerInfo { title = "Taiko Master" }.IsCoin, Is.False);
-            Assert.That(new PlayerInfo { dan = 0 }.IsCoin, Is.False, "初級 is a dan.");
+            Assert.That(new PlayerInfo { dan = 6 }.IsCoin, Is.False, "五級 is a dan.");
+            Assert.That(new PlayerInfo { dan = 0 }.HasDan, Is.False, "初級 is not offered.");
             Assert.That(new PlayerInfo { dan = 24 }.HasDan, Is.True);
             // Out-of-range dan is no dan (the dan = 69 case nameplate.lua guards against).
             Assert.That(new PlayerInfo { dan = 25 }.HasDan, Is.False);
@@ -42,10 +43,11 @@ namespace OurTaiko.Tests
                 var box = NameplateLayout.NameBox(info);
                 return (box.X, box.Y, box.FontSize);
             }
-            Assert.That(Box(new PlayerInfo()), Is.EqualTo((226f, 53f, 30f)), "1p_coin");
-            Assert.That(Box(new PlayerInfo { title = "T" }), Is.EqualTo((226f, 67.5f, 24f)), "1p_shougou");
-            Assert.That(Box(new PlayerInfo { dan = 3 }), Is.EqualTo((261f, 67.5f, 24f)), "1p_dani");
-            Assert.That(Box(new PlayerInfo { title = "T", dan = 3 }), Is.EqualTo((261f, 67.5f, 24f)), "1p_shougou_dani");
+            Assert.That(Box(new PlayerInfo()), Is.EqualTo((226f, 46f, 30f)), "1p_coin");
+            Assert.That(Box(new PlayerInfo { title = "T" }), Is.EqualTo((226f, 62.5f, 24f)), "1p_shougou");
+            Assert.That(Box(new PlayerInfo { dan = 10 }), Is.EqualTo((261f, 62.5f, 24f)), "1p_dani");
+            Assert.That(Box(new PlayerInfo { title = "T", dan = 10 }), Is.EqualTo((261f, 62.5f, 24f)), "1p_shougou_dani");
+            Assert.That(Box(new PlayerInfo { dan = 3 }), Is.EqualTo((226f, 46f, 30f)), "ranks below 五級 are not offered");
         }
 
         [Test]
