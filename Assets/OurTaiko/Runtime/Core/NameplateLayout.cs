@@ -27,7 +27,7 @@ namespace OurTaiko
         public static TextBox NameBox(PlayerInfo info)
         {
             if (info.IsCoin) return new TextBox(226, 46, 30);
-            return info.HasDan ? new TextBox(261, 62.5f, 24) : new TextBox(226, 62.5f, 24);
+            return info.HasDan ? new TextBox(261, 64.5f, 24) : new TextBox(226, 64.5f, 24);
         }
     }
 

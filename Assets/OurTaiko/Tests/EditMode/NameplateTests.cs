@@ -44,9 +44,9 @@ namespace OurTaiko.Tests
                 return (box.X, box.Y, box.FontSize);
             }
             Assert.That(Box(new PlayerInfo()), Is.EqualTo((226f, 46f, 30f)), "1p_coin");
-            Assert.That(Box(new PlayerInfo { title = "T" }), Is.EqualTo((226f, 62.5f, 24f)), "1p_shougou");
-            Assert.That(Box(new PlayerInfo { dan = 10 }), Is.EqualTo((261f, 62.5f, 24f)), "1p_dani");
-            Assert.That(Box(new PlayerInfo { title = "T", dan = 10 }), Is.EqualTo((261f, 62.5f, 24f)), "1p_shougou_dani");
+            Assert.That(Box(new PlayerInfo { title = "T" }), Is.EqualTo((226f, 64.5f, 24f)), "1p_shougou");
+            Assert.That(Box(new PlayerInfo { dan = 10 }), Is.EqualTo((261f, 64.5f, 24f)), "1p_dani");
+            Assert.That(Box(new PlayerInfo { title = "T", dan = 10 }), Is.EqualTo((261f, 64.5f, 24f)), "1p_shougou_dani");
             Assert.That(Box(new PlayerInfo { dan = 3 }), Is.EqualTo((226f, 46f, 30f)), "ranks below 五級 are not offered");
         }
 
