@@ -2,6 +2,7 @@
   "name": "OurTaiko.PlayModeTests",
   "references": [
     "OurTaiko.Runtime",
+    "OurTaiko.TjaParser",
     "OurTaiko.TestSupport",
     "Unity.ugui",
     "Unity.TextMeshPro",
