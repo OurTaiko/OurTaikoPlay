@@ -24,12 +24,5 @@ namespace OurTaiko
         // The sides a seat ("p1" or "p2") plays, best first.
         public static IReadOnlyList<string> Reads(string seat)
             => ReadOrder.TryGetValue(seat ?? "p1", out var order) ? order : throw new ArgumentException($"Unknown seat '{seat}'.", nameof(seat));
-
-        // The side a seat plays among a course's blocks, or null when it plays none of them.
-        public static string Pick(string seat, ICollection<string> present)
-        {
-            foreach (string side in Reads(seat)) if (present.Contains(side)) return side;
-            return null;
-        }
     }
 }

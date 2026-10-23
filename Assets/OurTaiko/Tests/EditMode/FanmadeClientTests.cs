@@ -361,13 +361,12 @@ namespace OurTaiko.Tests
                 string play = PlayableTja.Build(original, chart);
                 Assert.That(play, Does.Contain("OFFSET:-0.375\n"));
                 Assert.That(play.Split('\n').Count(line => line.StartsWith("OFFSET:", StringComparison.OrdinalIgnoreCase)), Is.EqualTo(1));
-                foreach (string seat in ChartSide.Seats)
-                    foreach (var block in chart.Blocks)
-                    {
-                        var parsed = TjaParser.Parse(play, block.Course, seat);
-                        Assert.That(parsed.Offset, Is.EqualTo(-0.375));
-                        Assert.That(parsed.Notes[0].Time, Is.EqualTo(0.375).Within(1e-9));
-                    }
+                foreach (var block in chart.Blocks)
+                {
+                    var parsed = TjaParser.Parse(play, block.Course, block.Side);
+                    Assert.That(parsed.Offset, Is.EqualTo(-0.375));
+                    Assert.That(parsed.Notes[0].Time, Is.EqualTo(0.375).Within(1e-9));
+                }
             }
             finally { CultureInfo.CurrentCulture = previous; }
         }
@@ -533,7 +532,7 @@ namespace OurTaiko.Tests
             {
                 Title = "Pair", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") },
             }.ToJson(), "server");
-            // The copy keeps every listed block with its #START player; the seat picks one when parsing.
+            // The copy keeps every listed block with its #START player; the parser reads the side asked for.
             string pairTja = "BPM:150\nCOURSE:Oni\nSTYLE:Double\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n";
             play = PlayableTja.Build(pairTja, pair);
             Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nBPM:150\n#START P1\n3,\n#END\n"));
@@ -553,9 +552,11 @@ namespace OurTaiko.Tests
             foreach (var (seat, level, kind) in new[] { ("p1", 9, NoteKind.BigDon), ("p2", 8, NoteKind.BigKa) })
             {
                 // The parsed block and the score's block id come from the same seat rule.
-                var parsed = TjaParser.Parse(play, "Oni", seat);
+                var block = mixed.Block(3, seat);
+                var parsed = TjaParser.Parse(play, block.Course, block.Side);
                 Assert.That((parsed.Level, parsed.Notes[0].Kind), Is.EqualTo((level, kind)), seat);
-                Assert.That(mixed.Block(3, seat).Level, Is.EqualTo(level));
+                Assert.That(block.Level, Is.EqualTo(level));
+                Assert.That(SongInfo.Read(play).Block(Difficulty.Oni, seat).Side, Is.EqualTo(block.Side));
                 Assert.That(SongInfo.Read(play, seat: seat).Course(Difficulty.Oni).Level, Is.EqualTo(level));
             }
             Assert.That(mixed.Difficulties[3].Side, Is.EqualTo("p1"));

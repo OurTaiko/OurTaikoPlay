@@ -18,26 +18,14 @@ namespace OurTaiko
         static bool SameCourse(string course, string requestedCourse)
             => string.Equals(Course(course), Course(requestedCourse), StringComparison.OrdinalIgnoreCase);
 
-        // The sides (#START players) a course's blocks have, in file order.
-        static List<string> Sides(string text, string requestedCourse)
-        {
-            var sides = new List<string>();
-            string course = "Oni";
-            foreach (var line in TjaLines.Read(text))
-            {
-                if (line.Kind == TjaLineKind.Header && line.Key == "COURSE") course = line.Value;
-                else if (line.Kind == TjaLineKind.Start && SameCourse(course, requestedCourse)) sides.Add(ChartSide.OfStart(line.Value));
-            }
-            return sides;
-        }
-
-        // One parse for every mode: how branches are played is PlaySession's choice. The seat
-        // ("p1" or "p2") picks which of a course's blocks is played (ChartSide), as the online
-        // playable copy does; SongInfo lists the same one.
-        public static TaikoChart Parse(string text, string requestedCourse = "Oni", string seat = "p1")
+        // One parse for every mode: how branches are played is PlaySession's choice. The block of
+        // the requested course on the requested side ("single", "p1" or "p2", #START's player) is
+        // played; which side a seat plays is the caller's choice (SongInfo.Block,
+        // FanmadeChart.Block), so a single block stays playable where the course also has a P1 one.
+        public static TaikoChart Parse(string text, string requestedCourse = "Oni", string requestedSide = "single")
         {
             if (string.IsNullOrWhiteSpace(text)) throw new FormatException("The TJA chart is empty.");
-            string side = ChartSide.Pick(seat, Sides(text, requestedCourse));
+            if (Array.IndexOf(ChartSide.All, requestedSide) < 0) throw new ArgumentException($"Unknown side '{requestedSide}'.", nameof(requestedSide));
             var chart = new TaikoChart();
             var tokens = new List<string>();
             // Balloon hits per route (Normal, Expert, Master); headers before any COURSE are
@@ -50,12 +38,12 @@ namespace OurTaiko
             bool reading = false, found = false, ended = false;
             // A scroll command after the course's COURSE: and before its #START sets how it begins.
             ScrollMode startMode = ScrollMode.Normal;
-            // The first block of the requested course on the chosen side is played.
+            // The first block of the requested course on the requested side is played.
             foreach (var line in TjaLines.Read(text))
             {
                 if (line.Kind == TjaLineKind.Start)
                 {
-                    reading = side != null && SameCourse(course, requestedCourse) && ChartSide.OfStart(line.Value) == side;
+                    reading = SameCourse(course, requestedCourse) && ChartSide.OfStart(line.Value) == requestedSide;
                     if (reading) { found = true; chart.Course = Course(course).Split('_')[0]; chart.Level = level; }
                     continue;
                 }
@@ -100,7 +88,7 @@ namespace OurTaiko
                         break;
                 }
             }
-            if (!found || !ended) throw new FormatException($"No {requestedCourse} course (#START) for the {seat} seat.");
+            if (!found || !ended) throw new FormatException($"No {requestedCourse} course (#START) on the {requestedSide} side.");
             if (!(chart.Bpm > 0) || double.IsInfinity(chart.Bpm)) throw new FormatException("BPM must be positive and finite.");
             new ChartReader(chart, balloons, startMode).Read(tokens);
             return chart;

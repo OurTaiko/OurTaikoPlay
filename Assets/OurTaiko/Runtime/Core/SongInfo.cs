@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace OurTaiko
 {
@@ -11,12 +12,13 @@ namespace OurTaiko
     {
         public Difficulty Difficulty;
         public string Course; // The TJA's own COURSE value, passed back to TjaParser.Parse.
-        public string Side;   // The block's side ("single", "p1", "p2") the seat ("p1"/"p2") reads (ChartSide).
+        public string Side;   // The block's side ("single", "p1", "p2"), passed back to TjaParser.Parse with Course.
         public int Level;
         public bool IsBranching;
     }
 
-    // Song-select metadata of a TJA file: the header and every course with a block the seat plays.
+    // Song-select metadata of a TJA file: the header, every block, and every course with a block
+    // the seat plays.
     public sealed class SongInfo
     {
         public string Title = "Untitled", Subtitle = "", Genre = "", Wave = "";
@@ -24,6 +26,8 @@ namespace OurTaiko
         public string Maker = "";
         public double Bpm = 120, DemoStart;
         public readonly List<CourseInfo> Courses = new List<CourseInfo>();
+        // The first block of each difficulty on each side, by difficulty and then side (ChartSide.All).
+        public readonly List<CourseInfo> Blocks = new List<CourseInfo>();
 
         // TJA COURSE names of Easy..Ura, as charts, scores and servers spell them.
         public static readonly System.Collections.ObjectModel.ReadOnlyCollection<string> CourseNames =
@@ -44,6 +48,18 @@ namespace OurTaiko
         public CourseInfo Course(Difficulty difficulty) => Courses.Find(c => c.Difficulty == difficulty);
         public bool Has(Difficulty difficulty) => Course(difficulty) != null;
 
+        // The block a seat ("p1" or "p2") plays on a difficulty (ChartSide); null when it has none.
+        // Unlike Course, any seat may be asked whichever seat the info was read for.
+        public CourseInfo Block(Difficulty difficulty, string seat = "p1")
+        {
+            foreach (string side in ChartSide.Reads(seat))
+            {
+                var block = Blocks.Find(c => c.Difficulty == difficulty && c.Side == side);
+                if (block != null) return block;
+            }
+            return null;
+        }
+
         public static SongInfo Read(string text, string language = null, string seat = "p1")
         {
             if (string.IsNullOrWhiteSpace(text)) throw new FormatException("The TJA chart is empty.");
@@ -53,9 +69,7 @@ namespace OurTaiko
             string course = "Oni";
             int level = 0;
             CourseInfo reading = null;
-            // The first block of each difficulty on each side; the seat then picks the side it plays,
-            // as TjaParser does.
-            var blocks = new Dictionary<Difficulty, Dictionary<string, CourseInfo>>();
+            // The first block of each difficulty on each side; the seat then picks the side it plays.
             foreach (var line in TjaLines.Read(text))
             {
                 if (line.Kind == TjaLineKind.Start)
@@ -67,11 +81,8 @@ namespace OurTaiko
                 }
                 if (line.Kind == TjaLineKind.End)
                 {
-                    if (reading != null)
-                    {
-                        if (!blocks.TryGetValue(reading.Difficulty, out var sides)) blocks[reading.Difficulty] = sides = new Dictionary<string, CourseInfo>();
-                        if (!sides.ContainsKey(reading.Side)) sides[reading.Side] = reading;
-                    }
+                    if (reading != null && !info.Blocks.Exists(c => c.Difficulty == reading.Difficulty && c.Side == reading.Side))
+                        info.Blocks.Add(reading);
                     reading = null;
                     continue;
                 }
@@ -107,12 +118,10 @@ namespace OurTaiko
                 info.Title = Translated(titles, language, info.Title);
                 info.Subtitle = Translated(subtitles, language, info.Subtitle);
             }
-            foreach (var sides in blocks.Values)
-            {
-                string side = ChartSide.Pick(seat, sides.Keys);
-                if (side != null) info.Courses.Add(sides[side]);
-            }
-            info.Courses.Sort((a, b) => a.Difficulty.CompareTo(b.Difficulty));
+            info.Blocks.Sort((a, b) => a.Difficulty != b.Difficulty ? a.Difficulty.CompareTo(b.Difficulty)
+                : Array.IndexOf(ChartSide.All, a.Side).CompareTo(Array.IndexOf(ChartSide.All, b.Side)));
+            foreach (var difficulty in info.Blocks.Select(c => c.Difficulty).Distinct())
+                if (info.Block(difficulty, seat) is CourseInfo block) info.Courses.Add(block);
             return info;
         }
 
