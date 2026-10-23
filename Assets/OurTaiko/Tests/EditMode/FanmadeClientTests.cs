@@ -556,8 +556,8 @@ namespace OurTaiko.Tests
                 var parsed = TjaParser.Parse(play, block.Course, block.Side);
                 Assert.That((parsed.Level, parsed.Notes[0].Kind), Is.EqualTo((level, kind)), seat);
                 Assert.That(block.Level, Is.EqualTo(level));
-                Assert.That(SongInfo.Read(play).Block(Difficulty.Oni, seat).Side, Is.EqualTo(block.Side));
-                Assert.That(SongInfo.Read(play, seat: seat).Course(Difficulty.Oni).Level, Is.EqualTo(level));
+                Assert.That(SongInfo.Read(play).PlayedBlock(Difficulty.Oni, seat).Side, Is.EqualTo(block.Side));
+                Assert.That(SongInfo.Read(play).Course(Difficulty.Oni, seat).Level, Is.EqualTo(level));
             }
             Assert.That(mixed.Difficulties[3].Side, Is.EqualTo("p1"));
             Assert.Throws<FanmadeException>(() => PlayableTja.Build(pairTja, mixed), "TJA_BLOCK_MISMATCH");
@@ -583,9 +583,9 @@ namespace OurTaiko.Tests
             json["difficulties"][1]["branching"] = true;
             var info = FanmadeChart.From(json, "server").ToSongInfo("ja");
             Assert.That((info.Title, info.Subtitle, info.Bpm, info.DemoStart), Is.EqualTo(("Meta JA", "副題", 180.0, 12.5)));
-            Assert.That(info.Courses.Select(c => (c.Difficulty, c.Course, c.Level)),
+            Assert.That(info.Courses().Select(c => (c.Difficulty, c.Course, c.Level)),
                 Is.EqualTo(new[] { (Difficulty.Hard, "Hard", 4), (Difficulty.Ura, "Edit", 10) }));
-            Assert.That(info.Courses.Select(c => c.IsBranching), Is.EqualTo(new[] { false, true }));
+            Assert.That(info.Courses().Select(c => c.IsBranching), Is.EqualTo(new[] { false, true }));
             ((JObject)json["difficulties"][0]).Remove("branching");
             Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(json, "server")).Message, Is.EqualTo("API_DIFFICULTY_INVALID"), "branching is required.");
             json["difficulties"][0]["branching"] = false;
@@ -598,7 +598,7 @@ namespace OurTaiko.Tests
             // One song whatever its sides: single play lists the 1P block of a course without a single one.
             var sided = FanmadeChart.From(keyed, "server");
             Assert.That(sided.ToSongInfo("en").Title, Is.EqualTo("Double"));
-            Assert.That(sided.ToSongInfo("en").Courses.Select(c => (c.Difficulty, c.Course, c.Level, c.IsBranching)), Is.EqualTo(new[] { (Difficulty.Oni, "Oni", 9, false) }));
+            Assert.That(sided.ToSongInfo("en").Courses().Select(c => (c.Difficulty, c.Course, c.Level, c.IsBranching)), Is.EqualTo(new[] { (Difficulty.Oni, "Oni", 9, false) }));
             ((JObject)keyed["difficulties"][1])["side"] = "p3";
             Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(keyed, "server")).Message, Is.EqualTo("API_DIFFICULTY_INVALID"));
 

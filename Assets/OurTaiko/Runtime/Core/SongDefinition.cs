@@ -49,13 +49,13 @@ namespace OurTaiko
             if (onlineChart != null)
             {
                 var online = onlineChart.Block((int)difficulty.Value, seat);
-                return online != null ? (online.Course, online.Side) : (requested, ChartSide.Reads(seat)[0]);
+                return online != null ? (online.Course, online.Side) : (requested, SeatBlocks.Reads(seat)[0]);
             }
-            var block = SongInfo.Read(chart.text).Block(difficulty.Value, seat);
-            return block != null ? (block.Course, block.Side) : (requested, ChartSide.Reads(seat)[0]);
+            var block = SongInfo.Read(chart.text).PlayedBlock(difficulty.Value, seat);
+            return block != null ? (block.Course, block.Side) : (requested, SeatBlocks.Reads(seat)[0]);
         }
         public TaikoChart Parse() => Parse(course);
-        // seat is the player's position (ChartSide.Seats): 2P reads p2, then single, then p1 blocks.
+        // seat is the player's position (SeatBlocks.Seats): 2P reads p2, then single, then p1 blocks.
         public TaikoChart Parse(string requestedCourse, string seat = "p1")
         {
             var (blockCourse, side) = ResolveBlock(string.IsNullOrEmpty(requestedCourse) ? course : requestedCourse, seat);

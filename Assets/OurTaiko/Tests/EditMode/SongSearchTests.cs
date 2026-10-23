@@ -88,7 +88,7 @@ namespace OurTaiko.Tests
                     // One song: single play reads the 1P Oni block; Hard has only a 2P block, which it never reads.
                     var found = reply.Charts[0];
                     Assert.That(query.Matches(found.ToSongInfo(null)), Is.True);
-                    Assert.That(found.ToSongInfo(null).Courses.Select(c => c.Difficulty), Is.EqualTo(new[] { Difficulty.Oni }));
+                    Assert.That(found.ToSongInfo(null).Courses().Select(c => c.Difficulty), Is.EqualTo(new[] { Difficulty.Oni }));
                     Assert.That(client.SearchNeedsClear(found, query), Is.False, "Earlier FC counts even though the highest score has a miss.");
                     Assert.That(client.SearchNeedsClear(found, new SongSearchQuery("", Difficulty.Oni, 8, SongSearchOrder.UnPerfect)), Is.True);
                 }).GetAwaiter().GetResult();

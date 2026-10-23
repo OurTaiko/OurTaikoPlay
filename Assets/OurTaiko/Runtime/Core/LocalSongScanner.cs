@@ -148,7 +148,7 @@ namespace OurTaiko
                 byte[] bytes = File.ReadAllBytes(file);
                 string text = ReadText(bytes);
                 var info = SongInfo.Read(text);
-                if (info.Courses.Count == 0) return;
+                if (info.Blocks.Count == 0) return;
                 string audio = string.IsNullOrWhiteSpace(info.Wave) ? null : Path.Combine(Path.GetDirectoryName(file), info.Wave.Trim());
                 string relative = Relative(root, file);
                 using var hash = SHA256.Create();

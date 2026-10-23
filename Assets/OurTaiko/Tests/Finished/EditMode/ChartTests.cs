@@ -12,11 +12,15 @@ namespace OurTaiko.Tests
         // TjaLines: the song list and the parser agree on the block they read, and on case.
         [Test] public void SongInfoListsTheBlockTheParserPlays()
         {
-            const string text = "TITLE:Twice\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#start\n1,\n#end\nCOURSE:Oni\nLEVEL:9\n#START\n#BRANCHSTART p,50,80\n#N\n1,\n#E\n1,\n#M\n1,\n#END";
-            var info = SongInfo.Read(text).Course(Difficulty.Oni);
+            const string text = "TITLE:Two\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#start\n1,\n#end\nCOURSE:Edit\nLEVEL:9\n#START\n#BRANCHSTART p,50,80\n#N\n1,\n#E\n1,\n#M\n1,\n#END";
+            var song = SongInfo.Read(text);
+            var info = song.Course(Difficulty.Oni);
             var chart = TjaParser.Parse(text, info.Course);
             Assert.That((info.Level, info.IsBranching), Is.EqualTo((5, false)));
             Assert.That((chart.Level, chart.Branches.Count), Is.EqualTo((5, 0)));
+            Assert.That((song.Course(Difficulty.Ura).Level, song.Course(Difficulty.Ura).IsBranching), Is.EqualTo((9, true)));
+            // The same course written twice is an error, as on the servers.
+            Assert.Throws<FormatException>(() => SongInfo.Read(text.Replace("COURSE:Edit", "COURSE:Oni")));
         }
 
         // OpenTaiko: a block without #END ends at the next COURSE: (or the file's end), and notes
@@ -30,7 +34,7 @@ namespace OurTaiko.Tests
             Assert.That(hard.Warnings, Is.SupersetOf(new[] { "#END missing", "Last measure without a comma" }));
             var oni = TjaParser.Parse(text, "Oni");
             Assert.That((oni.Level, oni.Notes.Count, oni.Duration), Is.EqualTo((9, 2, 4.0)));
-            Assert.That(SongInfo.Read(text).Courses.Select(c => (c.Difficulty, c.Level)),
+            Assert.That(SongInfo.Read(text).Courses().Select(c => (c.Difficulty, c.Level)),
                 Is.EqualTo(new[] { (Difficulty.Hard, 5), (Difficulty.Oni, 9) }));
         }
 

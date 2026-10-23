@@ -157,7 +157,7 @@ namespace OurTaiko
             song.localChartSha256 = chart.Sha256;
             song.genre = Online.OnlineManager.GenreFrame(string.IsNullOrEmpty(folderGenre) ? chart.Info.Genre : folderGenre);
             var oni = chart.Info.Course(Difficulty.Oni);
-            song.course = (oni ?? chart.Info.Courses[chart.Info.Courses.Count - 1]).Course;
+            song.course = (oni ?? chart.Info.Courses().Last()).Course;
             return song;
         }
 

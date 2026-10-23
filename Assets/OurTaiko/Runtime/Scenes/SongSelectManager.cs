@@ -568,11 +568,11 @@ namespace OurTaiko
         // Starts at the seat's last course; 2P starts on the column (Oni or Ura) 1P shows.
         DifficultyCursor NewCursor(int seat)
         {
-            var courses = items[Focused].Info.Courses.Select(c => c.Difficulty).ToList();
+            var courses = items[Focused].Info.Courses().Select(c => c.Difficulty).ToList();
             int preferred = seat == 0 ? Switcher.LastDifficulty : Switcher.LastDifficulty2P;
             if (SearchActive)
             {
-                var matching = items[Focused].Info.Courses.Where(SearchQuery.Matches).Select(c => c.Difficulty).ToList();
+                var matching = items[Focused].Info.Courses().Where(SearchQuery.Matches).Select(c => c.Difficulty).ToList();
                 if (matching.Count > 0 && !matching.Contains((Difficulty)preferred)) preferred = (int)matching[0];
             }
             bool ura = seat == 1 && cursors[0] != null ? cursors[0].IsUra

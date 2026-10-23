@@ -24,7 +24,7 @@ namespace OurTaiko.Tests
             var info = SongInfo.Read(Chart, language);
             Assert.That(info.Title, Is.EqualTo(title));
             Assert.That(info.Subtitle, Is.EqualTo(subtitle));
-            Assert.That(info.Courses[0].Level, Is.EqualTo(3));
+            Assert.That(info.Courses()[0].Level, Is.EqualTo(3));
             Assert.That(TjaParser.Parse(Chart).Title, Is.EqualTo("Base title"), "Display language must not rewrite the playable chart.");
         }
 

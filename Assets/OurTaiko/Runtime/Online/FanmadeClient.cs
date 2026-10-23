@@ -493,7 +493,7 @@ namespace OurTaiko.Online
         // The block a seat plays on this course (ChartSide): 1P's is Difficulties[course].
         static FanmadeDifficulty SeatBlock(FanmadeChart chart, int difficulty, int seat)
             => chart == null || difficulty < 0 || difficulty >= 5 ? null
-                : seat == 0 ? chart.Difficulties[difficulty] : chart.Block(difficulty, ChartSide.Seats[seat]);
+                : seat == 0 ? chart.Difficulties[difficulty] : chart.Block(difficulty, SeatBlocks.Seats[seat]);
 
         // Each seat has its own account (2P signs in through the account center only).
         static bool HasAccount(FanmadeEndpoint e, int seat) => seat >= 0 && seat < FanmadeEndpoint.SeatCount && e.Seats[seat].IsAuthenticated;

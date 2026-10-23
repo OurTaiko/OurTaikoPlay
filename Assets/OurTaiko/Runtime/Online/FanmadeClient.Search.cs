@@ -58,7 +58,7 @@ namespace OurTaiko.Online
             {
                 var e = endpoints.Find(x => x.Id == chart.Server);
                 if (e == null || !e.IsAuthenticated) return false;
-                return chart.ToSongInfo(null).Courses.Where(query.Matches).Any(course =>
+                return chart.ToSongInfo(null).Courses().Where(query.Matches).Any(course =>
                 {
                     // Plays of replaced files count only while the block has no play of the current ones.
                     string block = chart.Difficulties[(int)course.Difficulty].Name;

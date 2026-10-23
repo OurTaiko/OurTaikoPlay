@@ -36,7 +36,7 @@ namespace OurTaiko.Tests
             Assert.That(triple.Title, Is.EqualTo("TRIPLE HELIX"));
             Assert.That(triple.Subtitle, Is.EqualTo("Yonokid"));
             Assert.That(triple.DemoStart, Is.EqualTo(120.001));
-            Assert.That(triple.Courses.Select(c => (c.Difficulty, c.Level)),
+            Assert.That(triple.Courses().Select(c => (c.Difficulty, c.Level)),
                 Is.EqualTo(new[] { (Difficulty.Easy, 2), (Difficulty.Normal, 4), (Difficulty.Hard, 6), (Difficulty.Oni, 9), (Difficulty.Ura, 10) }));
             Assert.That(triple.Course(Difficulty.Ura).Course, Is.EqualTo("Edit"));
             var branch = SongInfo.Read(File.ReadAllText("Assets/OurTaiko/Tests/Shared/Songs~/3 BranchTraining.tja"));
