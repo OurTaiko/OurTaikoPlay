@@ -163,6 +163,60 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
+        public IEnumerator TheOnlinePagesListOnlyTheGaidenEntryWithoutAServerAndTakeACode()
+        {
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.DanSelectScene);
+            yield return null;
+            var scene = Object.FindFirstObjectByType<DanSelectScene>();
+            var view = scene.view;
+            yield return WaitUntil(() => scene.IntroDone, 3);
+            Assert.That(scene.Pages.Select(p => p.Title), Is.EqualTo(new[] { "ローカル", "Fanmade", "Database" }));
+            Assert.That(scene.Page, Is.Zero);
+            Assert.That(scene.Courses.Count, Is.EqualTo(3), "the local page lists the local courses");
+
+            // Down: the Fanmade page. Not signed in to any server, it holds the 外伝 entry alone.
+            Assert.That(scene.SwitchPage(1), Is.True);
+            Assert.That(scene.Page, Is.EqualTo(1));
+            Assert.That(scene.Courses.Count, Is.EqualTo(1));
+            Assert.That(scene.Courses[0].IsGaiden, Is.True);
+            yield return new WaitForSecondsRealtime(0.5f);
+            var chip = view.chips.First(c => c.root.gameObject.activeSelf);
+            Assert.That(chip.folder.sprite, Is.SameAs(view.folders[6]), "the 外伝 chip is the green plaque");
+            Assert.That(chip.folder.color, Is.EqualTo(Color.white));
+            Assert.That(view.horiName.text, Is.EqualTo("外伝"));
+            Assert.That(view.exams.gameObject.activeSelf, Is.False);
+            Assert.That(view.error.text, Does.Contain("段位コード"));
+            TestCapture.Capture("DanSelectGaiden.png");
+
+            // Don opens the code entry; a code goes nowhere without a connected server; Esc closes it.
+            scene.Don();
+            Assert.That(scene.IsEnteringCode, Is.True);
+            Assert.That(scene.Flow.State, Is.EqualTo(DanSelectFlow.Phase.Browsing));
+            yield return null;
+            TestCapture.Capture("DanSelectCodeEntry.png");
+            scene.SubmitCode("ab12c");
+            Assert.That(scene.CodeMessage, Does.Contain("6 文字"));
+            scene.SubmitCode("ab12cd");
+            Assert.That(scene.CodeMessage, Does.Contain("接続"));
+            Assert.That(scene.SwitchPage(1), Is.False, "no page change while a code is typed");
+            scene.Back();
+            Assert.That(scene.IsEnteringCode, Is.False);
+            Assert.That(scene.Flow.State, Is.EqualTo(DanSelectFlow.Phase.Browsing));
+
+            // Right again: Database, the last page; up twice: back to ローカル with its first chip.
+            Assert.That(scene.SwitchPage(1), Is.True);
+            Assert.That(scene.Page, Is.EqualTo(2));
+            Assert.That(scene.SwitchPage(1), Is.False, "the pages do not wrap");
+            scene.SwitchPage(-1);
+            scene.SwitchPage(-1);
+            Assert.That(scene.Page, Is.Zero);
+            Assert.That(scene.Flow.Selected, Is.Zero);
+            Assert.That(scene.Courses.Count, Is.EqualTo(3));
+        }
+
+        [UnityTest]
         public IEnumerator ATapManyChipsAwaySlidesTheRibbonAllTheWay()
         {
             for (int i = 4; i <= 7; i++)

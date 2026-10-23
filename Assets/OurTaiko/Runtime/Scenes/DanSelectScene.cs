@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,6 +18,9 @@ namespace OurTaiko
     // be played (a song not found, a broken file) are listed greyed out with the reason. The 段位道場
     // doors (DanIntroView) open over it first, the whole intro after Entry, and the screen takes input
     // once they have. No timer (user decision: the simulator does not limit the player's time).
+    // Three pages (DanSelectPages): ローカル, Fanmade and Database, the online ones listing only the
+    // official courses and ending with the 外伝 entry, where a course's code is typed to challenge
+    // it (GET /api/v1/game/dans/{code}); the course then joins the page.
     public sealed class DanSelectScene : MonoBehaviour
     {
         // The ribbon: chips every RibbonSpacing px around the centre (Nijiiro dan_ribbon x 960).
@@ -37,17 +42,30 @@ namespace OurTaiko
         public AudioClip introSound;
 
         public DanSelectFlow Flow { get; private set; }
+        // The current page's courses.
         public IReadOnlyList<DanCourseEntry> Courses => courses;
+        public IReadOnlyList<DanSelectPage> Pages => pages;
+        public int Page { get; private set; }
+        public bool IsEnteringCode => codeEntry != null && codeEntry.root.gameObject.activeSelf;
+        public string CodeMessage => codeEntry?.message.text ?? "";
         public bool HasLeft { get; private set; }
         public OptionMenu Options { get; private set; }
         // The doors play once the cover has opened; the screen takes input after them.
         public bool FullIntro { get; private set; }
         public bool IntroDone => intro == null || !intro.IsPlaying && !double.IsNaN(introStartedAt);
 
-        readonly List<DanCourseEntry> courses = new List<DanCourseEntry>();
+        List<DanCourseEntry> courses = new List<DanCourseEntry>();
+        readonly List<DanSelectPage> pages = new List<DanSelectPage>();
         readonly Dictionary<SongDefinition, SongInfo> displayInfo = new Dictionary<SongDefinition, SongInfo>();
         SceneSwitcher switcher;
         OptionPanel optionPanel;
+        DanCourseResolver resolver;
+        PageTabs tabs;
+        CodeEntry codeEntry;
+        // The code lookup under way, and the frame the input field consumed a key on.
+        Task<string> lookup;
+        string lookupCode;
+        int fieldKeyFrame = -1;
         double ribbonFrom, ribbonTo, ribbonMovedAt = double.NegativeInfinity, boardShownAt, introStartedAt = double.NaN;
         int shownCourse = -1;
         string language = "ja";
@@ -61,10 +79,11 @@ namespace OurTaiko
             switcher.TwoPlayers = false;
             language = SettingManager.EnsureInstance().Settings.general.Language;
             Load();
-            switcher.DanIndexMax = courses.Count > 0 ? courses.Max(c => c.Course.DanIndex) : -1;
-            int start = switcher.SelectedDan != null ? Math.Max(0, courses.FindIndex(c => Same(c, switcher.SelectedDan))) : 0;
-            Flow = new DanSelectFlow(courses.Count, i => courses[i].IsPlayable, start);
-            ribbonFrom = ribbonTo = Flow.Selected;
+            var all = pages.SelectMany(p => p.Courses).Where(c => !c.IsGaiden).ToList();
+            switcher.DanIndexMax = all.Count > 0 ? all.Max(c => c.Course.DanIndex) : -1;
+            // Back from a course: its page and chip again.
+            int startPage = switcher.SelectedDan != null ? pages.FindIndex(p => p.Courses.Any(c => Same(c, switcher.SelectedDan))) : -1;
+            OpenPage(Math.Max(0, startPage), startPage < 0 ? 0 : pages[startPage].Courses.FindIndex(c => Same(c, switcher.SelectedDan)));
             Bind();
             switcher.SceneChanging += OnSceneChanging;
             FullIntro = switcher.FromScene == SceneSwitcher.EntryScene;
@@ -94,23 +113,48 @@ namespace OurTaiko
 
         static bool Same(DanCourseEntry a, DanCourseEntry b) => a.Course.Id == b.Course.Id && a.Course.Server == b.Course.Server && a.Path == b.Path;
 
-        // Local courses first (each library root in order), then each connected server's, then the
-        // server stand-in's.
+        // The local courses (each library root in order) on the first page, each connected server's
+        // official courses on its page, the server stand-in's on the page of its server.
         void Load()
         {
             var library = LocalSongLibrary.EnsureInstance();
             var local = library.Songs.Concat(library.Folders.SelectMany(f => f.AllSongs())).Distinct().ToList();
             var online = Online.OnlineManager.EnsureInstance();
-            var resolver = new DanCourseResolver(local, (server, id) => FindServerSong(online, server, id));
-            courses.AddRange(DanCourseLoader.LoadLocal(library.Roots, resolver));
+            resolver = new DanCourseResolver(local, (server, id) => FindServerSong(online, server, id));
+            var servers = new List<DanCourseEntry>();
             if (online.Client != null)
-                foreach (var (server, dans) in online.Client.Dans) courses.AddRange(DanCourseLoader.LoadServer(server, dans, resolver));
-            courses.AddRange(DanCourseLoader.LoadServerTest(Path.Combine(GamePaths.Root, DanCourseLoader.ServerTestFolder), resolver));
-            foreach (var entry in courses)
+                foreach (var (server, dans) in online.Client.Dans) servers.AddRange(DanCourseLoader.LoadServer(server, dans, resolver));
+            var standIns = DanCourseLoader.LoadServerTest(Path.Combine(GamePaths.Root, DanCourseLoader.ServerTestFolder), resolver);
+            pages.Clear();
+            pages.AddRange(DanSelectPages.Build(DanCourseLoader.LoadLocal(library.Roots, resolver), servers, standIns,
+                Online.ServerList.BuiltIn[0].Url, Online.ServerList.BuiltIn[1].Url));
+            foreach (var entry in pages.SelectMany(p => p.Courses).Concat(servers).Distinct())
             {
                 if (entry.Error != null) Debug.LogWarning($"Dan course {entry.Path}: {entry.Error}");
                 foreach (string warning in entry.Course.Warnings) Debug.LogWarning($"Dan course {entry.Path}: {warning}");
             }
+        }
+
+        // Shows a page with its chip at `selected` under the cursor.
+        void OpenPage(int index, int selected)
+        {
+            Page = Math.Max(0, Math.Min(pages.Count - 1, index));
+            courses = pages[Page].Courses;
+            Flow = new DanSelectFlow(courses.Count, i => courses[i].IsPlayable, Math.Max(0, selected));
+            ribbonFrom = ribbonTo = Flow.Selected; ribbonMovedAt = double.NegativeInfinity;
+            shownCourse = -1;
+            tabs?.Show(Page);
+        }
+
+        // The page to the left (-1) or right (+1); the pages do not wrap.
+        public bool SwitchPage(int delta)
+        {
+            if (switcher.IsInputBlocked || HasLeft || !IntroDone || IsEnteringCode || Flow.State != DanSelectFlow.Phase.Browsing) return false;
+            int next = Page + delta;
+            if (next < 0 || next >= pages.Count || next == Page) return false;
+            Play(sfx, ka, true);
+            OpenPage(next, 0);
+            return true;
         }
 
         // A server's song by id: the endpoint whose base URL the course names, then its song.
@@ -138,6 +182,10 @@ namespace OurTaiko
             optionPanel.RowTapped += TapOptionRow;
             optionPanel.OutsideTapped += CloseOptions;
             view.confirm.gameObject.SetActive(false);
+            var canvas = view.board.parent as RectTransform;
+            tabs = new PageTabs(canvas, view.empty, pages.Select(p => p.Title).ToList(), i => { if (i != Page) SwitchPage(i - Page); });
+            tabs.Show(Page);
+            codeEntry = new CodeEntry(canvas, view.empty, SubmitCode, CloseCodeEntry, () => fieldKeyFrame = Time.frameCount);
         }
 
         void Update()
@@ -162,6 +210,16 @@ namespace OurTaiko
 
         void HandleInput(double now)
         {
+            if (IsEnteringCode)
+            {
+                // Typed letters also reach the drum keys; while the code is typed only Esc acts
+                // here (Enter arrives as the field's onSubmit), and the field eats the first Esc.
+                if (codeEntry.field.isFocused) return;
+                if (Time.frameCount == fieldKeyFrame) return;
+                if (Pressed(InputKey.Back)) CloseCodeEntry();
+                else if (Pressed(InputKey.LeftDon, InputKey.RightDon, InputKey.Confirm)) SubmitCode(codeEntry.field.text);
+                return;
+            }
             if (Flow.State == DanSelectFlow.Phase.Options)
             {
                 if (Options == null || Options.IsConfirmed) return;
@@ -173,8 +231,10 @@ namespace OurTaiko
             }
             if (Pressed(InputKey.Back)) { Back(); return; }
             if (Pressed(InputKey.LeftDon, InputKey.RightDon, InputKey.Confirm)) Don();
-            else if (Pressed(InputKey.LeftKa, InputKey.MenuLeft, InputKey.MenuUp)) Ka(-1);
-            else if (Pressed(InputKey.RightKa, InputKey.MenuRight, InputKey.MenuDown)) Ka(1);
+            else if (Pressed(InputKey.LeftKa, InputKey.MenuLeft)) Ka(-1);
+            else if (Pressed(InputKey.RightKa, InputKey.MenuRight)) Ka(1);
+            else if (Pressed(InputKey.MenuUp)) SwitchPage(-1);
+            else if (Pressed(InputKey.MenuDown)) SwitchPage(1);
         }
 
         static bool Pressed(params InputKey[] keys) => keys.Any(InputManager.GetKeyDown);
@@ -186,6 +246,7 @@ namespace OurTaiko
             double now = Now;
             if (Flow.State == DanSelectFlow.Phase.Browsing)
             {
+                if (courses.Count > 0 && courses[Flow.Selected].IsGaiden) { Play(sfx, don, true); OpenCodeEntry(); return; }
                 if (!Flow.Open(now)) { Play(sfx, cancel, true); return; }
                 Play(sfx, don, true);
                 Play(sfx, confirmBox, true);
@@ -230,6 +291,7 @@ namespace OurTaiko
         public void Back()
         {
             if (switcher.IsInputBlocked || HasLeft || !IntroDone) return;
+            if (IsEnteringCode) { CloseCodeEntry(); return; }
             if (!Flow.Back()) return;
             Play(sfx, cancel, true);
             if (Flow.State != DanSelectFlow.Phase.Left) return;
@@ -296,6 +358,65 @@ namespace OurTaiko
             else Flow = new DanSelectFlow(courses.Count, i => courses[i].IsPlayable, Flow.Selected);
         }
 
+        // ---------------------------------------------------------------- 外伝: a course by its code
+
+        void OpenCodeEntry()
+        {
+            codeEntry.Open(pages[Page].Title);
+        }
+
+        void CloseCodeEntry()
+        {
+            if (!IsEnteringCode) return;
+            Play(sfx, cancel, true);
+            codeEntry.Close();
+            fieldKeyFrame = Time.frameCount;
+        }
+
+        // Asks the page's server for the course; the answer is taken in Update (PollLookup).
+        public void SubmitCode(string typed)
+        {
+            if (!IsEnteringCode || lookup != null) return;
+            string code = DanSelectPages.CleanCode(typed);
+            if (code == null) { codeEntry.Say("英数字 6 文字のコードを入力してください"); return; }
+            string server = pages[Page].Server;
+            var endpoint = Online.OnlineManager.EnsureInstance().Client?.Endpoints
+                .FirstOrDefault(e => string.Equals(e.Config.baseUrl.TrimEnd('/'), server, StringComparison.OrdinalIgnoreCase) && e.IsConnected);
+            if (endpoint == null) { codeEntry.Say("サーバーに接続していません"); return; }
+            Play(sfx, don, true);
+            codeEntry.Say("検索中…");
+            codeEntry.field.interactable = false;
+            lookupCode = code;
+            lookup = endpoint.RequestAsync("/api/v1/game/dans/" + code);
+        }
+
+        void PollLookup()
+        {
+            if (lookup == null || !lookup.IsCompleted) return;
+            var task = lookup;
+            lookup = null;
+            if (codeEntry != null) codeEntry.field.interactable = true;
+            if (!IsEnteringCode) return;
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                var error = task.Exception?.InnerExceptions.FirstOrDefault();
+                codeEntry.Say(error is Online.HttpStatusException { Status: 404 } ? "コード " + lookupCode + " の段位はありません" : "取得できませんでした: " + (error?.Message ?? "?"));
+                return;
+            }
+            DanCourseEntry entry;
+            try { entry = resolver.Resolve(DanCourse.From(Online.Json.Parse(task.Result), pages[Page].Server), pages[Page].Server + "/api/v1/game/dans/" + lookupCode); }
+            catch (Exception error) when (error is FormatException || error is Online.FanmadeException)
+            {
+                codeEntry.Say("取得できませんでした: " + error.Message);
+                return;
+            }
+            int index = DanSelectPages.Insert(pages[Page], entry);
+            codeEntry.Close();
+            fieldKeyFrame = Time.frameCount;
+            Play(sfx, confirmBox, true);
+            OpenPage(Page, index);
+        }
+
         static void Play(AudioSource source, AudioClip clip, bool oneShot = false)
         {
             if (source == null || clip == null) return;
@@ -318,6 +439,7 @@ namespace OurTaiko
 
         void Show(double now)
         {
+            PollLookup();
             if (optionPanel.Draw(now)) { Options = null; PlayOptions.ForSeat(0).Save(); Flow.OptionsClosed(); }
             view.empty.gameObject.SetActive(courses.Count == 0);
             view.board.gameObject.SetActive(courses.Count > 0);
@@ -413,6 +535,16 @@ namespace OurTaiko
             view.frame.sprite = view.frames[Mathf.Clamp(course.Color, 0, view.frames.Length - 1)];
             view.horiName.text = course.Title(language);
             view.horiName.Squeeze(240);
+            if (entry.IsGaiden)
+            {
+                // The 外伝 plate: no songs or exams, the hint where the course list would be.
+                if (view.record != null) view.record.gameObject.SetActive(false);
+                foreach (var row in view.songs) row.root.gameObject.SetActive(false);
+                view.exams.gameObject.SetActive(false);
+                view.error.gameObject.SetActive(true);
+                view.error.text = "段位コードを入力して、一覧にない段位に挑戦できます。\nドンでコードを入力";
+                return;
+            }
             ShowRecord(entry);
             for (int i = 0; i < view.songs.Length; i++)
             {

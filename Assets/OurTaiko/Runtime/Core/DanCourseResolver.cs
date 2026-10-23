@@ -22,6 +22,8 @@ namespace OurTaiko
         public string Path;
         public readonly List<DanResolvedSong> Songs = new List<DanResolvedSong>();
         public string Error;
+        // The 外伝 entry at the end of an online page: not a course, but where a code is typed.
+        public bool IsGaiden;
         public bool IsPlayable => Error == null;
     }
 

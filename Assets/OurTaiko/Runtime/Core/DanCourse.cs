@@ -28,6 +28,10 @@ namespace OurTaiko
         public readonly Dictionary<string, string> Titles = new Dictionary<string, string>();
         // The Nijiiro dan box colour.
         public int Color;
+        // A server's course: whether an administrator marked it official (the lists show only
+        // those), and its six-character code (the 外伝 entry takes it).
+        public bool Official;
+        public string Code = "";
         public readonly List<DanSongRef> Songs = new List<DanSongRef>();
         public readonly List<DanExam> Exams = new List<DanExam>();
         public JToken Rewards;
@@ -86,6 +90,8 @@ namespace OurTaiko
             }
             if (!course.Titles.Values.Any(t => t.Length > 0)) throw new FormatException("Missing title.");
             course.Color = root.Value<int?>("color") ?? 0;
+            course.Official = root.Value<bool?>("official") ?? false;
+            course.Code = Text(root, "code").ToUpperInvariant();
 
             if (!(root["songs"] is JArray songs) || songs.Count == 0) throw new FormatException("A course needs songs.");
             if (songs.Count > MaxSongs) throw new FormatException($"A course has at most {MaxSongs} songs, not {songs.Count}.");
