@@ -86,10 +86,16 @@ namespace OurTaiko.Tests
             var chart = TjaParser.Parse("BPM:120\nCOURSE:Easy\nLEVEL:1\n#START\n1000,\n#END\nCOURSE:3\nLEVEL:9\nBALLOON:3\n#START\n7008,\n#END", "Oni");
             Assert.That(chart.Level, Is.EqualTo(9)); Assert.That(chart.Notes[0].BalloonHits, Is.EqualTo(3));
         }
-        [Test] public void MalformedBranchAndLongNoteAreExplicit()
+        // OpenTaiko tolerances, each warned about: notes before the first route marker are common,
+        // and a roll still open at #END ends there.
+        [Test] public void CommonNotesInABranchAndAnUnendedRollAreToleratedWithWarnings()
         {
-            Assert.Throws<FormatException>(() => Parse("#BRANCHSTART p,50,80\n1000,"));
-            Assert.Throws<FormatException>(() => Parse("5000,"));
+            var branched = Parse("#BRANCHSTART p,50,80\n1000,");
+            Assert.That(branched.Notes.Single().BranchId, Is.EqualTo(-1));
+            Assert.That(branched.Warnings, Has.Some.StartsWith("Notes between #BRANCHSTART"));
+            var roll = Parse("5000,");
+            Assert.That(roll.Notes.Single().EndTime, Is.EqualTo(roll.Duration));
+            Assert.That(roll.Warnings, Has.Some.EqualTo("An unended roll is ended by #END"));
         }
         [Test] public void WrongColorDoesNotConsumeNoteAndMissResetsCombo()
         {
