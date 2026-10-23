@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -150,6 +151,19 @@ namespace OurTaiko.Tests
                 var best = new DanRecordStore(path).Get(key).Value;
                 Assert.That((best.Verdict, best.Score, best.Arrival, best.Attempts), Is.EqualTo((1, 950000, 3, 2)));
                 Assert.That(DanRecordStore.Key(Entry("[{\"type\":\"gauge\",\"range\":\"more\",\"value\":[90]}]")), Is.Not.EqualTo(key));
+                // The bests under each exam: the gauge's percentage, per-song counts where the song
+                // was reached (less keeps the lowest), course-wide counts over the songs played; rows
+                // from before the counts were kept do not count.
+                var course = DanCourse.Parse("{\"id\":\"local:b\",\"title\":\"b\",\"songs\":[{\"chart\":{\"sha256\":\"abc\"}},{\"chart\":{\"sha256\":\"abc\"}}],"
+                    + "\"exams\":[{\"type\":\"gauge\",\"range\":\"more\",\"value\":[100]},{\"type\":\"ok\",\"range\":\"less\",\"value\":[[10],[10]]},{\"type\":\"combo\",\"range\":\"more\",\"value\":[50]}]}");
+                var bests = store.ExamBests(key, course);
+                Assert.That(bests.Select(b => b.All(v => v == null)), Is.All.True, "nothing counted yet");
+                store.Save(key, "b", 1, 1, 1, 9900, 2, new[] { new DanSongStats { Ok = 7, MaxCombo = 40 }, new DanSongStats { Ok = 3, MaxCombo = 44 } }, 99);
+                store.Save(key, "b", 0, 1, 1, 5000, 1, new[] { new DanSongStats { Ok = 2, MaxCombo = 60 } }, 50);
+                bests = store.ExamBests(key, course);
+                Assert.That(bests[0], Is.EqualTo(new int?[] { 99 }));
+                Assert.That(bests[1], Is.EqualTo(new int?[] { 2, 3 }));
+                Assert.That(bests[2], Is.EqualTo(new int?[] { 60 }));
                 song.localChartSha256 = "def";
                 // The same song file edited: the course now finds it by its title (x) under the new hash.
                 Assert.That(DanRecordStore.Key(new DanCourseResolver(new[] { song }, null).Resolve(DanCourse.Parse(

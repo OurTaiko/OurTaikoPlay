@@ -83,7 +83,8 @@ namespace OurTaiko.Tests
             Assert.That(view.chips.Count(c => c.root.gameObject.activeSelf), Is.EqualTo(3));
             Assert.That(view.cursor.rectTransform.anchoredPosition.x, Is.EqualTo(DanSelectScene.RibbonCenter).Within(0.01f));
             Assert.That(view.contents.alpha, Is.EqualTo(1));
-            Assert.That(view.horiName.text, Is.EqualTo("十段"));
+            Assert.That(view.horiName.text, Is.EqualTo("十\n段"), "the plate reads top to bottom");
+            Assert.That(view.chips.First(c => c.root.gameObject.activeSelf && Mathf.Abs(c.root.anchoredPosition.x - DanSelectScene.RibbonCenter) < 0.5f).name.text, Is.EqualTo("十\n段"), "a local course's chip carries its name");
             Assert.That(view.songs[0].title.text, Is.EqualTo("TRIPLE HELIX"));
             Assert.That(view.songs[1].title.text, Is.EqualTo("？？？"), "Hidden songs keep their title back.");
             Assert.That(view.songs[2].title.text, Is.EqualTo("Branch Training"));
@@ -185,7 +186,7 @@ namespace OurTaiko.Tests
             var chip = view.chips.First(c => c.root.gameObject.activeSelf);
             Assert.That(chip.folder.sprite, Is.SameAs(view.folders[6]), "the 外伝 chip is the green plaque");
             Assert.That(chip.folder.color, Is.EqualTo(Color.white));
-            Assert.That(view.horiName.text, Is.EqualTo("外伝"));
+            Assert.That(view.horiName.text, Is.EqualTo("外\n伝"));
             Assert.That(view.exams.gameObject.activeSelf, Is.False);
             Assert.That(view.error.text, Does.Contain("段位コード"));
             TestCapture.Capture("DanSelectGaiden.png");
@@ -242,7 +243,7 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.4f);
             Assert.That(view.cursor.rectTransform.anchoredPosition.x, Is.EqualTo(DanSelectScene.RibbonCenter).Within(0.01f));
             Assert.That(target.root.anchoredPosition.x, Is.EqualTo(DanSelectScene.RibbonCenter).Within(0.01f));
-            Assert.That(view.horiName.text, Is.EqualTo("4段"));
+            Assert.That(view.horiName.text, Is.EqualTo("4\n段"));
             // Left past the first course wraps to the last.
             for (int i = 0; i < 4; i++) scene.Ka(-1);
             Assert.That(scene.Flow.Selected, Is.EqualTo(6));

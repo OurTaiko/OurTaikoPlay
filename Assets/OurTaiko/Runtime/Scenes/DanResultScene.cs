@@ -96,8 +96,12 @@ namespace OurTaiko
             {
                 var entry = Result.Run.Entry;
                 string language = SettingManager.EnsureInstance().Settings.general.Language;
+                // The played songs' counts: the finished ones, then the one the course ended on.
+                var songs = new System.Collections.Generic.List<DanSongStats>(Result.Progress.Finished);
+                if (songs.Count < Result.Songs.Length) songs.Add(Result.Progress.Current);
+                int gaugePercent = (int)Math.Floor((Result.GaugePoints + SoulGauge.PointsEpsilon) / SoulGauge.MaximumPoints * 100);
                 PreviousBest = Result.PreviousBest = DanRecordStore.Shared.Save(DanRecordStore.Key(entry), entry.Course.Title(language), Result.Verdict,
-                    Result.Score, Result.MaxCombo, Result.GaugePoints, Result.Songs.Length);
+                    Result.Score, Result.MaxCombo, Result.GaugePoints, Result.Songs.Length, songs, gaugePercent);
             }
             for (int i = 0; i < Result.Songs.Length; i++)
                 ResultScene.SaveScore(Result.Run.Song(i), Result.Songs[i], Result.Records != null && i < Result.Records.Length ? Result.Records[i] : null, 0);

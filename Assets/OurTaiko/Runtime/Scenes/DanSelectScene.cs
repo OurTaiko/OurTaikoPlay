@@ -62,6 +62,7 @@ namespace OurTaiko
         DanCourseResolver resolver;
         PageTabs tabs;
         CodeEntry codeEntry;
+        ExamBestLines bestLines;
         // The code lookup under way, and the frame the input field consumed a key on.
         Task<string> lookup;
         string lookupCode;
@@ -183,6 +184,13 @@ namespace OurTaiko
             optionPanel.OutsideTapped += CloseOptions;
             view.confirm.gameObject.SetActive(false);
             var canvas = view.board.parent as RectTransform;
+            // The chips name the rank in two big characters, stacked tightly as the arcade does.
+            foreach (var chip in view.chips) DanPlateText.StyleChip(chip.name);
+            // The plate reads top to bottom; the old horizontal line and the record under it are gone
+            // (the arcade shows the bests under each exam instead).
+            DanPlateText.StylePlate(view.horiName, DanPlateText.SelectPlateCenter);
+            if (view.record != null) view.record.gameObject.SetActive(false);
+            bestLines = new ExamBestLines(view);
             tabs = new PageTabs(canvas, view.empty, pages.Select(p => p.Title).ToList(), i => { if (i != Page) SwitchPage(i - Page); });
             tabs.Show(Page);
             codeEntry = new CodeEntry(canvas, view.empty, SubmitCode, CloseCodeEntry, () => fieldKeyFrame = Time.frameCount);
@@ -468,7 +476,7 @@ namespace OurTaiko
                 var entry = courses[i];
                 chip.folder.sprite = view.folders[Mathf.Clamp(entry.Course.Color, 0, view.folders.Length - 1)];
                 chip.folder.color = entry.IsPlayable ? Color.white : new Color(0.45f, 0.45f, 0.45f, 1);
-                string name = Vertical(entry.Course.Title(language));
+                string name = Vertical(ChipLabel(entry));
                 if (chip.name.text != name) chip.name.text = name;
             }
             for (int i = used; i < view.chips.Length; i++) { view.chips[i].root.gameObject.SetActive(false); chipCourse[i] = -1; }
@@ -507,6 +515,15 @@ namespace OurTaiko
         // A chip's name is written top to bottom, one character per line.
         static string Vertical(string text) => string.Join("\n", (text ?? "").Where(c => !char.IsWhiteSpace(c)).Select(c => c.ToString()));
 
+        // What a chip says: 外伝, the rank a server's course awards (五級 .. 達人, two characters), else
+        // the course's own name (a local or unranked course). The plate carries the full name.
+        public string ChipLabel(DanCourseEntry entry)
+        {
+            if (entry.IsGaiden) return DanSelectPages.GaidenTitle;
+            int rank = entry.Course.DanIndex;
+            return rank >= 0 ? DanResultFlow.RankName(rank) : entry.Course.Title(language);
+        }
+
         // The yellow board opens like the song wheel's (animations 13–18); its contents fade in last.
         void ShowBoard(double t)
         {
@@ -533,19 +550,16 @@ namespace OurTaiko
         {
             var course = entry.Course;
             view.frame.sprite = view.frames[Mathf.Clamp(course.Color, 0, view.frames.Length - 1)];
-            view.horiName.text = course.Title(language);
-            view.horiName.Squeeze(240);
+            view.horiName.text = Vertical(course.Title(language));
             if (entry.IsGaiden)
             {
                 // The 外伝 plate: no songs or exams, the hint where the course list would be.
-                if (view.record != null) view.record.gameObject.SetActive(false);
                 foreach (var row in view.songs) row.root.gameObject.SetActive(false);
                 view.exams.gameObject.SetActive(false);
                 view.error.gameObject.SetActive(true);
                 view.error.text = "段位コードを入力して、一覧にない段位に挑戦できます。\nドンでコードを入力";
                 return;
             }
-            ShowRecord(entry);
             for (int i = 0; i < view.songs.Length; i++)
             {
                 var row = view.songs[i];
@@ -556,18 +570,7 @@ namespace OurTaiko
             view.error.gameObject.SetActive(!entry.IsPlayable);
             view.error.text = entry.Error ?? "";
             view.exams.gameObject.SetActive(entry.IsPlayable);
-            if (entry.IsPlayable) ShowExams(course);
-        }
-
-        // The best of the attempts played for real: verdict, score and how far the course went.
-        void ShowRecord(DanCourseEntry entry)
-        {
-            if (view.record == null) return;
-            var best = entry.IsPlayable ? DanRecordStore.Shared.Get(DanRecordStore.Key(entry)) : null;
-            view.record.gameObject.SetActive(best.HasValue);
-            if (!best.HasValue) return;
-            var b = best.Value;
-            view.record.text = $"最高記録\n{DanResultFlow.VerdictName(b.Verdict)}\n{b.Score:N0}点　{b.Arrival}曲";
+            if (entry.IsPlayable) ShowExams(course, DanRecordStore.Shared != null ? DanRecordStore.Shared.ExamBests(DanRecordStore.Key(entry), course) : null);
         }
 
         void ShowSong(DanSelectView.SongRowView row, int index, DanSongRef reference, DanResolvedSong resolved)
@@ -601,14 +604,17 @@ namespace OurTaiko
 
         // PyTaikoGreen draw_exam_grid (Nijiiro sets dan_exam_grid): the first gauge exam on the left,
         // up to three more on the right, each with one segment for the course or one per song.
-        void ShowExams(DanCourse course)
+        // bests: DanRecordStore.ExamBests, or null when nothing is recorded.
+        void ShowExams(DanCourse course, int?[][] bests)
         {
             var gauge = course.Exams.FirstOrDefault(e => e.Type == DanExamType.Gauge);
+            int gaugeIndex = course.Exams.IndexOf(gauge);
             view.gauge.gameObject.SetActive(gauge != null);
             if (gauge != null)
             {
                 view.gaugeIcon.sprite = view.examIcons[(int)DanExamType.Gauge];
                 view.gaugeCaption.text = Caption(gauge, gauge.Course.Red);
+                bestLines.ShowGauge(BestText(gauge, bests, gaugeIndex, 0));
             }
             var rest = course.Exams.Where(e => e != gauge).Take(view.examRows.Length).ToList();
             for (int i = 0; i < view.examRows.Length; i++)
@@ -618,6 +624,7 @@ namespace OurTaiko
                 row.root.gameObject.SetActive(shown);
                 if (!shown) continue;
                 var exam = rest[i];
+                int examIndex = course.Exams.IndexOf(exam);
                 row.icon.sprite = view.examIcons[(int)exam.Type];
                 int segments = exam.PerSong ? Math.Min(course.Songs.Count, row.segments.Length) : 1;
                 for (int k = 0; k < row.segments.Length; k++)
@@ -625,12 +632,21 @@ namespace OurTaiko
                     bool on = k < segments;
                     row.segments[k].gameObject.SetActive(on);
                     row.captions[k].gameObject.SetActive(on);
+                    bestLines.ShowRow(i, k, on ? BestText(exam, bests, examIndex, k) : null);
                     if (!on) continue;
                     row.segments[k].sprite = view.segmentLabels[exam.PerSong ? Math.Min(k + 1, view.segmentLabels.Length - 1) : 0];
                     var border = exam.BorderFor(exam.PerSong ? k : -1);
                     row.captions[k].text = border is DanBorder b ? Caption(exam, b.Red) : "―";
                 }
             }
+        }
+
+        // The 自己ベスト under an exam's segment: the recorded best, "0" where no attempt counted it
+        // (as the arcade shows), the gauge with its ％.
+        static string BestText(DanExam exam, int?[][] bests, int exam_index, int segment)
+        {
+            int value = bests != null && exam_index >= 0 && exam_index < bests.Length && segment < bests[exam_index].Length ? bests[exam_index][segment] ?? 0 : 0;
+            return exam.Type == DanExamType.Gauge ? value + " %" : value.ToString();
         }
 
         // skin_config dan_exam_text_* (ja), as the rest of the Nijiiro screens are: "100 ％以上", "5 未満".

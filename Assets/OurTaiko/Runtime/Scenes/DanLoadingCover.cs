@@ -36,6 +36,7 @@ namespace OurTaiko
 
         public void SetCourse(string title, int color)
         {
+            if (rank is TMPro.TextMeshProUGUI plate) DanPlateText.StylePlate(plate, DanPlateText.LoadingPlateCenter);
             rank.text = string.Join("\n", (title ?? "").Where(c => !char.IsWhiteSpace(c)).Select(c => c.ToString()));
             if (plaques != null && plaques.Length > 0) plaque.sprite = plaques[Mathf.Clamp(color, 0, plaques.Length - 1)];
             SetStatus("");
