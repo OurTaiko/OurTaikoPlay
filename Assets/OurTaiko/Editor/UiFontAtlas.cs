@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEditor.Build;
@@ -13,11 +14,14 @@ namespace OurTaiko.Editor
     // none are kept and the result is identical on every run. This happens on its own whenever
     // Play mode exits and before every build, which replaces TMP's Clear Dynamic Data On Build
     // (that one shrinks the atlas to 1x1 and keeps the ligature table, so the asset never
-    // matched what is committed).
+    // matched what is committed). TMP text in an open scene adds glyphs in Edit mode too, right
+    // after that cleanup, so any other save of the asset (Ctrl+S, quitting the Editor) is
+    // dropped; only Regenerate writes it.
     [InitializeOnLoad]
     public static class UiFontAtlas
     {
         const string UiFontPath = "Assets/OurTaiko/Resources/Nijiiro UI SDF.asset";
+        static bool regenerating;
 
         static UiFontAtlas()
         {
@@ -37,8 +41,22 @@ namespace OurTaiko.Editor
                 ?? throw new InvalidOperationException("The UI font " + UiFontPath + " is missing.");
             uiFont.ClearFontAssetData();
             EditorUtility.SetDirty(uiFont);
-            AssetDatabase.SaveAssetIfDirty(uiFont);
+            regenerating = true;
+            try
+            {
+                AssetDatabase.SaveAssetIfDirty(uiFont);
+            }
+            finally
+            {
+                regenerating = false;
+            }
             Debug.Log("OurTaiko: regenerated the UI font atlas with " + uiFont.characterTable.Count + " characters.");
+        }
+
+        sealed class SaveFilter : AssetModificationProcessor
+        {
+            static string[] OnWillSaveAssets(string[] paths) =>
+                regenerating ? paths : paths.Where(path => path != UiFontPath).ToArray();
         }
 
         sealed class BeforeBuild : IPreprocessBuildWithReport
