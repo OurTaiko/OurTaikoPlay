@@ -345,18 +345,23 @@ namespace OurTaiko.Tests
         {
             var song = Song("Online", "");
             song.chart = null;
-            song.onlineChart = new Online.FanmadeChart { Server = "endpoint", Id = "42", TjaHash = Hash1 };
-            song.onlineChart.Difficulties[(int)Difficulty.Oni] = new Online.FanmadeDifficulty { Course = "Oni", Level = 9, Id = 7 };
+            song.onlineChart = new Online.FanmadeChart { Server = "endpoint", Id = "42" };
+            var oni = new Online.FanmadeDifficulty { Course = "Oni", Level = 9, Id = 7, ChartHash = "v1:" + Hash1 };
+            song.onlineChart.Difficulties[(int)Difficulty.Oni] = oni;
+            song.onlineChart.Blocks.Add(oni);
             var asked = new List<(string, string)>();
             var resolver = new DanCourseResolver(Array.Empty<SongDefinition>(), (server, id) => { asked.Add((server, id)); return id == "42" ? song : null; });
             DanCourseEntry Resolve(string chart) => resolver.Resolve(DanCourse.Parse(Course("[{\"chart\":" + chart + "}]"), "https://example.test"));
 
-            var found = Resolve("{\"id\":\"42\",\"tjaHash\":\"" + Hash1 + "\"}");
+            var found = Resolve("{\"id\":\"42\",\"side\":\"single\"}");
             Assert.That(found.IsPlayable, Is.True, found.Error);
             Assert.That(found.Songs[0].Level, Is.EqualTo(9));
+            Assert.That(found.Songs[0].ChartHash, Is.EqualTo("v1:" + Hash1), "the played block's content hash keys the record");
             Assert.That(asked[0], Is.EqualTo(("https://example.test", "42")));
             Assert.That(Resolve("{\"id\":\"43\"}").Error, Does.StartWith("Song not found"));
-            Assert.That(Resolve("{\"id\":\"42\",\"tjaHash\":\"" + Hash2 + "\"}").Error, Does.StartWith("Song has changed"));
+            // The server says when the block is no longer the one the course was set up on.
+            Assert.That(resolver.Resolve(DanCourse.Parse(Course("[{\"chart\":{\"id\":\"42\",\"side\":\"single\"},\"available\":false}]"), "https://example.test")).Error, Does.StartWith("Song has changed"));
+            Assert.That(Resolve("{\"id\":\"42\",\"side\":\"p2\"}").Error, Does.StartWith("No Oni chart"));
             Assert.That(Resolve("{\"id\":\"42\",\"course\":\"Hard\"}").Error, Does.StartWith("No Hard chart"));
             var offline = new DanCourseResolver(Array.Empty<SongDefinition>(), null);
             Assert.That(offline.Resolve(DanCourse.Parse(Course("[{\"chart\":{\"id\":\"42\"}}]"), "https://example.test")).Error,

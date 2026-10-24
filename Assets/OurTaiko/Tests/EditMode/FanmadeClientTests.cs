@@ -395,9 +395,9 @@ namespace OurTaiko.Tests
             DownloadProgress last = null;
             int updates = 0;
             var (play, _, prepared) = Run(() => client.PrepareAsync(listed, progress: p => { last = p; updates++; }));
-            Assert.That(prepared.TjaHash, Is.EqualTo(FanmadeFixture.Sha(first.Tja)));
+            Assert.That(prepared.BlocksKey, Is.Not.EqualTo(listed.BlocksKey), "the replaced TJA's blocks have new content hashes");
             Assert.That(prepared.Title, Is.EqualTo("First v2"));
-            Assert.That(client.Charts[0].TjaHash, Is.EqualTo(prepared.TjaHash), "The catalog entry follows the replaced files.");
+            Assert.That(client.Charts[0].BlocksKey, Is.EqualTo(prepared.BlocksKey), "The catalog entry follows the replaced files.");
             Assert.That(TjaParser.Parse(play, "Oni").Notes.Count, Is.EqualTo(8));
             Assert.That(last.Step, Is.EqualTo(DownloadProgress.Stage.Ready));
             Assert.That(last.Audio.Status, Is.EqualTo(FileProgress.State.Complete));

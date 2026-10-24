@@ -11,6 +11,8 @@ namespace OurTaiko
         // The TJA COURSE value as written, for TjaParser.Parse, and the block's level.
         public string Course;
         public int Level;
+        // The played block's content hash on a server's song (its identity for records); empty locally.
+        public string ChartHash = "";
         // The course by its canonical name (Easy..Edit), which the soul gauge tables know.
         public string GaugeCourse => SongInfo.CourseName(Ref.Difficulty);
     }
@@ -51,26 +53,28 @@ namespace OurTaiko
             {
                 string label = reference.Title.Length > 0 ? reference.Title : reference.Sha256.Length > 0 ? reference.Sha256 : reference.Id;
                 var song = course.IsLocal ? FindLocal(reference) : serverSong?.Invoke(course.Server, reference.Id);
-                string tjaCourse = null; int level = 0;
-                string error = song == null ? "Song not found: " + label : Block(song, reference, out tjaCourse, out level);
+                string tjaCourse = null, chartHash = ""; int level = 0;
+                string error = song == null ? "Song not found: " + label : Block(song, reference, out tjaCourse, out level, out chartHash);
                 if (error != null) { entry.Error = error.EndsWith(": ") ? error + label : error; entry.Songs.Clear(); return entry; }
-                entry.Songs.Add(new DanResolvedSong { Ref = reference, Song = song, Course = tjaCourse, Level = level });
+                entry.Songs.Add(new DanResolvedSong { Ref = reference, Song = song, Course = tjaCourse, Level = level, ChartHash = chartHash });
             }
             return entry;
         }
 
-        string Block(SongDefinition song, DanSongRef reference, out string tjaCourse, out int level)
+        string Block(SongDefinition song, DanSongRef reference, out string tjaCourse, out int level, out string chartHash)
         {
-            tjaCourse = null; level = 0;
+            tjaCourse = null; level = 0; chartHash = "";
             string missing = "No " + SongInfo.CourseName(reference.Difficulty) + " chart: ";
             var online = song.onlineChart;
             if (online != null)
             {
-                if (reference.TjaHash.Length > 0 && !string.Equals(reference.TjaHash, online.TjaHash, StringComparison.OrdinalIgnoreCase))
-                    return "Song has changed: ";
-                var block = online.Difficulties[(int)reference.Difficulty];
+                // The server says whether the block the course named is still the one it was set up on.
+                if (!reference.Available) return "Song has changed: ";
+                var block = reference.Side.Length > 0
+                    ? online.Blocks.Find(b => b.Course == SongInfo.CourseName(reference.Difficulty) && b.Side == reference.Side)
+                    : online.Difficulties[(int)reference.Difficulty];
                 if (block == null) return missing;
-                tjaCourse = block.Course; level = block.Level;
+                tjaCourse = block.Course; level = block.Level; chartHash = block.ChartHash;
                 return null;
             }
             var course = Info(song)?.Course(reference.Difficulty);

@@ -81,7 +81,8 @@ namespace OurTaiko.Tests
         [Test] public void CorruptedCachedChartIsVerifiedAndDownloadedAgain()
         {
             Load(selected);
-            string path = Path.Combine(cache, "objects", selected.TjaHash.Substring(0, 2), selected.TjaHash);
+            string tjaHash = FanmadeFixture.Sha(api.Charts[0].Tja);
+            string path = Path.Combine(cache, "objects", tjaHash.Substring(0, 2), tjaHash);
             var bytes = File.ReadAllBytes(path); bytes[0] ^= 1; File.WriteAllBytes(path, bytes);
             Assert.That(Load(selected)[3], Is.EqualTo(1000020));
             Assert.That(api.Downloads, Is.EqualTo(2));

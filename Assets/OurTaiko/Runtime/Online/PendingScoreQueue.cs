@@ -15,7 +15,9 @@ namespace OurTaiko.Online
             [Indexed] public string Endpoint { get; set; }
             [Column("Body")] public string Body { get; set; }
             [Column("Rejected")] public bool Rejected { get; set; }
-            public string TjaHash { get; set; }
+            // The played block's content hash (rows queued before 2026-10-23 have the TJA file hash
+            // in the old TjaHash column instead and are rejected).
+            public string ChartHash { get; set; }
             public string AudioHash { get; set; }
             // The played song; null in rows queued before bodies named only the block.
             public string Song { get; set; }
@@ -31,9 +33,9 @@ namespace OurTaiko.Online
             db.CreateTable<Entry>();
         }
         SQLiteConnection Open() => new SQLiteConnection(path) { BusyTimeout = TimeSpan.FromSeconds(5) };
-        public void Enqueue(string endpoint, string key, string body, string tjaHash = null, string audioHash = null, string song = null)
+        public void Enqueue(string endpoint, string key, string body, string chartHash = null, string audioHash = null, string song = null)
         {
-            lock (sync) { using var db = Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, TjaHash = tjaHash, AudioHash = audioHash, Song = song, Created = DateTime.UtcNow.Ticks }); }
+            lock (sync) { using var db = Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, ChartHash = chartHash, AudioHash = audioHash, Song = song, Created = DateTime.UtcNow.Ticks }); }
         }
         public Entry[] Pending(string endpoint)
         {

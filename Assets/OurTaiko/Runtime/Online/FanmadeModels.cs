@@ -29,6 +29,9 @@ namespace OurTaiko.Online
         public int Level;
         // The block has #BRANCHSTART (Fanmade migration 031).
         public bool Branching;
+        // The server's content hash of the block as played ("v1:" + 64 hex, TJAParser): the block's
+        // identity for local records and queued scores. Empty while the server has not computed it.
+        public string ChartHash = "";
         // The key of the block's scores: Oni, Oni_1p, Oni_2p.
         public string Name => Course + (Side == "p1" ? "_1p" : Side == "p2" ? "_2p" : "");
     }
@@ -37,7 +40,8 @@ namespace OurTaiko.Online
     public sealed class FanmadeChart
     {
         public string Server = "", Id = "", Title = "", Subtitle = "", Maker = "";
-        public string TjaHash = "", AudioHash = "", AudioName = "";
+        // The audio file's hash (the download check); the chart itself is identified by its blocks.
+        public string AudioHash = "", AudioName = "";
         public string Category = "", Genre = "";
         public readonly Dictionary<string, string> Titles = new Dictionary<string, string>(), Subtitles = new Dictionary<string, string>();
         public double Bpm = 120, DemoStart, Offset;
@@ -46,6 +50,9 @@ namespace OurTaiko.Online
         public readonly List<FanmadeDifficulty> Blocks = new List<FanmadeDifficulty>();
 
         public bool IsPlayable => Difficulties.Any(d => d != null);
+        // Every block with its content hash: the same text for the same playable chart, whatever
+        // the file or its headers (replaces the TJA file hash as the cache identity).
+        public string BlocksKey => string.Join(",", Blocks.Select(b => b.Course + "/" + b.Side + "=" + b.ChartHash));
 
         public static FanmadeChart From(JToken v, string server)
         {
@@ -53,10 +60,10 @@ namespace OurTaiko.Online
             {
                 Server = server,
                 Id = Json.Id(v, "id"), Title = Json.Str(v, "title"),
-                Subtitle = Json.Str(v, "subtitle"), Maker = Json.Str(v, "maker"), TjaHash = Json.Str(v, "tjaHash"),
+                Subtitle = Json.Str(v, "subtitle"), Maker = Json.Str(v, "maker"),
                 AudioHash = Json.Str(v, "audioHash"), AudioName = Json.Str(v, "audioName"),
             };
-            if (!Json.ChartId(c.Id) || !Json.HexId(c.TjaHash, 64) || !Json.HexId(c.AudioHash, 64))
+            if (!Json.ChartId(c.Id) || !Json.HexId(c.AudioHash, 64))
                 throw new FanmadeException("API_ID_INVALID");
             foreach (var (key, target) in new[] { ("titleTranslations", c.Titles), ("subtitleTranslations", c.Subtitles) })
             {
@@ -78,10 +85,12 @@ namespace OurTaiko.Online
                 if (slot < 0) continue;  // Tower/Dan are not playable here.
                 long level = Json.Number(d, "level");
                 if (level > 100 || d["branching"]?.Type != JTokenType.Boolean) throw new FanmadeException("API_DIFFICULTY_INVALID");
+                string chartHash = Json.Str(d, "chartHash");
+                if (chartHash.Length > 0 && !ChartHashPattern.IsMatch(chartHash)) throw new FanmadeException("API_DIFFICULTY_INVALID");
                 var difficulty = new FanmadeDifficulty
                 {
                     Id = id, Course = name, Side = side, Level = (int)level,
-                    Maker = Json.Str(d, "maker"), Branching = (bool)d["branching"],
+                    Maker = Json.Str(d, "maker"), Branching = (bool)d["branching"], ChartHash = chartHash,
                 };
                 if (c.Blocks.Any(x => x.Course == name && x.Side == side)) throw new FanmadeException("API_DIFFICULTY_INVALID");
                 c.Blocks.Add(difficulty);
@@ -92,6 +101,7 @@ namespace OurTaiko.Online
 
         // 32 hex digits on Fanmade, a positive whole number on OurTaiko Database.
         public static bool ValidId(string id) => Json.ChartId(id);
+        static readonly System.Text.RegularExpressions.Regex ChartHashPattern = new System.Text.RegularExpressions.Regex("^v[0-9]+:[0-9a-f]{64}$");
 
         // The block a seat ("p1" or "p2") plays on a course (0..4 for Easy..Edit); null when it has none.
         public FanmadeDifficulty Block(int course, string seat = "p1")

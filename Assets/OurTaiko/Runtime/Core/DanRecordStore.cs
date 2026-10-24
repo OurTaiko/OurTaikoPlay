@@ -62,9 +62,10 @@ namespace OurTaiko
         {
             var text = new StringBuilder();
             text.Append(entry.Course.Id).Append('\n').Append(entry.Course.Server ?? "").Append('\n');
-            // A server's song keeps its id as it is replaced; its TJA hash tells the versions apart.
+            // A server's song keeps its id as it is replaced; the played block's content hash tells
+            // the versions apart.
             foreach (var song in entry.Songs)
-                text.Append(song.Song.ScoreKey).Append('/').Append(SongInfo.CourseName(song.Ref.Difficulty)).Append('/').Append(song.Song.onlineChart?.TjaHash ?? "").Append('\n');
+                text.Append(song.Song.ScoreKey).Append('/').Append(SongInfo.CourseName(song.Ref.Difficulty)).Append('/').Append(song.ChartHash ?? "").Append('\n');
             foreach (var exam in entry.Course.Exams)
             {
                 text.Append(exam.Type).Append(',').Append(exam.Range).Append(',').Append(exam.Course.Red).Append(',').Append(exam.Course.Gold);

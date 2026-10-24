@@ -38,19 +38,25 @@ namespace OurTaiko.Tests
             // Blocks (Oni, or Oni_1p / Oni_2p for a side) reported with "branching": true; the rest are false.
             public readonly HashSet<string> Branching = new HashSet<string>();
 
+            // A block's content hash as a server would report it: "v1:" + 64 hex, changing with the TJA.
+            public string ChartHash(string course, string player)
+                => "v1:" + Sha(System.Text.Encoding.UTF8.GetBytes(System.Text.Encoding.UTF8.GetString(Tja) + "\n" + course + "/" + player));
+
             public JObject ToJson()
             {
                 var value = new JObject
                 {
                     ["id"] = IdToken(Id), ["title"] = Title, ["subtitle"] = Subtitle, ["maker"] = Maker,
                     ["categoryIds"] = new JArray(Categories),
-                    ["tjaHash"] = Sha(Tja), ["audioHash"] = Sha(Audio), ["audioName"] = AudioName,
+                    ["audioHash"] = Sha(Audio), ["audioName"] = AudioName,
                     ["titleTranslations"] = new JObject { ["ja"] = Title + " JA" }, ["subtitleTranslations"] = new JObject(),
                     ["bpm"] = Bpm, ["demoStart"] = DemoStart, ["offset"] = Offset,
                     ["difficulties"] = new JArray(Difficulties.Select(d => new JObject
                     {
                         ["id"] = BlockId(d.Course, d.Player), ["course"] = d.Course, ["side"] = Side(d.Player), ["level"] = d.Level, ["maker"] = Maker,
                         ["branching"] = Branching.Contains(d.Course + (d.Player == "P1" ? "_1p" : d.Player == "P2" ? "_2p" : "")),
+                        // The server's content hash of the block: here one that follows the TJA bytes.
+                        ["chartHash"] = ChartHash(d.Course, d.Player),
                     })),
                 };
                 if (Encoding != null) value["encoding"] = Encoding;
@@ -429,6 +435,10 @@ namespace OurTaiko.Tests
             }
             catch (Exception) { }
         }
+
+        // A block's content hash as a server would report it: "v1:" + 64 hex, changing with the TJA.
+
+
 
         public static string Sha(byte[] bytes)
         {

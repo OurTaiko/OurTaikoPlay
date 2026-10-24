@@ -7,10 +7,13 @@ using Newtonsoft.Json.Linq;
 namespace OurTaiko
 {
     // A song of a course. Local courses name the chart by its file's SHA-256 (title and subtitle as a
-    // fallback); a server's courses by the song's id on that server. Either is played as 1P reads it.
+    // fallback) and are played as 1P reads them; a server's courses name the song's id on that
+    // server and the block's side, and tell whether the block is still the one the course was set
+    // up on (Available: valid and published).
     public sealed class DanSongRef
     {
-        public string Sha256 = "", Id = "", TjaHash = "", Title = "", Subtitle = "";
+        public string Sha256 = "", Id = "", Side = "", Title = "", Subtitle = "";
+        public bool Available = true;
         public Difficulty Difficulty = Difficulty.Oni;
         // The arcade's ？？？: the title stays hidden on the select screen and the curtain.
         public bool Hidden;
@@ -100,8 +103,9 @@ namespace OurTaiko
                 if (!(entry is JObject song) || !(song["chart"] is JObject chart)) throw new FormatException("A song needs a chart.");
                 var reference = new DanSongRef
                 {
-                    Sha256 = Text(chart, "sha256").ToLowerInvariant(), Id = Text(chart, "id", numbers: true), TjaHash = Text(chart, "tjaHash").ToLowerInvariant(),
+                    Sha256 = Text(chart, "sha256").ToLowerInvariant(), Id = Text(chart, "id", numbers: true), Side = Text(chart, "side").ToLowerInvariant(),
                     Title = Text(song, "title"), Subtitle = Text(song, "subtitle"), Hidden = song.Value<bool?>("hidden") ?? false,
+                    Available = song.Value<bool?>("available") ?? true,
                 };
                 string name = Text(chart, "course", numbers: true);
                 var difficulty = name.Length == 0 ? Difficulty.Oni : SongInfo.DifficultyOf(name);

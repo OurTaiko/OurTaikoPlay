@@ -528,7 +528,7 @@ namespace OurTaiko.Online
             body["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull();
             try
             {
-                UploadQueue.Enqueue(e.AccountIdOf(seat), RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), chart.TjaHash, chart.AudioHash, chart.Id);
+                UploadQueue.Enqueue(e.AccountIdOf(seat), RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), block.ChartHash, chart.AudioHash, chart.Id);
                 RetryNow();
                 return true;
             }
@@ -585,14 +585,15 @@ namespace OurTaiko.Online
                         await e.Transport.WaitAsync();
                         try
                         {
-                            // A score belongs to the files it was played on; if they changed since, keep it aside.
-                            if (!Json.HexId(queued.TjaHash ?? "", 64) || !Json.HexId(queued.AudioHash ?? "", 64))
+                            // A score belongs to the block it was played on and to the audio; if either
+                            // changed since, keep it aside.
+                            if (string.IsNullOrEmpty(queued.ChartHash) || !Json.HexId(queued.AudioHash ?? "", 64))
                             { UploadQueue.Reject(queued.Key); continue; }
                             var current = FanmadeChart.From(Json.Parse(await e.AuthorizedAsync("/api/v1/charts/" + (queued.Song ?? Json.Str(Json.Parse(queued.Body), "songId")))), e.Id);
                             var manifest = await e.ResourcesAsync(current.Id);
-                            if (manifest.Tja.Hash != current.TjaHash || manifest.Audio.Hash != current.AudioHash)
+                            if (manifest.Audio.Hash != current.AudioHash)
                                 throw new FanmadeException("CHART_UPDATING");
-                            if (current.TjaHash != queued.TjaHash || current.AudioHash != queued.AudioHash)
+                            if (!current.Blocks.Any(b => b.ChartHash == queued.ChartHash) || current.AudioHash != queued.AudioHash)
                             { UploadQueue.Reject(queued.Key); continue; }
                             score = FanmadeScore.From(Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", queued.Body, queued.Key, seat: seat)));
                         }

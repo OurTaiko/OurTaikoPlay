@@ -240,7 +240,7 @@ namespace OurTaiko.Tests
             client.Submit(c, 3, new FanmadeScore { Score = 99, ClearStatus = 1 }); Run(() => client.WaitForUploadsAsync());
             var queued = client.UploadQueue.Pending(endpoint.Id).Single();
             Assert.That(JObject.Parse(queued.Body).ContainsKey("versionId"), Is.False);
-            Assert.That(queued.TjaHash, Is.EqualTo(c.TjaHash));
+            Assert.That(queued.ChartHash, Is.EqualTo(c.Difficulties[3].ChartHash));
             chart.Audio = new byte[] { 10 }; client.RetryNow(); Run(() => client.WaitForUploadsAsync());
             Assert.That(client.PendingCount(endpoint), Is.Zero); Assert.That(client.UploadQueue.RejectedCount(endpoint.Id), Is.EqualTo(1));
             Assert.That(api.AcceptedScores, Is.Empty);

@@ -13,12 +13,12 @@ namespace OurTaiko.Online
             new Dictionary<string, (Task<int[]>, DateTime)>();
         CancellationTokenSource rankCancellation = new CancellationTokenSource();
 
-        // Polling from song select never blocks on disk, parsing, or the network. Both
-        // the played blocks and the content hash belong to the cache identity.
+        // Polling from song select never blocks on disk, parsing, or the network. The blocks
+        // and their content hashes are the cache identity.
         public int? RankThreshold(FanmadeChart chart, int difficulty)
         {
             if (chart == null || difficulty < 0 || difficulty >= chart.Difficulties.Length || chart.Difficulties[difficulty] == null) return null;
-            string key = chart.Server + "/" + chart.Id + "/" + chart.TjaHash + "/"
+            string key = chart.Server + "/" + chart.Id + "/" + chart.BlocksKey + "/"
                 + string.Join(",", chart.Difficulties.Select(d => d?.Name ?? ""));
             lock (sync)
             {
@@ -52,9 +52,12 @@ namespace OurTaiko.Online
             {
                 for (int attempt = 0; attempt < 2; attempt++)
                 {
+                    // The chart must still be the one the catalog showed (same blocks, same content)
+                    // before anything is downloaded.
+                    var current = FanmadeChart.From(Json.Parse(await endpoint.AuthorizedAsync("/api/v1/charts/" + selected.Id, cancel: cancel)), endpoint.Id);
+                    if (current.Id != selected.Id || current.BlocksKey != selected.BlocksKey) throw new FanmadeException("CHART_UPDATING");
                     var manifest = await endpoint.ResourcesAsync(selected.Id, cancel);
                     var resource = manifest.Tja;
-                    if (resource.Hash != selected.TjaHash) throw new FanmadeException("CHART_UPDATING");
                     try
                     {
                         string path = await EnsureObjectAsync(endpoint, resource, cancel);
