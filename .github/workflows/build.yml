@@ -83,6 +83,7 @@ jobs:
         with:
           submodules: recursive
           lfs: false
+          fetch-depth: 0
       - uses: ./.github/actions/lfs-pull
 
       - uses: actions/cache@v4
@@ -131,6 +132,170 @@ jobs:
         with:
           name: out-${{ matrix.platform }}
           path: out/*
+          if-no-files-found: error
+          retention-days: 7
+
+  # iOS: Unity exports the Xcode project on a macOS runner; with the Apple secrets set, fastlane
+  # signs it manually (Apple Distribution + an App Store profile), builds the IPA and uploads it to
+  # TestFlight. Without them the job only proves the export builds. The nightly release does not
+  # wait for it and never carries the IPA: TestFlight is its distribution.
+  ios:
+    name: Build (iOS) and TestFlight
+    runs-on: macos-26
+    needs: [version]
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPSTORE_PROFILE_NAME: ${{ secrets.APPSTORE_PROFILE_NAME }}
+      APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+      APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+      # A TestFlight external group to distribute each build to; empty = internal testers only.
+      TESTFLIGHT_GROUP: ${{ vars.TESTFLIGHT_GROUP }}
+      BUNDLE_ID: org.ourtaiko.play
+      EXPORT_DIR: ${{ github.workspace }}/build/iOS/OurTaikoPlay
+      IPA_DIR: ${{ github.workspace }}/build/ipa
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          lfs: false
+          fetch-depth: 0
+      - uses: ./.github/actions/lfs-pull
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-iOS-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'ProjectSettings/**', 'Packages/manifest.json', 'Packages/packages-lock.json') }}
+          restore-keys: |
+            Library-iOS-
+
+      # CFBundleShortVersionString must be plain dotted numbers, so iOS takes the bare version;
+      # the build number (CFBundleVersion) is the commit count, set by PlayerBuilds.
+      - uses: game-ci/unity-builder@v4
+        with:
+          targetPlatform: iOS
+          buildMethod: OurTaiko.Editor.PlayerBuilds.BuildIOS
+          buildName: ${{ env.BUILD_NAME }}
+          buildsPath: ${{ env.BUILDS_PATH }}
+          versioning: Custom
+          version: ${{ needs.version.outputs.version }}
+
+      # IosProjectBranding names the project, app target and scheme OurTaikoPlay; UnityFramework keeps its name.
+      - name: Locate the Xcode project
+        id: xcode
+        run: |
+          set -euo pipefail
+          PROJECT=$(ls -d "$EXPORT_DIR"/*.xcodeproj | head -n 1)
+          SCHEME=$(basename "$PROJECT" .xcodeproj)
+          echo "project=$PROJECT" >> "$GITHUB_OUTPUT"
+          echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
+          echo "Project $PROJECT, scheme $SCHEME"
+
+      - name: Import the Apple Distribution certificate
+        if: env.APPSTORE_PROFILE_NAME != ''
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
+          p12-password: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
+
+      - name: Install the App Store provisioning profile
+        if: env.APPSTORE_PROFILE_NAME != ''
+        env:
+          PROFILE_BASE64: ${{ secrets.APPSTORE_PROFILE_BASE64 }}
+        run: |
+          set -euo pipefail
+          DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$DIR"
+          printf '%s' "$PROFILE_BASE64" | base64 --decode > "$DIR/appstore.mobileprovision"
+          security cms -D -i "$DIR/appstore.mobileprovision" | plutil -extract Name raw -
+
+      - name: Sign and build the IPA
+        if: env.APPSTORE_PROFILE_NAME != ''
+        env:
+          IOS_PROJECT_PATH: ${{ steps.xcode.outputs.project }}
+          IOS_SCHEME: ${{ steps.xcode.outputs.scheme }}
+        run: |
+          set -euo pipefail
+          mkdir -p fastlane "$IPA_DIR"
+          cat > fastlane/Fastfile <<'EOF'
+          default_platform(:ios)
+
+          platform :ios do
+            lane :build do
+              update_code_signing_settings(
+                use_automatic_signing: false,
+                path: ENV["IOS_PROJECT_PATH"],
+                team_id: ENV["APPLE_TEAM_ID"],
+                targets: [ENV["IOS_SCHEME"]],
+                profile_name: ENV["APPSTORE_PROFILE_NAME"],
+                code_sign_identity: "Apple Distribution"
+              )
+              update_code_signing_settings(
+                use_automatic_signing: false,
+                path: ENV["IOS_PROJECT_PATH"],
+                team_id: ENV["APPLE_TEAM_ID"],
+                targets: ["UnityFramework"],
+                code_sign_identity: "Apple Distribution"
+              )
+              gym(
+                project: ENV["IOS_PROJECT_PATH"],
+                scheme: ENV["IOS_SCHEME"],
+                configuration: "Release",
+                export_method: "app-store",
+                output_directory: ENV["IPA_DIR"],
+                output_name: "OurTaikoPlay.ipa",
+                clean: true,
+                export_options: {
+                  method: "app-store",
+                  signingStyle: "manual",
+                  provisioningProfiles: { ENV["BUNDLE_ID"] => ENV["APPSTORE_PROFILE_NAME"] }
+                }
+              )
+            end
+
+            lane :testflight do
+              api_key = app_store_connect_api_key(
+                key_id: ENV["APPSTORE_KEY_ID"],
+                issuer_id: ENV["APPSTORE_ISSUER_ID"],
+                key_content: ENV["APPSTORE_PRIVATE_KEY"]
+              )
+              group = ENV["TESTFLIGHT_GROUP"].to_s
+              upload_to_testflight(
+                api_key: api_key,
+                ipa: File.join(ENV["IPA_DIR"], "OurTaikoPlay.ipa"),
+                changelog: "#{ENV["GITHUB_REF_NAME"]} #{ENV["DISPLAY_VERSION"]}\nCommit: #{ENV["GITHUB_SHA"]}",
+                distribute_external: !group.empty?,
+                groups: group.empty? ? nil : [group],
+                submit_beta_review: !group.empty?,
+                skip_waiting_for_build_processing: false
+              )
+            end
+          end
+          EOF
+          fastlane ios build
+
+      - name: Show the IPA's identity and version
+        if: env.APPSTORE_PROFILE_NAME != ''
+        run: |
+          set -euo pipefail
+          TMP=$(mktemp -d)
+          unzip -q "$IPA_DIR/OurTaikoPlay.ipa" -d "$TMP"
+          PLIST=$(ls -d "$TMP"/Payload/*.app | head -n 1)/Info.plist
+          for key in CFBundleIdentifier CFBundleShortVersionString CFBundleVersion; do
+            printf '%s: ' "$key"; /usr/libexec/PlistBuddy -c "Print :$key" "$PLIST"
+          done
+
+      - name: Upload to TestFlight
+        if: env.APPSTORE_PROFILE_NAME != '' && env.APPSTORE_KEY_ID != ''
+        env:
+          DISPLAY_VERSION: ${{ needs.version.outputs.display }}
+        run: fastlane ios testflight
+
+      - uses: actions/upload-artifact@v4
+        if: env.APPSTORE_PROFILE_NAME != ''
+        with:
+          name: ipa-iOS
+          path: ${{ env.IPA_DIR }}/OurTaikoPlay.ipa
           if-no-files-found: error
           retention-days: 7
 

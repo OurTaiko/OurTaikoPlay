@@ -4,12 +4,12 @@
 # and piped straight to `gh secret set`; nothing is printed or written to disk.
 #
 #   .github/scripts/set-ci-secrets.sh            # all sections
-#   .github/scripts/set-ci-secrets.sh android    # only some: unity android
+#   .github/scripts/set-ci-secrets.sh android    # only some: unity android apple
 set -euo pipefail
 
 REPO="${REPO:-OurTaiko/OurTaikoPlay}"
 sections=("$@")
-[ ${#sections[@]} -gt 0 ] || sections=(unity android)
+[ ${#sections[@]} -gt 0 ] || sections=(unity android apple)
 
 put() { gh secret set "$1" -R "$REPO" >/dev/null && echo "  ✓ $1"; }
 put_value() { printf '%s' "$2" | put "$1"; }
@@ -51,6 +51,30 @@ android() {
     put_hidden ANDROID_KEYSTORE_PASS "Keystore password"
     put_hidden ANDROID_KEYALIAS_PASS "Key password"
   fi
+}
+
+# iOS signing and TestFlight upload (build.yml's ios job). See Building.md "iOS TestFlight" for
+# where each file comes from. The .p12 must hold the Apple Distribution certificate with its key.
+apple() {
+  echo "Apple signing and App Store Connect"
+  local dir="$HOME/Documents/OurTaiko/apple-signing" p12 profile p8
+  p12=$(ask "Apple Distribution .p12" "$dir/distribution.p12")
+  need_file "$p12"
+  put_base64 APPSTORE_CERTIFICATES_FILE_BASE64 "$p12"
+  put_hidden APPSTORE_CERTIFICATES_PASSWORD ".p12 export password"
+  profile=$(ask "App Store provisioning profile (.mobileprovision)" "$dir/appstore.mobileprovision")
+  need_file "$profile"
+  put_base64 APPSTORE_PROFILE_BASE64 "$profile"
+  local name
+  name=$(security cms -D -i "$profile" | plutil -extract Name raw - 2>/dev/null || true)
+  put_value APPSTORE_PROFILE_NAME "$(ask "Profile name" "$name")"
+  put_value APPLE_TEAM_ID "$(ask "Apple Team ID" "$(security cms -D -i "$profile" | plutil -extract TeamIdentifier.0 raw - 2>/dev/null || true)")"
+  p8=$(ask "App Store Connect API key (.p8)" "$(ls "$dir"/AuthKey_*.p8 2>/dev/null | head -n 1)")
+  need_file "$p8"
+  put_file APPSTORE_PRIVATE_KEY "$p8"
+  local key_id; key_id=$(basename "$p8" .p8); key_id=${key_id#AuthKey_}
+  put_value APPSTORE_KEY_ID "$(ask "Key ID" "$key_id")"
+  put_value APPSTORE_ISSUER_ID "$(ask "Issuer ID" "")"
 }
 
 for section in "${sections[@]}"; do "$section"; echo; done
