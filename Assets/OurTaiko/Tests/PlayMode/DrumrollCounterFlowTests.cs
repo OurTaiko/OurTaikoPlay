@@ -145,7 +145,9 @@ namespace OurTaiko.Tests
             float deadline = Time.realtimeSinceStartup + 20;
             while (!small || !big)
             {
-                yield return new WaitForEndOfFrame();
+                // Every play view updates in Update, so the frame's state is complete once the coroutines run;
+                // WaitForEndOfFrame never resumes in batchmode, where no frame is presented.
+                yield return null;
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                 if (!view.IsVisible) continue;
                 Assert.That(view.Count, Is.EqualTo(play.Session.LongHits[view.NoteIndex]));

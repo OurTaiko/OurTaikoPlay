@@ -20,17 +20,19 @@ namespace OurTaiko.Tests
                 SceneSwitcher.Instance.Play(song);
                 float deadline = Time.realtimeSinceStartup + 20;
                 do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
-                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene);
+                while (SceneSwitcher.Instance.IsInputBlocked || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene);
                 yield return null;
                 var play = Object.FindFirstObjectByType<PlayScene>();
-                if (!play.IsPaused) play.TogglePause();
+                // The pause is refused until the song clock has started; the frozen clock is the session's time base.
+                while (!play.IsPaused) { play.TogglePause(); Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
                 play.pausePanel.SetActive(false);
                 var face = play.hitFace;
                 var ring = play.hitRing;
                 Assert.That(face.image.enabled || ring.image.enabled, Is.False);
 
-                // The session is driven directly; the view is timed from the frozen song clock.
-                double now = play.SongTime;
+                // The session is driven directly; the views are timed from the frozen chart clock
+                // (the song clock less the audio offset, at a whole millisecond).
+                double now = TjaTime.Truncate(play.SongTime - (song.audioOffsetMs + (double)SettingManager.EnsureInstance().Settings.play.audioOffsetMs) / 1000);
 
                 // A timed-out note is 不可 and draws no face.
                 play.Session.Advance(0.2, false);

@@ -27,6 +27,9 @@ namespace OurTaiko.Tests
                 var actual = graphics.OrderBy(g => Order(g.transform))
                     .Select(g => AnimationUtility.CalculateTransformPath(g.transform, root.transform)
                         .Replace("/LaneForeground", "").Replace("/Hud", "")).ToArray();
+                // After a deliberate scene change, copy this file over the fixture.
+                Directory.CreateDirectory("TestResults");
+                File.WriteAllLines("TestResults/" + name + "DrawOrder.actual.txt", actual);
                 Assert.That(actual, Is.EqualTo(expected), "Every graphic, including prefab children and hidden effects, must preserve its original relation.");
                 foreach (var rect in root.GetComponentsInChildren<RectTransform>(true))
                     if (rect != root.transform) Assert.That(rect.localPosition.z, Is.Zero, rect.name);
