@@ -116,7 +116,7 @@ namespace OurTaiko
                 bool repeat = System.Array.IndexOf(Songs(dan), song) < i;
                 if (online.IsOnline(song) && !repeat) yield return Download(switcher, online, song, false);
                 if (Error != null) break;
-                try { dan.Charts[i] = PlayScene.PrepareChart(song, dan.Course(i)); }
+                try { dan.Charts[i] = PlayScene.PrepareChart(dan.Resolved(i)); }
                 catch (Exception error) { Error = "CHART_LOAD_FAILED"; Debug.LogException(error, this); break; }
                 // Each entry keeps its own decoded audio, so a song played twice starts at once both times.
                 yield return DecodeAudio(song);

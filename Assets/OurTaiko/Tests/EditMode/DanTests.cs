@@ -369,6 +369,41 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void ACoursePinsAServerSongsSideAndTheRunParsesThatBlock()
+        {
+            var song = Song("Online", "");
+            song.onlineChart = new Online.FanmadeChart { Server = "endpoint", Id = "42" };
+            var p1 = new Online.FanmadeDifficulty { Course = "Oni", Side = "p1", Level = 7, Id = 7, ChartHash = "v1:" + Hash1 };
+            var p2 = new Online.FanmadeDifficulty { Course = "Oni", Side = "p2", Level = 8, Id = 8, ChartHash = "v1:" + Hash2 };
+            song.onlineChart.Blocks.Add(p1); song.onlineChart.Blocks.Add(p2);
+            song.onlineChart.Difficulties[(int)Difficulty.Oni] = song.onlineChart.Block((int)Difficulty.Oni);
+            // The downloaded file, as SongLoadingScene leaves it before the chart is parsed.
+            var chart = new TextAsset("TITLE:Online\nBPM:120\nSTYLE:Double\nCOURSE:Oni\nLEVEL:7\n#START P1\n1,\n#END\nCOURSE:Oni\nLEVEL:8\n#START P2\n11,\n#END\n");
+            created.Add(chart); song.chart = chart;
+            var resolver = new DanCourseResolver(Array.Empty<SongDefinition>(), (server, id) => id == "42" ? song : null);
+            DanResolvedSong Resolve(string chart) => resolver.Resolve(DanCourse.Parse(Course("[{\"chart\":" + chart + "}]"), "https://example.test")).Songs.Single();
+
+            var pinned = Resolve("{\"id\":\"42\",\"side\":\"p2\"}");
+            Assert.That((pinned.Course, pinned.Side, pinned.Level, pinned.ChartHash), Is.EqualTo(("Oni", "p2", 8, "v1:" + Hash2)));
+            Assert.That(pinned.Song.ParseBlock(pinned.Course, pinned.Side).Level, Is.EqualTo(8), "the run plays the pinned block, not the seat's p1");
+            Assert.That(pinned.Song.Parse(pinned.Course, "p1").Level, Is.EqualTo(7), "the seat's own choice would have been p1");
+
+            var unpinned = Resolve("{\"id\":\"42\"}");
+            Assert.That((unpinned.Side, unpinned.Level), Is.EqualTo(("p1", 7)), "without a pin, the 1P seat's block");
+        }
+
+        [Test]
+        public void ALocalCourseSongKeepsTheSideTheSeatReads()
+        {
+            var song = Song("Sides", Hash1, "STYLE:Double\nCOURSE:Oni\nLEVEL:7\n#START P1\n1,\n#END\nCOURSE:Oni\nLEVEL:8\n#START P2\n11,\n#END\nSTYLE:Single\nCOURSE:Oni\nLEVEL:9\n#START\n111,\n#END");
+            var resolved = new DanCourseResolver(new[] { song }, null).Resolve(DanCourse.Parse(Course(Songs(1)))).Songs.Single();
+            Assert.That((resolved.Course, resolved.Side, resolved.Level), Is.EqualTo(("Oni", "p1", 7)), "a local course has no pin: 1P reads p1 first");
+            Assert.That(song.ParseBlock(resolved.Course, resolved.Side).Level, Is.EqualTo(7));
+            var single = new DanCourseResolver(new[] { Song("Single", Hash2) }, null).Resolve(DanCourse.Parse(Course("[{\"chart\":{\"sha256\":\"" + Hash2 + "\",\"course\":\"Oni\"}}]"))).Songs.Single();
+            Assert.That(single.Side, Is.EqualTo("single"));
+        }
+
+        [Test]
         public void TheLoaderReadsLocalFoldersAndTheServerStandIn()
         {
             string root = Path.Combine(Path.GetTempPath(), "OurTaikoDanTests-" + Guid.NewGuid().ToString("N"));

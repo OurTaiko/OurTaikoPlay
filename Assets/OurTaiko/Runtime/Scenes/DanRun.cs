@@ -32,6 +32,7 @@ namespace OurTaiko
 
         public SongDefinition Song(int index) => Entry.Songs[index].Song;
         public string Course(int index) => Entry.Songs[index].Course;
+        public DanResolvedSong Resolved(int index) => Entry.Songs[index];
     }
 }
 

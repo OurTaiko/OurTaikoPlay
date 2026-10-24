@@ -61,6 +61,9 @@ namespace OurTaiko
             var (blockCourse, side) = ResolveBlock(string.IsNullOrEmpty(requestedCourse) ? course : requestedCourse, seat);
             return TjaParser.Parse(chart.text, blockCourse, side);
         }
+        // A block named outright (course as written and side), for a 段位 course that pins one: no
+        // seat choice is made here.
+        public TaikoChart ParseBlock(string blockCourse, string side) => TjaParser.Parse(chart.text, blockCourse, side);
         public SongInfo ReadInfo() => SongInfo.Read(chart.text);
         // Display metadata is separate from the parsed chart and score identity. Online songs take it
         // from the server's metadata: their chart is only set once SongLoadingScene downloads it.

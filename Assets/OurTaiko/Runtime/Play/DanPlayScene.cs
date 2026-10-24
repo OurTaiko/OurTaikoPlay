@@ -107,7 +107,7 @@ namespace OurTaiko
             betweenClip = betweenTimeline != null ? LumenClip.Parse(betweenTimeline.text) : LumenClip.Empty;
             try
             {
-                for (int i = 0; i < Run.Count; i++) Run.Charts[i] ??= PlayScene.PrepareChart(Run.Song(i), Run.Course(i));
+                for (int i = 0; i < Run.Count; i++) Run.Charts[i] ??= PlayScene.PrepareChart(Run.Resolved(i));
                 var notes = Run.Charts.Select(c => new ChartStatistics(c).JudgeableNotes).ToList();
                 Progress = new DanProgress(Run.Entry.Course, notes);
                 Gauge = SoulGauge.Dan(Run.Entry.Songs.Select(s => (s.GaugeCourse, s.Level)).ToList(), notes.Sum());

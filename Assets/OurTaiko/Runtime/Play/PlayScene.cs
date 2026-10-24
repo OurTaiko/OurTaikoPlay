@@ -189,6 +189,15 @@ namespace OurTaiko
             return chart;
         }
 
+        // A 段位 course's song: the block the resolver settled on (a server course may pin the side),
+        // never the seat's own choice; dan is always played from the 1P seat.
+        public static TaikoChart PrepareChart(DanResolvedSong song)
+        {
+            var chart = song.Song.ParseBlock(song.Course, song.Side);
+            ChartModifiers.Apply(chart, PlayOptions.ForSeat(0), new System.Random());
+            return chart;
+        }
+
         // MajdataPlay plays the track once the clock reaches it and restarts the clock from there.
         void StartDueMusic()
         {

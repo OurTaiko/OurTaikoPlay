@@ -8,8 +8,11 @@ namespace OurTaiko
     {
         public DanSongRef Ref;
         public SongDefinition Song;
-        // The TJA COURSE value as written, for TjaParser.Parse, and the block's level.
+        // The block the course plays: its TJA COURSE value as written and its side (ChartSide), for
+        // SongDefinition.ParseBlock, and its level. A course pins a server song's side; otherwise it
+        // is the side the 1P seat reads, found once here so the run never re-chooses by seat.
         public string Course;
+        public string Side = "single";
         public int Level;
         // The played block's content hash on a server's song (its identity for records); empty locally.
         public string ChartHash = "";
@@ -53,17 +56,17 @@ namespace OurTaiko
             {
                 string label = reference.Title.Length > 0 ? reference.Title : reference.Sha256.Length > 0 ? reference.Sha256 : reference.Id;
                 var song = course.IsLocal ? FindLocal(reference) : serverSong?.Invoke(course.Server, reference.Id);
-                string tjaCourse = null, chartHash = ""; int level = 0;
-                string error = song == null ? "Song not found: " + label : Block(song, reference, out tjaCourse, out level, out chartHash);
+                string tjaCourse = null, side = "single", chartHash = ""; int level = 0;
+                string error = song == null ? "Song not found: " + label : Block(song, reference, out tjaCourse, out side, out level, out chartHash);
                 if (error != null) { entry.Error = error.EndsWith(": ") ? error + label : error; entry.Songs.Clear(); return entry; }
-                entry.Songs.Add(new DanResolvedSong { Ref = reference, Song = song, Course = tjaCourse, Level = level, ChartHash = chartHash });
+                entry.Songs.Add(new DanResolvedSong { Ref = reference, Song = song, Course = tjaCourse, Side = side, Level = level, ChartHash = chartHash });
             }
             return entry;
         }
 
-        string Block(SongDefinition song, DanSongRef reference, out string tjaCourse, out int level, out string chartHash)
+        string Block(SongDefinition song, DanSongRef reference, out string tjaCourse, out string side, out int level, out string chartHash)
         {
-            tjaCourse = null; level = 0; chartHash = "";
+            tjaCourse = null; side = "single"; level = 0; chartHash = "";
             string missing = "No " + SongInfo.CourseName(reference.Difficulty) + " chart: ";
             var online = song.onlineChart;
             if (online != null)
@@ -74,12 +77,12 @@ namespace OurTaiko
                     ? online.Blocks.Find(b => b.Course == SongInfo.CourseName(reference.Difficulty) && b.Side == reference.Side)
                     : online.Difficulties[(int)reference.Difficulty];
                 if (block == null) return missing;
-                tjaCourse = block.Course; level = block.Level; chartHash = block.ChartHash;
+                tjaCourse = block.Course; side = block.Side; level = block.Level; chartHash = block.ChartHash;
                 return null;
             }
             var course = Info(song)?.Course(reference.Difficulty);
             if (course == null) return missing;
-            tjaCourse = course.Course; level = course.Level;
+            tjaCourse = course.Course; side = course.Side; level = course.Level;
             return null;
         }
 
