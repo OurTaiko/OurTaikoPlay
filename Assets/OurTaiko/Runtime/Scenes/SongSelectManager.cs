@@ -221,18 +221,43 @@ namespace OurTaiko
 
         // ---------------------------------------------------------------- input
 
+        // CStageSongSelect's ctキー反復用: browsing, a held arrow keeps moving the wheel (at once, after
+        // 200 ms, then every 30 ms), but is not read at all while the wheel is still sliding, so a
+        // held key steps once per slide. Choosing a course, the arrows act on the press only.
+        readonly KeyRepeat repeatLeft = new KeyRepeat(), repeatRight = new KeyRepeat();
+
         // Reads this frame's keys (the view calls it first in its Update).
-        public void HandleInput()
+        public void HandleInput() => HandleInput(GameTimeline.FrameTime * 1000);
+
+        public void HandleInput(double nowMs)
         {
             if (Switcher.IsInputBlocked || SearchDialogOpen) return;
             // song_select.cpp: the back key leaves for Entry from any state (an open option panel closes first).
             if (InputManager.GetKeyDown(InputKey.Back)) { Back(); return; }
             bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa), rightKa = InputManager.GetKeyDown(InputKey.RightKa);
             bool donHit = InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
+            bool left, right;
+            if (Phase == State.Browsing)
+            {
+                if (WheelScrolling?.Invoke() == true) left = right = false;
+                else
+                {
+                    left = repeatLeft.Tick(InputManager.GetKey(InputKey.MenuLeft), nowMs);
+                    right = repeatRight.Tick(InputManager.GetKey(InputKey.MenuRight), nowMs);
+                }
+            }
+            else
+            {
+                repeatLeft.Reset(); repeatRight.Reset();
+                left = InputManager.GetKeyDown(InputKey.MenuLeft);
+                right = InputManager.GetKeyDown(InputKey.MenuRight);
+            }
             if (leftKa) Ka(-1);
             else if (rightKa) Ka(+1);
-            else if (InputManager.GetKeyDown(InputKey.MenuLeft)) Left();
-            else if (InputManager.GetKeyDown(InputKey.MenuRight)) Right();
+            else if (left) Left();
+            else if (right) Right();
+            else if (InputManager.GetKeyDown(InputKey.MenuUp)) MoveOptionRow(-1);
+            else if (InputManager.GetKeyDown(InputKey.MenuDown)) MoveOptionRow(+1);
             else if (donHit) Confirm();
             // 2P's drum: a don joins; once in, it browses like 1P and works its own course cursor.
             var p2 = InputManager.P2;
@@ -616,6 +641,16 @@ namespace OurTaiko
             if (menus[seat] == null) return;
             menus[seat] = null;
             PlayOptions.ForSeat(seat).Save();
+        }
+
+        // CActPlayOption: the up/down arrows walk the option rows (wrapping) of the lowest seat whose
+        // panel is open; the drum itself only ever walks forward.
+        public void MoveOptionRow(int direction)
+        {
+            int seat = menus[0] != null ? 0 : menus[1] != null ? 1 : -1;
+            if (seat < 0 || !AcceptsInput() || ready[seat]) return;
+            if (!menus[seat].Move(direction)) return;
+            Play(Sound.Ka);
         }
 
         void ChangeOption(int seat, int direction)
