@@ -106,14 +106,12 @@ namespace OurTaiko
                 }).ToArray();
             folders = sources;
             parents = sources.Select(_ => -1).ToArray();
-            for (int f = 0; f < folders.Length; f++) items.Add(FolderItem(f));
-            items.Add(NewSearchItem());
-            items.Add(new WheelItem { Kind = ItemKind.Back });
-            Focused = 0;
             int home = selected != null ? Array.FindIndex(folders, f => f.Songs.Contains(selected)) : -1;
             if (home < 0 && folders.Length == 1) home = 0;
+            if (home >= 0) open.Add(home);
+            Rebuild();
+            Focused = 0;
             if (home < 0) return;
-            InsertFolder(FolderItemIndex(home), null);
             int anchor = AnchorOf(home), found = items.FindIndex(i => i.Song != null && i.Song == selected);
             Focused = found >= 0 ? found : anchor + 1;
             OpenFolderKey = folders[home].Key;
