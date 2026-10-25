@@ -66,7 +66,7 @@ namespace OurTaiko
         [Tooltip("voice_start_song_2p, voice_options_2p and entry_2p_add (2P joins).")]
         public AudioClip voiceStartSong2P, voiceOptions2P, secondJoined;
 
-        const double MoveMs = 166, OpenHoldMs = 61 / 120.0 * 1000, OpenGrowMs = 233, CloseMs = 13 / 0.06, FolderCloseMs = 8 / 0.06;
+        const double MoveMs = 120, OpenHoldMs = 61 / 120.0 * 1000, OpenGrowMs = 233, CloseMs = 13 / 0.06, FolderCloseMs = 8 / 0.06;
         const double CourseExitMoveMs = 500, CourseEnterMoveMs = 800, BoardFadeMs = 166;
         const double CourseFadeDelayMs = 400, CourseFadeMs = 483, GenreFadeMs = 200, BackgroundLoopMs = 15000;
         const double UraChangeMs = 1500, UraSwapMs = 450;
