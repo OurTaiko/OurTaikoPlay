@@ -108,9 +108,10 @@ namespace OurTaiko
             try
             {
                 for (int i = 0; i < Run.Count; i++) Run.Charts[i] ??= PlayScene.PrepareChart(Run.Resolved(i));
-                var notes = Run.Charts.Select(c => new ChartStatistics(c).JudgeableNotes).ToList();
-                Progress = new DanProgress(Run.Entry.Course, notes);
-                Gauge = SoulGauge.Dan(Run.Entry.Songs.Select(s => (s.GaugeCourse, s.Level)).ToList(), notes.Sum());
+                var statistics = Run.Charts.Select(c => new ChartStatistics(c)).ToList();
+                Progress = new DanProgress(Run.Entry.Course, statistics.Select(s => s.JudgeableNotes).ToList());
+                var routeNotes = Enumerable.Range(0, 3).Select(r => statistics.Sum(s => s.RouteNotes[r])).ToList();
+                Gauge = SoulGauge.Dan(Run.Entry.Songs.Select(s => (s.GaugeCourse, s.Level)).ToList(), routeNotes);
                 Lane = new PlayerLane(this, 0, this, options, autoPlay, new Online.PlayRecord()) { SharedGauge = Gauge };
                 ShowCourse();
                 BeginSong(0);

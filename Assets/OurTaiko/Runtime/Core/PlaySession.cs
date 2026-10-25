@@ -100,7 +100,7 @@ namespace OurTaiko
                 if (chart.Notes[i].Kind == NoteKind.Kusudama) kusudamas[i] = new Kusudama(this, i);
             var statistics = new ChartStatistics(chart);
             scoring = new ShinuchiScore(statistics);
-            gauge = new SoulGauge(statistics.JudgeableNotes, chart.Course, chart.Level);
+            gauge = new SoulGauge(statistics.RouteNotes, chart.Course, chart.Level);
             branchCounter = new BranchCounter(branchFeed);
             bool easy = chart.Course == "Easy" || chart.Course == "Normal";
             goodWindow = easy ? 0.0417083358764648 : GoodWindow;
@@ -222,6 +222,13 @@ namespace OurTaiko
             BeatAt(time, preview), Combo, expressionEighthStart, expressionSixteenthStart);
 
         bool IsActive(int branchId, BranchRoute route) => branchId < 0 || selectedRoutes[branchId] == (int)route;
+        // The route whose soul gauge increments a note uses (OpenTaiko UpdateGauge): its own inside
+        // a branch section, the route being played elsewhere.
+        public BranchRoute GaugeRoute(int note)
+        {
+            var n = Chart.Notes[note];
+            return n.BranchId >= 0 ? n.Route : CurrentBranch;
+        }
         public BranchRoute? SelectedRoute(int branchId) => selectedRoutes[branchId] < 0 ? (BranchRoute?)null : (BranchRoute)selectedRoutes[branchId];
 
         public void Advance(double time, bool auto)
@@ -412,7 +419,7 @@ namespace OurTaiko
                 if (Combo == 150) expressionSixteenthStart = NoteExpression.StartBeat(Chart.Notes[i].Beat);
             }
             int points = scoring.ApplyJudgment(result);
-            gauge.ApplyJudgment(result);
+            gauge.ApplyJudgment(result, GaugeRoute(i));
             branchFeed.Judge(Chart.Notes[i], result, points);
             Judged?.Invoke(i, result);
         }

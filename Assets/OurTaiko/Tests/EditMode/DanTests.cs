@@ -148,17 +148,19 @@ namespace OurTaiko.Tests
         [Test]
         public void DanGaugeUsesTheHarmonicMeanAndHasNoNormaZone()
         {
-            var single = SoulGauge.Dan(new[] { ("Oni", 10) }, 500);
-            var chart = new SoulGauge(500, "Oni", 10);
-            Assert.That(single.GoodPoints, Is.EqualTo(chart.GoodPoints).Within(1e-9));
+            var notes = new[] { 500, 500, 500 };
+            var single = SoulGauge.Dan(new[] { ("Oni", 10) }, notes);
+            var chart = new SoulGauge(notes, "Oni", 10);
+            Assert.That(single.Increment(Judgment.Good), Is.EqualTo(chart.Increment(Judgment.Good)));
+            Assert.That(single.Increment(Judgment.Bad), Is.EqualTo(chart.Increment(Judgment.Bad)));
             Assert.That(single.ClearPoints, Is.EqualTo(SoulGauge.MaximumPoints));
 
-            var mixed = SoulGauge.Dan(new[] { ("Oni", 10), ("Hard", 3), ("Oni", 0) }, 1200);
-            double hard = 72.5, oni = 76.75;
-            double soul = 3 / (1 / oni + 1 / hard + 1 / oni);
-            Assert.That(mixed.GoodPoints, Is.EqualTo(1000000.0 / (1200 * soul)).Within(1e-9), "LEVEL 0 counts as Oni 10.");
-            Assert.That(mixed.OkPoints, Is.EqualTo(mixed.GoodPoints * (0.5 + 0.75 + 0.5) / 3).Within(1e-9));
-            Assert.That(mixed.BadPoints, Is.EqualTo(mixed.GoodPoints * (-2.0 - 1.0 - 2.0) / 3).Within(1e-9));
+            // ★10 75% / −2, ★3 and an absent LEVEL 70.7% / −0.625.
+            var mixed = SoulGauge.Dan(new[] { ("Oni", 10), ("Hard", 3), ("Oni", 0) }, new[] { 1200, 1200, 1200 });
+            float rate = 3 / (1 / 75f + 1 / 70.7f + 1 / 70.7f);
+            Assert.That(mixed.Increment(Judgment.Good), Is.EqualTo(10000 / (1200 * rate)).Within(1e-4));
+            Assert.That(mixed.Increment(Judgment.Ok), Is.EqualTo(mixed.Increment(Judgment.Good) / 2).Within(1e-4));
+            Assert.That(mixed.Increment(Judgment.Bad), Is.EqualTo(-mixed.Increment(Judgment.Good) * (2f + 0.625f + 0.625f) / 3).Within(1e-4));
             mixed.ApplyJudgment(Judgment.Good);
             Assert.That(mixed.IsClear, Is.False, "Only a full gauge passes.");
         }
@@ -283,7 +285,7 @@ namespace OurTaiko.Tests
             Assert.That(entry.IsPlayable, Is.True, entry.Error);
             Assert.That(entry.Songs.Select(s => s.Course), Is.EqualTo(new[] { "4", "3" }), "TjaParser gets the COURSE as written.");
             Assert.That(entry.Songs.Select(s => s.GaugeCourse), Is.EqualTo(new[] { "Edit", "Oni" }));
-            Assert.DoesNotThrow(() => SoulGauge.Dan(entry.Songs.Select(s => (s.GaugeCourse, s.Level)).ToList(), 8));
+            Assert.DoesNotThrow(() => SoulGauge.Dan(entry.Songs.Select(s => (s.GaugeCourse, s.Level)).ToList(), new[] { 8, 8, 8 }));
         }
 
         [Test]
