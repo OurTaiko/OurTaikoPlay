@@ -4,17 +4,20 @@
 
 [简体中文](README.md) · **English** · [日本語](README.ja.md)
 
-OurTaikoPlay is a taiko rhythm game written from scratch in Unity and C#, drawing inspiration from the design and gameplay of projects such as [OurTaikoPlayer](https://github.com/OurTaiko/OurTaikoPlayer) and [MajdataPlay](https://github.com/TeamMajdata/MajdataPlay). It is under active development, with a focus on single-player play, keyboard and touch input, local and online songs, and scenes and UI that remain editable in the Unity Editor.
+OurTaikoPlay is a taiko rhythm game written from scratch in Unity and C#, drawing inspiration from the design and gameplay of projects such as [OurTaikoPlayer](https://github.com/OurTaiko/OurTaikoPlayer) and [MajdataPlay](https://github.com/TeamMajdata/MajdataPlay). It is under active development, offering single- and two-player play, Dan courses, keyboard and touch input, local and online songs, and scenes and UI that remain editable in the Unity Editor.
 
 ## Features
 
 - **A complete single-player flow**: Entry → server login / guest access → song selection → loading → gameplay → results, with pause, restart, and return to song selection.
+- **Two-player play**: 2P can join on Entry or song select and play side by side in DoublePlayScene (with a shared kusudama); results show 2P's board on the right. Each seat can sign in with its own OurTaiko account and shows its OurTaikoProfile nameplate.
+- **Dan courses**: Entry's 段位道場 board opens a three-page course select plus a 外伝 entry that takes a course code. Nijiiro's dan intro, loading, background and result presentation are ported; a course ends with 合格 or 不合格 and its records are kept. Server-provided courses can be played and attempts uploaded for rewards; nameplates show a two-layer dan emblem (五級 to 達人).
+- **Song select**: nested box.def folders, inertial wheel swiping, held arrows that repeat, a ka that skips seven boards while scrolling, and song lists and search results grouped by source.
 - **Nijiiro presentation**: song boards, difficulty cards, nameplates, soul gauge, dancers, crowns, and seven ScoreRank icons—including 粋, 雅, and 極—with a results animation.
 - **TJA gameplay**: common note types, drumrolls, balloons, BPM and scroll changes, and Normal / Expert / Master branches.
 - **Online catalogs and scores**: built-in Fanmade and ESE server configurations, account login, guest browsing, category folders, chart and audio downloads, best-score retrieval, and queued score uploads with retries.
 - **Score display**: local records stored in SQLite; online history supplied by the server. Song selection shows best scores, crowns, and ScoreRank. Online crowns use `ClearStatus`.
 - **Play and system settings**: autoplay, speed, Doron, swapped note colors, randomization, drum sounds, volume groups, audio backend, frame rate, and an on-screen drum toggle.
-- **Native audio**: a BASS backend with a design inspired by MajdataPlay, with a Unity audio backend option; Windows also supports WASAPI / ASIO.
+- **Native audio**: BASS decoding and mixing, with a design inspired by MajdataPlay. Output uses the cross-platform BassSimple backend, plus BassWASAPI / BassASIO on Windows. There is no Unity audio backend (its latency is too high); with no output device the game runs muted.
 
 ## Run from source
 
@@ -81,7 +84,7 @@ If the desktop game folder is read-only (for example a macOS app still in its do
 | `servers.json` | Online server and login configuration |
 | `scores.sqlite3` | Local best scores and pending uploads separated by server / account |
 
-General → Language currently changes song titles and subtitles only, preferring Japanese when a translation is unavailable. Full menu localization is not yet available. README translations are independent of the in-game language setting.
+General → Language currently changes song titles and subtitles only, falling back to the chart's own TITLE / SUBTITLE when a translation is missing. Full menu localization is not yet available. README translations are independent of the in-game language setting.
 
 ## Build
 
@@ -98,7 +101,7 @@ iOS builds require macOS and Xcode. Automatic signing defaults to the Hoshino Ne
 
 ## Development status and documentation
 
-The current focus is single-player gameplay with the Nijiiro skin. Two-player play, Dan courses, search / sorting, and full replay playback are not implemented, and not every TJA extension is supported. Runtime logic and Editor tools use C#; native audio libraries are platform dependencies. Imported animation tables are read as data, without executing Lua.
+The game uses the Nijiiro skin. Sorting and full replay playback are not implemented, and not every TJA extension is supported. Runtime logic and Editor tools use C#; native audio libraries are platform dependencies. Imported animation tables are read as data, without executing Lua.
 
 - [Asset manifest](Documentation/ImportedAssets.json): imported artwork and audio sources.
 - Tests are in `Assets/OurTaiko/Tests/`. Run EditMode and PlayMode tests with Unity Test Runner; `Finished/` retains regression tests for completed features.
