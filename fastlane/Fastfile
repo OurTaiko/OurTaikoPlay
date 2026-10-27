@@ -69,6 +69,7 @@ platform :ios do
     options = {
       api_key: api_key,
       app_identifier: ENV.fetch("BUNDLE_ID"),
+      app_platform: "ios",
       app_version: ENV.fetch("APP_VERSION"),
       build_number: ENV.fetch("BUILD_NUMBER"),
       changelog: "Automated CI build\nVersion: #{ENV.fetch('APP_VERSION')} (#{ENV.fetch('BUILD_NUMBER')})\nSource: #{ENV['BUILD_SOURCE'] || ENV['GITHUB_SHA']}",
