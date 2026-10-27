@@ -44,7 +44,9 @@ namespace OurTaiko
             rainbowStart = GameTimeline.FrameTime;
             renderedCanvasScale = float.NaN;
             Canvas.willRenderCanvases += RefreshCanvasScale;
-            Show(seat == 0 ? controller.Info : controller.SecondInfo);
+            // No rainbow sample yet: the Animator may not have woken, and evaluating its graph
+            // asserts m_DidAwake. Update draws the band before the first render.
+            Apply(seat == 0 ? controller.Info : controller.SecondInfo);
         }
 
         void OnDisable()
@@ -79,13 +81,18 @@ namespace OurTaiko
 
         public void Show(PlayerInfo info)
         {
+            Apply(info);
+            ShowRainbow(GameTimeline.FrameTime - rainbowStart);
+        }
+
+        void Apply(PlayerInfo info)
+        {
             Info = info = info ?? new PlayerInfo();
             bool hasBand = !info.IsCoin;
             band.enabled = outline.enabled = hasBand;
             bandUnder.enabled = false;
             if (hasBand && !info.rainbow) band.sprite = titleBackgrounds[info.TitleFrame];
             RainbowFrame = 0;
-            ShowRainbow(GameTimeline.FrameTime - rainbowStart);
 
             // *_dani labels only exist in the band family.
             bool hasDan = info.HasDan && hasBand;
