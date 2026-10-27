@@ -31,7 +31,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 yield return null;
                 play.MovePractice(1); play.MovePractice(1);
                 play.ConfirmPractice(); yield return null;
@@ -93,7 +93,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 var lane = play.branchLane;
                 void Check(BranchRoute route)
                 {

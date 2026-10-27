@@ -32,7 +32,7 @@ namespace OurTaiko.Tests
             SceneSwitcher.Instance.PracticeMode = practice;
             SceneSwitcher.Instance.Play(song, "Oni", auto);
             yield return WaitForPlay(practice);
-            play = Object.FindFirstObjectByType<PlayScene>();
+            play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.drumrollCounter, Is.Not.Null);
             Assert.That(play.drumrollCounter.digitSprites, Is.EqualTo(play.balloonCounter.digitSprites),
                 "The fan and balloon must share the same digit sprites.");
@@ -131,8 +131,8 @@ namespace OurTaiko.Tests
                 view.RecordHit(2, 9, now);
                 SceneSwitcher.Instance.Restart();
                 yield return WaitForPlay(false);
-                Assert.That(Object.FindFirstObjectByType<PlayScene>().drumrollCounter.Count, Is.Zero);
-                Assert.That(Object.FindFirstObjectByType<PlayScene>().drumrollCounter.IsVisible, Is.False);
+                Assert.That(Object.FindAnyObjectByType<PlayScene>().drumrollCounter.Count, Is.Zero);
+                Assert.That(Object.FindAnyObjectByType<PlayScene>().drumrollCounter.IsVisible, Is.False);
             }
         }
 
@@ -145,7 +145,9 @@ namespace OurTaiko.Tests
             float deadline = Time.realtimeSinceStartup + 20;
             while (!small || !big)
             {
-                yield return new WaitForEndOfFrame();
+                // Every play view updates in Update, so the frame's state is complete once the coroutines run;
+                // WaitForEndOfFrame never resumes in batchmode, where no frame is presented.
+                yield return null;
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                 if (!view.IsVisible) continue;
                 Assert.That(view.Count, Is.EqualTo(play.Session.LongHits[view.NoteIndex]));

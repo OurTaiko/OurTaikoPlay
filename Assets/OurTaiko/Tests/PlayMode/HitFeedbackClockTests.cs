@@ -35,7 +35,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 yield return null;
 
@@ -122,7 +122,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (practice)
                 {
                     yield return null;
@@ -140,7 +140,9 @@ namespace OurTaiko.Tests
                 float displaySeconds = play.judgment.GetComponent<ClipSampler>().clip.length;
                 while (normalHits < 5 || GameTimeline.FrameTime - lastNormal <= displaySeconds + .05)
                 {
-                    yield return new WaitForEndOfFrame();
+                    // Every play view updates in Update, so the frame's state is complete once the coroutines run;
+                    // WaitForEndOfFrame never resumes in batchmode, where no frame is presented.
+                    yield return null;
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
                         $"Observed {normalHits} normal hits; song time {play.SongTime:F3}, paused {play.IsPaused}.");
                     double elapsed = GameTimeline.FrameTime - lastNormal;
@@ -182,12 +184,14 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 int judged = 0, observed = 0;
                 play.Session.Judged += (_, result) => { if (result == Judgment.Good) judged++; };
                 while (observed < 3)
                 {
-                    yield return new WaitForEndOfFrame();
+                    // Every play view updates in Update, so the frame's state is complete once the coroutines run;
+                    // WaitForEndOfFrame never resumes in batchmode, where no frame is presented.
+                    yield return null;
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     if (judged == observed) continue;
                     Assert.That(play.hitFace.IsPlaying && play.hitFace.image.enabled, Is.True,

@@ -182,7 +182,7 @@ namespace OurTaiko.Tests
             yield return null;
             TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.PracticeScene);
-            play = Object.FindFirstObjectByType<PlayScene>();
+            play = Object.FindAnyObjectByType<PlayScene>();
             yield return Wait(() => play.Practice != null && play.IsPaused);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
             Assert.That(SceneSwitcher.Instance.SelectedPlayScene, Is.EqualTo(SceneSwitcher.PracticeScene));
@@ -254,7 +254,7 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
-            var entry = Object.FindFirstObjectByType<EntryScene>();
+            var entry = Object.FindAnyObjectByType<EntryScene>();
             Assert.That(entry.view.boards.Count(b => b.practice), Is.EqualTo(1));
             Assert.That(entry.view.boards[2].practice, Is.True, "練習モード follows 演奏ゲーム and 段位道場.");
             Assert.That(entry.view.boards[2].scene, Is.EqualTo(SceneSwitcher.ServerLoginScene));
@@ -267,7 +267,7 @@ namespace OurTaiko.Tests
             if (withAudio) song.music = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/OurTaiko/Audio/entry/bgm.ogg");
             SceneSwitcher.Instance.Play(song, "Oni", false);
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !SceneSwitcher.Instance.IsInputBlocked);
-            play = Object.FindFirstObjectByType<PlayScene>();
+            play = Object.FindAnyObjectByType<PlayScene>();
             yield return Wait(() => play.Practice != null && play.IsPaused);
             yield return null;
         }

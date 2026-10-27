@@ -40,7 +40,7 @@ namespace OurTaiko.Tests
             while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != target);
             yield return null;
             // Judge by hand on a paused song.
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             while (!play.IsPaused) { play.TogglePause(); yield return null; }
             play.pausePanel.SetActive(false);
         }
@@ -53,7 +53,7 @@ namespace OurTaiko.Tests
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:Kusudama\nBPM:120\nCOURSE:Oni\nLEVEL:1\nBALLOON:3\n#START\n9008,\n1,\n#END");
             yield return Play(song, false);
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             var view = play.kusudama; var session = play.Session;
             Assert.That(view, Is.Not.Null);
             Assert.That(play.kusudamaPop, Is.Not.Null);
@@ -96,7 +96,7 @@ namespace OurTaiko.Tests
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:Kusudama\nBPM:120\nCOURSE:Oni\nLEVEL:1\nBALLOON:30\n#START\n9008,\n1,\n#END");
             yield return Play(song, false);
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             play.Session.Hit(false, 0.1);
             play.kusudama.ShowTime(1.4);
             Assert.That(play.kusudama.IsShowing, Is.True);
@@ -113,7 +113,7 @@ namespace OurTaiko.Tests
             song.chart = new TextAsset("TITLE:Kusudama Two\nBPM:120\nCOURSE:Oni\nLEVEL:1\nBALLOON:2,2\n"
                 + "#START P1\n9008,\n9008,\n#END\n#START P2\n9008,\n0,\n#END");
             yield return Play(song, true);
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             var first = play.Lanes[0].Session; var second = play.Lanes[1].Session;
             var ball = first.KusudamaOf(0);
             Assert.That(second.KusudamaOf(0), Is.SameAs(ball));

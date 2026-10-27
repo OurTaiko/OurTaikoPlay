@@ -37,7 +37,7 @@ namespace OurTaiko.Tests
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
                 yield return null;
-                var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
                 var view = scene.view;
                 scene.Ka(3); scene.Don();
                 Assert.That(scene.Menu.CurrentType.Label, Is.EqualTo("Sound"));
@@ -138,7 +138,7 @@ namespace OurTaiko.Tests
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
                 yield return null;
-                var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
                 int before = engine.Generation;
                 bool changed = settings.Settings.audio.backend != backend;
                 scene.Menu.Settings.audio.backend = backend;
@@ -238,7 +238,7 @@ namespace OurTaiko.Tests
 
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
             yield return null;
-            var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+            var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
             // Invalid driver on Windows, unsupported backend on other platforms.
             scene.Menu.Settings.audio.backend = AudioBackend.BassASIO;
             scene.Menu.Settings.audio.asioDevice = int.MaxValue;

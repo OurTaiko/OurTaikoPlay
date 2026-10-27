@@ -4,11 +4,14 @@
 
 **简体中文** · [English](README.en.md) · [日本語](README.ja.md)
 
-OurTaikoPlay 是使用 Unity 与 C# 从零编写的太鼓节奏游戏，开发过程中借鉴了 [OurTaikoPlayer](https://github.com/OurTaiko/OurTaikoPlayer)、[MajdataPlay](https://github.com/TeamMajdata/MajdataPlay) 等项目的设计思路与玩法表现。项目持续开发中，目前专注于单人体验，提供键盘与触控操作、本地与在线曲目，以及可在 Unity Editor 中编辑的场景和 UI。
+OurTaikoPlay 是使用 Unity 与 C# 从零编写的太鼓节奏游戏，开发过程中借鉴了 [OurTaikoPlayer](https://github.com/OurTaiko/OurTaikoPlayer)、[MajdataPlay](https://github.com/TeamMajdata/MajdataPlay) 等项目的设计思路与玩法表现。项目持续开发中，提供单人与双人演奏、段位道场，键盘与触控操作、本地与在线曲目，以及可在 Unity Editor 中编辑的场景和 UI。
 
 ## 目前可以做什么
 
 - **完整单人流程**：Entry → 服务器登录／游客模式 → 选曲 → 加载 → 演奏 → 结算，支持暂停、重开和返回选曲。
+- **双人演奏**：2P 可在 Entry 或选曲时加入，进入 DoublePlayScene 同屏演奏（含双方共享的くす玉），结算右侧显示 2P 成绩板；1P／2P 可分别登录 OurTaiko 账号并显示各自的 OurTaikoProfile 名牌。
+- **段位道场**：Entry 的「段位道場」进入三页课程选择，另有输入课程码的「外伝」入口；移植 Nijiiro 的段位开场、加载、背景与结算演出，以合格／不合格结束，保存记录；可游玩服务器提供的段位课程并上传挑战以领取奖励，名牌显示双层段位徽章（五級～達人）。
+- **选曲**：嵌套 box.def 文件夹、带惯性的滑动选曲、长按方向键连续移动、滚动中按咔跳过 7 项，以及按来源分组的歌曲列表与搜索结果。
 - **Nijiiro 界面**：曲目板、难度卡、名牌、魂槽、舞者、皇冠，以及包含「粋／雅／極」的七种 ScoreRank 图标和结算演出。
 - **TJA 演奏**：支持常用音符、连打、气球、BPM／滚动速度变化和普通／玄人／达人分支。
 - **在线曲库与成绩**：内置 Fanmade、ESE 服务器配置，支持账号登录、游客浏览、分类文件夹、谱面与音频下载、最高分拉取，以及带重试队列的成绩上传。
@@ -104,7 +107,7 @@ iOS 构建需要 macOS 和 Xcode；项目默认开启 Hoshino Network LLC 团队
 
 ## 开发状态与文档
 
-目前专注于单人、Nijiiro 皮肤。双人演奏、段位模式、搜索／排序和完整回放播放尚未实现，也不保证兼容所有 TJA 扩展。运行逻辑与 Editor 工具使用 C#；原生音频库作为平台依赖提供，导入的动画表只作为数据读取，不执行 Lua。
+目前使用 Nijiiro 皮肤。排序和完整回放播放尚未实现，也不保证兼容所有 TJA 扩展。运行逻辑与 Editor 工具使用 C#；原生音频库作为平台依赖提供，导入的动画表只作为数据读取，不执行 Lua。
 
 - [素材清单](Documentation/ImportedAssets.json)：美术与音频的导入来源。
 - 测试位于 `Assets/OurTaiko/Tests/`，可在 Unity Test Runner 中运行 EditMode 与 PlayMode 测试；`Finished/` 保留已完成功能的回归测试。

@@ -82,7 +82,7 @@ namespace OurTaiko.Tests
             song.chart = new TextAsset("TITLE:Two Players\nBPM:120\nCOURSE:Oni\nLEVEL:1\n"
                 + "#START P1\n5,\n0,\n8,\n#END\n#START P2\n5,\n0,\n8,\n1,\n#END");
             yield return PlayBoth(song);
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.IsTwoPlayer, Is.True);
             Assert.That(play.Lanes.Count, Is.EqualTo(2));
             var first = play.Lanes[0].Session; var second = play.Lanes[1].Session;
@@ -162,7 +162,7 @@ namespace OurTaiko.Tests
                 float deadline = Time.realtimeSinceStartup + 30;
                 while (SceneManager.GetActiveScene().name != SceneSwitcher.ResultScene)
                 {
-                    var play = Object.FindFirstObjectByType<PlayScene>();
+                    var play = Object.FindAnyObjectByType<PlayScene>();
                     if (play != null && play.IsPaused) play.TogglePause();
                     yield return null;
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
@@ -173,7 +173,7 @@ namespace OurTaiko.Tests
                 Assert.That(SceneSwitcher.Instance.LastResult2P.Bad, Is.EqualTo(1), "2P did not hit the don.");
 
                 // result_2p: 2P's board on the right with its nameplate; both reveal and skip together.
-                var result = Object.FindFirstObjectByType<ResultScene>();
+                var result = Object.FindAnyObjectByType<ResultScene>();
                 Assert.That(result.Boards.Count, Is.EqualTo(2));
                 Assert.That(result.view.secondBoard.gameObject.activeSelf, Is.True);
                 Assert.That(result.view.secondBoard.nameplate.seat, Is.EqualTo(1));

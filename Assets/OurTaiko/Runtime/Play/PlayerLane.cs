@@ -197,7 +197,7 @@ namespace OurTaiko
             if (result == Judgment.Bad) comboCarried = false;
             if (result != Judgment.Roll)
             {
-                SharedGauge?.ApplyJudgment(result);
+                SharedGauge?.ApplyJudgment(result, Session.GaugeRoute(index));
                 v.soulGauge.SetPoints(GaugePoints, ChartTime);
             }
             if (AutoPlay)

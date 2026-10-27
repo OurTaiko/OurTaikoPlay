@@ -22,7 +22,7 @@ namespace OurTaiko.Tests
             TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             if (!play.IsPaused) play.TogglePause();
             play.pausePanel.SetActive(false);
             var canvas = SceneCanvas();
@@ -81,7 +81,7 @@ namespace OurTaiko.Tests
             gauge.SetValue(1, 6);
             Assert.That(gauge.rainbowA.color.a, Is.Zero, "Refilling restarts the rainbow fade.");
             play.Restart(); yield return WaitForRestart(play);
-            var restarted = Object.FindFirstObjectByType<PlayScene>();
+            var restarted = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(restarted.soulGauge.FilledCells, Is.Zero);
             Assert.That(restarted.soulGauge.rainbowA.enabled, Is.False);
             restarted.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
@@ -91,11 +91,11 @@ namespace OurTaiko.Tests
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
-            var menu = Object.FindFirstObjectByType<SongSelectScene>();
+            var menu = Object.FindAnyObjectByType<SongSelectScene>();
             var song = menu.Manager.Songs.Single(s => s.name == TestSongs.BranchTraining);
             SceneSwitcher.Instance.Play(song, expected == BranchRoute.Master);
             yield return WaitForScene(SceneSwitcher.GameScene);
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             float deadline = Time.realtimeSinceStartup + 40;
             int hits = 0;
             while (play.Session.BranchHistory.Count == 0)
@@ -153,10 +153,10 @@ namespace OurTaiko.Tests
                 Assert.That(play.Session.Good, Is.EqualTo(play.Session.Chart.Notes.Count(n => !n.IsLong && play.Session.IsActive(n))));
                 yield return WaitForScene(SceneSwitcher.ResultScene);
                 Assert.That(SceneSwitcher.Instance.LastResult.AutoPlay && SceneSwitcher.Instance.LastResult.Bad == 0, Is.True);
-                Assert.That(Object.FindFirstObjectByType<ResultScene>().Result, Is.SameAs(SceneSwitcher.Instance.LastResult));
+                Assert.That(Object.FindAnyObjectByType<ResultScene>().Result, Is.SameAs(SceneSwitcher.Instance.LastResult));
             }
             SceneSwitcher.Instance.Restart(); yield return WaitForScene(SceneSwitcher.GameScene);
-            var restarted = Object.FindFirstObjectByType<PlayScene>();
+            var restarted = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(restarted.Session.BranchHistory.Count, Is.Zero);
             Assert.That(restarted.Session.Score, Is.Zero);
             Assert.That(restarted.branchLane.currentLabel.sprite.name, Is.EqualTo("normal"));
@@ -172,10 +172,10 @@ namespace OurTaiko.Tests
             TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             // DrumPad is disabled while the pause menu is open, so inspect its live gameplay state.
             if (play.IsPaused) { play.Resume(); yield return WaitForResume(play); }
-            var pads = Object.FindObjectsByType<DrumPad>(FindObjectsSortMode.None);
+            var pads = Object.FindObjectsByType<DrumPad>();
             Assert.That(pads.Length, Is.EqualTo(1));
             var pad = pads[0];
             var zone = (RectTransform)pad.transform;
@@ -220,10 +220,10 @@ namespace OurTaiko.Tests
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
-            var menu = Object.FindFirstObjectByType<SongSelectScene>();
+            var menu = Object.FindAnyObjectByType<SongSelectScene>();
             SceneSwitcher.Instance.Play(menu.Manager.Songs.Single(s => s.name == TestSongs.BranchTraining), true);
             yield return WaitForScene(SceneSwitcher.GameScene);
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             if (!play.IsPaused) play.TogglePause();
             var branch = play.branchLane;
             branch.Select(BranchRoute.Expert, 0);
@@ -271,7 +271,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
                 SceneSwitcher.Instance.Play(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
@@ -337,7 +337,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
                 SceneSwitcher.Instance.Play(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
@@ -401,7 +401,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
                 SceneSwitcher.Instance.Play(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 float deadline = Time.realtimeSinceStartup + 20;
                 IEnumerator Reach(double time)
                 {
@@ -471,11 +471,11 @@ namespace OurTaiko.Tests
                 yield return Reach(3.51);
                 Assert.That(counter.IsVisible, Is.False, "An unpopped balloon clears at its end time.");
                 play.Restart(); yield return WaitForRestart(play);
-                play = Object.FindFirstObjectByType<PlayScene>();
+                play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.balloonCounter.IsVisible, Is.False);
                 Assert.That(play.Session.LongHits[0], Is.Zero);
                 SceneSwitcher.Instance.Play(song, true); yield return WaitForScene(SceneSwitcher.GameScene);
-                play = Object.FindFirstObjectByType<PlayScene>();
+                play = Object.FindAnyObjectByType<PlayScene>();
                 yield return Reach(0.1);
                 Assert.That(play.balloonCounter.Remaining, Is.EqualTo(12 - play.Session.LongHits[0]));
                 Assert.That(play.balloonCounter.IsVisible, Is.True);
@@ -502,7 +502,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 SceneSwitcher.Instance.Play(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 float deadline = Time.realtimeSinceStartup + 8;
                 while (play.RenderedTime < -0.5 || play.NoteRoot(0) == null)
                 {
@@ -591,7 +591,7 @@ namespace OurTaiko.Tests
             TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             float deadline = Time.realtimeSinceStartup + 5;
             do
             {
@@ -620,15 +620,15 @@ namespace OurTaiko.Tests
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
-            var menu = Object.FindFirstObjectByType<SongSelectScene>();
+            var menu = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(menu, Is.Not.Null, "SongSelect is the menu scene.");
             SceneSwitcher.Instance.Play(menu.Manager.Songs[0], true);
             yield return WaitForScene(SceneSwitcher.GameScene);
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Session.Chart.Notes.Count, Is.GreaterThan(50));
             Assert.That(play.branchLane.gameObject.activeSelf, Is.False, "Non-branch charts must not show route labels or tints.");
-            Assert.That(Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
-            Assert.That(Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
+            Assert.That(Object.FindObjectsByType<EventSystem>().Length, Is.EqualTo(1));
+            Assert.That(Object.FindObjectsByType<AudioListener>().Length, Is.EqualTo(1));
             if (play.IsPaused) { play.Resume(); yield return WaitForResume(play); }
             yield return new WaitForSecondsRealtime(2.4f);
             Assert.That(play.Session.Good, Is.GreaterThan(0));
@@ -645,14 +645,14 @@ namespace OurTaiko.Tests
             Capture("SinglePlayScene.png");
             play.Restart();
             yield return WaitForRestart(play);
-            var restarted = Object.FindFirstObjectByType<PlayScene>();
+            var restarted = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(restarted, Is.Not.SameAs(play));
             Assert.That(restarted.Session.Score, Is.Zero);
-            Assert.That(Object.FindObjectsByType<SceneSwitcher>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
+            Assert.That(Object.FindObjectsByType<SceneSwitcher>().Length, Is.EqualTo(1));
             restarted.Back();
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            Assert.That(Object.FindFirstObjectByType<PlayScene>(), Is.Null);
-            Assert.That(Object.FindObjectsByType<SceneSwitcher>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
+            Assert.That(Object.FindAnyObjectByType<PlayScene>(), Is.Null);
+            Assert.That(Object.FindObjectsByType<SceneSwitcher>().Length, Is.EqualTo(1));
         }
 
         [UnityTest]
@@ -666,13 +666,13 @@ namespace OurTaiko.Tests
             TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Session, Is.Not.Null);
             Assert.That(SceneSwitcher.Instance, Is.Not.Null);
             Assert.That(Application.targetFrameRate, Is.EqualTo(120));
             Assert.That(QualitySettings.vSyncCount, Is.Zero);
             Assert.That(UnityEngine.Rendering.OnDemandRendering.renderFrameInterval, Is.EqualTo(1));
-            var fps = Object.FindFirstObjectByType<FpsCounter>();
+            var fps = Object.FindAnyObjectByType<FpsCounter>();
             Assert.That(fps, Is.Not.Null);
             if (!play.IsPaused) play.TogglePause();
             float originalTimeScale = Time.timeScale;
@@ -688,7 +688,7 @@ namespace OurTaiko.Tests
             finally { Time.timeScale = originalTimeScale; }
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
-            Assert.That(Object.FindObjectsByType<FpsCounter>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
+            Assert.That(Object.FindObjectsByType<FpsCounter>().Length, Is.EqualTo(1));
         }
 
         static IEnumerator WaitForScene(string scene)

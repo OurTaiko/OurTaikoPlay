@@ -34,7 +34,7 @@ namespace OurTaiko.Tests
                 switcher.ShowResult(run);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
                 yield return new WaitForSecondsRealtime(.6f);
-                var result = Object.FindFirstObjectByType<ResultScene>(); var view = result.view.analysis;
+                var result = Object.FindAnyObjectByType<ResultScene>(); var view = result.view.analysis;
                 Assert.That(view, Is.Not.Null);
                 Assert.That(result.stage.Find("TouchArea"), Is.Null);
                 Assert.That(view.histogram.raycastTarget, Is.False);
@@ -112,7 +112,7 @@ namespace OurTaiko.Tests
                 SceneSwitcher.Instance.ShowResult(run);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
                 yield return new WaitForSecondsRealtime(.6f);
-                var result = Object.FindFirstObjectByType<ResultScene>(); var view = result.view.analysis;
+                var result = Object.FindAnyObjectByType<ResultScene>(); var view = result.view.analysis;
                 Assert.That(result.Sequence.CanAdvance, Is.False);
                 result.ChangePage(1); // This is also the Ka / swipe path while revealing.
                 result.Don();
@@ -161,7 +161,7 @@ namespace OurTaiko.Tests
                 SceneSwitcher.Instance.PracticeMode = practice;
                 SceneSwitcher.Instance.Play(song, "Oni", false);
                 yield return WaitForScene(practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 var feedback = play.timingFeedback;

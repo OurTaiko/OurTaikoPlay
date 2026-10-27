@@ -19,7 +19,7 @@ namespace OurTaiko.Tests
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
                 yield return null;
-                var entry = Object.FindFirstObjectByType<EntryScene>();
+                var entry = Object.FindAnyObjectByType<EntryScene>();
                 yield return new WaitForSecondsRealtime(0.2f);
 
                 // Credit screen: the boards are not up, so a tap anywhere lands on the touch area and joins.

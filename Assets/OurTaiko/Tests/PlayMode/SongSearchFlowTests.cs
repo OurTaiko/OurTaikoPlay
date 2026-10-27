@@ -53,7 +53,7 @@ namespace OurTaiko.Tests
             File.WriteAllText(Path.Combine(root, "Folder", "song.tja"), "TITLE:Keyword local\nBPM:120\nCOURSE:Oni\nLEVEL:8\n#START\n1000,\n#END");
             LocalSongLibrary.EnsureInstance().UseRoot(root);
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
-            var scene = Object.FindFirstObjectByType<SongSelectScene>(); var manager = scene.Manager; var view = scene.view.search;
+            var scene = Object.FindAnyObjectByType<SongSelectScene>(); var manager = scene.Manager; var view = scene.view.search;
             Assert.That(view, Is.Not.Null); int initial = manager.BoardCount;
             Assert.That(view.transform.Find("OpenSearch"), Is.Null, "The standalone entry button has been removed.");
             var searchEntry = manager.Items.Single(i => i.Kind == SongSelectManager.ItemKind.Search);
@@ -126,7 +126,7 @@ namespace OurTaiko.Tests
             // A scene reload represents returning from play and keeps the result selection.
             SceneSwitcher.Instance.Select(selected);
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
-            scene = Object.FindFirstObjectByType<SongSelectScene>(); manager = scene.Manager; view = scene.view.search;
+            scene = Object.FindAnyObjectByType<SongSelectScene>(); manager = scene.Manager; view = scene.view.search;
             Assert.That(manager.SearchActive, Is.True); Assert.That(manager.FocusedSong, Is.SameAs(selected));
             searchEntry = manager.Items.Single(i => i.Kind == SongSelectManager.ItemKind.Search);
             manager.SelectItem(searchEntry); manager.SelectItem(searchEntry); yield return null;
@@ -190,7 +190,7 @@ namespace OurTaiko.Tests
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
-                var scene = Object.FindFirstObjectByType<SongSelectScene>(); var view = scene.view.search; var manager = scene.Manager;
+                var scene = Object.FindAnyObjectByType<SongSelectScene>(); var view = scene.view.search; var manager = scene.Manager;
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Tab)); yield return null;
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
                 Assert.That(view.IsOpen, Is.False, "Tab no longer opens search from the wheel.");
@@ -279,7 +279,7 @@ namespace OurTaiko.Tests
         {
             TestData.UseServers(new ServerList()); TestSongs.Install();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
-            var scene = Object.FindFirstObjectByType<SongSelectScene>(); var view = scene.view.search;
+            var scene = Object.FindAnyObjectByType<SongSelectScene>(); var view = scene.view.search;
             view.Open(); yield return null;
             Assert.That(view.FocusedRow, Is.EqualTo(1));
             ClickKeyword(view); yield return null;
@@ -308,7 +308,7 @@ namespace OurTaiko.Tests
         {
             TestData.UseServers(new ServerList()); TestSongs.Install();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
-            var scene = Object.FindFirstObjectByType<SongSelectScene>(); var view = scene.view.search;
+            var scene = Object.FindAnyObjectByType<SongSelectScene>(); var view = scene.view.search;
             view.Open(); yield return null;
             ClickKeyword(view); yield return null;
             Assert.That(view.FocusedRow, Is.Zero); Assert.That(view.EditingKeyword, Is.False);

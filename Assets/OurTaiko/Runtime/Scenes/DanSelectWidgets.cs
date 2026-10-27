@@ -136,7 +136,7 @@ namespace OurTaiko
             text.fontSizeMax = PlateFontMax;
             text.lineSpacing = PlateLineSpacing;
             text.alignment = TextAlignmentOptions.Center;
-            text.enableWordWrapping = false;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Overflow;
         }
 
@@ -149,7 +149,7 @@ namespace OurTaiko
             text.fontSize = ChipFontSize;
             text.lineSpacing = ChipLineSpacing;
             text.alignment = TextAlignmentOptions.Center;
-            text.enableWordWrapping = false;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Overflow;
         }
     }
@@ -202,7 +202,7 @@ namespace OurTaiko
             label.fontSharedMaterial = caption.fontSharedMaterial;
             label.fontSize = size;
             label.alignment = alignment;
-            label.enableWordWrapping = false;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
             label.overflowMode = TextOverflowModes.Overflow;
             label.raycastTarget = false;
             label.color = caption.color;
@@ -261,7 +261,7 @@ namespace OurTaiko
             label.fontSharedMaterial = style.fontSharedMaterial;
             label.fontSize = size;
             label.alignment = TextAlignmentOptions.Center;
-            label.enableWordWrapping = false;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
             label.overflowMode = TextOverflowModes.Overflow;
             label.raycastTarget = false;
             label.text = text;

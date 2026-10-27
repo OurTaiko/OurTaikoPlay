@@ -58,11 +58,14 @@ namespace OurTaiko
             doorRight.uvRect = new Rect(0, 0, DoorWidth / AtlasWidth, 1);
             doorLeft.uvRect = new Rect(DoorWidth / AtlasWidth, 0, -DoorWidth / AtlasWidth, 1);
 
-            // #1@3: the full-screen black over both doors, under the kanji.
+            // #1@3: the full-screen black over both doors, under the kanji. It is left out of the
+            // viewport's RectMask2D (not maskable), whose antialiased edge would otherwise fade it and
+            // the doors alike along the border and let a 1px line of door through.
             float dark = (float)c.Get("#1@3", f, "a", 0.5);
             scrim.enabled = dark > 0;
             scrim.color = new Color(1, 1, 1, dark);
-            scrim.uvRect = new Rect(1200 / AtlasWidth, 1 - 864 / AtlasHeight, 64 / AtlasWidth, 64 / AtlasHeight);
+            // The middle of the 64px black cell, so bilinear filtering never reaches the art around it.
+            scrim.uvRect = new Rect(1216 / AtlasWidth, 1 - 848 / AtlasHeight, 32 / AtlasWidth, 32 / AtlasHeight);
 
             for (int i = 0; i < kanji.Length && i < Cells.Length; i++)
             {

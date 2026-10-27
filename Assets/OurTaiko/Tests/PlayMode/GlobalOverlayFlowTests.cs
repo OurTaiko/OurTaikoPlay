@@ -15,7 +15,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             var overlays = select.coursePanel.parent.Find("GlobalOverlays");
             Assert.That(overlays, Is.Not.Null);
             // draw_overlays comes after the player's course and option panels.
@@ -49,7 +49,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.ResultScene);
             yield return null;
-            var result = Object.FindFirstObjectByType<ResultScene>();
+            var result = Object.FindAnyObjectByType<ResultScene>();
             Assert.That(result.Coins, Is.Not.Null);
             Assert.That(result.Coins.FreePlay.text, Is.EqualTo("フリープレイ"));
             Assert.That(result.Coins.QrChip, Is.Null);

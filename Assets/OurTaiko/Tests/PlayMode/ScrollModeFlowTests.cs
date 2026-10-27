@@ -40,7 +40,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 while (play.Session == null) { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
@@ -84,7 +84,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 while (play.Session == null) { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
                 var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 render.Invoke(play, new object[] { -0.5 });
@@ -129,7 +129,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 while (play.Session == null) { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
                 var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 var circle = (RectTransform)play.noteLayer.parent.parent.Find("JudgeCircle");
@@ -188,7 +188,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (practice)
                 {
                     // A paused practice draws its preview at the cursor through the same path.

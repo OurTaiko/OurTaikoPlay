@@ -62,11 +62,11 @@ namespace OurTaiko.Tests
                 Assert.That(SceneSwitcher.MainCamera, Is.SameAs(Camera.main));
                 Assert.That(SceneSwitcher.Instance, Is.SameAs(switcher));
                 Assert.That(switcher.IsInputBlocked, Is.False);
-                Assert.That(Object.FindObjectsByType<SceneSwitcher>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
-                Assert.That(Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
-                Assert.That(Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
+                Assert.That(Object.FindObjectsByType<SceneSwitcher>().Length, Is.EqualTo(1));
+                Assert.That(Object.FindObjectsByType<EventSystem>().Length, Is.EqualTo(1));
+                Assert.That(Object.FindObjectsByType<AudioListener>().Length, Is.EqualTo(1));
                 yield return null;
-                Assert.That(Object.FindFirstObjectByType<PlayScene>().SongTime, Is.LessThan(-1.7), "The gameplay countdown starts after revealing the scene.");
+                Assert.That(Object.FindAnyObjectByType<PlayScene>().SongTime, Is.LessThan(-1.7), "The gameplay countdown starts after revealing the scene.");
             }
             finally
             {
@@ -92,7 +92,7 @@ namespace OurTaiko.Tests
             Assert.That(switcher.IsSwitching, Is.False);
             Assert.That(switcher.IsCovered, Is.True);
             Assert.That(switcher.IsInputBlocked, Is.True);
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Session, Is.Not.Null, "Target initialization runs while covered.");
             Assert.That(play.SongTime, Is.EqualTo(-2));
             yield return WaitFor(switcher.FadeOutAsync());
@@ -101,7 +101,7 @@ namespace OurTaiko.Tests
             Assert.That(play.SongTime, Is.LessThan(-1.7));
             yield return WaitFor(switcher.SwitchSceneAsync(SceneSwitcher.GameScene));
             Assert.That(SceneSwitcher.LastScene, Is.EqualTo(SceneSwitcher.GameScene), "Reloading the same scene still records a scene change.");
-            Assert.That(Object.FindFirstObjectByType<PlayScene>(), Is.Not.SameAs(play));
+            Assert.That(Object.FindAnyObjectByType<PlayScene>(), Is.Not.SameAs(play));
             yield return WaitFor(switcher.SwitchSceneAsync(SceneSwitcher.MenuScene));
         }
 
@@ -150,7 +150,7 @@ namespace OurTaiko.Tests
             yield return null;
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.MenuScene));
             Assert.That(SceneSwitcher.EnsureInstance(), Is.Not.SameAs(switcher));
-            Assert.That(Object.FindObjectsByType<SceneSwitcher>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
+            Assert.That(Object.FindObjectsByType<SceneSwitcher>().Length, Is.EqualTo(1));
         }
 
         static IEnumerator WaitFor(Task operation)

@@ -15,8 +15,8 @@ namespace OurTaiko.Tests
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.course = "Easy";
             song.chart = new TextAsset("TITLE:Shinuchi Gauge\nBPM:120\nCOURSE:Easy\nLEVEL:1\nBALLOON:2\n#START\n"
-                + string.Concat(Enumerable.Repeat("1111,\n", 9)) + "7008,\n"
-                + string.Concat(Enumerable.Repeat("1111,\n", 16)) + "#END");
+                + string.Concat(Enumerable.Repeat("1111,\n", 10)) + "1110,\n7008,\n"
+                + string.Concat(Enumerable.Repeat("1111,\n", 14)) + "1000,\n#END");
             try
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 SceneSwitcher.Instance.Play(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 Assert.That(play.IsPaused, Is.True);
                 play.pausePanel.SetActive(false);
@@ -34,24 +34,25 @@ namespace OurTaiko.Tests
                 Assert.That(session.ClearThreshold, Is.EqualTo(0.6));
 
                 // Drive exact judgments while the clock is paused; the real event handlers update the saved scene UI.
-                for (int i = 0; i < 36; i++) session.Hit(false, session.Chart.Notes[i].Time);
-                Assert.That(session.GaugePoints, Is.EqualTo(6000));
+                // Easy ★1 over 100 notes: 1.4144% a 良, so the 43rd crosses クリア.
+                for (int i = 0; i < 43; i++) session.Hit(false, session.Chart.Notes[i].Time);
+                Assert.That(session.GaugePoints, Is.EqualTo(6081.92).Within(1e-9));
                 Assert.That(session.IsClear && play.soulGauge.IsClear, Is.True);
                 Assert.That(play.soulGauge.FilledCells, Is.EqualTo(30));
-                Assert.That(play.scoreCounter.Text, Is.EqualTo("360000"));
+                Assert.That(play.scoreCounter.Text, Is.EqualTo("430000"));
                 // The fade starts at the judging frame's whole millisecond.
                 play.soulGauge.ShowTime(TjaTime.Truncate(play.SongTime) + 0.225);
                 Assert.That(play.soulGauge.cellFade.enabled, Is.True);
                 Assert.That(play.soulGauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001));
 
-                session.Hit(false, 18.1); session.Hit(false, 18.1);
-                Assert.That(session.Score, Is.EqualTo(360200));
-                Assert.That(play.scoreCounter.Text, Is.EqualTo("360200"));
-                Assert.That(session.GaugePoints, Is.EqualTo(6000));
+                session.Hit(false, 22.1); session.Hit(false, 22.1);
+                Assert.That(session.Score, Is.EqualTo(430200));
+                Assert.That(play.scoreCounter.Text, Is.EqualTo("430200"));
+                Assert.That(session.GaugePoints, Is.EqualTo(6081.92).Within(1e-9));
                 Assert.That(play.soulGauge.cellFade.enabled, Is.True);
                 Assert.That(play.soulGauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001), "A balloon pop must not restart or cancel the cell fade.");
 
-                Assert.That(session.Hit(false, 20.11), Is.EqualTo(Judgment.Bad));
+                Assert.That(session.Hit(false, 24.11), Is.EqualTo(Judgment.Bad));
                 Assert.That(session.IsClear || play.soulGauge.IsClear, Is.False);
                 Assert.That(play.soulGauge.FilledCells, Is.EqualTo(29));
                 Assert.That(play.soulGauge.clearLabel.sprite.name, Is.EqualTo("clear_dark_ja"));
@@ -63,7 +64,7 @@ namespace OurTaiko.Tests
                 play.SendMessage("Finish");
                 Assert.That(play.IsFinished && !play.resultPanel.activeSelf, Is.True);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
-                var result = Object.FindFirstObjectByType<ResultScene>().Result;
+                var result = Object.FindAnyObjectByType<ResultScene>().Result;
                 Assert.That(result, Is.SameAs(SceneSwitcher.Instance.LastResult));
                 Assert.That(result.Score, Is.EqualTo(990200));
                 Assert.That((result.Good, result.Ok, result.Bad), Is.EqualTo((session.Good, session.Ok, 1)));
@@ -73,7 +74,7 @@ namespace OurTaiko.Tests
 
                 SceneSwitcher.Instance.Restart();
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var restarted = Object.FindFirstObjectByType<PlayScene>();
+                var restarted = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(restarted.Session.Score, Is.Zero);
                 Assert.That(restarted.Session.GaugePoints, Is.Zero);
                 Assert.That(restarted.scoreCounter.Text, Is.EqualTo("0"));

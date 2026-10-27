@@ -13,7 +13,9 @@ namespace OurTaiko.Tests
             yield return null;
             double frame = GameTimeline.FrameTime, audio = GameTimeline.AudioFrameTime;
             double live = GameTimeline.Realtime;
-            yield return new WaitForEndOfFrame();
+            // Stay inside the frame: WaitForEndOfFrame never resumes in batchmode, where no frame is presented.
+            var spin = System.Diagnostics.Stopwatch.StartNew();
+            while (spin.ElapsedMilliseconds < 2) { }
             Assert.That(GameTimeline.FrameTime, Is.EqualTo(frame));
             Assert.That(GameTimeline.AudioFrameTime, Is.EqualTo(audio));
             Assert.That(GameTimeline.Realtime, Is.GreaterThan(live));

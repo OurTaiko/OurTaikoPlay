@@ -35,7 +35,7 @@ namespace OurTaiko.Tests
                     yield return null;
                 }
                 yield return null;
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 if (practice) play.practiceView.panel.SetActive(false);

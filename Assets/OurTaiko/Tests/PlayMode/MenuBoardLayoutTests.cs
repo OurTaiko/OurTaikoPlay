@@ -23,7 +23,7 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
-            var entry = Object.FindFirstObjectByType<EntryScene>();
+            var entry = Object.FindAnyObjectByType<EntryScene>();
             entry.Don(); yield return new WaitForSecondsRealtime(2);
             int count = entry.Board.Boards.Count;
             Assert.That(count, Is.EqualTo(4));
@@ -71,7 +71,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             // The local songs are in the Local folder: open it on the first one.
             select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
             yield return new WaitForSecondsRealtime(2);

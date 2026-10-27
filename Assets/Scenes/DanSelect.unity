@@ -1450,17 +1450,17 @@ MonoBehaviour:
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
+  m_Maskable: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
   m_Texture: {fileID: 2800000, guid: cda9872c2bc7147218a95675f0eff7e5, type: 3}
   m_UVRect:
     serializedVersion: 2
-    x: 0.6
-    y: 0.19999999
-    width: 0.032
-    height: 0.05925926
+    x: 0.608
+    y: 0.21481481
+    width: 0.016
+    height: 0.02962963
 --- !u!1 &159606973
 GameObject:
   m_ObjectHideFlags: 0

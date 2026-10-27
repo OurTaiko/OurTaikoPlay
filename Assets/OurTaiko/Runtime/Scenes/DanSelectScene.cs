@@ -234,6 +234,8 @@ namespace OurTaiko
                 if (Pressed(InputKey.Back)) { CloseOptions(); return; }
                 if (Pressed(InputKey.LeftKa, InputKey.MenuLeft)) ChangeOption(-1);
                 else if (Pressed(InputKey.RightKa, InputKey.MenuRight)) ChangeOption(+1);
+                else if (Pressed(InputKey.MenuUp)) { if (Options.Move(-1)) Play(sfx, ka, true); }
+                else if (Pressed(InputKey.MenuDown)) { if (Options.Move(+1)) Play(sfx, ka, true); }
                 else if (Pressed(InputKey.LeftDon, InputKey.RightDon, InputKey.Confirm)) { Play(sfx, don, true); Options.Confirm(); }
                 return;
             }

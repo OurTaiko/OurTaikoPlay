@@ -67,10 +67,10 @@ namespace OurTaiko.Tests
             TestCapture.Capture("DanLoading.png", canvas: cover.GetComponentInParent<Canvas>().rootCanvas);
             yield return WaitForScene(SceneSwitcher.DanPlayScene, 30);
             Assert.That(cover.IsVisible, Is.False, "It fades away over the play scene.");
-            var scene = Object.FindFirstObjectByType<DanPlayScene>();
+            var scene = Object.FindAnyObjectByType<DanPlayScene>();
             Assert.That(scene.SongIndex, Is.Zero);
             // The dojo's own top band: its cloud layers slide.
-            var band = Object.FindFirstObjectByType<DanBackgroundView>();
+            var band = Object.FindAnyObjectByType<DanBackgroundView>();
             Assert.That(band, Is.Not.Null);
             float cloud = band.layers[0].image.uvRect.x;
             Assert.That(scene.view.rows.Count(r => r.root.gameObject.activeSelf), Is.EqualTo(2), "The gauge exam has its plate, not a row.");
@@ -139,7 +139,7 @@ namespace OurTaiko.Tests
             Assert.That(result.Verdict, Is.EqualTo(6), "Gold, no 可, no 不可.");
 
             // The result: under オート nothing is recorded, and the plate says so.
-            var screen = Object.FindFirstObjectByType<DanResultScene>();
+            var screen = Object.FindAnyObjectByType<DanResultScene>();
             Assert.That(screen.Recorded, Is.False);
             Assert.That(screen.view.noSave.gameObject.activeSelf, Is.True);
             Assert.That(DanRecordStore.Shared.Get(DanRecordStore.Key(entry)), Is.Null);
@@ -178,7 +178,7 @@ namespace OurTaiko.Tests
             yield return null;
             SceneSwitcher.EnsureInstance().PlayDan(entry);
             yield return WaitForScene(SceneSwitcher.DanPlayScene, 30);
-            var scene = Object.FindFirstObjectByType<DanPlayScene>();
+            var scene = Object.FindAnyObjectByType<DanPlayScene>();
             // Nobody plays: the first note is a 不可 and the exam fails at once, but the song plays on.
             yield return WaitUntil(() => scene.Progress.AnyFailed, 15);
             Assert.That(scene.SongEnded, Is.False);
@@ -196,7 +196,7 @@ namespace OurTaiko.Tests
             Assert.That(result.Verdict, Is.Zero);
 
             // Played for real: the attempt is recorded, and song A's score with it.
-            var screen = Object.FindFirstObjectByType<DanResultScene>();
+            var screen = Object.FindAnyObjectByType<DanResultScene>();
             Assert.That(screen.Recorded, Is.True);
             var best = DanRecordStore.Shared.Get(DanRecordStore.Key(entry));
             Assert.That(best.HasValue, Is.True);
@@ -227,7 +227,7 @@ namespace OurTaiko.Tests
             yield return null;
             SceneSwitcher.EnsureInstance().PlayDan(entry);
             yield return WaitForScene(SceneSwitcher.DanPlayScene, 30);
-            var scene = Object.FindFirstObjectByType<DanPlayScene>();
+            var scene = Object.FindAnyObjectByType<DanPlayScene>();
             yield return WaitUntil(() => scene.BetweenElapsedMs > 1000, 5);
             double clock = scene.SongTime;
             scene.TogglePause();

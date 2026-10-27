@@ -60,7 +60,7 @@ namespace OurTaiko.Tests
             Chart = chart; Resolved = new bool[chart.Notes.Count]; Missed = new bool[chart.Notes.Count]; LongHits = new int[chart.Notes.Count];
             var statistics = new ChartStatistics(chart);
             scoring = new ShinuchiScore(statistics);
-            gauge = new SoulGauge(statistics.JudgeableNotes, chart.Course, chart.Level);
+            gauge = new SoulGauge(statistics.RouteNotes, chart.Course, chart.Level);
             bool easy = chart.Course == "Easy" || chart.Course == "Normal";
             goodWindow = easy ? 0.0417083358764648 : GoodWindow;
             okWindow = easy ? 0.108441665649414 : OkWindow;
@@ -225,7 +225,7 @@ namespace OurTaiko.Tests
                 Combo++; MaxCombo = Math.Max(MaxCombo, Combo);
             }
             scoring.ApplyJudgment(result);
-            gauge.ApplyJudgment(result);
+            gauge.ApplyJudgment(result, Chart.Notes[i].BranchId >= 0 ? Chart.Notes[i].Route : CurrentBranch);
             Judged?.Invoke(i, result);
         }
     }

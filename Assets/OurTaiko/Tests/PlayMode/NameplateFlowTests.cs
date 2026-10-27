@@ -27,7 +27,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
                 yield return null;
                 yield return null;
-                var plate = Object.FindFirstObjectByType<NameplateView>();
+                var plate = Object.FindAnyObjectByType<NameplateView>();
                 var text = plate.playerName;
                 AssertRenderedSdfScale(text);
 
@@ -63,7 +63,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 SceneSwitcher.Instance.Play(song, autoPlay: true);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 var lane = (RectTransform)play.scoreCounter.transform.parent;
@@ -174,7 +174,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 SceneSwitcher.Instance.SwitchScene(SceneSwitcher.SongSelectScene);
                 yield return WaitForScene(SceneSwitcher.SongSelectScene);
-                var select = Object.FindFirstObjectByType<SongSelectScene>();
+                var select = Object.FindAnyObjectByType<SongSelectScene>();
                 var plate = select.view.nameplate;
                 Assert.That(plate, Is.Not.Null);
                 // song_select_nameplate_1p (14, 908): over the wheel, under the course panel and its option panel
@@ -196,7 +196,7 @@ namespace OurTaiko.Tests
                 };
                 SceneSwitcher.Instance.ShowResult(run);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
-                var result = Object.FindFirstObjectByType<ResultScene>();
+                var result = Object.FindAnyObjectByType<ResultScene>();
                 plate = result.view.nameplate;
                 // result_player.lua nameplate_pos (2, 922), drawn after the board and before the fade-in wipe.
                 Assert.That(plate.transform.parent, Is.SameAs(result.view.analysis.scorePage.transform));

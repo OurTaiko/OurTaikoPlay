@@ -26,7 +26,7 @@ namespace OurTaiko.Tests
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
             }
             yield return null;
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             if (!play.IsPaused) play.TogglePause();
             play.pausePanel.SetActive(false);
             var lane = play.Lane1;

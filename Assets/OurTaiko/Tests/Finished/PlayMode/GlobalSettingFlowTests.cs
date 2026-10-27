@@ -23,7 +23,7 @@ namespace OurTaiko.Tests
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
                 yield return null;
-                var entry = Object.FindFirstObjectByType<EntryScene>();
+                var entry = Object.FindAnyObjectByType<EntryScene>();
                 Assert.That(entry.Modes.Length, Is.EqualTo(4));
                 Assert.That(entry.Modes[3].Title, Is.EqualTo("ゲーム設定"));
                 yield return new WaitForSecondsRealtime(0.2f);
@@ -58,7 +58,7 @@ namespace OurTaiko.Tests
 
                 entry.Don();
                 yield return WaitForScene(SceneSwitcher.SettingScene);
-                var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
                 var menu = scene.Menu;
                 var view = scene.view;
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
@@ -110,7 +110,7 @@ namespace OurTaiko.Tests
                 view.choiceRows[0].click.Clicked();
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.True);
                 AssertPopup(view, false);
-                view.itemSwipe.Swiped(3);
+                view.itemSwipe.Swiped(4);
                 Assert.That(menu.IsItemReturn, Is.True);
                 view.typeSwipe.Swiped(-2);
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
@@ -124,7 +124,7 @@ namespace OurTaiko.Tests
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.False);
 
                 // Items' Return goes back to the types; the types' Return leaves for Entry.
-                scene.Ka(3);
+                scene.Ka(4);
                 scene.Don();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
 
@@ -188,7 +188,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
                 yield return null;
                 yield return null;
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.drumPad, Is.Not.Null);
                 Assert.That(play.drumPad.gameObject.activeSelf, Is.EqualTo(enabled));
                 Assert.That(play.drumPad.isActiveAndEnabled, Is.EqualTo(enabled));

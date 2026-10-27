@@ -1,4 +1,5 @@
 # Original scene at 12f5bd5: runtime score additions at order 1; pause explicitly moved to front.
+# Refreshed 2026-10-24 after 3f7fdad (GogoTint -> GogoEffects), 96cb157 (Nameplate/DanRing) and d6f4e56 (Kusudama).
 Viewport1920x1080/Backdrop
 Viewport1920x1080/HeaderPattern0
 Viewport1920x1080/HeaderPattern1
@@ -20,8 +21,15 @@ Viewport1920x1080/NoteLane/BranchIndicator/RouteBackground
 Viewport1920x1080/NoteLane/BranchIndicator/LevelChange
 Viewport1920x1080/NoteLane/BranchIndicator/PreviousRoute
 Viewport1920x1080/NoteLane/BranchIndicator/CurrentRoute
-Viewport1920x1080/NoteLane/GogoTint
 Viewport1920x1080/NoteLane/JudgeCircle
+Viewport1920x1080/NoteLane/GogoEffects/Lane
+Viewport1920x1080/NoteLane/GogoEffects/Fire
+Viewport1920x1080/NoteLane/GogoEffects/Explosions/Burst0
+Viewport1920x1080/NoteLane/GogoEffects/Explosions/Burst1
+Viewport1920x1080/NoteLane/GogoEffects/Explosions/Burst2
+Viewport1920x1080/NoteLane/GogoEffects/Explosions/Burst3
+Viewport1920x1080/NoteLane/GogoEffects/Explosions/Burst4
+Viewport1920x1080/NoteLane/GogoEffects/Explosions/Burst5
 Viewport1920x1080/NoteLane/HitFace
 Viewport1920x1080/NoteLane/PlayerCover
 Viewport1920x1080/NoteLane/PlayerIcon
@@ -51,6 +59,7 @@ Viewport1920x1080/NoteLane/Nameplate/BandUnder
 Viewport1920x1080/NoteLane/Nameplate/Band
 Viewport1920x1080/NoteLane/Nameplate/Outline
 Viewport1920x1080/NoteLane/Nameplate/DanBackground
+Viewport1920x1080/NoteLane/Nameplate/DanRing
 Viewport1920x1080/NoteLane/Nameplate/Dan
 Viewport1920x1080/NoteLane/Nameplate/Badge
 Viewport1920x1080/NoteLane/Nameplate/Title
@@ -125,6 +134,8 @@ Viewport1920x1080/NoteLane/ScoreCounter/ScoreAddition/Digit8
 Viewport1920x1080/NoteLane/ScoreCounter/ScoreAddition/Digit9
 Viewport1920x1080/NoteLane/TimingFeedback/Offset
 Viewport1920x1080/NoteLane/ScoreCounter/PlayScoreRank/ScoreRank
+Viewport1920x1080/Kusudama/Ball
+Viewport1920x1080/Kusudama/Renda
 PausePanel
 PausePanel/Back
 PausePanel/Back/Label

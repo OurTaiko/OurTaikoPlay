@@ -66,7 +66,7 @@ namespace OurTaiko.Tests
             online.RefreshSongs();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(1);
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             // The server's folder, then its first category.
             select.Manager.OpenFolderAt(select.Manager.Items.ToList().FindIndex(i => i.Kind == SongSelectManager.ItemKind.Folder && select.Manager.Folders[i.Folder].Server != null));
             yield return null;
@@ -103,7 +103,7 @@ namespace OurTaiko.Tests
             online.RefreshSongs();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(1);
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             // The server's folder, then its first category.
             select.Manager.OpenFolderAt(select.Manager.Items.ToList().FindIndex(i => i.Kind == SongSelectManager.ItemKind.Folder && select.Manager.Folders[i.Folder].Server != null));
             yield return null;

@@ -28,7 +28,7 @@ namespace OurTaiko.Tests
                 do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name !=
                     (practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene));
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 while (play.Session == null) { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
                 if (!play.IsPaused) play.TogglePause();
                 play.enabled = false; // Keep the clock still while exercising the actual scene rendering path.

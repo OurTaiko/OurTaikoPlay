@@ -20,20 +20,23 @@ namespace OurTaiko.Tests
             var settings = SettingManager.EnsureInstance();
             string path = Path.Combine(Application.temporaryCachePath, "offset-test-" + Guid.NewGuid(), "settings.json");
             settings.Load(path);
-            var keyboard = InputSystem.AddDevice<Keyboard>(); keyboard.MakeCurrent();
             var background = InputSystem.settings.backgroundBehavior;
             var editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
             InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
             InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            // Added only now: a device added while the unfocused Editor still ignored background input starts disabled (batchmode).
+            var keyboard = InputSystem.AddDevice<Keyboard>(); keyboard.MakeCurrent();
             try
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene); yield return null;
-                var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
                 var view = scene.view;
+                // Keys are ignored while the switcher's transition still covers the scene.
+                yield return Wait(() => !SceneSwitcher.Instance.IsInputBlocked);
                 yield return Press(keyboard, Key.K); yield return Press(keyboard, Key.F);
-                Assert.That(scene.Menu.ItemCount, Is.EqualTo(4));
+                Assert.That(scene.Menu.ItemCount, Is.EqualTo(5));
                 yield return Press(keyboard, Key.K); yield return Press(keyboard, Key.J);
                 Assert.That(view.detailTitle.text, Is.EqualTo("Offset A (Audio)"));
                 yield return Press(keyboard, Key.D);
@@ -86,7 +89,7 @@ namespace OurTaiko.Tests
                 var switcher = SceneSwitcher.Instance; switcher.PracticeMode = practice;
                 switcher.Play(song, "Oni", false);
                 yield return Wait(() => !switcher.IsInputBlocked && SceneManager.GetActiveScene().name == switcher.SelectedPlayScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 yield return Wait(() => play.Session != null && (!practice || play.Practice != null));
                 yield return null;
                 Assert.That(play.Session.JudgeOffset, Is.EqualTo(b / 1000.0));
@@ -129,7 +132,7 @@ namespace OurTaiko.Tests
             }
             finally
             {
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (play != null) Object.Destroy(play.gameObject);
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 Object.Destroy(song.chart); Object.Destroy(song);
