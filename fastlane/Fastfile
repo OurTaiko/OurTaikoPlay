@@ -65,38 +65,31 @@ platform :ios do
       key_content: ENV.fetch("APPSTORE_PRIVATE_KEY")
     )
     group = ENV["TESTFLIGHT_GROUP"].to_s
-    resume = ENV["RESUME_DISTRIBUTION"] == "true"
     options = {
       api_key: api_key,
       app_identifier: ENV.fetch("BUNDLE_ID"),
       app_platform: "ios",
       app_version: ENV.fetch("APP_VERSION"),
       build_number: ENV.fetch("BUILD_NUMBER"),
-      changelog: "Automated CI build\nVersion: #{ENV.fetch('APP_VERSION')} (#{ENV.fetch('BUILD_NUMBER')})\nSource: #{ENV['BUILD_SOURCE'] || ENV['GITHUB_SHA']}",
+      changelog: "Automated CI build\nVersion: #{ENV.fetch('APP_VERSION')} (#{ENV.fetch('BUILD_NUMBER')})\nSource: #{ENV['GITHUB_SHA']}",
       distribute_external: !group.empty?,
       groups: group.empty? ? nil : [group],
       submit_beta_review: !group.empty?,
       skip_waiting_for_build_processing: false,
       wait_processing_timeout_duration: 1800,
-      distribute_only: resume
+      ipa: File.join(ENV.fetch("IPA_DIR"), "OurTaikoPlay.ipa")
     }
-    options[:ipa] = File.join(ENV.fetch("IPA_DIR"), "OurTaikoPlay.ipa") unless resume
-    if resume
-      wait_for_exact_build
+    begin
       upload_to_testflight(**options)
-    else
-      begin
-        upload_to_testflight(**options)
-      rescue FastlaneCore::Interface::FastlaneError => error
-        # altool can recover from an Apple 500 and report UPLOAD SUCCEEDED, while
-        # fastlane still treats the earlier diagnostic as fatal. Never re-upload:
-        # require this exact app/version/build to finish processing before recovery.
-        raise unless error.message.include?("Error uploading ipa file") &&
-                     error.message.include?("internal server error")
-        UI.important("Apple reported a server error; checking the exact build before resuming distribution.")
-        wait_for_exact_build
-        upload_to_testflight(**options.merge(distribute_only: true))
-      end
+    rescue FastlaneCore::Interface::FastlaneError => error
+      # altool can recover from an Apple 500 and report UPLOAD SUCCEEDED, while
+      # fastlane still treats the earlier diagnostic as fatal. Never re-upload:
+      # require this exact app/version/build to finish processing before recovery.
+      raise unless error.message.include?("Error uploading ipa file") &&
+                   error.message.include?("internal server error")
+      UI.important("Apple reported a server error; checking the exact build before resuming distribution.")
+      wait_for_exact_build
+      upload_to_testflight(**options.except(:ipa).merge(distribute_only: true))
     end
   end
 end
