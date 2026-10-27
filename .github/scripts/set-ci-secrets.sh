@@ -69,12 +69,17 @@ apple() {
   name=$(security cms -D -i "$profile" | plutil -extract Name raw - 2>/dev/null || true)
   put_value APPSTORE_PROFILE_NAME "$(ask "Profile name" "$name")"
   put_value APPLE_TEAM_ID "$(ask "Apple Team ID" "$(security cms -D -i "$profile" | plutil -extract TeamIdentifier.0 raw - 2>/dev/null || true)")"
-  p8=$(ask "App Store Connect API key (.p8)" "$(ls "$dir"/AuthKey_*.p8 2>/dev/null | head -n 1)")
+  p8=$(ask "App Store Connect API key (.p8)" "$(ls "$dir"/AuthKey_*.p8 "$dir"/ApiKey_*.p8 2>/dev/null | head -n 1)")
   need_file "$p8"
   put_file APPSTORE_PRIVATE_KEY "$p8"
-  local key_id; key_id=$(basename "$p8" .p8); key_id=${key_id#AuthKey_}
+  local key_id; key_id=$(basename "$p8" .p8); key_id=${key_id#AuthKey_}; key_id=${key_id#ApiKey_}
   put_value APPSTORE_KEY_ID "$(ask "Key ID" "$key_id")"
-  put_value APPSTORE_ISSUER_ID "$(ask "Issuer ID" "")"
+  local issuer; issuer=$(ask "Issuer ID (leave empty for an individual API key)" "")
+  if [ -n "$issuer" ]; then
+    put_value APPSTORE_ISSUER_ID "$issuer"
+  else
+    echo "  Individual API key: APPSTORE_ISSUER_ID must remain unset in GitHub."
+  fi
 }
 
 for section in "${sections[@]}"; do "$section"; echo; done
