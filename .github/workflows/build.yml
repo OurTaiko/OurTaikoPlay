@@ -94,7 +94,29 @@ jobs:
             Library-${{ matrix.platform }}-
 
       # Without ANDROID_KEYSTORE_BASE64 the APK uses Unity's debug signature.
-      - uses: game-ci/unity-builder@v4
+      # Since Unity 6000.6 the build launch is sometimes SIGKILLed (exit 137) within a second of
+      # starting, right after the activation launch; retry once. Keep both steps' inputs identical.
+      - id: unity
+        uses: game-ci/unity-builder@v4
+        continue-on-error: true
+        with:
+          targetPlatform: ${{ matrix.platform }}
+          buildMethod: ${{ matrix.method }}
+          buildName: ${{ env.BUILD_NAME }}
+          buildsPath: ${{ env.BUILDS_PATH }}
+          versioning: Custom
+          version: ${{ needs.version.outputs.display }}
+          androidVersionCode: ${{ needs.version.outputs.android_code }}
+          androidExportType: androidPackage
+          androidKeystoreName: ourtaiko.keystore
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+
+      - name: Retry the Unity build
+        if: steps.unity.outcome == 'failure'
+        uses: game-ci/unity-builder@v4
         with:
           targetPlatform: ${{ matrix.platform }}
           buildMethod: ${{ matrix.method }}
