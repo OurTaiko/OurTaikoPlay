@@ -1,0 +1,102 @@
+require "fastlane_core/build_watcher"
+
+default_platform(:ios)
+
+def wait_for_exact_build
+  app = Spaceship::ConnectAPI::App.find(ENV.fetch("BUNDLE_ID"))
+  UI.user_error!("App Store Connect app not found") unless app
+  build = FastlaneCore::BuildWatcher.wait_for_build_processing_to_be_complete(
+    app_id: app.id,
+    platform: "ios",
+    app_version: ENV.fetch("APP_VERSION"),
+    build_version: ENV.fetch("BUILD_NUMBER"),
+    poll_interval: 30,
+    timeout_duration: 1800,
+    return_spaceship_testflight_build: false,
+    select_latest: false,
+    wait_for_build_beta_detail_processing: true
+  )
+  unless build.app_version == ENV.fetch("APP_VERSION") && build.version == ENV.fetch("BUILD_NUMBER")
+    UI.user_error!("App Store Connect returned a different build")
+  end
+end
+
+platform :ios do
+  lane :build do
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: ENV.fetch("IOS_PROJECT_PATH"),
+      team_id: ENV.fetch("APPLE_TEAM_ID"),
+      targets: [ENV.fetch("IOS_SCHEME")],
+      profile_name: ENV.fetch("APPSTORE_PROFILE_NAME"),
+      code_sign_identity: "Apple Distribution"
+    )
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: ENV.fetch("IOS_PROJECT_PATH"),
+      team_id: ENV.fetch("APPLE_TEAM_ID"),
+      targets: ["UnityFramework"],
+      code_sign_identity: "Apple Distribution"
+    )
+    gym(
+      project: ENV.fetch("IOS_PROJECT_PATH"),
+      scheme: ENV.fetch("IOS_SCHEME"),
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: ENV.fetch("IPA_DIR"),
+      output_name: "OurTaikoPlay.ipa",
+      clean: true,
+      export_options: {
+        method: "app-store",
+        signingStyle: "manual",
+        provisioningProfiles: { ENV.fetch("BUNDLE_ID") => ENV.fetch("APPSTORE_PROFILE_NAME") }
+      }
+    )
+  end
+
+  lane :deliver_beta do
+    %w[APPSTORE_KEY_ID APPSTORE_PRIVATE_KEY APP_VERSION BUILD_NUMBER].each do |key|
+      UI.user_error!("Missing #{key}") if ENV[key].to_s.empty?
+    end
+    issuer = ENV["APPSTORE_ISSUER_ID"].to_s.strip
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("APPSTORE_KEY_ID"),
+      issuer_id: issuer.empty? ? nil : issuer,
+      key_content: ENV.fetch("APPSTORE_PRIVATE_KEY")
+    )
+    group = ENV["TESTFLIGHT_GROUP"].to_s
+    resume = ENV["RESUME_DISTRIBUTION"] == "true"
+    options = {
+      api_key: api_key,
+      app_identifier: ENV.fetch("BUNDLE_ID"),
+      app_platform: "ios",
+      app_version: ENV.fetch("APP_VERSION"),
+      build_number: ENV.fetch("BUILD_NUMBER"),
+      changelog: "Automated CI build\nVersion: #{ENV.fetch('APP_VERSION')} (#{ENV.fetch('BUILD_NUMBER')})\nSource: #{ENV['BUILD_SOURCE'] || ENV['GITHUB_SHA']}",
+      distribute_external: !group.empty?,
+      groups: group.empty? ? nil : [group],
+      submit_beta_review: !group.empty?,
+      skip_waiting_for_build_processing: false,
+      wait_processing_timeout_duration: 1800,
+      distribute_only: resume
+    }
+    options[:ipa] = File.join(ENV.fetch("IPA_DIR"), "OurTaikoPlay.ipa") unless resume
+    if resume
+      wait_for_exact_build
+      upload_to_testflight(**options)
+    else
+      begin
+        upload_to_testflight(**options)
+      rescue FastlaneCore::Interface::FastlaneError => error
+        # altool can recover from an Apple 500 and report UPLOAD SUCCEEDED, while
+        # fastlane still treats the earlier diagnostic as fatal. Never re-upload:
+        # require this exact app/version/build to finish processing before recovery.
+        raise unless error.message.include?("Error uploading ipa file") &&
+                     error.message.include?("internal server error")
+        UI.important("Apple reported a server error; checking the exact build before resuming distribution.")
+        wait_for_exact_build
+        upload_to_testflight(**options.merge(distribute_only: true))
+      end
+    end
+  end
+end
