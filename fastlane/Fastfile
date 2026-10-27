@@ -77,7 +77,7 @@ platform :ios do
       submit_beta_review: !group.empty?,
       skip_waiting_for_build_processing: false,
       wait_processing_timeout_duration: 1800,
-      skip_binary_upload: resume
+      distribute_only: resume
     }
     options[:ipa] = File.join(ENV.fetch("IPA_DIR"), "OurTaikoPlay.ipa") unless resume
     if resume
@@ -94,7 +94,7 @@ platform :ios do
                      error.message.include?("internal server error")
         UI.important("Apple reported a server error; checking the exact build before resuming distribution.")
         wait_for_exact_build
-        upload_to_testflight(**options.merge(skip_binary_upload: true))
+        upload_to_testflight(**options.merge(distribute_only: true))
       end
     end
   end
