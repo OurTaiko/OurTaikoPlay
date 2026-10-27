@@ -17,6 +17,14 @@ on:
         description: Upload the manual iOS build to TestFlight
         type: boolean
         default: false
+      resume_build:
+        description: Resume distribution of an already uploaded iOS build (no rebuild or upload)
+        type: string
+        default: ''
+      resume_version:
+        description: Version of the already uploaded build (defaults to project version)
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -70,7 +78,7 @@ jobs:
 
   build:
     name: Build (${{ matrix.name }})
-    if: github.event_name != 'workflow_dispatch' || !inputs.ios_only
+    if: (github.event_name != 'workflow_dispatch' || !inputs.ios_only) && inputs.resume_build == ''
     runs-on: ubuntu-latest
     needs: [version]
     strategy:
@@ -154,6 +162,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 120
     needs: [version]
+    if: inputs.resume_build == ''
     env:
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APPSTORE_PROFILE_NAME: ${{ secrets.APPSTORE_PROFILE_NAME }}
@@ -162,6 +171,7 @@ jobs:
       BUNDLE_ID: org.ourtaiko.play
       EXPORT_DIR: ${{ github.workspace }}/build/iOS/OurTaikoPlay
       IPA_DIR: ${{ github.workspace }}/build/ipa
+      BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
     steps:
       - uses: actions/checkout@v4
         with:
@@ -235,13 +245,7 @@ jobs:
           ruby-version: '3.3'
 
       - name: Install fastlane
-        run: |
-          cat > Gemfile <<'EOF'
-          source "https://rubygems.org"
-          gem "fastlane", "2.236.1"
-          gem "xcodeproj"
-          EOF
-          bundle install
+        run: bundle install
 
       - name: Sign and build the IPA
         if: env.APPSTORE_PROFILE_NAME != ''
@@ -250,67 +254,11 @@ jobs:
           IOS_SCHEME: ${{ steps.xcode.outputs.scheme }}
         run: |
           set -euo pipefail
-          mkdir -p fastlane "$IPA_DIR"
-          cat > fastlane/Fastfile <<'EOF'
-          default_platform(:ios)
-
-          platform :ios do
-            lane :build do
-              update_code_signing_settings(
-                use_automatic_signing: false,
-                path: ENV["IOS_PROJECT_PATH"],
-                team_id: ENV["APPLE_TEAM_ID"],
-                targets: [ENV["IOS_SCHEME"]],
-                profile_name: ENV["APPSTORE_PROFILE_NAME"],
-                code_sign_identity: "Apple Distribution"
-              )
-              update_code_signing_settings(
-                use_automatic_signing: false,
-                path: ENV["IOS_PROJECT_PATH"],
-                team_id: ENV["APPLE_TEAM_ID"],
-                targets: ["UnityFramework"],
-                code_sign_identity: "Apple Distribution"
-              )
-              gym(
-                project: ENV["IOS_PROJECT_PATH"],
-                scheme: ENV["IOS_SCHEME"],
-                configuration: "Release",
-                export_method: "app-store",
-                output_directory: ENV["IPA_DIR"],
-                output_name: "OurTaikoPlay.ipa",
-                clean: true,
-                export_options: {
-                  method: "app-store",
-                  signingStyle: "manual",
-                  provisioningProfiles: { ENV["BUNDLE_ID"] => ENV["APPSTORE_PROFILE_NAME"] }
-                }
-              )
-            end
-
-            lane :testflight do
-              issuer = ENV["APPSTORE_ISSUER_ID"].to_s.strip
-              api_key = app_store_connect_api_key(
-                key_id: ENV["APPSTORE_KEY_ID"],
-                issuer_id: issuer.empty? ? nil : issuer,
-                key_content: ENV["APPSTORE_PRIVATE_KEY"]
-              )
-              group = ENV["TESTFLIGHT_GROUP"].to_s
-              upload_to_testflight(
-                api_key: api_key,
-                ipa: File.join(ENV["IPA_DIR"], "OurTaikoPlay.ipa"),
-                changelog: "#{ENV["GITHUB_REF_NAME"]} #{ENV["DISPLAY_VERSION"]}\nCommit: #{ENV["GITHUB_SHA"]}",
-                distribute_external: !group.empty?,
-                groups: group.empty? ? nil : [group],
-                submit_beta_review: !group.empty?,
-                skip_waiting_for_build_processing: false,
-                wait_processing_timeout_duration: 1800
-              )
-            end
-          end
-          EOF
+          mkdir -p "$IPA_DIR"
           bundle exec fastlane ios build
 
       - name: Show the IPA's identity and version
+        id: ipa
         if: env.APPSTORE_PROFILE_NAME != ''
         run: |
           set -euo pipefail
@@ -320,6 +268,12 @@ jobs:
           for key in CFBundleIdentifier CFBundleShortVersionString CFBundleVersion; do
             printf '%s: ' "$key"; /usr/libexec/PlistBuddy -c "Print :$key" "$PLIST"
           done
+          ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PLIST")
+          VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")
+          NUMBER=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST")
+          [[ "$ID" == "$BUNDLE_ID" && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}$ && "$NUMBER" =~ ^[0-9]+$ ]]
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
 
       - name: Upload to TestFlight
         if: github.event_name == 'push' || inputs.upload_testflight
@@ -327,14 +281,15 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
-          DISPLAY_VERSION: ${{ needs.version.outputs.display }}
+          APP_VERSION: ${{ steps.ipa.outputs.version }}
+          BUILD_NUMBER: ${{ steps.ipa.outputs.number }}
         run: |
           set -euo pipefail
           if [[ -z "$APPSTORE_KEY_ID" || -z "$APPSTORE_PRIVATE_KEY" ]]; then
             echo "::error::Missing TestFlight API key"
             exit 1
           fi
-          bundle exec fastlane ios testflight
+          bundle exec fastlane ios deliver_beta
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -343,6 +298,42 @@ jobs:
           path: ${{ env.IPA_DIR }}/OurTaikoPlay.ipa
           if-no-files-found: ignore
           retention-days: 7
+
+  resume-testflight:
+    name: Resume TestFlight distribution
+    if: github.event_name == 'workflow_dispatch' && inputs.resume_build != ''
+    needs: [version]
+    runs-on: macos-26
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/fastlane/Gemfile
+      BUNDLE_ID: org.ourtaiko.play
+      APP_VERSION: ${{ inputs.resume_version || needs.version.outputs.version }}
+      BUILD_NUMBER: ${{ inputs.resume_build }}
+      TESTFLIGHT_GROUP: ${{ vars.TESTFLIGHT_GROUP }}
+      RESUME_DISTRIBUTION: 'true'
+      BUILD_SOURCE: Previously uploaded CI build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Validate the exact build
+        run: |
+          set -euo pipefail
+          [[ "$APP_VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}$ && "$BUILD_NUMBER" =~ ^[0-9]+$ ]]
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - name: Install fastlane
+        run: bundle install
+      - name: Wait for the exact build and distribute it
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: bundle exec fastlane ios deliver_beta
 
   publish:
     name: Publish ${{ startsWith(github.ref, 'refs/tags/') && 'release' || 'nightly' }}
