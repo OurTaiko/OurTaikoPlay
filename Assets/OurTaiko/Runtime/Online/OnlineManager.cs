@@ -46,7 +46,7 @@ namespace OurTaiko.Online
         {
             if (Instance != null) return Instance;
             // Also handles entering Play mode with scene/domain reload disabled.
-            var existing = FindFirstObjectByType<OnlineManager>();
+            var existing = FindAnyObjectByType<OnlineManager>();
             if (existing != null) { existing.Initialize(); return Instance; }
             new GameObject(nameof(OnlineManager)).AddComponent<OnlineManager>();
             return Instance;

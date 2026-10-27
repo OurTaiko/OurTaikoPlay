@@ -30,7 +30,7 @@ namespace OurTaiko.Tests
                 while (SceneManager.GetActiveScene().name != scene || switcher.IsInputBlocked)
                 { Assert.That(Time.realtimeSinceStartupAsDouble, Is.LessThan(deadline)); yield return null; }
                 yield return null;
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 var badge = play.scoreCounter.scoreRank;
@@ -103,7 +103,7 @@ namespace OurTaiko.Tests
                         Assert.That(Time.realtimeSinceStartupAsDouble, Is.LessThan(deadline));
                         yield return null;
                     } while (play != null || switcher.IsInputBlocked);
-                    var restarted = Object.FindFirstObjectByType<PlayScene>();
+                    var restarted = Object.FindAnyObjectByType<PlayScene>();
                     Assert.That((int)restarted.scoreCounter.scoreRank.rank.DisplayedRank, Is.Zero);
                     Assert.That(restarted.scoreCounter.scoreRank.rank.image.enabled, Is.False);
                 }

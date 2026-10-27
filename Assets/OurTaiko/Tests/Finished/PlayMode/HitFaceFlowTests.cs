@@ -22,7 +22,7 @@ namespace OurTaiko.Tests
                 do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
                 while (SceneSwitcher.Instance.IsInputBlocked || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene);
                 yield return null;
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 // The pause is refused until the song clock has started; the frozen clock is the session's time base.
                 while (!play.IsPaused) { play.TogglePause(); Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
                 play.pausePanel.SetActive(false);

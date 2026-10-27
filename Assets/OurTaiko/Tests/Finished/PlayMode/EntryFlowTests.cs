@@ -16,7 +16,7 @@ namespace OurTaiko.Tests
             Assert.That(SceneSwitcher.MenuScene, Is.EqualTo(SceneSwitcher.EntryScene));
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
-            var entry = Object.FindFirstObjectByType<EntryScene>();
+            var entry = Object.FindAnyObjectByType<EntryScene>();
             Assert.That(entry, Is.Not.Null);
             Assert.That(entry.bgm.IsAudioPlaying(), Is.True);
 

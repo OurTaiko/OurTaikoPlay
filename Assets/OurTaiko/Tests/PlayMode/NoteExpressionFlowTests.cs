@@ -40,7 +40,7 @@ namespace OurTaiko.Tests
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
             while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != scene);
             yield return null;
-            play = Object.FindFirstObjectByType<PlayScene>();
+            play = Object.FindAnyObjectByType<PlayScene>();
             if (!play.IsPaused) play.TogglePause();
             play.pausePanel.SetActive(false);
             var notes = play.Session.Chart.Notes;

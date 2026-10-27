@@ -495,7 +495,7 @@ namespace OurTaiko
 
         void DisableDrumPads()
         {
-            foreach (var pad in FindObjectsByType<DrumPad>(FindObjectsSortMode.None))
+            foreach (var pad in FindObjectsByType<DrumPad>())
             {
                 if (pad.gameObject.scene != gameObject.scene || !pad.enabled) continue;
                 pausedPads.Add(pad);

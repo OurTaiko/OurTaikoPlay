@@ -30,7 +30,7 @@ namespace OurTaiko
         {
             if (Instance != null) return Instance;
             // Also handles entering Play mode with scene/domain reload disabled.
-            var existing = FindFirstObjectByType<PlayerInfoController>();
+            var existing = FindAnyObjectByType<PlayerInfoController>();
             if (existing != null) { existing.Initialize(); return Instance; }
             new GameObject(nameof(PlayerInfoController)).AddComponent<PlayerInfoController>();
             return Instance;

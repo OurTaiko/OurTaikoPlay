@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 SceneSwitcher.Instance.Play(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 Assert.That(play.IsPaused, Is.True);
                 play.pausePanel.SetActive(false);
@@ -64,7 +64,7 @@ namespace OurTaiko.Tests
                 play.SendMessage("Finish");
                 Assert.That(play.IsFinished && !play.resultPanel.activeSelf, Is.True);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
-                var result = Object.FindFirstObjectByType<ResultScene>().Result;
+                var result = Object.FindAnyObjectByType<ResultScene>().Result;
                 Assert.That(result, Is.SameAs(SceneSwitcher.Instance.LastResult));
                 Assert.That(result.Score, Is.EqualTo(990200));
                 Assert.That((result.Good, result.Ok, result.Bad), Is.EqualTo((session.Good, session.Ok, 1)));
@@ -74,7 +74,7 @@ namespace OurTaiko.Tests
 
                 SceneSwitcher.Instance.Restart();
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var restarted = Object.FindFirstObjectByType<PlayScene>();
+                var restarted = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(restarted.Session.Score, Is.Zero);
                 Assert.That(restarted.Session.GaugePoints, Is.Zero);
                 Assert.That(restarted.scoreCounter.Text, Is.EqualTo("0"));

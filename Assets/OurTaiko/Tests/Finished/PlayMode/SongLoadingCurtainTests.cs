@@ -19,7 +19,7 @@ namespace OurTaiko.Tests
             var curtain = switcher.Curtain;
             Assert.That(curtain, Is.Not.Null, "The SceneSwitcher prefab carries the song loading curtain.");
             Assert.That(curtain.IsVisible, Is.False);
-            var song = Object.FindFirstObjectByType<SongSelectScene>().Manager.Songs.Single(s => s.name == TestSongs.TripleHelix);
+            var song = Object.FindAnyObjectByType<SongSelectScene>().Manager.Songs.Single(s => s.name == TestSongs.TripleHelix);
             // A local song plays its WAVE file; drop any decode left by an earlier test.
             Assert.That(song.audioPath, Does.EndWith("TRIPLE HELIX.ogg"));
             song.SetPreparedAudio(null);
@@ -52,7 +52,7 @@ namespace OurTaiko.Tests
             yield return WaitUntil(() => SceneSwitcher.CurrentScene == SceneSwitcher.SongLoadingScene && !switcher.IsSwitching);
             SceneManager.activeSceneChanged -= OnActiveScene;
             Assert.That(float.IsNaN(parkedAt), Is.False);
-            var loader = Object.FindFirstObjectByType<SongLoadingScene>();
+            var loader = Object.FindAnyObjectByType<SongLoadingScene>();
             Assert.That(switcher.IsCurtainClosed && switcher.IsCovered && switcher.IsInputBlocked, Is.True);
             Assert.That((curtain.Frame, curtain.InfoAlpha), Is.EqualTo((55.0, 1f)), "Parked on loading_song frame 55.");
             Assert.That(curtain.rainbow.enabled && !curtain.curtainLeft.enabled && !curtain.curtainRight.enabled, Is.True);
@@ -69,7 +69,7 @@ namespace OurTaiko.Tests
             yield return WaitUntil(() => SceneSwitcher.CurrentScene == SceneSwitcher.GameScene);
             Assert.That(Time.realtimeSinceStartup - parkedAt, Is.GreaterThanOrEqualTo(loader.minimumSeconds - 0.05f),
                 "The parked title stays up for the minimum time.");
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(switcher.TakePreparedChart(song, null), Is.Null, "The play scene took the prepared chart.");
             Assert.That(play.Session, Is.Not.Null);
             Assert.That(play.Session.Chart.Title, Is.EqualTo("TRIPLE HELIX"));
@@ -87,7 +87,7 @@ namespace OurTaiko.Tests
             Assert.That(switcher.IsSwitching && !curtain.IsVisible, Is.True);
             yield return WaitUntil(() => !switcher.IsSwitching);
             Assert.That(SceneSwitcher.CurrentScene, Is.EqualTo(SceneSwitcher.GameScene));
-            Assert.That(Object.FindFirstObjectByType<PlayScene>().Session.Chart.Title, Is.EqualTo("TRIPLE HELIX"));
+            Assert.That(Object.FindAnyObjectByType<PlayScene>().Session.Chart.Title, Is.EqualTo("TRIPLE HELIX"));
         }
 
         [UnityTest]
@@ -124,7 +124,7 @@ namespace OurTaiko.Tests
         static void Capture(string name)
         {
             var camera = Camera.main;
-            var canvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None)
+            var canvases = Object.FindObjectsByType<Canvas>()
                 .Where(c => c.isRootCanvas && c.renderMode == RenderMode.ScreenSpaceOverlay).ToArray();
             var target = new RenderTexture(1920, 1080, 24);
             var texture = new Texture2D(1920, 1080, TextureFormat.RGB24, false);

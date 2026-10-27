@@ -30,7 +30,7 @@ namespace OurTaiko.Tests
                 var switcher = SceneSwitcher.Instance;
                 switcher.Play(song, "Easy", true);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 float deadline = Time.realtimeSinceStartup + 15;
                 while (!play.IsFinished)
                 {
@@ -85,7 +85,7 @@ namespace OurTaiko.Tests
                 var switcher = SceneSwitcher.Instance;
                 switcher.Play(song, "Easy", false);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 var session = play.Session;
@@ -126,10 +126,10 @@ namespace OurTaiko.Tests
                 TestCapture.Capture("EndingFinal-" + kind + ".png");
                 yield return WaitForScene(SceneSwitcher.ResultScene);
                 Assert.That(switcher.LastResult, Is.SameAs(result));
-                Assert.That(Object.FindFirstObjectByType<ResultScene>().Result, Is.SameAs(result));
+                Assert.That(Object.FindAnyObjectByType<ResultScene>().Result, Is.SameAs(result));
                 switcher.Restart();
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var restarted = Object.FindFirstObjectByType<PlayScene>();
+                var restarted = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(restarted.IsFinished, Is.False);
                 Assert.That(restarted.ending.gameObject.activeSelf, Is.False);
                 Assert.That(restarted.pauseButton.interactable, Is.True);

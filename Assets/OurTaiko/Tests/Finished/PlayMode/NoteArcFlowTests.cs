@@ -27,7 +27,7 @@ namespace OurTaiko.Tests
                 do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene);
                 yield return null;
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 var arcs = play.noteArcs; var session = play.Session;

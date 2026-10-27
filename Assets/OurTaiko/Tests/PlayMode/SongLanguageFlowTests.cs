@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
                 yield return null;
-                var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
                 Assert.That(scene.Menu.CurrentType.Label, Is.EqualTo("General"));
                 Assert.That(scene.view.itemRows[0].label.text, Is.EqualTo("Language"));
                 TestCapture.Capture("SettingsGeneral.png");
@@ -42,7 +42,7 @@ namespace OurTaiko.Tests
 
                 SceneSwitcher.Instance.Play(song, "Oni", true);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.title.text, Is.EqualTo("Korean title"));
                 Assert.That(play.subtitle.text, Does.StartWith("Base subtitle"));
                 Assert.That(play.Session.Chart.Title, Is.EqualTo("Base"));
@@ -55,7 +55,7 @@ namespace OurTaiko.Tests
                     yield return null;
                 }
                 yield return null;
-                var result = Object.FindFirstObjectByType<ResultScene>();
+                var result = Object.FindAnyObjectByType<ResultScene>();
                 Assert.That(result.view.songTitle.text, Is.EqualTo("Korean title"));
                 Assert.That(result.Result.ChartKey, Is.EqualTo(song.name));
             }

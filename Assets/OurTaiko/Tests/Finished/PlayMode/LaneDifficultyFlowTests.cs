@@ -21,7 +21,7 @@ namespace OurTaiko.Tests
             SceneSwitcher.EnsureInstance().Select(song, course, false);
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Session, Is.Not.Null, "The chart should load.");
             Assert.That(play.laneDifficultySprites, Has.Length.EqualTo(5));
             var difficulty = SongInfo.DifficultyOf(course).Value;

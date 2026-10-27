@@ -24,7 +24,7 @@ namespace OurTaiko.Tests
                 var switcher = SceneSwitcher.Instance;
                 switcher.Play(song, "Oni", false);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 play.TogglePause();
                 Assert.That(play.IsPaused, Is.True);
                 play.Session.Advance(play.Session.Chart.Duration, true);

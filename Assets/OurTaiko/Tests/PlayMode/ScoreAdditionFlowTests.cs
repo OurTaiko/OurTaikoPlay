@@ -29,7 +29,7 @@ namespace OurTaiko.Tests
                 while (SceneManager.GetActiveScene().name != scene || switcher.IsInputBlocked)
                 { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
                 yield return null;
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 // Hide the ordinary pause menu only for inspecting the saved score UI underneath.
                 play.pausePanel.SetActive(false);

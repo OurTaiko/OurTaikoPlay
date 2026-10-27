@@ -78,7 +78,7 @@ namespace OurTaiko.Tests
             yield return null;
             SceneSwitcher.EnsureInstance().ShowDanResult(result);
             yield return WaitForScene(SceneSwitcher.DanResultScene);
-            var screen = Object.FindFirstObjectByType<DanResultScene>();
+            var screen = Object.FindAnyObjectByType<DanResultScene>();
             Assert.That(screen.Recorded, Is.True);
             Assert.That(screen.PreviousBest?.Score, Is.EqualTo(1000000));
             Assert.That(screen.voice.clip, Is.SameAs(screen.announce), "The announce, once, as the result opens.");
@@ -144,7 +144,7 @@ namespace OurTaiko.Tests
             switcher.DanIndexMax = 24;
             switcher.ShowDanResult(result);
             yield return WaitForScene(SceneSwitcher.DanResultScene);
-            var screen = Object.FindFirstObjectByType<DanResultScene>();
+            var screen = Object.FindAnyObjectByType<DanResultScene>();
             Assert.That(screen.Celebrates && screen.Congratulates, Is.True);
             yield return new WaitForSecondsRealtime(0.6f);
             screen.Don();
@@ -182,7 +182,7 @@ namespace OurTaiko.Tests
             yield return null;
             SceneSwitcher.EnsureInstance().ShowDanResult(result);
             yield return WaitForScene(SceneSwitcher.DanResultScene);
-            var screen = Object.FindFirstObjectByType<DanResultScene>();
+            var screen = Object.FindAnyObjectByType<DanResultScene>();
             yield return new WaitForSecondsRealtime(2.5f);
             Assert.That(screen.view.plates[1].unreached.enabled, Is.True);
             Assert.That(screen.view.plates[1].title.text, Is.EqualTo("？？？？？？"));

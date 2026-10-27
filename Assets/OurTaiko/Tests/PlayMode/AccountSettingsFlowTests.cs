@@ -70,7 +70,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
             yield return null;
-            var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+            var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
             scene.Ka(4);
             Assert.That(scene.Menu.CurrentType.Label, Is.EqualTo("OurTaiko Accounts"));
             scene.Don();
@@ -206,7 +206,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
-            var entry = Object.FindFirstObjectByType<EntryScene>();
+            var entry = Object.FindAnyObjectByType<EntryScene>();
             Assert.That(entry.AccountNotice, Is.EqualTo("1P's OurTaiko sign-in has expired. Sign in again in the game settings."));
             yield return null;
             TestCapture.Capture("EntryAccountExpired.png");

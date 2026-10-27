@@ -35,7 +35,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 yield return null;
 
@@ -122,7 +122,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (practice)
                 {
                     yield return null;
@@ -184,7 +184,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     yield return null;
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 int judged = 0, observed = 0;
                 play.Session.Judged += (_, result) => { if (result == Judgment.Good) judged++; };
                 while (observed < 3)

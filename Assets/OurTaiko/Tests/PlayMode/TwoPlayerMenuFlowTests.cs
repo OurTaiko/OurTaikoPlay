@@ -33,7 +33,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
-            var entry = Object.FindFirstObjectByType<EntryScene>();
+            var entry = Object.FindAnyObjectByType<EntryScene>();
             Assert.That(SceneSwitcher.Instance.TwoPlayers, Is.False);
             Assert.That(entry.view.nameplateGroup2P.alpha, Is.Zero);
 
@@ -55,7 +55,7 @@ namespace OurTaiko.Tests
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
             while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene);
             Assert.That(SceneSwitcher.Instance.TwoPlayers, Is.True);
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.view.nameplateGroup2P.alpha, Is.EqualTo(1), "2P's plate is up when it joined on Entry.");
         }
 
@@ -72,7 +72,7 @@ namespace OurTaiko.Tests
             float deadline = Time.realtimeSinceStartup + 20;
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
             while (switcher.IsInputBlocked || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene);
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             var manager = select.Manager;
             Assert.That(manager.TwoPlayers, Is.False);
             Assert.That(select.view.nameplateGroup2P.alpha, Is.Zero);

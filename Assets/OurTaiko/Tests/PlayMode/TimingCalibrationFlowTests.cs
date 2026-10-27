@@ -38,7 +38,7 @@ namespace OurTaiko.Tests
                 yield return null;
             }
             yield return new WaitForSecondsRealtime(.6f);
-            Object.FindFirstObjectByType<ResultScene>().ShowPage(true);
+            Object.FindAnyObjectByType<ResultScene>().ShowPage(true);
             yield return new WaitForSecondsRealtime(.25f);
         }
         static void Click(ResultPointerControl control)
@@ -64,7 +64,7 @@ namespace OurTaiko.Tests
             try
             {
                 var run = Run(); yield return Open(run);
-                var scene = Object.FindFirstObjectByType<ResultScene>(); var view = scene.view.analysis;
+                var scene = Object.FindAnyObjectByType<ResultScene>(); var view = scene.view.analysis;
                 Assert.That(view.Details, Is.True);
                 Assert.That(view.audioRecommendation.text, Is.EqualTo("+12 ms → -3 ms"));
                 Assert.That(view.judgeRecommendation.text, Is.EqualTo("-4 ms → -19 ms"));
@@ -113,7 +113,7 @@ namespace OurTaiko.Tests
             try
             {
                 yield return Open(Run());
-                var scene = Object.FindFirstObjectByType<ResultScene>(); var view = scene.view.analysis;
+                var scene = Object.FindAnyObjectByType<ResultScene>(); var view = scene.view.analysis;
                 foreach (var run in new[] { Run(auto: true), Run(empty: true), Run() })
                 {
                     settings.play.audioOffsetMs = 13; manager.UseUnsaved(settings);

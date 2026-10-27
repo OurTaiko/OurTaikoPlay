@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 SceneSwitcher.Instance.Play(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 var notes = play.Session.Chart.Notes;
                 Assert.That(notes.All(n => n.Kind == NoteKind.Ka && !n.Display), Is.True, "あべこべ swaps, ドロン hides.");
                 Assert.That(notes[0].ScrollX, Is.EqualTo(2));

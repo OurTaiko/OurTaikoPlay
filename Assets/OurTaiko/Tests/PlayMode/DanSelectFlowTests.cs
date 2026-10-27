@@ -49,7 +49,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
-            var entry = Object.FindFirstObjectByType<EntryScene>();
+            var entry = Object.FindAnyObjectByType<EntryScene>();
             Assert.That(entry.Modes.Select(m => m.Title), Is.EqualTo(new[] { "演奏ゲーム", "段位道場", "練習モード", "ゲーム設定" }));
             Assert.That(entry.Modes[1].Scene, Is.EqualTo(SceneSwitcher.DanSelectScene));
             yield return new WaitForSecondsRealtime(0.2f);
@@ -62,7 +62,7 @@ namespace OurTaiko.Tests
             entry.Don();
             yield return WaitForScene(SceneSwitcher.DanSelectScene);
 
-            var scene = Object.FindFirstObjectByType<DanSelectScene>();
+            var scene = Object.FindAnyObjectByType<DanSelectScene>();
             var view = scene.view;
             // After Entry the whole 段位道場 intro plays: the four kanji are stamped on the shut doors.
             Assert.That(scene.FullIntro, Is.True);
@@ -150,7 +150,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
-            var entry = Object.FindFirstObjectByType<EntryScene>();
+            var entry = Object.FindAnyObjectByType<EntryScene>();
             yield return new WaitForSecondsRealtime(0.2f);
             entry.Don();
             entry.Join2P();
@@ -170,7 +170,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.DanSelectScene);
             yield return null;
-            var scene = Object.FindFirstObjectByType<DanSelectScene>();
+            var scene = Object.FindAnyObjectByType<DanSelectScene>();
             var view = scene.view;
             yield return WaitUntil(() => scene.IntroDone, 3);
             Assert.That(scene.Pages.Select(p => p.Title), Is.EqualTo(new[] { "ローカル", "Fanmade", "Database" }));
@@ -228,7 +228,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.DanSelectScene);
             yield return null;
-            var scene = Object.FindFirstObjectByType<DanSelectScene>();
+            var scene = Object.FindAnyObjectByType<DanSelectScene>();
             var view = scene.view;
             Assert.That(scene.Courses.Count, Is.EqualTo(7));
             // Not from Entry: only the doors' opening plays.
@@ -259,7 +259,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
-            var entry = Object.FindFirstObjectByType<EntryScene>();
+            var entry = Object.FindAnyObjectByType<EntryScene>();
             yield return new WaitForSecondsRealtime(0.2f);
             entry.Don();
             yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 3);

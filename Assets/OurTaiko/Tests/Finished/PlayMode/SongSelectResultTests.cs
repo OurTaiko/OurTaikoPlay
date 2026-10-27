@@ -21,7 +21,7 @@ namespace OurTaiko.Tests
             switcher.LastDifficulty = -1;
             switcher.SwitchScene(SceneSwitcher.SongSelectScene);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.Songs.Length, Is.EqualTo(3));
             // The local songs are in the Local folder: open it on the first one.
             select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
@@ -95,14 +95,14 @@ namespace OurTaiko.Tests
             Assert.That(switcher.AutoPlay && switcher.LastDifficulty == (int)Difficulty.Oni, Is.True);
             Assert.That(switcher.ReturnScene, Is.EqualTo(SceneSwitcher.SongSelectScene));
 
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Session.Chart.Course, Is.EqualTo("Oni"));
             if (!play.IsPaused) play.TogglePause();
             play.pausePanel.SetActive(false);
             play.Session.Advance(play.Session.Chart.Duration + 1, true);
             play.SendMessage("Finish");
             yield return WaitForScene(SceneSwitcher.ResultScene);
-            var result = Object.FindFirstObjectByType<ResultScene>();
+            var result = Object.FindAnyObjectByType<ResultScene>();
             Assert.That(result.Result.Bad == 0 && result.Result.Ok == 0, Is.True);
             Assert.That(result.Result.GaugeState, Is.EqualTo(GaugeState.Full));
             Assert.That(ScoreStore.Shared.Get(TestSongs.Load(TestSongs.TripleHelix).ScoreKey, Difficulty.Oni), Is.Null, "Auto play is never saved.");
@@ -118,7 +118,7 @@ namespace OurTaiko.Tests
             Assert.That(result.Sequence.CanAdvance, Is.True, "A settled result has no extra exit delay.");
             result.Don();
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            Assert.That(Object.FindFirstObjectByType<SongSelectScene>().Manager.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
+            Assert.That(Object.FindAnyObjectByType<SongSelectScene>().Manager.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
             Object.Destroy(switcher.gameObject);
         }
 
@@ -137,7 +137,7 @@ namespace OurTaiko.Tests
             Assert.That(failed.Message, Is.EqualTo(ResultMessage.Miss));
             SceneSwitcher.Instance.ShowResult(failed);
             yield return WaitForScene(SceneSwitcher.ResultScene);
-            var result = Object.FindFirstObjectByType<ResultScene>();
+            var result = Object.FindAnyObjectByType<ResultScene>();
             yield return WaitUntil(() => result.Sequence.RevealEndMs > 0, 20);
             Assert.That(result.Sequence.GaugeShown, Is.EqualTo(12));
             Assert.That(result.Sequence.CrownAtMs.HasValue, Is.True);
@@ -167,7 +167,7 @@ namespace OurTaiko.Tests
         static void Capture(string name)
         {
             Canvas canvas = null;
-            foreach (var candidate in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            foreach (var candidate in Object.FindObjectsByType<Canvas>())
                 if (candidate.gameObject.scene == SceneManager.GetActiveScene()) canvas = candidate;
             var camera = Camera.main;
             var scaler = canvas.GetComponent<UnityEngine.UI.CanvasScaler>();

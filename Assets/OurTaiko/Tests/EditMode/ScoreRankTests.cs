@@ -103,7 +103,7 @@ namespace OurTaiko.Tests
             try
             {
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/Result.unity");
-                var view = Object.FindFirstObjectByType<ResultScene>().view.scoreRank;
+                var view = Object.FindAnyObjectByType<ResultScene>().view.scoreRank;
                 var shapes = new[] { "s74", "s76", "s78", "s80", "s82", "s84", "s86" };
                 for (int rank = 1; rank <= 7; rank++)
                 {
@@ -120,7 +120,7 @@ namespace OurTaiko.Tests
                 view.Show(0);
                 Assert.That(view.animationView.layers.All(i => !i.enabled), Is.True);
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/SongSelect.unity");
-                var select = Object.FindFirstObjectByType<SongSelectScene>();
+                var select = Object.FindAnyObjectByType<SongSelectScene>();
                 foreach (var display in select.view.songBoards.Select(b => b.scoreRank).Concat(select.view.cards.Select(c => c.scoreRank)))
                 {
                     for (int rank = 1; rank <= 7; rank++)

@@ -31,7 +31,7 @@ namespace OurTaiko.Tests
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene); yield return null;
-                var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
                 var view = scene.view;
                 // Keys are ignored while the switcher's transition still covers the scene.
                 yield return Wait(() => !SceneSwitcher.Instance.IsInputBlocked);
@@ -89,7 +89,7 @@ namespace OurTaiko.Tests
                 var switcher = SceneSwitcher.Instance; switcher.PracticeMode = practice;
                 switcher.Play(song, "Oni", false);
                 yield return Wait(() => !switcher.IsInputBlocked && SceneManager.GetActiveScene().name == switcher.SelectedPlayScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 yield return Wait(() => play.Session != null && (!practice || play.Practice != null));
                 yield return null;
                 Assert.That(play.Session.JudgeOffset, Is.EqualTo(b / 1000.0));
@@ -132,7 +132,7 @@ namespace OurTaiko.Tests
             }
             finally
             {
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (play != null) Object.Destroy(play.gameObject);
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 Object.Destroy(song.chart); Object.Destroy(song);

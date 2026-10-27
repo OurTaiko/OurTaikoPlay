@@ -39,7 +39,7 @@ namespace OurTaiko
         public static LocalSongLibrary EnsureInstance()
         {
             if (Instance != null) return Instance;
-            var existing = FindFirstObjectByType<LocalSongLibrary>();
+            var existing = FindAnyObjectByType<LocalSongLibrary>();
             if (existing != null) { existing.Initialize(); return Instance; }
             new GameObject(nameof(LocalSongLibrary)).AddComponent<LocalSongLibrary>();
             return Instance;

@@ -213,11 +213,11 @@ namespace OurTaiko.Tests
             Assert.That(oldPlay.pauseMenu.IsClosing, Is.True);
             yield return new WaitForSecondsRealtime(0.16f);
             Assert.That(SceneSwitcher.Instance.IsSwitching, Is.False, "Restart must wait for the menu to fade away.");
-            Assert.That(Object.FindFirstObjectByType<PlayScene>(), Is.SameAs(oldPlay));
+            Assert.That(Object.FindAnyObjectByType<PlayScene>(), Is.SameAs(oldPlay));
             yield return WaitUntil(() => oldPlay == null, "Restart did not reload the play scene.", 15);
             yield return WaitForScene(SceneSwitcher.GameScene);
-            play = Object.FindFirstObjectByType<PlayScene>();
-            pad = Object.FindFirstObjectByType<DrumPad>();
+            play = Object.FindAnyObjectByType<PlayScene>();
+            pad = Object.FindAnyObjectByType<DrumPad>();
             Assert.That(play.Session.Chart.Title, Is.EqualTo("Pause Menu Test"));
             Assert.That(play.Session.Rolls, Is.Zero);
             Assert.That(play.SongTime, Is.LessThan(0), "Restart begins a new countdown.");
@@ -232,7 +232,7 @@ namespace OurTaiko.Tests
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.GameScene));
             Assert.That(pad.enabled, Is.False);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            Assert.That(Object.FindFirstObjectByType<SongSelectScene>(), Is.Not.Null);
+            Assert.That(Object.FindAnyObjectByType<SongSelectScene>(), Is.Not.Null);
         }
 
         [UnityTest]
@@ -333,8 +333,8 @@ namespace OurTaiko.Tests
             switcher.PracticeMode = practice;
             switcher.Play(song);
             yield return WaitForScene(practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene);
-            play = Object.FindFirstObjectByType<PlayScene>();
-            pad = Object.FindFirstObjectByType<DrumPad>();
+            play = Object.FindAnyObjectByType<PlayScene>();
+            pad = Object.FindAnyObjectByType<DrumPad>();
             Assert.That(play.pauseMenu, Is.Not.Null, "The saved play scene must contain the pause menu.");
             Assert.That(pad, Is.Not.Null);
             if (!practice && waitForPlayback)

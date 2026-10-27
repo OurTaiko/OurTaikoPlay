@@ -57,7 +57,7 @@ namespace OurTaiko.Tests
         {
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
             yield return null;
-            var scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+            var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
             scene.Don(); scene.Ka(1); scene.Don();
             AssertClickable(scene.view.choiceRows[0].click);
             // Open capture with the current Don key. That same press must not be captured.
@@ -82,7 +82,7 @@ namespace OurTaiko.Tests
             manager.Set(empty);
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
             yield return null;
-            scene = Object.FindFirstObjectByType<GlobalSettingScene>();
+            scene = Object.FindAnyObjectByType<GlobalSettingScene>();
             scene.view.typeRows[0].click.Clicked();
             scene.view.itemRows[1].click.Clicked(); scene.view.itemRows[1].click.Clicked();
             AssertClickable(scene.view.choiceRows[2].click);

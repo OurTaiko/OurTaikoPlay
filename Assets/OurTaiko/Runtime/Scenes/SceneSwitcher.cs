@@ -110,7 +110,7 @@ namespace OurTaiko
         {
             if (Instance != null) return Instance;
             // Also handles entering Play mode with scene/domain reload disabled.
-            var existing = FindFirstObjectByType<SceneSwitcher>();
+            var existing = FindAnyObjectByType<SceneSwitcher>();
             if (existing != null) { existing.Initialize(); return Instance; }
             var prefab = Resources.Load<SceneSwitcher>(nameof(SceneSwitcher));
             if (prefab == null) throw new InvalidOperationException("The global Resources/SceneSwitcher prefab is missing.");

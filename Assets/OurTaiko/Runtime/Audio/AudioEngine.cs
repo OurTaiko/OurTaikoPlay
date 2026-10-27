@@ -55,7 +55,7 @@ namespace OurTaiko
         public static AudioEngine EnsureInstance()
         {
             if (Instance != null) return Instance;
-            var existing = FindFirstObjectByType<AudioEngine>();
+            var existing = FindAnyObjectByType<AudioEngine>();
             if (existing != null) { existing.Initialize(); return existing; }
             return new GameObject(nameof(AudioEngine)).AddComponent<AudioEngine>();
         }
@@ -227,7 +227,7 @@ namespace OurTaiko
                 var requested = manager.Settings.Clone().audio;
                 var previous = appliedOptions;
                 Generation++;
-                foreach (var bus in FindObjectsByType<AudioBus>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                foreach (var bus in FindObjectsByType<AudioBus>(FindObjectsInactive.Include))
                 { bus.Stop(); bus.Release(); }
                 NativeAudioSample.ReleaseAll();
                 FreeNative();
@@ -286,7 +286,7 @@ namespace OurTaiko
         {
             if (Instance != this) return;
             // Release pinned stream memory before unloading the native device, including Play-mode exit.
-            foreach (var bus in FindObjectsByType<AudioBus>(FindObjectsInactive.Include, FindObjectsSortMode.None)) bus.Release();
+            foreach (var bus in FindObjectsByType<AudioBus>(FindObjectsInactive.Include)) bus.Release();
             lock (DeviceLock)
             {
                 Generation++;

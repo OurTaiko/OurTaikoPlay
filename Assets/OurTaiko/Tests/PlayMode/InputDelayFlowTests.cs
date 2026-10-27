@@ -116,7 +116,7 @@ namespace OurTaiko.Tests
                     yield return null;
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                 }
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 deadline = Time.realtimeSinceStartup + 10;
                 while (play.SongTime < 0.3)
                 {

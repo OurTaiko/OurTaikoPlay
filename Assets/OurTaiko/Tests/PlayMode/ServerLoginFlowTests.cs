@@ -56,7 +56,7 @@ namespace OurTaiko.Tests
             var online = OnlineManager.Instance;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
             yield return null;
-            var login = Object.FindFirstObjectByType<ServerLoginScene>();
+            var login = Object.FindAnyObjectByType<ServerLoginScene>();
             var view = login.view;
             Assert.That(view.serverName.text, Is.EqualTo("Fixture"));
             Assert.That(view.serverUrl.text, Is.EqualTo(fixture.BaseUrl));
@@ -88,7 +88,7 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
 
             // The server's folder follows Local; inside it the categories are closed folders: Game (1 song) and Pop (empty).
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.Items.Select(i => i.Kind), Is.EqualTo(new[]
                 { SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Search, SongSelectManager.ItemKind.Back }),
                 "Local, the server, search and the root もどる.");
@@ -151,7 +151,7 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.GameScene, 30);
 
             // The verified copy plays: API title, downloaded audio.
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Session.Chart.Title, Is.EqualTo("Fixture Song"));
             Assert.That(song.audioPath, Is.Not.Null.And.Not.Empty);
             Assert.That(play.music.AudioLength(), Is.GreaterThan(0));
@@ -200,7 +200,7 @@ namespace OurTaiko.Tests
             yield return WaitUntil(() => !SceneSwitcher.Instance.IsInputBlocked, 10);
             SceneSwitcher.Instance.ReturnToMenu();
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            select = Object.FindFirstObjectByType<SongSelectScene>();
+            select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.KindAt(2), Is.EqualTo(SongSelectManager.ItemKind.Back));
             Assert.That(select.Manager.FocusedSong, Is.SameAs(song));
             Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).Select(item => item.Folder), Is.EqualTo(new[] { 2 }),
@@ -216,7 +216,7 @@ namespace OurTaiko.Tests
             TestData.UseServers(new ServerList { servers = { fixture.Server("don", "katsu") } });
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
-            var entry = Object.FindFirstObjectByType<EntryScene>();
+            var entry = Object.FindAnyObjectByType<EntryScene>();
             entry.Don();
             yield return new WaitForSecondsRealtime(1.5f);
             entry.Ka(2);
@@ -224,14 +224,14 @@ namespace OurTaiko.Tests
             entry.Don();
             yield return WaitForScene(SceneSwitcher.ServerLoginScene);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
-            var login = Object.FindFirstObjectByType<ServerLoginScene>();
+            var login = Object.FindAnyObjectByType<ServerLoginScene>();
             Assert.That(login.view.message.text, Does.Contain("過去のスコア"));
             login.Activate(ServerLoginView.Item.Login);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
             Assert.That(fixture.Requests, Does.Contain("POST /api/v1/game/login"));
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
 
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             select.Manager.OpenFolderAt(1);
             select.Manager.OpenFolderAt(3);
             yield return Focus(select, 3);
@@ -247,7 +247,7 @@ namespace OurTaiko.Tests
             Assert.That(select.view.cards[(int)Difficulty.Oni].crown.sprite, Is.SameAs(select.smallCrowns[1]));
             select.Manager.Confirm();
             yield return WaitForScene(SceneSwitcher.PracticeScene, 30);
-            var play = Object.FindFirstObjectByType<PlayScene>();
+            var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.IsPractice, Is.True);
             Assert.That(play.Session.Chart.Title, Is.EqualTo("Fixture Song"));
             Assert.That(play.music.AudioLength(), Is.GreaterThan(0));
@@ -279,7 +279,7 @@ namespace OurTaiko.Tests
             online.RefreshSongs();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(.6f);
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             select.Manager.OpenFolderAt(1);
             select.Manager.OpenFolderAt(3);
             yield return Focus(select, 3);
@@ -337,7 +337,7 @@ namespace OurTaiko.Tests
                 Assert.That(online.Servers.servers, Is.Empty, "Built-in servers are not part of servers.json.");
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.PresentedScene);
                 yield return null;
-                var presented = Object.FindFirstObjectByType<PresentedScene>();
+                var presented = Object.FindAnyObjectByType<PresentedScene>();
                 presented.minimumSeconds = 1;
                 yield return null;
                 TestCapture.Capture("Presented.png");
@@ -359,7 +359,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
                 yield return WaitForScene(SceneSwitcher.SongSelectScene);
                 Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/catalog"), Is.EqualTo(1), "Song select does not load the list again.");
-                Assert.That(Object.FindFirstObjectByType<SongSelectScene>().Manager.Folders.Skip(2).Select(f => f.Title), Is.EqualTo(new[] { "Game", "Pop" }));
+                Assert.That(Object.FindAnyObjectByType<SongSelectScene>().Manager.Folders.Skip(2).Select(f => f.Title), Is.EqualTo(new[] { "Game", "Pop" }));
             }
             finally
             {
@@ -378,7 +378,7 @@ namespace OurTaiko.Tests
             TestData.UseServers(new ServerList());
             online.UseUnsaved(new ServerList(), TestData.OnlineCache, ("Built-in", fixture.BaseUrl));
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.PresentedScene);
-            var presented = Object.FindFirstObjectByType<PresentedScene>();
+            var presented = Object.FindAnyObjectByType<PresentedScene>();
             presented.minimumSeconds = 60;
             presented.Skip();
             Assert.That(presented.Skipped, Is.True);
@@ -398,7 +398,7 @@ namespace OurTaiko.Tests
             var online = OnlineManager.Instance;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
             yield return null;
-            var login = Object.FindFirstObjectByType<ServerLoginScene>();
+            var login = Object.FindAnyObjectByType<ServerLoginScene>();
             Assert.That(login.Focus, Is.EqualTo(ServerLoginView.Item.Username), "No account yet: the name field first.");
             Assert.That(login.view.progress.text, Is.EqualTo("1 / 2"), "Disabled servers are not shown.");
             login.Activate(ServerLoginView.Item.Login);
@@ -418,7 +418,7 @@ namespace OurTaiko.Tests
 
             // Only one category at a time: opening Pop closes Game; もどる closes Pop again. While a
             // category is open only its もどる shows; the server's returns when the category closes.
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             yield return Focus(select, 1);
             select.Manager.Confirm();
             Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).Select(item => item.Folder), Is.EqualTo(new[] { 1 }));
@@ -455,7 +455,7 @@ namespace OurTaiko.Tests
             fixture.Fail["/api/v1/charts/" + chart.Id] = 500;
             SceneSwitcher.Instance.Play(song, "Oni", false);
             yield return WaitForScene(SceneSwitcher.SongLoadingScene, 10);
-            var loading = Object.FindFirstObjectByType<SongLoadingScene>();
+            var loading = Object.FindAnyObjectByType<SongLoadingScene>();
             yield return WaitUntil(() => loading.Error != null, 10);
             Assert.That(loading.Error, Is.EqualTo("HTTP_500"));
             yield return null;
@@ -498,10 +498,10 @@ namespace OurTaiko.Tests
             var online = OnlineManager.Instance;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
             yield return null;
-            Object.FindFirstObjectByType<ServerLoginScene>().Activate(ServerLoginView.Item.Guest);
+            Object.FindAnyObjectByType<ServerLoginScene>().Activate(ServerLoginView.Item.Guest);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
 
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.Folders.Skip(2).Select(f => (f.Title, f.Genre, f.Songs.Length)),
                 Is.EqualTo(new[] { ("Game", 3, 1), ("Pop", 1, 0), ("Festival Set", 8, 1), ("Daily Challenge", 6, 1) }));
             Assert.That(select.Manager.BoardCount, Is.EqualTo(4));
@@ -551,13 +551,13 @@ namespace OurTaiko.Tests
             TestData.UseServers(new ServerList { servers = { fixture.Server() } });
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
             yield return null;
-            var login = Object.FindFirstObjectByType<ServerLoginScene>();
+            var login = Object.FindAnyObjectByType<ServerLoginScene>();
             login.Activate(ServerLoginView.Item.Guest);
             yield return WaitUntil(() => login.IsBusy == false, 60);
             Assert.That(login.view.message.text, Does.Contain("3001 曲"));
             yield return WaitForScene(SceneSwitcher.SongSelectScene, 30);
 
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.BoardCount, Is.EqualTo(4));
             yield return Focus(select, 1);
             select.Manager.Confirm();
@@ -594,7 +594,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.BoardCount, Is.EqualTo(3), "The Local folder, the search folder and the root もどる.");
             Assert.That(select.Manager.Focused, Is.Zero, "Local is focused, not もどる.");
             // The wheel wraps: one step back from Local is the root もどる, which leaves for Entry.

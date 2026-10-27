@@ -23,7 +23,7 @@ namespace OurTaiko.Tests
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
-                var select = Object.FindFirstObjectByType<SongSelectScene>();
+                var select = Object.FindAnyObjectByType<SongSelectScene>();
                 select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
                 yield return new WaitForSecondsRealtime(1f);
                 song = select.Manager.FocusedSong; original = song.chart; song.chart = chart;
@@ -59,7 +59,7 @@ namespace OurTaiko.Tests
                 double deadline = Time.realtimeSinceStartupAsDouble + 20;
                 while (SceneManager.GetActiveScene().name != SceneSwitcher.ResultScene || SceneSwitcher.Instance.IsInputBlocked)
                 { Assert.That(Time.realtimeSinceStartupAsDouble, Is.LessThan(deadline)); yield return null; }
-                var result = Object.FindFirstObjectByType<ResultScene>();
+                var result = Object.FindAnyObjectByType<ResultScene>();
                 while (!result.Sequence.CanSkip)
                 { Assert.That(Time.realtimeSinceStartupAsDouble, Is.LessThan(deadline)); yield return null; }
                 result.Don(); yield return null; yield return null;
@@ -81,7 +81,7 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
             yield return new WaitForSecondsRealtime(1f);
             var song = select.Manager.FocusedSong;
@@ -113,7 +113,7 @@ namespace OurTaiko.Tests
             var switcher = SceneSwitcher.Instance;
             switcher.ShowResult(resultData);
             for (int i = 0; i < 600 && SceneManager.GetActiveScene().name != SceneSwitcher.ResultScene; i++) yield return null;
-            var result = Object.FindFirstObjectByType<ResultScene>();
+            var result = Object.FindAnyObjectByType<ResultScene>();
             Assert.That(result, Is.Not.Null);
             double deadline = Time.realtimeSinceStartupAsDouble + 25;
             while (!result.Sequence.RankAtMs.HasValue || result.Sequence.Now < result.Sequence.RankAtMs.Value + 400)

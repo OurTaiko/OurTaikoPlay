@@ -48,7 +48,7 @@ namespace OurTaiko.Tests
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
-            var select = Object.FindFirstObjectByType<SongSelectScene>();
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
             float deadline = Time.realtimeSinceStartup + 20;
             while (SceneSwitcher.Instance.IsInputBlocked) { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
             select.Manager.OpenFolderAt(0);

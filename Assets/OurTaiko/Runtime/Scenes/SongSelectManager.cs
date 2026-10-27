@@ -124,7 +124,7 @@ namespace OurTaiko
         public static SongSelectManager EnsureInstance()
         {
             if (Instance != null) return Instance;
-            var existing = FindFirstObjectByType<SongSelectManager>();
+            var existing = FindAnyObjectByType<SongSelectManager>();
             if (existing != null) { existing.Initialize(); return Instance; }
             new GameObject(nameof(SongSelectManager)).AddComponent<SongSelectManager>();
             return Instance;

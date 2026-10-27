@@ -22,7 +22,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 SceneSwitcher.Instance.Play(song, autoPlay: true);
                 yield return WaitForScene(SceneSwitcher.GameScene);
-                var play = Object.FindFirstObjectByType<PlayScene>();
+                var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 var counter = play.judgeCounter;

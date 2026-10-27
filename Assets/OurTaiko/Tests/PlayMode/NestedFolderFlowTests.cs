@@ -55,7 +55,7 @@ namespace OurTaiko.Tests
             LocalSongLibrary.EnsureInstance().UseRoot(root);
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
-            var manager = Object.FindFirstObjectByType<SongSelectScene>().Manager;
+            var manager = Object.FindAnyObjectByType<SongSelectScene>().Manager;
 
             // Only the Local folder is on the wheel at first; it holds the root song and Pack.
             Assert.That(manager.Folders.Select(f => f.Title), Is.EqualTo(new[] { SongSelectManager.LocalTitle, "Pack", "Sub" }));
@@ -143,7 +143,7 @@ namespace OurTaiko.Tests
             SceneSwitcher.EnsureInstance().Select(subSong);
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
-            manager = Object.FindFirstObjectByType<SongSelectScene>().Manager;
+            manager = Object.FindAnyObjectByType<SongSelectScene>().Manager;
             Assert.That(manager.OpenFolder, Is.EqualTo("local/Pack/Sub"));
             Assert.That(manager.Items.Select(i => i.Kind).Take(3), Is.EqualTo(new[] { ItemKind.Search, ItemKind.Back, ItemKind.Song }));
             Assert.That(manager.Items.Count(i => i.Kind == ItemKind.Back), Is.EqualTo(1));
