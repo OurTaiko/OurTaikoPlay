@@ -4,7 +4,7 @@
 
 [简体中文](README.md) · **English** · [日本語](README.ja.md)
 
-OurTaikoPlay is a taiko rhythm game written from scratch in Unity and C#, drawing inspiration from the design and gameplay of projects such as [OurTaikoPlayer](https://github.com/OurTaiko/OurTaikoPlayer) and [MajdataPlay](https://github.com/TeamMajdata/MajdataPlay). It is under active development, offering single- and two-player play, Dan courses, keyboard and touch input, local and online songs, and scenes and UI that remain editable in the Unity Editor.
+OurTaikoPlay is a taiko rhythm game written from scratch in Unity and C#, drawing inspiration from the design and gameplay of projects such as [YataiDON](https://github.com/Yonokid/YataiDON), [MajdataPlay](https://github.com/TeamMajdata/MajdataPlay), [OpenTaiko](https://github.com/0auBSQ/OpenTaiko). It is under active development, offering single- and two-player play, Dan courses, keyboard and touch input, local and online songs, and scenes and UI that remain editable in the Unity Editor.
 
 ## Features
 

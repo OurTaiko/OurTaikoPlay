@@ -4,7 +4,7 @@
 
 [简体中文](README.md) · [English](README.en.md) · **日本語**
 
-OurTaikoPlay は、Unity と C# でゼロから開発している太鼓リズムゲームです。[OurTaikoPlayer](https://github.com/OurTaiko/OurTaikoPlayer) や [MajdataPlay](https://github.com/TeamMajdata/MajdataPlay) などの設計思想やゲームプレイを参考にしています。現在も開発を進めており、1 人・2 人プレイ、段位道場、キーボード・タッチ操作、ローカル・オンライン楽曲に対応しています。シーンや UI は Unity Editor 上で編集できます。
+OurTaikoPlay は、Unity と C# でゼロから開発している太鼓リズムゲームです。[YataiDON](https://github.com/Yonokid/YataiDON)、[MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)、[OpenTaiko](https://github.com/0auBSQ/OpenTaiko) などの設計思想やゲームプレイを参考にしています。現在も開発を進めており、1 人・2 人プレイ、段位道場、キーボード・タッチ操作、ローカル・オンライン楽曲に対応しています。シーンや UI は Unity Editor 上で編集できます。
 
 ## 主な機能
 
