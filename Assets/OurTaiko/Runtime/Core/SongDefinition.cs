@@ -8,6 +8,9 @@ namespace OurTaiko
         public TextAsset chart;
         public AudioClip music;
         [System.NonSerialized] public string audioPath;
+        // The background movie (BGMOVIE) on disk: beside a local TJA, or the downloaded copy of an
+        // online one. null when the chart has none.
+        [System.NonSerialized] public string moviePath;
         [System.NonSerialized] public string localChartSha256;
         // Online charts and authored assets keep their existing identity. Disk charts
         // use their raw file hash; name remains the entry identity for navigation/audio.
@@ -65,6 +68,9 @@ namespace OurTaiko
         // seat choice is made here.
         public TaikoChart ParseBlock(string blockCourse, string side) => TjaParser.Parse(chart.text, blockCourse, side);
         public SongInfo ReadInfo() => SongInfo.Read(chart.text);
+        // MOVIEOFFSET: how many seconds after the music starts the movie does (negative: before).
+        // Online charts lose their headers when they are made playable; the server keeps it.
+        public double MovieOffset() => onlineChart != null ? onlineChart.MovieOffset : chart != null ? ReadInfo().MovieOffset : 0;
         // Display metadata is separate from the parsed chart and score identity. Online songs take it
         // from the server's metadata: their chart is only set once SongLoadingScene downloads it.
         public SongInfo ReadDisplayInfo()

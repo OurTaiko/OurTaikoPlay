@@ -12,7 +12,7 @@ namespace OurTaiko
     // of the entry's location and is calculated from the file's original bytes.
     public sealed class LocalChart
     {
-        public string Key, FilePath, Text, AudioPath, Sha256;
+        public string Key, FilePath, Text, AudioPath, MoviePath, Sha256;
         public SongInfo Info;
     }
 
@@ -150,6 +150,7 @@ namespace OurTaiko
                 var info = SongInfo.Read(text);
                 if (info.Blocks.Count == 0) return;
                 string audio = string.IsNullOrWhiteSpace(info.Wave) ? null : Path.Combine(Path.GetDirectoryName(file), info.Wave.Trim());
+                string movie = string.IsNullOrWhiteSpace(info.Movie) ? null : Path.Combine(Path.GetDirectoryName(file), info.Movie.Trim());
                 string relative = Relative(root, file);
                 using var hash = SHA256.Create();
                 list.Add(new LocalChart
@@ -158,6 +159,7 @@ namespace OurTaiko
                     Sha256 = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(),
                     FilePath = file, Text = text, Info = info,
                     AudioPath = audio != null && File.Exists(audio) ? audio : null,
+                    MoviePath = movie != null && File.Exists(movie) ? movie : null,
                 });
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is FormatException)

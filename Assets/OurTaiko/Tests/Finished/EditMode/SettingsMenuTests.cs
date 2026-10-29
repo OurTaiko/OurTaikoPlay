@@ -149,13 +149,32 @@ namespace OurTaiko.Tests
             var menu = Menu();
             menu.Ka(1); menu.Don(); menu.Ka(1);
             Assert.That(menu.CurrentItem.Label, Is.EqualTo("VSync"));
-            Assert.That(menu.ItemCount, Is.EqualTo(3), "Target Frame Rate, VSync and Return.");
+            Assert.That(menu.ItemCount, Is.EqualTo(5), "Target Frame Rate, VSync, Background Movie, Lane Opacity with Movie and Return.");
             menu.Don();
             Assert.That(menu.CurrentItem.Choices, Is.EqualTo(new[] { "Enabled", "Disabled" }));
             Assert.That(menu.ChoiceIndex, Is.EqualTo(1), "Disabled is the default.");
             menu.Ka(-1); menu.Don();
             Assert.That(menu.Settings.display.vSync, Is.True);
             Assert.That(GameSettings.FromJson(menu.Settings.ToJson()).display.vSync, Is.True);
+        }
+
+        [Test]
+        public void BackgroundMovieIsOnAndLanesAreFortyPercentByDefault()
+        {
+            var menu = Menu();
+            menu.Ka(1); menu.Don(); menu.Ka(2);
+            Assert.That(menu.CurrentItem.Label, Is.EqualTo("Background Movie"));
+            menu.Don();
+            Assert.That(menu.ChoiceIndex, Is.Zero, "Enabled is the default.");
+            menu.Ka(1); menu.Don();
+            Assert.That(menu.Settings.display.backgroundMovie, Is.False);
+            menu.Ka(1);
+            Assert.That(menu.CurrentItem.Label, Is.EqualTo("Lane Opacity with Movie"));
+            Assert.That(menu.CurrentItem.Format(menu.CurrentItem.Get(menu.Settings)), Is.EqualTo("40 %"));
+            Assert.That(menu.CurrentItem.Move(100, 1), Is.EqualTo(100));
+            Assert.That(menu.CurrentItem.Move(0, -1), Is.Zero);
+            Assert.That(GameSettings.FromJson("{}").display.MovieLaneAlpha, Is.EqualTo(0.4f));
+            Assert.That(GameSettings.FromJson(menu.Settings.ToJson()).display.backgroundMovie, Is.False);
         }
 
         [Test]

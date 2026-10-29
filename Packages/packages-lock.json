@@ -304,6 +304,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "net.majdata.ffmpeg-autogen": {
+      "version": "https://github.com/TeamMajdata/FFmpeg.AutoGen.git?path=Unity#51afb07b99dfb2ffea5b8ff2112f7e3434cb7e74",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "51afb07b99dfb2ffea5b8ff2112f7e3434cb7e74"
+    },
     "org.ourtaiko.tjaparser": {
       "version": "https://github.com/OurTaiko/TJAParser.git#v0.5.0",
       "depth": 0,

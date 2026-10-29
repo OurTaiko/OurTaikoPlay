@@ -55,6 +55,9 @@ namespace OurTaiko
         public bool FailedOut { get; private set; }
 
         readonly SongClock songClock = new SongClock();
+        [Tooltip("Each song's background movie behind the lane.")]
+        public BackgroundMovieView movie;
+        double movieOffset;
         readonly List<PlayResult> songResults = new List<PlayResult>();
         readonly List<Online.PlayRecord> songRecords = new List<Online.PlayRecord>();
         SceneSwitcher switcher;
@@ -155,6 +158,7 @@ namespace OurTaiko
             var audio = Run.TakeAudio(index);
             if (audio != null) song.SetPreparedAudio(audio);
             music.SetAudioSong(song);
+            if (movie != null) { movieOffset = song.MovieOffset(); movie.Load(song.moviePath); }
             SongEnded = false; songMaxCombo = 0; musicEndedAt = double.NaN;
             Progress.Update(default, Gauge.Percent);
             ShowExams();
@@ -193,6 +197,7 @@ namespace OurTaiko
             double? playback = AudioEngine.EnsureInstance().Backend == AudioBackend.BassSimple && music.IsAudioPlaying() ? music.AudioPosition() : null;
             songClock.Update(GameTimeline.AudioFrameTime, playback);
             StartDueMusic();
+            if (movie != null) movie.Show(SongTime - movieOffset, songClock.Rate, !IsPaused);
             if (closingPauseMenu || Time.frameCount == resumeFrame || Time.frameCount == pauseOpenedFrame) return;
             if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause)) { TogglePause(); return; }
             if (InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }

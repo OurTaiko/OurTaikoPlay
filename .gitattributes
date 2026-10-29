@@ -139,6 +139,7 @@ Packages/packages-lock.json linguist-generated
 *.dll                   lfs
 *.pdb                   lfs
 *.so                    lfs
+Assets/Plugins/MajdataPlay/FFmpeg/Native/**/*.dylib lfs
 
 # Fonts
 *.otf                   lfs

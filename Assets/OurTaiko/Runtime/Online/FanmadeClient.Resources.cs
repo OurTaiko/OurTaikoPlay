@@ -10,9 +10,10 @@ namespace OurTaiko.Online
         // Refreshes the chart's details (the author may have replaced its files), then makes sure
         // the TJA and audio from the resource URLs are cached with matching size and
         // SHA-256. Returns the playable TJA (built from the API metadata, kept in memory only) and
-        // the audio object's path. `progress` runs on worker threads.
+        // the audio object's path. With `movie` the background movie is cached too (Chart.MoviePath);
+        // the chart still plays when that fails. `progress` runs on worker threads.
         public async Task<(string Tja, string AudioPath, FanmadeChart Chart)> PrepareAsync(FanmadeChart selected, CancellationToken cancel = default,
-            Action<DownloadProgress> progress = null)
+            Action<DownloadProgress> progress = null, bool movie = false)
         {
             var e = Endpoint(selected.Server) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
             var state = new DownloadProgress();
@@ -40,6 +41,13 @@ namespace OurTaiko.Online
                         state.Step = DownloadProgress.Stage.Files; Publish();
                         string original = await EnsureObjectAsync(e, manifest.Tja, cancel, state.Chart, Publish);
                         string audio = await EnsureObjectAsync(e, manifest.Audio, cancel, state.Audio, Publish);
+                        if (movie && manifest.Movie != null)
+                        {
+                            state.Movie = new FileProgress();
+                            try { c.MoviePath = await EnsureObjectAsync(e, manifest.Movie, cancel, state.Movie, Publish); }
+                            catch (Exception error) when (!cancel.IsCancellationRequested)
+                            { UnityEngine.Debug.LogWarning("Background movie download failed: " + error.Message); }
+                        }
                         state.Step = DownloadProgress.Stage.Preparing; Publish();
                         // Rebuilt on every preparation: it depends on the API metadata, not only on the files.
                         string text = await CacheWork(() =>

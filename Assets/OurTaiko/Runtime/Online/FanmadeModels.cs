@@ -45,6 +45,10 @@ namespace OurTaiko.Online
         public string Category = "", Genre = "";
         public readonly Dictionary<string, string> Titles = new Dictionary<string, string>(), Subtitles = new Dictionary<string, string>();
         public double Bpm = 120, DemoStart, Offset;
+        // MOVIEOFFSET in seconds (0 without one), and the cached background movie once PrepareAsync
+        // has downloaded it (null when the chart has none, or it was not wanted or failed).
+        public double MovieOffset;
+        public string MoviePath;
         // The block the 1P seat reads for each of Easy..Edit; Block gives either seat's.
         public FanmadeDifficulty[] Difficulties = new FanmadeDifficulty[5];
         public readonly List<FanmadeDifficulty> Blocks = new List<FanmadeDifficulty>();
@@ -75,6 +79,9 @@ namespace OurTaiko.Online
                 throw new FanmadeException("API_METADATA_INVALID");
             c.Bpm = (double)v["bpm"]; c.DemoStart = (double)v["demoStart"]; c.Offset = (double)v["offset"];
             if (double.IsNaN(c.Offset) || double.IsInfinity(c.Offset)) throw new FanmadeException("API_METADATA_INVALID");
+            // Optional: servers without background movies leave it out.
+            if (Json.IsNumber(v["movieOffset"])) c.MovieOffset = (double)v["movieOffset"];
+            if (double.IsNaN(c.MovieOffset) || double.IsInfinity(c.MovieOffset)) c.MovieOffset = 0;
             if (!(v["difficulties"] is JArray difficulties)) throw new FanmadeException("API_DIFFICULTIES_INVALID");
             foreach (var d in difficulties)
             {
@@ -271,7 +278,9 @@ namespace OurTaiko.Online
         public enum Stage { Checking, Files, Preparing, Ready }
         public Stage Step;
         public FileProgress Chart = new FileProgress(), Audio = new FileProgress();
-        public DownloadProgress Clone() => new DownloadProgress { Step = Step, Chart = Chart.Clone(), Audio = Audio.Clone() };
+        // Only when the background movie is being fetched.
+        public FileProgress Movie;
+        public DownloadProgress Clone() => new DownloadProgress { Step = Step, Chart = Chart.Clone(), Audio = Audio.Clone(), Movie = Movie?.Clone() };
     }
 
     static class Json
