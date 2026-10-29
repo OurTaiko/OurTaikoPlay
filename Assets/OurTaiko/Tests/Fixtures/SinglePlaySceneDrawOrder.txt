@@ -1,5 +1,6 @@
 # Original scene at 12f5bd5: runtime score additions at order 1; pause explicitly moved to front.
 # Refreshed 2026-10-24 after 3f7fdad (GogoTint -> GogoEffects), 96cb157 (Nameplate/DanRing) and d6f4e56 (Kusudama).
+# Refreshed 2026-10-28 for BackgroundMovie (blackout and movie behind the dancers, footer and lanes).
 Viewport1920x1080/Backdrop
 Viewport1920x1080/HeaderPattern0
 Viewport1920x1080/HeaderPattern1
@@ -7,6 +8,8 @@ Viewport1920x1080/HeaderPattern2
 Viewport1920x1080/HeaderPattern3
 Viewport1920x1080/FestivalBackground
 Viewport1920x1080/FestivalLights
+Viewport1920x1080/BackgroundMovie/Blackout
+Viewport1920x1080/BackgroundMovie/Screen
 Viewport1920x1080/Dancers/Slot5/Dancer0_4/Layer0
 Viewport1920x1080/Dancers/Slot4/Dancer0_3/Layer0
 Viewport1920x1080/Dancers/Slot3/Dancer0_2/Layer0

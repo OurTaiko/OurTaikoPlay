@@ -13,6 +13,7 @@
     "ManagedBass.BassAac",
     "ManagedBass.BassOpus",
     "ManagedBass.BassFx",
-    "Gilzoide.SqliteNet"
+    "Gilzoide.SqliteNet",
+    "MajdataPlay.FFmpeg"
   ]
 }

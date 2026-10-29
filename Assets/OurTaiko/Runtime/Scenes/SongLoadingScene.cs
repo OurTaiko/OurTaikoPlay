@@ -149,7 +149,8 @@ namespace OurTaiko
         {
             var cancel = downloadCancellation = new CancellationTokenSource();
             DownloadProgress latest = null;
-            var task = online.Client.PrepareAsync(online.ChartOf(song), cancel.Token, progress => Volatile.Write(ref latest, progress));
+            bool movie = SettingManager.EnsureInstance().Settings.display.backgroundMovie;
+            var task = online.Client.PrepareAsync(online.ChartOf(song), cancel.Token, progress => Volatile.Write(ref latest, progress), movie);
             while (!task.IsCompleted)
             {
                 // The parked curtain blocks scene input, so Back is read directly.
@@ -171,16 +172,18 @@ namespace OurTaiko
             switcher.SetCoverStatus("音源を読み込み中…", Color.white);
             online.SetPrepared(song, chart, text, null);
             song.audioPath = audio;
+            song.moviePath = chart.MoviePath;
             if (titleSong) switcher.ShowSongOnCurtain(song);
             switcher.SetCoverStatus("", Color.white);
         }
 
-        // The download card's two lines (chart / audio) as one status text.
+        // The download card's lines (chart / audio, and the movie when one is fetched) as one status text.
         public static string Describe(DownloadProgress progress)
         {
             if (progress.Step == DownloadProgress.Stage.Checking) return "サーバーを確認中…";
             if (progress.Step == DownloadProgress.Stage.Preparing || progress.Step == DownloadProgress.Stage.Ready) return "譜面を準備中…";
-            return "譜面 " + Describe(progress.Chart) + "　音源 " + Describe(progress.Audio);
+            string text = "譜面 " + Describe(progress.Chart) + "　音源 " + Describe(progress.Audio);
+            return progress.Movie == null ? text : text + "　映像 " + Describe(progress.Movie);
         }
 
         static string Describe(FileProgress file)

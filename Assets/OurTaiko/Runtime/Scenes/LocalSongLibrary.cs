@@ -154,6 +154,7 @@ namespace OurTaiko
                 song.chart = new TextAsset(chart.Text) { name = chart.Key, hideFlags = HideFlags.DontSave };
             }
             song.audioPath = chart.AudioPath;
+            song.moviePath = chart.MoviePath;
             song.localChartSha256 = chart.Sha256;
             song.genre = Online.OnlineManager.GenreFrame(string.IsNullOrEmpty(folderGenre) ? chart.Info.Genre : folderGenre);
             var oni = chart.Info.Course(Difficulty.Oni);

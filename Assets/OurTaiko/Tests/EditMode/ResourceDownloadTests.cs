@@ -16,15 +16,19 @@ namespace OurTaiko.Tests
         FanmadeClient client;
         FanmadeEndpoint endpoint;
         string cache;
-        int manifests, tjaGets, audioGets, forbidden;
+        int manifests, tjaGets, audioGets, movieGets, forbidden;
+        // The chart's background movie in the manifest (null: none), with its content type.
+        byte[] movie;
+        string movieType;
         public int ResourceStatus;
-        bool corrupt, mismatch;
+        bool corrupt, mismatch, corruptMovie;
         static void Run(Func<Task> action) => Task.Run(action).GetAwaiter().GetResult();
         static T Run<T>(Func<Task<T>> action) => Task.Run(action).GetAwaiter().GetResult();
         [SetUp] public void Setup()
         {
-            manifests = tjaGets = audioGets = forbidden = ResourceStatus = 0;
-            corrupt = mismatch = false;
+            manifests = tjaGets = audioGets = movieGets = forbidden = ResourceStatus = 0;
+            movie = null; movieType = "video/mp4";
+            corrupt = mismatch = corruptMovie = false;
             api = new FanmadeFixture();
             origin = new FanmadeFixture();
             chart = new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3 } };
@@ -37,19 +41,20 @@ namespace OurTaiko.Tests
                     ["url"] = origin.BaseUrl + "/" + kind + "?signature=a%2Fb&mode=get", ["headUrl"] = origin.BaseUrl + "/" + kind + "?signature=head",
                     ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
                 };
-                return new JObject { ["chartId"] = FanmadeFixture.IdToken(c.Id),
-                    ["resources"] = new JObject { ["tja"] = Resource("tja", c.Tja, "application/octet-stream"),
-                        ["audio"] = Resource("audio", mismatch ? new byte[] { 9 } : c.Audio, "audio/ogg") } };
+                var resources = new JObject { ["tja"] = Resource("tja", c.Tja, "application/octet-stream"),
+                    ["audio"] = Resource("audio", mismatch ? new byte[] { 9 } : c.Audio, "audio/ogg") };
+                if (movie != null) resources["movie"] = Resource("movie", movie, movieType);
+                return new JObject { ["chartId"] = FanmadeFixture.IdToken(c.Id), ["resources"] = resources };
             };
             origin.CustomRequest = context =>
             {
                 if (context.Request.Headers["Authorization"] != null || context.Request.Headers["Cookie"] != null || context.Request.Headers["Idempotency-Key"] != null) forbidden++;
                 if (context.Request.RawUrl != context.Request.Url.AbsolutePath + "?signature=a%2Fb&mode=get") forbidden++;
-                bool audio = context.Request.Url.AbsolutePath == "/audio";
-                if (audio) audioGets++; else tjaGets++;
+                bool audio = context.Request.Url.AbsolutePath == "/audio", video = context.Request.Url.AbsolutePath == "/movie";
+                if (audio) audioGets++; else if (video) movieGets++; else tjaGets++;
                 context.Response.StatusCode = ResourceStatus == 0 ? 200 : ResourceStatus;
-                byte[] bytes = audio ? chart.Audio : chart.Tja;
-                if (corrupt) bytes = bytes.Select(b => (byte)(b ^ 1)).ToArray();
+                byte[] bytes = audio ? chart.Audio : video ? movie : chart.Tja;
+                if (corrupt || (video && corruptMovie)) bytes = bytes.Select(b => (byte)(b ^ 1)).ToArray();
                 context.Response.ContentLength64 = bytes.Length;
                 context.Response.OutputStream.Write(bytes, 0, bytes.Length);
                 context.Response.Close(); return true;
@@ -273,6 +278,41 @@ namespace OurTaiko.Tests
             client.Submit(result.Chart, 3, new FanmadeScore { Score = 123 }); Run(() => client.WaitForUploadsAsync());
             Assert.That(api.AcceptedScores.TryDequeue(out var body), Is.True);
             Assert.That((long)body["difficultyId"], Is.EqualTo(chart.BlockId("Oni", "P1"))); Assert.That(body.ContainsKey("versionId"), Is.False);
+        }
+
+        [Test]
+        public void MovieIsCachedOnlyWhenAskedFor()
+        {
+            movie = new byte[] { 0, 0, 0, 24, (byte)'f', (byte)'t', (byte)'y', (byte)'p' };
+            chart.MovieOffset = -1.5;
+            Run(() => client.ConnectAsync(endpoint, false));
+            var plain = Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That(plain.Chart.MoviePath, Is.Null);
+            Assert.That(plain.Chart.MovieOffset, Is.EqualTo(-1.5));
+            Assert.That(movieGets, Is.Zero);
+            DownloadProgress last = null;
+            var prepared = Run(() => client.PrepareAsync(client.Charts[0], progress: p => last = p, movie: true));
+            Assert.That(File.ReadAllBytes(prepared.Chart.MoviePath), Is.EqualTo(movie));
+            Assert.That(last.Movie.Status, Is.EqualTo(FileProgress.State.Complete));
+            Assert.That(SongLoadingScene.Describe(new DownloadProgress { Step = DownloadProgress.Stage.Files, Movie = last.Movie }), Does.Contain("映像 完了"));
+            Run(() => client.PrepareAsync(client.Charts[0], movie: true));
+            Assert.That(movieGets, Is.EqualTo(1), "the second preparation plays the cached copy");
+            Assert.That(forbidden, Is.Zero);
+        }
+
+        [Test]
+        public void ChartPlaysWithoutAMovieThatFailsOrIsNotMp4()
+        {
+            movie = new byte[] { 1, 2, 3, 4 };
+            corruptMovie = true;
+            var prepared = Run(() => client.PrepareAsync(client.Charts[0], movie: true));
+            Assert.That(prepared.AudioPath, Is.Not.Null);
+            Assert.That(prepared.Chart.MoviePath, Is.Null);
+            Assert.That(prepared.Chart.MovieOffset, Is.Zero, "no movieOffset in the details: 0");
+            corruptMovie = false; movieType = "video/webm"; movieGets = 0;
+            prepared = Run(() => client.PrepareAsync(client.Charts[0], movie: true));
+            Assert.That(prepared.Chart.MoviePath, Is.Null);
+            Assert.That(movieGets, Is.Zero);
         }
     }
 }

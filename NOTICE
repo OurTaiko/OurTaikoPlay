@@ -31,6 +31,13 @@ dependency; its license and package provenance are included beside the DLL.
 BASS and its native add-ons retain their individual licenses and notices in
 Assets/Plugins/Un4seen.Bass, separate from the ManagedBass license.
 
+Background movie playback uses TeamMajdata/MajdataPlay's FFmpeg video player
+(revision b03db444420d761147b06cb6d7731adde4cd1c61, playback only; changes listed in
+Assets/Plugins/MajdataPlay/PROVENANCE.md), distributed under GPLv3, with FFmpeg
+n9.0.1 native builds under GPLv3 or later (licenses and build configuration in
+each Assets/Plugins/MajdataPlay/FFmpeg/Native folder) and the MIT-licensed
+TeamMajdata/FFmpeg.AutoGen binding package.
+
 The pause_circle icon is from Google's Material Symbols Outlined, licensed
 under Apache License 2.0. The original SVG, license, source URL and local
 rasterization details are in Documentation/ThirdParty/MaterialSymbols.

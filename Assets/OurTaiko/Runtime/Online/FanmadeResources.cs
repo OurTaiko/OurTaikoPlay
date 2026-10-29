@@ -24,7 +24,9 @@ namespace OurTaiko.Online
 
     public sealed class FanmadeResources
     {
-        public FanmadeResource Tja, Audio, Preview;
+        // Movie: the optional background video (BGMOVIE), an H.264 MP4; null when there is none.
+        public FanmadeResource Tja, Audio, Preview, Movie;
+        public const long MovieLimit = 128L * 1024 * 1024;
         public static FanmadeResources Parse(JObject value, string chartId, Action<string> validateUrl)
         {
             if (Json.Id(value, "chartId") != chartId) throw new FanmadeException("RESOURCE_CHART_MISMATCH");
@@ -36,6 +38,11 @@ namespace OurTaiko.Online
             if (resources["preview"] != null) {
                 result.Preview = Read("preview", 32L * 1024 * 1024);
                 if (result.Preview.ContentType != "audio/ogg") throw new FanmadeException("API_AUDIO_FORMAT_UNSUPPORTED");
+            }
+            // The chart plays without a movie of another type.
+            if (resources["movie"] != null) {
+                result.Movie = Read("movie", MovieLimit);
+                if (result.Movie.ContentType != "video/mp4") result.Movie = null;
             }
             return result;
         }

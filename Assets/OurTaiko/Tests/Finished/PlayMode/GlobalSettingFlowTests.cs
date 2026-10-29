@@ -162,7 +162,12 @@ namespace OurTaiko.Tests
                 scene.Don();
                 view.choiceRows[1].click.Clicked();
                 Assert.That(QualitySettings.vSyncCount, Is.Zero);
-                scene.Ka(1);
+                // Display › Background Movie and its lane opacity follow.
+                Assert.That(view.itemRows[2].label.text, Is.EqualTo("Background Movie"));
+                Assert.That(view.itemRows[2].value.text, Is.EqualTo("Enabled"));
+                Assert.That(view.itemRows[3].label.text, Is.EqualTo("Lane Opacity with Movie"));
+                Assert.That(view.itemRows[3].value.text, Is.EqualTo("40 %"));
+                scene.Ka(3);
                 scene.Don();
                 Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Types));
                 scene.Ka(3);

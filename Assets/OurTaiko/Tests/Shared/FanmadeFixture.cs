@@ -35,6 +35,8 @@ namespace OurTaiko.Tests
             public long BlockId(string course, string player = "") => firstBlock + Difficulties.FindIndex(d => d.Course == course && d.Player == player);
             public static string Side(string player) => player == "P1" ? "p1" : player == "P2" ? "p2" : "single";
             public double Bpm = 120, DemoStart, Offset;
+            // MOVIEOFFSET; left out of the JSON when null, as a server without movies does.
+            public double? MovieOffset;
             // Blocks (Oni, or Oni_1p / Oni_2p for a side) reported with "branching": true; the rest are false.
             public readonly HashSet<string> Branching = new HashSet<string>();
 
@@ -60,6 +62,7 @@ namespace OurTaiko.Tests
                     })),
                 };
                 if (Encoding != null) value["encoding"] = Encoding;
+                if (MovieOffset.HasValue) value["movieOffset"] = MovieOffset.Value;
                 return value;
             }
         }
