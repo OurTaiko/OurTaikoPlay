@@ -8,8 +8,7 @@
     "Unity.TextMeshPro",
     "Unity.InputSystem",
     "ManagedBass",
-    "ManagedBass.BassMix",
-    "MajdataPlay.FFmpeg"
+    "ManagedBass.BassMix"
   ],
   "overrideReferences": true,
   "precompiledReferences": [

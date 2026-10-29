@@ -24599,6 +24599,7 @@ GameObject:
   - component: {fileID: 1859173902}
   - component: {fileID: 1859173904}
   - component: {fileID: 1859173903}
+  - component: {fileID: 1859173905}
   m_Layer: 0
   m_Name: BackgroundMovie
   m_TagString: Untagged
@@ -24639,7 +24640,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0298dea9da6d14ef8bcbd6ca276a3c36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.BackgroundMovieView
-  player: {fileID: 1859173904}
+  player: {fileID: 1859173905}
   screen: {fileID: 125013882}
   blackout: {fileID: 761659867}
   stageArt:
@@ -24677,6 +24678,19 @@ MonoBehaviour:
   _targetRenderer: {fileID: 0}
   _textureProperty: _MainTex
   _targetTexture: {fileID: 0}
+--- !u!114 &1859173905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1859173901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00d5915f8d22249468bac6420929dbb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.FFmpegMoviePlayer
+  video: {fileID: 0}
 --- !u!1 &1860315494
 GameObject:
   m_ObjectHideFlags: 0

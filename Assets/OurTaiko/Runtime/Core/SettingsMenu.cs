@@ -238,7 +238,7 @@ namespace OurTaiko
                     "Wait for the display's refresh before each frame to prevent tearing. While enabled, the refresh rate replaces Target Frame Rate.",
                     s => s.display.vSync, (s, on) => s.display.vSync = on),
                 SettingItem.Toggle("Background Movie",
-                    "Play the chart's background movie behind the lanes, and download it with online charts. Practice mode never shows it.",
+                    "Play the chart's background movie behind the lanes, and download it with online charts.",
                     s => s.display.backgroundMovie, (s, on) => s.display.backgroundMovie = on),
                 SettingItem.Number("Lane Opacity with Movie",
                     "How opaque the lane backgrounds are while a background movie plays. 100: as without a movie.",

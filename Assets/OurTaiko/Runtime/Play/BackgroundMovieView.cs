@@ -1,18 +1,18 @@
-using MajdataPlay.FFmpeg;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace OurTaiko
 {
-    // The chart's background movie (BGMOVIE) behind the lanes, decoded by MajdataPlay's FFmpeg
-    // player. As in OpenTaiko, while a song has a movie the stage art (sky, header, festival,
-    // dancers, footer) is hidden, the screen is black until the movie starts and keeps its last
-    // frame after it ends, the movie fills the height (a 4:3 one shows black at the sides) and the
-    // lanes' backgrounds turn see-through (Settings > Display). A movie that cannot be opened
-    // gives the stage art back. The scene drives it every frame with Show (MovieSync).
+    // The chart's background movie (BGMOVIE) behind the lanes. As in OpenTaiko, while a song has a
+    // movie the stage art (sky, header, festival, dancers, footer) is hidden, the screen is black
+    // until the movie starts and keeps its last frame after it ends, the movie fills the height (a
+    // 4:3 one shows black at the sides) and the lanes' backgrounds turn see-through (Settings >
+    // Display). A movie that cannot be opened gives the stage art back. The scene drives it every
+    // frame with Show (MovieSync). The decoder is a MoviePlayer: FFmpeg in the game, the browser's
+    // in OurTaikoView_Web; this file is the same in both.
     public sealed class BackgroundMovieView : MonoBehaviour
     {
-        public FFmpegVideoPlayer player;
+        public MoviePlayer player;
         [Tooltip("The movie, sized to the 1080 px height and centred.")]
         public RawImage screen;
         [Tooltip("Black behind the movie, over the hidden stage art.")]
@@ -29,11 +29,8 @@ namespace OurTaiko
 
         void Awake()
         {
-            player.PreferredDecoderType = VideoDecoderType.Hardware;
-            player.PreferNativeTextures = true;
-            player.Loop = false;
             player.TextureChanged += OnTexture;
-            player.ErrorReceived += OnError;
+            player.Failed += OnFailed;
             Present(false);
         }
 
@@ -41,8 +38,7 @@ namespace OurTaiko
         {
             if (player == null) return;
             player.TextureChanged -= OnTexture;
-            player.ErrorReceived -= OnError;
-            player.Close();
+            player.Failed -= OnFailed;
         }
 
         // Opens a song's movie (null or "" for none). A song without one, or with the setting off,
@@ -55,13 +51,13 @@ namespace OurTaiko
             loaded = path;
             Present(true);
             screen.enabled = false;
-            player.Preload(path);
+            player.Open(path);
         }
 
         public void Unload()
         {
             loaded = null;
-            if (player.State != VideoPlaybackState.Idle) player.Close();
+            if (player.IsOpen) player.Close();
             Present(false);
         }
 
@@ -70,28 +66,26 @@ namespace OurTaiko
         public void Show(double target, double rate, bool running)
         {
             if (!HasMovie) return;
-            var state = player.State;
             var plan = MovieSync.Decide(target, rate, running, new MovieSync.Player
             {
-                Prepared = player.IsPrepared, Seeking = state == VideoPlaybackState.Seeking,
-                Playing = state == VideoPlaybackState.Playing, Ended = state == VideoPlaybackState.Ended,
-                Position = player.IsPrepared ? player.TimeSeconds : 0, Length = player.LengthSeconds,
+                Prepared = player.IsPrepared, Seeking = player.IsSeeking, Playing = player.IsPlaying,
+                Ended = player.IsEnded, Position = player.Position, Length = player.Length,
             });
             if (plan.Pause) player.Pause();
-            if (plan.SeekTo is double position && player.IsSeekable) player.TimeSeconds = position;
-            if (System.Math.Abs(player.PlaybackRate - plan.Rate) > 1e-4) player.PlaybackRate = (float)plan.Rate;
+            if (plan.SeekTo is double position && player.CanSeek) player.Seek(position);
+            if (System.Math.Abs(player.Rate - plan.Rate) > 1e-4) player.Rate = (float)plan.Rate;
             if (plan.Play) player.Play();
             screen.enabled = plan.Visible && screen.texture != null;
         }
 
-        void OnTexture(FFmpegVideoPlayer _, Texture texture)
+        void OnTexture(Texture texture)
         {
             screen.texture = texture;
             if (texture != null && texture.height > 0)
                 screen.rectTransform.sizeDelta = new Vector2(Height * texture.width / texture.height, Height);
         }
 
-        void OnError(FFmpegVideoPlayer _, string message)
+        void OnFailed(string message)
         {
             Debug.LogWarning("Background movie " + loaded + " cannot play: " + message);
             loaded = null;

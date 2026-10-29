@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
-using MajdataPlay.FFmpeg;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,7 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace OurTaiko.Tests
 {
-    // The background movie decoded by the vendored FFmpeg player in the real play scenes: an 8 s
+    // The background movie decoded by the vendored FFmpeg player (FFmpegMoviePlayer) in the real play scenes: an 8 s
     // 320×180 30 fps H.264 test pattern (Fixtures/Movie~, kept out of the asset import).
     public sealed class BackgroundMovieFlowTests
     {
@@ -40,23 +39,23 @@ namespace OurTaiko.Tests
                 Assert.That(movie.screen.rectTransform.sizeDelta, Is.EqualTo(new Vector2(1920, 1080)));
                 // Give the rate correction a second to pull in the start.
                 yield return Wait(() => play.SongTime >= 3);
-                Assert.That(movie.player.State, Is.EqualTo(VideoPlaybackState.Playing));
-                Assert.That(movie.player.TimeSeconds, Is.EqualTo(play.SongTime - 1).Within(.06));
+                Assert.That(movie.player.IsPlaying, Is.True);
+                Assert.That(movie.player.Position, Is.EqualTo(play.SongTime - 1).Within(.06));
                 TestCapture.Capture("BackgroundMovie.png");
                 // Pausing the song pauses the movie where it is.
                 play.TogglePause(); yield return null; yield return null;
-                Assert.That(movie.player.State, Is.EqualTo(VideoPlaybackState.Paused));
-                double paused = movie.player.TimeSeconds;
+                Assert.That(movie.player.IsPlaying, Is.False);
+                double paused = movie.player.Position;
                 yield return new WaitForSecondsRealtime(.3f);
-                Assert.That(movie.player.TimeSeconds, Is.EqualTo(paused).Within(1e-6));
+                Assert.That(movie.player.Position, Is.EqualTo(paused).Within(1e-6));
                 play.Resume();
                 yield return Wait(() => !play.IsPaused);
                 // The song clock settles on the restarted audio (about 0.1 s); the movie catches up.
                 yield return new WaitForSecondsRealtime(1.5f);
-                Assert.That(movie.player.TimeSeconds, Is.EqualTo(play.SongTime - 1).Within(.06));
+                Assert.That(movie.player.Position, Is.EqualTo(play.SongTime - 1).Within(.06));
                 // After its 8 s: the last frame stays.
                 yield return Wait(() => play.SongTime >= 9.5 || play.IsFinished);
-                Assert.That(movie.player.State, Is.EqualTo(VideoPlaybackState.Ended));
+                Assert.That(movie.player.IsEnded, Is.True);
                 Assert.That(movie.IsShowing, Is.True);
             }
             finally { Cleanup(); }
@@ -78,17 +77,39 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator SettingOffPracticeAndBrokenFilesKeepTheStageArt()
+        public IEnumerator PracticeMovesTheMovieWithTheMeasure()
+        {
+            PlayScene play = null; BackgroundMovieView movie = null;
+            yield return Play(Fixture("testsrc.mp4"), true, false, (p, m) => { play = p; movie = m; });
+            try
+            {
+                Assert.That(play.IsPractice, Is.True);
+                Assert.That(play.movie, Is.SameAs(movie));
+                Assert.That(movie.HasMovie, Is.True);
+                yield return Wait(() => play.Practice != null && play.IsPaused && movie.player.IsPrepared);
+                // Measure 3 starts at 4 s (BPM 120): 3 s into the movie, followed while paused.
+                play.MovePractice(1); play.MovePractice(1);
+                yield return Wait(() => !movie.player.IsSeeking && System.Math.Abs(movie.player.Position - (play.SongTime - 1)) < .05);
+                Assert.That(movie.player.IsPlaying, Is.False);
+                Assert.That(movie.IsShowing, Is.True);
+                // The measure, then the speed (kept at 1): practice plays from just before the measure.
+                play.ConfirmPractice(); yield return null;
+                play.ConfirmPractice();
+                yield return Wait(() => !play.IsPaused);
+                yield return new WaitForSecondsRealtime(1.5f);
+                Assert.That(movie.player.IsPlaying, Is.True);
+                Assert.That(movie.player.Position, Is.EqualTo(play.SongTime - 1).Within(.06));
+                TestCapture.Capture("BackgroundMoviePractice.png");
+            }
+            finally { Cleanup(); }
+        }
+
+        [UnityTest]
+        public IEnumerator SettingOffAndBrokenFilesKeepTheStageArt()
         {
             BackgroundMovieView movie = null;
             yield return Play(Fixture("testsrc.mp4"), false, false, (_, m) => movie = m, new GameSettings { display = new DisplaySettings { backgroundMovie = false } });
             try { Assert.That(movie.HasMovie, Is.False); Assert.That(movie.stageArt.All(g => g.alpha == 1), Is.True); }
-            finally { Cleanup(); }
-            yield return null;
-
-            PlayScene play = null;
-            yield return Play(Fixture("testsrc.mp4"), true, false, (p, m) => { play = p; movie = m; });
-            try { Assert.That(play.IsPractice, Is.True); Assert.That(play.movie, Is.Null, "PracticeScene has no movie view"); }
             finally { Cleanup(); }
             yield return null;
 
