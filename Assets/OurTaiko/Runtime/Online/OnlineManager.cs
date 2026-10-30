@@ -628,6 +628,38 @@ namespace OurTaiko.Online
 
         static string Url(string baseUrl) => (baseUrl ?? "").Trim().TrimEnd('/');
 
+        // Queues a finished play for upload: on a connected server under the seat's account there;
+        // on an unreachable one under the account the seat would sign in with (OfflineAccountId),
+        // sent once that server connects again. False when nothing is queued (a guest, or no
+        // account for the server).
+        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null)
+            => Client.Submit(chart, difficulty, score, replay, seat, side, OfflineAccountId(chart.Server, seat));
+
+        // The queue key a seat's scores have on a server that is not connected (what
+        // FanmadeEndpoint.AccountIdOf gives once it is): on a built-in server the seat's remembered
+        // OurTaiko account, on a servers.json server its configured 1P username. null without one.
+        public string OfflineAccountId(string server, int seat)
+        {
+            var entry = cached.FirstOrDefault(x => x.Server == server);
+            if (entry == null || seat < 0 || seat >= Accounts.Seats.Length) return null;
+            string url = Url(entry.ServerUrl);
+            string user;
+            if (builtIn.Any(b => string.Equals(Url(b.Url), url, StringComparison.OrdinalIgnoreCase)))
+            {
+                var account = Accounts.Seats[seat];
+                if (!account.IsSignedIn || account.UserId.Length == 0) return null;
+                user = "sso:" + account.UserId;
+            }
+            else
+            {
+                if (seat != 0) return null;
+                var config = Servers.servers.FirstOrDefault(s => s.enabled && s.HasCredentials && string.Equals(Url(s.baseUrl), url, StringComparison.OrdinalIgnoreCase));
+                if (config == null) return null;
+                user = config.username;
+            }
+            return FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(url + "\n" + user));
+        }
+
         // The display name of a server by endpoint id: a configured one's, else the name its
         // offline cache remembers; the id itself when neither knows it.
         public string ServerDisplayName(string server)

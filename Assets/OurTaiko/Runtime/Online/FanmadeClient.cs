@@ -518,12 +518,26 @@ namespace OurTaiko.Online
         // and unknown charts are not uploaded. The request body and its idempotency key are fixed
         // when queued, so retries never create a second score.
         // side is the block played (decided before the play), seat the account it belongs to.
-        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null)
+        // A play of a cached chart while its server is not connected is queued under
+        // `offlineAccount` (the queue key the seat's account has there, FanmadeEndpoint.AccountIdOf)
+        // and sent once that account is signed in to the server again; null queues nothing offline.
+        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null,
+            string offlineAccount = null)
         {
             var block = SideBlock(chart, difficulty, side);
             if (block == null) return false;
             var e = Endpoint(chart.Server);
-            if (e == null || !e.IsConnected || !HasAccount(e, seat)) return false;
+            string account;
+            if (e != null && e.IsConnected)
+            {
+                if (!HasAccount(e, seat)) return false;
+                account = e.AccountIdOf(seat);
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(offlineAccount) || Offline.Get(chart.Server, chart.Id) == null) return false;
+                account = offlineAccount;
+            }
             // The block that was played names the song and course.
             var body = new JObject { ["difficultyId"] = block.Id };
             body["good"] = score.Good; body["ok"] = score.Ok; body["bad"] = score.Bad; body["score"] = score.Score;
@@ -532,7 +546,7 @@ namespace OurTaiko.Online
             body["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull();
             try
             {
-                UploadQueue.Enqueue(e.AccountIdOf(seat), RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), block.ChartHash, chart.AudioHash, chart.Id);
+                UploadQueue.Enqueue(account, RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), block.ChartHash, chart.AudioHash, chart.Id);
                 RetryNow();
                 return true;
             }

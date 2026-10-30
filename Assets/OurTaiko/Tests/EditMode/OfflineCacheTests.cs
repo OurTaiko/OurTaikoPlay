@@ -115,6 +115,30 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void AnOfflinePlayIsQueuedForTheAccountAndSentOnceTheServerConnectsAgain()
+        {
+            var endpoint = Connect();
+            string account = endpoint.AccountIdOf(0);
+            Run(() => client.PrepareAsync(client.Charts.First(c => c.Id == first.Id)));
+            client.Reset();
+            var cached = client.Offline.Get(endpoint.Id, first.Id).ToChart();
+            Assert.That(client.Submit(cached, (int)Difficulty.Oni, new FanmadeScore { Score = 4321 }), Is.False, "Without an account to queue under, nothing is queued.");
+            Assert.That(client.Submit(new FanmadeChart { Server = endpoint.Id, Id = second.Id }, (int)Difficulty.Oni, new FanmadeScore(), offlineAccount: account), Is.False,
+                "A chart that is not cached is not queued either.");
+            Assert.That(client.Submit(cached, (int)Difficulty.Oni, new FanmadeScore { Score = 4321 }, offlineAccount: account), Is.True);
+            Assert.That(client.UploadQueue.Pending(account).Length, Is.EqualTo(1));
+            Assert.That(fixture.AcceptedScores, Is.Empty);
+
+            var again = Connect();
+            Run(() => client.WaitForUploadsAsync());
+            Assert.That(again.AccountIdOf(0), Is.EqualTo(account));
+            Assert.That(client.UploadQueue.Pending(account), Is.Empty);
+            Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
+            Assert.That((long)body["score"], Is.EqualTo(4321));
+            Assert.That(client.Best(client.Charts.First(c => c.Id == first.Id), (int)Difficulty.Oni).Score, Is.EqualTo(4321));
+        }
+
+        [Test]
         public void PreparingAgainOnlineReplacesTheRecord()
         {
             var endpoint = Connect();

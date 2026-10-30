@@ -62,7 +62,7 @@ A large note needs only one side of the drum for a full judgment. Only the earli
 
 Online servers are configured in `servers.json` in the data folder, with `https://fanmade.ourtaiko.org` and `https://ese-backend.llx.life` included by default. Set an entry's `enabled` field to `false` to disable it.
 
-Every song played online is cached with its chart and audio under `cache/` in the data folder. When a server cannot be reached, song select shows a folder named after that server and marked as its offline cache, listing the cached songs under their original categories; they play without the server. Once the server connects again its full catalog shows instead. Scores of offline plays are neither saved nor uploaded.
+Every song played online is cached with its chart and audio under `cache/` in the data folder. When a server cannot be reached, song select shows a folder named after that server and marked as its offline cache, listing the cached songs under their original categories; they play without the server. Once the server connects again its full catalog shows instead. Scores of offline plays are queued under the account the seat uses on that server and uploaded once it connects again.
 
 Local songs are currently configured as Unity assets: import TJA content as `.txt`, create a `SongDefinition` via **Assets → Create → OurTaiko → Song**, assign its chart, music, and offsets, then add it to the SongSelect controller's `songs` list.
 
