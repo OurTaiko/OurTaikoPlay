@@ -19,7 +19,7 @@ namespace OurTaiko.Online
         public async Task<(string Tja, string AudioPath, FanmadeChart Chart)> PrepareAsync(FanmadeChart selected, CancellationToken cancel = default,
             Action<DownloadProgress> progress = null, bool movie = false)
         {
-            var e = Endpoint(selected.Server);
+            var e = ConnectedEndpoint(selected.Server);
             if (e == null)
             {
                 var cached = Offline.Get(selected.Server, selected.Id);

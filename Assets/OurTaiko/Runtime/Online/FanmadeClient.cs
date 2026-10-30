@@ -126,6 +126,11 @@ namespace OurTaiko.Online
 
         public FanmadeEndpoint Endpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id); }
 
+        // The endpoint of a server whose catalog is loaded now; null otherwise. A server that is
+        // listed but not connected (unreachable at start-up, start-up skipped, a failed login) has
+        // no catalog to play from, so its charts play from the offline cache as if it were absent.
+        FanmadeEndpoint ConnectedEndpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id && e.IsConnected); }
+
         void SetStatus(string text) { lock (sync) status = text; }
 
         // Drops every server and its catalog (uploads finish first). Pending scores stay on disk.

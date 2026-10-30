@@ -10,7 +10,7 @@ namespace OurTaiko.Online
         // Without the server, the preview excerpt cached while online plays (never the full audio).
         public async Task<string> PreparePreviewAsync(FanmadeChart selected, CancellationToken cancel = default)
         {
-            var endpoint = Endpoint(selected.Server);
+            var endpoint = ConnectedEndpoint(selected.Server);
             if (endpoint == null)
             {
                 var cached = Offline.Get(selected.Server, selected.Id) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");

@@ -96,6 +96,47 @@ namespace OurTaiko.Tests
             Assert.That(error.Message, Is.EqualTo("SERVER_NOT_CONNECTED"), "A chart never prepared has no cache to play from.");
         }
 
+        // A server that is listed but not connected still plays from the cache: its endpoint stays
+        // after a failed connection (ServerLogin, an unreachable built-in server).
+        [Test]
+        public void ACachedChartPlaysWhenItsServerFailsToConnect()
+        {
+            var endpoint = Connect();
+            Run(() => client.PrepareAsync(client.Charts.First(c => c.Id == first.Id)));
+            fixture.Dispose();
+            Assert.That(() => Run(() => client.ConnectAsync(endpoint, false)), Throws.Exception);
+            Assert.That(client.Endpoint(endpoint.Id), Is.SameAs(endpoint), "The endpoint stays after the failure.");
+            Assert.That(endpoint.IsConnected, Is.False);
+            int requests = fixture.Requests.Count;
+            var cached = client.Offline.Get(endpoint.Id, first.Id).ToChart();
+            var prepared = Run(() => client.PrepareAsync(cached));
+            Assert.That(File.ReadAllBytes(prepared.AudioPath), Is.EqualTo(first.Audio));
+            Assert.That(client.Status, Does.Contain("offline cache"));
+            var preview = Assert.Throws<FanmadeException>(() => Run(() => client.PreparePreviewAsync(cached)));
+            Assert.That(preview.Message, Is.EqualTo("PREVIEW_UNAVAILABLE"), "The preview reads the cache too (this one cached no excerpt).");
+            var rank = Assert.Throws<FanmadeException>(() => Run(() => client.PrepareRankThresholdsAsync(cached)));
+            Assert.That(rank.Message, Is.EqualTo("SERVER_NOT_CONNECTED"));
+            Assert.That(fixture.Requests.Count, Is.EqualTo(requests), "Nothing tries the unreachable server.");
+        }
+
+        // Skipping the start-up in Presented cancels the catalog load: the built-in server is listed
+        // but never connected, though it is reachable.
+        [Test]
+        public void ACachedChartPlaysWhenItsServerWasNeverConnected()
+        {
+            var endpoint = Connect();
+            Run(() => client.PrepareAsync(client.Charts.First(c => c.Id == first.Id)));
+            client.Reset();
+            var listed = client.Add(fixture.Server("don", "katsu"));
+            Assert.That(listed.Id, Is.EqualTo(endpoint.Id));
+            Assert.That(listed.IsConnected, Is.False);
+            int downloads = fixture.Downloads, requests = fixture.Requests.Count;
+            var prepared = Run(() => client.PrepareAsync(client.Offline.Get(endpoint.Id, first.Id).ToChart()));
+            Assert.That(File.ReadAllBytes(prepared.AudioPath), Is.EqualTo(first.Audio));
+            Assert.That(fixture.Downloads, Is.EqualTo(downloads));
+            Assert.That(fixture.Requests.Count, Is.EqualTo(requests), "The server is not contacted until it connects.");
+        }
+
         [Test]
         public void ADamagedOrMissingFileRefusesThePlayAndTheScanForgetsTheChart()
         {
