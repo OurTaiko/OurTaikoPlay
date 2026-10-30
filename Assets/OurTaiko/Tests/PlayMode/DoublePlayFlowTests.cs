@@ -88,6 +88,7 @@ namespace OurTaiko.Tests
             var first = play.Lanes[0].Session; var second = play.Lanes[1].Session;
             Assert.That(first.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.Zero, "1P reads the P1 block.");
             Assert.That(second.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.EqualTo(1), "2P reads the P2 block.");
+            Assert.That((SceneSwitcher.Instance.SideOf(0), SceneSwitcher.Instance.SideOf(1)), Is.EqualTo(("p1", "p2")), "decided before the play");
             Assert.That(play.dancers, Is.Null, "Two players have no dancers.");
             // The play option badges sit where 1P's do on its own lane, flipped inside the mirrored score cover.
             Assert.That(play.secondLane.modifierBadges.flipped && !play.modifierBadges.flipped, Is.True);
@@ -171,6 +172,8 @@ namespace OurTaiko.Tests
                 Assert.That(SceneSwitcher.Instance.LastResult2P, Is.Not.Null);
                 Assert.That(SceneSwitcher.Instance.LastResult.Good, Is.EqualTo(1), "1P played automatically.");
                 Assert.That(SceneSwitcher.Instance.LastResult2P.Bad, Is.EqualTo(1), "2P did not hit the don.");
+                Assert.That((SceneSwitcher.Instance.LastResult.Side, SceneSwitcher.Instance.LastResult2P.Side), Is.EqualTo(("single", "single")),
+                    "each result keeps the side its seat played");
 
                 // result_2p: 2P's board on the right with its nameplate; both reveal and skip together.
                 var result = Object.FindAnyObjectByType<ResultScene>();

@@ -245,6 +245,7 @@ namespace OurTaiko
             // A failed exam before the last song ends the course with this one; it still plays out.
             if (Progress.IsEnded && !Progress.IsLastSong) FailedOut = true;
             var result = PlayResult.From(Session, song.ScoreKey, autoPlay, playedAudioOffsetMs);
+            result.Side = Run.Resolved(SongIndex).Side;
             result.Title = displayInfo.Title; result.Subtitle = displayInfo.Subtitle;
             // save_song_score: a song counts as cleared unless the course failed out on it.
             result.IsClear = !FailedOut;

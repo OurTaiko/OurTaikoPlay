@@ -110,10 +110,15 @@ namespace OurTaiko.Online
         public static bool ValidId(string id) => Json.ChartId(id);
         static readonly System.Text.RegularExpressions.Regex ChartHashPattern = new System.Text.RegularExpressions.Regex("^v[0-9]+:[0-9a-f]{64}$");
 
-        // The block a seat ("p1" or "p2") plays on a course (0..4 for Easy..Edit); null when it has none.
-        public FanmadeDifficulty Block(int course, string seat = "p1")
+        // The block on one side of a course; null when the course has none there.
+        public FanmadeDifficulty BlockOn(int course, string side)
+            => Blocks.Find(x => x.Course == SongInfo.CourseNames[course] && x.Side == side);
+
+        // The block a seat ("p1" or "p2") plays on a course (0..4 for Easy..Edit), alone or with
+        // two playing together (SeatBlocks); null when it has none.
+        public FanmadeDifficulty Block(int course, string seat = "p1", bool together = false)
         {
-            foreach (string side in SeatBlocks.Reads(seat))
+            foreach (string side in SeatBlocks.Reads(seat, together))
             {
                 var block = Blocks.Find(x => x.Course == SongInfo.CourseNames[course] && x.Side == side);
                 if (block != null) return block;

@@ -149,13 +149,13 @@ namespace OurTaiko
         }
 
         // SongLoadingScene parsed each seat's chart behind the curtain; restarts and direct runs parse
-        // here. 2P reads its own block of the course (ChartSide) with its own options. The lane is
+        // here. Each seat reads the block of the side decided before the play, with its own options. The lane is
         // prepared with the returned session once every seat has one.
         PlaySession AddLane(int seat, LaneViews views)
         {
             string course = switcher.CourseOf(seat);
             var options = PlayOptions.ForSeat(seat);
-            var chart = switcher.TakePreparedChart(song, course, seat) ?? PrepareChart(song, course, seat);
+            var chart = switcher.TakePreparedChart(song, course, seat) ?? PrepareChart(song, course, switcher.SideOf(seat), seat);
             var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : switcher.AutoPlayOf(seat), new Online.PlayRecord
             {
                 // Replay v1 stores already corrected judgment time. Keep its two-offset convention:
@@ -187,9 +187,9 @@ namespace OurTaiko
         }
 
         // Player::reset_chart: the play options change the chart before load times are taken.
-        public static TaikoChart PrepareChart(SongDefinition song, string course, int seat = 0)
+        public static TaikoChart PrepareChart(SongDefinition song, string course, string side, int seat = 0)
         {
-            var chart = song.Parse(course, SeatBlocks.Seats[seat]);
+            var chart = song.ParseBlock(course, side);
             ChartModifiers.Apply(chart, PlayOptions.ForSeat(seat), new System.Random());
             return chart;
         }
@@ -328,6 +328,7 @@ namespace OurTaiko
             foreach (var lane in lanes)
             {
                 lane.Result = PlayResult.From(lane.Session, song.ScoreKey, lane.AutoPlay, playedAudioOffsetMs);
+                lane.Result.Side = switcher.SideOf(lane.Seat);
                 lane.Result.Title = displayInfo.Title;
                 lane.Result.Subtitle = displayInfo.Subtitle;
             }

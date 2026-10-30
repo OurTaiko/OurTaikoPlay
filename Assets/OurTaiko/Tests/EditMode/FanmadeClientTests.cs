@@ -549,17 +549,18 @@ namespace OurTaiko.Tests
             string mixedTja = "BPM:150\nCOURSE:Oni\n#START\n5,\n#END\n#START P1\n3,\n#END\n#START P2\n4,\n#END\n";
             play = PlayableTja.Build(mixedTja, mixed);
             Assert.That(play, Does.EndWith("COURSE:Oni\nLEVEL:7\nBPM:150\n#START\n5,\n#END\nCOURSE:Oni\nLEVEL:9\nBPM:150\n#START P1\n3,\n#END\nCOURSE:Oni\nLEVEL:8\nBPM:150\n#START P2\n4,\n#END\n"));
-            foreach (var (seat, level, kind) in new[] { ("p1", 9, NoteKind.BigDon), ("p2", 8, NoteKind.BigKa) })
+            foreach (var (seat, together, level, kind) in new[] { ("p1", true, 9, NoteKind.BigDon), ("p2", true, 8, NoteKind.BigKa),
+                ("p1", false, 7, NoteKind.Roll), ("p2", false, 7, NoteKind.Roll) })
             {
                 // The parsed block and the score's block id come from the same seat rule.
-                var block = mixed.Block(3, seat);
+                var block = mixed.Block(3, seat, together);
                 var parsed = TjaParser.Parse(play, block.Course, block.Side);
-                Assert.That((parsed.Level, parsed.Notes[0].Kind), Is.EqualTo((level, kind)), seat);
+                Assert.That((parsed.Level, parsed.Notes[0].Kind), Is.EqualTo((level, kind)), seat + (together ? " together" : " alone"));
                 Assert.That(block.Level, Is.EqualTo(level));
-                Assert.That(SongInfo.Read(play).PlayedBlock(Difficulty.Oni, seat).Side, Is.EqualTo(block.Side));
-                Assert.That(SongInfo.Read(play).Course(Difficulty.Oni, seat).Level, Is.EqualTo(level));
+                Assert.That(SongInfo.Read(play).PlayedBlock(Difficulty.Oni, seat, together).Side, Is.EqualTo(block.Side));
+                Assert.That(SongInfo.Read(play).Course(Difficulty.Oni, seat, together).Level, Is.EqualTo(level));
             }
-            Assert.That(mixed.Difficulties[3].Side, Is.EqualTo("p1"));
+            Assert.That(mixed.Difficulties[3].Side, Is.EqualTo("single"), "the list shows what 1P plays alone");
             Assert.Throws<FanmadeException>(() => PlayableTja.Build(pairTja, mixed), "TJA_BLOCK_MISMATCH");
 
             // A course with only a single block is what both seats read; a 2P-only one is not for the 1P seat.

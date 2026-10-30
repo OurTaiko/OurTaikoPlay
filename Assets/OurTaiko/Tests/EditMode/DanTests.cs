@@ -395,12 +395,15 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void ALocalCourseSongKeepsTheSideTheSeatReads()
+        public void ALocalCourseSongKeepsTheSideTheSeatReadsAlone()
         {
             var song = Song("Sides", Hash1, "STYLE:Double\nCOURSE:Oni\nLEVEL:7\n#START P1\n1,\n#END\nCOURSE:Oni\nLEVEL:8\n#START P2\n11,\n#END\nSTYLE:Single\nCOURSE:Oni\nLEVEL:9\n#START\n111,\n#END");
             var resolved = new DanCourseResolver(new[] { song }, null).Resolve(DanCourse.Parse(Course(Songs(1)))).Songs.Single();
-            Assert.That((resolved.Course, resolved.Side, resolved.Level), Is.EqualTo(("Oni", "p1", 7)), "a local course has no pin: 1P reads p1 first");
-            Assert.That(song.ParseBlock(resolved.Course, resolved.Side).Level, Is.EqualTo(7));
+            Assert.That((resolved.Course, resolved.Side, resolved.Level), Is.EqualTo(("Oni", "single", 9)), "a local course has no pin: 1P alone reads single first");
+            Assert.That(song.ParseBlock(resolved.Course, resolved.Side).Level, Is.EqualTo(9));
+            var pair = Song("Pair", Hash2, "STYLE:Double\nCOURSE:Oni\nLEVEL:7\n#START P1\n1,\n#END\nCOURSE:Oni\nLEVEL:8\n#START P2\n11,\n#END");
+            var fromPair = new DanCourseResolver(new[] { pair }, null).Resolve(DanCourse.Parse(Course("[{\"chart\":{\"sha256\":\"" + Hash2 + "\",\"course\":\"Oni\"}}]"))).Songs.Single();
+            Assert.That((fromPair.Side, fromPair.Level), Is.EqualTo(("p1", 7)), "without single, 1P alone reads p1");
             var single = new DanCourseResolver(new[] { Song("Single", Hash2) }, null).Resolve(DanCourse.Parse(Course("[{\"chart\":{\"sha256\":\"" + Hash2 + "\",\"course\":\"Oni\"}}]"))).Songs.Single();
             Assert.That(single.Side, Is.EqualTo("single"));
         }

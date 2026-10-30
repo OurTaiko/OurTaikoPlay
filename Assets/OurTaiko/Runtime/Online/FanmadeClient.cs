@@ -490,18 +490,18 @@ namespace OurTaiko.Online
         static bool ValidCategory(string id) => id.Length > 0 && id.Length <= 64 && id[0] >= 'a' && id[0] <= 'z'
             && id.All(c => (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-');
 
-        // The block a seat plays on this course (ChartSide): 1P's is Difficulties[course].
-        static FanmadeDifficulty SeatBlock(FanmadeChart chart, int difficulty, int seat)
+        // The block of this course on the side played; without one, what the song list shows (1P alone).
+        static FanmadeDifficulty SideBlock(FanmadeChart chart, int difficulty, string side)
             => chart == null || difficulty < 0 || difficulty >= 5 ? null
-                : seat == 0 ? chart.Difficulties[difficulty] : chart.Block(difficulty, SeatBlocks.Seats[seat]);
+                : side == null ? chart.Difficulties[difficulty] : chart.BlockOn(difficulty, side);
 
         // Each seat has its own account (2P signs in through the account center only).
         static bool HasAccount(FanmadeEndpoint e, int seat) => seat >= 0 && seat < FanmadeEndpoint.SeatCount && e.Seats[seat].IsAuthenticated;
 
         // The seat's account's best on this chart and course; null for a guest.
-        public FanmadeScore Best(FanmadeChart chart, int difficulty, int seat = 0)
+        public FanmadeScore Best(FanmadeChart chart, int difficulty, int seat = 0, string side = null)
         {
-            var block = SeatBlock(chart, difficulty, seat);
+            var block = SideBlock(chart, difficulty, side);
             if (block == null) return null;
             lock (sync)
             {
@@ -513,10 +513,10 @@ namespace OurTaiko.Online
         // Queues a finished play of a logged-in account, then sends it in the background. Guests
         // and unknown charts are not uploaded. The request body and its idempotency key are fixed
         // when queued, so retries never create a second score.
-        // seat picks the block played (2P reads p2, then single, then p1) and the account it belongs to.
-        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0)
+        // side is the block played (decided before the play), seat the account it belongs to.
+        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null)
         {
-            var block = SeatBlock(chart, difficulty, seat);
+            var block = SideBlock(chart, difficulty, side);
             if (block == null) return false;
             var e = Endpoint(chart.Server);
             if (e == null || !e.IsConnected || !HasAccount(e, seat)) return false;

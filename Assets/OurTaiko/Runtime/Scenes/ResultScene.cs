@@ -131,13 +131,13 @@ namespace OurTaiko
             var chart = online != null ? online.ChartOf(song) : null;
             if (chart == null) return;
             int difficulty = (int)result.Difficulty;
-            var best = online.Client.Best(chart, difficulty, seat);
+            var best = online.Client.Best(chart, difficulty, seat, result.Side);
             if (best != null) result.PreviousBest = (int)Math.Min(int.MaxValue, Math.Max(result.PreviousBest, best.Score));
             online.Client.Submit(chart, difficulty, new Online.FanmadeScore
             {
                 Good = result.Good, Ok = result.Ok, Bad = result.Bad, Score = result.Score,
                 Drumroll = result.Rolls, MaxCombo = result.MaxCombo, ClearStatus = (int)result.StoredCrown,
-            }, record, seat);
+            }, record, seat, result.Side);
         }
 
 

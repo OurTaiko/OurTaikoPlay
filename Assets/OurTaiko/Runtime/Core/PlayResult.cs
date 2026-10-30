@@ -17,6 +17,8 @@ namespace OurTaiko
         public const int GaugeCells = 50;
 
         public string ChartKey = "", Title = "", Subtitle = "", Course = "Oni";
+        // The side played (ChartSide), decided before the play; online scores upload to its block.
+        public string Side = "single";
         public Difficulty Difficulty = Difficulty.Oni;
         public int Level, Score, Good, Ok, Bad, MaxCombo, Rolls, PreviousBest;
         public int KiwamiThreshold = 1000000;

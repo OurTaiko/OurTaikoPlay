@@ -125,20 +125,21 @@ namespace OurTaiko.Tests
             SignIn(e, 1, "ka", "don");
             Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"), "No password goes to the game server.");
             var listed = client.Chart(e.Id, chart.Id);
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0)?.Score, Is.EqualTo(900000));
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1)?.Score, Is.EqualTo(800000), "2P reads its own account's p2 block.");
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(900000));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(800000), "2P reads its own account's p2 block.");
 
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1000000, Good = 4, MaxCombo = 4 }, seat: 1), Is.True);
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 950000, Good = 4, MaxCombo = 4 }, seat: 0), Is.True);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1000000, Good = 4, MaxCombo = 4 }, seat: 1, side: "p2"), Is.True);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 950000, Good = 4, MaxCombo = 4 }, seat: 0, side: "single"), Is.True);
             Drain();
             Assert.That(fixture.AcceptedUsers.ToArray(), Is.EquivalentTo(new[] { "don", "ka" }));
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1)?.Score, Is.EqualTo(1000000));
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0)?.Score, Is.EqualTo(950000));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(1000000));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(950000));
 
             client.SignOut(e, 1);
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1), Is.Null);
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, seat: 1), Is.False, "A guest seat uploads nothing.");
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0)?.Score, Is.EqualTo(950000), "1P is untouched.");
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2"), Is.Null);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, seat: 1, side: "p2"), Is.False, "A guest seat uploads nothing.");
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(950000), "1P is untouched.");
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, seat: 0, side: "p1"), Is.False, "No block on the side played: nothing uploads.");
         }
 
         [Test]
@@ -163,13 +164,13 @@ namespace OurTaiko.Tests
             SignIn(e, 1, "don", "katsu");
             Assert.That(e.AccountIdOf(0), Is.EqualTo(e.AccountIdOf(1)));
             var listed = client.Chart(e.Id, chart.Id);
-            client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 10, Good = 1, MaxCombo = 1 }, seat: 0);
-            client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 20, Good = 1, MaxCombo = 1 }, seat: 1);
+            client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 10, Good = 1, MaxCombo = 1 }, seat: 0, side: "single");
+            client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 20, Good = 1, MaxCombo = 1 }, seat: 1, side: "p2");
             Drain();
             Assert.That(fixture.AcceptedScores.Select(s => (long)s["score"]), Is.EquivalentTo(new[] { 10L, 20L }));
             // Each seat played its own block (2P the P2 one); both seats see both plays.
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0)?.Score, Is.EqualTo(10));
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1)?.Score, Is.EqualTo(20));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(10));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(20));
             Assert.That(e.Seats[0].ScoreCount, Is.EqualTo(2));
             Assert.That(e.Seats[1].ScoreCount, Is.EqualTo(2));
         }
