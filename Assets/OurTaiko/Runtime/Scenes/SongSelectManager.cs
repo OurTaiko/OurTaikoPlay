@@ -49,7 +49,8 @@ namespace OurTaiko
         // The local songs (LocalSongLibrary) at the top of the Local folder.
         public SongDefinition[] Songs { get; private set; } = Array.Empty<SongDefinition>();
         // The root lists one folder per source: Local (the local songs and box.def folders), then each
-        // server (its categories and playlists). A source with nothing to show has no folder.
+        // server (its categories and playlists), then the offline cache of each server that is not
+        // connected (its categories, marked as cache). A source with nothing to show has no folder.
         public const string LocalKey = "source:local";
         public static string ServerKey(string server) => "source:server/" + server;
         public static string LocalTitle => Words("Local", "ローカル", "本地谱面");
@@ -193,12 +194,21 @@ namespace OurTaiko
 
         static IEnumerable<SongFolder> Sources(LocalSongLibrary library, Online.OnlineManager online)
         {
+            // Read first: a pending cache scan rebuilds the online folders too.
+            var offline = online.OfflineFolders.ToArray();
             if (library.Songs.Count > 0 || library.Folders.Count > 0)
                 yield return new SongFolder { Key = LocalKey, Title = LocalTitle, Songs = library.Songs.ToArray(), Folders = library.Folders.ToArray() };
             foreach (var server in online.Folders.Where(f => f.Server != null).GroupBy(f => f.Server))
                 yield return new SongFolder
                 {
                     Key = ServerKey(server.Key), Title = server.First().ServerName, Server = server.Key, Folders = server.ToArray(),
+                };
+            // An unreachable server's cache wears the server's name and says it is the cache (issue #4).
+            foreach (var server in offline.GroupBy(f => f.Server))
+                yield return new SongFolder
+                {
+                    Key = ServerKey(server.Key), Title = online.ServerDisplayName(server.Key), Server = server.Key,
+                    ServerName = Online.OnlineManager.OfflineLabel, Folders = server.ToArray(),
                 };
         }
 

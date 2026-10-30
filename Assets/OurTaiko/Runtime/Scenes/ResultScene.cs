@@ -122,7 +122,8 @@ namespace OurTaiko
 
         // Local charts keep every seat's best in the one score database. Online, each seat uploads
         // its own course and block with its own account; a seat without a login is skipped (2P has
-        // none yet).
+        // none yet). A play from the offline cache is queued for the seat's account on that server
+        // and goes up once the server connects again.
         internal static void SaveScore(SongDefinition song, PlayResult result, Online.PlayRecord record, int seat)
         {
             if (result.AutoPlay) return;
@@ -133,7 +134,7 @@ namespace OurTaiko
             int difficulty = (int)result.Difficulty;
             var best = online.Client.Best(chart, difficulty, seat, result.Side);
             if (best != null) result.PreviousBest = (int)Math.Min(int.MaxValue, Math.Max(result.PreviousBest, best.Score));
-            online.Client.Submit(chart, difficulty, new Online.FanmadeScore
+            online.Submit(chart, difficulty, new Online.FanmadeScore
             {
                 Good = result.Good, Ok = result.Ok, Bad = result.Bad, Score = result.Score,
                 Drumroll = result.Rolls, MaxCombo = result.MaxCombo, ClearStatus = (int)result.StoredCrown,

@@ -7,9 +7,16 @@ namespace OurTaiko.Online
     {
         // Resource manifests are fetched on each selection; only verified content is cached.
         // Never construct a URL from the catalog's bucket key or forward API credentials.
+        // Without the server, the preview excerpt cached while online plays (never the full audio).
         public async Task<string> PreparePreviewAsync(FanmadeChart selected, CancellationToken cancel = default)
         {
-            var endpoint = Endpoint(selected.Server) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
+            var endpoint = ConnectedEndpoint(selected.Server);
+            if (endpoint == null)
+            {
+                var cached = Offline.Get(selected.Server, selected.Id) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
+                if (cached.PreviewHash == null) throw new FanmadeException("PREVIEW_UNAVAILABLE");
+                return await CachedObjectAsync(cached.PreviewHash, cached.PreviewSize, cancel, new FileProgress(), () => { });
+            }
             await endpoint.Transport.WaitAsync(cancel);
             try
             {

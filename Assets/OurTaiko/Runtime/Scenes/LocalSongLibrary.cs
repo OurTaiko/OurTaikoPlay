@@ -90,9 +90,11 @@ namespace OurTaiko
             Clear();
         }
 
-        // Starts a rescan in the background; Songs and Folders wait for it.
+        // Starts a rescan in the background; Songs and Folders wait for it. The offline chart
+        // cache is read again alongside, for the servers song select cannot reach.
         public void Refresh()
         {
+            Online.OnlineManager.Instance?.RescanCache();
             string root = testRoot;
             string[] snapshot = (string[])roots.Clone();
             string defaultRoot = DefaultRoot;

@@ -46,7 +46,7 @@ namespace OurTaiko.Online
         // course mapping as SongLoadingScene; never download a song's audio just for rank.
         public async Task<int[]> PrepareRankThresholdsAsync(FanmadeChart selected, CancellationToken cancel = default)
         {
-            var endpoint = Endpoint(selected.Server) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
+            var endpoint = ConnectedEndpoint(selected.Server) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
             await endpoint.Transport.WaitAsync(cancel);
             try
             {

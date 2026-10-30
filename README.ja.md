@@ -62,6 +62,8 @@ git submodule update --init --recursive
 
 オンラインサーバーはデータフォルダーの `servers.json` で設定します。初期設定には `https://fanmade.ourtaiko.org` と `https://ese-backend.llx.life` が含まれます。各項目の `enabled` を `false` にすると無効にできます。
 
+オンラインで遊んだ曲は譜面と音源ごとデータフォルダーの `cache/` に保存されます。サーバーにつながらないときは、選曲画面にそのサーバー名の「オフラインキャッシュ」フォルダーが現れ、元のカテゴリ別にキャッシュ済みの曲が並び、サーバーなしで遊べます。サーバーにつながればまた通常の曲リストに戻ります。オフラインで遊んだ成績はそのサーバーのアカウント宛てに保留され、再接続後に送信されます。
+
 ローカル楽曲は現在 Unity アセットとして設定します。TJA の内容を `.txt` としてインポートし、**Assets → Create → OurTaiko → Song** から `SongDefinition` を作成してください。譜面、音源、オフセットを設定し、SongSelect コントローラーの `songs` リストに追加します。
 
 楽曲（`Songs/`）、設定、スコア、キャッシュは同じデータフォルダーに保存されます。
@@ -82,7 +84,7 @@ git submodule update --init --recursive
 | `options.json` | 演奏オプション |
 | `player.json` | プレイヤーのネームプレート |
 | `servers.json` | オンラインサーバーとログインの設定 |
-| `scores.sqlite3` | ローカル自己ベストと、サーバー・アカウント別の送信待ちキュー |
+| `scores.sqlite3` | ローカル自己ベスト、サーバー・アカウント別の送信待ちキュー、キャッシュ済み譜面の索引 |
 
 General → Language は現在、曲名とサブタイトルにのみ適用されます。翻訳がない場合は譜面の TITLE／SUBTITLE をそのまま表示します。メニュー全体の翻訳にはまだ対応していません。README の言語別ページはゲーム内の言語設定とは別です。
 

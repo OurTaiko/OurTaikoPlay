@@ -55,11 +55,15 @@ namespace OurTaiko.Online
 
         public PendingScoreQueue UploadQueue { get; }
         public PendingDanQueue DanQueue { get; }
+        // The charts prepared so far, playable while their server is not connected.
+        public OfflineChartStore Offline { get; }
         public FanmadeClient(string cacheRoot, string databasePath = null)
         {
             CacheRoot = Path.GetFullPath(cacheRoot);
-            UploadQueue = new PendingScoreQueue(databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3"));
-            DanQueue = new PendingDanQueue(databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3"));
+            string database = databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3");
+            UploadQueue = new PendingScoreQueue(database);
+            DanQueue = new PendingDanQueue(database);
+            Offline = new OfflineChartStore(database);
         }
 
         // A 段位 attempt's answer: Profile is OurTaikoProfile's reply ({granted, nameplate}) or null
@@ -121,6 +125,11 @@ namespace OurTaiko.Online
         }
 
         public FanmadeEndpoint Endpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id); }
+
+        // The endpoint of a server whose catalog is loaded now; null otherwise. A server that is
+        // listed but not connected (unreachable at start-up, start-up skipped, a failed login) has
+        // no catalog to play from, so its charts play from the offline cache as if it were absent.
+        FanmadeEndpoint ConnectedEndpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id && e.IsConnected); }
 
         void SetStatus(string text) { lock (sync) status = text; }
 
@@ -514,12 +523,26 @@ namespace OurTaiko.Online
         // and unknown charts are not uploaded. The request body and its idempotency key are fixed
         // when queued, so retries never create a second score.
         // side is the block played (decided before the play), seat the account it belongs to.
-        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null)
+        // A play of a cached chart while its server is not connected is queued under
+        // `offlineAccount` (the queue key the seat's account has there, FanmadeEndpoint.AccountIdOf)
+        // and sent once that account is signed in to the server again; null queues nothing offline.
+        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null,
+            string offlineAccount = null)
         {
             var block = SideBlock(chart, difficulty, side);
             if (block == null) return false;
             var e = Endpoint(chart.Server);
-            if (e == null || !e.IsConnected || !HasAccount(e, seat)) return false;
+            string account;
+            if (e != null && e.IsConnected)
+            {
+                if (!HasAccount(e, seat)) return false;
+                account = e.AccountIdOf(seat);
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(offlineAccount) || Offline.Get(chart.Server, chart.Id) == null) return false;
+                account = offlineAccount;
+            }
             // The block that was played names the song and course.
             var body = new JObject { ["difficultyId"] = block.Id };
             body["good"] = score.Good; body["ok"] = score.Ok; body["bad"] = score.Bad; body["score"] = score.Score;
@@ -528,7 +551,7 @@ namespace OurTaiko.Online
             body["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull();
             try
             {
-                UploadQueue.Enqueue(e.AccountIdOf(seat), RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), block.ChartHash, chart.AudioHash, chart.Id);
+                UploadQueue.Enqueue(account, RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), block.ChartHash, chart.AudioHash, chart.Id);
                 RetryNow();
                 return true;
             }
@@ -684,7 +707,8 @@ namespace OurTaiko.Online
         }
 
         // The cached file for a content hash (the manifest only accepts 64-digit hex hashes).
-        string ObjectPath(string hash) => Path.Combine(CacheRoot, "objects", hash.Substring(0, 2), hash);
+        string ObjectPath(string hash) => ObjectPath(CacheRoot, hash);
+        internal static string ObjectPath(string cacheRoot, string hash) => Path.Combine(cacheRoot, "objects", hash.Substring(0, 2), hash);
 
         // The cached file of a resource, downloaded and verified (size and SHA-256) first when the
         // cache does not hold it. `transfer` and `publish` report the steps to a progress display.
