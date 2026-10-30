@@ -55,11 +55,15 @@ namespace OurTaiko.Online
 
         public PendingScoreQueue UploadQueue { get; }
         public PendingDanQueue DanQueue { get; }
+        // The charts prepared so far, playable while their server is not connected.
+        public OfflineChartStore Offline { get; }
         public FanmadeClient(string cacheRoot, string databasePath = null)
         {
             CacheRoot = Path.GetFullPath(cacheRoot);
-            UploadQueue = new PendingScoreQueue(databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3"));
-            DanQueue = new PendingDanQueue(databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3"));
+            string database = databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3");
+            UploadQueue = new PendingScoreQueue(database);
+            DanQueue = new PendingDanQueue(database);
+            Offline = new OfflineChartStore(database);
         }
 
         // A 段位 attempt's answer: Profile is OurTaikoProfile's reply ({granted, nameplate}) or null
@@ -684,7 +688,8 @@ namespace OurTaiko.Online
         }
 
         // The cached file for a content hash (the manifest only accepts 64-digit hex hashes).
-        string ObjectPath(string hash) => Path.Combine(CacheRoot, "objects", hash.Substring(0, 2), hash);
+        string ObjectPath(string hash) => ObjectPath(CacheRoot, hash);
+        internal static string ObjectPath(string cacheRoot, string hash) => Path.Combine(cacheRoot, "objects", hash.Substring(0, 2), hash);
 
         // The cached file of a resource, downloaded and verified (size and SHA-256) first when the
         // cache does not hold it. `transfer` and `publish` report the steps to a progress display.

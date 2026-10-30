@@ -68,6 +68,8 @@ Entry 的「ゲーム設定」可进入系统设置。
 
 在线服务器从数据目录的 `servers.json` 读取；内置 `https://fanmade.ourtaiko.org` 和 `https://ese-backend.llx.life`。可将对应配置的 `enabled` 设为 `false` 停用服务器。
 
+在线游玩过的曲目会连同谱面、音源一起缓存在数据目录的 `cache/` 下。某个服务器连不上时，选曲页面会显示一个以该服务器命名、标注「本地缓存」的文件夹，里面按原分类列出已缓存的曲目，可以离线游玩；服务器一旦连上，就恢复显示其完整曲库。离线游玩的成绩不会保存或上传。
+
 本地曲目目前通过 Unity 资源配置：将 TJA 内容导入为 `.txt`，通过 **Assets → Create → OurTaiko → Song** 创建 `SongDefinition`，设置谱面、音乐和偏移，再加入 SongSelect 控制器的 `songs` 列表。
 
 歌曲、设置、成绩和缓存都在同一个数据目录：
@@ -88,7 +90,7 @@ Entry 的「ゲーム設定」可进入系统设置。
 | `options.json` | 演奏选项 |
 | `player.json` | 玩家名牌 |
 | `servers.json` | 在线服务器与登录配置 |
-| `scores.sqlite3` | 本地最佳成绩，以及按服务器／账号隔离的待上传队列 |
+| `scores.sqlite3` | 本地最佳成绩、按服务器／账号隔离的待上传队列，以及已缓存谱面的索引 |
 
 General → Language 当前只影响歌名和副标题，缺失翻译时显示谱面原文（TITLE／SUBTITLE）；尚不提供整套菜单翻译。README 的语言版本与游戏内语言设置相互独立。
 

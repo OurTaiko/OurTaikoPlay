@@ -64,6 +64,9 @@ namespace OurTaiko
             var local = scope == null || scope == LocalKey
                 ? library.Songs.Concat(library.Folders.SelectMany(f => f.AllSongs())).Distinct().Where(query.MatchesLocal).ToList()
                 : new List<SongDefinition>();
+            // The offline cache of unreachable servers is searched here, by the metadata it keeps.
+            if (scope != LocalKey)
+                local.AddRange(online.OfflineSongs.Where(s => (server == null || s.onlineChart?.Server == server) && query.MatchesCached(s)));
             var replies = scope == LocalKey ? Array.Empty<FanmadeSearchResult>() : await online.Client.SearchAsync(query, cancel, server);
             cancel.ThrowIfCancellationRequested();
             if (version != searchVersion) return;
@@ -102,7 +105,7 @@ namespace OurTaiko
                 .Select(g => new SongFolder
                 {
                     Key = "search:" + (g.Key ?? "local"), Server = g.Key, Songs = g.ToArray(),
-                    Title = (g.Key == null ? LocalTitle : OnlineManager.Instance.Client.Endpoint(g.Key)?.Config.DisplayName ?? g.Key) + " (" + g.Count() + ")",
+                    Title = (g.Key == null ? LocalTitle : OnlineManager.Instance.ServerDisplayName(g.Key)) + " (" + g.Count() + ")",
                 }).ToArray();
             folders = sources;
             parents = sources.Select(_ => -1).ToArray();
