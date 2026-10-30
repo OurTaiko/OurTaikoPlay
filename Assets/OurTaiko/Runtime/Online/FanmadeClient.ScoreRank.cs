@@ -54,7 +54,7 @@ namespace OurTaiko.Online
                 {
                     // The chart must still be the one the catalog showed (same blocks, same content)
                     // before anything is downloaded.
-                    var current = FanmadeChart.From(Json.Parse(await endpoint.AuthorizedAsync("/api/v1/charts/" + selected.Id, cancel: cancel)), endpoint.Id);
+                    var current = FanmadeChart.From(Json.Parse(await endpoint.AuthorizedAsync("/api/v1/charts/" + selected.Id + "?by=id", cancel: cancel)), endpoint.Id);
                     if (current.Id != selected.Id || current.BlocksKey != selected.BlocksKey) throw new FanmadeException("CHART_UPDATING");
                     var manifest = await endpoint.ResourcesAsync(selected.Id, cancel);
                     var resource = manifest.Tja;

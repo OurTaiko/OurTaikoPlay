@@ -589,7 +589,7 @@ namespace OurTaiko.Online
                             // changed since, keep it aside.
                             if (string.IsNullOrEmpty(queued.ChartHash) || !Json.HexId(queued.AudioHash ?? "", 64))
                             { UploadQueue.Reject(queued.Key); continue; }
-                            var current = FanmadeChart.From(Json.Parse(await e.AuthorizedAsync("/api/v1/charts/" + (queued.Song ?? Json.Str(Json.Parse(queued.Body), "songId")))), e.Id);
+                            var current = FanmadeChart.From(Json.Parse(await e.AuthorizedAsync("/api/v1/charts/" + (queued.Song ?? Json.Str(Json.Parse(queued.Body), "songId")) + "?by=id")), e.Id);
                             var manifest = await e.ResourcesAsync(current.Id);
                             if (manifest.Audio.Hash != current.AudioHash)
                                 throw new FanmadeException("CHART_UPDATING");
