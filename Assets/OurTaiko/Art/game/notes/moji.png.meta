@@ -435,6 +435,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: Moji12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 576
+        width: 256
+        height: 48
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9684b992af1741cf82d6f94e25d7b876
+      internalID: 1426806141
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -453,6 +475,7 @@ TextureImporter:
       Moji1: -1386001064
       Moji10: 475634943
       Moji11: 163934189
+      Moji12: 1426806141
       Moji2: 2093287263
       Moji3: 552836711
       Moji4: 926926321

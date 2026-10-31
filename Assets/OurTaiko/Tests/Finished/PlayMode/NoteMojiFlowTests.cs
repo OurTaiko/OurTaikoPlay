@@ -101,5 +101,43 @@ namespace OurTaiko.Tests
                 Object.Destroy(song.chart); Object.Destroy(song);
             }
         }
+
+        // A Kadon (G) draws the purple big note with カドン under it, and both colours hit it.
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator KadonDrawsItsOwnNoteAndText()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Kadon\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1G,\n#END");
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
+                SceneSwitcher.Instance.Play(song);
+                float deadline = Time.realtimeSinceStartup + 20;
+                do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
+                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene);
+                yield return null;
+                var play = Object.FindAnyObjectByType<PlayScene>();
+                if (!play.IsPaused) play.TogglePause();
+                play.pausePanel.SetActive(false);
+                var kadon = play.Session.Chart.Notes[1];
+                Assert.That(kadon.Kind, Is.EqualTo(NoteKind.Kadon));
+                Render.Invoke(play, new object[] { kadon.Time - 0.3 });
+                Canvas.ForceUpdateCanvases();
+                Assert.That(play.NoteRoot(1).Find("Head").GetComponent<LaneSprite>().sprite.name, Is.EqualTo("Note16"));
+                Assert.That(play.MojiRoot(1).Find("Head").GetComponent<LaneSprite>().sprite.name, Is.EqualTo("Moji12"));
+                SceneFlowTests.Capture("Kadon.png");
+
+                Assert.That(play.Session.Hit(false, 0), Is.EqualTo(Judgment.Good));
+                Assert.That(play.Session.Hit(false, kadon.Time), Is.EqualTo(Judgment.None));
+                Assert.That(play.Session.Hit(true, kadon.Time + 0.01), Is.EqualTo(Judgment.Good));
+                Render.Invoke(play, new object[] { kadon.Time + 0.02 });
+                Assert.That(play.NoteRoot(1) == null && play.MojiRoot(1) == null, Is.True);
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
     }
 }
