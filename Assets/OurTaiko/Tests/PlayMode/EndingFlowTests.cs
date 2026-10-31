@@ -53,9 +53,9 @@ namespace OurTaiko.Tests
                     fireFrames.Add(play.soulGauge.fire.sprite);
                     rainbowFrames.Add(play.soulGauge.rainbowA.sprite);
                     Assert.That(play.Session.Version, Is.EqualTo(version), "Presentation must not advance judgment after the result is captured.");
-                    Assert.That(play.SongTime, Is.EqualTo(songTime));
                     yield return null;
                 }
+                Assert.That(play.SongTime, Is.GreaterThan(songTime), "The song clock (and its music) plays on under the ending.");
                 Assert.That(dancerFrames.Count, Is.GreaterThan(1), "Dancers must keep animating during the ending.");
                 Assert.That(fireFrames.Count, Is.GreaterThan(1), "Soul fire must keep animating during the ending.");
                 Assert.That(rainbowFrames.Count, Is.GreaterThan(1), "The full gauge must keep cycling during the ending.");
