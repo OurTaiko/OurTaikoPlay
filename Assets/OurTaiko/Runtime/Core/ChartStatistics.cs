@@ -26,7 +26,7 @@ namespace OurTaiko
             var routeNotes = new int[3];
             foreach (var note in chart.Notes)
             {
-                if (note.Kind < NoteKind.Don || note.Kind > NoteKind.BigKa) continue;
+                if (!IsJudgeable(note)) continue;
                 for (int route = 0; route < 3; route++)
                     if (note.BranchId < 0 || note.Route == chart.Branches[note.BranchId].ResolveRoute((BranchRoute)route)) routeNotes[route]++;
             }
@@ -40,12 +40,15 @@ namespace OurTaiko
                 {
                     // A branch without #M counts the route drawn in its place.
                     if (note.BranchId != branchId || (branchId >= 0 && note.Route != chart.Branches[branchId].ResolveRoute(BranchRoute.Master))) continue;
-                    if (note.Kind >= NoteKind.Don && note.Kind <= NoteKind.BigKa) judgeableNotes++;
+                    if (IsJudgeable(note)) judgeableNotes++;
                     else if (note.IsBalloon) balloonHitBudget += Math.Min(100, note.BalloonHits);
                     else if (note.IsDrumroll)
                         drumrollMilliseconds += (note.EndTime - note.Time) * 1000;
                 }
             }
         }
+
+        // Notes 1–4 and the Kadon (G): judged 良/可/不可 and counted for score and gauge.
+        static bool IsJudgeable(ChartNote note) => note.Kind >= NoteKind.Don && note.Kind <= NoteKind.BigKa || note.IsKadon;
     }
 }
