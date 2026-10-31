@@ -437,7 +437,9 @@ namespace OurTaiko
         // window resolution, so cull against its live rect instead of fixed pixels.
         // A note is drawn from the screen's left edge to the lane's right edge (CStage演奏ドラム画面
         // t進行描画_チップ_Taiko: x > -note size and x < the resolution); left of the lane it is under the cover.
-        bool InLane(float x, Vector2 reach) => LaneCull.InLane(x + leftMargin, reach.x, reach.y, noteLayer.rect.width + leftMargin);
+        // The width is the one EnsureLaneWindows read at the start of this frame: reading
+        // RectTransform.rect for every note costs microseconds each once the layout is dirty.
+        bool InLane(float x, Vector2 reach) => LaneCull.InLane(x + leftMargin, reach.x, reach.y, windowWidth + leftMargin);
         float leftMargin;
         // How far the note layer's left edge is from the lane's (the screen's) left edge, in lane
         // units: summed down the hierarchy, so it holds before the canvas has been scaled.
