@@ -47,6 +47,17 @@ namespace OurTaiko
         public string[] songLibraryPaths = Array.Empty<string>();
         public KeyboardBindings keyboard = new KeyboardBindings();
         public string Language => Array.IndexOf(Languages, language) >= 0 ? language : "en";
+        public static readonly LogLevel[] LogLevels = { OurTaiko.LogLevel.Debug, OurTaiko.LogLevel.Info, OurTaiko.LogLevel.Warning, OurTaiko.LogLevel.Error };
+        // The least severe messages the log keeps; empty (or unknown) is Log.DefaultLevel.
+        public string logLevel = "";
+        public LogLevel LogLevel
+        {
+            get
+            {
+                LogLevel level = Log.Parse(logLevel, Log.DefaultLevel);
+                return Array.IndexOf(LogLevels, level) >= 0 ? level : Log.DefaultLevel;
+            }
+        }
     }
 
     // The username of each player's OurTaiko account, filled in on the settings page. Passwords

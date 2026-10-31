@@ -199,7 +199,7 @@ namespace OurTaiko
                     view.status = online.LoginSummary;
                 }
             }
-            catch (System.Exception error) { view.status = error.Message; Debug.LogWarning(error); }
+            catch (System.Exception error) { view.status = error.Message; Log.Exception("Settings", error); }
             finally { cancel.Dispose(); if (actionCancel == cancel) actionCancel = null; }
             if (this == null) return;
             running = null;
@@ -224,7 +224,7 @@ namespace OurTaiko
                 Menu.RefreshItems();
                 view.Show(Menu);
                 if (view.outputStatus != null) view.outputStatus.text = error.Message;
-                Debug.LogWarning("[Audio] " + error.Message);
+                Log.Warn("Audio", error.Message);
                 if (bgm != null && bgm.clip != null) bgm.PlayAudio();
             }
         }

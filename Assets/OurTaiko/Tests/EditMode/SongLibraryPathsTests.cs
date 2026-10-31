@@ -56,7 +56,7 @@ namespace OurTaiko.Tests
         public void RelativeAndEmptyEntriesAreRejected(string path)
         {
             Assert.That(SongLibraryPaths.TryNormalize(path, out _), Is.False);
-            LogAssert.Expect(LogType.Warning, "Skipping song library path: an absolute folder path is required.");
+            LogAssert.Expect(LogType.Warning, "[Songs] Skipping song library path: an absolute folder path is required.");
             Assert.That(SongLibraryPaths.Resolve(new[] { path }, defaultRoot), Is.EqualTo(new[] { defaultRoot }),
                 "Invalid custom entries must not remove the default library.");
         }

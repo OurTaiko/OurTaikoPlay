@@ -185,6 +185,7 @@ namespace OurTaiko.Online
             {
                 using var response = await http.SendAsync(request, linked.Token);
                 int status = (int)response.StatusCode;
+                Log.Debug("Account", $"{method} {path}: {status}");
                 if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 string text = await response.Content.ReadAsStringAsync();
                 if (text.Length > 64 * 1024) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");

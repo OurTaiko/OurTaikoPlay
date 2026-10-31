@@ -59,7 +59,7 @@ namespace OurTaiko
                 if (File.Exists(path)) settings = GameSettings.FromJson(File.ReadAllText(path));
                 else Write(settings);
             }
-            catch (Exception error) { Debug.LogWarning("Ignoring unreadable settings: " + error.Message); }
+            catch (Exception error) { Log.Warn("Settings", "Ignoring unreadable settings: " + error.Message); }
             Apply(settings);
         }
 
@@ -80,6 +80,11 @@ namespace OurTaiko
         void Apply(GameSettings settings)
         {
             Settings = settings;
+            if (Log.MinimumLevel != settings.general.LogLevel)
+            {
+                Log.MinimumLevel = settings.general.LogLevel;
+                Log.Info("Log", "Log level: " + Log.MinimumLevel);
+            }
             Settings.general.keyboard.Apply();
             Changed?.Invoke(Settings);
         }

@@ -69,7 +69,7 @@ namespace OurTaiko
                     if (Stale()) yield break;
                     if (!download.IsCompletedSuccessfully)
                     {
-                        Debug.LogWarning("Online preview: " + download.Exception?.GetBaseException().Message);
+                        Log.Warn("Preview", "Online preview: " + download.Exception?.GetBaseException().Message);
                         yield break;
                     }
                     string file = download.Result;
@@ -81,7 +81,7 @@ namespace OurTaiko
                     Exception readError = null;
                     try { if (string.IsNullOrEmpty(song.audioPath)) bytes = AudioAssetCatalog.Read(song.music); }
                     catch (Exception error) { readError = error; }
-                    if (readError != null) { Debug.LogWarning("Preview audio: " + readError.Message); Stop(); yield break; }
+                    if (readError != null) { Log.Warn("Preview", "Preview audio: " + readError.Message); Stop(); yield break; }
                     string path = song.audioPath;
                     read = () => bytes ?? System.IO.File.ReadAllBytes(path);
                 }
@@ -92,7 +92,7 @@ namespace OurTaiko
                     if (Stale()) yield break;
                     if (!decode.Succeeded)
                     {
-                        Debug.LogWarning("Preview audio: " + decode.Error?.Message);
+                        Log.Warn("Preview", "Preview audio: " + decode.Error?.Message);
                         if (!remote) Stop();
                         yield break;
                     }

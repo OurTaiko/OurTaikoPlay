@@ -62,7 +62,7 @@ namespace OurTaiko
                 if (File.Exists(path)) info = PlayerInfo.FromJson(File.ReadAllText(path));
                 else Write(info);
             }
-            catch (Exception error) { Debug.LogWarning("Ignoring unreadable player info: " + error.Message); }
+            catch (Exception error) { Log.Warn("Settings", "Ignoring unreadable player info: " + error.Message); }
             Apply(info);
         }
 

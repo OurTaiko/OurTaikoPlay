@@ -59,7 +59,7 @@ namespace OurTaiko
             settings.Changed += SettingsChanged;
             // Created up front so players can find where to put their songs.
             try { Directory.CreateDirectory(DefaultRoot); }
-            catch (System.Exception error) { Debug.LogWarning("Could not create the songs folder: " + error.Message); }
+            catch (System.Exception error) { Log.Warn("Songs", "Could not create the songs folder: " + error.Message); }
         }
 
         void OnDestroy()
@@ -99,8 +99,15 @@ namespace OurTaiko
             string[] snapshot = (string[])roots.Clone();
             string defaultRoot = DefaultRoot;
             string language = SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language : "en";
-            scan = Task.Run(() => root != null ? LocalSongScanner.Scan(root, language)
-                : LocalSongScanner.ScanRoots(snapshot, defaultRoot, language));
+            scan = Task.Run(() =>
+            {
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                var catalog = root != null ? LocalSongScanner.Scan(root, language)
+                    : LocalSongScanner.ScanRoots(snapshot, defaultRoot, language);
+                string from = root ?? string.Join(", ", snapshot);
+                Log.Info("Songs", $"Scanned {catalog.ChartCount} songs in {catalog.FolderCount} folders from {from} in {watch.ElapsedMilliseconds} ms");
+                return catalog;
+            });
         }
 
         void Complete()
@@ -114,7 +121,7 @@ namespace OurTaiko
             try { catalog = task.Result; }
             catch (System.AggregateException error)
             {
-                Debug.LogWarning("Could not read the songs folder: " + error.GetBaseException().Message);
+                Log.Warn("Songs", "Could not read the songs folder: " + error.GetBaseException().Message);
                 return;
             }
             Apply(catalog);

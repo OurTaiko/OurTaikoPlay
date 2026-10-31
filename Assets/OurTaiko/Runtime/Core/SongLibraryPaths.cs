@@ -37,7 +37,7 @@ namespace OurTaiko
             {
                 if (!TryNormalize(path, out string normalized))
                 {
-                    UnityEngine.Debug.LogWarning("Skipping song library path: an absolute folder path is required.");
+                    Log.Warn("Songs", "Skipping song library path: an absolute folder path is required.");
                     continue;
                 }
                 if (seen.Add(normalized)) paths.Add(normalized);

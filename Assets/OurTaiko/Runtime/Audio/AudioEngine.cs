@@ -91,7 +91,7 @@ namespace OurTaiko
                 if (!allowFallback) throw;
                 Failure = error.Message;
                 Diagnostics = "No audio output: " + Failure;
-                UnityEngine.Debug.LogError("[Audio] " + Diagnostics);
+                Log.Error("Audio", Diagnostics);
                 return;
             }
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
@@ -132,13 +132,13 @@ namespace OurTaiko
             if (!Available)
             {
                 Diagnostics = "No audio output: " + Failure;
-                UnityEngine.Debug.LogError("[Audio] " + Diagnostics);
+                Log.Error("Audio", Diagnostics);
                 return;
             }
             Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + $"; {options.Rate} Hz requested; device period {options.Period(SoundSettings.Platform)} ms requested; buffer {options.Buffer(SoundSettings.Platform)} ms requested; stream buffering disabled";
             if (Failure != null) Diagnostics += "; fallback: " + Failure;
-            if (Silent) UnityEngine.Debug.LogWarning("[Audio] " + Diagnostics);
-            else UnityEngine.Debug.Log("[Audio] " + Diagnostics);
+            if (Silent) Log.Warn("Audio", Diagnostics);
+            else Log.Info("Audio", Diagnostics);
         }
         static void Check(bool success, string operation)
         {

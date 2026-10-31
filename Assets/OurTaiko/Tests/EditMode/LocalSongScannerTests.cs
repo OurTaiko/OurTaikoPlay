@@ -1,8 +1,10 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
@@ -29,6 +31,26 @@ namespace OurTaiko.Tests
             string path = Path.Combine(root, relative);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, (encoding ?? new UTF8Encoding(false)).GetBytes(text));
+        }
+
+        [Test]
+        public void ChartsWithoutACourseOrWithMissingFilesAreLogged()
+        {
+            Write("empty.tja", "TITLE:Empty\nWAVE:empty.ogg\n");
+            Write("Pack/box.def", "#TITLE:Pack\n");
+            Write("Pack/missing.tja", "TITLE:Missing\nWAVE:missing.ogg\nBGMOVIE:missing.mp4\nCOURSE:Oni\nLEVEL:5\n#START\n1,\n#END\n");
+            Write("Pack/found.tja", Chart("Found", wave: "found.ogg"));
+            Write("Pack/found.ogg", "");
+
+            LogAssert.Expect(LogType.Warning, new Regex(@"^\[Songs\] Skipping song .*empty\.tja: it has no course"));
+            LogAssert.Expect(LogType.Warning, new Regex(@"^\[Songs\] Song .*missing\.tja: its WAVE missing\.ogg is missing\.$"));
+            LogAssert.Expect(LogType.Warning, new Regex(@"^\[Songs\] Song .*missing\.tja: its BGMOVIE missing\.mp4 is missing\.$"));
+            var catalog = LocalSongScanner.Scan(root);
+            LogAssert.NoUnexpectedReceived();
+
+            Assert.That(catalog.ChartCount, Is.EqualTo(2), "The missing files do not hide the song.");
+            Assert.That(catalog.FolderCount, Is.EqualTo(1));
+            Assert.That(catalog.Folders[0].Charts.Single(c => c.Info.Title == "Missing").AudioPath, Is.Null);
         }
 
         [Test]

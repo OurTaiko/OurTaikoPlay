@@ -23,7 +23,7 @@ namespace OurTaiko
             // dataPath is <name>_Data beside the executable, or <name>.app/Contents on macOS.
             string beside = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             if (Writable(beside)) return beside;
-            Debug.LogWarning("The game folder is read-only; saving to " + Application.persistentDataPath);
+            Log.Warn("Paths", "The game folder is read-only; saving to " + Application.persistentDataPath);
 #endif
             return Application.persistentDataPath;
         }

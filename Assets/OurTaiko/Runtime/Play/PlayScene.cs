@@ -91,7 +91,7 @@ namespace OurTaiko
             // Play scenes start from the song list; a direct run without a song goes back to Entry.
             if (song == null)
             {
-                Debug.LogWarning("No song is selected; returning to Entry.", this);
+                Log.Warn("Play", "No song is selected; returning to Entry.", this);
                 switcher.SwitchScene(SceneSwitcher.MenuScene);
                 yield break;
             }
@@ -135,7 +135,7 @@ namespace OurTaiko
             }
             catch (Exception error)
             {
-                Debug.LogException(error);
+                Log.Exception("Play", error);
                 IsFinished = true; resultPanel.SetActive(true);
                 resultText.text = "CHART COULD NOT LOAD\n<size=22>" + error.Message + "</size>";
             }
@@ -165,7 +165,7 @@ namespace OurTaiko
             });
             lanes.Add(lane);
             var session = new PlaySession(chart, judgeOffset, IsPractice ? practiceBranch : (BranchRoute?)null);
-            foreach (string warning in session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
+            foreach (string warning in session.Chart.Warnings) Log.Warn("Play", "Ignored TJA command: " + warning);
             return session;
         }
 

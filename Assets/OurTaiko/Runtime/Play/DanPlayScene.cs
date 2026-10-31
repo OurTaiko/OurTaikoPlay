@@ -88,7 +88,7 @@ namespace OurTaiko
             if (Run == null && switcher.SelectedDan != null && switcher.SelectedDan.IsPlayable) Run = new DanRun(switcher.SelectedDan);
             if (Run == null)
             {
-                Debug.LogWarning("No 段位 course is selected; returning to the course select.", this);
+                Log.Warn("Play", "No 段位 course is selected; returning to the course select.", this);
                 switcher.SwitchScene(SceneSwitcher.DanSelectScene);
                 yield break;
             }
@@ -121,7 +121,7 @@ namespace OurTaiko
             }
             catch (Exception error)
             {
-                Debug.LogException(error);
+                Log.Exception("Play", error);
                 IsFinished = true; resultPanel.SetActive(true);
                 resultText.text = "CHART COULD NOT LOAD\n<size=22>" + error.Message + "</size>";
             }
@@ -141,7 +141,7 @@ namespace OurTaiko
             audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
             visualOffset = song.visualOffsetMs / 1000.0;
             var session = new PlaySession(Run.Charts[index], judgeOffset);
-            foreach (string warning in session.Chart.Warnings) Debug.LogWarning("Ignored TJA command: " + warning);
+            foreach (string warning in session.Chart.Warnings) Log.Warn("Play", "Ignored TJA command: " + warning);
             Lane.Record.AudioOffsetMs = (int)Math.Round((audioOffset + judgeOffset) * 1000);
             Lane.Record.VisualOffsetMs = (int)Math.Round((visualOffset - judgeOffset) * 1000);
             Lane.Record.Inputs.Clear();

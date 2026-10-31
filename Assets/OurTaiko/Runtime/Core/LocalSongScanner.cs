@@ -29,6 +29,12 @@ namespace OurTaiko
     {
         public readonly List<LocalChart> Songs = new List<LocalChart>();
         public readonly List<LocalFolder> Folders = new List<LocalFolder>();
+
+        // Charts and folders at every depth, for the scan's log line.
+        public int ChartCount => Songs.Count + Folders.Sum(ChartsIn);
+        public int FolderCount => Folders.Sum(FoldersIn);
+        static int ChartsIn(LocalFolder folder) => folder.Charts.Count + folder.Folders.Sum(ChartsIn);
+        static int FoldersIn(LocalFolder folder) => 1 + folder.Folders.Sum(FoldersIn);
     }
 
     // The songs folder as OpenTaiko reads it (CSongs管理.t曲を検索してリストを作成する, CBoxDef): a
@@ -75,7 +81,7 @@ namespace OurTaiko
                 catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
                     error is System.Security.SecurityException)
                 {
-                    UnityEngine.Debug.LogWarning($"Skipping song library {root}: {error.Message}");
+                    Log.Warn("Songs", $"Skipping song library {root}: {error.Message}");
                 }
             }
             return combined;
@@ -148,9 +154,16 @@ namespace OurTaiko
                 byte[] bytes = File.ReadAllBytes(file);
                 string text = ReadText(bytes);
                 var info = SongInfo.Read(text);
-                if (info.Blocks.Count == 0) return;
+                if (info.Blocks.Count == 0)
+                {
+                    Log.Warn("Songs", $"Skipping song {file}: it has no course (COURSE … #START … #END).");
+                    return;
+                }
                 string audio = string.IsNullOrWhiteSpace(info.Wave) ? null : Path.Combine(Path.GetDirectoryName(file), info.Wave.Trim());
                 string movie = string.IsNullOrWhiteSpace(info.Movie) ? null : Path.Combine(Path.GetDirectoryName(file), info.Movie.Trim());
+                // Still listed: it plays without music or without the movie.
+                if (audio != null && !File.Exists(audio)) Log.Warn("Songs", $"Song {file}: its WAVE {info.Wave.Trim()} is missing.");
+                if (movie != null && !File.Exists(movie)) Log.Warn("Songs", $"Song {file}: its BGMOVIE {info.Movie.Trim()} is missing.");
                 string relative = Relative(root, file);
                 using var hash = SHA256.Create();
                 list.Add(new LocalChart
@@ -164,7 +177,7 @@ namespace OurTaiko
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is FormatException)
             {
-                UnityEngine.Debug.LogWarning($"Skipping song {file}: {error.Message}");
+                Log.Warn("Songs", $"Skipping song {file}: {error.Message}");
             }
         }
 

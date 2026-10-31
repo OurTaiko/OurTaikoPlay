@@ -19,6 +19,8 @@ namespace OurTaiko.Online
             try
             {
                 using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token);
+                // Only the path: a resource URL's query may carry a signature.
+                Log.Debug("Online", $"GET {request.RequestUri.Host}{request.RequestUri.AbsolutePath}: {(int)response.StatusCode}");
                 if ((int)response.StatusCode != 200) throw new HttpStatusException((int)response.StatusCode);
                 long? length = response.Content.Headers.ContentLength;
                 if (length.HasValue && length.Value != resource.Size) throw new FanmadeException("DOWNLOAD_SIZE_MISMATCH");

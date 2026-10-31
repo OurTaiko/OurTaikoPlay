@@ -58,7 +58,7 @@ namespace OurTaiko
             catch (Exception error)
             {
                 calibrationError = "保存失败，请重试";
-                Debug.LogWarning("Could not save timing adjustment: " + error.Message);
+                Log.Warn("Result", "Could not save timing adjustment: " + error.Message);
                 DrawCalibration();
                 return false;
             }

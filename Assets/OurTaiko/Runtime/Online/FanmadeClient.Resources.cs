@@ -57,7 +57,7 @@ namespace OurTaiko.Online
                             state.Movie = new FileProgress();
                             try { c.MoviePath = await EnsureObjectAsync(e, manifest.Movie, cancel, state.Movie, Publish); }
                             catch (Exception error) when (!cancel.IsCancellationRequested)
-                            { UnityEngine.Debug.LogWarning("Background movie download failed: " + error.Message); }
+                            { Log.Warn("Online", "Background movie download failed: " + error.Message); }
                         }
                         state.Step = DownloadProgress.Stage.Preparing; Publish();
                         // Rebuilt on every preparation: it depends on the API metadata, not only on the files.
@@ -110,7 +110,7 @@ namespace OurTaiko.Online
                     Cached = DateTime.UtcNow.Ticks,
                 });
             }
-            catch (Exception error) { UnityEngine.Debug.LogWarning("Could not record the cached chart: " + error.Message); }
+            catch (Exception error) { Log.Warn("Online", "Could not record the cached chart: " + error.Message); }
         }
 
         // The offline counterpart of PrepareAsync: the chart as the server last described it, its
@@ -134,7 +134,7 @@ namespace OurTaiko.Online
                 state.Movie = new FileProgress();
                 try { c.MoviePath = await CachedObjectAsync(cached.MovieHash, cached.MovieSize, cancel, state.Movie, Publish); }
                 catch (Exception error) when (!cancel.IsCancellationRequested)
-                { UnityEngine.Debug.LogWarning("Cached background movie unavailable: " + error.Message); }
+                { Log.Warn("Online", "Cached background movie unavailable: " + error.Message); }
             }
             state.Step = DownloadProgress.Stage.Preparing; Publish();
             string text = await CacheWork(() =>

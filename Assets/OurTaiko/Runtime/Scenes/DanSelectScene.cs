@@ -131,8 +131,8 @@ namespace OurTaiko
                 Online.ServerList.BuiltIn[0].Url, Online.ServerList.BuiltIn[1].Url));
             foreach (var entry in pages.SelectMany(p => p.Courses).Concat(servers).Distinct())
             {
-                if (entry.Error != null) Debug.LogWarning($"Dan course {entry.Path}: {entry.Error}");
-                foreach (string warning in entry.Course.Warnings) Debug.LogWarning($"Dan course {entry.Path}: {warning}");
+                if (entry.Error != null) Log.Warn("Dan", $"Dan course {entry.Path}: {entry.Error}");
+                foreach (string warning in entry.Course.Warnings) Log.Warn("Dan", $"Dan course {entry.Path}: {warning}");
             }
         }
 
@@ -360,7 +360,7 @@ namespace OurTaiko
             PlayOptions.ForSeat(0).Save();
             if (!Application.CanStreamedLevelBeLoaded(SceneSwitcher.DanPlayScene))
             {
-                Debug.LogWarning("DanPlayScene is not in the build.");
+                Log.Warn("Dan", "DanPlayScene is not in the build.");
                 Flow = new DanSelectFlow(courses.Count, i => courses[i].IsPlayable, Flow.Selected);
                 return;
             }

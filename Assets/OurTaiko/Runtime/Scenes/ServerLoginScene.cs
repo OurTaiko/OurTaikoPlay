@@ -233,7 +233,7 @@ namespace OurTaiko
             catch (Exception error)
             {
                 if (this == null) return;
-                Debug.LogWarning($"ServerLogin: {Server.DisplayName}: {error.Message}");
+                Log.Warn("Online", $"ServerLogin: {Server.DisplayName}: {error.Message}");
                 if (!guest && error is HttpStatusException status && (status.Status == 401 || status.Status == 403))
                     online.Remember(index, Server.username, Server.password, autoLogin: false);
                 view.ShowMessage(Describe(error, cancel.IsCancellationRequested), error: true);

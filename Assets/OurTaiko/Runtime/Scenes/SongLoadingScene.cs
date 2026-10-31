@@ -31,7 +31,7 @@ namespace OurTaiko
             string course = switcher.SelectedCourse;
             if (song == null)
             {
-                Debug.LogWarning("No song is selected; returning to Entry.", this);
+                Log.Warn("Loading", "No song is selected; returning to Entry.", this);
                 switcher.SwitchScene(SceneSwitcher.MenuScene);
                 yield break;
             }
@@ -42,6 +42,7 @@ namespace OurTaiko
                 switcher.ParkCurtain();
             }
             double started = GameTimeline.FrameTime;
+            Log.Info("Loading", song.name + (string.IsNullOrEmpty(course) ? "" : " " + course) + (switcher.PracticeMode ? " (practice)" : ""));
 
             var online = OnlineManager.EnsureInstance();
             if (online.IsOnline(song))
@@ -65,7 +66,7 @@ namespace OurTaiko
                 if (switcher.PlaysTwo)
                     switcher.SetPreparedChart(song, switcher.SelectedCourse2P, PlayScene.PrepareChart(song, switcher.SelectedCourse2P, switcher.SideOf(1), 1), 1);
             }
-            catch (Exception error) { Debug.LogException(error, this); }  // The play scene parses again and shows it.
+            catch (Exception error) { Log.Exception("Loading", error, this); }  // The play scene parses again and shows it.
             yield return DecodeAudio(song);
             if (Error != null)
             {
@@ -90,7 +91,7 @@ namespace OurTaiko
             if (!engine.Available || song == null || (song.music == null && string.IsNullOrEmpty(song.audioPath))) yield break;
             byte[] encoded = null;
             try { if (string.IsNullOrEmpty(song.audioPath)) encoded = AudioAssetCatalog.Read(song.music); }
-            catch (Exception error) { Error = "AUDIO_LOAD_FAILED"; Debug.LogException(error); }
+            catch (Exception error) { Error = "AUDIO_LOAD_FAILED"; Log.Exception("Loading", error); }
             if (Error != null) yield break;
             string path = song.audioPath;
             // A cancelled scene still releases a completed native decode.
@@ -98,7 +99,7 @@ namespace OurTaiko
             {
                 while (!decode.IsDone) yield return null;
                 if (decode.Succeeded) song.SetPreparedAudio(decode.Take());
-                else { Error = "AUDIO_DECODE_FAILED"; Debug.LogException(decode.Error); }
+                else { Error = "AUDIO_DECODE_FAILED"; Log.Exception("Loading", decode.Error); }
             }
         }
 
@@ -117,7 +118,7 @@ namespace OurTaiko
                 if (online.IsOnline(song) && !repeat) yield return Download(switcher, online, song, false);
                 if (Error != null) break;
                 try { dan.Charts[i] = PlayScene.PrepareChart(dan.Resolved(i)); }
-                catch (Exception error) { Error = "CHART_LOAD_FAILED"; Debug.LogException(error, this); break; }
+                catch (Exception error) { Error = "CHART_LOAD_FAILED"; Log.Exception("Loading", error, this); break; }
                 // Each entry keeps its own decoded audio, so a song played twice starts at once both times.
                 yield return DecodeAudio(song);
                 dan.Audio[i] = song.TakePreparedAudio();
@@ -164,7 +165,7 @@ namespace OurTaiko
             if (!task.IsCompletedSuccessfully)
             {
                 var error = task.Exception?.GetBaseException();
-                Debug.LogWarning("Online chart download failed: " + error?.Message);
+                Log.Warn("Loading", "Online chart download failed: " + error?.Message);
                 Error = error is FanmadeException ? error.Message : "DOWNLOAD_FAILED";
                 yield break;
             }

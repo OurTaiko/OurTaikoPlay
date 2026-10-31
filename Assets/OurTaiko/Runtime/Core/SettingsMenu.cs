@@ -207,7 +207,14 @@ namespace OurTaiko
                     GeneralSettings.LanguageNames,
                     s => Array.IndexOf(GeneralSettings.Languages, s.general.Language),
                     (s, choice) => s.general.language = GeneralSettings.Languages[choice]),
-            }.Concat(KeyboardBindings.SettingsOrder.Select(SettingItem.Keyboard)).ToArray()),
+            }.Concat(KeyboardBindings.SettingsOrder.Select(SettingItem.Keyboard)).Concat(new[]
+            {
+                new SettingItem("Log Level",
+                    "The least severe messages written to the log (the Logs folder and the console). Debug: everything; Error: failures only.",
+                    GeneralSettings.LogLevels.Select(level => level.ToString()).ToArray(),
+                    s => Array.IndexOf(GeneralSettings.LogLevels, s.general.LogLevel),
+                    (s, choice) => s.general.logLevel = GeneralSettings.LogLevels[choice].ToString()),
+            }).ToArray()),
             new SettingType("Play", new[]
             {
                 SettingItem.Toggle("Enable Drumpad for Single Player Mode",

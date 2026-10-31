@@ -60,13 +60,13 @@ namespace OurTaiko
             Result = switcher.LastDan;
             if (Result == null)
             {
-                Debug.LogWarning("No 段位 result to show; returning to the course select.", this);
+                Log.Warn("Dan", "No 段位 result to show; returning to the course select.", this);
                 enabled = false;
                 switcher.SwitchScene(SceneSwitcher.DanSelectScene);
                 return;
             }
             try { Save(); }
-            catch (Exception error) { Debug.LogException(error, this); }
+            catch (Exception error) { Log.Exception("Dan", error, this); }
             Bind();
             Show(Now);
         }

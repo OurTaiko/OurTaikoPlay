@@ -46,7 +46,7 @@ namespace OurTaiko
             {
                 if (File.Exists(path)) JsonUtility.FromJsonOverwrite(File.ReadAllText(path), options);
             }
-            catch (Exception error) { Debug.LogWarning("Ignoring unreadable options file: " + error.Message); }
+            catch (Exception error) { Log.Warn("Settings", "Ignoring unreadable options file: " + error.Message); }
             options.path = path;
             options.speed = Math.Max(MinSpeed, Math.Min(MaxSpeed, options.speed));
             if (!Enum.IsDefined(typeof(RandomMode), options.random)) options.random = RandomMode.Off;

@@ -298,7 +298,7 @@ namespace OurTaiko
         {
             try { await BeginSwitch(sceneName, Task.CompletedTask, autoFadeOut, style); }
             catch (OperationCanceledException) { }
-            catch (Exception error) { Debug.LogException(error, this); }
+            catch (Exception error) { Log.Exception("Scene", error, this); }
         }
 
         public Task SwitchSceneAsync(string sceneName, bool autoFadeOut = true)
@@ -351,6 +351,7 @@ namespace OurTaiko
                 if (afterFade != null) await afterFade();
                 lifetime.ThrowIfCancellationRequested();
                 FromScene = CurrentScene;
+                Log.Info("Scene", FromScene + " → " + sceneName);
                 var operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
                 if (operation == null) throw new InvalidOperationException("Could not load scene: " + sceneName);
                 while (!operation.isDone) await Awaitable.NextFrameAsync(lifetime);
@@ -387,7 +388,7 @@ namespace OurTaiko
         {
             try { await task; }
             catch (OperationCanceledException) { }
-            catch (Exception error) { Debug.LogException(error, this); }
+            catch (Exception error) { Log.Exception("Scene", error, this); }
         }
 
         public void SetLoadingText(string text) => SetLoadingText(text, Color.white);

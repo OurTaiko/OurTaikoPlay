@@ -167,7 +167,7 @@ namespace OurTaiko.Online
             {
                 if (string.IsNullOrEmpty(usernames[seat]) || string.IsNullOrEmpty(passwords[seat]) || Accounts.Seats[seat].IsSignedIn) continue;
                 try { await SignInAsync(seat, usernames[seat], passwords[seat], cancel, connect: false); }
-                catch (Exception error) { Debug.LogWarning($"Signing {seat + 1}P in with the saved password failed: {error.Message}"); }
+                catch (Exception error) { Log.Warn("Online", $"Signing {seat + 1}P in with the saved password failed: {error.Message}"); }
             }
             account.p1Password = ""; account.p2Password = "";
             manager.Set(settings);
@@ -198,7 +198,7 @@ namespace OurTaiko.Online
             if (this != null) RefreshSongs();
             if (token.Length == 0) return;
             try { await Center.LogoutAsync(token, cancel); }
-            catch (Exception error) { Debug.LogWarning("Account center sign-out failed: " + error.Message); }
+            catch (Exception error) { Log.Warn("Online", "Account center sign-out failed: " + error.Message); }
         }
 
         // Checks each remembered account at the account center and signs it in to every built-in
@@ -240,7 +240,7 @@ namespace OurTaiko.Online
                     }
                     catch (Exception error)
                     {
-                        Debug.LogWarning($"{who}'s account check failed: {error.Message}");
+                        Log.Warn("Online", $"{who}'s account check failed: {error.Message}");
                         results.Add(who + ": " + (cancel.IsCancellationRequested ? "cancelled" : "offline (" + error.Message + ")"));
                         continue;
                     }
@@ -273,7 +273,7 @@ namespace OurTaiko.Online
                         }
                         catch (Exception error)
                         {
-                            Debug.LogWarning($"{who}'s sign-in to {name} failed: {error.Message}");
+                            Log.Warn("Online", $"{who}'s sign-in to {name} failed: {error.Message}");
                             results.Add(who + " " + name + ": " + (cancel.IsCancellationRequested ? "cancelled" : Describe(error)));
                         }
                     }
@@ -297,7 +297,7 @@ namespace OurTaiko.Online
         void SaveAccounts()
         {
             try { Accounts.Save(); }
-            catch (Exception error) { Debug.LogWarning("Could not save the OurTaiko accounts: " + error.Message); }
+            catch (Exception error) { Log.Warn("Online", "Could not save the OurTaiko accounts: " + error.Message); }
         }
 
         // What the account center lists under 登录设备 for this sign-in.
@@ -323,10 +323,11 @@ namespace OurTaiko.Online
                     {
                         await Client.LoadCatalogAsync(e, cancel);
                         results.Add($"{name}: {e.ChartCount} songs");
+                        Log.Info("Online", $"Song list of {name}: {e.ChartCount} songs");
                     }
                     catch (Exception error)
                     {
-                        Debug.LogWarning($"Song list of {name} failed: {error.Message}");
+                        Log.Warn("Online", $"Song list of {name} failed: {error.Message}");
                         results.Add(name + ": " + (cancel.IsCancellationRequested ? "cancelled" : Describe(error)));
                     }
                 }
@@ -360,7 +361,7 @@ namespace OurTaiko.Online
             try { return await Profiles.NameplateAsync(account.UserId, SettingManager.EnsureInstance().Settings.general.Language, cancel); }
             catch (Exception error)
             {
-                Debug.LogWarning("Nameplate unavailable: " + error.Message);
+                Log.Warn("Online", "Nameplate unavailable: " + error.Message);
                 return null;
             }
         }
@@ -409,7 +410,7 @@ namespace OurTaiko.Online
                 list = ServerList.Read(path) ?? new ServerList();
                 if (list.RemoveBuiltIn() || !File.Exists(path)) list.Write(path);
             }
-            catch (Exception error) { Debug.LogWarning("Ignoring unreadable server list: " + error.Message); }
+            catch (Exception error) { Log.Warn("Online", "Ignoring unreadable server list: " + error.Message); }
             Servers = list ?? new ServerList();
         }
 
@@ -456,7 +457,7 @@ namespace OurTaiko.Online
             cacheScan = null;
             cacheScanned = true;
             try { cached = task.Result; }
-            catch (AggregateException error) { Debug.LogWarning("Could not read the cached charts: " + error.GetBaseException().Message); }
+            catch (AggregateException error) { Log.Warn("Online", "Could not read the cached charts: " + error.GetBaseException().Message); }
         }
 
         // Remembers the account ServerLogin used, in the same servers.json entry.
@@ -466,7 +467,7 @@ namespace OurTaiko.Online
             server.username = username ?? ""; server.password = password ?? ""; server.autoLogin = autoLogin;
             if (string.IsNullOrEmpty(FilePath)) return;
             try { Servers.Write(FilePath); }
-            catch (Exception error) { Debug.LogWarning("Could not save the server list: " + error.Message); }
+            catch (Exception error) { Log.Warn("Online", "Could not save the server list: " + error.Message); }
         }
 
         // Forgets every connection and catalog song.
@@ -546,7 +547,7 @@ namespace OurTaiko.Online
                 }
                 folder.Cover = sprite;
             }
-            catch (Exception error) { Debug.LogWarning("Playlist cover unavailable: " + error.Message); }
+            catch (Exception error) { Log.Warn("Online", "Playlist cover unavailable: " + error.Message); }
         }
 
         // Search can discover songs not present in any category. Register them for preview,
@@ -598,7 +599,7 @@ namespace OurTaiko.Online
                 {
                     FanmadeChart chart;
                     try { chart = entry.ToChart(); }
-                    catch (FanmadeException error) { Debug.LogWarning("Skipping cached chart " + entry.Key + ": " + error.Message); continue; }
+                    catch (FanmadeException error) { Log.Warn("Online", "Skipping cached chart " + entry.Key + ": " + error.Message); continue; }
                     if (!chart.IsPlayable) continue;
                     var song = Register(chart, keep);
                     offlineSongs.Add(song);
