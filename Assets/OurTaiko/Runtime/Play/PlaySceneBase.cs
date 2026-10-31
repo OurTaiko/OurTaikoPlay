@@ -9,6 +9,8 @@ namespace OurTaiko
     {
         public AudioSource music, hitAudio;
         public AudioClip don, ka, balloonPop, kusudamaPop;
+        [Tooltip("Played on top of the drum when an Ad-Lib is hit (OpenTaiko's Adlib sound). Left empty until we have our own.")]
+        public AudioClip adLibHit;
         public HitSoundLibrary hitSounds;
         public Sprite[] laneDifficultySprites;
         public Sprite[] noteSprites;

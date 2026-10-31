@@ -139,5 +139,41 @@ namespace OurTaiko.Tests
                 Object.Destroy(song.chart); Object.Destroy(song);
             }
         }
+
+        // An Ad-Lib (F) draws neither a note nor text, and either colour still hits it.
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator AdLibIsNotDrawn()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:AdLib\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1F,\n#END");
+            try
+            {
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
+                SceneSwitcher.Instance.Play(song);
+                float deadline = Time.realtimeSinceStartup + 20;
+                do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
+                while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene);
+                yield return null;
+                var play = Object.FindAnyObjectByType<PlayScene>();
+                if (!play.IsPaused) play.TogglePause();
+                play.pausePanel.SetActive(false);
+                var adLib = play.Session.Chart.Notes[1];
+                Assert.That(adLib.Kind, Is.EqualTo(NoteKind.AdLib));
+                Render.Invoke(play, new object[] { adLib.Time - 0.3 });
+                Canvas.ForceUpdateCanvases();
+                Assert.That(play.NoteRoot(0), Is.Not.Null);
+                Assert.That(play.NoteRoot(1) == null && play.MojiRoot(1) == null, Is.True);
+
+                Assert.That(play.Session.Hit(false, 0), Is.EqualTo(Judgment.Good));
+                Assert.That(play.Session.Hit(true, adLib.Time), Is.EqualTo(Judgment.Good));
+                Render.Invoke(play, new object[] { adLib.Time + 0.02 });
+                Assert.That(play.Session.Combo, Is.EqualTo(2));
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
     }
 }

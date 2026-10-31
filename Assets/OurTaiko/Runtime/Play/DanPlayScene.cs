@@ -106,7 +106,7 @@ namespace OurTaiko
             resultBack.onClick.AddListener(Back);
             pausePanel.SetActive(false); resultPanel.SetActive(false);
             if (drumPad != null) drumPad.gameObject.SetActive(playSettings.singlePlayerDrumPad);
-            hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, danFailed, fusumaClose, fusumaOpen);
+            hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, adLibHit, danFailed, fusumaClose, fusumaOpen);
             betweenClip = betweenTimeline != null ? LumenClip.Parse(betweenTimeline.text) : LumenClip.Empty;
             try
             {
