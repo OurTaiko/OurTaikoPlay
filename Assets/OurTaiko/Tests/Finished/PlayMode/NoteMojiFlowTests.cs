@@ -140,7 +140,7 @@ namespace OurTaiko.Tests
             }
         }
 
-        // An Ad-Lib (F) draws neither a note nor text, and either colour still hits it.
+        // An Ad-Lib (F) draws neither a note nor text, either colour still hits it, and the scene has its sound.
         [UnityTest, Category("SpriteRendering")]
         public IEnumerator AdLibIsNotDrawn()
         {
@@ -159,6 +159,7 @@ namespace OurTaiko.Tests
                 play.pausePanel.SetActive(false);
                 var adLib = play.Session.Chart.Notes[1];
                 Assert.That(adLib.Kind, Is.EqualTo(NoteKind.AdLib));
+                Assert.That(play.adLibHit, Is.Not.Null.And.Property("name").EqualTo("adlib"));
                 Render.Invoke(play, new object[] { adLib.Time - 0.3 });
                 Canvas.ForceUpdateCanvases();
                 Assert.That(play.NoteRoot(0), Is.Not.Null);
