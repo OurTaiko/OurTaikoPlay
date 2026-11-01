@@ -64,71 +64,70 @@ namespace OurTaiko.Tests
             if (Directory.Exists(directory)) Directory.Delete(directory, true);
         }
 
-        IEnumerator OpenAccounts(System.Action<GlobalSettingScene> use)
+        IEnumerator OpenAccounts(System.Action<SettingsOverlay> use)
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
-            var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
-            scene.Ka(4);
-            Assert.That(scene.Menu.CurrentType.Label, Is.EqualTo("OurTaiko Accounts"));
-            scene.Don();
-            use(scene);
+            var overlay = SettingsOverlay.Open();
+            overlay.Move(5);
+            Assert.That(overlay.Navigator.Page.Title, Is.EqualTo("Accounts"));
+            overlay.Confirm();
+            use(overlay);
         }
 
-        // Selects item `index` of the open type from wherever the focus is among the items.
-        static void Select(GlobalSettingScene scene, int index) => scene.Ka(index - scene.Menu.ItemIndex);
+        // Focuses row `index` of the open page from wherever the focus is among its rows.
+        static void Select(SettingsOverlay overlay, int index) => overlay.Move(index - overlay.Navigator.RowIndex);
 
-        static IEnumerator Type(GlobalSettingScene scene, int index, string text)
+        static IEnumerator Type(SettingsOverlay overlay, int index, string text)
         {
-            Select(scene, index);
-            scene.Don();
-            Assert.That(scene.Menu.EditingText, Is.True);
+            Select(overlay, index);
+            overlay.Confirm();
+            Assert.That(overlay.Navigator.Zone, Is.EqualTo(SettingsZone.Typing));
             yield return null;
-            scene.view.textField.text = text;
-            scene.view.textField.onSubmit.Invoke(text);
+            overlay.View.Field.text = text;
+            overlay.View.Field.onSubmit.Invoke(text);
             yield return null;
         }
 
         [UnityTest]
         public IEnumerator EachSeatSignsInWithAPasswordThatIsNeverSaved()
         {
-            GlobalSettingScene scene = null;
-            yield return OpenAccounts(s => scene = s);
-            var view = scene.view;
-            Assert.That(Enumerable.Range(0, 4).Select(i => view.itemRows[i].label.text),
-                Is.EqualTo(new[] { "1P Username", "1P Password", "1P Sign Out", "2P Username" }));
-            TestCapture.Capture("SettingsAccounts.png");
-            Assert.That(view.itemRows[2].value.text, Is.EqualTo("Not signed in"));
+            SettingsOverlay overlay = null;
+            yield return OpenAccounts(o => overlay = o);
+            var nav = overlay.Navigator;
+            var rows = nav.Page.Rows;
+            Assert.That(rows.Take(4).Select(r => r.Label), Is.EqualTo(new[] { "Username", "Password", "Sign Out", "Username" }));
+            Assert.That(nav.Page.Groups.Select(g => g.Title), Is.EqualTo(new[] { "1P", "2P", "Servers" }));
+            Assert.That(rows[2].Display(nav.Settings), Is.EqualTo("Not signed in"));
 
             // The song list first: it names the account center the server takes accounts from.
-            Select(scene, 6);
-            Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Refresh Song List"));
-            scene.Don();
-            yield return WaitUntil(() => scene.Menu.CurrentItem.Status == "Done");
+            Select(overlay, 6);
+            Assert.That(nav.Row.Label, Is.EqualTo("Refresh Song List"));
+            overlay.Confirm();
+            yield return WaitUntil(() => nav.Row.Status == "Done");
             Assert.That(online.Songs.Count, Is.EqualTo(1));
 
             // A password without a username asks for the username.
-            yield return Type(scene, 1, "katsu");
-            Assert.That(view.outputStatus.text, Is.EqualTo("Enter 1P's username first."));
+            yield return Type(overlay, 1, "katsu");
+            Assert.That(overlay.Status, Is.EqualTo("Enter 1P's username first."));
             Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/account/login"));
 
-            yield return Type(scene, 0, "don");
-            Assert.That(view.itemRows[0].value.text, Is.EqualTo("don"));
-            Select(scene, 1);
-            scene.Don();
-            Assert.That(view.textField.contentType, Is.EqualTo(TMP_InputField.ContentType.Password));
-            Assert.That(view.textField.text, Is.Empty);
+            yield return Type(overlay, 0, "don");
+            Assert.That(rows[0].Display(nav.Settings), Is.EqualTo("don"));
+            Select(overlay, 1);
+            overlay.Confirm();
             yield return null;
-            view.textField.text = "katsu";
-            TestCapture.Capture("SettingsAccountField.png");
-            view.textField.onSubmit.Invoke("katsu");
-            yield return WaitUntil(() => online.Accounts.Seats[0].IsSignedIn && !online.IsBusy && scene.Menu.Types[4].Items[2].Status.StartsWith("Signed in"));
+            Assert.That(overlay.View.Field.contentType, Is.EqualTo(TMP_InputField.ContentType.Password));
+            Assert.That(overlay.View.Field.text, Is.Empty);
+            overlay.View.Field.text = "katsu";
+            overlay.View.Field.onSubmit.Invoke("katsu");
+            yield return WaitUntil(() => online.Accounts.Seats[0].IsSignedIn && !online.IsBusy && rows[2].Status.StartsWith("Signed in"));
             yield return null;
-            Assert.That(view.outputStatus.text, Does.StartWith("1P signed in as DON."));
-            Assert.That(view.itemRows[1].value.text, Is.EqualTo("Type to sign in"), "The password row keeps nothing.");
-            Assert.That(view.itemRows[2].value.text, Is.EqualTo("Signed in: DON"));
+            Assert.That(overlay.Status, Does.StartWith("1P signed in as DON."));
+            Assert.That(rows[1].Display(nav.Settings), Is.Empty, "The password row keeps nothing.");
+            Assert.That(rows[2].Display(nav.Settings), Is.EqualTo("Signed in: DON"));
             var plate = PlayerInfoController.Instance.Info;
             Assert.That(plate.name, Is.EqualTo("DON"), "The nickname goes on the nameplate.");
             Assert.That(plate.title, Is.EqualTo("Taiko Master"), "The title Profile says 1P wears, in the song language (English by default).");
@@ -144,17 +143,16 @@ namespace OurTaiko.Tests
             string saved = File.ReadAllText(SettingManager.Instance.FilePath);
             Assert.That(saved, Does.Not.Contain("katsu"), "The password is not in settings.json.");
             Assert.That(GameSettings.FromJson(saved).accounts.p1Username, Is.EqualTo("don"));
-            TestCapture.Capture("SettingsAccountButtons.png");
 
             // A wrong password says so and keeps the sign-in there is.
-            yield return Type(scene, 1, "wrong");
-            yield return WaitUntil(() => view.outputStatus.text.Contains("wrong username or password"));
+            yield return Type(overlay, 1, "wrong");
+            yield return WaitUntil(() => overlay.Status.Contains("wrong username or password"));
             Assert.That(online.Accounts.Seats[0].IsSignedIn, Is.True);
 
             // 2P signs in with an account of its own; its plate shows its nickname.
-            yield return Type(scene, 3, "ka");
-            yield return Type(scene, 4, "don");
-            yield return WaitUntil(() => online.Accounts.Seats[1].IsSignedIn && !online.IsBusy && scene.Menu.Types[4].Items[5].Status.StartsWith("Signed in"));
+            yield return Type(overlay, 3, "ka");
+            yield return Type(overlay, 4, "don");
+            yield return WaitUntil(() => online.Accounts.Seats[1].IsSignedIn && !online.IsBusy && rows[5].Status.StartsWith("Signed in"));
             var second = PlayerInfoController.Instance.SecondInfo;
             Assert.That(second.name, Is.EqualTo("KA"));
             Assert.That(second.title, Is.EqualTo("虹"));
@@ -164,16 +162,17 @@ namespace OurTaiko.Tests
             Assert.That(online.Client.Best(listed, (int)Difficulty.Oni, 1), Is.Null, "2P has none of 1P's scores.");
 
             // Signing 1P out forgets it here and at the account center; 2P stays.
-            Select(scene, 2);
-            scene.Don();
-            yield return WaitUntil(() => !online.Accounts.Seats[0].IsSignedIn && scene.Menu.Types[4].Items[2].Status == "Not signed in");
-            Assert.That(view.outputStatus.text, Is.EqualTo("1P signed out."));
+            Select(overlay, 2);
+            overlay.Confirm();
+            yield return WaitUntil(() => !online.Accounts.Seats[0].IsSignedIn && rows[2].Status == "Not signed in");
+            Assert.That(overlay.Status, Is.EqualTo("1P signed out."));
             Assert.That(online.Client.Best(listed, (int)Difficulty.Oni), Is.Null, "A guest has no scores.");
             Assert.That(online.Client.Playlists, Is.Empty, "A guest has no playlists of its own.");
             Assert.That(PlayerInfoController.Instance.Info.name, Is.EqualTo(PlayerInfo.DefaultName));
             Assert.That(PlayerInfoController.Instance.Info.IsCoin, Is.True, "Signed out: the guest plate.");
             Assert.That(fixture.AccountTokens.Values, Is.EqualTo(new[] { "ka" }));
             Assert.That(online.Client.Endpoints.Single().Seats[1].IsAuthenticated, Is.True);
+            Object.Destroy(overlay.gameObject);
         }
 
         // A sign-in the account center no longer knows (expired, signed out elsewhere) is dropped

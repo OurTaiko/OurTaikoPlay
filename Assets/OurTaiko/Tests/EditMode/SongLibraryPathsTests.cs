@@ -43,7 +43,7 @@ namespace OurTaiko.Tests
             Assert.That(settings.general.songLibraryPaths[0], Is.EqualTo(first));
             foreach (string json in new[] { "{}", "{\"general\":{\"songLibraryPaths\":null}}", "{\"general\":{\"songLibraryPaths\":[]}}" })
                 Assert.That(SongLibraryPaths.Resolve(GameSettings.FromJson(json).general.songLibraryPaths, defaultRoot), Is.EqualTo(new[] { defaultRoot }));
-            Assert.That(SettingsMenu.Catalog().SelectMany(t => t.Items).Any(i => i.Label.Contains("Path")), Is.False);
+            Assert.That(SettingsCatalog.Pages(SoundPlatform.Desktop).SelectMany(p => p.Groups).SelectMany(g => g.Rows).Any(r => r.Label.Contains("Path")), Is.False);
         }
 
         [TestCase("")]

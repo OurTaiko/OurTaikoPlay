@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -35,80 +36,61 @@ namespace OurTaiko.Tests
             yield return null;
             try
             {
-                yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
                 yield return null;
-                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
-                var view = scene.view;
-                scene.Ka(3); scene.Don();
-                Assert.That(scene.Menu.CurrentType.Label, Is.EqualTo("Sound"));
-                Assert.That(scene.Menu.ItemCount, Is.EqualTo(SoundSettings.Catalog(SoundSettings.Platform).Count + 1));
-                Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Master Volume"));
-                Assert.That(view.nextItems.gameObject.activeInHierarchy, Is.True);
-                Assert.That(scene.previewVoice, Is.Not.Null);
-                TestCapture.Capture("SoundSettings.png");
-                scene.Don(); scene.Ka(3); // 35% -> 50%
-                TestCapture.Capture("SoundVolumeChoice.png");
-                scene.Don();
+                var entry = Object.FindAnyObjectByType<EntryScene>();
+                var overlay = SettingsOverlay.Open();
+                yield return null;
+                var nav = overlay.Navigator;
+                overlay.Move(4); overlay.Confirm();
+                Assert.That(nav.Page.Title, Is.EqualTo("Sound"));
+                Assert.That(nav.Page.Rows.Count, Is.EqualTo(SettingsCatalog.Sound(SoundSettings.Platform, settings.Settings.audio.Backend).Sum(g => g.Rows.Count)));
+                Assert.That(nav.Row.Label, Is.EqualTo("Master"));
+                Assert.That(overlay.previewVoice, Is.Not.Null);
+                overlay.Confirm(); overlay.Move(3); // 35% -> 50%
+                overlay.Confirm();
                 Assert.That(settings.Settings.audio.volume.master, Is.EqualTo(.5f));
-                Assert.That(scene.bgm.GetComponent<AudioBus>().MainOutputVolume, Is.EqualTo(scene.bgm.volume * .5f).Within(.001));
+                Assert.That(entry.bgm.GetComponent<AudioBus>().MainOutputVolume, Is.EqualTo(entry.bgm.volume * .5f).Within(.001));
                 Assert.That(engine.HasPendingDeviceChanges, Is.False);
-                AssertRaycast(view.nextItems);
-                view.nextItems.Clicked(); // Effects Volume
-                view.itemSwipe.OnScroll(new PointerEventData(EventSystem.current) { scrollDelta = new Vector2(0, -1) });
-                Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Voice Volume"));
-                scene.Don(); scene.Don(); // previews voice using the Voice group
-                scene.Ka(1);
-                Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Output Backend"));
-                scene.Don();
-                scene.Ka(scene.Menu.CurrentItem.Choices.Count - 1); // BassSimple, the last choice everywhere
-                TestCapture.Capture("SoundBackendChoice.png");
-                int slot = scene.Menu.ChoiceIndex - view.FirstChoice;
-                AssertRaycast(view.choiceRows[slot].click);
+                overlay.Move(5);
+                Assert.That(nav.Row.Label, Is.EqualTo("Voice"));
+                overlay.Side(-1); // previews voice using the Voice group
+                overlay.Move(1);
+                Assert.That(nav.Row.Label, Is.EqualTo("Output Backend"));
+                overlay.Confirm();
+                overlay.Move(nav.SheetOptions.Count - 1); // BassSimple, the last choice everywhere
+                yield return new WaitForSecondsRealtime(0.3f);
+                var option = overlay.View.GetComponentsInChildren<PointerRelay>().Single(r => r.name == "Option" + nav.SheetIndex);
+                AssertRaycast(option);
                 int before = engine.Generation;
-                view.choiceRows[slot].click.Clicked();
+                option.Clicked();
                 Assert.That(engine.Generation, Is.EqualTo(before));
                 Assert.That(engine.HasPendingDeviceChanges, Is.True);
-                Assert.That(view.outputStatus.text, Does.Contain("Applies on exit"));
                 var saved = GameSettings.FromJson(File.ReadAllText(settings.FilePath));
                 Assert.That(saved.audio.backend, Is.EqualTo(AudioBackend.BassSimple));
                 Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
                 Assert.That(saved.audio.volume.master, Is.EqualTo(.5f));
-                Assert.That(scene.bgm.IsAudioPlaying(), Is.True);
-                if (SoundSettings.Platform != SoundPlatform.Windows)
-                {
-                    scene.Ka(1); scene.Don();
-                    Assert.That(scene.Menu.CurrentItem.Label, Is.EqualTo("Audio Output Period"));
-                    scene.Ka(4);
-                    TestCapture.Capture("AudioOutputPeriodChoice.png");
-                    int periodSlot = 0;
-                    AssertRaycast(view.choiceRows[periodSlot].click);
-                    view.choiceRows[periodSlot].click.Clicked();
-                    Assert.That(settings.Settings.audio.devicePeriodMs, Is.EqualTo(4));
-                    Assert.That(engine.Generation, Is.EqualTo(before), "Period changes also wait until exit");
-                    saved = GameSettings.FromJson(File.ReadAllText(settings.FilePath));
-                    Assert.That(saved.audio.devicePeriodMs, Is.EqualTo(4));
-                }
-                scene.Ka(scene.Menu.ItemCount - 1 - scene.Menu.ItemIndex); scene.Don();
-                Assert.That(scene.Menu.Focus, Is.EqualTo(SettingsFocus.Types));
-                // Render Windows-only settings without opening a Windows audio device.
+                Assert.That(entry.bgm.IsAudioPlaying(), Is.True);
+                overlay.Move(1);
+                Assert.That(nav.Row.Label, Is.EqualTo("Output Period"));
+                overlay.Confirm(); overlay.Move(4); overlay.Confirm();
+                Assert.That(settings.Settings.audio.devicePeriodMs, Is.EqualTo(4));
+                Assert.That(engine.Generation, Is.EqualTo(before), "Period changes also wait until the overlay closes");
+                saved = GameSettings.FromJson(File.ReadAllText(settings.FilePath));
+                Assert.That(saved.audio.devicePeriodMs, Is.EqualTo(4));
+                overlay.Back();
+                Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
+                // Every Windows-only row draws, focused and not, without opening a Windows audio device.
                 foreach (var backend in new[] { AudioBackend.BassSimple, AudioBackend.BassWASAPI, AudioBackend.BassASIO })
                 {
-                    var preview = new SettingsMenu(new[] { new SettingType("Sound", SoundSettings.Catalog(SoundPlatform.Windows, backend)) }, new GameSettings());
-                    preview.Don();
-                    for (int i = 7; i < preview.CurrentType.Items.Count; i++)
-                    {
-                        preview.TapItem(i); preview.Don();
-                        view.Show(preview);
-                        view.description.ForceMeshUpdate();
-                        Assert.That(view.description.isTextTruncated, Is.False, preview.CurrentItem.Label);
-                        preview.Back();
-                    }
-                    view.Show(preview);
-                    TestCapture.Capture("SoundSettings-" + backend + ".png");
+                    var preview = new SettingsNavigator(SettingsCatalog.Pages(SoundPlatform.Windows), new GameSettings { audio = new AudioOptions { backend = backend } });
+                    preview.Move(4); preview.Confirm();
+                    for (int i = 0; i < preview.Page.Rows.Count; i++) { preview.TapRow(i); overlay.View.Show(preview, "", null, false); }
                 }
             }
             finally
             {
+                if (SettingsOverlay.Instance != null) Object.Destroy(SettingsOverlay.Instance.gameObject);
                 settings.UseUnsaved(new GameSettings());
                 if (Directory.Exists(dir)) Directory.Delete(dir, true);
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -136,20 +118,22 @@ namespace OurTaiko.Tests
             // Automatic -> BASS -> Automatic reopens the device each time, then leave with volume-only changes.
             foreach (var backend in new[] { AudioBackend.BassSimple, AudioBackend.Automatic, AudioBackend.Automatic })
             {
-                yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
                 yield return null;
-                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
+                var overlay = SettingsOverlay.Open();
+                yield return null;
                 int before = engine.Generation;
                 bool changed = settings.Settings.audio.backend != backend;
-                scene.Menu.Settings.audio.backend = backend;
-                scene.Menu.Settings.audio.volume.master = .5f;
-                settings.Set(scene.Menu.Settings);
+                overlay.Navigator.Settings.audio.backend = backend;
+                overlay.Navigator.Settings.audio.volume.master = .5f;
+                settings.Set(overlay.Navigator.Settings);
                 Assert.That(engine.Generation, Is.EqualTo(before), "Editing must not reopen the device");
-                scene.Ka(scene.Menu.TypeCount - 1);
-                scene.Don(); scene.Don(); // second confirm is blocked throughout the transition
+                overlay.Back(); overlay.Back(); // the second is ignored once closed
+                Assert.That(SettingsOverlay.IsOpen, Is.False);
                 Assert.That(engine.Generation, Is.EqualTo(before), "Apply only after the fade closes");
                 float deadline = Time.realtimeSinceStartup + 15;
-                while ((scene != null || SceneSwitcher.Instance.IsInputBlocked) && Time.realtimeSinceStartup < deadline) yield return null;
+                yield return null;
+                while (SceneSwitcher.Instance.IsInputBlocked && Time.realtimeSinceStartup < deadline) yield return null;
                 Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.EntryScene));
                 Assert.That(engine.Backend, Is.EqualTo(backend == AudioBackend.Automatic && SoundSettings.Platform == SoundPlatform.Windows ? AudioBackend.BassWASAPI : AudioBackend.BassSimple));
                 Assert.That(engine.Silent, Is.False, engine.Diagnostics);
@@ -236,23 +220,29 @@ namespace OurTaiko.Tests
             Assert.Throws<System.OperationCanceledException>(() => new NativeAudioSample(bytes, engine, false, false, oldGeneration));
             Object.Destroy(song);
 
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
-            var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
+            var overlay = SettingsOverlay.Open();
+            yield return null;
             // Invalid driver on Windows, unsupported backend on other platforms.
-            scene.Menu.Settings.audio.backend = AudioBackend.BassASIO;
-            scene.Menu.Settings.audio.asioDevice = int.MaxValue;
-            scene.Menu.Settings.audio.volume.master = .6f;
-            scene.Ka(scene.Menu.TypeCount - 1); scene.Don();
-            float deadline = Time.realtimeSinceStartup + 15;
-            while (scene.HasLeft && Time.realtimeSinceStartup < deadline) yield return null;
-            Assert.That(scene.HasLeft, Is.False);
-            Assert.That(SceneSwitcher.Instance.IsInputBlocked, Is.False);
+            overlay.Navigator.Settings.audio.backend = AudioBackend.BassASIO;
+            overlay.Navigator.Settings.audio.asioDevice = int.MaxValue;
+            overlay.Navigator.Settings.audio.volume.master = .6f;
+            overlay.Back();
+            Assert.That(SettingsOverlay.IsOpen, Is.False);
+            // The device is restored, Entry reloads for its music and the overlay reopens on Sound with the reason.
+            float deadline = Time.realtimeSinceStartup + 20;
+            while ((!SettingsOverlay.IsOpen || SceneSwitcher.Instance.IsSwitching) && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(SettingsOverlay.IsOpen, Is.True);
+            Assert.That(overlay.Navigator.Page.Id, Is.EqualTo("sound"));
+            Assert.That(overlay.Status, Does.Contain("Could not apply audio settings"));
             Assert.That(engine.Available, Is.True);
             Assert.That(settings.Settings.audio.backend, Is.EqualTo(AudioBackend.Automatic));
             Assert.That(settings.Settings.audio.volume.master, Is.EqualTo(.6f));
-            Assert.That(scene.view.outputStatus.text, Does.Contain("Could not apply audio settings"));
-            Assert.That(scene.bgm.IsAudioPlaying(), Is.True);
+            yield return null;
+            Assert.That(Object.FindAnyObjectByType<EntryScene>().bgm.IsAudioPlaying(), Is.True);
+            overlay.Back(); overlay.Back();
+            Object.Destroy(overlay.gameObject);
             settings.UseUnsaved(new GameSettings());
             yield return WaitFor(engine.ApplyPendingSettingsAsync());
         }

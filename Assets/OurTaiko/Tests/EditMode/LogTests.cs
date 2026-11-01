@@ -93,9 +93,8 @@ namespace OurTaiko.Tests
             Assert.That(new GeneralSettings { logLevel = "Off" }.LogLevel, Is.EqualTo(Log.DefaultLevel), "The menu has no Off.");
             Assert.That(new GeneralSettings { logLevel = "loud" }.LogLevel, Is.EqualTo(Log.DefaultLevel));
 
-            var menu = new SettingsMenu(SettingsMenu.Catalog(), new GameSettings());
-            var item = menu.Types[0].Items.Single(i => i.Label == "Log Level");
-            Assert.That(item.Choices, Is.EqualTo(new[] { "Debug", "Info", "Warning", "Error" }));
+            var row = SettingsCatalog.Pages(SoundPlatform.Desktop)[0].Groups.SelectMany(g => g.Rows).Single(r => r.Label == "Log Level");
+            Assert.That(row.Options, Is.EqualTo(new[] { "Debug", "Info", "Warning", "Error" }));
         }
     }
 }

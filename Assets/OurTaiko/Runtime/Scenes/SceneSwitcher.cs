@@ -29,6 +29,7 @@ namespace OurTaiko
         // The first scene and where Back falls back to.
         public const string MenuScene = EntryScene;
         public const string SongLoadingScene = "SongLoadingScene";
+        // The ゲーム設定 board's scene value in Entry; the board opens the settings overlay.
         public const string SettingScene = "GlobalSettingScene";
         // Online server login, between Entry's 演奏ゲーム and SongSelect.
         public const string ServerLoginScene = "ServerLogin";
@@ -90,7 +91,8 @@ namespace OurTaiko
         public bool IsCurtainClosed => songTransition != null && songTransition.IsClosed || danCover != null && danCover.IsClosed;
         public SongTransition Curtain => songTransition;
         public DanLoadingCover DanCover => danCover;
-        public bool IsInputBlocked => IsSwitching || IsCovered || (transitionTask != null && !transitionTask.IsCompleted);
+        // The settings overlay takes the keys while it is open over a scene.
+        public bool IsInputBlocked => IsSwitching || IsCovered || (transitionTask != null && !transitionTask.IsCompleted) || SettingsOverlay.BlocksInput;
         public event Action<string> SceneChanging;
 
         Task switchTask, transitionTask;

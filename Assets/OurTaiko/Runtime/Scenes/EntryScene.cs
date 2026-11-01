@@ -11,7 +11,7 @@ namespace OurTaiko
     // the credit screen waits for a drum face hit, 1P joins (nameplate and control guide fade in),
     // and once the join animation would have finished the mode list opens with 演奏ゲーム selected and
     // ゲーム設定 below it; ka moves between the boards and a face hit picks one: 演奏ゲーム goes to
-    // SongSelect, ゲーム設定 to GlobalSettingScene. The arcade's 60 s timer is shown as a placeholder that never
+    // SongSelect, ゲーム設定 opens the settings overlay. The arcade's 60 s timer is shown as a placeholder that never
     // counts down (user decision: the simulator does not limit the player's time). 2P joins at any
     // time with its own don (issue #5): its nameplate fades in on the right and the invite goes away;
     // the play mode then plays both seats. Not ported: the 3D Don and its join cloud, the other
@@ -225,6 +225,8 @@ namespace OurTaiko
             // 段位道場 is single-player only (box_manager.cpp leaves its board out once 2P is in).
             if (Joined2P && Modes[Flow.SelectedMode].Scene == SceneSwitcher.DanSelectScene) return;
             Play(sfx, don, oneShot: true);
+            // ゲーム設定 opens the settings overlay over the mode list instead of leaving Entry.
+            if (Modes[Flow.SelectedMode].Scene == SceneSwitcher.SettingScene) { SettingsOverlay.Open(); return; }
             Flow.Select(now);
         }
 
