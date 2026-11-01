@@ -14,8 +14,9 @@ namespace OurTaiko
     // returns to the rail, so the drum alone can leave a page (a held key's repeats only stop there).
     // Don (or Enter) confirms; Back (Esc) steps out one level. On the rail don opens the page; on a row it flips a toggle, starts adjusting a
     // choice or number (ka then changes it, don keeps it, Back restores it), opens the sheet of a
-    // list or key row, runs an action or starts typing. Left/right adjust a choice or number row
-    // directly; left from any other row returns to the rail. The rail ends with Close.
+    // list or key row, runs an action or starts typing. Left/right only change a value: they adjust
+    // a choice, number or slider row and flip a toggle (right on, left off); anywhere else they do
+    // nothing. The rail ends with Close.
     public sealed class SettingsNavigator
     {
         public enum Result { None, Moved, Bumped, Entered, Returned, Changed, Action, Close }
@@ -82,23 +83,18 @@ namespace OurTaiko
             return Result.Moved;
         }
 
-        // Left/right arrows.
+        // Left/right arrows: a value change on the focused row and nothing else (no navigation).
         public Result Side(int delta)
         {
             if (delta == 0) return Result.None;
             switch (Zone)
             {
-                case SettingsZone.Rail:
-                    return delta > 0 ? Confirm() : Result.Bumped;
                 case SettingsZone.Rows:
                     if (Row.IsAdjustable) return Change(Row.Move(Row.Get(Settings), delta));
                     if (Row.Kind == SettingKind.Toggle) return Change(delta > 0 ? 1 : 0);
-                    if (delta < 0) { Zone = SettingsZone.Rail; return Result.Returned; }
-                    return Result.Bumped;
+                    return Result.None;
                 case SettingsZone.Adjust:
                     return Move(delta);
-                case SettingsZone.Sheet:
-                    return delta < 0 ? Back() : Result.Bumped;
                 default: return Result.None;
             }
         }

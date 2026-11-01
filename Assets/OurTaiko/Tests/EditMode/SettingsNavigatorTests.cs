@@ -121,7 +121,7 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void ArrowsAdjustDirectlyAndLeaveOtherRowsForTheRail()
+        public void ArrowsOnlyChangeValues()
         {
             var nav = OnPage("display");
             Assert.That(nav.Row.Id, Is.EqualTo("frame-rate"));
@@ -136,8 +136,22 @@ namespace OurTaiko.Tests
             Assert.That(nav.Settings.display.vSync, Is.True);
             Assert.That(nav.Side(1), Is.EqualTo(SettingsNavigator.Result.Bumped));
 
+            Assert.That(nav.Side(-1), Is.EqualTo(SettingsNavigator.Result.Changed), "Left turns a toggle off.");
+            Assert.That(nav.Settings.display.vSync, Is.False);
+
+            // Rows without a value, the rail and the sheet ignore the arrows: no navigation.
             var general = OnPage("general");
-            Assert.That(general.Side(-1), Is.EqualTo(SettingsNavigator.Result.Returned));
+            Assert.That(general.Row.Kind, Is.EqualTo(SettingKind.List));
+            Assert.That(general.Side(-1), Is.EqualTo(SettingsNavigator.Result.None));
+            Assert.That(general.Side(1), Is.EqualTo(SettingsNavigator.Result.None));
+            Assert.That(general.Zone, Is.EqualTo(SettingsZone.Rows));
+            general.Confirm();
+            Assert.That(general.Zone, Is.EqualTo(SettingsZone.Sheet));
+            Assert.That(general.Side(-1), Is.EqualTo(SettingsNavigator.Result.None));
+            Assert.That(general.Zone, Is.EqualTo(SettingsZone.Sheet));
+            general.Back(); general.Back();
+            Assert.That(general.Zone, Is.EqualTo(SettingsZone.Rail));
+            Assert.That(general.Side(1), Is.EqualTo(SettingsNavigator.Result.None));
             Assert.That(general.Zone, Is.EqualTo(SettingsZone.Rail));
         }
 
