@@ -297,6 +297,9 @@ namespace OurTaiko
                     s => Array.IndexOf(backends, s.audio.backend), (s, i) => s.audio.backend = backends[i],
                     list: true, notes: Array.ConvertAll(backends, Note)).OnClose(),
             };
+            // A backend this platform does not offer (a Windows settings file opened on a Mac) is shown
+            // as Automatic by the row above, and AudioEngine falls back the same way; show its rows.
+            if (Array.IndexOf(backends, backend) < 0) backend = AudioBackend.Automatic;
             var selected = backend == AudioBackend.Automatic
                 ? (platform == SoundPlatform.Windows ? AudioBackend.BassWASAPI : AudioBackend.BassSimple) : backend;
             if (selected == AudioBackend.BassSimple)

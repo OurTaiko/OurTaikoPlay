@@ -45,6 +45,22 @@ namespace OurTaiko.Tests
             Assert.That(groups[0].Rows.Any(r => r.AppliesOnClose), Is.False, "Volumes apply at once.");
         }
 
+        // A Windows settings file with BassWASAPI opened on another platform: the row shows Automatic
+        // (the engine falls back to BassSimple there), and the device rows are Automatic's too.
+        [Test]
+        public void ABackendThePlatformLacksShowsAsAutomaticWithAutomaticRows()
+        {
+            var settings = new GameSettings { audio = new AudioOptions { backend = AudioBackend.BassWASAPI } };
+            var nav = new SettingsNavigator(SettingsCatalog.Pages(SoundPlatform.Desktop), settings);
+            nav.Move(nav.Pages.ToList().FindIndex(p => p.Id == "sound")); nav.Confirm();
+            var backend = nav.Page.Rows.Single(r => r.Id == "backend");
+            Assert.That(backend.Display(nav.Settings), Is.EqualTo("Automatic"));
+            Assert.That(nav.Page.Rows.Select(r => r.Id), Has.None.StartsWith("wasapi-"));
+            Assert.That(nav.Page.Rows.Select(r => r.Id), Is.EqualTo(new SettingsNavigator(SettingsCatalog.Pages(SoundPlatform.Desktop), new GameSettings())
+                .Pages.Single(p => p.Id == "sound").Rows.Select(r => r.Id)), "The same rows as Automatic.");
+            Assert.That(Rows(SoundPlatform.Windows, AudioBackend.BassWASAPI).Select(r => r.Id), Has.Some.StartsWith("wasapi-"), "Windows still offers WASAPI.");
+        }
+
         [Test]
         public void BackendChangesPreserveAdvancedConfiguration()
         {
