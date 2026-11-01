@@ -18,19 +18,23 @@ namespace OurTaiko
     // GamePaths.Root/Logs with a timestamp, the level and the thread. Callable from any thread.
     public static class Log
     {
-        static int minimum = (int)DefaultLevel;
+        // The Editor and development builds show Debug messages until the settings say otherwise.
+        // Debug.isDebugBuild is true in both (it replaces the deprecated DEVELOPMENT_BUILD symbol) but
+        // may only be read on the main thread, while Log's type may first be touched by any thread:
+        // so a player reads it in ResetStatics, at startup on the main thread, not in a field
+        // initializer. Until then, and always in the Editor, the build kind decides.
+#if UNITY_EDITOR
+        const LogLevel BuildDefault = LogLevel.Debug;
+#else
+        const LogLevel BuildDefault = LogLevel.Info;
+#endif
+        public static LogLevel DefaultLevel { get; private set; } = BuildDefault;
+        static int minimum = (int)BuildDefault;
         public static LogLevel MinimumLevel
         {
             get => (LogLevel)Volatile.Read(ref minimum);
             set => Volatile.Write(ref minimum, (int)value);
         }
-
-        // The Editor and development builds show Debug messages until the settings say otherwise.
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        public const LogLevel DefaultLevel = LogLevel.Debug;
-#else
-        public const LogLevel DefaultLevel = LogLevel.Info;
-#endif
 
         public static bool Enabled(LogLevel level) => level < LogLevel.Off && level >= MinimumLevel;
 
@@ -79,7 +83,11 @@ namespace OurTaiko
             => Enum.TryParse(name, true, out LogLevel level) && Enum.IsDefined(typeof(LogLevel), level) ? level : fallback;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => MinimumLevel = DefaultLevel;
+        static void ResetStatics()
+        {
+            DefaultLevel = UnityEngine.Debug.isDebugBuild ? LogLevel.Debug : LogLevel.Info;
+            MinimumLevel = DefaultLevel;
+        }
     }
 
     // The session's log file: Logs/ourtaiko-<start time>.log, written by a background thread so

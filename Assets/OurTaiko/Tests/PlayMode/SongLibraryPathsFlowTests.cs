@@ -100,9 +100,10 @@ namespace OurTaiko.Tests
             Assert.That(CustomSongs(library).Length, Is.EqualTo(2));
             var keys = CustomSongs(library).Select(s => s.name).ToArray();
             Assert.That(keys, Is.Unique);
-            var menu = new SettingsMenu(SettingsMenu.Catalog(), manager.Settings);
-            menu.Settings.display.targetFrameRate = 60;
-            manager.Set(menu.Settings);
+            var nav = new SettingsNavigator(SettingsCatalog.Pages(SoundPlatform.Desktop), manager.Settings);
+            nav.Move(3); nav.Confirm(); nav.Side(1); // Display › Frame Rate: 60
+            Assert.That(nav.Settings.display.targetFrameRate, Is.EqualTo(60));
+            manager.Set(nav.Settings);
             Assert.That(GameSettings.FromJson(File.ReadAllText(file)).general.songLibraryPaths, Is.EqualTo(new[] { first, second }));
             Object.Destroy(library.gameObject);
             yield return null;

@@ -61,11 +61,11 @@ namespace OurTaiko.Tests
         {
             var settings = GameSettings.FromJson("{\"general\":null,\"audio\":{\"deviceBufferMs\":73}}");
             Assert.That(settings.general.Language, Is.EqualTo("en"));
-            var menu = new SettingsMenu(SettingsMenu.Catalog(), settings);
-            Assert.That(menu.CurrentType.Label, Is.EqualTo("General"));
-            menu.Don(); menu.Don();
-            menu.TapChoice(3);
-            var saved = GameSettings.FromJson(menu.Settings.ToJson());
+            var nav = new SettingsNavigator(SettingsCatalog.Pages(SoundPlatform.Desktop), settings);
+            Assert.That(nav.Page.Title, Is.EqualTo("General"));
+            nav.Confirm(); nav.Confirm();
+            nav.TapSheet(3);
+            var saved = GameSettings.FromJson(nav.Settings.ToJson());
             Assert.That(saved.general.language, Is.EqualTo("zh_tw"));
             Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
             Assert.That(saved.play.singlePlayerDrumPad, Is.True);

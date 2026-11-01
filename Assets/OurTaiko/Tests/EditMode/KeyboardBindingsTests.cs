@@ -59,28 +59,30 @@ namespace OurTaiko.Tests
         [Test]
         public void MenuAddsRemovesClearsResetsAndCancelsWithoutReservingKeys()
         {
-            var menu = new SettingsMenu(SettingsMenu.Catalog(), new GameSettings());
-            menu.Don(); menu.Ka(1); menu.Don();
-            Assert.That(menu.CurrentItem.BindingKey, Is.EqualTo(InputKey.LeftDon));
-            menu.Don();
-            Assert.That(menu.CapturingKey, Is.True);
-            Assert.That(menu.Ka(1), Is.EqualTo(SettingsMenu.Result.None));
-            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.None));
-            Assert.That(menu.CaptureKey(Key.Escape), Is.EqualTo(SettingsMenu.Result.Changed));
-            Assert.That(menu.Settings.general.keyboard.Get(InputKey.Back), Is.Empty);
-            Assert.That(menu.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F, Key.Escape }));
-            menu.TapChoice(3); // remove F
-            Assert.That(menu.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.Escape }));
-            menu.TapChoice(1);
-            Assert.That(menu.Settings.general.keyboard.Get(InputKey.LeftDon), Is.Empty);
-            menu.TapChoice(2);
-            Assert.That(menu.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F }));
-            menu.TapChoice(0); menu.Back();
-            Assert.That(menu.CapturingKey, Is.False);
-            Assert.That(menu.CaptureKey(Key.A), Is.EqualTo(SettingsMenu.Result.None));
-            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Choice));
-            menu.Back();
-            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
+            var nav = new SettingsNavigator(SettingsCatalog.Pages(SoundPlatform.Desktop), new GameSettings());
+            nav.Move(1); nav.Confirm();
+            Assert.That(nav.Page.Id, Is.EqualTo("controls"));
+            Assert.That(nav.Row.Key, Is.EqualTo(InputKey.LeftDon));
+            nav.Confirm(); nav.Confirm();
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Capture));
+            Assert.That(nav.Move(1), Is.EqualTo(SettingsNavigator.Result.None));
+            Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.None));
+            Assert.That(nav.CaptureKey(Key.Escape), Is.EqualTo(SettingsNavigator.Result.Changed));
+            Assert.That(nav.Settings.general.keyboard.Get(InputKey.Back), Is.Empty);
+            Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F, Key.Escape }));
+            nav.Confirm();
+            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { "Add a Key", "Remove F", "Remove Escape", "Reset to Default", "Clear All" }));
+            nav.TapSheet(1);
+            Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.Escape }));
+            nav.Confirm(); nav.TapSheet(3);
+            Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.Empty);
+            nav.Confirm(); nav.TapSheet(1);
+            Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F }));
+            nav.Confirm(); nav.TapSheet(0); nav.Back();
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Sheet));
+            Assert.That(nav.CaptureKey(Key.A), Is.EqualTo(SettingsNavigator.Result.None));
+            nav.Back();
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
         }
     }
 }

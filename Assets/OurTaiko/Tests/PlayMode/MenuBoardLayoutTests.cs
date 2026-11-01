@@ -52,16 +52,16 @@ namespace OurTaiko.Tests
                 TestCapture.Capture("EntryThreeModes" + selected + ".png");
                 TestCapture.Capture("EntryThreeModes720-" + selected + ".png", 1280, 720);
             }
-            // Clicking the first board moves focus; clicking settings twice opens Settings.
+            // Clicking the first board moves focus; clicking settings twice opens the settings overlay.
             entry.view.boards[0].hitRelay.Clicked();
             yield return new WaitForSecondsRealtime(.7f);
             Assert.That(entry.Flow.SelectedMode, Is.Zero);
             entry.view.boards[3].hitRelay.Clicked();
             yield return new WaitForSecondsRealtime(.7f);
             entry.view.boards[3].hitRelay.Clicked();
-            float end = Time.realtimeSinceStartup + 15;
-            while (SceneManager.GetActiveScene().name != SceneSwitcher.SettingScene || SceneSwitcher.Instance.IsInputBlocked)
-            { Assert.That(Time.realtimeSinceStartup, Is.LessThan(end)); yield return null; }
+            Assert.That(SettingsOverlay.IsOpen, Is.True);
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.EntryScene));
+            SettingsOverlay.Instance.Close();
         }
 
         [UnityTest]

@@ -21,21 +21,26 @@ namespace OurTaiko.Tests
             try
             {
                 settings.Load(path);
+                // The engine started with the player's settings file; closing would reload Entry to apply them.
+                var apply = AudioEngine.EnsureInstance().ApplyPendingSettingsAsync();
+                while (!apply.IsCompleted) yield return null;
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
-                yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
                 yield return null;
-                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
-                Assert.That(scene.Menu.CurrentType.Label, Is.EqualTo("General"));
-                Assert.That(scene.view.itemRows[0].label.text, Is.EqualTo("Language"));
-                TestCapture.Capture("SettingsGeneral.png");
-                scene.Don(); scene.Don(); scene.Ka(4);
-                Assert.That(scene.view.choiceRows[2].label.text, Is.EqualTo("Korean"));
-                TestCapture.Capture("SettingsLanguage.png");
-                scene.view.choiceRows[2].click.Clicked();
+                var overlay = SettingsOverlay.Open();
+                var nav = overlay.Navigator;
+                Assert.That(nav.Page.Title, Is.EqualTo("General"));
+                Assert.That(nav.Page.Rows[0].Label, Is.EqualTo("Song Title Language"));
+                overlay.Confirm(); overlay.Confirm(); overlay.Move(4);
+                Assert.That(nav.SheetOptions[nav.SheetIndex], Is.EqualTo("Korean"));
+                overlay.View.TapSheet(nav.SheetIndex);
                 Assert.That(settings.Settings.general.language, Is.EqualTo("ko"));
                 Assert.That(GameSettings.FromJson(File.ReadAllText(path)).general.language, Is.EqualTo("ko"));
-                Assert.That(scene.view.itemRows[0].label.text, Is.EqualTo("Language"), "The interface is not translated.");
+                Assert.That(nav.Page.Rows[0].Label, Is.EqualTo("Song Title Language"), "The interface is not translated.");
+                overlay.Back(); overlay.Back();
+                Assert.That(SettingsOverlay.IsOpen, Is.False);
+                yield return null; // the closing key's frame still blocks input
                 Assert.That(song.ReadDisplayInfo().Title, Is.EqualTo("Korean title"));
                 Assert.That(song.ReadDisplayInfo().Subtitle, Is.EqualTo("Base subtitle"), "Missing translations use the original, not Japanese.");
                 Assert.That(song.ReadInfo().Title, Is.EqualTo("Base"));

@@ -5,50 +5,55 @@ namespace OurTaiko.Tests
 {
     public sealed class OffsetSettingsTests
     {
+        static SettingsNavigator OnPage(string id)
+        {
+            var nav = new SettingsNavigator(SettingsCatalog.Pages(SoundPlatform.Desktop), new GameSettings());
+            nav.Move(nav.Pages.ToList().FindIndex(p => p.Id == id));
+            nav.Confirm();
+            return nav;
+        }
+
         [Test]
         public void AccountTextIsTypedAndSavedWithTheOtherSettings()
         {
-            var menu = new SettingsMenu(SettingsMenu.Catalog(), new GameSettings());
-            menu.Ka(4);
-            Assert.That(menu.CurrentType.Label, Is.EqualTo("OurTaiko Accounts"));
-            Assert.That(menu.CurrentType.Items.Select(i => i.Label), Is.EqualTo(new[]
+            var nav = OnPage("accounts");
+            Assert.That(nav.Page.Groups.Select(g => g.Title), Is.EqualTo(new[] { "1P", "2P", "Servers" }));
+            Assert.That(nav.Page.Rows.Select(r => r.Label), Is.EqualTo(new[]
             {
-                "1P Username", "1P Password", "1P Sign Out", "2P Username", "2P Password", "2P Sign Out", "Refresh Song List", "Refresh Login Status",
+                "Username", "Password", "Sign Out", "Username", "Password", "Sign Out", "Refresh Song List", "Refresh Login",
             }));
-            menu.Don();
-            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("Not set"));
-            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Entered));
-            Assert.That(menu.EditingText, Is.True);
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("Not set"));
+            Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Entered));
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Typing));
             // The field owns the keys while typing; only its submit or a step back ends it.
-            Assert.That(menu.Ka(1), Is.EqualTo(SettingsMenu.Result.None));
-            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.None));
-            Assert.That(menu.Back(), Is.EqualTo(SettingsMenu.Result.Returned));
-            Assert.That(menu.Settings.accounts.p1Username, Is.Empty);
-            menu.Don();
-            Assert.That(menu.SubmitText(" don "), Is.EqualTo(SettingsMenu.Result.Changed));
-            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
-            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("don"));
-            // The password signs in (the scene runs SubmitActionId with the text) and is never kept.
-            menu.Ka(1); menu.Don();
-            Assert.That(menu.CurrentItem.IsSecret, Is.True);
-            Assert.That(menu.CurrentItem.SubmitActionId, Is.EqualTo(SettingsMenu.SignInAction + "0"));
-            Assert.That(menu.SubmitText("katsu"), Is.EqualTo(SettingsMenu.Result.Changed));
-            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("Type to sign in"));
-            Assert.That(menu.Settings.ToJson(), Does.Not.Contain("katsu"));
-            menu.Ka(1);
-            Assert.That(menu.CurrentItem.ActionId, Is.EqualTo(SettingsMenu.SignOutAction + "0"));
-            menu.Ka(3);
-            Assert.That(menu.CurrentItem.ActionId, Is.EqualTo(SettingsMenu.SignOutAction + "1"));
+            Assert.That(nav.Move(1), Is.EqualTo(SettingsNavigator.Result.None));
+            Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.None));
+            Assert.That(nav.Back(), Is.EqualTo(SettingsNavigator.Result.Returned));
+            Assert.That(nav.Settings.accounts.p1Username, Is.Empty);
+            nav.Confirm();
+            Assert.That(nav.SubmitText(" don "), Is.EqualTo(SettingsNavigator.Result.Changed));
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("don"));
+            // The password signs in (the overlay runs its action with the text) and is never kept.
+            nav.Move(1); nav.Confirm();
+            Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.Password));
+            Assert.That(nav.SubmitText("katsu"), Is.EqualTo(SettingsNavigator.Result.Action));
+            Assert.That(nav.PendingAction, Is.EqualTo(SettingsCatalog.SignIn + "0"));
+            Assert.That(nav.Settings.ToJson(), Does.Not.Contain("katsu"));
+            nav.Move(1);
+            Assert.That(nav.Row.ActionId, Is.EqualTo(SettingsCatalog.SignOut + "0"));
+            nav.Move(3);
+            Assert.That(nav.Row.ActionId, Is.EqualTo(SettingsCatalog.SignOut + "1"));
 
-            // The buttons open nothing: the scene runs them and writes their status.
-            menu.Ka(1);
-            Assert.That(menu.CurrentItem.ActionId, Is.EqualTo(SettingsMenu.RefreshSongListAction));
-            Assert.That(menu.Don(), Is.EqualTo(SettingsMenu.Result.Action));
-            Assert.That(menu.Focus, Is.EqualTo(SettingsFocus.Items));
-            menu.CurrentItem.Status = "Done";
-            Assert.That(menu.CurrentItem.Format(menu.Settings), Is.EqualTo("Done"));
+            // The buttons open nothing: the overlay runs them and writes their status.
+            nav.Move(1);
+            Assert.That(nav.Row.ActionId, Is.EqualTo(SettingsCatalog.RefreshSongList));
+            Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Action));
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
+            nav.Row.Status = "Done";
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("Done"));
 
-            string json = menu.Settings.ToJson();
+            string json = nav.Settings.ToJson();
             Assert.That(json, Does.Contain("p2Username"));
             var restored = GameSettings.FromJson(json);
             Assert.That(restored.accounts.p1Username, Is.EqualTo("don"));
@@ -61,21 +66,23 @@ namespace OurTaiko.Tests
         [Test]
         public void NumbersStageSignedStepsAndOnlyConfirmPersists()
         {
-            var menu = new SettingsMenu(SettingsMenu.Catalog(), new GameSettings());
-            menu.Ka(1); menu.Don(); menu.Ka(1); menu.Don();
-            Assert.That(menu.CurrentItem.IsNumber, Is.True);
-            Assert.That(menu.CurrentItem.DefaultValue, Is.Zero);
-            Assert.That(menu.CurrentItem.Step, Is.EqualTo(1));
-            menu.Ka(-1); menu.Ka(-1);
-            Assert.That(menu.ChoiceIndex, Is.EqualTo(-2));
-            Assert.That(menu.CurrentItem.Format(menu.ChoiceIndex), Is.EqualTo("-2 ms"));
-            Assert.That(menu.Settings.play.audioOffsetMs, Is.Zero);
-            menu.Back(); menu.Don();
-            Assert.That(menu.ChoiceIndex, Is.Zero);
-            menu.Ka(1); menu.Don();
-            Assert.That(menu.Settings.play.audioOffsetMs, Is.EqualTo(1));
-            menu.Ka(1); menu.Don(); menu.Ka(-1); menu.TapChoice(0);
-            var restored = GameSettings.FromJson(menu.Settings.ToJson());
+            var nav = OnPage("play");
+            Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.Number));
+            Assert.That(nav.Row.Default, Is.Zero);
+            Assert.That(nav.Row.Step, Is.EqualTo(1));
+            nav.Confirm();
+            nav.Move(-1); nav.Move(-1);
+            Assert.That(nav.AdjustValue, Is.EqualTo(-2));
+            Assert.That(nav.Row.Format(nav.AdjustValue), Is.EqualTo("-2 ms"));
+            Assert.That(nav.Row.Format(3), Is.EqualTo("+3 ms"));
+            Assert.That(nav.Settings.play.audioOffsetMs, Is.Zero);
+            nav.Back(); nav.Confirm();
+            Assert.That(nav.AdjustValue, Is.Zero);
+            nav.Move(1); nav.Confirm();
+            Assert.That(nav.Settings.play.audioOffsetMs, Is.EqualTo(1));
+            nav.Move(1);
+            nav.Side(-1);
+            var restored = GameSettings.FromJson(nav.Settings.ToJson());
             Assert.That(restored.play.audioOffsetMs, Is.EqualTo(1));
             Assert.That(restored.play.judgeOffsetMs, Is.EqualTo(-1));
             Assert.That(GameSettings.FromJson("{\"play\":{\"singlePlayerDrumPad\":false}}").play.audioOffsetMs, Is.Zero);
@@ -87,27 +94,27 @@ namespace OurTaiko.Tests
         {
             Assert.That(new GameSettings().play.inputDelayMs, Is.Zero);
             Assert.That(GameSettings.FromJson("{\"play\":{\"judgeOffsetMs\":3}}").play.inputDelayMs, Is.Zero, "Older files get the default.");
-            var menu = new SettingsMenu(SettingsMenu.Catalog(), new GameSettings());
-            menu.Ka(1); menu.Don(); menu.Ka(3); menu.Don();
-            Assert.That(menu.CurrentItem.Label, Is.EqualTo("Input Delay"));
-            Assert.That(menu.ChoiceIndex, Is.Zero);
-            for (int i = 0; i < 5; i++) menu.Ka(1);
-            Assert.That(menu.ChoiceIndex, Is.EqualTo(5));
-            for (int i = 0; i < 8; i++) menu.Ka(-1);
-            Assert.That(menu.ChoiceIndex, Is.Zero, "A delay cannot be negative.");
-            menu.Don();
-            Assert.That(GameSettings.FromJson(menu.Settings.ToJson()).play.inputDelayMs, Is.Zero);
-            Assert.That(menu.CurrentItem.Move(PlaySettings.InputDelayMaxMs, 1), Is.EqualTo(PlaySettings.InputDelayMaxMs));
+            var nav = OnPage("play");
+            nav.Move(2); nav.Confirm();
+            Assert.That(nav.Row.Label, Is.EqualTo("Input Delay"));
+            Assert.That(nav.AdjustValue, Is.Zero);
+            for (int i = 0; i < 5; i++) nav.Move(1);
+            Assert.That(nav.AdjustValue, Is.EqualTo(5));
+            for (int i = 0; i < 8; i++) nav.Move(-1);
+            Assert.That(nav.AdjustValue, Is.Zero, "A delay cannot be negative.");
+            nav.Confirm();
+            Assert.That(GameSettings.FromJson(nav.Settings.ToJson()).play.inputDelayMs, Is.Zero);
+            Assert.That(nav.Row.Move(PlaySettings.InputDelayMaxMs, 1), Is.EqualTo(PlaySettings.InputDelayMaxMs));
         }
 
         [Test]
         public void NumericMetadataWorksForOtherDefaultsAndStepsWithoutWrapping()
         {
-            var item = SettingItem.Number("Test", "", 10, 5, "ms", s => s.play.audioOffsetMs,
-                (s, value) => s.play.audioOffsetMs = value);
-            Assert.That(item.Move(item.DefaultValue, -3), Is.EqualTo(-5));
-            Assert.That(item.Move(int.MaxValue, 1), Is.EqualTo(int.MaxValue));
-            Assert.That(item.Move(int.MinValue, -1), Is.EqualTo(int.MinValue));
+            var row = SettingRow.Number("test", "Test", "", 10, 5, s => s.play.audioOffsetMs,
+                (s, value) => s.play.audioOffsetMs = value, v => v + " ms");
+            Assert.That(row.Move(row.Default, -3), Is.EqualTo(-5));
+            Assert.That(row.Move(int.MaxValue, 1), Is.EqualTo(int.MaxValue));
+            Assert.That(row.Move(int.MinValue, -1), Is.EqualTo(int.MinValue));
         }
 
         [TestCase(-0.2)] [TestCase(0.2)]

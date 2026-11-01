@@ -15,7 +15,7 @@ namespace OurTaiko.Tests
     public sealed class OffsetFlowTests
     {
         [UnityTest]
-        public IEnumerator NumericPopupUsesDrumKeysAndTouchAndSavesMilliseconds()
+        public IEnumerator OffsetsAdjustWithDrumKeysAndTouchAndSaveMilliseconds()
         {
             var settings = SettingManager.EnsureInstance();
             string path = Path.Combine(Application.temporaryCachePath, "offset-test-" + Guid.NewGuid(), "settings.json");
@@ -30,39 +30,43 @@ namespace OurTaiko.Tests
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
-                yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene); yield return null;
-                var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
-                var view = scene.view;
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
                 // Keys are ignored while the switcher's transition still covers the scene.
-                yield return Wait(() => !SceneSwitcher.Instance.IsInputBlocked);
-                yield return Press(keyboard, Key.K); yield return Press(keyboard, Key.F);
-                Assert.That(scene.Menu.ItemCount, Is.EqualTo(5));
-                yield return Press(keyboard, Key.K); yield return Press(keyboard, Key.J);
-                Assert.That(view.detailTitle.text, Is.EqualTo("Offset A (Audio)"));
+                yield return Wait(() => !SceneSwitcher.Instance.IsSwitching && !SceneSwitcher.Instance.IsCovered);
+                var overlay = SettingsOverlay.Open();
+                var nav = overlay.Navigator;
+                yield return null;
+                // Right ka twice reaches Play, don opens it on Offset A, don starts adjusting it.
+                yield return Press(keyboard, Key.K); yield return Press(keyboard, Key.K);
+                Assert.That(nav.Page.Title, Is.EqualTo("Play"));
+                yield return Press(keyboard, Key.F);
+                Assert.That(nav.Row.Label, Is.EqualTo("Offset A (Audio)"));
+                yield return Press(keyboard, Key.F);
+                Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Adjust));
                 yield return Press(keyboard, Key.D);
-                Assert.That(view.choiceRows[0].label.text, Is.EqualTo("-1 ms"));
+                Assert.That(nav.Row.Format(nav.AdjustValue), Is.EqualTo("-1 ms"));
                 Assert.That(settings.Settings.play.audioOffsetMs, Is.Zero);
-                TestCapture.Capture("OffsetASettings.png");
-                TestCapture.Capture("OffsetASettings720.png", 1280, 720);
                 yield return Press(keyboard, Key.F);
                 Assert.That(settings.Settings.play.audioOffsetMs, Is.EqualTo(-1));
-                Assert.That(view.itemRows[1].value.text, Is.EqualTo("-1 ms"));
-                scene.Ka(1); scene.Don();
-                Assert.That(view.detailTitle.text, Is.EqualTo("Offset B (Judgment)"));
-                Click(view.nextChoice); Click(view.nextChoice); Click(view.previousChoice);
-                Assert.That(view.choiceRows[0].label.text, Is.EqualTo("+1 ms"));
-                Click(view.choiceRows[0].click);
+                // The arrows adjust a number directly; the stepper buttons do too.
+                overlay.Move(1);
+                Assert.That(nav.Row.Label, Is.EqualTo("Offset B (Judgment)"));
+                yield return Press(keyboard, Key.RightArrow); yield return Press(keyboard, Key.RightArrow); yield return Press(keyboard, Key.LeftArrow);
+                Assert.That(settings.Settings.play.judgeOffsetMs, Is.EqualTo(1));
+                overlay.View.SetRow(1, nav.Row.Move(nav.Row.Get(nav.Settings), 1));
+                overlay.View.SetRow(1, nav.Row.Move(nav.Row.Get(nav.Settings), -1));
                 settings.Load(path);
                 Assert.That(settings.Settings.play.audioOffsetMs, Is.EqualTo(-1));
                 Assert.That(settings.Settings.play.judgeOffsetMs, Is.EqualTo(1));
-                scene.Don(); scene.Ka(1); view.shadeClick.Clicked();
-                Assert.That(settings.Settings.play.judgeOffsetMs, Is.EqualTo(1), "Cancel does not save staged edits.");
+                overlay.Confirm(); overlay.Move(1); overlay.Back();
+                Assert.That(settings.Settings.play.judgeOffsetMs, Is.EqualTo(1), "Back does not save an adjustment.");
             }
             finally
             {
                 InputSystem.RemoveDevice(keyboard);
                 InputSystem.settings.backgroundBehavior = background;
                 InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
+                if (SettingsOverlay.Instance != null) Object.Destroy(SettingsOverlay.Instance.gameObject);
                 settings.UseUnsaved(new GameSettings());
                 Directory.Delete(Path.GetDirectoryName(path), true);
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);

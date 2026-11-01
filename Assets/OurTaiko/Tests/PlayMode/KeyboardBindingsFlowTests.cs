@@ -55,44 +55,85 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator CaptureConsumesNavigationKeysAndPersistsEmptyAndMultipleBindings()
         {
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
-            var scene = Object.FindAnyObjectByType<GlobalSettingScene>();
-            scene.Don(); scene.Ka(1); scene.Don();
-            AssertClickable(scene.view.choiceRows[0].click);
+            var overlay = SettingsOverlay.Open();
+            var nav = overlay.Navigator;
+            overlay.Move(1); overlay.Confirm(); overlay.Confirm();
+            Assert.That(nav.Row.Key, Is.EqualTo(InputKey.LeftDon));
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Sheet));
+            yield return new WaitForSecondsRealtime(0.3f);
+            AssertClickable(Option(overlay, 0));
             // Open capture with the current Don key. That same press must not be captured.
             Press(Key.F); yield return null;
-            Assert.That(scene.Menu.CapturingKey, Is.True);
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Capture));
             yield return null;
-            Assert.That(scene.Menu.CapturingKey, Is.True);
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Capture));
             Press(); yield return null;
             Press(Key.Escape); yield return null;
-            Assert.That(scene.Menu.CapturingKey, Is.False);
-            Assert.That(scene.Menu.Focus, Is.EqualTo(SettingsFocus.Choice));
-            Assert.That(scene.Menu.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F, Key.Escape }));
-            Assert.That(scene.Menu.Settings.general.keyboard.Get(InputKey.Back), Is.Empty);
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
+            Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F, Key.Escape }));
+            Assert.That(nav.Settings.general.keyboard.Get(InputKey.Back), Is.Empty);
             Press(); yield return null;
-            TestCapture.Capture("KeyboardBindings.png");
             var manager = SettingManager.EnsureInstance();
             manager.Load(manager.FilePath);
             Assert.That(InputManager.GetBinding(InputKey.LeftDon), Is.EqualTo(new[] { Key.F, Key.Escape }));
+            overlay.Close();
             // Pointer operations remain available even when all keyboard controls are unbound.
             var empty = manager.Settings.Clone();
             foreach (InputKey action in System.Enum.GetValues(typeof(InputKey))) empty.general.keyboard.Set(action);
             manager.Set(empty);
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SettingScene);
             yield return null;
-            scene = Object.FindAnyObjectByType<GlobalSettingScene>();
-            scene.view.typeRows[0].click.Clicked();
-            scene.view.itemRows[1].click.Clicked(); scene.view.itemRows[1].click.Clicked();
-            AssertClickable(scene.view.choiceRows[2].click);
-            scene.view.choiceRows[2].click.Clicked();
+            overlay = SettingsOverlay.Open();
+            nav = overlay.Navigator;
+            overlay.View.TapPage(1); overlay.View.TapPage(1);
+            overlay.View.OpenRow(0);
+            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { "Add a Key", "Reset to Default", "Clear All" }));
+            yield return new WaitForSecondsRealtime(0.3f);
+            AssertClickable(Option(overlay, 1));
+            Option(overlay, 1).Clicked();
             Assert.That(InputManager.GetBinding(InputKey.LeftDon), Is.EqualTo(new[] { Key.F }));
-            scene.view.shadeClick.Clicked();
-            scene.view.nextItems.Clicked();
-            Assert.That(scene.view.FirstItem, Is.GreaterThan(0));
-            AssertClickable(scene.view.nextItems);
+            overlay.Close();
+            Object.Destroy(overlay.gameObject);
         }
+
+        // Reset to Default swaps X for F without changing how many keys are bound; the row's keycaps
+        // must follow the keys, not just their count.
+        [UnityTest]
+        public IEnumerator ResetToDefaultRedrawsTheKeycaps()
+        {
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
+            yield return null;
+            var manager = SettingManager.EnsureInstance();
+            var custom = manager.Settings.Clone();
+            custom.general.keyboard.Set(InputKey.LeftDon, Key.X);
+            manager.Set(custom);
+            var overlay = SettingsOverlay.Open();
+            var nav = overlay.Navigator;
+            overlay.Move(1); overlay.Confirm();
+            Assert.That(nav.Row.Key, Is.EqualTo(InputKey.LeftDon));
+            Assert.That(Keycaps(overlay, nav.Row.Id), Is.EqualTo(new[] { "Key X" }));
+            overlay.Confirm();
+            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { "Add a Key", "Remove X", "Reset to Default", "Clear All" }));
+            overlay.View.TapSheet(2);
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
+            Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F }));
+            Assert.That(Keycaps(overlay, nav.Row.Id), Is.EqualTo(new[] { "Key F" }));
+            overlay.Close();
+            Object.Destroy(overlay.gameObject);
+        }
+
+        // The keycaps a key row draws, by name, newest row objects only (destroyed ones linger until the end of the frame).
+        static string[] Keycaps(SettingsOverlay overlay, string rowId)
+        {
+            var list = overlay.View.transform.Find("Panel/Page/List");
+            var row = Enumerable.Range(0, list.childCount).Select(list.GetChild).Last(t => t.name == rowId);
+            var control = row.Find("Control");
+            return Enumerable.Range(0, control.childCount).Select(i => control.GetChild(i).name).Where(n => n.StartsWith("Key ")).ToArray();
+        }
+
+        static PointerRelay Option(SettingsOverlay overlay, int index)
+            => overlay.View.GetComponentsInChildren<PointerRelay>().Single(r => r.name == "Option" + index);
 
         [UnityTest]
         public IEnumerator EveryBoundKeyProducesTheActionAndHoldingEitherKeepsItHeld()
