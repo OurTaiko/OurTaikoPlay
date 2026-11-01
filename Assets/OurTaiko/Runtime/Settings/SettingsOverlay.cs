@@ -11,7 +11,9 @@ namespace OurTaiko
     // The settings overlay, opened over the current scene (Entry's ゲーム設定 board) and kept across
     // loads like SceneSwitcher. While it is open SceneSwitcher.IsInputBlocked is true, so the scene
     // underneath ignores its keys. Drum keys and the menu keys drive SettingsNavigator; held keys
-    // repeat, faster the longer they are held. Each change is saved at once through SettingManager.
+    // repeat, faster the longer they are held. Each change is saved at once through SettingManager,
+    // except in the middle of a gesture (a slider drag, a held stepper or arrow key): those apply at
+    // once and are written when the gesture ends, so a drag is not a file write per frame.
     // Closing applies pending audio device changes by reloading the scene behind the fade, like the
     // old settings scene did on its way back to Entry.
     public sealed class SettingsOverlay : MonoBehaviour
@@ -46,6 +48,8 @@ namespace OurTaiko
         int ignoreFrame = -1, openFrame = -1;
         InputKey? held;
         float heldAt, nextRepeat;
+        // A change applied during a gesture, to be written when the gesture ends.
+        bool writePending;
         // The row of the running settings action (by id: rows are rebuilt on every change); closing cancels it.
         string runningId;
         CancellationTokenSource actionCancel;
@@ -86,6 +90,7 @@ namespace OurTaiko
             View.TapRow = i => Run(() => Navigator.TapRow(i));
             View.OpenRow = i => Run(() => Navigator.OpenRow(i));
             View.SetRow = (i, value) => Run(() => Navigator.SetRow(i, value));
+            View.DragRow = (i, value) => Run(() => Navigator.SetRow(i, value), continuous: true);
             View.TapSheet = i => Run(() => Navigator.TapSheet(i));
             View.TapShade = () => { if (Navigator != null && Navigator.Zone is SettingsZone.Sheet or SettingsZone.Capture or SettingsZone.Typing) Run(() => Navigator.Back()); };
             View.SubmitText = text => { ignoreFrame = Time.frameCount; Run(() => Navigator.SubmitText(text)); };
@@ -149,6 +154,7 @@ namespace OurTaiko
         void Update()
         {
             if (Navigator == null) return;
+            if (writePending && held == null && !PointerPressed) Save(continuous: false);
             if (runningId != null)
             {
                 string activity = OnlineManager.EnsureInstance().Activity;
@@ -172,18 +178,19 @@ namespace OurTaiko
             else if (Down(InputKey.Back)) Back();
             else if (Press(InputKey.LeftKa) || Press(InputKey.MenuUp)) Move(-1, repeating);
             else if (Press(InputKey.RightKa) || Press(InputKey.MenuDown)) Move(1, repeating);
-            else if (Press(InputKey.MenuLeft)) Side(-1);
-            else if (Press(InputKey.MenuRight)) Side(1);
+            else if (Press(InputKey.MenuLeft)) Side(-1, repeating);
+            else if (Press(InputKey.MenuRight)) Side(1, repeating);
             if (held is InputKey key0 && !InputManager.GetKey(key0)) held = null;
         }
 
         // The keys' actions, also for tests: don, ka (left -1, right +1), left/right arrows and Back.
         public void Confirm() => Run(() => Navigator.Confirm());
         public void Move(int delta, bool repeat = false) => Run(() => Navigator.Move(delta, repeat));
-        public void Side(int delta) => Run(() => Navigator.Side(delta));
+        public void Side(int delta, bool repeat = false) => Run(() => Navigator.Side(delta), continuous: repeat);
         public void Back() => Run(() => Navigator.Back());
 
         static bool Down(InputKey key) => InputManager.GetKeyDown(key);
+        static bool PointerPressed => Mouse.current?.leftButton.isPressed == true || Touchscreen.current?.primaryTouch.press.isPressed == true;
 
         // A first press, or a repeat while the same key is held (then repeating is set).
         bool repeating;
@@ -198,16 +205,17 @@ namespace OurTaiko
             return true;
         }
 
-        void Run(Func<SettingsNavigator.Result> action)
+        // continuous: the action is part of a gesture that is still going on (a drag, a held key).
+        void Run(Func<SettingsNavigator.Result> action, bool continuous = false)
         {
             if (Navigator == null) return;
             var zone = Navigator.Zone;
             var result = action();
             if (result != SettingsNavigator.Result.None && result != SettingsNavigator.Result.Action) status = "";
-            Handle(result, zone);
+            Handle(result, zone, continuous);
         }
 
-        void Handle(SettingsNavigator.Result result, SettingsZone? from = null)
+        void Handle(SettingsNavigator.Result result, SettingsZone? from = null, bool continuous = false)
         {
             if (result == SettingsNavigator.Result.None || Navigator == null) return;
             switch (result)
@@ -222,7 +230,7 @@ namespace OurTaiko
                     Play(ka);
                     break;
                 case SettingsNavigator.Result.Changed:
-                    SettingManager.EnsureInstance().Set(Navigator.Settings);
+                    Save(continuous);
                     var row = Navigator.Row;
                     if (row?.Preview is AudioGroup group && PreviewClip(group) is AudioClip preview) sfx.PlayAudioOneShot(preview, group);
                     else Play(row?.Kind == SettingKind.Slider || from == SettingsZone.Rows && row?.IsAdjustable == true ? ka : don);
@@ -242,6 +250,15 @@ namespace OurTaiko
             Refresh();
         }
 
+        // Applies the navigator's settings; writes them too unless a gesture is still changing them.
+        void Save(bool continuous)
+        {
+            var manager = SettingManager.EnsureInstance();
+            if (continuous) manager.Stage(Navigator.Settings);
+            else manager.Set(Navigator.Settings);
+            writePending = continuous;
+        }
+
         // Leaves the scene underneath as it was, unless the audio device changed: then the scene
         // reloads behind the fade while the new output starts.
         public void Close()
@@ -252,6 +269,7 @@ namespace OurTaiko
         void Dismiss()
         {
             SettingManager.EnsureInstance().Set(Navigator.Settings);
+            writePending = false;
             // The cancelled action is over as far as the overlay is concerned: a reopened overlay may
             // run the next one at once, and the old task leaves everything alone when it returns.
             actionCancel?.Cancel();

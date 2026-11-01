@@ -25,9 +25,10 @@ namespace OurTaiko
         const float Inset = 30, HeaderHeight = 108, FooterHeight = 90, RailWidth = 435, RailItem = 102, RowHeight = 120,
             RowGap = 12, GroupGap = 39, WrappedSpacing = -32, SectionHeight = 48, PagePad = 48, SheetWidth = 810, SheetOption = 126, DescWidth = 760;
 
-        // Taps and drags, wired by SettingsOverlay.
+        // Taps and drags, wired by SettingsOverlay. SetRow is a tap's change; DragRow is one in the
+        // middle of a gesture (a slider drag, a held stepper) that is still going on.
         public Action<int> TapPage, TapRow, OpenRow, TapSheet;
-        public Action<int, int> SetRow;
+        public Action<int, int> SetRow, DragRow;
         public Action TapShade;
         public Action<string> SubmitText;
         public Action CancelText;
@@ -881,7 +882,7 @@ namespace OurTaiko
                         hit.gameObject.AddComponent<SettingsSliderDrag>().Dragged = t =>
                         {
                             int steps = Mathf.RoundToInt(t * (row.Maximum - row.Minimum) / row.Step);
-                            view.SetRow?.Invoke(index, row.Minimum + steps * row.Step);
+                            view.DragRow?.Invoke(index, row.Minimum + steps * row.Step);
                         };
                         Add(track.rectTransform);
                         fill = SettingsShapes.Box("Fill", track.transform, Cyan, 9);
@@ -934,10 +935,12 @@ namespace OurTaiko
             {
                 // The press repeats; the click is swallowed so it does not reach the row.
                 var box = ButtonBox(null, glyph == ">" ? "Increase" : "Decrease", Button, 84, 84, () => { });
-                box.gameObject.AddComponent<SettingsRepeatPress>().Pressed = () =>
+                box.gameObject.AddComponent<SettingsRepeatPress>().Pressed = repeat =>
                 {
                     var row = SettingsOverlay.CurrentRow(index);
-                    if (row != null) view.SetRow?.Invoke(index, row.Move(row.Get(SettingsOverlay.CurrentSettings), delta));
+                    if (row == null) return;
+                    int next = row.Move(row.Get(SettingsOverlay.CurrentSettings), delta);
+                    (repeat ? view.DragRow : view.SetRow)?.Invoke(index, next);
                 };
                 var text = Label("Glyph", box.transform, glyph == ">" ? "›" : "‹", 48, Ink, TextAlignmentOptions.Center);
                 Center(text.rectTransform, 84, 84);
@@ -1040,10 +1043,11 @@ namespace OurTaiko
         public void OnDrag(PointerEventData eventData) => Report(eventData);
     }
 
-    // A stepper button: one step on press, then repeating faster while held.
+    // A stepper button: one step on press, then repeating faster while held. Pressed says whether
+    // the step is a repeat (true) or the press itself (false).
     public sealed class SettingsRepeatPress : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
     {
-        public Action Pressed;
+        public Action<bool> Pressed;
         bool held;
         float heldAt, nextAt;
 
@@ -1052,7 +1056,7 @@ namespace OurTaiko
             held = true;
             heldAt = Time.unscaledTime;
             nextAt = heldAt + SettingsOverlay.RepeatDelay;
-            Pressed?.Invoke();
+            Pressed?.Invoke(false);
         }
 
         public void OnPointerUp(PointerEventData eventData) => held = false;
@@ -1063,7 +1067,7 @@ namespace OurTaiko
         {
             if (!held || Time.unscaledTime < nextAt) return;
             nextAt = Time.unscaledTime + SettingsOverlay.RepeatInterval(Time.unscaledTime - heldAt);
-            Pressed?.Invoke();
+            Pressed?.Invoke(true);
         }
     }
 }

@@ -70,6 +70,10 @@ namespace OurTaiko
             Apply(settings);
         }
 
+        // Applies without writing, for a change that is still going on (a slider being dragged):
+        // the caller calls Set once the gesture ends, so the file is not rewritten every frame.
+        public void Stage(GameSettings settings) => Apply(settings?.Clone() ?? new GameSettings());
+
         // Tests use settings that are never written to the player's file.
         public void UseUnsaved(GameSettings settings)
         {
