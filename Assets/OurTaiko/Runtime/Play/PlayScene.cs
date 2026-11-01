@@ -92,6 +92,7 @@ namespace OurTaiko
         IEnumerator Start()
         {
             switcher = SceneSwitcher.EnsureInstance();
+            PlayfieldMask.Cover(this);
             // Direct Editor runs must return to the same mode after Back and another song.
             switcher.PracticeMode = IsPractice;
             switcher.SceneChanging += PrepareToLeave;
