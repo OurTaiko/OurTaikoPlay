@@ -152,6 +152,39 @@ namespace OurTaiko.Tests
             yield return WaitFor(engine.ApplyPendingSettingsAsync());
         }
 
+        // A scene switch under the open overlay dismisses it; the device change it left pending is
+        // applied once that switch is over, not left hanging until the next time Settings closes.
+        [UnityTest]
+        public IEnumerator ASceneSwitchUnderTheOverlayAppliesPendingDeviceChanges()
+        {
+            var settings = SettingManager.EnsureInstance();
+            settings.UseUnsaved(new GameSettings());
+            var engine = AudioEngine.EnsureInstance();
+            yield return WaitFor(engine.ApplyPendingSettingsAsync());
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
+            yield return null;
+            var overlay = SettingsOverlay.Open();
+            yield return null;
+            int before = engine.Generation;
+            overlay.Navigator.Settings.audio.backend = AudioBackend.BassSimple;
+            settings.Set(overlay.Navigator.Settings);
+            Assert.That(engine.HasPendingDeviceChanges, Is.True);
+            var switcher = SceneSwitcher.EnsureInstance();
+            switcher.SwitchScene(SceneSwitcher.EntryScene);
+            float deadline = Time.realtimeSinceStartup + 20;
+            while (SettingsOverlay.IsOpen && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(SettingsOverlay.IsOpen, Is.False, "The switch dismisses the overlay.");
+            while ((switcher.IsInputBlocked || engine.HasPendingDeviceChanges) && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(engine.HasPendingDeviceChanges, Is.False);
+            Assert.That(engine.Backend, Is.EqualTo(AudioBackend.BassSimple));
+            Assert.That(engine.Generation, Is.EqualTo(before + 1));
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.EntryScene));
+            settings.UseUnsaved(new GameSettings());
+            yield return WaitFor(engine.ApplyPendingSettingsAsync());
+        }
+
         [UnityTest]
         public IEnumerator SoundSettingsReloadWaitsForBackgroundPreparation()
         {

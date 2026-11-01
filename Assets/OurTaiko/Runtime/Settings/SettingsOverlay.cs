@@ -93,14 +93,11 @@ namespace OurTaiko
             View.CancelText = () => { ignoreFrame = Time.frameCount; if (Navigator?.Zone == SettingsZone.Typing) Run(() => Navigator.Back()); };
         }
 
-        // A scene loaded underneath (not through the overlay) takes the overlay with the old scene.
+        // A scene loaded underneath (not through the overlay) takes the overlay with the old scene,
+        // closing it like Close() does; pending device changes apply once that switch is over.
         void OnSceneChanged(Scene from, Scene to)
         {
-            if (Navigator == null) return;
-            SettingManager.EnsureInstance().Set(Navigator.Settings);
-            actionCancel?.Cancel();
-            Navigator = null;
-            View.Close();
+            if (Navigator != null) Dismiss();
         }
 
         void OnDestroy()
@@ -251,7 +248,11 @@ namespace OurTaiko
         // reloads behind the fade while the new output starts.
         public void Close()
         {
-            if (Navigator == null) return;
+            if (Navigator != null) Dismiss();
+        }
+
+        void Dismiss()
+        {
             SettingManager.EnsureInstance().Set(Navigator.Settings);
             actionCancel?.Cancel();
             Navigator = null;
@@ -268,6 +269,13 @@ namespace OurTaiko
             var switcher = SceneSwitcher.EnsureInstance();
             try
             {
+                // A switch already under way (the one that dismissed the overlay) finishes first;
+                // the scene it loaded is then reloaded with the new device.
+                while (switcher != null && switcher.IsSwitching)
+                {
+                    await Awaitable.NextFrameAsync();
+                    if (this == null) return;
+                }
                 await switcher.SwitchSceneAfterFadeAsync(SceneSwitcher.CurrentScene, () => engine.ApplyPendingSettingsAsync());
             }
             catch (Exception error)
