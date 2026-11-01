@@ -80,13 +80,12 @@ namespace OurTaiko
         bool resuming, resumeLostFocus;
         int resumeFrame = -1;
         int pauseOpenedFrame = -1;
-        // The end points for the music's length they were taken with (it is 0 until the music loads).
-        SongEnd? songEnd;
-        double songEndAudio;
-        // After the chart end: the lanes playing an ending, and whether the fade-out point has passed.
+        // When the play ends (SongEnd), for the seats' charts both played.
+        double? songEnd;
+        // After the play's end: the lanes playing an ending, under which the music fades out.
         List<PlayerLane> endings;
         double endingDuration, endingStartedAt, endedAt;
-        bool finishedPlaying, resultShown;
+        bool resultShown;
 
         IEnumerator Start()
         {
@@ -241,9 +240,7 @@ namespace OurTaiko
             double time = ChartTime;
             foreach (var lane in lanes) lane.Advance(time);
             UpdatePlayVisuals(time);
-            var end = SongEndNow();
-            if (time >= end.FadeOut) Finish();
-            else if (time >= end.ChartEnd) EndChart();
+            if (time >= SongEndNow()) Finish();
         }
 
         // Keep the intentional frame-based judgment; input event timestamps only sort hits.
@@ -256,18 +253,8 @@ namespace OurTaiko
             if (movie != null) movie.Show(SongTime - movieOffset, songClock.Rate, !IsPaused);
         }
 
-        // OpenTaiko's chart end and fade-out (SongEnd), for the seats' charts and the music both play.
-        SongEnd SongEndNow()
-        {
-            double audio = music.AudioLength();
-            if (songEnd == null || audio != songEndAudio)
-            {
-                songEndAudio = audio;
-                double audioEnd = audio > 0 ? audio - audioOffset : double.NaN;
-                songEnd = lanes.Select(lane => SongEnd.Of(lane.Session.Chart, audioEnd, judgeOffset)).Aggregate(SongEnd.Latest);
-            }
-            return songEnd.Value;
-        }
+        // Every seat must reach its end (OpenTaiko IsChartEnded: all players).
+        public double SongEndNow() => songEnd ??= lanes.Max(lane => SongEnd.Of(lane.Session.Chart, judgeOffset));
 
         // Presentation can keep running after the result is captured, without advancing judgment.
         void UpdatePlayVisuals(double time)
@@ -343,20 +330,13 @@ namespace OurTaiko
             if (resuming) resumeLostFocus = true;
             if (Session != null && !IsPaused && !IsFinished) TogglePause();
         }
-        // The fade-out point: practice loops here; a play ends its chart if it has not yet, and goes
-        // to ResultScene (which persists the result) once the ending has played.
+        // The play's end (SongEnd): practice loops here. A play (OpenTaiko Game_EndChart) captures the
+        // result and stops input, and each lane plays its own ending (Player::spawn_ending_anim) over
+        // its lane while the music fades out; ResultScene (which persists the result) follows.
         void Finish()
         {
             if (IsPractice) { PausePractice(true); return; }
-            EndChart();
-            finishedPlaying = true;
-        }
-
-        // The chart end (OpenTaiko Game_EndChart): the result is captured and input stops, and each
-        // lane plays its own ending (Player::spawn_ending_anim) over its lane while the music plays on.
-        void EndChart()
-        {
-            if (IsPractice || IsFinished) return;
+            if (IsFinished) return;
             IsFinished = true;
             foreach (var lane in lanes)
             {
@@ -375,8 +355,9 @@ namespace OurTaiko
         }
 
         // The stopped Session stays untouched: dancers, gauge loops and existing hit effects keep
-        // playing on the song clock while input and scoring stay disabled. A play finished while
-        // paused (tests) carries the presentation on in real time.
+        // playing on the song clock while input and scoring stay disabled, and the music fades out
+        // linearly over the ending, which the result follows. A play finished while paused (tests)
+        // carries the presentation on in real time.
         void UpdateEnding()
         {
             if (endings == null || resultShown) return;
@@ -386,8 +367,8 @@ namespace OurTaiko
             UpdatePlayVisuals(time);
             foreach (var lane in lanes) lane.ShowBranchTime(time);
             foreach (var lane in endings) lane.Views.ending.ShowTime(Math.Min(elapsed, endingDuration));
-            if (ChartTime >= SongEndNow().FadeOut) finishedPlaying = true;
-            if (!finishedPlaying || elapsed < endingDuration) return;
+            music.SetAudioFade(SongEnd.Fade(elapsed, endingDuration));
+            if (elapsed < endingDuration) return;
             resultShown = true;
             var second = lanes.Count > 1 ? lanes[1] : null;
             switcher.ShowResult(Result, song, Record, second?.Result, second?.Record);

@@ -14,8 +14,10 @@ namespace OurTaiko
     // judgments and the running combo carry on (PlayerLane.SharedGauge / Carry). The exams are
     // judged by DanProgress: a less exam fails the moment its allowance is used up, a more exam
     // when its song (or the course) ends. Every song plays out, music and all, even after an exam
-    // has failed; once its music has finished the course goes on to the next song, or, when it is
-    // over (the last song, or an exam failed), shows 合格 / 不合格 a second later and then the result.
+    // has failed; once its music has finished the course goes on to the next song. When the course
+    // is over (the last song, or an exam failed) it ends as a normal play does (SongEnd): 合格 /
+    // 不合格 starts two seconds after the last note while the music fades out under it, and the
+    // result follows once that ending has played.
     // Before each song the doors close over the lane with its title (DanBetween), and the song
     // begins once they have parted and its title has gone from the lane. Pause offers resume,
     // restart (the whole course) and back (the course select); the doors, the music's tail and the
@@ -33,10 +35,8 @@ namespace OurTaiko
         [Tooltip("anim/dani_between (Nijiiro): the doors' and the title's clip.")]
         public TextAsset betweenTimeline;
 
-        // The course's last song (or the song a failed exam ended it on) has its ending (合格 /
-        // 不合格) a second after its music has finished, as a normal play's ending follows its
-        // audio; a song's music waits at most 20 s past its last note (a long silent tail).
-        const double EndingDelay = 1, MaxTail = 20;
+        // Between songs the music waits at most 20 s past the last note (a long silent tail).
+        const double MaxTail = 20;
 
         public PlayerLane Lane { get; private set; }
         public PlaySession Session => Lane?.Session;
@@ -67,6 +67,10 @@ namespace OurTaiko
         int playedAudioOffsetMs, songMaxCombo;
         bool autoPlay, closingPauseMenu, betweenOpened;
         double songEndedAt, lastNoteEnd, musicEndedAt = double.NaN;
+        // After the course's end: its ending, under which the music fades out.
+        DanPlayResult courseResult;
+        double endingDuration, endingStartedAt, endedAt;
+        bool resultShown;
         // Real time less the time spent paused, in seconds.
         double pausedTotal, pausedAt = double.NaN;
         double PlayNow => (double.IsNaN(pausedAt) ? GameTimeline.FrameTime : pausedAt) - pausedTotal;
@@ -193,11 +197,9 @@ namespace OurTaiko
         void Update()
         {
             ShowBetween();
-            if (switcher == null || switcher.IsInputBlocked || !songClock.Started || IsFinished || Lane == null) return;
-            double? playback = AudioEngine.EnsureInstance().Backend == AudioBackend.BassSimple && music.IsAudioPlaying() ? music.AudioPosition() : null;
-            songClock.Update(GameTimeline.AudioFrameTime, playback);
-            StartDueMusic();
-            if (movie != null) movie.Show(SongTime - movieOffset, songClock.Rate, !IsPaused);
+            if (switcher == null || switcher.IsInputBlocked || !songClock.Started || Lane == null) return;
+            if (IsFinished) { UpdateEnding(); return; }
+            TickSong();
             if (closingPauseMenu || Time.frameCount == resumeFrame || Time.frameCount == pauseOpenedFrame) return;
             if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause)) { TogglePause(); return; }
             if (InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
@@ -214,15 +216,27 @@ namespace OurTaiko
                 // its music plays out before the next one (capped, for a long silent tail).
                 if (time > lastNoteEnd + Math.Max(0, judgeOffset) + PlaySession.BadWindow) EndSong();
             }
+            // The course over: its ending from this song's end, the music fading out under it.
+            else if (Progress.IsEnded) { if (time >= SongEndNow()) Finish(); }
             else if (double.IsNaN(musicEndedAt))
             {
                 if (MusicOver()) musicEndedAt = PlayNow;
             }
-            // The music has finished: the next song, or (the course over) its ending a second on.
-            else if (!Progress.IsEnded) NextSong();
-            else if (PlayNow - musicEndedAt >= EndingDelay) Finish();
+            // The music has finished: the next song.
+            else NextSong();
             ShowExams();
         }
+
+        void TickSong()
+        {
+            double? playback = AudioEngine.EnsureInstance().Backend == AudioBackend.BassSimple && music.IsAudioPlaying() ? music.AudioPosition() : null;
+            songClock.Update(GameTimeline.AudioFrameTime, playback);
+            StartDueMusic();
+            if (movie != null) movie.Show(SongTime - movieOffset, songClock.Rate, !IsPaused);
+        }
+
+        // The song's end (SongEnd), as PlayScene's.
+        public double SongEndNow() => SongEnd.Of(Session.Chart, judgeOffset);
 
         // The song's music has played out (or it has none), or its tail has run 20 s past the last note.
         bool MusicOver()
@@ -266,39 +280,41 @@ namespace OurTaiko
             StartSong();
         }
 
-        // The course is over: 合格 or 不合格 plays over the lane, and the result follows.
+        // The course's end: input stops and 合格 or 不合格 plays over the lane while the music fades out.
         void Finish()
         {
             IsFinished = true;
-            songClock.Pause();
             DisableDrumPads();
             pauseButton.interactable = false;
             var total = Progress.Total;
-            var result = new DanPlayResult
+            courseResult = new DanPlayResult
             {
                 Run = Run, Progress = Progress, Verdict = Progress.Verdict(), Songs = songResults.ToArray(), Records = songRecords.ToArray(),
                 Score = total.Score, MaxCombo = total.MaxCombo, GaugePoints = Gauge.Points, AutoPlay = autoPlay,
             };
-            StartCoroutine(ShowEnding(result));
+            if (ending != null) ending.BeginDan(courseResult.Verdict > 0);
+            endingDuration = ending != null ? ending.Duration : 0;
+            endingStartedAt = GameTimeline.FrameTime;
+            endedAt = ChartTime;
         }
 
-        IEnumerator ShowEnding(DanPlayResult result)
+        // The song clock runs on under the ending and the music fades out linearly over it; the
+        // result follows once it has played. A course finished while paused (tests) carries the
+        // lane on in real time.
+        void UpdateEnding()
         {
-            if (ending != null)
-            {
-                ending.BeginDan(result.Verdict > 0);
-                double started = GameTimeline.FrameTime, chartTime = ChartTime;
-                while (GameTimeline.FrameTime - started < ending.Duration)
-                {
-                    double elapsed = GameTimeline.FrameTime - started;
-                    Lane.ShowVisuals(chartTime + elapsed, chartTime + elapsed - visualOffset, false, false);
-                    ending.ShowTime(elapsed);
-                    yield return null;
-                }
-            }
+            if (courseResult == null || resultShown) return;
+            TickSong();
+            double elapsed = GameTimeline.FrameTime - endingStartedAt;
+            double time = Math.Max(ChartTime, endedAt + elapsed);
+            Lane.ShowVisuals(time, time - visualOffset, false, false);
+            if (ending != null) ending.ShowTime(Math.Min(elapsed, endingDuration));
+            music.SetAudioFade(SongEnd.Fade(elapsed, endingDuration));
+            if (elapsed < endingDuration) return;
+            resultShown = true;
             music.StopAudio();
             // The result screen says its announce as it opens.
-            switcher.ShowDanResult(result);
+            switcher.ShowDanResult(courseResult);
         }
 
         // ---------------------------------------------------------------- HUD

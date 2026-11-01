@@ -2,45 +2,25 @@ using System;
 
 namespace OurTaiko
 {
-    // When a play ends, in chart seconds (OpenTaiko CTja.InsertEndOfChartChips). Two pairs of 0xFF
-    // chips are placed, one a second after #END and one at the end of the music, and the first
-    // of each kind decides: the chart end starts the ending, the fade-out lets the play leave
-    // once that ending has played. The chart end is two seconds after the last note before its
-    // fade-out (a roll counts until its end), never later than the fade-out itself.
-    public readonly struct SongEnd
+    // When a play ends, in chart seconds: two seconds after its last note (a roll at its end), as
+    // OpenTaiko's chart end (CTja.InsertEndOfChartChips) but decided by the chart alone (user
+    // request): neither #END nor the music's end cuts it short. The ending starts there and the
+    // music fades out under it. A chart without notes ends at #END.
+    public static class SongEnd
     {
-        public const double FadeOutDelay = 1, LastNoteDelay = 2;
+        public const double LastNoteDelay = 2;
 
-        public readonly double ChartEnd, FadeOut;
-
-        public SongEnd(double chartEnd, double fadeOut) { ChartEnd = chartEnd; FadeOut = fadeOut; }
-
-        // audioEnd: the music's end in chart time, or NaN without music. lateJudge (a positive
-        // judge offset) moves the chart's own pair later, as the notes are judged that much later.
-        public static SongEnd Of(TaikoChart chart, double audioEnd, double lateJudge = 0)
+        // lateJudge (a positive judge offset) moves it later, as the notes are judged that much later.
+        public static double Of(TaikoChart chart, double lateJudge = 0)
         {
             double late = Math.Max(0, lateJudge);
-            double fadeOut = chart.Duration + FadeOutDelay + late;
-            double chartEnd = ChartEndBefore(chart, fadeOut, late);
-            if (!double.IsNaN(audioEnd))
-            {
-                chartEnd = Math.Min(chartEnd, ChartEndBefore(chart, audioEnd, late));
-                fadeOut = Math.Min(fadeOut, audioEnd);
-            }
-            return new SongEnd(chartEnd, fadeOut);
-        }
-
-        // Every seat must reach each point (OpenTaiko IsChartEnded / IsFinishedPlaying: all players).
-        public static SongEnd Latest(SongEnd a, SongEnd b) => new SongEnd(Math.Max(a.ChartEnd, b.ChartEnd), Math.Max(a.FadeOut, b.FadeOut));
-
-        // FindLastHittableOrChip: the latest end among the notes starting by the fade-out chip.
-        static double ChartEndBefore(TaikoChart chart, double fadeOut, double late)
-        {
             double last = double.NegativeInfinity;
-            foreach (var note in chart.Notes)
-                if (note.Time + late <= fadeOut) last = Math.Max(last, (note.IsLong ? note.EndTime : note.Time) + late);
-            // Without such a note the chip found is the fade-out itself.
-            return double.IsNegativeInfinity(last) ? fadeOut : Math.Min(last + LastNoteDelay, fadeOut);
+            foreach (var note in chart.Notes) last = Math.Max(last, note.IsLong ? note.EndTime : note.Time);
+            return (double.IsNegativeInfinity(last) ? chart.Duration : last + LastNoteDelay) + late;
         }
+
+        // The music's volume (1 to 0, linear) this long after the ending started.
+        public static float Fade(double elapsed, double duration) =>
+            duration <= 0 ? 0 : (float)Math.Max(0, Math.Min(1, 1 - elapsed / duration));
     }
 }

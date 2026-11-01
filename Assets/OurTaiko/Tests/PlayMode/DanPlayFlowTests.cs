@@ -184,9 +184,15 @@ namespace OurTaiko.Tests
             Assert.That(scene.SongEnded, Is.False);
             Assert.That(scene.view.rows[0].failed.enabled, Is.True);
             TestCapture.Capture("DanPlayFailed.png");
-            // The course failed: 不合格 over the still lane, on the fail ending.
+            // The course failed: 不合格 over the lane two seconds after its last note, the music fading out.
             yield return WaitUntil(() => scene.IsFinished, 30);
+            var lastNote = scene.Session.Chart.Notes.Max(n => n.IsLong ? n.EndTime : n.Time);
+            Assert.That(scene.SongEndNow(), Is.EqualTo(lastNote + SongEnd.LastNoteDelay).Within(1e-9));
+            Assert.That(scene.ChartTime, Is.EqualTo(scene.SongEndNow()).Within(0.1), "The song's end, as a normal play's.");
+            double endedAt = scene.SongTime;
             yield return new WaitForSecondsRealtime(1.2f);
+            Assert.That(scene.SongTime, Is.GreaterThan(endedAt + 1), "The song clock runs on under the ending.");
+            Assert.That(scene.music.AudioFade(), Is.LessThan(1).And.GreaterThan(0), "The music is fading out.");
             Assert.That(scene.ending.GetComponentsInChildren<UnityEngine.UI.Image>().Any(i => i.enabled && i.sprite == scene.ending.danFail), Is.True, "不合格");
             Assert.That(scene.ending.danWord.gameObject.activeSelf, Is.False);
             TestCapture.Capture("DanPlayFailEnding.png");
