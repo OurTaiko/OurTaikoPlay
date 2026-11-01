@@ -46,7 +46,8 @@ namespace OurTaiko
         readonly List<(RectTransform root, Image box, Image radio, Image dot)> sheetItems = new();
         TextMeshProUGUI pageTitle, pageSubtitle, banner;
         Image bannerBox;
-        int shownPage = -1, shownSheetRow = -1, rowsSignature;
+        int shownPage = -1, shownSheetRow = -1;
+        string rowsSignature;
         float scroll, scrollTarget, listHeight, focusTop, focusBottom, sheetOffset = 1, openAt, bumpAt = -10, bumpDirection;
         bool following = true, ringPlaced, closing;
         Rect ringRect;
@@ -407,13 +408,19 @@ namespace OurTaiko
             }
         }
 
-        // Rows are rebuilt when the page or its set of rows changes, not for a value change.
-        static int Signature(SettingsNavigator nav)
+        // Rows are rebuilt when the page or its set of rows changes, not for a value change. A key
+        // row draws its keys as keycaps, so its keys are part of the signature (not just how many:
+        // Reset to Default can swap one key for another).
+        static string Signature(SettingsNavigator nav)
         {
-            if (nav.Page == null) return 0;
-            int hash = 17;
-            foreach (var row in nav.Page.Rows) hash = hash * 31 + row.Id.GetHashCode() + (row.Kind == SettingKind.Keys ? nav.Settings.general.keyboard.Get(row.Key).Count * 7919 : 0);
-            return hash;
+            if (nav.Page == null) return "";
+            var text = new System.Text.StringBuilder();
+            foreach (var row in nav.Page.Rows)
+            {
+                text.Append(row.Id).Append('\n');
+                if (row.Kind == SettingKind.Keys) text.Append(string.Join(" ", nav.Settings.general.keyboard.Get(row.Key))).Append('\n');
+            }
+            return text.ToString();
         }
 
         void BuildRows(SettingsNavigator nav)

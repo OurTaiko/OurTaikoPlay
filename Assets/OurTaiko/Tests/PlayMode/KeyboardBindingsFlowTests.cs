@@ -97,6 +97,41 @@ namespace OurTaiko.Tests
             Object.Destroy(overlay.gameObject);
         }
 
+        // Reset to Default swaps X for F without changing how many keys are bound; the row's keycaps
+        // must follow the keys, not just their count.
+        [UnityTest]
+        public IEnumerator ResetToDefaultRedrawsTheKeycaps()
+        {
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
+            yield return null;
+            var manager = SettingManager.EnsureInstance();
+            var custom = manager.Settings.Clone();
+            custom.general.keyboard.Set(InputKey.LeftDon, Key.X);
+            manager.Set(custom);
+            var overlay = SettingsOverlay.Open();
+            var nav = overlay.Navigator;
+            overlay.Move(1); overlay.Confirm();
+            Assert.That(nav.Row.Key, Is.EqualTo(InputKey.LeftDon));
+            Assert.That(Keycaps(overlay, nav.Row.Id), Is.EqualTo(new[] { "Key X" }));
+            overlay.Confirm();
+            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { "Add a Key", "Remove X", "Reset to Default", "Clear All" }));
+            overlay.View.TapSheet(2);
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
+            Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F }));
+            Assert.That(Keycaps(overlay, nav.Row.Id), Is.EqualTo(new[] { "Key F" }));
+            overlay.Close();
+            Object.Destroy(overlay.gameObject);
+        }
+
+        // The keycaps a key row draws, by name, newest row objects only (destroyed ones linger until the end of the frame).
+        static string[] Keycaps(SettingsOverlay overlay, string rowId)
+        {
+            var list = overlay.View.transform.Find("Panel/Page/List");
+            var row = Enumerable.Range(0, list.childCount).Select(list.GetChild).Last(t => t.name == rowId);
+            var control = row.Find("Control");
+            return Enumerable.Range(0, control.childCount).Select(i => control.GetChild(i).name).Where(n => n.StartsWith("Key ")).ToArray();
+        }
+
         static PointerRelay Option(SettingsOverlay overlay, int index)
             => overlay.View.GetComponentsInChildren<PointerRelay>().Single(r => r.name == "Option" + index);
 
