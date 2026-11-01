@@ -26,6 +26,37 @@ namespace OurTaiko.Tests
             Assert.That(session.Skipped, Is.EqualTo(new[] { true, true, true, true, false, false, false, false }));
             Assert.That(session.Hit(false, 2), Is.EqualTo(Judgment.Good));
         }
+        // At any practice speed the windows stay the same real milliseconds: chart time runs at the rate.
+        [TestCase(0.5)]
+        [TestCase(2.0)]
+        public void JudgeWindowsKeepRealMilliseconds(double rate)
+        {
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\n#START\n1000,\n#END");
+            Judgment HitAt(double realSeconds) => PlaySession.PracticeAt(chart, 0, null, null, rate).Hit(false, realSeconds * rate);
+            Assert.That(HitAt(PlaySession.GoodWindow - .001), Is.EqualTo(Judgment.Good));
+            Assert.That(HitAt(PlaySession.GoodWindow + .001), Is.EqualTo(Judgment.Ok));
+            Assert.That(HitAt(PlaySession.OkWindow + .001), Is.EqualTo(Judgment.Bad));
+            Assert.That(HitAt(PlaySession.BadWindow + .001), Is.EqualTo(Judgment.None));
+            var session = PlaySession.PracticeAt(chart, 0, null, null, rate);
+            Assert.That(session.Rate, Is.EqualTo(rate));
+            Assert.That(PlaySession.PracticeAt(chart, 0, session).Rate, Is.EqualTo(rate));
+            Assert.That(session.GoodWindowMs, Is.EqualTo(PlaySession.GoodWindow * 1000 * rate).Within(1e-8));
+        }
+        // The judge offset is real seconds too: 30 ms late input stays centred at any speed.
+        [TestCase(0.5)]
+        [TestCase(2.0)]
+        public void JudgeOffsetKeepsRealMilliseconds(double rate)
+        {
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\n#START\n0000,\n1000,\n#END");
+            var first = PlaySession.PracticeAt(chart, 0, new PlaySession(chart, .03), null, rate);
+            Assert.That(first.JudgeOffset, Is.EqualTo(.03 * rate).Within(1e-12));
+            var again = PlaySession.PracticeAt(chart, 0, first, null, 1);
+            Assert.That(again.JudgeOffset, Is.EqualTo(.03).Within(1e-12));
+            double note = chart.Notes[0].Time;
+            Assert.That(first.Hit(false, note + (.03 + PlaySession.GoodWindow - .001) * rate), Is.EqualTo(Judgment.Good));
+            Assert.That(PlaySession.PracticeAt(chart, 0, first).Hit(false, note + (.03 + PlaySession.GoodWindow + .001) * rate),
+                Is.EqualTo(Judgment.Ok));
+        }
         [Test]
         public void PreparationInsideLongNoteDoesNotCountEarlyHits()
         {

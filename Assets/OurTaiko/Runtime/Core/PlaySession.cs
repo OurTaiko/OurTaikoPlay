@@ -12,7 +12,12 @@ namespace OurTaiko
         public const double KadonWait = 0.05;
         public readonly TaikoChart Chart;
         public int KiwamiThreshold => scoring.CeilingScore;
-        public double JudgeOffset { get; }
+        // Playback rate (practice speed). Chart time runs this much faster than real time, so every
+        // window and the judge offset are scaled by it to stay the same number of real milliseconds.
+        public double Rate { get; }
+        // In chart seconds; the configured offset is real seconds.
+        public double JudgeOffset => realJudgeOffset * Rate;
+        readonly double realJudgeOffset;
         public BranchRoute? ForcedBranch { get; }
         // Results are written only here, so every change also moves Version.
         public IReadOnlyList<bool> Resolved => resolved;
@@ -32,6 +37,7 @@ namespace OurTaiko
         readonly List<HitTiming> hitTimings = new List<HitTiming>();
         public IReadOnlyList<HitTiming> HitTimings => hitTimings;
         public double? TimingOffsetMs(int index) => timingOffsets[index];
+        // Chart milliseconds, like TimingOffsetMs, so the histogram bands match the offsets at any rate.
         public double GoodWindowMs => goodWindow * 1000;
         public double OkWindowMs => okWindow * 1000;
         public double BadWindowMs => badWindow * 1000;
@@ -68,7 +74,7 @@ namespace OurTaiko
         public event Action<ChartBranch, BranchRoute> BranchSelected;
         readonly ShinuchiScore scoring;
         readonly SoulGauge gauge;
-        readonly double goodWindow, okWindow, badWindow;
+        readonly double goodWindow, okWindow, badWindow, kadonWait;
         readonly int[] selectedRoutes;
         readonly List<BranchRoute> branchHistory = new List<BranchRoute>();
         readonly List<TimelineEvent> timeline = new List<TimelineEvent>();
@@ -100,14 +106,16 @@ namespace OurTaiko
         // A fixed route (practice) plays every branch on ResolveRoute(route) and evaluates no
         // condition. Without one, branches are judged by their #BRANCHSTART condition; the reference
         // player does not define omitted routes, so such charts are refused, not guessed.
-        public PlaySession(TaikoChart chart, double judgeOffset = 0, BranchRoute? forcedBranch = null)
+        public PlaySession(TaikoChart chart, double judgeOffset = 0, BranchRoute? forcedBranch = null, double rate = 1)
         {
+            if (double.IsNaN(rate) || double.IsInfinity(rate) || rate <= 0) throw new ArgumentOutOfRangeException(nameof(rate));
             if (!forcedBranch.HasValue)
                 foreach (var branch in chart.Branches)
                     if (!branch.HasAllRoutes)
                         throw new NotSupportedException("A branch without #E or #M can only be played on a fixed route, as in practice.");
             ForcedBranch = forcedBranch;
-            JudgeOffset = judgeOffset;
+            realJudgeOffset = judgeOffset;
+            Rate = rate;
             Chart = chart; resolved = new bool[chart.Notes.Count]; missed = new bool[chart.Notes.Count]; skipped = new bool[chart.Notes.Count]; exploded = new bool[chart.Notes.Count]; longHits = new int[chart.Notes.Count];
             timingOffsets = new double?[chart.Notes.Count];
             kusudamas = new Kusudama[chart.Notes.Count];
@@ -118,9 +126,10 @@ namespace OurTaiko
             gauge = new SoulGauge(statistics.RouteNotes, chart.Course, chart.Level);
             branchCounter = new BranchCounter(branchFeed);
             bool easy = chart.Course == "Easy" || chart.Course == "Normal";
-            goodWindow = easy ? 0.0417083358764648 : GoodWindow;
-            okWindow = easy ? 0.108441665649414 : OkWindow;
-            badWindow = easy ? 0.125125 : BadWindow;
+            goodWindow = (easy ? 0.0417083358764648 : GoodWindow) * rate;
+            okWindow = (easy ? 0.108441665649414 : OkWindow) * rate;
+            badWindow = (easy ? 0.125125 : BadWindow) * rate;
+            kadonWait = KadonWait * rate;
             selectedRoutes = Enumerable.Repeat(-1, chart.Branches.Count).ToArray();
             timeSorted = true;
             for (int i = 0; i < chart.Notes.Count; i++)
@@ -154,9 +163,11 @@ namespace OurTaiko
 
         // Start a fresh practice attempt without replaying judgments, sounds or missed-note penalties.
         // Preserve already chosen branches before the cursor, and recalculate future checkpoints.
-        public static PlaySession PracticeAt(TaikoChart chart, double time, PlaySession previous = null, BranchRoute? forcedBranch = null)
+        // The rate defaults to the previous attempt's.
+        public static PlaySession PracticeAt(TaikoChart chart, double time, PlaySession previous = null, BranchRoute? forcedBranch = null,
+            double? rate = null)
         {
-            var session = new PlaySession(chart, previous?.JudgeOffset ?? 0, forcedBranch) { practiceStart = time };
+            var session = new PlaySession(chart, previous?.realJudgeOffset ?? 0, forcedBranch, rate ?? previous?.Rate ?? 1) { practiceStart = time };
             while (session.nextEvent < session.timeline.Count && session.timeline[session.nextEvent].Time <= time)
             {
                 var item = session.timeline[session.nextEvent++];
@@ -423,7 +434,7 @@ namespace OurTaiko
             }
         }
 
-        bool KadonWaits(int i, double time) => kadonWaiting == i && Pending(i) && time - kadonFirstHit < KadonWait;
+        bool KadonWaits(int i, double time) => kadonWaiting == i && Pending(i) && time - kadonFirstHit < kadonWait;
 
         // A Kadon waits for this colour: a press of it in the same frame as the first is judged too.
         public bool AwaitsKadon(bool ka, double time) => kadonWaiting >= 0 && kadonFirstKa != ka && KadonWaits(kadonWaiting, time - JudgeOffset);

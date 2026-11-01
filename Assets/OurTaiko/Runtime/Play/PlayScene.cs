@@ -60,12 +60,14 @@ namespace OurTaiko
         public RectTransform MojiRoot(int index) => Lane1.MojiRoot(index);
         public RectTransform BarRoot(int index) => Lane1.BarRoot(index);
         SongDefinition song;
+        // Configured in real seconds. Chart time runs at the clock's rate (practice speed), so they are
+        // scaled by it wherever they meet chart time.
         double audioOffset, visualOffset, judgeOffset;
         int playedAudioOffsetMs;
         // OpenTaiko judges and draws at a whole millisecond of the play clock (cut toward zero).
-        double ChartTime => TjaTime.Truncate(SongTime - audioOffset);
+        double ChartTime => TjaTime.Truncate(SongTime - audioOffset * songClock.Rate);
         internal override double ChartTimeNow => ChartTime;
-        internal override double JudgeOffset => judgeOffset;
+        internal override double JudgeOffset => judgeOffset * songClock.Rate;
         internal override bool AcceptsHits => songClock.Started && !switcher.IsInputBlocked && !IsPaused && !IsFinished;
         SongInfo displayInfo;
         // The subtitle line shows the SUBTITLE and, when the chart names one, the MAKER in turn.
@@ -254,13 +256,13 @@ namespace OurTaiko
         }
 
         // Every seat must reach its end (OpenTaiko IsChartEnded: all players).
-        public double SongEndNow() => songEnd ??= lanes.Max(lane => SongEnd.Of(lane.Session.Chart, judgeOffset));
+        public double SongEndNow() => (songEnd ??= lanes.Max(lane => SongEnd.Of(lane.Session.Chart))) + Math.Max(0, JudgeOffset);
 
         // Presentation can keep running after the result is captured, without advancing judgment.
         void UpdatePlayVisuals(double time)
         {
             bool preview = IsPractice && IsPaused, hideSkipped = IsPractice && (!IsPaused || practiceRewinding);
-            foreach (var lane in lanes) lane.ShowVisuals(time, time - visualOffset, preview, hideSkipped);
+            foreach (var lane in lanes) lane.ShowVisuals(time, time - visualOffset * songClock.Rate, preview, hideSkipped);
             if (kusudama != null) kusudama.ShowTime(time);
             SampleDancers(time);
         }
