@@ -32,6 +32,8 @@ namespace OurTaiko
         public string ActionLabel { get; private set; }
         // An action row's progress ("Working…", who is signed in); set by the overlay.
         public string Status { get; set; } = "";
+        // The sound group a change of this row previews (the drum and voice volumes); null for none.
+        public AudioGroup? Preview { get; private set; }
         Func<GameSettings, int> get;
         Action<GameSettings, int> set;
         Func<int, string> format;
@@ -111,6 +113,7 @@ namespace OurTaiko
             => new SettingRow(id, SettingKind.Password, label, description) { ActionId = id };
 
         public SettingRow OnClose() { AppliesOnClose = true; return this; }
+        public SettingRow Previews(AudioGroup group) { Preview = group; return this; }
     }
 
     public sealed class SettingGroup
@@ -127,13 +130,15 @@ namespace OurTaiko
         public string Id { get; }
         public string Title { get; }
         public string Subtitle { get; }
+        // The page shows the audio engine's output banner (the current device, pending changes).
+        public bool ShowsAudioOutput { get; }
         public IReadOnlyList<SettingGroup> Groups { get; private set; } = Array.Empty<SettingGroup>();
         public IReadOnlyList<SettingRow> Rows { get; private set; } = Array.Empty<SettingRow>();
         readonly Func<GameSettings, IReadOnlyList<SettingGroup>> build;
 
-        public SettingPage(string id, string title, string subtitle, Func<GameSettings, IReadOnlyList<SettingGroup>> build)
+        public SettingPage(string id, string title, string subtitle, Func<GameSettings, IReadOnlyList<SettingGroup>> build, bool audioOutput = false)
         {
-            Id = id; Title = title; Subtitle = subtitle; this.build = build;
+            Id = id; Title = title; Subtitle = subtitle; ShowsAudioOutput = audioOutput; this.build = build;
             Refresh(new GameSettings());
         }
 
@@ -220,7 +225,7 @@ namespace OurTaiko
                         DisplaySettings.MovieLaneOpacityDefault, DisplaySettings.MovieLaneOpacityStep,
                         s => s.display.movieLaneOpacity, (s, v) => s.display.movieLaneOpacity = v, v => v + "%", 0, 100, slider: true, stepText: DisplaySettings.MovieLaneOpacityStep + "%")),
             }),
-            new SettingPage("sound", "Sound", "Volumes and the output device", s => Sound(platform, s.audio.Backend)),
+            new SettingPage("sound", "Sound", "Volumes and the output device", s => Sound(platform, s.audio.Backend), audioOutput: true),
             new SettingPage("accounts", "Accounts", "OurTaiko accounts for 1P and 2P", _ => new[]
             {
                 new SettingGroup("1P", Account(0)),
@@ -289,9 +294,9 @@ namespace OurTaiko
                 Volume("master-volume", "Master", "Overall volume.", v => v.master, (v, n) => v.master = n),
                 Volume("bgm-volume", "BGM", "Music in menus and the result screen.", v => v.bgm, (v, n) => v.bgm = n),
                 Volume("track-volume", "Track", "Song playback and song previews.", v => v.track, (v, n) => v.track = n),
-                Volume("drum-volume", "Drum", "Don and ka during gameplay. Changing it plays a don.", v => v.drum, (v, n) => v.drum = n),
+                Volume("drum-volume", "Drum", "Don and ka during gameplay. Changing it plays a don.", v => v.drum, (v, n) => v.drum = n).Previews(AudioGroup.Drum),
                 Volume("effects-volume", "Effects", "Menu feedback, balloon pops and result effects.", v => v.effects, (v, n) => v.effects = n),
-                Volume("voice-volume", "Voice", "Entry, song selection, combo and result voices.", v => v.voice, (v, n) => v.voice = n));
+                Volume("voice-volume", "Voice", "Entry, song selection, combo and result voices.", v => v.voice, (v, n) => v.voice = n).Previews(AudioGroup.Voice));
 
             var output = new List<SettingRow>
             {

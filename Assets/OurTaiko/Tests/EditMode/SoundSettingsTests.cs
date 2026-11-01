@@ -76,6 +76,19 @@ namespace OurTaiko.Tests
             Assert.That(nav.Page.Rows.Single(r => r.Id == "sample-rate").Status, Is.EqualTo("kept"), "Statuses survive the rebuild.");
         }
 
+        // The overlay previews a volume through the row's group and shows the output banner on the
+        // page that says so; neither is keyed on a row or page id.
+        [Test]
+        public void VolumeRowsNamePreviewGroupsAndTheSoundPageShowsTheOutput()
+        {
+            var pages = SettingsCatalog.Pages(SoundPlatform.Desktop);
+            Assert.That(pages.Where(p => p.ShowsAudioOutput).Select(p => p.Title), Is.EqualTo(new[] { "Sound" }));
+            var rows = Rows(SoundPlatform.Desktop);
+            Assert.That(rows.Single(r => r.Label == "Drum").Preview, Is.EqualTo(AudioGroup.Drum));
+            Assert.That(rows.Single(r => r.Label == "Voice").Preview, Is.EqualTo(AudioGroup.Voice));
+            Assert.That(rows.Where(r => r.Preview != null).Count(), Is.EqualTo(2), "Only the drum and voice volumes preview.");
+        }
+
         [Test]
         public void BackendChangesPreserveAdvancedConfiguration()
         {

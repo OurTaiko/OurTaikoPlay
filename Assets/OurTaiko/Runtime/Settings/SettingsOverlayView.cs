@@ -340,7 +340,7 @@ namespace OurTaiko
             breadcrumb.text = nav.Page != null ? "›  " + nav.Page.Title : "";
             if (banner != null)
             {
-                bannerBox.gameObject.SetActive(sound != null && nav.Page?.Id == "sound");
+                bannerBox.gameObject.SetActive(sound != null && nav.Page?.ShowsAudioOutput == true);
                 banner.text = sound ?? "";
                 bannerBox.color = soundPending ? Alpha(Amber, 0.12f) : new Color(1, 1, 1, 0.05f);
                 Recolor(banner, soundPending ? Amber : Ink);
@@ -438,7 +438,7 @@ namespace OurTaiko
             Top(pageTitle.rectTransform, 0, 36, 0, 66);
             pageSubtitle = Label("Subtitle", list, nav.Page.Subtitle, 27, Muted, TextAlignmentOptions.TopLeft);
             Top(pageSubtitle.rectTransform, 0, 102, 0, 40);
-            if (nav.Page.Id == "sound")
+            if (nav.Page.ShowsAudioOutput)
             {
                 bannerBox = SettingsShapes.Box("Output", list, new Color(1, 1, 1, 0.05f), 24);
                 Top(bannerBox.rectTransform, 0, 168, 0, 84);

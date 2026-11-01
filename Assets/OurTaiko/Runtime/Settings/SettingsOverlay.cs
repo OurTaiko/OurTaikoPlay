@@ -224,8 +224,7 @@ namespace OurTaiko
                 case SettingsNavigator.Result.Changed:
                     SettingManager.EnsureInstance().Set(Navigator.Settings);
                     var row = Navigator.Row;
-                    if (row?.Id == "drum-volume") sfx.PlayAudioOneShot(don, AudioGroup.Drum);
-                    else if (row?.Id == "voice-volume" && previewVoice != null) sfx.PlayAudioOneShot(previewVoice, AudioGroup.Voice);
+                    if (row?.Preview is AudioGroup group && PreviewClip(group) is AudioClip preview) sfx.PlayAudioOneShot(preview, group);
                     else Play(row?.Kind == SettingKind.Slider || from == SettingsZone.Rows && row?.IsAdjustable == true ? ka : don);
                     break;
                 case SettingsNavigator.Result.Action:
@@ -290,7 +289,7 @@ namespace OurTaiko
                 catch (Exception reload) { Log.Warn("Scene", reload.Message); }
                 if (this == null || Navigator != null) return;
                 Show();
-                Navigator.TapPage(Navigator.Pages.ToList().FindIndex(p => p.Id == "sound"));
+                Navigator.TapPage(Navigator.Pages.ToList().FindIndex(p => p.ShowsAudioOutput));
                 Navigator.Confirm();
                 status = error.Message;
                 Refresh();
@@ -364,6 +363,14 @@ namespace OurTaiko
         }
 
         SettingRow RowById(string id) => Navigator?.Pages.SelectMany(p => p.Rows).FirstOrDefault(r => r.Id == id);
+
+        // What a volume row plays through its group when it changes; null when there is no clip for it.
+        AudioClip PreviewClip(AudioGroup group) => group switch
+        {
+            AudioGroup.Drum => don,
+            AudioGroup.Voice => previewVoice,
+            _ => null,
+        };
 
         void Play(AudioClip clip)
         {
