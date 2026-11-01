@@ -254,6 +254,13 @@ namespace OurTaiko
             return Result.Moved;
         }
 
+        // Touch: a row's own button (Open, +, Run) focuses the row and confirms it in one tap.
+        public Result OpenRow(int index)
+        {
+            var tapped = TapRow(index);
+            return tapped == Result.Moved ? Confirm() : tapped;
+        }
+
         // Touch: a row's own control (a switch, a stepper button, a choice, a slider) changes it at once.
         public Result SetRow(int index, int value)
         {

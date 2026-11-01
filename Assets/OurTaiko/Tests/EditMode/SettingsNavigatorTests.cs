@@ -279,6 +279,30 @@ namespace OurTaiko.Tests
             Assert.That(nav.TapPage(nav.Pages.Count), Is.EqualTo(SettingsNavigator.Result.Close));
         }
 
+        // A row's own button (Open, +, Run) works from anywhere on the page: it focuses the row and
+        // confirms it in one go, and on the focused row it is the same as confirming.
+        [Test]
+        public void ARowsOwnButtonFocusesAndConfirmsInOneTap()
+        {
+            var nav = OnPage("general");
+            nav.Back();
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
+            Assert.That(nav.OpenRow(1), Is.EqualTo(SettingsNavigator.Result.Entered), "From the rail: focus the row, open its sheet.");
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Sheet));
+            Assert.That(nav.Row.Id, Is.EqualTo("log-level"));
+            nav.Back();
+            Assert.That(nav.OpenRow(1), Is.EqualTo(SettingsNavigator.Result.Entered), "On the focused row: confirm.");
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Sheet));
+            Assert.That(nav.OpenRow(0), Is.EqualTo(SettingsNavigator.Result.Entered), "From the sheet: the other row's sheet.");
+            Assert.That(nav.Row.Id, Is.EqualTo("language"));
+            Assert.That(nav.OpenRow(9), Is.EqualTo(SettingsNavigator.Result.None), "No such row.");
+
+            var accounts = OnPage("accounts");
+            int refresh = accounts.Page.Rows.ToList().FindIndex(r => r.Id == SettingsCatalog.RefreshSongList);
+            Assert.That(accounts.OpenRow(refresh), Is.EqualTo(SettingsNavigator.Result.Action));
+            Assert.That(accounts.PendingAction, Is.EqualTo(SettingsCatalog.RefreshSongList));
+        }
+
         [Test]
         public void TheNavigatorWorksOnACopy()
         {

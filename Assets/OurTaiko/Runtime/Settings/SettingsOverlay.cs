@@ -84,8 +84,7 @@ namespace OurTaiko
             View.Build();
             View.TapPage = i => Run(() => Navigator.TapPage(i));
             View.TapRow = i => Run(() => Navigator.TapRow(i));
-            // A row's own button: focus it and confirm it in one tap.
-            View.OpenRow = i => Run(() => Navigator.TapRow(i) is var r && r == SettingsNavigator.Result.Moved ? Navigator.Confirm() : r);
+            View.OpenRow = i => Run(() => Navigator.OpenRow(i));
             View.SetRow = (i, value) => Run(() => Navigator.SetRow(i, value));
             View.TapSheet = i => Run(() => Navigator.TapSheet(i));
             View.TapShade = () => { if (Navigator != null && Navigator.Zone is SettingsZone.Sheet or SettingsZone.Capture or SettingsZone.Typing) Run(() => Navigator.Back()); };
