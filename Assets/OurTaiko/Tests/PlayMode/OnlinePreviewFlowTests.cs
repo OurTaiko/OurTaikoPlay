@@ -20,14 +20,14 @@ namespace OurTaiko.Tests
         FanmadeEndpoint endpoint;
         long downloaded;
         int requests, wrongMethod, delayMs;
-        byte[] audio;
+        byte[] audio, previewAudio;
         bool failDownload;
         [SetUp] public void Setup()
         {
             downloaded = requests = wrongMethod = delayMs = 0; failDownload = false;
             api = new FanmadeFixture();
             origin = new FanmadeFixture();
-            audio = File.ReadAllBytes("Assets/OurTaiko/Audio/song_select/bgm.ogg");
+            audio = previewAudio = File.ReadAllBytes("Assets/OurTaiko/Audio/song_select/bgm.ogg");
             api.Charts.Add(new FanmadeFixture.Chart { Title = "Streaming preview", Audio = audio, DemoStart = 15,
                 Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()) });
             api.Manifest = c =>
@@ -35,7 +35,7 @@ namespace OurTaiko.Tests
                 JObject R(byte[] bytes, string type) => new JObject { ["url"] = origin.BaseUrl + "/audio?get", ["headUrl"] = origin.BaseUrl + "/audio?head",
                     ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
                 return new JObject { ["chartId"] = c.Id,
-                    ["resources"] = new JObject { ["tja"] = R(c.Tja, "application/octet-stream"), ["audio"] = R(c.Audio, "audio/ogg"), ["preview"] = R(audio, "audio/ogg") } };
+                    ["resources"] = new JObject { ["tja"] = R(c.Tja, "application/octet-stream"), ["audio"] = R(c.Audio, "audio/ogg"), ["preview"] = R(previewAudio, "audio/ogg") } };
             };
             origin.CustomRequest = ctx =>
             {
@@ -87,6 +87,14 @@ namespace OurTaiko.Tests
         }
         [UnityTest] public IEnumerator NativeSelectionPlaysPreview() { yield return PlaySelection(); }
         [UnityTest] public IEnumerator FailedPreviewKeepsBgmPlaying() { failDownload = true; yield return PlaySelection(); }
+        // Issue #44: a 1.7 s excerpt has ended and restarted after three seconds; the BGM stays paused.
+        [UnityTest] public IEnumerator PreviewLoopsWithoutTheBgm()
+        {
+            // The origin serves one file for every resource; the manifest's preview hash follows it.
+            audio = previewAudio = File.ReadAllBytes("Assets/OurTaiko/Audio/song_select/entry_2p_add.ogg");
+            loops = true; yield return PlaySelection();
+        }
+        bool loops;
         IEnumerator PlaySelection()
         {
             var settings = SettingManager.EnsureInstance();
@@ -124,9 +132,18 @@ namespace OurTaiko.Tests
             while (!select.IsPreviewPlaying && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
             Assert.That(select.IsPreviewPlaying, Is.True); Assert.That(online.IsOnline(select.Manager.FocusedSong), Is.True);
             Assert.That(select.preview.AudioPosition(), Is.LessThan(5), "Must start the excerpt at zero, not DEMOSTART=15");
-            Assert.That(select.bgm.IsAudioPlaying(), Is.True);
+            Assert.That(select.bgm.IsAudioPlaying(), Is.False, "The selection BGM pauses while the preview sounds.");
+            if (loops)
+            {
+                double length = select.preview.AudioLength();
+                Assert.That(length, Is.InRange(1.5, 1.9));
+                for (int i = 0; i < 30; i++) { yield return new WaitForSecondsRealtime(.1f); Assert.That(select.bgm.IsAudioPlaying(), Is.False, "The BGM never sounds between loops."); }
+                Assert.That(select.IsPreviewPlaying, Is.True, "The preview restarted from its start.");
+                Assert.That(select.preview.AudioPosition(), Is.LessThan(length));
+            }
             select.Manager.Left(); yield return new WaitForSecondsRealtime(.3f);
             Assert.That(select.IsPreviewPlaying, Is.False);
+            Assert.That(select.bgm.IsAudioPlaying(), Is.True, "The selection BGM resumes once the preview stops.");
             int atStop = requests; yield return new WaitForSecondsRealtime(.3f); Assert.That(requests, Is.EqualTo(atStop));
             Assert.That(wrongMethod, Is.Zero);
             Assert.That(AudioEngine.Instance.Available, Is.True);

@@ -128,6 +128,11 @@ namespace OurTaiko
             pending = false; seek = 0; source?.Stop(); main?.Stop();
             foreach (var sample in effects.Values) sample.Stop();
         }
+        // Stops the main sound where it is, so the next Play resumes from there.
+        public void Pause()
+        {
+            double at = Position; Stop(); seek = at;
+        }
         public void Release()
         {
             ReleaseMain();
@@ -159,6 +164,7 @@ namespace OurTaiko
             var bus = source.GetComponent<AudioBus>();
             if (bus != null) bus.Stop(); else source.Stop();
         }
+        public static void PauseAudio(this AudioSource source) { if (source != null) AudioBus.Get(source).Pause(); }
         public static bool IsAudioPlaying(this AudioSource source) => source != null && AudioBus.Get(source).IsPlaying;
         public static double AudioPosition(this AudioSource source) => AudioBus.Get(source).Position;
         public static void SeekAudio(this AudioSource source, double seconds) => AudioBus.Get(source).Seek(seconds);

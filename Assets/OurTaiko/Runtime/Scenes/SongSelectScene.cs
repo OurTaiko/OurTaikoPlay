@@ -474,7 +474,7 @@ namespace OurTaiko
         // ---------------------------------------------------------------- preview / bgm
 
         SongPreview songPreview;
-        SongPreview Preview => songPreview ??= new SongPreview(this, preview);
+        SongPreview Preview => songPreview ??= new SongPreview(this, preview, bgm);
 
         void UpdatePreview(double now)
         {
