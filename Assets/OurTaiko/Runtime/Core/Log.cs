@@ -19,9 +19,17 @@ namespace OurTaiko
     public static class Log
     {
         // The Editor and development builds show Debug messages until the settings say otherwise.
-        // Debug.isDebugBuild is true in both; it replaces the deprecated DEVELOPMENT_BUILD symbol.
-        public static readonly LogLevel DefaultLevel = UnityEngine.Debug.isDebugBuild ? LogLevel.Debug : LogLevel.Info;
-        static int minimum = (int)DefaultLevel;
+        // Debug.isDebugBuild is true in both (it replaces the deprecated DEVELOPMENT_BUILD symbol) but
+        // may only be read on the main thread, while Log's type may first be touched by any thread:
+        // so a player reads it in ResetStatics, at startup on the main thread, not in a field
+        // initializer. Until then, and always in the Editor, the build kind decides.
+#if UNITY_EDITOR
+        const LogLevel BuildDefault = LogLevel.Debug;
+#else
+        const LogLevel BuildDefault = LogLevel.Info;
+#endif
+        public static LogLevel DefaultLevel { get; private set; } = BuildDefault;
+        static int minimum = (int)BuildDefault;
         public static LogLevel MinimumLevel
         {
             get => (LogLevel)Volatile.Read(ref minimum);
@@ -75,7 +83,11 @@ namespace OurTaiko
             => Enum.TryParse(name, true, out LogLevel level) && Enum.IsDefined(typeof(LogLevel), level) ? level : fallback;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => MinimumLevel = DefaultLevel;
+        static void ResetStatics()
+        {
+            DefaultLevel = UnityEngine.Debug.isDebugBuild ? LogLevel.Debug : LogLevel.Info;
+            MinimumLevel = DefaultLevel;
+        }
     }
 
     // The session's log file: Logs/ourtaiko-<start time>.log, written by a background thread so
