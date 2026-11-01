@@ -109,14 +109,10 @@ namespace OurTaiko
             var header = Node("Header", panel);
             Stretch(header, 0, 0, 0, -1); header.anchorMin = new Vector2(0, 1); header.sizeDelta = new Vector2(0, HeaderHeight);
             header.anchoredPosition = new Vector2(0, -HeaderHeight / 2);
-            var mark = SettingsShapes.Dot("Mark", header, Don, 48);
-            Pin(mark.rectTransform, 36, HeaderHeight / 2, left: true);
-            var inner = SettingsShapes.Dot("MarkInner", mark.transform, Color.white, 24, ring: true);
-            inner.rectTransform.anchorMin = inner.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             var title = Label("Title", header, "Settings", 36, Ink, TextAlignmentOptions.MidlineLeft);
-            Pin(title.rectTransform, 102, HeaderHeight / 2, left: true, width: 220);
+            Pin(title.rectTransform, 36, HeaderHeight / 2, left: true, width: 220);
             breadcrumb = Label("Breadcrumb", header, "", 27, Section, TextAlignmentOptions.MidlineLeft);
-            Pin(breadcrumb.rectTransform, 102 + title.preferredWidth + 21, HeaderHeight / 2, left: true, width: 700);
+            Pin(breadcrumb.rectTransform, 36 + title.preferredWidth + 21, HeaderHeight / 2, left: true, width: 700);
             for (int seat = 1; seat >= 0; seat--)
             {
                 var chip = SettingsShapes.Box("Seat" + (seat + 1), header, new Color(1, 1, 1, 0.06f), 36);
