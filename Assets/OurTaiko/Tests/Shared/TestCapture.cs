@@ -6,11 +6,13 @@ using UnityEngine.SceneManagement;
 namespace OurTaiko.Tests
 {
     // Renders the active scene's Canvas (or the given one) through the main camera into
-    // TestResults/<name>; a scene without a camera borrows a temporary one.
+    // TestResults/<name>; a scene without a camera borrows a temporary one. The play scenes'
+    // PlayfieldMask canvas only letterboxes the screen, so it is not the scene's canvas.
     public static class TestCapture
     {
         public static Canvas SceneCanvas() => Object.FindObjectsByType<Canvas>()
-            .Single(canvas => canvas.isRootCanvas && canvas.gameObject.scene == SceneManager.GetActiveScene());
+            .Single(canvas => canvas.isRootCanvas && canvas.gameObject.scene == SceneManager.GetActiveScene()
+                && !canvas.TryGetComponent<PlayfieldMask>(out _));
 
         public static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null, Canvas canvas = null)
         {

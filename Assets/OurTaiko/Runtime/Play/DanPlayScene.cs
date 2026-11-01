@@ -86,6 +86,7 @@ namespace OurTaiko
         IEnumerator Start()
         {
             switcher = SceneSwitcher.EnsureInstance();
+            PlayfieldMask.Cover(this);
             switcher.PracticeMode = false; switcher.TwoPlayers = false;
             switcher.SceneChanging += PrepareToLeave;
             Run = switcher.CurrentDan;
