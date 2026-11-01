@@ -10,10 +10,13 @@ namespace OurTaiko
     public struct DanSongStats
     {
         public int Good, Ok, Bad, Rolls, Score, MaxCombo;
+        // Kept apart from Good/Ok/Bad as in PlaySession; a mine hit spoils a clean run.
+        public int AdLibGood, AdLibOk, Mines;
 
         public static DanSongStats operator +(DanSongStats a, DanSongStats b) => new DanSongStats
         {
             Good = a.Good + b.Good, Ok = a.Ok + b.Ok, Bad = a.Bad + b.Bad, Rolls = a.Rolls + b.Rolls,
+            AdLibGood = a.AdLibGood + b.AdLibGood, AdLibOk = a.AdLibOk + b.AdLibOk, Mines = a.Mines + b.Mines,
             Score = a.Score + b.Score, MaxCombo = Math.Max(a.MaxCombo, b.MaxCombo),
         };
     }
@@ -191,7 +194,7 @@ namespace OurTaiko
             int check = Enumerable.Range(0, Course.Exams.Count).Min(i => Tier(i, reached));
             var total = Total;
             if (check == 0) return 0;
-            int clean = total.Bad > 0 ? 0 : total.Ok > 0 ? 1 : 2;
+            int clean = total.Bad > 0 || total.Mines > 0 ? 0 : total.Ok > 0 ? 1 : 2;
             return (check == 2 ? 4 : 1) + clean;
         }
     }

@@ -33,6 +33,26 @@ namespace OurTaiko.Tests
             }
         }
 
+        // OpenTaiko: a mine hit loses the full combo (nMine > 0), and so the donderful one.
+        [Test] public void AHitLosesTheFullCombo()
+        {
+            var session = Session("1C1C,");
+            Assert.That(session.Hit(false, 0), Is.EqualTo(Judgment.Good));
+            Assert.That(session.Hit(false, 0.5), Is.EqualTo(Judgment.Bad));
+            Assert.That(session.Hit(false, 1), Is.EqualTo(Judgment.Good));
+            session.Advance(3, false);
+            var result = PlayResult.From(session, "test", false);
+            Assert.That(result.Bad, Is.Zero);
+            Assert.That(result.Mines, Is.EqualTo(1));
+            Assert.That(result.StoredCrown, Is.Not.EqualTo(Crown.FullCombo).And.Not.EqualTo(Crown.DonderfulCombo));
+
+            var avoided = Session("1C1C,");
+            Assert.That(avoided.Hit(false, 0), Is.EqualTo(Judgment.Good));
+            Assert.That(avoided.Hit(false, 1), Is.EqualTo(Judgment.Good));
+            avoided.Advance(3, false);
+            Assert.That(PlayResult.From(avoided, "test", false).StoredCrown, Is.EqualTo(Crown.DonderfulCombo));
+        }
+
         [Test] public void TheGaugeStopsAtZero()
         {
             var session = Session("C000,");

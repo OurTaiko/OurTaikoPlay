@@ -548,6 +548,9 @@ namespace OurTaiko.Online
             body["good"] = score.Good; body["ok"] = score.Ok; body["bad"] = score.Bad; body["score"] = score.Score;
             body["drumroll"] = score.Drumroll; body["max_combo"] = score.MaxCombo;
             body["ClearStatus"] = score.ClearStatus;
+            // Sent only when there are any, so a play without them reads the same as before they existed.
+            if (score.AdLibGood > 0 || score.AdLibOk > 0) body["adlib"] = new JArray(score.AdLibGood, score.AdLibOk);
+            if (score.Mines > 0) body["mines"] = score.Mines;
             body["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull();
             try
             {

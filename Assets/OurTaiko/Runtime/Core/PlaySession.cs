@@ -44,7 +44,12 @@ namespace OurTaiko
         public int Ok { get; private set; }
         public int Bad { get; private set; }
         public int Rolls { get; private set; }
-        // Mines hit: each breaks the combo and costs gauge, but is not a 不可.
+        // Ad-Libs hit 良 and 可: they score, combo and fill the gauge as small notes but are counted
+        // apart from Good and Ok (OpenTaiko nADLIB), so the judge counts are the chart's notes only.
+        public int AdLibGood { get; private set; }
+        public int AdLibOk { get; private set; }
+        // Mines hit (OpenTaiko nMine): each breaks the combo, costs gauge and loses a full combo,
+        // but is not a 不可.
         public int MinesHit { get; private set; }
         public double Gauge => gauge.Value;
         public double GaugePoints => gauge.Points;
@@ -509,7 +514,8 @@ namespace OurTaiko
             }
             else
             {
-                if (result == Judgment.Good) Good++; else Ok++;
+                if (Chart.Notes[i].IsAdLib) { if (result == Judgment.Good) AdLibGood++; else AdLibOk++; }
+                else if (result == Judgment.Good) Good++; else Ok++;
                 Combo++; MaxCombo = Math.Max(MaxCombo, Combo);
                 if (Combo == 50) expressionEighthStart = NoteExpression.StartBeat(Chart.Notes[i].Beat);
                 if (Combo == 150) expressionSixteenthStart = NoteExpression.StartBeat(Chart.Notes[i].Beat);

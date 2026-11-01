@@ -104,7 +104,8 @@ namespace OurTaiko
         {
             var list = new JArray();
             foreach (var s in songs)
-                list.Add(new JObject { ["good"] = s.Good, ["ok"] = s.Ok, ["bad"] = s.Bad, ["rolls"] = s.Rolls, ["score"] = s.Score, ["combo"] = s.MaxCombo });
+                list.Add(new JObject { ["good"] = s.Good, ["ok"] = s.Ok, ["bad"] = s.Bad, ["rolls"] = s.Rolls, ["score"] = s.Score, ["combo"] = s.MaxCombo,
+                    ["adlib"] = new JArray(s.AdLibGood, s.AdLibOk), ["mines"] = s.Mines });
             return list.ToString(Newtonsoft.Json.Formatting.None);
         }
 
@@ -119,6 +120,10 @@ namespace OurTaiko
                     {
                         Good = item.Value<int?>("good") ?? 0, Ok = item.Value<int?>("ok") ?? 0, Bad = item.Value<int?>("bad") ?? 0,
                         Rolls = item.Value<int?>("rolls") ?? 0, Score = item.Value<int?>("score") ?? 0, MaxCombo = item.Value<int?>("combo") ?? 0,
+                        // Records from before these were kept read 0.
+                        AdLibGood = item["adlib"] is JArray a && a.Count == 2 ? a[0].Value<int>() : 0,
+                        AdLibOk = item["adlib"] is JArray b && b.Count == 2 ? b[1].Value<int>() : 0,
+                        Mines = item.Value<int?>("mines") ?? 0,
                     });
             }
             catch (Newtonsoft.Json.JsonException) { songs.Clear(); }

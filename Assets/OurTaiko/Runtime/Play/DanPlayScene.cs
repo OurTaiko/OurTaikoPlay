@@ -248,6 +248,7 @@ namespace OurTaiko
         DanSongStats Stats() => new DanSongStats
         {
             Good = Session.Good, Ok = Session.Ok, Bad = Session.Bad, Rolls = Session.Rolls, Score = Session.Score, MaxCombo = songMaxCombo,
+            AdLibGood = Session.AdLibGood, AdLibOk = Session.AdLibOk, Mines = Session.MinesHit,
         };
 
         void EndSong()

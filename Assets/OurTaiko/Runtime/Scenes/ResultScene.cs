@@ -138,6 +138,7 @@ namespace OurTaiko
             {
                 Good = result.Good, Ok = result.Ok, Bad = result.Bad, Score = result.Score,
                 Drumroll = result.Rolls, MaxCombo = result.MaxCombo, ClearStatus = (int)result.StoredCrown,
+                AdLibGood = result.AdLibGood, AdLibOk = result.AdLibOk, Mines = result.Mines,
             }, record, seat, result.Side);
         }
 
