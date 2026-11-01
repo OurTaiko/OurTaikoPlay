@@ -200,9 +200,12 @@ namespace OurTaiko
         {
             var v = Views;
             if (result == Judgment.Bad) comboCarried = false;
+            var judged = Session.Chart.Notes[index];
             if (result != Judgment.Roll)
             {
-                SharedGauge?.ApplyJudgment(result, Session.GaugeRoute(index));
+                // A mine is shown as 不可 but costs its own damage.
+                if (judged.IsMine) SharedGauge?.ApplyMine();
+                else SharedGauge?.ApplyJudgment(result, Session.GaugeRoute(index));
                 v.soulGauge.SetPoints(GaugePoints, ChartTime);
             }
             if (AutoPlay)
@@ -216,8 +219,8 @@ namespace OurTaiko
                 nextAutoRight = !nextAutoRight;
             }
             SpawnArc(index, result);
-            var judged = Session.Chart.Notes[index];
             if (judged.IsAdLib && scene.adLibHit != null) scene.hitAudio.PlayAudioOneShot(scene.adLibHit, AudioGroup.Drum);
+            if (judged.IsMine && scene.mineHit != null) scene.hitAudio.PlayAudioOneShot(scene.mineHit, AudioGroup.Drum);
             bool big = judged.IsBigNote || judged.IsKadon;
             double judgedAt = ChartTime;
             v.hitFace.Play(result, big, judgedAt);

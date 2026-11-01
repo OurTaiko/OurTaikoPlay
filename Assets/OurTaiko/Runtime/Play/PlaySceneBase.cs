@@ -11,6 +11,8 @@ namespace OurTaiko
         public AudioClip don, ka, balloonPop, kusudamaPop;
         [Tooltip("Played on top of the drum when an Ad-Lib is hit (OpenTaiko's Adlib sound). Left empty until we have our own.")]
         public AudioClip adLibHit;
+        [Tooltip("Played on top of the drum when a mine is hit (OpenTaiko's bomb sound). Left empty until we have our own.")]
+        public AudioClip mineHit;
         public HitSoundLibrary hitSounds;
         public Sprite[] laneDifficultySprites;
         public Sprite[] noteSprites;

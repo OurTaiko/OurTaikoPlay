@@ -79,6 +79,15 @@ namespace OurTaiko
             }
         }
 
+        // A mine hit (OpenTaiko MineDamage under the default BOOMRULE, SCAL 4): four percent off,
+        // whatever the course and route.
+        public const float MineDamage = 4f;
+        public void ApplyMine()
+        {
+            percent = Math.Round(percent - MineDamage, 5, MidpointRounding.ToEven);
+            percent = Math.Max(0.0, Math.Min(100.0, percent));
+        }
+
         // route: the note's own route inside a branch section, else the route being played.
         public void ApplyJudgment(Judgment judgment, BranchRoute route = BranchRoute.Normal)
         {

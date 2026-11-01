@@ -135,7 +135,7 @@ namespace OurTaiko
                 title.text = displayInfo.Title;
                 ShowSubtitleLines(displayInfo);
                 music.SetAudioSong(song);
-                hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, adLibHit);
+                hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, adLibHit, mineHit);
                 // Both seats play one file, so the song's one BGMOVIE plays behind both lanes.
                 if (movie != null) { movieOffset = song.MovieOffset(); movie.Load(song.moviePath); }
             }
