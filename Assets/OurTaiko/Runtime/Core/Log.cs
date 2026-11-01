@@ -18,19 +18,15 @@ namespace OurTaiko
     // GamePaths.Root/Logs with a timestamp, the level and the thread. Callable from any thread.
     public static class Log
     {
+        // The Editor and development builds show Debug messages until the settings say otherwise.
+        // Debug.isDebugBuild is true in both; it replaces the deprecated DEVELOPMENT_BUILD symbol.
+        public static readonly LogLevel DefaultLevel = UnityEngine.Debug.isDebugBuild ? LogLevel.Debug : LogLevel.Info;
         static int minimum = (int)DefaultLevel;
         public static LogLevel MinimumLevel
         {
             get => (LogLevel)Volatile.Read(ref minimum);
             set => Volatile.Write(ref minimum, (int)value);
         }
-
-        // The Editor and development builds show Debug messages until the settings say otherwise.
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        public const LogLevel DefaultLevel = LogLevel.Debug;
-#else
-        public const LogLevel DefaultLevel = LogLevel.Info;
-#endif
 
         public static bool Enabled(LogLevel level) => level < LogLevel.Off && level >= MinimumLevel;
 
