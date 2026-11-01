@@ -42,14 +42,39 @@ namespace OurTaiko.Tests
         {
             var nav = OnPage("play");
             Assert.That(nav.Row.Id, Is.EqualTo("audio-offset"));
-            Assert.That(nav.Move(-1), Is.EqualTo(SettingsNavigator.Result.Bumped));
+            Assert.That(nav.Move(-1, repeat: true), Is.EqualTo(SettingsNavigator.Result.Bumped), "A held key's repeats stop at the first row.");
             Assert.That(nav.Move(10), Is.EqualTo(SettingsNavigator.Result.Moved));
             Assert.That(nav.Row.Id, Is.EqualTo("drum-pad"), "The last row, not a Return entry.");
-            Assert.That(nav.Move(1), Is.EqualTo(SettingsNavigator.Result.Bumped));
+            Assert.That(nav.Move(1, repeat: true), Is.EqualTo(SettingsNavigator.Result.Bumped));
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
             Assert.That(nav.Back(), Is.EqualTo(SettingsNavigator.Result.Returned));
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
             Assert.That(nav.Page.Id, Is.EqualTo("play"), "The page stays selected.");
             Assert.That(nav.Back(), Is.EqualTo(SettingsNavigator.Result.Close));
+        }
+
+        [Test]
+        public void AFreshPressPastEitherEndReturnsToTheRail()
+        {
+            var nav = OnPage("play");
+            Assert.That(nav.Move(-1), Is.EqualTo(SettingsNavigator.Result.Returned), "Ka above the first row leaves the page.");
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
+            Assert.That(nav.Page.Id, Is.EqualTo("play"), "The page stays selected.");
+            nav.Confirm();
+            nav.Move(3);
+            Assert.That(nav.Move(1), Is.EqualTo(SettingsNavigator.Result.Returned), "Ka below the last row too.");
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
+
+            // Adjusting and the sheet still stop at their ends.
+            nav.Confirm();
+            nav.Confirm();
+            Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Adjust));
+            Assert.That(nav.Move(-1000), Is.EqualTo(SettingsNavigator.Result.Moved));
+            nav.Back();
+            var general = OnPage("general");
+            general.Confirm();
+            Assert.That(general.Move(-1), Is.EqualTo(SettingsNavigator.Result.Bumped));
+            Assert.That(general.Zone, Is.EqualTo(SettingsZone.Sheet));
         }
 
         [Test]

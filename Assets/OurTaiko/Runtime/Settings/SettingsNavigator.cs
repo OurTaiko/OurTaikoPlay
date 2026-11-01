@@ -10,8 +10,9 @@ namespace OurTaiko
     public enum SettingsZone { Rail, Rows, Adjust, Sheet, Typing, Capture }
 
     // The settings overlay's navigation, drum first. Ka (or up/down) moves within the focused list
-    // and stops at either end (Bumped) instead of wrapping; don (or Enter) confirms; Back (Esc) steps
-    // out one level. On the rail don opens the page; on a row it flips a toggle, starts adjusting a
+    // and stops at either end (Bumped) instead of wrapping; a fresh press past the first or last row
+    // returns to the rail, so the drum alone can leave a page (a held key's repeats only stop there).
+    // Don (or Enter) confirms; Back (Esc) steps out one level. On the rail don opens the page; on a row it flips a toggle, starts adjusting a
     // choice or number (ka then changes it, don keeps it, Back restores it), opens the sheet of a
     // list or key row, runs an action or starts typing. Left/right adjust a choice or number row
     // directly; left from any other row returns to the rail. The rail ends with Close.
@@ -49,8 +50,8 @@ namespace OurTaiko
             : Row?.Options ?? Array.Empty<string>();
         public IReadOnlyList<string> SheetNotes => Row?.Kind == SettingKind.Keys ? Array.Empty<string>() : Row?.OptionNotes ?? Array.Empty<string>();
 
-        // Ka or up/down.
-        public Result Move(int delta)
+        // Ka or up/down; repeat is a held key's repeat rather than a new press.
+        public Result Move(int delta, bool repeat = false)
         {
             if (delta == 0) return Result.None;
             switch (Zone)
@@ -58,7 +59,10 @@ namespace OurTaiko
                 case SettingsZone.Rail:
                     return Step(PageIndex, delta, Pages.Count + 1, i => { PageIndex = i; RowIndex = 0; });
                 case SettingsZone.Rows:
-                    return Step(RowIndex, delta, Page.Rows.Count, i => RowIndex = i);
+                    var moved = Step(RowIndex, delta, Page.Rows.Count, i => RowIndex = i);
+                    if (moved != Result.Bumped || repeat) return moved;
+                    Zone = SettingsZone.Rail;
+                    return Result.Returned;
                 case SettingsZone.Adjust:
                     int next = Row.Move(AdjustValue, delta);
                     if (next == AdjustValue) return Result.Bumped;

@@ -174,8 +174,8 @@ namespace OurTaiko
 
             if (Down(InputKey.LeftDon) || Down(InputKey.RightDon) || Down(InputKey.Confirm)) Confirm();
             else if (Down(InputKey.Back)) Back();
-            else if (Press(InputKey.LeftKa) || Press(InputKey.MenuUp)) Move(-1);
-            else if (Press(InputKey.RightKa) || Press(InputKey.MenuDown)) Move(1);
+            else if (Press(InputKey.LeftKa) || Press(InputKey.MenuUp)) Move(-1, repeating);
+            else if (Press(InputKey.RightKa) || Press(InputKey.MenuDown)) Move(1, repeating);
             else if (Press(InputKey.MenuLeft)) Side(-1);
             else if (Press(InputKey.MenuRight)) Side(1);
             if (held is InputKey key0 && !InputManager.GetKey(key0)) held = null;
@@ -183,19 +183,22 @@ namespace OurTaiko
 
         // The keys' actions, also for tests: don, ka (left -1, right +1), left/right arrows and Back.
         public void Confirm() => Run(() => Navigator.Confirm());
-        public void Move(int delta) => Run(() => Navigator.Move(delta));
+        public void Move(int delta, bool repeat = false) => Run(() => Navigator.Move(delta, repeat));
         public void Side(int delta) => Run(() => Navigator.Side(delta));
         public void Back() => Run(() => Navigator.Back());
 
         static bool Down(InputKey key) => InputManager.GetKeyDown(key);
 
-        // A first press, or a repeat while the same key is held.
+        // A first press, or a repeat while the same key is held (then repeating is set).
+        bool repeating;
         bool Press(InputKey key)
         {
             float now = Time.unscaledTime;
+            repeating = false;
             if (InputManager.GetKeyDown(key)) { held = key; heldAt = now; nextRepeat = now + RepeatDelay; return true; }
             if (held != key || !InputManager.GetKey(key) || now < nextRepeat) return false;
             nextRepeat = now + RepeatInterval(now - heldAt);
+            repeating = true;
             return true;
         }
 
