@@ -137,13 +137,16 @@ namespace OurTaiko
             Refresh(new GameSettings());
         }
 
-        // Keeps the rows whose ids are unchanged, so their statuses survive.
+        // Rebuilds every row from the settings (a description can depend on another row's value);
+        // the status of a row whose id is unchanged survives. Rows are therefore found by Id, never
+        // by reference, across a refresh.
         public void Refresh(GameSettings settings)
         {
             var old = Rows.ToDictionary(r => r.Id);
-            Groups = build(settings).Select(g => new SettingGroup(g.Title,
-                g.Rows.Select(r => old.TryGetValue(r.Id, out var kept) && kept.Kind == r.Kind ? kept : r).ToArray())).ToArray();
+            Groups = build(settings);
             Rows = Groups.SelectMany(g => g.Rows).ToArray();
+            foreach (var row in Rows)
+                if (old.TryGetValue(row.Id, out var was)) row.Status = was.Status;
         }
 
         public int GroupOf(int row)

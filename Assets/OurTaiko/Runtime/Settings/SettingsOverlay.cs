@@ -46,8 +46,8 @@ namespace OurTaiko
         int ignoreFrame = -1, openFrame = -1;
         InputKey? held;
         float heldAt, nextRepeat;
-        // The running settings action; closing cancels it.
-        SettingRow running;
+        // The row of the running settings action (by id: rows are rebuilt on every change); closing cancels it.
+        string runningId;
         CancellationTokenSource actionCancel;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -143,7 +143,7 @@ namespace OurTaiko
                 ? (accounts.Seats[seat].Nickname.Length > 0 ? accounts.Seats[seat].Nickname : accounts.Seats[seat].Username) : null;
             View.ShowSeats(Name(0), Name(1));
             foreach (var row in Navigator.Pages.SelectMany(p => p.Rows))
-                if (row.ActionId != null && row.ActionId.StartsWith(SettingsCatalog.SignOut) && row != running)
+                if (row.ActionId != null && row.ActionId.StartsWith(SettingsCatalog.SignOut) && row.Id != runningId)
                 {
                     string name = Name(row.ActionId[SettingsCatalog.SignOut.Length] - '0');
                     row.Status = name != null ? "Signed in: " + name : "Not signed in";
@@ -153,7 +153,7 @@ namespace OurTaiko
         void Update()
         {
             if (Navigator == null) return;
-            if (running != null)
+            if (runningId != null)
             {
                 string activity = OnlineManager.EnsureInstance().Activity;
                 if (activity.Length > 0 && status != activity) { status = activity; Refresh(); }
@@ -291,7 +291,7 @@ namespace OurTaiko
         async void RunAction(SettingRow row, string action, string text)
         {
             var online = OnlineManager.EnsureInstance();
-            if (running != null || online.IsBusy) { status = "Still busy with the previous request."; Refresh(); return; }
+            if (runningId != null || online.IsBusy) { status = "Still busy with the previous request."; Refresh(); return; }
             bool account = action.StartsWith(SettingsCatalog.SignIn) || action.StartsWith(SettingsCatalog.SignOut);
             int seat = account ? action[action.Length - 1] - '0' : 0;
             var settings = Navigator.Settings;
@@ -302,7 +302,7 @@ namespace OurTaiko
                 Refresh();
                 return;
             }
-            running = row;
+            runningId = row.Id;
             row.Status = "Working…";
             Refresh();
             actionCancel = new CancellationTokenSource();
@@ -342,12 +342,14 @@ namespace OurTaiko
             catch (Exception) { }
             finally { cancel.Dispose(); if (actionCancel == cancel) actionCancel = null; }
             if (this == null) return;
-            running = null;
-            row.Status = account ? "" : "Done";
+            runningId = null;
+            (RowById(row.Id) ?? row).Status = account ? "" : "Done";
             if (Navigator == null) return;
             ShowAccounts();
             Refresh();
         }
+
+        SettingRow RowById(string id) => Navigator?.Pages.SelectMany(p => p.Rows).FirstOrDefault(r => r.Id == id);
 
         void Play(AudioClip clip)
         {

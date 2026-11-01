@@ -408,16 +408,16 @@ namespace OurTaiko
             }
         }
 
-        // Rows are rebuilt when the page or its set of rows changes, not for a value change. A key
-        // row draws its keys as keycaps, so its keys are part of the signature (not just how many:
-        // Reset to Default can swap one key for another).
+        // Rows are rebuilt when the page, its set of rows or a row's text changes, not for a value
+        // change. A key row draws its keys as keycaps, so its keys are part of the signature (not
+        // just how many: Reset to Default can swap one key for another).
         static string Signature(SettingsNavigator nav)
         {
             if (nav.Page == null) return "";
             var text = new System.Text.StringBuilder();
             foreach (var row in nav.Page.Rows)
             {
-                text.Append(row.Id).Append('\n');
+                text.Append(row.Id).Append('\n').Append(row.Description).Append('\n');
                 if (row.Kind == SettingKind.Keys) text.Append(string.Join(" ", nav.Settings.general.keyboard.Get(row.Key))).Append('\n');
             }
             return text.ToString();
@@ -768,7 +768,8 @@ namespace OurTaiko
             public bool IsSection { get; private set; }
             public int Index { get; private set; }
             public float Height { get; private set; } = RowHeight;
-            readonly SettingRow row;
+            // The page's current row object; the pages rebuild their rows on every change.
+            SettingRow row;
             readonly Image box;
             readonly TextMeshProUGUI label, description;
             TextMeshProUGUI value;
@@ -946,6 +947,7 @@ namespace OurTaiko
             public void Show(SettingsNavigator nav, int listIndex, SettingsOverlayView view)
             {
                 if (IsSection) return;
+                if (nav.Page != null && Index < nav.Page.Rows.Count) row = nav.Page.Rows[Index];
                 bool focused = (nav.Zone == SettingsZone.Rows || nav.Zone == SettingsZone.Adjust) && nav.RowIndex == Index;
                 bool adjusting = focused && nav.Zone == SettingsZone.Adjust;
                 int current = row.HasValue ? (adjusting ? nav.AdjustValue : row.Get(nav.Settings)) : 0;

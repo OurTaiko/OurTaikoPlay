@@ -61,6 +61,21 @@ namespace OurTaiko.Tests
             Assert.That(Rows(SoundPlatform.Windows, AudioBackend.BassWASAPI).Select(r => r.Id), Has.Some.StartsWith("wasapi-"), "Windows still offers WASAPI.");
         }
 
+        // Sample Rate explains itself differently under WASAPI; the text must follow the backend.
+        [Test]
+        public void SwitchingBackendRefreshesDependentDescriptions()
+        {
+            var nav = new SettingsNavigator(SettingsCatalog.Pages(SoundPlatform.Windows), new GameSettings());
+            nav.Move(nav.Pages.ToList().FindIndex(p => p.Id == "sound")); nav.Confirm();
+            string Sample() => nav.Page.Rows.Single(r => r.Id == "sample-rate").Description;
+            Assert.That(Sample(), Does.StartWith("BASS initialization rate"), "Automatic is WASAPI on Windows.");
+            nav.Page.Rows.Single(r => r.Id == "sample-rate").Status = "kept";
+            var backend = nav.Page.Rows.Single(r => r.Id == "backend");
+            Assert.That(nav.SetRow(nav.Page.Rows.ToList().IndexOf(backend), backend.Options.ToList().IndexOf("BassSimple")), Is.EqualTo(SettingsNavigator.Result.Changed));
+            Assert.That(Sample(), Does.StartWith("Requested sample rate"));
+            Assert.That(nav.Page.Rows.Single(r => r.Id == "sample-rate").Status, Is.EqualTo("kept"), "Statuses survive the rebuild.");
+        }
+
         [Test]
         public void BackendChangesPreserveAdvancedConfiguration()
         {
