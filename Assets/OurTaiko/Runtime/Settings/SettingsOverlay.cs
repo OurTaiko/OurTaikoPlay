@@ -254,7 +254,11 @@ namespace OurTaiko
         void Dismiss()
         {
             SettingManager.EnsureInstance().Set(Navigator.Settings);
+            // The cancelled action is over as far as the overlay is concerned: a reopened overlay may
+            // run the next one at once, and the old task leaves everything alone when it returns.
             actionCancel?.Cancel();
+            actionCancel = null;
+            runningId = null;
             Navigator = null;
             held = null;
             closedFrame = Time.frameCount;
@@ -348,8 +352,11 @@ namespace OurTaiko
             }
             catch (Exception error) when (!cancel.IsCancellationRequested) { status = error.Message; Log.Exception("Settings", error); }
             catch (Exception) { }
-            finally { cancel.Dispose(); if (actionCancel == cancel) actionCancel = null; }
-            if (this == null) return;
+            bool cancelled = cancel.IsCancellationRequested;
+            cancel.Dispose();
+            if (actionCancel == cancel) actionCancel = null;
+            // Cancelled means the overlay was dismissed meanwhile, which already cleared the action.
+            if (this == null || cancelled) return;
             runningId = null;
             (RowById(row.Id) ?? row).Status = account ? "" : "Done";
             if (Navigator == null) return;
