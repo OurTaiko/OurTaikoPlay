@@ -454,7 +454,102 @@ namespace OurTaiko
                 title.characterSpacing = 8;
                 rows.Add(RowView.Section(title));
                 foreach (var row in g.Rows) rows.Add(new RowView(this, list, row, index++, nav.Settings));
+                if (g.Diagram == SettingDiagram.JudgeWindow) rows.Add(JudgeWindowDiagram());
             }
+        }
+
+        static readonly Color GoodBand = Hex(0xFFE36B), OkBand = Hex(0xF08A3C), BadBand = Hex(0x5AA6F0);
+        const float DiagramHeight = 300, DiagramPad = 60;
+
+        // The Timing group's picture of the judgment windows (JudgeDiagramState): the BAD, OK and
+        // GOOD bands around the note line, moved by Offset B, with the axis in ms below.
+        RowView JudgeWindowDiagram()
+        {
+            var box = SettingsShapes.Box("JudgeWindowDiagram", list, RowColor, 24);
+            var root = box.rectTransform;
+            var legend = Label("Legend", root, "", 30, Ink, TextAlignmentOptions.MidlineLeft);
+            Top(legend.rectTransform, 36, 22, 36, 44);
+            var noteStrip = Node("NoteLabel", root);
+            Top(noteStrip, DiagramPad, 72, DiagramPad, 32);
+            var noteLabel = Label("Text", noteStrip, "NOTE", 22, Muted, TextAlignmentOptions.Bottom);
+            noteLabel.characterSpacing = 6;
+            Place(noteLabel.rectTransform, 0.5f, 200, 0.5f);
+            var plot = Node("Plot", root);
+            Top(plot, DiagramPad, 108, DiagramPad, 90);
+            var track = SettingsShapes.Box("Track", plot, Groove, 10);
+            Stretch(track.rectTransform, 0, 0, 0, 0);
+            Image Band(string name, Color color, float inset)
+            {
+                var band = SettingsShapes.Box(name, plot, color, 8);
+                band.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                band.rectTransform.offsetMin = new Vector2(0, inset); band.rectTransform.offsetMax = new Vector2(0, -inset);
+                return band;
+            }
+            var bad = Band("Bad", Alpha(BadBand, 0.55f), 0);
+            var ok = Band("Ok", Alpha(OkBand, 0.75f), 12);
+            var good = Band("Good", GoodBand, 24);
+            const int Ticks = 5;
+            var grid = new Image[Ticks];
+            for (int i = 0; i < Ticks; i++)
+            {
+                grid[i] = SkinUi.Image("Grid" + i, plot, null, 2, 0);
+                grid[i].color = new Color(1, 1, 1, i == Ticks / 2 ? 0 : 0.12f);
+            }
+            var note = SkinUi.Image("Note", plot, null, 4, 0);
+            note.color = Ink;
+            Place(note.rectTransform, 0.5f, 4, 0.5f, 10);
+            var tickStrip = Node("Ticks", root);
+            Top(tickStrip, DiagramPad, 206, DiagramPad, 32);
+            var ticks = new TextMeshProUGUI[Ticks];
+            for (int i = 0; i < Ticks; i++)
+            {
+                var align = i == 0 ? TextAlignmentOptions.TopLeft : i == Ticks - 1 ? TextAlignmentOptions.TopRight : TextAlignmentOptions.Top;
+                ticks[i] = Label("Tick" + i, tickStrip, "", 22, Muted, align);
+                Place(ticks[i].rectTransform, i / (Ticks - 1f), 260, i == 0 ? 0 : i == Ticks - 1 ? 1 : 0.5f);
+            }
+            var caption = Label("Caption", root, "", 24, Muted, TextAlignmentOptions.MidlineLeft);
+            caption.textWrappingMode = TextWrappingModes.Normal;
+            Top(caption.rectTransform, 36, 246, 36, 40);
+            JudgeDiagramState? shown = null;
+
+            return RowView.Widget(root, DiagramHeight, nav =>
+            {
+                var state = JudgeDiagramState.Previewed(nav);
+                if (shown is JudgeDiagramState was && was.Equals(state)) return;
+                shown = state;
+                void Span(Image band, double half)
+                {
+                    var rect = band.rectTransform;
+                    rect.anchorMin = new Vector2(state.X(state.Offset - half), 0);
+                    rect.anchorMax = new Vector2(state.X(state.Offset + half), 1);
+                }
+                Span(bad, state.Bad); Span(ok, state.Ok); Span(good, state.Good);
+                for (int i = 0; i < Ticks; i++)
+                {
+                    double ms = state.Range * (i - Ticks / 2) / (Ticks / 2);
+                    string number = (ms > 0 ? "+" : "") + Math.Round(ms) + " ms";
+                    ticks[i].text = i == 0 ? "EARLY  " + number : i == Ticks - 1 ? number + "  LATE" : number;
+                    Place(grid[i].rectTransform, state.X(ms), 2, 0.5f);
+                }
+                string Ms(double value) => Math.Round(value).ToString(System.Globalization.CultureInfo.InvariantCulture) + " ms";
+                string Name(string name, Color color) => "<color=#" + ColorUtility.ToHtmlStringRGB(color) + ">" + name + "</color>";
+                legend.text = Name("GOOD", GoodBand) + "  " + Ms(state.Good) + "      " + Name("OK", OkBand) + "  " + Ms(state.Ok)
+                    + "      " + Name("BAD", BadBand) + "  " + Ms(state.Bad)
+                    + (state.Offset != 0 ? "      Offset B  " + (state.Offset > 0 ? "+" : "") + Ms(state.Offset) : "");
+                caption.text = state.Custom
+                    ? "<color=#" + ColorUtility.ToHtmlStringRGB(Amber) + ">Custom windows for every difficulty  ·  scores are not saved or uploaded</color>"
+                    : "Standard windows of Oni and Ura. Easy and Normal are wider: 42 / 108 / 125 ms.";
+            });
+        }
+
+        // A child spanning its parent's height at fraction x of its width (pivot px horizontally);
+        // grow extends it that far past the top and bottom.
+        static void Place(RectTransform rect, float x, float width, float px, float grow = 0)
+        {
+            rect.anchorMin = new Vector2(x, 0); rect.anchorMax = new Vector2(x, 1);
+            rect.pivot = new Vector2(px, 0.5f);
+            rect.sizeDelta = new Vector2(width, 2 * grow);
+            rect.anchoredPosition = Vector2.zero;
         }
 
         // Stacks the page and keeps the focused row in view.
@@ -782,6 +877,10 @@ namespace OurTaiko
             RowView() { }
 
             public static RowView Section(TextMeshProUGUI title) => new RowView { Root = title.rectTransform, IsSection = true, Index = -1 };
+            // A picture under a group's rows: laid out like a row, never focused, redrawn on every Show.
+            public static RowView Widget(RectTransform root, float height, Action<SettingsNavigator> show)
+                => new RowView { Root = root, Index = -1, Height = height, widget = show };
+            Action<SettingsNavigator> widget;
 
             public RowView(SettingsOverlayView view, RectTransform list, SettingRow row, int index, GameSettings settings)
             {
@@ -949,6 +1048,7 @@ namespace OurTaiko
 
             public void Show(SettingsNavigator nav, int listIndex, SettingsOverlayView view)
             {
+                if (widget != null) { widget(nav); return; }
                 if (IsSection) return;
                 if (nav.Page != null && Index < nav.Page.Rows.Count) row = nav.Page.Rows[Index];
                 bool focused = (nav.Zone == SettingsZone.Rows || nav.Zone == SettingsZone.Adjust) && nav.RowIndex == Index;

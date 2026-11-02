@@ -4,6 +4,27 @@ using System.Linq;
 
 namespace OurTaiko
 {
+    // The half widths of the 良, 可 and 不可 windows in real seconds, Good <= Ok <= Bad.
+    public readonly struct JudgeWindows
+    {
+        public readonly double Good, Ok, Bad;
+        public JudgeWindows(double good, double ok, double bad) { Good = good; Ok = ok; Bad = bad; }
+
+        // The course's own windows: かんたん and ふつう are wider.
+        public static JudgeWindows Standard(string course) => course == "Easy" || course == "Normal"
+            ? new JudgeWindows(0.0417083358764648, 0.108441665649414, 0.125125)
+            : new JudgeWindows(PlaySession.GoodWindow, PlaySession.OkWindow, PlaySession.BadWindow);
+
+        // Whole milliseconds as the settings keep them, kept in range and in order.
+        public static JudgeWindows FromMs(int good, int ok, int bad)
+        {
+            bad = Math.Max(PlaySettings.JudgeWindowMinMs, Math.Min(PlaySettings.JudgeWindowMaxMs, bad));
+            ok = Math.Max(PlaySettings.JudgeWindowMinMs, Math.Min(bad, ok));
+            good = Math.Max(PlaySettings.JudgeWindowMinMs, Math.Min(ok, good));
+            return new JudgeWindows(good / 1000.0, ok / 1000.0, bad / 1000.0);
+        }
+    }
+
     // Pure C#: independent of frame rate, rendering and audio, and testable without a scene.
     public sealed class PlaySession
     {
@@ -18,9 +39,10 @@ namespace OurTaiko
         // In chart seconds; the configured offset is real seconds.
         public double JudgeOffset => realJudgeOffset * Rate;
         readonly double realJudgeOffset;
-        // Multiplies the 良/可/不可 windows (PlaySettings.judgeWindowPercent). Anything but 1 is not the standard
-        // judgement, so a result played with it must never be saved or uploaded (PlayResult.CustomJudge).
-        public double JudgeScale { get; }
+        // The player's own windows for every course (PlaySettings.customJudgeWindow), or null for the
+        // course's standard ones. A play with them is not a real result: it is never saved or uploaded.
+        public JudgeWindows? CustomWindows { get; }
+        public bool CustomJudge => CustomWindows.HasValue;
         public BranchRoute? ForcedBranch { get; }
         // Results are written only here, so every change also moves Version.
         public IReadOnlyList<bool> Resolved => resolved;
@@ -110,11 +132,9 @@ namespace OurTaiko
         // condition. Without one, branches are judged by their #BRANCHSTART condition; the reference
         // player does not define omitted routes, so such charts are refused, not guessed.
         public PlaySession(TaikoChart chart, double judgeOffset = 0, BranchRoute? forcedBranch = null, double rate = 1,
-            double judgeScale = 1)
+            JudgeWindows? judgeWindows = null)
         {
             if (double.IsNaN(rate) || double.IsInfinity(rate) || rate <= 0) throw new ArgumentOutOfRangeException(nameof(rate));
-            if (double.IsNaN(judgeScale) || double.IsInfinity(judgeScale) || judgeScale <= 0)
-                throw new ArgumentOutOfRangeException(nameof(judgeScale));
             if (!forcedBranch.HasValue)
                 foreach (var branch in chart.Branches)
                     if (!branch.HasAllRoutes)
@@ -122,7 +142,7 @@ namespace OurTaiko
             ForcedBranch = forcedBranch;
             realJudgeOffset = judgeOffset;
             Rate = rate;
-            JudgeScale = judgeScale;
+            CustomWindows = judgeWindows;
             Chart = chart; resolved = new bool[chart.Notes.Count]; missed = new bool[chart.Notes.Count]; skipped = new bool[chart.Notes.Count]; exploded = new bool[chart.Notes.Count]; longHits = new int[chart.Notes.Count];
             timingOffsets = new double?[chart.Notes.Count];
             kusudamas = new Kusudama[chart.Notes.Count];
@@ -132,10 +152,10 @@ namespace OurTaiko
             scoring = new ShinuchiScore(statistics);
             gauge = new SoulGauge(statistics.RouteNotes, chart.Course, chart.Level);
             branchCounter = new BranchCounter(branchFeed);
-            var windows = StandardWindows(chart.Course);
-            goodWindow = windows.Good * judgeScale * rate;
-            okWindow = windows.Ok * judgeScale * rate;
-            badWindow = windows.Bad * judgeScale * rate;
+            var windows = judgeWindows ?? JudgeWindows.Standard(chart.Course);
+            goodWindow = windows.Good * rate;
+            okWindow = windows.Ok * rate;
+            badWindow = windows.Bad * rate;
             kadonWait = KadonWait * rate;
             selectedRoutes = Enumerable.Repeat(-1, chart.Branches.Count).ToArray();
             timeSorted = true;
@@ -147,11 +167,6 @@ namespace OurTaiko
             // Stable order preserves authored checkpoint order when several become ready together.
             timeline = timeline.OrderBy(e => e.Time).ThenBy(e => e.Priority).ToList();
         }
-
-        // The course's unscaled windows in real seconds: かんたん and ふつう are wider.
-        public static (double Good, double Ok, double Bad) StandardWindows(string course)
-            => course == "Easy" || course == "Normal" ? (0.0417083358764648, 0.108441665649414, 0.125125)
-                : (GoodWindow, OkWindow, BadWindow);
 
         public bool IsActive(ChartNote note) => IsActive(note.BranchId, note.Route);
 
@@ -175,12 +190,12 @@ namespace OurTaiko
 
         // Start a fresh practice attempt without replaying judgments, sounds or missed-note penalties.
         // Preserve already chosen branches before the cursor, and recalculate future checkpoints.
-        // The rate and the judge scale default to the previous attempt's.
+        // The rate and the judge windows default to the previous attempt's.
         public static PlaySession PracticeAt(TaikoChart chart, double time, PlaySession previous = null, BranchRoute? forcedBranch = null,
-            double? rate = null, double? judgeScale = null)
+            double? rate = null, JudgeWindows? judgeWindows = null)
         {
             var session = new PlaySession(chart, previous?.realJudgeOffset ?? 0, forcedBranch, rate ?? previous?.Rate ?? 1,
-                judgeScale ?? previous?.JudgeScale ?? 1) { practiceStart = time };
+                judgeWindows ?? previous?.CustomWindows) { practiceStart = time };
             while (session.nextEvent < session.timeline.Count && session.timeline[session.nextEvent].Time <= time)
             {
                 var item = session.timeline[session.nextEvent++];

@@ -42,21 +42,23 @@ namespace OurTaiko.Tests
             Assert.That(PlaySession.PracticeAt(chart, 0, session).Rate, Is.EqualTo(rate));
             Assert.That(session.GoodWindowMs, Is.EqualTo(PlaySession.GoodWindow * 1000 * rate).Within(1e-8));
         }
-        // The judge window setting scales all three windows on top of the practice speed, and later attempts keep it.
-        [TestCase(1.0, 0.5)]
-        [TestCase(0.5, 1.5)]
-        [TestCase(2.0, 2.0)]
-        public void JudgeScaleWidensEveryWindowInRealMilliseconds(double rate, double scale)
+        // Custom judge windows are real milliseconds at any practice speed, and later attempts keep them.
+        [TestCase(1.0)]
+        [TestCase(0.5)]
+        [TestCase(2.0)]
+        public void CustomWindowsKeepRealMilliseconds(double rate)
         {
-            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\n#START\n1000,\n#END");
-            Judgment HitAt(double realSeconds) => PlaySession.PracticeAt(chart, 0, null, null, rate, scale).Hit(false, realSeconds * rate);
-            Assert.That(HitAt(PlaySession.GoodWindow * scale - .001), Is.EqualTo(Judgment.Good));
-            Assert.That(HitAt(PlaySession.GoodWindow * scale + .001), Is.EqualTo(Judgment.Ok));
-            Assert.That(HitAt(PlaySession.OkWindow * scale + .001), Is.EqualTo(Judgment.Bad));
-            Assert.That(HitAt(PlaySession.BadWindow * scale + .001), Is.EqualTo(Judgment.None));
-            var session = PlaySession.PracticeAt(chart, 0, null, null, rate, scale);
-            Assert.That(session.BadWindowMs, Is.EqualTo(PlaySession.BadWindow * 1000 * scale * rate).Within(1e-8));
-            Assert.That(PlaySession.PracticeAt(chart, 0, session).JudgeScale, Is.EqualTo(scale));
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Easy\n#START\n1000,\n#END");
+            var windows = JudgeWindows.FromMs(40, 90, 150);
+            Judgment HitAt(double realSeconds) => PlaySession.PracticeAt(chart, 0, null, null, rate, windows).Hit(false, realSeconds * rate);
+            Assert.That(HitAt(.039), Is.EqualTo(Judgment.Good));
+            Assert.That(HitAt(.041), Is.EqualTo(Judgment.Ok));
+            Assert.That(HitAt(.091), Is.EqualTo(Judgment.Bad));
+            Assert.That(HitAt(.151), Is.EqualTo(Judgment.None));
+            var session = PlaySession.PracticeAt(chart, 0, null, null, rate, windows);
+            Assert.That(session.BadWindowMs, Is.EqualTo(150 * rate).Within(1e-8), "Custom windows replace かんたん's own too.");
+            Assert.That(PlaySession.PracticeAt(chart, 0, session).CustomJudge, Is.True);
+            Assert.That(PlaySession.PracticeAt(chart, 0).CustomJudge, Is.False);
         }
         // The judge offset is real seconds too: 30 ms late input stays centred at any speed.
         [TestCase(0.5)]

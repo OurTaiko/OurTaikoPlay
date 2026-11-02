@@ -64,7 +64,7 @@ namespace OurTaiko
         SongDefinition song;
         SongInfo displayInfo;
         double audioOffset, visualOffset, judgeOffset;
-        double judgeScale = 1;
+        JudgeWindows? judgeWindows;
         int playedAudioOffsetMs, songMaxCombo;
         bool autoPlay, closingPauseMenu, betweenOpened;
         double songEndedAt, lastNoteEnd, musicEndedAt = double.NaN;
@@ -103,7 +103,7 @@ namespace OurTaiko
             var playSettings = SettingManager.EnsureInstance().Settings.play;
             playedAudioOffsetMs = playSettings.audioOffsetMs;
             judgeOffset = autoPlay ? 0 : playSettings.judgeOffsetMs / 1000.0;
-            judgeScale = playSettings.JudgeScale;
+            judgeWindows = playSettings.CustomJudgeWindows;
             InputManager.DrumDelay = Math.Min(Math.Max(0, playSettings.inputDelayMs), PlaySettings.InputDelayMaxMs) / 1000.0;
             pauseButton.onClick.AddListener(TogglePause);
             resumeButton.onClick.AddListener(Resume);
@@ -147,7 +147,7 @@ namespace OurTaiko
             var playSettings = SettingManager.EnsureInstance().Settings.play;
             audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
             visualOffset = song.visualOffsetMs / 1000.0;
-            var session = new PlaySession(Run.Charts[index], judgeOffset, null, 1, judgeScale);
+            var session = new PlaySession(Run.Charts[index], judgeOffset, null, 1, judgeWindows);
             foreach (string warning in session.Chart.Warnings) Log.Warn("Play", "Ignored TJA command: " + warning);
             Lane.Record.AudioOffsetMs = (int)Math.Round((audioOffset + judgeOffset) * 1000);
             Lane.Record.VisualOffsetMs = (int)Math.Round((visualOffset - judgeOffset) * 1000);
@@ -295,7 +295,7 @@ namespace OurTaiko
             {
                 Run = Run, Progress = Progress, Verdict = Progress.Verdict(), Songs = songResults.ToArray(), Records = songRecords.ToArray(),
                 Score = total.Score, MaxCombo = total.MaxCombo, GaugePoints = Gauge.Points, AutoPlay = autoPlay,
-                CustomJudge = judgeScale != 1,
+                CustomJudge = judgeWindows.HasValue,
             };
             if (ending != null) ending.BeginDan(courseResult.Verdict > 0);
             endingDuration = ending != null ? ending.Duration : 0;

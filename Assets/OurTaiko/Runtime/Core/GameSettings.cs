@@ -82,12 +82,24 @@ namespace OurTaiko
         public const int InputDelayDefaultMs = 0, InputDelayMaxMs = 100;
         // How long a drum press waits before it is judged, heard and shown, like the arcade. 0 is off.
         public int inputDelayMs = InputDelayDefaultMs;
-        public const int JudgeWindowDefaultPercent = 100, JudgeWindowMinPercent = 50, JudgeWindowMaxPercent = 200,
-            JudgeWindowStepPercent = 10;
-        // The 良/可/不可 windows' size in percent of the standard ones, in every mode (practice too).
-        // Anything but 100 is not a real result: such a play is neither saved nor uploaded.
-        public int judgeWindowPercent = JudgeWindowDefaultPercent;
-        public double JudgeScale => Math.Max(JudgeWindowMinPercent, Math.Min(JudgeWindowMaxPercent, judgeWindowPercent)) / 100.0;
+        // Off: every course judges with its own standard windows. On: the 良/可/不可 half widths below
+        // apply to every course in every mode (practice too), and no score is saved or uploaded.
+        public bool customJudgeWindow;
+        public const int JudgeWindowMinMs = 1, JudgeWindowMaxMs = 300;
+        // The standard 鬼 windows (25.025, 75.075 and 108.44 ms), rounded.
+        public static readonly int[] StandardJudgeMs = { 25, 75, 108 };
+        public int judgeGoodMs = 25, judgeOkMs = 75, judgeBadMs = 108;
+        public JudgeWindows? CustomJudgeWindows => customJudgeWindow ? JudgeWindows.FromMs(judgeGoodMs, judgeOkMs, judgeBadMs) : null;
+
+        // 0 良, 1 可, 2 不可. A new value moves its neighbours along so that 良 <= 可 <= 不可 holds.
+        public int JudgeMs(int window) => window == 0 ? judgeGoodMs : window == 1 ? judgeOkMs : judgeBadMs;
+        public void SetJudgeMs(int window, int ms)
+        {
+            ms = Math.Max(JudgeWindowMinMs, Math.Min(JudgeWindowMaxMs, ms));
+            if (window == 0) { judgeGoodMs = ms; judgeOkMs = Math.Max(judgeOkMs, ms); judgeBadMs = Math.Max(judgeBadMs, judgeOkMs); }
+            else if (window == 1) { judgeOkMs = ms; judgeGoodMs = Math.Min(judgeGoodMs, ms); judgeBadMs = Math.Max(judgeBadMs, ms); }
+            else { judgeBadMs = ms; judgeOkMs = Math.Min(judgeOkMs, ms); judgeGoodMs = Math.Min(judgeGoodMs, judgeOkMs); }
+        }
     }
 
     [Serializable]

@@ -95,7 +95,7 @@ namespace OurTaiko.Tests
             Assert.That(new GameSettings().play.inputDelayMs, Is.Zero);
             Assert.That(GameSettings.FromJson("{\"play\":{\"judgeOffsetMs\":3}}").play.inputDelayMs, Is.Zero, "Older files get the default.");
             var nav = OnPage("play");
-            nav.Move(2); nav.Confirm();
+            nav.Move(3); nav.Confirm();
             Assert.That(nav.Row.Label, Is.EqualTo("Input Delay"));
             Assert.That(nav.AdjustValue, Is.Zero);
             for (int i = 0; i < 5; i++) nav.Move(1);
@@ -108,26 +108,55 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void JudgeWindowDefaultsToStandardAndStaysInRange()
+        public void CustomJudgeWindowSitsUnderOffsetBAndKeepsItsOrder()
         {
-            Assert.That(new GameSettings().play.JudgeScale, Is.EqualTo(1));
-            Assert.That(GameSettings.FromJson("{\"play\":{\"judgeOffsetMs\":3}}").play.judgeWindowPercent, Is.EqualTo(100), "Older files get the default.");
-            Assert.That(GameSettings.FromJson("{\"play\":{\"judgeWindowPercent\":999}}").play.JudgeScale, Is.EqualTo(2), "A hand-edited file is clamped.");
-            Assert.That(GameSettings.FromJson("{\"play\":{\"judgeWindowPercent\":1}}").play.JudgeScale, Is.EqualTo(.5));
+            var play = new GameSettings().play;
+            Assert.That(play.customJudgeWindow, Is.False);
+            Assert.That(play.CustomJudgeWindows, Is.Null, "Off: every course keeps its own standard windows.");
+            Assert.That(GameSettings.FromJson("{\"play\":{\"judgeOffsetMs\":3}}").play.judgeBadMs, Is.EqualTo(108), "Older files get the default.");
             var nav = OnPage("play");
-            nav.Move(3); nav.Confirm();
-            Assert.That(nav.Row.Id, Is.EqualTo("judge-window"));
-            Assert.That(nav.Row.Format(100), Is.EqualTo("100%"));
-            Assert.That(nav.Row.Format(120), Is.EqualTo("120% · Not saved"));
+            Assert.That(nav.Page.Rows.Select(r => r.Id).Take(4), Is.EqualTo(new[] { "audio-offset", "judge-offset", SettingsCatalog.JudgeCustom, "input-delay" }),
+                "The three window rows exist only while the custom windows are on.");
             nav.Move(2);
-            Assert.That(nav.AdjustValue, Is.EqualTo(120));
+            Assert.That(nav.Row.Id, Is.EqualTo(SettingsCatalog.JudgeCustom));
             nav.Confirm();
-            Assert.That(GameSettings.FromJson(nav.Settings.ToJson()).play.JudgeScale, Is.EqualTo(1.2).Within(1e-12));
-            Assert.That(nav.Row.Move(100, -100), Is.EqualTo(PlaySettings.JudgeWindowMinPercent));
-            Assert.That(nav.Row.Move(100, 100), Is.EqualTo(PlaySettings.JudgeWindowMaxPercent));
+            Assert.That(nav.Settings.play.customJudgeWindow, Is.True);
+            Assert.That(nav.Page.Rows.Select(r => r.Id).Skip(1).Take(5),
+                Is.EqualTo(new[] { "judge-offset", SettingsCatalog.JudgeCustom, "judge-good", "judge-ok", "judge-bad" }));
+            nav.Move(1); nav.Confirm();
+            Assert.That(nav.Row.Id, Is.EqualTo("judge-good"));
+            Assert.That(nav.Row.Format(nav.AdjustValue), Is.EqualTo("25 ms"));
+            nav.Move(60);
+            Assert.That(JudgeDiagramState.Previewed(nav).Good, Is.EqualTo(85).Within(1e-9), "The diagram follows the value before it is kept.");
+            Assert.That(JudgeDiagramState.Previewed(nav).Ok, Is.EqualTo(85).Within(1e-9), "GOOD past OK pushes OK along.");
+            Assert.That(nav.Settings.play.judgeGoodMs, Is.EqualTo(25));
+            nav.Confirm();
+            var saved = GameSettings.FromJson(nav.Settings.ToJson()).play;
+            Assert.That((saved.judgeGoodMs, saved.judgeOkMs, saved.judgeBadMs), Is.EqualTo((85, 85, 108)));
+            saved.SetJudgeMs(2, 50);
+            Assert.That((saved.judgeGoodMs, saved.judgeOkMs, saved.judgeBadMs), Is.EqualTo((50, 50, 50)), "BAD below them pulls both down.");
+            saved.SetJudgeMs(1, 1000);
+            Assert.That((saved.judgeGoodMs, saved.judgeOkMs, saved.judgeBadMs), Is.EqualTo((50, PlaySettings.JudgeWindowMaxMs, PlaySettings.JudgeWindowMaxMs)));
+            var edited = GameSettings.FromJson("{\"play\":{\"customJudgeWindow\":true,\"judgeGoodMs\":90,\"judgeOkMs\":40,\"judgeBadMs\":5000}}").play;
+            var windows = edited.CustomJudgeWindows.Value;
+            Assert.That((windows.Good, windows.Ok, windows.Bad), Is.EqualTo((.04, .04, .3)), "A hand-edited file is clamped and ordered.");
         }
 
-        // Any window size but 100% marks the result, and it is neither saved, uploaded nor celebrated.
+        [Test]
+        public void JudgeDiagramShowsStandardWindowsAndOffsetB()
+        {
+            var standard = JudgeDiagramState.Of(new PlaySettings());
+            Assert.That(standard.Custom, Is.False);
+            Assert.That(standard.Good, Is.EqualTo(PlaySession.GoodWindow * 1000).Within(1e-9));
+            Assert.That(standard.Range, Is.EqualTo(JudgeDiagramState.MinimumRange));
+            Assert.That(standard.X(0), Is.EqualTo(.5f));
+            var late = JudgeDiagramState.Of(new PlaySettings { judgeOffsetMs = 100, customJudgeWindow = true, judgeBadMs = 200 });
+            Assert.That(late.Range, Is.EqualTo(350), "The axis grows to hold the shifted BAD window.");
+            Assert.That(late.X(late.Offset + late.Bad), Is.LessThan(1f));
+            Assert.That(late.X(-10000), Is.Zero);
+        }
+
+        // Custom windows mark the result, and it is neither saved, uploaded nor celebrated.
         [Test]
         public void CustomJudgeWindowResultIsNotRecordable()
         {
@@ -135,11 +164,10 @@ namespace OurTaiko.Tests
             var standard = PlayResult.From(new PlaySession(chart), "test", false);
             Assert.That(standard.CustomJudge, Is.False);
             Assert.That(standard.IsRecordable, Is.True);
-            var wide = PlayResult.From(new PlaySession(chart, judgeScale: 1.5), "test", false);
-            Assert.That(wide.JudgeScale, Is.EqualTo(1.5));
-            Assert.That(wide.CustomJudge, Is.True);
-            Assert.That(wide.IsRecordable, Is.False);
-            Assert.That(wide.Timing.BadWindowMs, Is.EqualTo(PlaySession.BadWindow * 1500).Within(1e-8));
+            var custom = PlayResult.From(new PlaySession(chart, judgeWindows: JudgeWindows.FromMs(25, 75, 108)), "test", false);
+            Assert.That(custom.CustomJudge, Is.True, "Even the standard values count as custom while the setting is on.");
+            Assert.That(custom.IsRecordable, Is.False);
+            Assert.That(custom.Timing.BadWindowMs, Is.EqualTo(108).Within(1e-8));
             Assert.That(new DanPlayResult { CustomJudge = true }.IsRecordable, Is.False);
         }
 

@@ -138,7 +138,7 @@ namespace OurTaiko.Tests
             overlay.Confirm();
             Assert.That(Settings.Settings.play.audioOffsetMs, Is.EqualTo(-12));
 
-            overlay.Move(3);
+            overlay.Move(4);
             overlay.Confirm();
             Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.False, "Don flips the drum pad.");
             yield return Settle();
