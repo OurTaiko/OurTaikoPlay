@@ -108,6 +108,42 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void JudgeWindowDefaultsToStandardAndStaysInRange()
+        {
+            Assert.That(new GameSettings().play.JudgeScale, Is.EqualTo(1));
+            Assert.That(GameSettings.FromJson("{\"play\":{\"judgeOffsetMs\":3}}").play.judgeWindowPercent, Is.EqualTo(100), "Older files get the default.");
+            Assert.That(GameSettings.FromJson("{\"play\":{\"judgeWindowPercent\":999}}").play.JudgeScale, Is.EqualTo(2), "A hand-edited file is clamped.");
+            Assert.That(GameSettings.FromJson("{\"play\":{\"judgeWindowPercent\":1}}").play.JudgeScale, Is.EqualTo(.5));
+            var nav = OnPage("play");
+            nav.Move(3); nav.Confirm();
+            Assert.That(nav.Row.Id, Is.EqualTo("judge-window"));
+            Assert.That(nav.Row.Format(100), Is.EqualTo("100%"));
+            Assert.That(nav.Row.Format(120), Is.EqualTo("120% · Not saved"));
+            nav.Move(2);
+            Assert.That(nav.AdjustValue, Is.EqualTo(120));
+            nav.Confirm();
+            Assert.That(GameSettings.FromJson(nav.Settings.ToJson()).play.JudgeScale, Is.EqualTo(1.2).Within(1e-12));
+            Assert.That(nav.Row.Move(100, -100), Is.EqualTo(PlaySettings.JudgeWindowMinPercent));
+            Assert.That(nav.Row.Move(100, 100), Is.EqualTo(PlaySettings.JudgeWindowMaxPercent));
+        }
+
+        // Any window size but 100% marks the result, and it is neither saved, uploaded nor celebrated.
+        [Test]
+        public void CustomJudgeWindowResultIsNotRecordable()
+        {
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1000,\n#END");
+            var standard = PlayResult.From(new PlaySession(chart), "test", false);
+            Assert.That(standard.CustomJudge, Is.False);
+            Assert.That(standard.IsRecordable, Is.True);
+            var wide = PlayResult.From(new PlaySession(chart, judgeScale: 1.5), "test", false);
+            Assert.That(wide.JudgeScale, Is.EqualTo(1.5));
+            Assert.That(wide.CustomJudge, Is.True);
+            Assert.That(wide.IsRecordable, Is.False);
+            Assert.That(wide.Timing.BadWindowMs, Is.EqualTo(PlaySession.BadWindow * 1500).Within(1e-8));
+            Assert.That(new DanPlayResult { CustomJudge = true }.IsRecordable, Is.False);
+        }
+
+        [Test]
         public void NumericMetadataWorksForOtherDefaultsAndStepsWithoutWrapping()
         {
             var row = SettingRow.Number("test", "Test", "", 10, 5, s => s.play.audioOffsetMs,

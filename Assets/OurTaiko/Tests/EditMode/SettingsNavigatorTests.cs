@@ -270,9 +270,9 @@ namespace OurTaiko.Tests
             Assert.That(nav.TapPage(2), Is.EqualTo(SettingsNavigator.Result.Moved));
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
             Assert.That(nav.TapPage(2), Is.EqualTo(SettingsNavigator.Result.Entered), "Tapping the selected category opens it.");
-            Assert.That(nav.TapRow(3), Is.EqualTo(SettingsNavigator.Result.Moved));
+            Assert.That(nav.TapRow(4), Is.EqualTo(SettingsNavigator.Result.Moved));
             Assert.That(nav.Row.Id, Is.EqualTo("drum-pad"));
-            Assert.That(nav.TapRow(3), Is.EqualTo(SettingsNavigator.Result.Changed));
+            Assert.That(nav.TapRow(4), Is.EqualTo(SettingsNavigator.Result.Changed));
             Assert.That(nav.SetRow(0, 7), Is.EqualTo(SettingsNavigator.Result.Changed));
             Assert.That(nav.Settings.play.audioOffsetMs, Is.EqualTo(7));
             Assert.That(nav.TapPage(nav.Pages.Count), Is.EqualTo(SettingsNavigator.Result.Moved));

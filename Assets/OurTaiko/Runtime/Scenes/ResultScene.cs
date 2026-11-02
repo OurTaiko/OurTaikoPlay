@@ -126,8 +126,8 @@ namespace OurTaiko
         // and goes up once the server connects again.
         internal static void SaveScore(SongDefinition song, PlayResult result, Online.PlayRecord record, int seat)
         {
-            // Auto play and a custom judge size (practice only today) are not real results.
-            if (result.AutoPlay || result.CustomJudge) return;
+            // Auto play and a custom judge window are not real results.
+            if (!result.IsRecordable) return;
             if (!SongScores.IsOnline(song)) { ScoreStore.Shared.Save(result); return; }
             var online = Online.OnlineManager.Instance;
             var chart = online != null ? online.ChartOf(song) : null;

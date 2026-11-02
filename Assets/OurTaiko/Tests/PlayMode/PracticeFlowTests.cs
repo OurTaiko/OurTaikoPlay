@@ -46,7 +46,6 @@ namespace OurTaiko.Tests
             yield return StartPractice(AudioBackend.BassSimple, true);
             yield return Click(play.practiceView.confirm);
             yield return Click(play.practiceView.confirm);
-            yield return Click(play.practiceView.confirm);
             yield return Wait(() => !play.IsPaused);
             Assert.That(play.SongTime, Is.LessThan(-1.8));
             Assert.That(play.Session.Good + play.Session.Bad + play.Session.Rolls, Is.Zero);
@@ -59,7 +58,6 @@ namespace OurTaiko.Tests
             yield return Click(play.practiceView.confirm);
             yield return Press(Key.D); yield return Press(Key.D);
             Assert.That(play.Practice.Speed, Is.EqualTo(0.8));
-            yield return Click(play.practiceView.confirm);
             yield return Click(play.practiceView.confirm);
             yield return Wait(() => !play.IsPaused);
             Assert.That(play.SongTime, Is.LessThan(target - 1.4));
@@ -97,9 +95,6 @@ namespace OurTaiko.Tests
             Assert.That(play.Practice.Speed, Is.EqualTo(0.8));
             TestCapture.Capture("PracticeSpeed-" + backend + ".png");
             yield return Press(Key.J);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Judge));
-            Assert.That(play.practiceView.heading.text, Is.EqualTo("判定范围"));
-            yield return Press(Key.J);
             Assert.That(play.practiceView.panel.activeSelf, Is.False);
             Assert.That(play.IsPaused, Is.True, "The lane scrolls back to the preparation start before playback.");
             Assert.That(play.RenderedTime, Is.InRange(0.4, 2), "Starting must animate like a measure skip, not teleport.");
@@ -127,7 +122,6 @@ namespace OurTaiko.Tests
             yield return Click(play.practiceView.confirm);
             for (int i = 0; i < 4; i++) yield return Press(Key.K);
             Assert.That(play.Practice.Speed, Is.EqualTo(1.2));
-            yield return Click(play.practiceView.confirm);
             yield return Click(play.practiceView.confirm);
             yield return new WaitForSecondsRealtime(2.3f);
             songStart = play.SongTime; audioStart = play.music.AudioPosition(); realStart = GameTimeline.AudioNow;
@@ -168,7 +162,6 @@ namespace OurTaiko.Tests
             // Jump near the end, then run the complete end-of-chart path.
             play.MovePractice(1); yield return null; play.MovePractice(1);
             yield return new WaitForSecondsRealtime(0.25f);
-            play.ConfirmPractice(); yield return null;
             play.ConfirmPractice(); yield return null;
             play.ConfirmPractice();
             yield return Wait(() => !play.IsPaused);
@@ -225,14 +218,7 @@ namespace OurTaiko.Tests
             yield return Press(Key.F);
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
             yield return Press(Key.F);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Judge));
-            Assert.That(play.practiceView.value.text, Does.StartWith("100%"));
-            // Wider windows for this attempt only: the practice session plays at 150%.
-            for (int i = 0; i < 5; i++) yield return Press(Key.K);
-            Assert.That(play.Practice.JudgePercent, Is.EqualTo(150));
-            yield return Press(Key.F);
             yield return Wait(() => !play.IsPaused);
-            Assert.That(play.Session.JudgeScale, Is.EqualTo(1.5));
             yield return Wait(() => play.Session.BranchHistory.Count == 2);
             Assert.That(play.Session.BranchHistory, Is.EqualTo(new[] { BranchRoute.Expert, BranchRoute.Expert }));
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
@@ -253,7 +239,7 @@ namespace OurTaiko.Tests
             var notes = play.Session.Chart.Notes;
             Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Session.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True,
                 "達人 falls back to the authored 玄人 notes.");
-            yield return Press(Key.F); yield return Press(Key.F); yield return Press(Key.F); yield return Press(Key.F);
+            yield return Press(Key.F); yield return Press(Key.F); yield return Press(Key.F);
             yield return Wait(() => play.Session.BranchHistory.Count == 1);
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
         }

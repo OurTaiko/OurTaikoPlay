@@ -18,7 +18,7 @@ namespace OurTaiko
         // In chart seconds; the configured offset is real seconds.
         public double JudgeOffset => realJudgeOffset * Rate;
         readonly double realJudgeOffset;
-        // Multiplies the 良/可/不可 windows (practice only). Anything but 1 is not the standard
+        // Multiplies the 良/可/不可 windows (PlaySettings.judgeWindowPercent). Anything but 1 is not the standard
         // judgement, so a result played with it must never be saved or uploaded (PlayResult.CustomJudge).
         public double JudgeScale { get; }
         public BranchRoute? ForcedBranch { get; }

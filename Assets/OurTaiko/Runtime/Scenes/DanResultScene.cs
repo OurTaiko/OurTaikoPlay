@@ -89,9 +89,9 @@ namespace OurTaiko
         // Once per result: the attempt and each song's score.
         void Save()
         {
-            if (Result.Saved) { Recorded = !Result.AutoPlay; PreviousBest = Result.PreviousBest; return; }
+            if (Result.Saved) { Recorded = Result.IsRecordable; PreviousBest = Result.PreviousBest; return; }
             Result.Saved = true;
-            Recorded = !Result.AutoPlay;
+            Recorded = Result.IsRecordable;
             if (Recorded)
             {
                 var entry = Result.Run.Entry;

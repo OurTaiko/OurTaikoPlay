@@ -5,7 +5,7 @@ using System.Linq;
 namespace OurTaiko
 {
     // Practice menu pages in order; Branch appears only for a chart with branches.
-    public enum PracticeStage { Branch, Measure, Speed, Judge }
+    public enum PracticeStage { Branch, Measure, Speed }
 
     // Uses parsed measure times, including hidden barlines, BPM changes, delays and branches.
     public sealed class PracticeProgress
@@ -59,12 +59,5 @@ namespace OurTaiko
         }
         // Unity AudioSource supports positive pitch up to 3; keep the same range on every backend.
         public void ChangeSpeed(int direction) => SpeedTenths = Math.Max(1, Math.Min(30, SpeedTenths + direction));
-        // Judge window size in percent of the course's standard windows, 50% to 200% in 10% steps.
-        // Practice never saves or uploads a result, so any size is safe to offer here.
-        public const int MinJudgePercent = 50, MaxJudgePercent = 200, JudgePercentStep = 10;
-        public int JudgePercent { get; private set; } = 100;
-        public double JudgeScale => JudgePercent / 100.0;
-        public void ChangeJudge(int direction) => JudgePercent = Math.Max(MinJudgePercent,
-            Math.Min(MaxJudgePercent, JudgePercent + Math.Sign(direction) * JudgePercentStep));
     }
 }

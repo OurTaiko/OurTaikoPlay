@@ -64,6 +64,7 @@ namespace OurTaiko
         SongDefinition song;
         SongInfo displayInfo;
         double audioOffset, visualOffset, judgeOffset;
+        double judgeScale = 1;
         int playedAudioOffsetMs, songMaxCombo;
         bool autoPlay, closingPauseMenu, betweenOpened;
         double songEndedAt, lastNoteEnd, musicEndedAt = double.NaN;
@@ -102,6 +103,7 @@ namespace OurTaiko
             var playSettings = SettingManager.EnsureInstance().Settings.play;
             playedAudioOffsetMs = playSettings.audioOffsetMs;
             judgeOffset = autoPlay ? 0 : playSettings.judgeOffsetMs / 1000.0;
+            judgeScale = playSettings.JudgeScale;
             InputManager.DrumDelay = Math.Min(Math.Max(0, playSettings.inputDelayMs), PlaySettings.InputDelayMaxMs) / 1000.0;
             pauseButton.onClick.AddListener(TogglePause);
             resumeButton.onClick.AddListener(Resume);
@@ -145,7 +147,7 @@ namespace OurTaiko
             var playSettings = SettingManager.EnsureInstance().Settings.play;
             audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
             visualOffset = song.visualOffsetMs / 1000.0;
-            var session = new PlaySession(Run.Charts[index], judgeOffset);
+            var session = new PlaySession(Run.Charts[index], judgeOffset, null, 1, judgeScale);
             foreach (string warning in session.Chart.Warnings) Log.Warn("Play", "Ignored TJA command: " + warning);
             Lane.Record.AudioOffsetMs = (int)Math.Round((audioOffset + judgeOffset) * 1000);
             Lane.Record.VisualOffsetMs = (int)Math.Round((visualOffset - judgeOffset) * 1000);
@@ -215,7 +217,7 @@ namespace OurTaiko
                 if (Progress.Update(Stats(), Gauge.Percent).Count > 0) hitAudio.PlayAudioOneShot(danFailed);
                 // YataiDON's end_time: once the last note is judged the song is over for the exams;
                 // its music plays out before the next one (capped, for a long silent tail).
-                if (time > lastNoteEnd + Math.Max(0, judgeOffset) + PlaySession.BadWindow) EndSong();
+                if (time > lastNoteEnd + Math.Max(0, judgeOffset) + Session.BadWindowMs / 1000) EndSong();
             }
             // The course over: its ending from this song's end, the music fading out under it.
             else if (Progress.IsEnded) { if (time >= SongEndNow()) Finish(); }
@@ -293,6 +295,7 @@ namespace OurTaiko
             {
                 Run = Run, Progress = Progress, Verdict = Progress.Verdict(), Songs = songResults.ToArray(), Records = songRecords.ToArray(),
                 Score = total.Score, MaxCombo = total.MaxCombo, GaugePoints = Gauge.Points, AutoPlay = autoPlay,
+                CustomJudge = judgeScale != 1,
             };
             if (ending != null) ending.BeginDan(courseResult.Verdict > 0);
             endingDuration = ending != null ? ending.Duration : 0;

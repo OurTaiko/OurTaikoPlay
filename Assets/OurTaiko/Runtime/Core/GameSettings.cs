@@ -82,6 +82,12 @@ namespace OurTaiko
         public const int InputDelayDefaultMs = 0, InputDelayMaxMs = 100;
         // How long a drum press waits before it is judged, heard and shown, like the arcade. 0 is off.
         public int inputDelayMs = InputDelayDefaultMs;
+        public const int JudgeWindowDefaultPercent = 100, JudgeWindowMinPercent = 50, JudgeWindowMaxPercent = 200,
+            JudgeWindowStepPercent = 10;
+        // The 良/可/不可 windows' size in percent of the standard ones, in every mode (practice too).
+        // Anything but 100 is not a real result: such a play is neither saved nor uploaded.
+        public int judgeWindowPercent = JudgeWindowDefaultPercent;
+        public double JudgeScale => Math.Max(JudgeWindowMinPercent, Math.Min(JudgeWindowMaxPercent, judgeWindowPercent)) / 100.0;
     }
 
     [Serializable]

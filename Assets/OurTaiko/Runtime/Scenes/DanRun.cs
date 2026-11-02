@@ -51,6 +51,9 @@ namespace OurTaiko
         public int Score, MaxCombo;
         public double GaugePoints;
         public bool AutoPlay;
+        // Played with a judge window other than 100% (PlaySettings.judgeWindowPercent): not recorded.
+        public bool CustomJudge;
+        public bool IsRecordable => !AutoPlay && !CustomJudge;
         // Set once DanResult has recorded it, so showing it again saves nothing twice; the best
         // before this attempt is kept for the celebration and the best-score pill.
         public bool Saved;
