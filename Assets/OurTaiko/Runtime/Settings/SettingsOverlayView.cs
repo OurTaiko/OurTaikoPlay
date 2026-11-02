@@ -54,6 +54,8 @@ namespace OurTaiko
         Rect ringRect;
         SettingsZone lastZone;
         int lastFocus = -1;
+        // The navigator last drawn: rows grow and shrink over several frames, so the page is stacked again every frame.
+        SettingsNavigator shownNav;
 
         static Color Hex(int rgb) => new Color(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f);
         static Color Alpha(Color color, float alpha) { color.a = alpha; return color; }
@@ -347,6 +349,7 @@ namespace OurTaiko
                 Recolor(banner, soundPending ? Amber : Ink);
             }
             for (int i = 0; i < rows.Count; i++) rows[i].Show(nav, i, this);
+            shownNav = nav;
             Layout(nav);
             ShowSheet(nav);
             ShowModal(nav);
@@ -454,31 +457,127 @@ namespace OurTaiko
                 title.characterSpacing = 8;
                 rows.Add(RowView.Section(title));
                 foreach (var row in g.Rows) rows.Add(new RowView(this, list, row, index++, nav.Settings));
+                if (g.Diagram == SettingDiagram.JudgeWindow) rows.Add(JudgeWindowDiagram());
             }
+        }
+
+        static readonly Color GoodBand = Hex(0xFFE36B), OkBand = Hex(0xF08A3C), BadBand = Hex(0x5AA6F0);
+        const float DiagramHeight = 300, DiagramPad = 60;
+
+        // The Timing group's picture of the judgment windows (JudgeDiagramState): the BAD, OK and
+        // GOOD bands around the note line, moved by Offset B, with the axis in ms below.
+        RowView JudgeWindowDiagram()
+        {
+            var box = SettingsShapes.Box("JudgeWindowDiagram", list, RowColor, 24);
+            var root = box.rectTransform;
+            var legend = Label("Legend", root, "", 30, Ink, TextAlignmentOptions.MidlineLeft);
+            Top(legend.rectTransform, 36, 22, -36, 44);
+            var noteStrip = Node("NoteLabel", root);
+            Top(noteStrip, DiagramPad, 72, -DiagramPad, 32);
+            var noteLabel = Label("Text", noteStrip, "NOTE", 22, Muted, TextAlignmentOptions.Bottom);
+            noteLabel.characterSpacing = 6;
+            Place(noteLabel.rectTransform, 0.5f, 200, 0.5f);
+            var plot = Node("Plot", root);
+            Top(plot, DiagramPad, 108, -DiagramPad, 90);
+            var track = SettingsShapes.Box("Track", plot, Groove, 10);
+            Stretch(track.rectTransform, 0, 0, 0, 0);
+            Image Band(string name, Color color, float inset)
+            {
+                var band = SettingsShapes.Box(name, plot, color, 8);
+                band.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                band.rectTransform.offsetMin = new Vector2(0, inset); band.rectTransform.offsetMax = new Vector2(0, -inset);
+                return band;
+            }
+            var bad = Band("Bad", Alpha(BadBand, 0.55f), 0);
+            var ok = Band("Ok", Alpha(OkBand, 0.75f), 12);
+            var good = Band("Good", GoodBand, 24);
+            const int Ticks = 5;
+            var grid = new Image[Ticks];
+            for (int i = 0; i < Ticks; i++)
+            {
+                grid[i] = SkinUi.Image("Grid" + i, plot, null, 2, 0);
+                grid[i].color = new Color(1, 1, 1, i == Ticks / 2 ? 0 : 0.12f);
+            }
+            var note = SkinUi.Image("Note", plot, null, 4, 0);
+            note.color = Ink;
+            Place(note.rectTransform, 0.5f, 4, 0.5f, 10);
+            var tickStrip = Node("Ticks", root);
+            Top(tickStrip, DiagramPad, 206, -DiagramPad, 32);
+            var ticks = new TextMeshProUGUI[Ticks];
+            for (int i = 0; i < Ticks; i++)
+            {
+                var align = i == 0 ? TextAlignmentOptions.TopLeft : i == Ticks - 1 ? TextAlignmentOptions.TopRight : TextAlignmentOptions.Top;
+                ticks[i] = Label("Tick" + i, tickStrip, "", 22, Muted, align);
+                Place(ticks[i].rectTransform, i / (Ticks - 1f), 260, i == 0 ? 0 : i == Ticks - 1 ? 1 : 0.5f);
+            }
+            var caption = Label("Caption", root, "", 24, Muted, TextAlignmentOptions.MidlineLeft);
+            caption.textWrappingMode = TextWrappingModes.Normal;
+            Top(caption.rectTransform, 36, 246, -36, 40);
+            JudgeDiagramState? shown = null;
+
+            return RowView.Widget(root, DiagramHeight, nav =>
+            {
+                var state = JudgeDiagramState.Previewed(nav);
+                if (shown is JudgeDiagramState was && was.Equals(state)) return;
+                shown = state;
+                void Span(Image band, double half)
+                {
+                    var rect = band.rectTransform;
+                    rect.anchorMin = new Vector2(state.X(state.Offset - half), 0);
+                    rect.anchorMax = new Vector2(state.X(state.Offset + half), 1);
+                }
+                Span(bad, state.Bad); Span(ok, state.Ok); Span(good, state.Good);
+                for (int i = 0; i < Ticks; i++)
+                {
+                    double ms = state.Range * (i - Ticks / 2) / (Ticks / 2);
+                    string number = (ms > 0 ? "+" : "") + Math.Round(ms) + " ms";
+                    ticks[i].text = i == 0 ? "EARLY  " + number : i == Ticks - 1 ? number + "  LATE" : number;
+                    Place(grid[i].rectTransform, state.X(ms), 2, 0.5f);
+                }
+                string Ms(double value) => Math.Round(value).ToString(System.Globalization.CultureInfo.InvariantCulture) + " ms";
+                string Name(string name, Color color) => "<color=#" + ColorUtility.ToHtmlStringRGB(color) + ">" + name + "</color>";
+                legend.text = Name("GOOD", GoodBand) + "  " + Ms(state.Good) + "      " + Name("OK", OkBand) + "  " + Ms(state.Ok)
+                    + "      " + Name("BAD", BadBand) + "  " + Ms(state.Bad)
+                    + (state.Offset != 0 ? "      Offset B  " + (state.Offset > 0 ? "+" : "") + Ms(state.Offset) : "");
+                caption.text = state.Custom
+                    ? "<color=#" + ColorUtility.ToHtmlStringRGB(Amber) + ">Custom windows for every difficulty  ·  scores are not saved or uploaded</color>"
+                    : "Standard windows of Oni and Ura. Easy and Normal are wider: 42 / 108 / 125 ms.";
+            });
+        }
+
+        // A child spanning its parent's height at fraction x of its width (pivot px horizontally);
+        // grow extends it that far past the top and bottom.
+        static void Place(RectTransform rect, float x, float width, float px, float grow = 0)
+        {
+            rect.anchorMin = new Vector2(x, 0); rect.anchorMax = new Vector2(x, 1);
+            rect.pivot = new Vector2(px, 0.5f);
+            rect.sizeDelta = new Vector2(width, 2 * grow);
+            rect.anchoredPosition = Vector2.zero;
         }
 
         // Stacks the page and keeps the focused row in view.
         void Layout(SettingsNavigator nav)
         {
-            float y = banner != null && bannerBox.gameObject.activeSelf ? 282 : 168;
+            // y is where each row is drawn this frame (animated heights); goal is where it is heading,
+            // which the scroll follows so it does not chase a moving row.
+            float y = banner != null && bannerBox.gameObject.activeSelf ? 282 : 168, goal = y;
             bool first = true;
             focusTop = focusBottom = -1;
             foreach (var row in rows)
             {
                 if (row.IsSection)
                 {
-                    if (!first) y += GroupGap - RowGap;
+                    if (!first) { y += GroupGap - RowGap; goal += GroupGap - RowGap; }
                     first = false;
                     Top(row.Root, 6, y, 0, SectionHeight);
-                    y += SectionHeight + 14;
+                    y += SectionHeight + 14; goal += SectionHeight + 14;
                     continue;
                 }
-                float height = row.Height;
-                Top(row.Root, 0, y, 0, height);
-                if (row.Index == nav.RowIndex && nav.Zone is SettingsZone.Rows or SettingsZone.Adjust) { focusTop = row.Index == 0 ? 0 : y; focusBottom = y + height; }
-                y += height + RowGap;
+                Top(row.Root, 0, y, 0, row.ShownHeight);
+                if (row.Index == nav.RowIndex && nav.Zone is SettingsZone.Rows or SettingsZone.Adjust) { focusTop = row.Index == 0 ? 0 : goal; focusBottom = goal + row.Height; }
+                y += row.ShownHeight + RowGap; goal += row.Height + RowGap;
             }
-            listHeight = y + 36;
+            listHeight = goal + 36;
         }
 
         // Keeps the focused row inside the page with a margin, unless the page was scrolled by hand.
@@ -616,6 +715,7 @@ namespace OurTaiko
             if (!sheetOpen && sheetOffset > 0.99f) { sheet.gameObject.SetActive(false); sheetShade.gameObject.SetActive(false); }
 
             foreach (var row in rows) row.Animate(dt);
+            if (shownNav != null && shownNav.Page != null) Layout(shownNav);
             PlaceRing(now, dt);
         }
 
@@ -768,7 +868,12 @@ namespace OurTaiko
             public RectTransform Root { get; private set; }
             public bool IsSection { get; private set; }
             public int Index { get; private set; }
+            // The height the row is heading for (taller while focused, to fit its description) and
+            // the height it is drawn at this frame.
             public float Height { get; private set; } = RowHeight;
+            public float ShownHeight => widget != null ? Height : shownHeight;
+            float shownHeight = RowHeight, expand, descHeight;
+            bool focusedNow, placed;
             // The page's current row object; the pages rebuild their rows on every change.
             SettingRow row;
             readonly Image box;
@@ -782,6 +887,10 @@ namespace OurTaiko
             RowView() { }
 
             public static RowView Section(TextMeshProUGUI title) => new RowView { Root = title.rectTransform, IsSection = true, Index = -1 };
+            // A picture under a group's rows: laid out like a row, never focused, redrawn on every Show.
+            public static RowView Widget(RectTransform root, float height, Action<SettingsNavigator> show)
+                => new RowView { Root = root, Index = -1, Height = height, widget = show };
+            Action<SettingsNavigator> widget;
 
             public RowView(SettingsOverlayView view, RectTransform list, SettingRow row, int index, GameSettings settings)
             {
@@ -810,6 +919,8 @@ namespace OurTaiko
                 description.rectTransform.anchorMin = description.rectTransform.anchorMax = description.rectTransform.pivot = new Vector2(0, 1);
                 description.rectTransform.sizeDelta = new Vector2(DescWidth, 40);
                 description.gameObject.SetActive(false);
+                // The description is cut at the row's edge while the row grows and shrinks.
+                box.gameObject.AddComponent<RectMask2D>();
 
                 control = Node("Control", Root);
                 control.anchorMin = control.anchorMax = control.pivot = new Vector2(1, 0.5f);
@@ -949,22 +1060,25 @@ namespace OurTaiko
 
             public void Show(SettingsNavigator nav, int listIndex, SettingsOverlayView view)
             {
+                if (widget != null) { widget(nav); return; }
                 if (IsSection) return;
                 if (nav.Page != null && Index < nav.Page.Rows.Count) row = nav.Page.Rows[Index];
                 bool focused = (nav.Zone == SettingsZone.Rows || nav.Zone == SettingsZone.Adjust) && nav.RowIndex == Index;
                 bool adjusting = focused && nav.Zone == SettingsZone.Adjust;
                 int current = row.HasValue ? (adjusting ? nav.AdjustValue : row.Get(nav.Settings)) : 0;
-                box.color = focused ? RowFocus : RowColor;
-                description.gameObject.SetActive(focused);
-                float descHeight = focused ? description.GetPreferredValues(row.Description, DescWidth, 0).y : 0;
-                Height = focused ? Mathf.Max(RowHeight, 78 + descHeight + 24) : RowHeight;
-                label.rectTransform.anchoredPosition = new Vector2(36, focused ? -24 : -(RowHeight - 54) / 2);
-                if (badge != null) badge.anchoredPosition = new Vector2(36 + label.rectTransform.sizeDelta.x + 16, label.rectTransform.anchoredPosition.y - 7);
+                focusedNow = focused;
+                // The description keeps its last size while it fades out.
                 if (focused)
                 {
+                    description.text = row.Description;
+                    descHeight = description.GetPreferredValues(row.Description, DescWidth, 0).y;
                     description.rectTransform.sizeDelta = new Vector2(DescWidth, descHeight + 4);
-                    description.rectTransform.anchoredPosition = new Vector2(36, -78);
                 }
+                Height = focused ? Mathf.Max(RowHeight, 78 + descHeight + 24) : RowHeight;
+                // A freshly built row (a new page, a rebuilt list) starts where it belongs; only a
+                // change of focus afterwards animates.
+                if (!placed) { placed = true; expand = focused ? 1 : 0; shownHeight = Height; }
+                ApplyExpand();
                 switch (row.Kind)
                 {
                     case SettingKind.Toggle:
@@ -1004,9 +1118,32 @@ namespace OurTaiko
                 }
             }
 
+            // Focus grows the row to fit its description and fades the description in (and back out
+            // when the focus leaves), over about 0.2 s.
+            void ApplyExpand()
+            {
+                float e = expand * expand * (3 - 2 * expand);
+                box.color = Color.Lerp(RowColor, RowFocus, e);
+                label.rectTransform.anchoredPosition = new Vector2(36, Mathf.Lerp(-(RowHeight - 54) / 2, -24, e));
+                if (badge != null) badge.anchoredPosition = new Vector2(36 + label.rectTransform.sizeDelta.x + 16, label.rectTransform.anchoredPosition.y - 7);
+                bool visible = expand > 0.01f;
+                if (description.gameObject.activeSelf != visible) description.gameObject.SetActive(visible);
+                description.alpha = Mathf.Clamp01((expand - 0.3f) / 0.7f);
+                description.rectTransform.anchoredPosition = new Vector2(36, Mathf.Lerp(-62, -78, e));
+            }
+
             public void Animate(float dt)
             {
-                if (IsSection || knob == null) return;
+                if (IsSection || widget != null) return;
+                if (placed)
+                {
+                    float k = 1 - Mathf.Exp(-dt * 20);
+                    float target = focusedNow ? 1 : 0;
+                    expand = Mathf.Abs(expand - target) < 0.002f ? target : Mathf.Lerp(expand, target, k);
+                    shownHeight = Mathf.Abs(shownHeight - Height) < 0.5f ? Height : Mathf.Lerp(shownHeight, Height, k);
+                    ApplyExpand();
+                }
+                if (knob == null) return;
                 knobAt = Mathf.Lerp(knobAt, knobGoal, 1 - Mathf.Exp(-dt * (row.Kind == SettingKind.Toggle ? 26 : 40)));
                 knob.rectTransform.anchoredPosition = new Vector2(knobAt, 0);
                 if (fill != null) fill.rectTransform.sizeDelta = new Vector2(Mathf.Max(18, knobAt), 0);

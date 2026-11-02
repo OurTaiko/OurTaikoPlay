@@ -116,10 +116,14 @@ namespace OurTaiko
         public SettingRow Previews(AudioGroup group) { Preview = group; return this; }
     }
 
+    // A picture drawn under a group's rows, showing what they set.
+    public enum SettingDiagram { None, JudgeWindow }
+
     public sealed class SettingGroup
     {
         public string Title { get; }
         public IReadOnlyList<SettingRow> Rows { get; }
+        public SettingDiagram Diagram { get; set; }
         public SettingGroup(string title, params SettingRow[] rows) { Title = title; Rows = rows; }
     }
 
@@ -195,13 +199,10 @@ namespace OurTaiko
                 new SettingGroup("2P Drum", Seat(1)),
                 new SettingGroup("Menus", KeyboardBindings.SettingsOrder.Where(k => !k.IsDrum()).Select(SettingRow.Keys).ToArray()),
             }),
-            new SettingPage("play", "Play", "Timing and touch", _ => new[]
+            new SettingPage("play", "Play", "Timing, judgment and touch", settings => new[]
             {
-                new SettingGroup("Timing",
-                    SettingRow.Number("audio-offset", "Offset A (Audio)", "Move the chart relative to the music. Negative: earlier; positive: later.",
-                        PlaySettings.OffsetDefaultMs, PlaySettings.OffsetStepMs, s => s.play.audioOffsetMs, (s, v) => s.play.audioOffsetMs = v, Signed, stepText: "1 ms"),
-                    SettingRow.Number("judge-offset", "Offset B (Judgment)", "Move the judgment window only. Negative: earlier; positive: later.",
-                        PlaySettings.OffsetDefaultMs, PlaySettings.OffsetStepMs, s => s.play.judgeOffsetMs, (s, v) => s.play.judgeOffsetMs = v, Signed, stepText: "1 ms"),
+                new SettingGroup("Timing", Timing(settings)) { Diagram = SettingDiagram.JudgeWindow },
+                new SettingGroup("Input",
                     SettingRow.Number("input-delay", "Input Delay", "Delay drum hits before judgment, sound and effects, like the arcade.",
                         PlaySettings.InputDelayDefaultMs, PlaySettings.OffsetStepMs, s => s.play.inputDelayMs, (s, v) => s.play.inputDelayMs = v,
                         v => v == 0 ? "Off" : v + " ms", 0, PlaySettings.InputDelayMaxMs, stepText: "1 ms")),
@@ -234,6 +235,43 @@ namespace OurTaiko
                     SettingRow.Action(RefreshSongList, "Refresh Song List", "Load the built-in servers' song lists again.", "Refresh"),
                     SettingRow.Action(RefreshLogin, "Refresh Login", "Check both accounts and sign them in to the built-in servers again.", "Refresh")),
             }),
+        };
+
+        // Offset A, Offset B and the judgment windows, which the diagram under them draws. The three
+        // window rows exist only while the custom windows are on.
+        static SettingRow[] Timing(GameSettings settings)
+        {
+            var rows = new List<SettingRow>
+            {
+                SettingRow.Number("audio-offset", "Offset A (Audio)", "Move the chart relative to the music. Negative: earlier; positive: later.",
+                    PlaySettings.OffsetDefaultMs, PlaySettings.OffsetStepMs, s => s.play.audioOffsetMs, (s, v) => s.play.audioOffsetMs = v, Signed, stepText: "1 ms"),
+                SettingRow.Number("judge-offset", "Offset B (Judgment)", "Move the judgment window only. Negative: earlier; positive: later.",
+                    PlaySettings.OffsetDefaultMs, PlaySettings.OffsetStepMs, s => s.play.judgeOffsetMs, (s, v) => s.play.judgeOffsetMs = v, Signed, stepText: "1 ms"),
+                SettingRow.Toggle(JudgeCustom, "Custom Judgment Window",
+                    "Judge every difficulty and mode with your own GOOD/OK/BAD windows. Off: each difficulty's standard windows. While on, no score is saved or uploaded.",
+                    s => s.play.customJudgeWindow, (s, on) => s.play.customJudgeWindow = on),
+            };
+            if (settings.play.customJudgeWindow)
+                for (int window = 0; window < 3; window++)
+                {
+                    int w = window;
+                    string name = JudgeNames[w];
+                    rows.Add(SettingRow.Number(JudgeRows[w], name + " Window",
+                        "A hit this many ms or less from the note, early or late, is " + name + ". " + JudgeOrder[w],
+                        PlaySettings.StandardJudgeMs[w], 1, s => s.play.JudgeMs(w), (s, v) => s.play.SetJudgeMs(w, v),
+                        v => v + " ms", PlaySettings.JudgeWindowMinMs, PlaySettings.JudgeWindowMaxMs, stepText: "1 ms"));
+                }
+            return rows.ToArray();
+        }
+
+        public const string JudgeCustom = "judge-custom";
+        public static readonly string[] JudgeRows = { "judge-good", "judge-ok", "judge-bad" };
+        static readonly string[] JudgeNames = { "GOOD", "OK", "BAD" };
+        static readonly string[] JudgeOrder =
+        {
+            "Raising it past OK raises OK too.",
+            "It stays between GOOD and BAD, moving them along.",
+            "Beyond it a hit counts for nothing. Lowering it below OK lowers OK too.",
         };
 
         static SettingRow[] Seat(int seat) => KeyboardBindings.SettingsOrder.Where(k => k.IsDrum() && k.Seat() == seat).Select(SettingRow.Keys).ToArray();
@@ -348,5 +386,46 @@ namespace OurTaiko
                 1000, 6, 5000, 1, a => a.playbackBufferMs, (a, v) => a.playbackBufferMs = v, Unit("ms"), "ms"));
             return new[] { volumes, new SettingGroup("Output", output.ToArray()) };
         }
+    }
+
+    // What the Timing group's diagram draws: the GOOD/OK/BAD half widths around the note in real
+    // ms, shifted by Offset B, on an axis of ±Range ms. Standard shows 鬼's windows.
+    public readonly struct JudgeDiagramState
+    {
+        public const double MinimumRange = 150, MaximumRange = 1000, RangeStep = 50;
+        public readonly double Good, Ok, Bad, Offset, Range;
+        public readonly bool Custom;
+
+        JudgeDiagramState(JudgeWindows windows, double offset, bool custom)
+        {
+            Good = windows.Good * 1000; Ok = windows.Ok * 1000; Bad = windows.Bad * 1000; Offset = offset; Custom = custom;
+            double reach = Math.Abs(offset) + Bad;
+            Range = Math.Min(MaximumRange, Math.Max(MinimumRange, Math.Ceiling(reach * 1.1 / RangeStep) * RangeStep));
+        }
+
+        public static JudgeDiagramState Of(PlaySettings play) => new JudgeDiagramState(
+            play.CustomJudgeWindows ?? JudgeWindows.Standard("Oni"), play.judgeOffsetMs, play.customJudgeWindow);
+
+        // The settings as the next play would use them, with the value being adjusted (not kept yet)
+        // already applied, so the picture follows the arrows before Don keeps the value.
+        public static JudgeDiagramState Previewed(SettingsNavigator nav)
+        {
+            var p = nav.Settings.play;
+            var play = new PlaySettings
+            {
+                customJudgeWindow = p.customJudgeWindow, judgeOffsetMs = p.judgeOffsetMs,
+                judgeGoodMs = p.judgeGoodMs, judgeOkMs = p.judgeOkMs, judgeBadMs = p.judgeBadMs,
+            };
+            if (nav.Zone == SettingsZone.Adjust && nav.Row != null)
+            {
+                int window = Array.IndexOf(SettingsCatalog.JudgeRows, nav.Row.Id);
+                if (window >= 0) play.SetJudgeMs(window, nav.AdjustValue);
+                else if (nav.Row.Id == "judge-offset") play.judgeOffsetMs = nav.AdjustValue;
+            }
+            return Of(play);
+        }
+
+        // 0 at the axis's early end, 1 at its late end.
+        public float X(double ms) => (float)Math.Max(0, Math.Min(1, (ms + Range) / (2 * Range)));
     }
 }

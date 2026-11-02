@@ -35,7 +35,8 @@ namespace OurTaiko
             mean.text = data?.MeanMs is double m ? m.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture) + " ms" : "—";
             deviation.text = Number(data?.StandardDeviationMs);
             absolute.text = Number(data?.MeanAbsoluteMs);
-            counts.text = $"有效击打 {data?.Count ?? 0}    漏打 {data?.Misses ?? 0}";
+            counts.text = $"有效击打 {data?.Count ?? 0}    漏打 {data?.Misses ?? 0}"
+                + (result.CustomJudge ? "    自定义判定 不计成绩" : "");
             sides.text = $"早 {data?.Early ?? 0}    晚 {data?.Late ?? 0}" + (data?.Exact > 0 ? $"    零偏差 {data.Exact}" : "");
             empty.text = result.AutoPlay ? "自动演奏不统计手动偏差" : data == null || data.Count == 0 ? "暂无有效击打" : "";
             meanLegend.text = data?.MeanMs is double average

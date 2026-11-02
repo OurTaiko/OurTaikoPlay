@@ -63,6 +63,8 @@ namespace OurTaiko
         // Configured in real seconds. Chart time runs at the clock's rate (practice speed), so they are
         // scaled by it wherever they meet chart time.
         double audioOffset, visualOffset, judgeOffset;
+        // PlaySettings.CustomJudgeWindows (null: the course's own), read once per play like the offsets.
+        JudgeWindows? judgeWindows;
         int playedAudioOffsetMs;
         // OpenTaiko judges and draws at a whole millisecond of the play clock (cut toward zero).
         double ChartTime => TjaTime.Truncate(SongTime - audioOffset * songClock.Rate);
@@ -110,6 +112,7 @@ namespace OurTaiko
             audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
             visualOffset = song.visualOffsetMs / 1000.0;
             judgeOffset = autoPlay ? 0 : playSettings.judgeOffsetMs / 1000.0;
+            judgeWindows = playSettings.CustomJudgeWindows;
             InputManager.DrumDelay = Math.Min(Math.Max(0, playSettings.inputDelayMs), PlaySettings.InputDelayMaxMs) / 1000.0;
             pauseButton.onClick.AddListener(TogglePause);
             resumeButton.onClick.AddListener(Resume);
@@ -173,7 +176,7 @@ namespace OurTaiko
                 VisualOffsetMs = (int)Math.Round((visualOffset - judgeOffset) * 1000),
             });
             lanes.Add(lane);
-            var session = new PlaySession(chart, judgeOffset, IsPractice ? practiceBranch : (BranchRoute?)null);
+            var session = new PlaySession(chart, judgeOffset, IsPractice ? practiceBranch : (BranchRoute?)null, 1, judgeWindows);
             foreach (string warning in session.Chart.Warnings) Log.Warn("Play", "Ignored TJA command: " + warning);
             return session;
         }

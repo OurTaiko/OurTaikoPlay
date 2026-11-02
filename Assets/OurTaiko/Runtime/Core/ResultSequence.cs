@@ -65,7 +65,7 @@ namespace OurTaiko
                 StopCountLoop();
                 if (result.GaugeState == GaugeState.Full) RainbowStartMs ??= now;
                 ScoreLandMs ??= now;
-                if (result.ScoreDifference > 0 && !result.AutoPlay && !highScoreShown)
+                if (result.ScoreDifference > 0 && result.IsRecordable && !highScoreShown)
                 { highScoreShown = true; HighScoreAtMs = now; cues.Add((ResultCue.HighScore, 0)); }
                 if (result.Rank > 0) { RankAtMs = now; rankShown = true; }
                 CrownAtMs = MessageAtMs = now;
@@ -117,7 +117,7 @@ namespace OurTaiko
                 rowDelay += RowsLanded == Rows ? ScoreMs : RowMs;
                 if (RowsLanded > Rows) break;
             }
-            if (ScoreLandMs.HasValue && !highScoreShown && result.ScoreDifference > 0 && !result.AutoPlay)
+            if (ScoreLandMs.HasValue && !highScoreShown && result.ScoreDifference > 0 && result.IsRecordable)
             {
                 highScoreShown = true; HighScoreAtMs = now; cues.Add((ResultCue.HighScore, 0));
             }

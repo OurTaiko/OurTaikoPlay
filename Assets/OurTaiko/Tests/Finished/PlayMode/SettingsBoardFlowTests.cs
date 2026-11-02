@@ -79,12 +79,12 @@ namespace OurTaiko.Tests
                 Assert.That(nav.Page.Title, Is.EqualTo("Play"));
                 view.TapPage(2);
                 Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
-                view.TapRow(3);
+                view.TapRow(4);
                 Assert.That(nav.Row.Id, Is.EqualTo("drum-pad"));
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.True);
-                view.TapRow(3);
+                view.TapRow(4);
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.False, "Applied and saved through SettingManager.");
-                view.SetRow(3, 1);
+                view.SetRow(4, 1);
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.True);
                 view.SetRow(0, 5);
                 Assert.That(Settings.Settings.play.audioOffsetMs, Is.EqualTo(5), "A stepper button changes the number at once.");
