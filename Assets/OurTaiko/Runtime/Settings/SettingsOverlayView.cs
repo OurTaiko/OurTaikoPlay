@@ -54,6 +54,8 @@ namespace OurTaiko
         Rect ringRect;
         SettingsZone lastZone;
         int lastFocus = -1;
+        // The navigator last drawn: rows grow and shrink over several frames, so the page is stacked again every frame.
+        SettingsNavigator shownNav;
 
         static Color Hex(int rgb) => new Color(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f);
         static Color Alpha(Color color, float alpha) { color.a = alpha; return color; }
@@ -347,6 +349,7 @@ namespace OurTaiko
                 Recolor(banner, soundPending ? Amber : Ink);
             }
             for (int i = 0; i < rows.Count; i++) rows[i].Show(nav, i, this);
+            shownNav = nav;
             Layout(nav);
             ShowSheet(nav);
             ShowModal(nav);
@@ -555,25 +558,26 @@ namespace OurTaiko
         // Stacks the page and keeps the focused row in view.
         void Layout(SettingsNavigator nav)
         {
-            float y = banner != null && bannerBox.gameObject.activeSelf ? 282 : 168;
+            // y is where each row is drawn this frame (animated heights); goal is where it is heading,
+            // which the scroll follows so it does not chase a moving row.
+            float y = banner != null && bannerBox.gameObject.activeSelf ? 282 : 168, goal = y;
             bool first = true;
             focusTop = focusBottom = -1;
             foreach (var row in rows)
             {
                 if (row.IsSection)
                 {
-                    if (!first) y += GroupGap - RowGap;
+                    if (!first) { y += GroupGap - RowGap; goal += GroupGap - RowGap; }
                     first = false;
                     Top(row.Root, 6, y, 0, SectionHeight);
-                    y += SectionHeight + 14;
+                    y += SectionHeight + 14; goal += SectionHeight + 14;
                     continue;
                 }
-                float height = row.Height;
-                Top(row.Root, 0, y, 0, height);
-                if (row.Index == nav.RowIndex && nav.Zone is SettingsZone.Rows or SettingsZone.Adjust) { focusTop = row.Index == 0 ? 0 : y; focusBottom = y + height; }
-                y += height + RowGap;
+                Top(row.Root, 0, y, 0, row.ShownHeight);
+                if (row.Index == nav.RowIndex && nav.Zone is SettingsZone.Rows or SettingsZone.Adjust) { focusTop = row.Index == 0 ? 0 : goal; focusBottom = goal + row.Height; }
+                y += row.ShownHeight + RowGap; goal += row.Height + RowGap;
             }
-            listHeight = y + 36;
+            listHeight = goal + 36;
         }
 
         // Keeps the focused row inside the page with a margin, unless the page was scrolled by hand.
@@ -711,6 +715,7 @@ namespace OurTaiko
             if (!sheetOpen && sheetOffset > 0.99f) { sheet.gameObject.SetActive(false); sheetShade.gameObject.SetActive(false); }
 
             foreach (var row in rows) row.Animate(dt);
+            if (shownNav != null && shownNav.Page != null) Layout(shownNav);
             PlaceRing(now, dt);
         }
 
@@ -863,7 +868,12 @@ namespace OurTaiko
             public RectTransform Root { get; private set; }
             public bool IsSection { get; private set; }
             public int Index { get; private set; }
+            // The height the row is heading for (taller while focused, to fit its description) and
+            // the height it is drawn at this frame.
             public float Height { get; private set; } = RowHeight;
+            public float ShownHeight => widget != null ? Height : shownHeight;
+            float shownHeight = RowHeight, expand, descHeight;
+            bool focusedNow, placed;
             // The page's current row object; the pages rebuild their rows on every change.
             SettingRow row;
             readonly Image box;
@@ -909,6 +919,8 @@ namespace OurTaiko
                 description.rectTransform.anchorMin = description.rectTransform.anchorMax = description.rectTransform.pivot = new Vector2(0, 1);
                 description.rectTransform.sizeDelta = new Vector2(DescWidth, 40);
                 description.gameObject.SetActive(false);
+                // The description is cut at the row's edge while the row grows and shrinks.
+                box.gameObject.AddComponent<RectMask2D>();
 
                 control = Node("Control", Root);
                 control.anchorMin = control.anchorMax = control.pivot = new Vector2(1, 0.5f);
@@ -1054,17 +1066,19 @@ namespace OurTaiko
                 bool focused = (nav.Zone == SettingsZone.Rows || nav.Zone == SettingsZone.Adjust) && nav.RowIndex == Index;
                 bool adjusting = focused && nav.Zone == SettingsZone.Adjust;
                 int current = row.HasValue ? (adjusting ? nav.AdjustValue : row.Get(nav.Settings)) : 0;
-                box.color = focused ? RowFocus : RowColor;
-                description.gameObject.SetActive(focused);
-                float descHeight = focused ? description.GetPreferredValues(row.Description, DescWidth, 0).y : 0;
-                Height = focused ? Mathf.Max(RowHeight, 78 + descHeight + 24) : RowHeight;
-                label.rectTransform.anchoredPosition = new Vector2(36, focused ? -24 : -(RowHeight - 54) / 2);
-                if (badge != null) badge.anchoredPosition = new Vector2(36 + label.rectTransform.sizeDelta.x + 16, label.rectTransform.anchoredPosition.y - 7);
+                focusedNow = focused;
+                // The description keeps its last size while it fades out.
                 if (focused)
                 {
+                    description.text = row.Description;
+                    descHeight = description.GetPreferredValues(row.Description, DescWidth, 0).y;
                     description.rectTransform.sizeDelta = new Vector2(DescWidth, descHeight + 4);
-                    description.rectTransform.anchoredPosition = new Vector2(36, -78);
                 }
+                Height = focused ? Mathf.Max(RowHeight, 78 + descHeight + 24) : RowHeight;
+                // A freshly built row (a new page, a rebuilt list) starts where it belongs; only a
+                // change of focus afterwards animates.
+                if (!placed) { placed = true; expand = focused ? 1 : 0; shownHeight = Height; }
+                ApplyExpand();
                 switch (row.Kind)
                 {
                     case SettingKind.Toggle:
@@ -1104,9 +1118,32 @@ namespace OurTaiko
                 }
             }
 
+            // Focus grows the row to fit its description and fades the description in (and back out
+            // when the focus leaves), over about 0.2 s.
+            void ApplyExpand()
+            {
+                float e = expand * expand * (3 - 2 * expand);
+                box.color = Color.Lerp(RowColor, RowFocus, e);
+                label.rectTransform.anchoredPosition = new Vector2(36, Mathf.Lerp(-(RowHeight - 54) / 2, -24, e));
+                if (badge != null) badge.anchoredPosition = new Vector2(36 + label.rectTransform.sizeDelta.x + 16, label.rectTransform.anchoredPosition.y - 7);
+                bool visible = expand > 0.01f;
+                if (description.gameObject.activeSelf != visible) description.gameObject.SetActive(visible);
+                description.alpha = Mathf.Clamp01((expand - 0.3f) / 0.7f);
+                description.rectTransform.anchoredPosition = new Vector2(36, Mathf.Lerp(-62, -78, e));
+            }
+
             public void Animate(float dt)
             {
-                if (IsSection || knob == null) return;
+                if (IsSection || widget != null) return;
+                if (placed)
+                {
+                    float k = 1 - Mathf.Exp(-dt * 20);
+                    float target = focusedNow ? 1 : 0;
+                    expand = Mathf.Abs(expand - target) < 0.002f ? target : Mathf.Lerp(expand, target, k);
+                    shownHeight = Mathf.Abs(shownHeight - Height) < 0.5f ? Height : Mathf.Lerp(shownHeight, Height, k);
+                    ApplyExpand();
+                }
+                if (knob == null) return;
                 knobAt = Mathf.Lerp(knobAt, knobGoal, 1 - Mathf.Exp(-dt * (row.Kind == SettingKind.Toggle ? 26 : 40)));
                 knob.rectTransform.anchoredPosition = new Vector2(knobAt, 0);
                 if (fill != null) fill.rectTransform.sizeDelta = new Vector2(Mathf.Max(18, knobAt), 0);
