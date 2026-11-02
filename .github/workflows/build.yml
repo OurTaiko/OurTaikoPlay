@@ -2,6 +2,8 @@ name: Build
 run-name: OurTaikoPlay ${{ github.ref_name }}
 
 # main publishes the rolling "nightly" pre-release; a v* tag publishes a formal release.
+# The Windows and macOS builds also go live in the RhythmHub launcher: v* tags on its stable channel,
+# main on its nightly channel (only the latest nightly is kept). See sparkbarry/MajdataHub.
 # Tests do not gate builds; run the Test workflow manually when needed.
 on:
   push:
@@ -63,6 +65,9 @@ jobs:
     name: Build (${{ matrix.name }})
     runs-on: ubuntu-latest
     needs: [version]
+    permissions:
+      contents: read
+      id-token: write # RhythmHub upload signs in to AWS through GitHub OIDC
     strategy:
       fail-fast: false
       matrix:
@@ -156,6 +161,54 @@ jobs:
           path: out/*
           if-no-files-found: error
           retention-days: 7
+
+      # RhythmHub serves the build unpacked, file by file, so players only download what changed.
+      - name: Prepare RhythmHub release
+        id: rhythmhub
+        if: matrix.platform == 'StandaloneOSX' || matrix.platform == 'StandaloneWindows64'
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            channel=stable; prune=false
+          elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            channel=nightly; prune=true
+          else
+            echo "Not main or a v* tag; skipping RhythmHub."
+            exit 0
+          fi
+          DIR="$BUILDS_PATH/${{ matrix.platform }}"
+          STAGE="$RUNNER_TEMP/rhythmhub"
+          mkdir -p "$STAGE"
+          if [[ "${{ matrix.platform }}" == StandaloneOSX ]]; then
+            platform=MacOS; entry="$BUILD_NAME.app"
+            cp -a "$DIR/$BUILD_NAME.app" "$STAGE/"
+          else
+            platform=Windows; entry="$BUILD_NAME.exe"
+            # Same contents as the Windows zip: no debug symbols or backup folders.
+            cp -a "$DIR/." "$STAGE/"
+            rm -rf "$STAGE"/*_BurstDebugInformation_DoNotShip "$STAGE"/*_BackUpThisFolder_ButDontShipItWithYourGame
+          fi
+          {
+            echo "channel=$channel"
+            echo "prune=$prune"
+            echo "platform=$platform"
+            echo "entrypoint=$entry"
+            echo "path=$STAGE"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish to RhythmHub
+        if: steps.rhythmhub.outputs.channel != ''
+        uses: sparkbarry/MajdataHub/.github/actions/upload-build@main
+        with:
+          game: OurTaikoPlay
+          platform: ${{ steps.rhythmhub.outputs.platform }}
+          version: ${{ needs.version.outputs.display }}
+          build-path: ${{ steps.rhythmhub.outputs.path }}
+          entrypoint: ${{ steps.rhythmhub.outputs.entrypoint }}
+          role-arn: ${{ vars.AWS_ROLE_ARN }}
+          channel: ${{ steps.rhythmhub.outputs.channel }}
+          signing-key: ${{ secrets.RHYTHMHUB_SIGNING_KEY }}
+          prune-previous: ${{ steps.rhythmhub.outputs.prune }}
 
   # iOS: Unity exports the Xcode project on a macOS runner; with the Apple secrets set, fastlane
   # signs it manually (Apple Distribution + an App Store profile), builds the IPA and uploads it to
