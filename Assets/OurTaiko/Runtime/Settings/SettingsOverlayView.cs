@@ -468,14 +468,14 @@ namespace OurTaiko
             var box = SettingsShapes.Box("JudgeWindowDiagram", list, RowColor, 24);
             var root = box.rectTransform;
             var legend = Label("Legend", root, "", 30, Ink, TextAlignmentOptions.MidlineLeft);
-            Top(legend.rectTransform, 36, 22, 36, 44);
+            Top(legend.rectTransform, 36, 22, -36, 44);
             var noteStrip = Node("NoteLabel", root);
-            Top(noteStrip, DiagramPad, 72, DiagramPad, 32);
+            Top(noteStrip, DiagramPad, 72, -DiagramPad, 32);
             var noteLabel = Label("Text", noteStrip, "NOTE", 22, Muted, TextAlignmentOptions.Bottom);
             noteLabel.characterSpacing = 6;
             Place(noteLabel.rectTransform, 0.5f, 200, 0.5f);
             var plot = Node("Plot", root);
-            Top(plot, DiagramPad, 108, DiagramPad, 90);
+            Top(plot, DiagramPad, 108, -DiagramPad, 90);
             var track = SettingsShapes.Box("Track", plot, Groove, 10);
             Stretch(track.rectTransform, 0, 0, 0, 0);
             Image Band(string name, Color color, float inset)
@@ -499,7 +499,7 @@ namespace OurTaiko
             note.color = Ink;
             Place(note.rectTransform, 0.5f, 4, 0.5f, 10);
             var tickStrip = Node("Ticks", root);
-            Top(tickStrip, DiagramPad, 206, DiagramPad, 32);
+            Top(tickStrip, DiagramPad, 206, -DiagramPad, 32);
             var ticks = new TextMeshProUGUI[Ticks];
             for (int i = 0; i < Ticks; i++)
             {
@@ -509,7 +509,7 @@ namespace OurTaiko
             }
             var caption = Label("Caption", root, "", 24, Muted, TextAlignmentOptions.MidlineLeft);
             caption.textWrappingMode = TextWrappingModes.Normal;
-            Top(caption.rectTransform, 36, 246, 36, 40);
+            Top(caption.rectTransform, 36, 246, -36, 40);
             JudgeDiagramState? shown = null;
 
             return RowView.Widget(root, DiagramHeight, nav =>
