@@ -27,6 +27,8 @@ namespace OurTaiko
         public ScoreRank Rank => ScoreRankUtil.FromScore(Score, KiwamiThreshold);
         public double GaugePoints;
         public bool IsClear, IsGaugeFull, AutoPlay;
+        // Played with widened or narrowed judge windows (PlaySession.JudgeScale): never saved or uploaded.
+        public bool CustomJudge;
         public TimingStatistics Timing;
         public TimingCalibration Calibration;
 
@@ -65,6 +67,7 @@ namespace OurTaiko
                 AdLibGood = session.AdLibGood, AdLibOk = session.AdLibOk, Mines = session.MinesHit,
                 MaxCombo = session.MaxCombo, Rolls = session.Rolls, GaugePoints = session.GaugePoints,
                 IsClear = session.IsClear, IsGaugeFull = session.IsGaugeFull, AutoPlay = autoPlay,
+                CustomJudge = session.JudgeScale != 1,
                 Timing = timing,
                 Calibration = !autoPlay && audioOffsetMs.HasValue
                     ? new TimingCalibration(timing, audioOffsetMs.Value, (int)Math.Round(session.JudgeOffset * 1000)) : null,

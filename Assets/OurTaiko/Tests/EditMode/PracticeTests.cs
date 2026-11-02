@@ -42,6 +42,44 @@ namespace OurTaiko.Tests
             Assert.That(PlaySession.PracticeAt(chart, 0, session).Rate, Is.EqualTo(rate));
             Assert.That(session.GoodWindowMs, Is.EqualTo(PlaySession.GoodWindow * 1000 * rate).Within(1e-8));
         }
+        // The practice judge size scales all three windows on top of the speed, and later attempts keep it.
+        [TestCase(1.0, 0.5)]
+        [TestCase(0.5, 1.5)]
+        [TestCase(2.0, 2.0)]
+        public void JudgeScaleWidensEveryWindowInRealMilliseconds(double rate, double scale)
+        {
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\n#START\n1000,\n#END");
+            Judgment HitAt(double realSeconds) => PlaySession.PracticeAt(chart, 0, null, null, rate, scale).Hit(false, realSeconds * rate);
+            Assert.That(HitAt(PlaySession.GoodWindow * scale - .001), Is.EqualTo(Judgment.Good));
+            Assert.That(HitAt(PlaySession.GoodWindow * scale + .001), Is.EqualTo(Judgment.Ok));
+            Assert.That(HitAt(PlaySession.OkWindow * scale + .001), Is.EqualTo(Judgment.Bad));
+            Assert.That(HitAt(PlaySession.BadWindow * scale + .001), Is.EqualTo(Judgment.None));
+            var session = PlaySession.PracticeAt(chart, 0, null, null, rate, scale);
+            Assert.That(session.BadWindowMs, Is.EqualTo(PlaySession.BadWindow * 1000 * scale * rate).Within(1e-8));
+            Assert.That(PlaySession.PracticeAt(chart, 0, session).JudgeScale, Is.EqualTo(scale));
+        }
+        [Test]
+        public void JudgeSizeStepsByTenPercentBetweenHalfAndDouble()
+        {
+            var progress = new PracticeProgress();
+            Assert.That(progress.JudgePercent, Is.EqualTo(100));
+            progress.ChangeJudge(1);
+            Assert.That(progress.JudgeScale, Is.EqualTo(1.1).Within(1e-12));
+            for (int i = 0; i < 100; i++) progress.ChangeJudge(-1);
+            Assert.That(progress.JudgePercent, Is.EqualTo(PracticeProgress.MinJudgePercent));
+            for (int i = 0; i < 100; i++) progress.ChangeJudge(1);
+            Assert.That(progress.JudgePercent, Is.EqualTo(PracticeProgress.MaxJudgePercent));
+            Assert.That(PracticeView.JudgeText(100, "Oni"), Is.EqualTo("100%  <size=70%>良 25 / 可 75 / 不可 108 ms</size>"));
+            Assert.That(PracticeView.JudgeText(200, "Easy"), Is.EqualTo("200%  <size=70%>良 83 / 可 217 / 不可 250 ms</size>"));
+        }
+        // A result played with a custom judge size is marked, and SaveScore drops it like auto play.
+        [Test]
+        public void CustomJudgeResultIsMarked()
+        {
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\n#START\n1000,\n#END");
+            Assert.That(PlayResult.From(new PlaySession(chart), "test", false).CustomJudge, Is.False);
+            Assert.That(PlayResult.From(new PlaySession(chart, judgeScale: 1.5), "test", false).CustomJudge, Is.True);
+        }
         // The judge offset is real seconds too: 30 ms late input stays centred at any speed.
         [TestCase(0.5)]
         [TestCase(2.0)]

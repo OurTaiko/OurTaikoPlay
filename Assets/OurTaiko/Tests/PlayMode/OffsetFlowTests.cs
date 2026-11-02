@@ -109,6 +109,7 @@ namespace OurTaiko.Tests
                     play.MovePractice(-1); play.MovePractice(-1);
                     play.ConfirmPractice(); yield return null;
                     Assert.That(play.Practice.Speed, Is.EqualTo(.8));
+                    play.ConfirmPractice(); yield return null;
                 }
                 // A and B are real milliseconds: in chart time they shrink with the practice speed.
                 double rate = practice ? .8 : 1, audio = a / 1000.0 * rate, judge = b / 1000.0 * rate;

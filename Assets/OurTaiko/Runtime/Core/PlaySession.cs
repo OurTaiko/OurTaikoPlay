@@ -18,6 +18,9 @@ namespace OurTaiko
         // In chart seconds; the configured offset is real seconds.
         public double JudgeOffset => realJudgeOffset * Rate;
         readonly double realJudgeOffset;
+        // Multiplies the 良/可/不可 windows (practice only). Anything but 1 is not the standard
+        // judgement, so a result played with it must never be saved or uploaded (PlayResult.CustomJudge).
+        public double JudgeScale { get; }
         public BranchRoute? ForcedBranch { get; }
         // Results are written only here, so every change also moves Version.
         public IReadOnlyList<bool> Resolved => resolved;
@@ -106,9 +109,12 @@ namespace OurTaiko
         // A fixed route (practice) plays every branch on ResolveRoute(route) and evaluates no
         // condition. Without one, branches are judged by their #BRANCHSTART condition; the reference
         // player does not define omitted routes, so such charts are refused, not guessed.
-        public PlaySession(TaikoChart chart, double judgeOffset = 0, BranchRoute? forcedBranch = null, double rate = 1)
+        public PlaySession(TaikoChart chart, double judgeOffset = 0, BranchRoute? forcedBranch = null, double rate = 1,
+            double judgeScale = 1)
         {
             if (double.IsNaN(rate) || double.IsInfinity(rate) || rate <= 0) throw new ArgumentOutOfRangeException(nameof(rate));
+            if (double.IsNaN(judgeScale) || double.IsInfinity(judgeScale) || judgeScale <= 0)
+                throw new ArgumentOutOfRangeException(nameof(judgeScale));
             if (!forcedBranch.HasValue)
                 foreach (var branch in chart.Branches)
                     if (!branch.HasAllRoutes)
@@ -116,6 +122,7 @@ namespace OurTaiko
             ForcedBranch = forcedBranch;
             realJudgeOffset = judgeOffset;
             Rate = rate;
+            JudgeScale = judgeScale;
             Chart = chart; resolved = new bool[chart.Notes.Count]; missed = new bool[chart.Notes.Count]; skipped = new bool[chart.Notes.Count]; exploded = new bool[chart.Notes.Count]; longHits = new int[chart.Notes.Count];
             timingOffsets = new double?[chart.Notes.Count];
             kusudamas = new Kusudama[chart.Notes.Count];
@@ -125,10 +132,10 @@ namespace OurTaiko
             scoring = new ShinuchiScore(statistics);
             gauge = new SoulGauge(statistics.RouteNotes, chart.Course, chart.Level);
             branchCounter = new BranchCounter(branchFeed);
-            bool easy = chart.Course == "Easy" || chart.Course == "Normal";
-            goodWindow = (easy ? 0.0417083358764648 : GoodWindow) * rate;
-            okWindow = (easy ? 0.108441665649414 : OkWindow) * rate;
-            badWindow = (easy ? 0.125125 : BadWindow) * rate;
+            var windows = StandardWindows(chart.Course);
+            goodWindow = windows.Good * judgeScale * rate;
+            okWindow = windows.Ok * judgeScale * rate;
+            badWindow = windows.Bad * judgeScale * rate;
             kadonWait = KadonWait * rate;
             selectedRoutes = Enumerable.Repeat(-1, chart.Branches.Count).ToArray();
             timeSorted = true;
@@ -140,6 +147,11 @@ namespace OurTaiko
             // Stable order preserves authored checkpoint order when several become ready together.
             timeline = timeline.OrderBy(e => e.Time).ThenBy(e => e.Priority).ToList();
         }
+
+        // The course's unscaled windows in real seconds: かんたん and ふつう are wider.
+        public static (double Good, double Ok, double Bad) StandardWindows(string course)
+            => course == "Easy" || course == "Normal" ? (0.0417083358764648, 0.108441665649414, 0.125125)
+                : (GoodWindow, OkWindow, BadWindow);
 
         public bool IsActive(ChartNote note) => IsActive(note.BranchId, note.Route);
 
@@ -163,11 +175,12 @@ namespace OurTaiko
 
         // Start a fresh practice attempt without replaying judgments, sounds or missed-note penalties.
         // Preserve already chosen branches before the cursor, and recalculate future checkpoints.
-        // The rate defaults to the previous attempt's.
+        // The rate and the judge scale default to the previous attempt's.
         public static PlaySession PracticeAt(TaikoChart chart, double time, PlaySession previous = null, BranchRoute? forcedBranch = null,
-            double? rate = null)
+            double? rate = null, double? judgeScale = null)
         {
-            var session = new PlaySession(chart, previous?.realJudgeOffset ?? 0, forcedBranch, rate ?? previous?.Rate ?? 1) { practiceStart = time };
+            var session = new PlaySession(chart, previous?.realJudgeOffset ?? 0, forcedBranch, rate ?? previous?.Rate ?? 1,
+                judgeScale ?? previous?.JudgeScale ?? 1) { practiceStart = time };
             while (session.nextEvent < session.timeline.Count && session.timeline[session.nextEvent].Time <= time)
             {
                 var item = session.timeline[session.nextEvent++];

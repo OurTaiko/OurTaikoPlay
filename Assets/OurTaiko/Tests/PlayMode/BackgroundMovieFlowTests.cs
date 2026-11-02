@@ -92,7 +92,9 @@ namespace OurTaiko.Tests
                 yield return Wait(() => !movie.player.IsSeeking && System.Math.Abs(movie.player.Position - (play.SongTime - 1)) < .05);
                 Assert.That(movie.player.IsPlaying, Is.False);
                 Assert.That(movie.IsShowing, Is.True);
-                // The measure, then the speed (kept at 1): practice plays from just before the measure.
+                // The measure, the speed (kept at 1), then the judge size (kept at 100%): practice plays
+                // from just before the measure.
+                play.ConfirmPractice(); yield return null;
                 play.ConfirmPractice(); yield return null;
                 play.ConfirmPractice();
                 yield return Wait(() => !play.IsPaused);

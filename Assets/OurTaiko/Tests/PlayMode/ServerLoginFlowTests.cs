@@ -256,6 +256,8 @@ namespace OurTaiko.Tests
             play.ConfirmPractice();
             yield return null;
             play.ConfirmPractice();
+            yield return null;
+            play.ConfirmPractice();
             yield return WaitUntil(() => !play.IsPaused, 5);
             yield return WaitUntil(() => play.IsPaused, 20);
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.PracticeScene));

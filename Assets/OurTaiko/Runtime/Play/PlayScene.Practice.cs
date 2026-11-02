@@ -65,7 +65,8 @@ namespace OurTaiko
         void ResetPracticeAttempt(double position)
         {
             var previous = Session;
-            Session = PlaySession.PracticeAt(previous.Chart, position + VisualOffset, previous, practiceBranch, Practice.Speed);
+            Session = PlaySession.PracticeAt(previous.Chart, position + VisualOffset, previous, practiceBranch, Practice.Speed,
+                Practice.JudgeScale);
             Lane1.ResetBranchLane(position + VisualOffset);
             Lane1.ResetAttempt();
         }
@@ -74,7 +75,7 @@ namespace OurTaiko
             Practice.Update(GameTimeline.FrameTime);
             RenderNotes(Practice.Position);
             SampleDancers(Practice.Position);
-            practiceView.Show(PracticeStage, Practice, PracticeBranch);
+            practiceView.Show(PracticeStage, Practice, PracticeBranch, Session.Chart.Course);
         }
         void UpdatePracticePause()
         {
@@ -95,6 +96,7 @@ namespace OurTaiko
         {
             if (!CanAdjustPractice) return;
             if (PracticeStage == PracticeStage.Speed) Practice.ChangeSpeed(Math.Sign(direction));
+            else if (PracticeStage == PracticeStage.Judge) Practice.ChangeJudge(direction);
             else if (PracticeStage == PracticeStage.Branch) ChangePracticeBranch(Math.Sign(direction));
             else
             {
@@ -108,7 +110,7 @@ namespace OurTaiko
         {
             if (!CanAdjustPractice) return;
             pauseOpenedFrame = Time.frameCount;
-            if (PracticeStage != PracticeStage.Speed) { PracticeStage++; ShowPracticePause(); return; }
+            if (PracticeStage != PracticeStage.Judge) { PracticeStage++; ShowPracticePause(); return; }
             ResetPracticeAttempt(Practice.Target);
             practiceView.panel.SetActive(false);
             practiceRewinding = true;

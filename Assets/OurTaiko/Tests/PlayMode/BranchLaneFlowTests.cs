@@ -38,6 +38,7 @@ namespace OurTaiko.Tests
                 for (int i = 0; i < targetMeasure; i++) play.MovePractice(1);
                 Assert.That(play.Practice.Target, Is.EqualTo(targetMeasure).Within(1e-6));
                 play.ConfirmPractice(); yield return null;
+                play.ConfirmPractice(); yield return null;
                 play.ConfirmPractice();
                 while (play.IsPaused) yield return null;
                 Assert.That(play.SongTime, Is.EqualTo(targetMeasure - 2).Within(.01));
@@ -114,6 +115,7 @@ namespace OurTaiko.Tests
                     play.MovePractice(1); Check(BranchRoute.Normal);
                     play.MovePractice(-1); Check(BranchRoute.Master);
                     play.MovePractice(-1); Check(BranchRoute.Normal);
+                    play.ConfirmPractice(); yield return null;
                     play.ConfirmPractice(); yield return null;
                     play.ConfirmPractice();
                     while (play.IsPaused) yield return null;
