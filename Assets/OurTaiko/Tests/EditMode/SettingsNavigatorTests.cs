@@ -61,7 +61,7 @@ namespace OurTaiko.Tests
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
             Assert.That(nav.Page.Id, Is.EqualTo("play"), "The page stays selected.");
             nav.Confirm();
-            nav.Move(3);
+            Focus(nav, "drum-pad");
             Assert.That(nav.Move(1), Is.EqualTo(SettingsNavigator.Result.Returned), "Ka below the last row too.");
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
 

@@ -48,7 +48,7 @@ namespace OurTaiko.Tests
         [TestCase(2.0)]
         public void CustomWindowsKeepRealMilliseconds(double rate)
         {
-            var chart = TjaParser.Parse("BPM:120\nCOURSE:Easy\n#START\n1000,\n#END");
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Easy\n#START\n1000,\n#END", "Easy");
             var windows = JudgeWindows.FromMs(40, 90, 150);
             Judgment HitAt(double realSeconds) => PlaySession.PracticeAt(chart, 0, null, null, rate, windows).Hit(false, realSeconds * rate);
             Assert.That(HitAt(.039), Is.EqualTo(Judgment.Good));
