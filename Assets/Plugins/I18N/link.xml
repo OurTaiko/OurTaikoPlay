@@ -1,0 +1,5 @@
+<linker>
+  <!-- Mono creates its I18N encodings by reflection, so IL2CPP stripping cannot see them. -->
+  <assembly fullname="I18N" preserve="all" />
+  <assembly fullname="I18N.CJK" preserve="all" />
+</linker>

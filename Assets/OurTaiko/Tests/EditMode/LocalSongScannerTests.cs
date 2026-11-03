@@ -127,10 +127,21 @@ namespace OurTaiko.Tests
             Assert.That(catalog.Songs[0].AudioPath, Is.Null);
         }
 
+        // Mono's Path.Combine rejects '|'; it once failed the whole scan, leaving no local songs.
+        [Test]
+        public void AChartWithAnUnusableWavePathIsSkippedAlone()
+        {
+            Write("bad.tja", Chart("Bad", wave: "a|b.ogg"));
+            Write("good.tja", Chart("Good"));
+            LogAssert.Expect(LogType.Warning, new Regex(@"^\[Songs\] Skipping song .*bad\.tja: "));
+            Assert.That(LocalSongScanner.Scan(root).Songs.Select(s => s.Key), Is.EqualTo(new[] { "good" }));
+        }
+
         [Test]
         public void ReadsBomEncodingsAndShiftJis()
         {
-            string text = Chart("太鼓の達人");
+            // 竹 is 92 7C in Shift-JIS: misread as UTF-8 it leaves a '|' in the WAVE path.
+            string text = Chart("太鼓の達人", wave: "竹.ogg");
             Assert.That(LocalSongScanner.ReadText(new UTF8Encoding(true).GetPreamble().Concat(Encoding.UTF8.GetBytes(text)).ToArray()), Is.EqualTo(text));
             Assert.That(LocalSongScanner.ReadText(Encoding.Unicode.GetPreamble().Concat(Encoding.Unicode.GetBytes(text)).ToArray()), Is.EqualTo(text));
             Assert.That(LocalSongScanner.ReadText(Encoding.UTF8.GetBytes(text)), Is.EqualTo(text));

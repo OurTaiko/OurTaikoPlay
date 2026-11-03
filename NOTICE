@@ -28,6 +28,8 @@ ManagedBass is included as the unmodified TeamMajdata/ManagedBass Git submodule
 at 5944aad3842484d78f588d63d5bdc8a85569495b, under its included MIT license.
 System.Runtime.CompilerServices.Unsafe 6.1.2 is Microsoft's MIT-licensed binary
 dependency; its license and package provenance are included beside the DLL.
+Mono's I18N and I18N.CJK encodings, unmodified from Unity 6000.6.8f1, are
+included under their MIT license; license and provenance are in Assets/Plugins/I18N.
 BASS and its native add-ons retain their individual licenses and notices in
 Assets/Plugins/Un4seen.Bass, separate from the ManagedBass license.
 

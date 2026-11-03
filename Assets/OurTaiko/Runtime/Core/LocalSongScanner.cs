@@ -175,7 +175,10 @@ namespace OurTaiko
                     MoviePath = movie != null && File.Exists(movie) ? movie : null,
                 });
             }
-            catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is FormatException)
+            // Mono's Path.Combine throws ArgumentException for a WAVE or BGMOVIE with '|', '"', '<'
+            // or '>'; one such chart must not fail the whole scan.
+            catch (Exception error) when (error is IOException || error is UnauthorizedAccessException ||
+                error is FormatException || error is ArgumentException || error is NotSupportedException)
             {
                 Log.Warn("Songs", $"Skipping song {file}: {error.Message}");
             }
