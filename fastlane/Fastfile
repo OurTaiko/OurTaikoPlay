@@ -39,6 +39,18 @@ def exact_build_uploaded?(attempts: 1)
   false
 end
 
+# App Store Connect reviews one external beta build of an app at a time; submitting another
+# while one waits or is in review fails after the upload.
+def build_in_beta_review?
+  app = Spaceship::ConnectAPI::App.find(ENV.fetch("BUNDLE_ID"))
+  UI.user_error!("App Store Connect app not found") unless app
+  response = Spaceship::ConnectAPI.get_builds(
+    filter: { app: app.id, "betaAppReviewSubmission.betaReviewState" => "WAITING_FOR_REVIEW,IN_REVIEW" },
+    limit: 1
+  )
+  !response.to_models.empty?
+end
+
 platform :ios do
   lane :build do
     update_code_signing_settings(
@@ -83,6 +95,10 @@ platform :ios do
       key_content: ENV.fetch("APPSTORE_PRIVATE_KEY")
     )
     group = ENV["TESTFLIGHT_GROUP"].to_s
+    if !group.empty? && build_in_beta_review?
+      UI.important("Another build is waiting for or in beta review; this one goes to internal testers only.")
+      group = ""
+    end
     options = {
       api_key: api_key,
       app_identifier: ENV.fetch("BUNDLE_ID"),
