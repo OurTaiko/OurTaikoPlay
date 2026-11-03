@@ -21,6 +21,24 @@ def wait_for_exact_build
   end
 end
 
+# main and a v* tag pushed on the same commit both build this app/version/build; App Store
+# Connect rejects the second upload. A build only lists a while after its upload, hence attempts.
+def exact_build_uploaded?(attempts: 1)
+  app = Spaceship::ConnectAPI::App.find(ENV.fetch("BUNDLE_ID"))
+  UI.user_error!("App Store Connect app not found") unless app
+  attempts.times do |attempt|
+    sleep(30) if attempt > 0
+    builds = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      version: ENV.fetch("APP_VERSION"),
+      build_number: ENV.fetch("BUILD_NUMBER"),
+      platform: "IOS"
+    )
+    return true if builds.any?
+  end
+  false
+end
+
 platform :ios do
   lane :build do
     update_code_signing_settings(
@@ -79,14 +97,25 @@ platform :ios do
       wait_processing_timeout_duration: 1800,
       ipa: File.join(ENV.fetch("IPA_DIR"), "OurTaikoPlay.ipa")
     }
+    build = "#{ENV.fetch('APP_VERSION')} (#{ENV.fetch('BUILD_NUMBER')})"
+    if exact_build_uploaded?
+      UI.important("#{build} is already on TestFlight from another run of this commit; not uploading it again.")
+      next
+    end
     begin
       upload_to_testflight(**options)
     rescue FastlaneCore::Interface::FastlaneError => error
+      server_error = error.message.include?("Error uploading ipa file") &&
+                     error.message.include?("internal server error")
+      unless server_error
+        # The other run of this commit can finish its upload after the check above.
+        raise unless exact_build_uploaded?(attempts: 10)
+        UI.important("#{build} was uploaded by another run of this commit meanwhile; not uploading it again.")
+        next
+      end
       # altool can recover from an Apple 500 and report UPLOAD SUCCEEDED, while
       # fastlane still treats the earlier diagnostic as fatal. Never re-upload:
       # require this exact app/version/build to finish processing before recovery.
-      raise unless error.message.include?("Error uploading ipa file") &&
-                   error.message.include?("internal server error")
       UI.important("Apple reported a server error; checking the exact build before resuming distribution.")
       wait_for_exact_build
       upload_to_testflight(**options.except(:ipa).merge(distribute_only: true))
