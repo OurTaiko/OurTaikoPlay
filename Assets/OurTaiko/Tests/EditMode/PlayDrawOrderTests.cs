@@ -13,12 +13,14 @@ namespace OurTaiko.Tests
     {
         [TestCase("SinglePlayScene")]
         [TestCase("PracticeScene")]
+        [TestCase("DoublePlayScene")]
+        [TestCase("DanPlayScene")]
         public void AllSavedGraphicsKeepOriginalDrawOrder(string name)
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/" + name + ".unity");
             try
             {
-                var play = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<PlayScene>(true)).Single();
+                var play = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<PlaySceneBase>(true)).Single();
                 var root = play.firstLane.noteLayer.GetComponentInParent<Canvas>().rootCanvas;
                 var graphics = root.GetComponentsInChildren<Graphic>(true);
                 var expected = File.ReadAllLines("Assets/OurTaiko/Tests/Fixtures/" + name + "DrawOrder.txt")

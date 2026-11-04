@@ -43,7 +43,8 @@ namespace OurTaiko.Tests
                 var play = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<PlayScene>(true)).Single();
                 var face = play.firstLane.hitFace;
                 Assert.That(face, Is.Not.Null);
-                Assert.That(PrefabUtility.GetCorrespondingObjectFromSource(face.gameObject),
+                // HitFace is nested inside NoteLane.prefab now; the original source is still HitFace.prefab.
+                Assert.That(PrefabUtility.GetCorrespondingObjectFromOriginalSource(face.gameObject),
                     Is.SameAs(AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath)));
                 var rect = (RectTransform)face.transform;
                 Assert.That(rect.parent, Is.SameAs(play.firstLane.noteLayer.parent.parent));
@@ -53,7 +54,7 @@ namespace OurTaiko.Tests
                 // Player::draw: face under the notes; ring over the notes and lane cover, under the drum.
                 Assert.That(rect.GetSiblingIndex() + 1, Is.EqualTo(play.firstLane.noteLayer.parent.GetSiblingIndex()));
                 var ring = (RectTransform)play.firstLane.hitRing.transform;
-                Assert.That(PrefabUtility.GetCorrespondingObjectFromSource(ring.gameObject),
+                Assert.That(PrefabUtility.GetCorrespondingObjectFromOriginalSource(ring.gameObject),
                     Is.SameAs(AssetDatabase.LoadAssetAtPath<GameObject>(RingPrefabPath)));
                 Assert.That(ring.parent, Is.SameAs(play.firstLane.judgment.transform.parent));
                 Assert.That(ring.anchoredPosition, Is.EqualTo(new Vector2(450, 58)));
