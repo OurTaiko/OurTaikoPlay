@@ -127,7 +127,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.Record.Inputs[0].Ms, Is.EqualTo(TjaTime.Ms(songTime - audio) - judge * 1000).Within(1e-6));
                 Assert.That(play.Record.AudioOffsetMs, Is.EqualTo(a + b));
                 Assert.That(play.Record.VisualOffsetMs, Is.EqualTo(-b));
-                Assert.That(play.hitFace.IsPlaying, Is.True);
+                Assert.That(play.firstLane.hitFace.IsPlaying, Is.True);
                 if (practice)
                 {
                     play.TogglePause(); yield return null;

@@ -26,8 +26,8 @@ namespace OurTaiko.Tests
                 // The pause is refused until the song clock has started; the frozen clock is the session's time base.
                 while (!play.IsPaused) { play.TogglePause(); Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
                 play.pausePanel.SetActive(false);
-                var face = play.hitFace;
-                var ring = play.hitRing;
+                var face = play.firstLane.hitFace;
+                var ring = play.firstLane.hitRing;
                 Assert.That(face.image.enabled || ring.image.enabled, Is.False);
 
                 // The session is driven directly; the views are timed from the frozen chart clock

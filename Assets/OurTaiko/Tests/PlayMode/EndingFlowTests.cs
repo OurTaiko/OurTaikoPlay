@@ -39,7 +39,7 @@ namespace OurTaiko.Tests
                 }
                 Assert.That(play.Result.AutoPlay, Is.True);
                 Assert.That(play.Result.ResultCrown, Is.EqualTo(Crown.DonderfulCombo));
-                Assert.That(play.ending.gameObject.activeSelf, Is.True);
+                Assert.That(play.firstLane.ending.gameObject.activeSelf, Is.True);
                 Assert.That(switcher.IsSwitching, Is.False);
                 var dancerFrames = new HashSet<int>();
                 var fireFrames = new HashSet<Sprite>();
@@ -50,8 +50,8 @@ namespace OurTaiko.Tests
                 while (GameTimeline.FrameTime < observeUntil)
                 {
                     dancerFrames.Add(play.dancers.dancers[0].Frame);
-                    fireFrames.Add(play.soulGauge.fire.sprite);
-                    rainbowFrames.Add(play.soulGauge.rainbowA.sprite);
+                    fireFrames.Add(play.firstLane.soulGauge.fire.sprite);
+                    rainbowFrames.Add(play.firstLane.soulGauge.rainbowA.sprite);
                     Assert.That(play.Session.Version, Is.EqualTo(version), "Presentation must not advance judgment after the result is captured.");
                     yield return null;
                 }
@@ -100,11 +100,11 @@ namespace OurTaiko.Tests
                 var result = play.Result;
                 Assert.That((int)result.ResultCrown, Is.EqualTo(kind));
                 Assert.That(play.IsFinished, Is.True);
-                Assert.That(play.ending.gameObject.activeSelf, Is.True);
+                Assert.That(play.firstLane.ending.gameObject.activeSelf, Is.True);
                 Assert.That(play.pauseButton.interactable, Is.False);
                 Assert.That(play.drumPad.enabled, Is.False);
                 Assert.That(switcher.IsSwitching, Is.False, "The curtain must wait for the ending.");
-                AssertEndingAudio(play.ending, kind);
+                AssertEndingAudio(play.firstLane.ending, kind);
                 double started = GameTimeline.FrameTime;
                 var record = play.Record;
                 int inputs = record.Inputs.Count;
@@ -113,13 +113,13 @@ namespace OurTaiko.Tests
                 Assert.That(record.Inputs.Count, Is.EqualTo(inputs));
                 Assert.That(session.Score, Is.EqualTo(score));
                 yield return new WaitForSecondsRealtime(1.2f);
-                Assert.That(play.hitFace.IsPlaying || play.hitRing.IsPlaying, Is.False,
+                Assert.That(play.firstLane.hitFace.IsPlaying || play.firstLane.hitRing.IsPlaying, Is.False,
                     "Existing hit effects must expire instead of freezing over the ending.");
-                Assert.That(play.noteArcs.ActiveCount, Is.Zero, "Existing flying notes must finish their animation.");
+                Assert.That(play.firstLane.noteArcs.ActiveCount, Is.Zero, "Existing flying notes must finish their animation.");
                 Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.GameScene));
                 TestCapture.Capture("Ending-" + kind + ".png");
                 TestCapture.Capture("Ending720-" + kind + ".png", 1280, 720);
-                while (GameTimeline.FrameTime - started < play.ending.Duration - .1)
+                while (GameTimeline.FrameTime - started < play.firstLane.ending.Duration - .1)
                 {
                     Assert.That(switcher.IsSwitching, Is.False);
                     yield return null;
@@ -132,7 +132,7 @@ namespace OurTaiko.Tests
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var restarted = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(restarted.IsFinished, Is.False);
-                Assert.That(restarted.ending.gameObject.activeSelf, Is.False);
+                Assert.That(restarted.firstLane.ending.gameObject.activeSelf, Is.False);
                 Assert.That(restarted.pauseButton.interactable, Is.True);
             }
             finally

@@ -15,7 +15,7 @@ namespace OurTaiko.Tests
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/" + name + ".unity");
             try
             {
-                var counter = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<PlayScene>(true)).Single().scoreCounter;
+                var counter = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<PlayScene>(true)).Single().firstLane.scoreCounter;
                 var row = counter.additionTemplate;
                 Assert.That(row, Is.Not.Null);
                 var clip = row.GetComponent<ClipSampler>().clip;

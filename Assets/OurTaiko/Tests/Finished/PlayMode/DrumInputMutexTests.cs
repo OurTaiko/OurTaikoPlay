@@ -106,7 +106,7 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                 }
                 Assert.That(play.Session.Rolls, Is.Zero);
-                Assert.That(play.drumFlashes.Any(f => f.enabled), Is.False);
+                Assert.That(play.firstLane.drumFlashes.Any(f => f.enabled), Is.False);
 
                 // Four drum keys in one frame: only the earliest (left ka) is judged.
                 Press(Key.D, Key.F, Key.J, Key.K);
@@ -118,7 +118,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.Record.Inputs[0].Ms, Is.EqualTo((double)TjaTime.Ms(play.SongTime - song.audioOffsetMs / 1000.0)).Within(0.000001),
                     "The event timestamp only orders presses; judgment uses this frame's song time.");
                 // drumFlashes: left don, right don, left ka, right ka.
-                Assert.That(play.drumFlashes.Select(f => f.enabled), Is.EqualTo(new[] { false, false, true, false }));
+                Assert.That(play.firstLane.drumFlashes.Select(f => f.enabled), Is.EqualTo(new[] { false, false, true, false }));
 
                 // Holding the keys is not another hit.
                 yield return null;
@@ -136,7 +136,7 @@ namespace OurTaiko.Tests
                 ReleaseAll(); yield return null;
                 Press(Key.J, Key.D); yield return null;
                 Assert.That(play.Session.Rolls, Is.EqualTo(4));
-                Assert.That(play.drumFlashes[1].enabled, Is.True);
+                Assert.That(play.firstLane.drumFlashes[1].enabled, Is.True);
                 Assert.That(play.SongTime, Is.LessThan(4), "All presses must land inside the drumroll.");
                 ReleaseAll(); yield return null;
             }

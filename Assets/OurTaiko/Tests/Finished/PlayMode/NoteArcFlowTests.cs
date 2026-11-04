@@ -30,10 +30,10 @@ namespace OurTaiko.Tests
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
-                var arcs = play.noteArcs; var session = play.Session;
+                var arcs = play.firstLane.noteArcs; var session = play.Session;
                 Assert.That(arcs, Is.Not.Null);
                 // Player::draw paints the gauge before draw_overlays, so the arcs fly over it.
-                Assert.That(arcs.transform.GetSiblingIndex(), Is.EqualTo(play.soulGauge.transform.GetSiblingIndex() + 1));
+                Assert.That(arcs.transform.GetSiblingIndex(), Is.EqualTo(play.firstLane.soulGauge.transform.GetSiblingIndex() + 1));
                 string Sprite(int i) => arcs.ArcRoot(i).GetComponent<UnityEngine.UI.Image>().sprite.name;
 
                 // Bad does not fly; good/ok notes fly as themselves.
@@ -59,14 +59,14 @@ namespace OurTaiko.Tests
                 var viewport = (RectTransform)arcs.transform.parent;
                 Vector2 Local(Transform t) => viewport.InverseTransformPoint(t.position);
                 Vector2 Centre(RectTransform r) => viewport.InverseTransformPoint(r.TransformPoint(r.rect.center));
-                var lane = (RectTransform)play.noteLayer.parent.parent;
+                var lane = (RectTransform)play.firstLane.noteLayer.parent.parent;
                 // Arcs start at the judging frame's whole millisecond.
                 double start = TjaTime.Truncate(play.SongTime - SceneSwitcher.Instance.SelectedSong.audioOffsetMs / 1000.0);
                 arcs.ShowTime(start);
                 Assert.That(Vector2.Distance(Local(arcs.ArcRoot(0)), (Vector2)viewport.InverseTransformPoint(lane.TransformPoint(new Vector3(618, -110)))), Is.LessThan(0.1f));
                 arcs.ShowTime(start + NoteArcPath.Duration / 2);
                 Assert.That(Local(arcs.ArcRoot(0)).y, Is.EqualTo(Local(lane).y + 299).Within(1));
-                var soul = (RectTransform)play.soulGauge.transform.Find("Soul");
+                var soul = (RectTransform)play.firstLane.soulGauge.transform.Find("Soul");
                 arcs.ShowTime(start + NoteArcPath.Duration - 1e-6);
                 Assert.That(Vector2.Distance(Local(arcs.ArcRoot(0)), Centre(soul)), Is.LessThan(0.1f));
                 var effect = arcs.gaugeHitEffect;

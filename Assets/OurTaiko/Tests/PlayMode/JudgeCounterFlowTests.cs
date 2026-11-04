@@ -25,12 +25,12 @@ namespace OurTaiko.Tests
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
-                var counter = play.judgeCounter;
+                var counter = play.firstLane.judgeCounter;
 
                 // Over the 1P cover, after ComboAnnounce (judge_counter follows combo_announce).
-                Assert.That(counter.transform.parent, Is.SameAs(play.comboAnnounce.transform.parent));
-                Assert.That(counter.transform.GetSiblingIndex(), Is.EqualTo(play.comboAnnounce.transform.GetSiblingIndex() + 1));
-                Assert.That(counter.digits, Is.EqualTo(play.scoreCounter.digits), "Counts use the score counter's digits.");
+                Assert.That(counter.transform.parent, Is.SameAs(play.firstLane.comboAnnounce.transform.parent));
+                Assert.That(counter.transform.GetSiblingIndex(), Is.EqualTo(play.firstLane.comboAnnounce.transform.GetSiblingIndex() + 1));
+                Assert.That(counter.digits, Is.EqualTo(play.firstLane.scoreCounter.digits), "Counts use the score counter's digits.");
                 for (int row = 0; row < 4; row++) Assert.That(counter.Text(row), Is.EqualTo("0"));
 
                 var session = play.Session;

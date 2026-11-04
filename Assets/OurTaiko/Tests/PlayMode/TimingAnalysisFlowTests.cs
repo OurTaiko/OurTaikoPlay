@@ -164,10 +164,10 @@ namespace OurTaiko.Tests
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
-                var feedback = play.timingFeedback;
+                var feedback = play.firstLane.timingFeedback;
                 Assert.That(feedback, Is.Not.Null);
                 Assert.That(feedback.GetComponent<Canvas>().sortingOrder,
-                    Is.GreaterThan(play.judgeCounter.GetComponentInParent<Canvas>().sortingOrder));
+                    Is.GreaterThan(play.firstLane.judgeCounter.GetComponentInParent<Canvas>().sortingOrder));
                 var notes = play.Session.Chart.Notes;
                 play.Session.Hit(false, notes[0].Time + play.Session.JudgeOffset - .02);
                 Assert.That(feedback.label.text, Is.EqualTo("-20ms"));

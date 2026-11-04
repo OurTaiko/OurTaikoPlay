@@ -66,7 +66,7 @@ namespace OurTaiko.Tests
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
-                var lane = (RectTransform)play.scoreCounter.transform.parent;
+                var lane = (RectTransform)play.firstLane.scoreCounter.transform.parent;
                 Assert.That(lane.parent.Find("PlayerName"), Is.Null, "The debug player label is gone.");
                 Assert.That(lane.parent.Find("PlayState"), Is.Null, "No AUTO PLAY / READY debug label.");
 
@@ -76,7 +76,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.RectTransform.anchoredPosition, Is.EqualTo(new Vector2(-44, -161)));
                 Assert.That(plate.RectTransform.sizeDelta, Is.EqualTo(new Vector2(408, 96)));
                 Assert.That(plate.transform.GetSiblingIndex(), Is.GreaterThan(lane.Find("Drum").GetSiblingIndex()));
-                Assert.That(lane.GetComponent<Canvas>().sortingOrder, Is.LessThan(play.balloonCounter.GetComponentInParent<Canvas>().sortingOrder),
+                Assert.That(lane.GetComponent<Canvas>().sortingOrder, Is.LessThan(play.firstLane.balloonCounter.GetComponentInParent<Canvas>().sortingOrder),
                     "The balloon overlay draws above the lane containing the nameplate.");
 
                 // Title and dan: the band family with the gold 達人 on the rainbow ring and the *_dani name box.
@@ -96,13 +96,13 @@ namespace OurTaiko.Tests
                 AssertRenderedSdfScale(plate.playerName);
 
                 // AUTO is the first option-dock badge; the nameplate stays.
-                var dock = play.modifierBadges;
+                var dock = play.firstLane.modifierBadges;
                 Assert.That(dock.Count, Is.EqualTo(1));
                 Assert.That(dock.GetComponentsInChildren<UnityEngine.UI.Image>().First().sprite, Is.SameAs(dock.auto));
                 Assert.That(plate.gameObject.activeInHierarchy, Is.True);
 
                 // ScoreCounter: the grey cover, then right-aligned digits that start at a plain 0.
-                var counter = play.scoreCounter;
+                var counter = play.firstLane.scoreCounter;
                 Assert.That(counter.transform.GetSiblingIndex(), Is.GreaterThan(plate.transform.GetSiblingIndex()));
                 Assert.That(counter.transform.GetSiblingIndex(), Is.LessThan(lane.Find("Ending").GetSiblingIndex()),
                     "The ending overlay remains above the lane's score counter.");

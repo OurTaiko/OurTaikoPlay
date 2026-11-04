@@ -90,7 +90,7 @@ namespace OurTaiko.Tests
             // No note shows while the title is up; the song begins once it has gone.
             while (scene.view.betweenTitle.gameObject.activeInHierarchy)
             {
-                Assert.That(scene.noteLayer.Cast<Transform>().Count(t => t.gameObject.activeSelf), Is.Zero, "A note under the title.");
+                Assert.That(scene.firstLane.noteLayer.Cast<Transform>().Count(t => t.gameObject.activeSelf), Is.Zero, "A note under the title.");
                 yield return null;
             }
 
@@ -106,9 +106,9 @@ namespace OurTaiko.Tests
             // The doors close over the lane with song B's title.
             yield return WaitUntil(() => scene.SongIndex == 1, 15);
             // Nothing of song A stays on the lane; the course's gauge carries on.
-            Assert.That(scene.noteLayer.Cast<Transform>().Count(t => t.gameObject.activeSelf), Is.Zero);
+            Assert.That(scene.firstLane.noteLayer.Cast<Transform>().Count(t => t.gameObject.activeSelf), Is.Zero);
             Assert.That(scene.Gauge.Points, Is.GreaterThan(0));
-            Assert.That(scene.soulGauge.FilledCells, Is.GreaterThan(0));
+            Assert.That(scene.firstLane.soulGauge.FilledCells, Is.GreaterThan(0));
             Assert.That(scene.Lane.Carry.Good, Is.EqualTo(11), "Song A's 良 carry into the course's counts.");
             Assert.That(scene.Lane.DisplayCombo, Is.EqualTo(11), "The combo runs on into song B.");
             yield return new WaitForSecondsRealtime(3f);
@@ -125,8 +125,8 @@ namespace OurTaiko.Tests
             // The course passed: 合格 over the lane, on the clear ending's dancers.
             yield return WaitUntil(() => scene.IsFinished, 30);
             yield return new WaitForSecondsRealtime(1.7f);
-            Assert.That(scene.ending.danWord.enabled, Is.True, "合格");
-            Assert.That(scene.ending.GetComponentsInChildren<UnityEngine.UI.Image>().Any(i => i.enabled && System.Array.IndexOf(scene.ending.clearText, i.sprite) >= 0), Is.False, "No クリア成功.");
+            Assert.That(scene.firstLane.ending.danWord.enabled, Is.True, "合格");
+            Assert.That(scene.firstLane.ending.GetComponentsInChildren<UnityEngine.UI.Image>().Any(i => i.enabled && System.Array.IndexOf(scene.firstLane.ending.clearText, i.sprite) >= 0), Is.False, "No クリア成功.");
             TestCapture.Capture("DanPlayPass.png");
 
             yield return WaitForScene(SceneSwitcher.DanResultScene, 40);
@@ -193,8 +193,8 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(1.2f);
             Assert.That(scene.SongTime, Is.GreaterThan(endedAt + 1), "The song clock runs on under the ending.");
             Assert.That(scene.music.AudioFade(), Is.LessThan(1).And.GreaterThan(0), "The music is fading out.");
-            Assert.That(scene.ending.GetComponentsInChildren<UnityEngine.UI.Image>().Any(i => i.enabled && i.sprite == scene.ending.danFail), Is.True, "不合格");
-            Assert.That(scene.ending.danWord.gameObject.activeSelf, Is.False);
+            Assert.That(scene.firstLane.ending.GetComponentsInChildren<UnityEngine.UI.Image>().Any(i => i.enabled && i.sprite == scene.firstLane.ending.danFail), Is.True, "不合格");
+            Assert.That(scene.firstLane.ending.danWord.gameObject.activeSelf, Is.False);
             TestCapture.Capture("DanPlayFailEnding.png");
             yield return WaitForScene(SceneSwitcher.DanResultScene, 30);
             var result = SceneSwitcher.Instance.LastDan;

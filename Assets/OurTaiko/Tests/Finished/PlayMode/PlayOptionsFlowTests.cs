@@ -30,11 +30,11 @@ namespace OurTaiko.Tests
                 Assert.That(notes.All(n => n.Kind == NoteKind.Ka && !n.Display), Is.True, "あべこべ swaps, ドロン hides.");
                 Assert.That(notes[0].ScrollX, Is.EqualTo(2));
                 Assert.That(play.don == null && play.ka == null, Is.True, "無音 has no hit sounds.");
-                Assert.That(play.modifierBadges.Count, Is.EqualTo(3), "Speed, doron and abekobe badges.");
+                Assert.That(play.firstLane.modifierBadges.Count, Is.EqualTo(3), "Speed, doron and abekobe badges.");
                 // At x2.0 the first note is on screen half a second before it is due.
                 float deadline = Time.realtimeSinceStartup + 10;
                 while (play.RenderedTime < -0.4) { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
-                Assert.That(play.noteLayer.Cast<Transform>().Any(t => t.gameObject.activeSelf), Is.False);
+                Assert.That(play.firstLane.noteLayer.Cast<Transform>().Any(t => t.gameObject.activeSelf), Is.False);
                 SceneFlowTests.Capture("PlayOptionsBadges.png");
                 Assert.That(play.Session.Hit(true, notes[0].Time), Is.EqualTo(Judgment.Good), "Hidden notes are still judged.");
                 play.Back();

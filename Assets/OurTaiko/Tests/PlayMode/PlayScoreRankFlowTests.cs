@@ -33,16 +33,16 @@ namespace OurTaiko.Tests
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
-                var badge = play.scoreCounter.scoreRank;
+                var badge = play.firstLane.scoreCounter.scoreRank;
                 Assert.That(badge, Is.Not.Null);
                 Assert.That(badge.transform.localScale, Is.EqualTo(Vector3.one));
                 Assert.That(((RectTransform)badge.transform).anchoredPosition, Is.EqualTo(new Vector2(152, 118)));
                 Assert.That(badge.rank.image.rectTransform.sizeDelta, Is.EqualTo(Vector2.one * 208));
                 Assert.That(badge.GetComponent<Canvas>().overrideSorting, Is.True);
                 Assert.That(badge.GetComponent<Canvas>().sortingOrder,
-                    Is.GreaterThan(play.judgeCounter.GetComponentInParent<Canvas>().sortingOrder));
+                    Is.GreaterThan(play.firstLane.judgeCounter.GetComponentInParent<Canvas>().sortingOrder));
                 Assert.That(badge.GetComponent<Canvas>().sortingOrder,
-                    Is.GreaterThan(play.timingFeedback.GetComponent<Canvas>().sortingOrder));
+                    Is.GreaterThan(play.firstLane.timingFeedback.GetComponent<Canvas>().sortingOrder));
                 Assert.That(badge.GetComponent<Canvas>().sortingOrder,
                     Is.LessThan(play.pausePanel.GetComponent<Canvas>().sortingOrder));
                 Assert.That((int)badge.rank.DisplayedRank, Is.Zero);
@@ -79,14 +79,14 @@ namespace OurTaiko.Tests
                 badge.ShowTime(103.25);
                 Assert.That(badge.rank.group.alpha, Is.EqualTo(1).Within(.001));
                 Assert.That(badge.rank.image.sprite.name, Is.EqualTo("s76"));
-                play.scoreCounter.Show(1000000, play.Session.KiwamiThreshold);
+                play.firstLane.scoreCounter.Show(1000000, play.Session.KiwamiThreshold);
                 Assert.That((int)badge.rank.DisplayedRank, Is.EqualTo(6));
-                play.scoreCounter.Show(1000020, play.Session.KiwamiThreshold);
+                play.firstLane.scoreCounter.Show(1000020, play.Session.KiwamiThreshold);
                 Assert.That((int)badge.rank.DisplayedRank, Is.EqualTo(7));
                 if (practice)
                 {
                     play.MovePractice(1);
-                    Assert.That(play.scoreCounter.Text, Is.EqualTo("0"));
+                    Assert.That(play.firstLane.scoreCounter.Text, Is.EqualTo("0"));
                     Assert.That((int)badge.rank.DisplayedRank, Is.Zero);
                     Assert.That(badge.rank.image.enabled, Is.False);
                     play.Session.Hit(false, play.Session.Chart.Notes[4].Time);
@@ -104,8 +104,8 @@ namespace OurTaiko.Tests
                         yield return null;
                     } while (play != null || switcher.IsInputBlocked);
                     var restarted = Object.FindAnyObjectByType<PlayScene>();
-                    Assert.That((int)restarted.scoreCounter.scoreRank.rank.DisplayedRank, Is.Zero);
-                    Assert.That(restarted.scoreCounter.scoreRank.rank.image.enabled, Is.False);
+                    Assert.That((int)restarted.firstLane.scoreCounter.scoreRank.rank.DisplayedRank, Is.Zero);
+                    Assert.That(restarted.firstLane.scoreCounter.scoreRank.rank.image.enabled, Is.False);
                 }
             }
             finally

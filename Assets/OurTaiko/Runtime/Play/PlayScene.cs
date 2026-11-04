@@ -8,7 +8,7 @@ using UnityEngine;
 namespace OurTaiko
 {
     // The play scenes' driver: the song clock, music, pause, title and ending around one PlayerLane per
-    // seat. The 1P lane's views are this component's own (LaneViews); DoublePlayScene adds secondLane.
+    // seat. The 1P lane's views are firstLane (on NoteLane); DoublePlayScene adds secondLane.
     // The art and sounds the lanes draw with are PlaySceneBase's.
     public sealed partial class PlayScene : PlaySceneBase
     {
@@ -130,7 +130,7 @@ namespace OurTaiko
                 // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.
                 practiceBranch = BranchRoute.Normal;
                 if (kusudama != null) kusudama.ResetDisplay();
-                var sessions = new List<PlaySession> { AddLane(0, this) };
+                var sessions = new List<PlaySession> { AddLane(0, firstLane) };
                 if (secondLane != null) sessions.Add(AddLane(1, secondLane));
                 // Both seats' kusudama at the same time are one ball; a lone one is a balloon.
                 if (sessions.Count > 1) Kusudama.Share(sessions[0], sessions[1]);

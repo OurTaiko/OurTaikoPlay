@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // One player's lane and the HUD that belongs to it (Player::draw and draw_overlays). PlayScene
-    // derives from it, so the play scenes keep the 1P lane on the scene component as before; the
-    // two-player scene adds a second LaneViews on the 2P lane (PlayScene.secondLane).
+    // One player's lane and the HUD that belongs to it (Player::draw and draw_overlays). It sits on
+    // the lane's NoteLane object: 1P's is PlaySceneBase.firstLane, and the two-player scene adds a
+    // second one on NoteLane2P (PlayScene.secondLane).
     public class LaneViews : MonoBehaviour
     {
         // Player::draw: lane/lane_difficulty frame = difficulty (Easy..Ura).

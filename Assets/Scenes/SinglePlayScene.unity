@@ -8219,6 +8219,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1010394549}
   - component: {fileID: 1010394550}
+  - component: {fileID: 1010394551}
   m_Layer: 0
   m_Name: NoteLane
   m_TagString: Untagged
@@ -8277,6 +8278,43 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: -50
   m_TargetDisplay: 0
+--- !u!114 &1010394551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1010394548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cb9c9f5d9ef94876b02ae2676273e14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LaneViews
+  laneDifficulty: {fileID: 114656370}
+  modifierBadges: {fileID: 961300034}
+  noteLayer: {fileID: 2060243652}
+  barLayer: {fileID: 1809151790}
+  mojiLayer: {fileID: 199355009}
+  balloonCounter: {fileID: 608617524}
+  drumrollCounter: {fileID: 1261287495}
+  judgment: {fileID: 1017079119}
+  hitFace: {fileID: 631012317}
+  hitRing: {fileID: 1731969881}
+  soulGauge: {fileID: 671817434}
+  noteArcs: {fileID: 76178598}
+  drumFlashes:
+  - {fileID: 398013031}
+  - {fileID: 1683452662}
+  - {fileID: 220707643}
+  - {fileID: 702618698}
+  scoreCounter: {fileID: 2020266786}
+  combo: {fileID: 1270598235}
+  comboAnnounce: {fileID: 1983080210}
+  judgeCounter: {fileID: 393679049}
+  timingFeedback: {fileID: 1318232733}
+  branchLane: {fileID: 861875410}
+  gogo: {fileID: 758571553}
+  ending: {fileID: 1369071517}
 --- !u!1 &1017079116
 GameObject:
   m_ObjectHideFlags: 0
@@ -11506,31 +11544,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa950c0b127584ae6a0959f42896b42d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.PlayScene
-  laneDifficulty: {fileID: 114656370}
-  modifierBadges: {fileID: 961300034}
-  noteLayer: {fileID: 2060243652}
-  barLayer: {fileID: 1809151790}
-  mojiLayer: {fileID: 199355009}
-  balloonCounter: {fileID: 608617524}
-  drumrollCounter: {fileID: 1261287495}
-  judgment: {fileID: 1017079119}
-  hitFace: {fileID: 631012317}
-  hitRing: {fileID: 1731969881}
-  soulGauge: {fileID: 671817434}
-  noteArcs: {fileID: 76178598}
-  drumFlashes:
-  - {fileID: 398013031}
-  - {fileID: 1683452662}
-  - {fileID: 220707643}
-  - {fileID: 702618698}
-  scoreCounter: {fileID: 2020266786}
-  combo: {fileID: 1270598235}
-  comboAnnounce: {fileID: 1983080210}
-  judgeCounter: {fileID: 393679049}
-  timingFeedback: {fileID: 1318232733}
-  branchLane: {fileID: 861875410}
-  gogo: {fileID: 758571553}
-  ending: {fileID: 1369071517}
+  firstLane: {fileID: 1010394551}
   music: {fileID: 976959716}
   hitAudio: {fileID: 549007535}
   don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}
@@ -11538,6 +11552,7 @@ MonoBehaviour:
   balloonPop: {fileID: 8300000, guid: 44b1297bb1bd74b4ab8ac5ed9f62c148, type: 3}
   kusudamaPop: {fileID: 8300000, guid: e7df7d936a436464a94bfa6e9c9b284d, type: 3}
   adLibHit: {fileID: 8300000, guid: 802dd0a590d544b9aca25550a434cd56, type: 3}
+  mineHit: {fileID: 0}
   hitSounds: {fileID: 11400000, guid: 5515db8dbe20b4e3796637e25e79846f, type: 2}
   laneDifficultySprites:
   - {fileID: -455977207, guid: afc21b14a938040be93225af4c3983cf, type: 3}

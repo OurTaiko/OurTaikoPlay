@@ -26,14 +26,14 @@ namespace OurTaiko.Tests
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
-                var combo = play.combo;
+                var combo = play.firstLane.combo;
                 var lane = combo.transform.parent;
                 Assert.That(combo.gameObject.activeSelf, Is.False, "The saved preview is hidden at start.");
-                var announce = play.comboAnnounce;
+                var announce = play.firstLane.comboAnnounce;
                 Assert.That(announce.IsShowing, Is.False, "The saved announce preview is hidden at start.");
                 // Drawn over the soul gauge (draw_overlays), aligned with the lane.
-                Assert.That(announce.transform.GetSiblingIndex(), Is.GreaterThan(play.soulGauge.transform.GetSiblingIndex()));
-                Assert.That(((RectTransform)announce.transform).anchoredPosition, Is.EqualTo(((RectTransform)play.noteLayer.parent.parent).anchoredPosition));
+                Assert.That(announce.transform.GetSiblingIndex(), Is.GreaterThan(play.firstLane.soulGauge.transform.GetSiblingIndex()));
+                Assert.That(((RectTransform)announce.transform).anchoredPosition, Is.EqualTo(((RectTransform)play.firstLane.noteLayer.parent.parent).anchoredPosition));
 
                 // Centred on the drum: combo_ja at (320, 136) and the digit row's centre at x 401.
                 var drum = (RectTransform)lane.Find("Drum");

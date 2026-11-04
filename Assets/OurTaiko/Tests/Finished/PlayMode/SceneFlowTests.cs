@@ -30,7 +30,7 @@ namespace OurTaiko.Tests
             Assert.That(canvas.transform.Find("Viewport1920x1080").GetComponent<RectTransform>().sizeDelta, Is.EqualTo(new Vector2(1920, 1080)));
             Assert.That(play.noteSprites[1].rect.size, Is.EqualTo(new Vector2(192, 192)));
             Assert.That(play.title.font, Is.SameAs(SkinUi.Font));
-            var gauge = play.soulGauge;
+            var gauge = play.firstLane.soulGauge;
             foreach (double threshold in new[] { 0.6, 0.7, 0.8 })
             {
                 gauge.Initialize(threshold);
@@ -82,8 +82,8 @@ namespace OurTaiko.Tests
             Assert.That(gauge.rainbowA.color.a, Is.Zero, "Refilling restarts the rainbow fade.");
             play.Restart(); yield return WaitForRestart(play);
             var restarted = Object.FindAnyObjectByType<PlayScene>();
-            Assert.That(restarted.soulGauge.FilledCells, Is.Zero);
-            Assert.That(restarted.soulGauge.rainbowA.enabled, Is.False);
+            Assert.That(restarted.firstLane.soulGauge.FilledCells, Is.Zero);
+            Assert.That(restarted.firstLane.soulGauge.rainbowA.enabled, Is.False);
             restarted.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
         }
 
@@ -117,7 +117,7 @@ namespace OurTaiko.Tests
                 yield return null;
             }
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(expected));
-            var branch = play.branchLane;
+            var branch = play.firstLane.branchLane;
             Assert.That(branch.gameObject.activeInHierarchy, Is.True);
             Assert.That(branch.currentLabel.sprite.name, Is.EqualTo(expected.ToString().ToLowerInvariant()));
             Assert.That(branch.currentLabel.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(1606.5f, -64.5f)));
@@ -128,7 +128,7 @@ namespace OurTaiko.Tests
                 Assert.That(branch.background.sprite.name, Is.EqualTo(expected.ToString().ToLowerInvariant() + "_bg"));
                 Assert.That(branch.background.color.a, Is.EqualTo(0.5f));
             }
-            Assert.That(branch.transform.GetSiblingIndex(), Is.LessThan(play.noteLayer.parent.GetSiblingIndex()));
+            Assert.That(branch.transform.GetSiblingIndex(), Is.LessThan(play.firstLane.noteLayer.parent.GetSiblingIndex()));
             Assert.That(branch.transform.parent.parent.Find("BranchPanel"), Is.Null);
             Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId != 0 || n.Route == expected || play.NoteRoot(i) == null).All(x => x), Is.True);
             Assert.That(play.Session.Chart.Notes.Select((n, i) => n.BranchId == 0 && n.Route == expected && play.NoteRoot(i) != null).Any(x => x), Is.True);
@@ -159,8 +159,8 @@ namespace OurTaiko.Tests
             var restarted = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(restarted.Session.BranchHistory.Count, Is.Zero);
             Assert.That(restarted.Session.Score, Is.Zero);
-            Assert.That(restarted.branchLane.currentLabel.sprite.name, Is.EqualTo("normal"));
-            Assert.That(restarted.branchLane.background.enabled, Is.False);
+            Assert.That(restarted.firstLane.branchLane.currentLabel.sprite.name, Is.EqualTo("normal"));
+            Assert.That(restarted.firstLane.branchLane.background.enabled, Is.False);
             restarted.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
         }
 
@@ -225,7 +225,7 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindAnyObjectByType<PlayScene>();
             if (!play.IsPaused) play.TogglePause();
-            var branch = play.branchLane;
+            var branch = play.firstLane.branchLane;
             branch.Select(BranchRoute.Expert, 0);
             branch.ShowTime(0.05);
             Assert.That(branch.previousLabel.sprite.name, Is.EqualTo("normal"));
@@ -295,7 +295,7 @@ namespace OurTaiko.Tests
                     double speed = note.Bpm / 240 * note.ScrollX * NoteScroll.MeasureWidth;
                     double length = (note.EndTime - note.Time) * speed;
                     float direction = length < 0 ? -1 : 1;
-                    Vector3 TailPosition() => play.noteLayer.InverseTransformPoint(tail.position);
+                    Vector3 TailPosition() => play.firstLane.noteLayer.InverseTransformPoint(tail.position);
                     Assert.That(body.rect.height, Is.EqualTo(head.rect.height));
                     // Head and tail are each cut toward zero to whole pixels (OpenTaiko): a place is
                     // within a pixel of the continuous formula, a length (one each side of the judge
@@ -306,10 +306,10 @@ namespace OurTaiko.Tests
                     Assert.That(tail.localScale.x, Is.EqualTo(direction));
                     Assert.That(TailPosition().x, Is.EqualTo(120 + (note.EndTime - time) * speed).Within(1));
                     Assert.That(TailPosition().y, Is.EqualTo(root.anchoredPosition.y).Within(0.01));
-                    var bodyEnd = play.noteLayer.InverseTransformPoint(body.TransformPoint(new Vector3(body.rect.xMax, 0)));
+                    var bodyEnd = play.firstLane.noteLayer.InverseTransformPoint(body.TransformPoint(new Vector3(body.rect.xMax, 0)));
                     Assert.That((bodyEnd.x - TailPosition().x) * direction, Is.EqualTo(1.5).Within(0.01), "Body and cap overlap without a gap.");
-                    foreach (Transform child in play.noteLayer) child.gameObject.SetActive(child == root);
-                    play.barLayer.gameObject.SetActive(false);
+                    foreach (Transform child in play.firstLane.noteLayer) child.gameObject.SetActive(child == root);
+                    play.firstLane.barLayer.gameObject.SetActive(false);
                     Capture(captureNames[i] + ".png");
                     if (i <= 1) Capture(captureNames[i] + "-720p.png", 1280, 720);
                     float headBefore = root.anchoredPosition.x, tailBefore = TailPosition().x;
@@ -354,7 +354,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.Session.Resolved[0], Is.True);
                 render.Invoke(play, new object[] { note.EndTime + 0.1 });
                 Assert.That(play.NoteRoot(0), Is.SameAs(root.transform), "A finished roll must flow past the judge instead of vanishing.");
-                Assert.That(play.noteLayer.InverseTransformPoint(tail.position).x, Is.EqualTo(120 - 0.1 * speed).Within(1), "Whole pixels.");
+                Assert.That(play.firstLane.noteLayer.InverseTransformPoint(tail.position).x, Is.EqualTo(120 - 0.1 * speed).Within(1), "Whole pixels.");
                 render.Invoke(play, new object[] { note.EndTime + 2 });
                 Assert.That(play.NoteRoot(0), Is.Null, "The roll unloads once its tail has left the screen.");
                 Assert.That(root.activeSelf, Is.False, "An unloaded view returns to the pool inactive.");
@@ -374,8 +374,8 @@ namespace OurTaiko.Tests
                 // until its right edge passes the screen's left edge (it is under the cover from the lane's).
                 float halfWidth = ((RectTransform)don.transform).rect.width / 2;
                 var corners = new Vector3[4];
-                ((RectTransform)play.noteLayer.parent.parent).GetWorldCorners(corners);
-                float margin = play.noteLayer.rect.xMin - play.noteLayer.InverseTransformPoint(corners[0]).x;
+                ((RectTransform)play.firstLane.noteLayer.parent.parent).GetWorldCorners(corners);
+                float margin = play.firstLane.noteLayer.rect.xMin - play.firstLane.noteLayer.InverseTransformPoint(corners[0]).x;
                 Assert.That(margin, Is.EqualTo(498).Within(1), "The lane starts 498 px from the screen's edge.");
                 double exit = donNote.Time + (120 + halfWidth + margin) / speed;
                 render.Invoke(play, new object[] { exit - 0.005 });
@@ -412,7 +412,7 @@ namespace OurTaiko.Tests
                         Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     }
                 }
-                var counter = play.balloonCounter;
+                var counter = play.firstLane.balloonCounter;
                 Assert.That(play.balloonPop, Is.Not.Null);
                 Assert.That(play.balloonPop.name, Is.EqualTo("balloon_pop"));
                 Assert.That(play.hitAudio.GetComponent<AudioBus>().PreparedEffects, Is.GreaterThan(0));
@@ -472,16 +472,16 @@ namespace OurTaiko.Tests
                 Assert.That(counter.IsVisible, Is.False, "An unpopped balloon clears at its end time.");
                 play.Restart(); yield return WaitForRestart(play);
                 play = Object.FindAnyObjectByType<PlayScene>();
-                Assert.That(play.balloonCounter.IsVisible, Is.False);
+                Assert.That(play.firstLane.balloonCounter.IsVisible, Is.False);
                 Assert.That(play.Session.LongHits[0], Is.Zero);
                 SceneSwitcher.Instance.Play(song, true); yield return WaitForScene(SceneSwitcher.GameScene);
                 play = Object.FindAnyObjectByType<PlayScene>();
                 yield return Reach(0.1);
-                Assert.That(play.balloonCounter.Remaining, Is.EqualTo(12 - play.Session.LongHits[0]));
-                Assert.That(play.balloonCounter.IsVisible, Is.True);
+                Assert.That(play.firstLane.balloonCounter.Remaining, Is.EqualTo(12 - play.Session.LongHits[0]));
+                Assert.That(play.firstLane.balloonCounter.IsVisible, Is.True);
                 yield return Reach(1);
                 Assert.That(play.Session.Resolved[0], Is.True);
-                Assert.That(play.balloonCounter.IsVisible, Is.False);
+                Assert.That(play.firstLane.balloonCounter.IsVisible, Is.False);
                 play.Back(); yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
             finally
@@ -512,12 +512,12 @@ namespace OurTaiko.Tests
                 }
                 var balloon = play.NoteRoot(0);
                 var head = (RectTransform)balloon.Find("Head");
-                var circle = (RectTransform)play.noteLayer.parent.parent.Find("JudgeCircle");
-                Vector3 judge = play.noteLayer.InverseTransformPoint(circle.TransformPoint(circle.rect.center));
+                var circle = (RectTransform)play.firstLane.noteLayer.parent.parent.Find("JudgeCircle");
+                Vector3 judge = play.firstLane.noteLayer.InverseTransformPoint(circle.TransformPoint(circle.rect.center));
                 // The face center in Nijiiro's 192px balloon crop is (114, 96),
                 // unlike the centered face in the normal-note and kusudama crops.
                 Vector3 FaceWorldPosition() => head.TransformPoint(new Vector3(head.rect.width * (114f / 192f - 0.5f), 0));
-                Vector3 FacePosition() => play.noteLayer.InverseTransformPoint(FaceWorldPosition());
+                Vector3 FacePosition() => play.firstLane.noteLayer.InverseTransformPoint(FaceWorldPosition());
                 Assert.That(play.RenderedTime, Is.LessThan(0));
                 play.Hit(false, false);
                 Assert.That(play.Session.LongHits[0], Is.Zero, "The visual offset must not start balloon hits early.");
@@ -626,7 +626,7 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Session.Chart.Notes.Count, Is.GreaterThan(50));
-            Assert.That(play.branchLane.gameObject.activeSelf, Is.False, "Non-branch charts must not show route labels or tints.");
+            Assert.That(play.firstLane.branchLane.gameObject.activeSelf, Is.False, "Non-branch charts must not show route labels or tints.");
             Assert.That(Object.FindObjectsByType<EventSystem>().Length, Is.EqualTo(1));
             Assert.That(Object.FindObjectsByType<AudioListener>().Length, Is.EqualTo(1));
             if (play.IsPaused) { play.Resume(); yield return WaitForResume(play); }

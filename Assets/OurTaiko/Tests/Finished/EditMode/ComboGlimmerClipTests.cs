@@ -51,7 +51,7 @@ namespace OurTaiko.Tests
             try
             {
                 var play = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<PlayScene>(true)).Single();
-                Assert.That(play.combo.glimmer.clip, Is.SameAs(clip));
+                Assert.That(play.firstLane.combo.glimmer.clip, Is.SameAs(clip));
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }
