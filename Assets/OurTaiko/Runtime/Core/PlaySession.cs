@@ -242,6 +242,12 @@ namespace OurTaiko
             }
             return (on, startedAt);
         }
+        // #LANE_ALPHA: the lane background's opacity (0–1) on the played route, as GOGO is read:
+        // a route's commands count once its branch is decided, the common ones always.
+        public double LaneAlphaAt(double time, bool preview = false)
+            => Chart.LaneAlphas.Count == 0 ? LaneAlpha.Initial : LaneAlpha.At(Chart.LaneAlphas, time,
+                a => preview ? IsPracticePreviewActive(a.BranchId, a.Route) : IsActive(a.BranchId, a.Route));
+
         // Latest reached tempo on this route. Querying by chart time also supports practice
         // seeking backwards; neither future notes' BPM nor their SCROLL affects expressions.
         public double BpmAt(double time, bool preview = false) => TempoAt(time, preview)?.Bpm ?? Chart.Bpm;

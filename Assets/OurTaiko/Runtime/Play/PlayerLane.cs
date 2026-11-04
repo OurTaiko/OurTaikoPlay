@@ -146,7 +146,32 @@ namespace OurTaiko
         public void RenderNotes(double time, bool preview, bool hideSkipped)
         {
             ShiftJudge(time);
-            if (renderer.Render(Session, time, preview, hideSkipped) && Views.gogo != null) Views.gogo.ShowTime(Session, time, preview);
+            if (!renderer.Render(Session, time, preview, hideSkipped)) return;
+            if (Views.gogo != null) Views.gogo.ShowTime(Session, time, preview);
+            ShowLaneAlpha(time, preview);
+        }
+
+        // #LANE_ALPHA (TJAParser Documentation~/TJA-Specification.md §13): the lane background and
+        // the tints drawn on it (the branch route's, GOGO's) fade together; the notes, the judge
+        // circle and the HUD do not. A CanvasGroup each, so the clips that animate those images'
+        // own colours keep working under it.
+        CanvasGroup[] laneBackground;
+        public float LaneAlphaShown => laneBackground != null && laneBackground.Length > 0 ? laneBackground[0].alpha : 1;
+
+        void ShowLaneAlpha(double time, bool preview)
+        {
+            if (laneBackground == null)
+            {
+                var v = Views;
+                laneBackground = new Component[] { v.noteLayer.parent.parent.Find("LaneBackground"),
+                        v.branchLane != null ? v.branchLane.background : null, v.gogo != null ? v.gogo.lane : null }
+                    .Where(c => c != null)
+                    .Select(c => c.TryGetComponent(out CanvasGroup group) ? group : c.gameObject.AddComponent<CanvasGroup>())
+                    .ToArray();
+            }
+            float alpha = (float)Session.LaneAlphaAt(time, preview);
+            foreach (var group in laneBackground)
+                if (group.alpha != alpha) group.alpha = alpha;
         }
 
         // Input mutex: a frame judges only this seat's earliest drum press; later ones in the same frame are
