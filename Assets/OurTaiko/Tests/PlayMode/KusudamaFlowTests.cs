@@ -60,7 +60,7 @@ namespace OurTaiko.Tests
             Assert.That(view.IsShowing, Is.False);
             // Over the score and its additions, under the pause panel.
             int order = view.GetComponent<Canvas>().sortingOrder;
-            Assert.That(order, Is.GreaterThan(play.scoreCounter.scoreRank.GetComponentInParent<Canvas>().sortingOrder));
+            Assert.That(order, Is.GreaterThan(play.firstLane.scoreCounter.scoreRank.GetComponentInParent<Canvas>().sortingOrder));
             Assert.That(order, Is.LessThan(play.pausePanel.GetComponent<Canvas>().sortingOrder));
             play.Lane1.RenderNotes(0.05, false, false);
             Assert.That(play.NoteRoot(0), Is.Not.Null, "The kusudama waits on the judge circle.");

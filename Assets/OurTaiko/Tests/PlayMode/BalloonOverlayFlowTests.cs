@@ -39,19 +39,21 @@ namespace OurTaiko.Tests
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 if (practice) play.practiceView.panel.SetActive(false);
-                var view = play.balloonCounter;
-                var lane = (RectTransform)play.noteLayer.parent.parent;
+                var view = play.firstLane.balloonCounter;
+                var lane = (RectTransform)play.firstLane.noteLayer.parent.parent;
                 view.RecordHit(0, 100, 99, 10, 0);
                 view.ShowTime(.2);
                 Assert.That(view.body.sprite, Is.SameAs(view.bodyFrames[6]));
-                Assert.That(view.transform.parent, Is.SameAs(play.pauseButton.transform.parent));
-                Assert.That(view.transform.GetSiblingIndex(), Is.LessThan(play.pauseButton.transform.GetSiblingIndex()));
+                var hud = play.firstLane.hud.transform;
+                Assert.That(view.transform.parent, Is.SameAs(hud));
+                Assert.That(hud.parent, Is.SameAs(play.pauseButton.transform.parent));
+                Assert.That(hud.GetSiblingIndex(), Is.LessThan(play.pauseButton.transform.GetSiblingIndex()));
                 Assert.That(lane.parent.GetSiblingIndex(), Is.LessThan(play.pausePanel.transform.GetSiblingIndex()),
                     "The pause menu must remain above the gameplay viewport.");
 
                 void Verify(Camera camera)
                 {
-                    int gaugeDepth = play.soulGauge.GetComponentsInChildren<UnityEngine.UI.Graphic>()
+                    int gaugeDepth = play.firstLane.soulGauge.GetComponentsInChildren<UnityEngine.UI.Graphic>()
                         .Max(graphic => graphic.depth);
                     foreach (var graphic in view.GetComponentsInChildren<UnityEngine.UI.Graphic>())
                         Assert.That(graphic.depth, Is.GreaterThan(gaugeDepth),

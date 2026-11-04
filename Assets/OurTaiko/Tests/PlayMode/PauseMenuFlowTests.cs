@@ -96,7 +96,7 @@ namespace OurTaiko.Tests
             Assert.That(play.RenderedTime, Is.EqualTo(renderedTime));
             Assert.That(play.NoteRoot(0).localPosition, Is.EqualTo(notePosition));
             Assert.That(play.Session.Rolls, Is.Zero, "Paused drum keys and background pointers must not hit the roll.");
-            Assert.That(play.drumFlashes.Any(f => f.enabled), Is.False);
+            Assert.That(play.firstLane.drumFlashes.Any(f => f.enabled), Is.False);
             Assert.That(play.hitAudio.IsAudioPlaying(), Is.False);
             Assert.That(pad.drum.localScale, Is.EqualTo(Vector3.one), "Disabled drum pads must not animate on pointer presses.");
 

@@ -37,30 +37,30 @@ namespace OurTaiko.Tests
                 // Easy ★1 over 100 notes: 1.4144% a 良, so the 43rd crosses クリア.
                 for (int i = 0; i < 43; i++) session.Hit(false, session.Chart.Notes[i].Time);
                 Assert.That(session.GaugePoints, Is.EqualTo(6081.92).Within(1e-9));
-                Assert.That(session.IsClear && play.soulGauge.IsClear, Is.True);
-                Assert.That(play.soulGauge.FilledCells, Is.EqualTo(30));
-                Assert.That(play.scoreCounter.Text, Is.EqualTo("430000"));
+                Assert.That(session.IsClear && play.firstLane.soulGauge.IsClear, Is.True);
+                Assert.That(play.firstLane.soulGauge.FilledCells, Is.EqualTo(30));
+                Assert.That(play.firstLane.scoreCounter.Text, Is.EqualTo("430000"));
                 // The fade starts at the judging frame's whole millisecond.
-                play.soulGauge.ShowTime(TjaTime.Truncate(play.SongTime) + 0.225);
-                Assert.That(play.soulGauge.cellFade.enabled, Is.True);
-                Assert.That(play.soulGauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001));
+                play.firstLane.soulGauge.ShowTime(TjaTime.Truncate(play.SongTime) + 0.225);
+                Assert.That(play.firstLane.soulGauge.cellFade.enabled, Is.True);
+                Assert.That(play.firstLane.soulGauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001));
 
                 session.Hit(false, 22.1); session.Hit(false, 22.1);
                 Assert.That(session.Score, Is.EqualTo(430200));
-                Assert.That(play.scoreCounter.Text, Is.EqualTo("430200"));
+                Assert.That(play.firstLane.scoreCounter.Text, Is.EqualTo("430200"));
                 Assert.That(session.GaugePoints, Is.EqualTo(6081.92).Within(1e-9));
-                Assert.That(play.soulGauge.cellFade.enabled, Is.True);
-                Assert.That(play.soulGauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001), "A balloon pop must not restart or cancel the cell fade.");
+                Assert.That(play.firstLane.soulGauge.cellFade.enabled, Is.True);
+                Assert.That(play.firstLane.soulGauge.cellFade.color.a, Is.EqualTo(0.5f).Within(0.001), "A balloon pop must not restart or cancel the cell fade.");
 
                 Assert.That(session.Hit(false, 24.11), Is.EqualTo(Judgment.Bad));
-                Assert.That(session.IsClear || play.soulGauge.IsClear, Is.False);
-                Assert.That(play.soulGauge.FilledCells, Is.EqualTo(29));
-                Assert.That(play.soulGauge.clearLabel.sprite.name, Is.EqualTo("clear_dark_ja"));
+                Assert.That(session.IsClear || play.firstLane.soulGauge.IsClear, Is.False);
+                Assert.That(play.firstLane.soulGauge.FilledCells, Is.EqualTo(29));
+                Assert.That(play.firstLane.soulGauge.clearLabel.sprite.name, Is.EqualTo("clear_dark_ja"));
                 session.Advance(session.Chart.Duration, true);
                 Assert.That(session.GaugePoints, Is.EqualTo(10000));
-                Assert.That(play.soulGauge.FilledCells, Is.EqualTo(50));
-                Assert.That(play.soulGauge.IsFull, Is.True);
-                Assert.That(play.scoreCounter.Text, Is.EqualTo("990200"));
+                Assert.That(play.firstLane.soulGauge.FilledCells, Is.EqualTo(50));
+                Assert.That(play.firstLane.soulGauge.IsFull, Is.True);
+                Assert.That(play.firstLane.scoreCounter.Text, Is.EqualTo("990200"));
                 play.SendMessage("Finish");
                 Assert.That(play.IsFinished && !play.resultPanel.activeSelf, Is.True);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
@@ -77,9 +77,9 @@ namespace OurTaiko.Tests
                 var restarted = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(restarted.Session.Score, Is.Zero);
                 Assert.That(restarted.Session.GaugePoints, Is.Zero);
-                Assert.That(restarted.scoreCounter.Text, Is.EqualTo("0"));
-                Assert.That(restarted.soulGauge.FilledCells, Is.Zero);
-                Assert.That(restarted.soulGauge.IsClear, Is.False);
+                Assert.That(restarted.firstLane.scoreCounter.Text, Is.EqualTo("0"));
+                Assert.That(restarted.firstLane.soulGauge.FilledCells, Is.Zero);
+                Assert.That(restarted.firstLane.soulGauge.IsClear, Is.False);
                 restarted.Back();
                 yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }

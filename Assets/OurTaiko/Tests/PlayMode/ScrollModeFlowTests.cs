@@ -51,7 +51,7 @@ namespace OurTaiko.Tests
                 float before = play.NoteRoot(3).anchoredPosition.x;
                 Assert.That(before, Is.EqualTo(JudgeX + 1080).Within(0.01));
                 Assert.That(play.NoteRoot(4), Is.Null);
-                play.noteLayer.sizeDelta += new Vector2(800, 0);
+                play.firstLane.noteLayer.sizeDelta += new Vector2(800, 0);
                 Canvas.ForceUpdateCanvases();
                 render.Invoke(play, new object[] { 0.001 });
                 render.Invoke(play, new object[] { 0.0 });
@@ -132,27 +132,28 @@ namespace OurTaiko.Tests
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 while (play.Session == null) { Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); yield return null; }
                 var render = typeof(PlayScene).GetMethod("RenderNotes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                var circle = (RectTransform)play.noteLayer.parent.parent.Find("JudgeCircle");
+                var circle = (RectTransform)play.firstLane.noteLayer.parent.parent.Find("JudgeCircle");
                 render.Invoke(play, new object[] { -0.5 });
-                Vector2 circleHome = circle.anchoredPosition, textHome = play.judgment.rectTransform.anchoredPosition;
-                var balloonHome = ((RectTransform)play.balloonCounter.transform).anchoredPosition;
+                Vector2 circleHome = circle.anchoredPosition, textHome = play.firstLane.judgment.rectTransform.anchoredPosition;
+                var balloonHome = ((RectTransform)play.firstLane.balloonCounter.transform).anchoredPosition;
                 // OpenTaiko draws the soul gauge under the notes; the rest of the HUD stays above.
-                var gaugeCanvas = play.soulGauge.GetComponent<Canvas>();
+                var gaugeCanvas = play.firstLane.soulGauge.GetComponent<Canvas>();
                 Assert.That(gaugeCanvas.overrideSorting && gaugeCanvas.sortingOrder == PlayScene.SoulGaugeOrder, Is.True);
-                Assert.That(gaugeCanvas.sortingOrder, Is.LessThan(play.barLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
-                Assert.That(play.soulGauge.transform.parent.GetComponent<Canvas>().sortingOrder, Is.GreaterThan(play.mojiLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
+                Assert.That(gaugeCanvas.sortingOrder, Is.LessThan(play.firstLane.barLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
+                Assert.That(play.firstLane.soulGauge.transform.parent, Is.SameAs(play.firstLane.hud.transform));
+                Assert.That(play.firstLane.hud.transform.parent.GetComponent<Canvas>().sortingOrder, Is.GreaterThan(play.firstLane.mojiLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
                 // Halfway (0.5 s): -100 across and 50 down in 1280 pixels → -150, -75 here.
                 render.Invoke(play, new object[] { 0.5 });
                 var offset = new Vector2(-150, -75);
                 Assert.That(circle.anchoredPosition, Is.EqualTo(circleHome + offset));
-                Assert.That(play.judgment.rectTransform.anchoredPosition, Is.EqualTo(textHome + offset));
-                Assert.That(((RectTransform)play.balloonCounter.transform).anchoredPosition, Is.EqualTo(balloonHome + offset));
+                Assert.That(play.firstLane.judgment.rectTransform.anchoredPosition, Is.EqualTo(textHome + offset));
+                Assert.That(((RectTransform)play.firstLane.balloonCounter.transform).anchoredPosition, Is.EqualTo(balloonHome + offset));
                 // The note due now sits on the moved judge; the next one a quarter measure on from it.
                 Assert.That(play.NoteRoot(1).anchoredPosition, Is.EqualTo(new Vector2(JudgeX, JudgeY) + offset));
                 Assert.That(play.NoteRoot(2).anchoredPosition.x, Is.EqualTo(JudgeX - 150 + 360).Within(0.01));
                 // A note hit now flies from the moved judge (lane-local 618-150, 110+75) and lands on the badge.
-                var arcs = play.noteArcs;
-                var lane = (RectTransform)play.noteLayer.parent.parent;
+                var arcs = play.firstLane.noteArcs;
+                var lane = (RectTransform)play.firstLane.noteLayer.parent.parent;
                 var viewport = (RectTransform)arcs.transform.parent;
                 var shift = JudgeShift.At(play.Session.Chart.JudgeMoves, 0.5);
                 Assert.That((shift.X, shift.Y), Is.EqualTo((-150.0, 75.0)));
@@ -161,7 +162,7 @@ namespace OurTaiko.Tests
                 Vector2 Local(Transform t) => viewport.InverseTransformPoint(t.position);
                 Assert.That(Vector2.Distance(Local(arcs.ArcRoot(0)), (Vector2)viewport.InverseTransformPoint(lane.TransformPoint(new Vector3(468, -185)))), Is.LessThan(0.1f));
                 arcs.ShowTime(0.5 + NoteArcPath.Duration - 1e-6);
-                var soul = (RectTransform)play.soulGauge.transform.Find("Soul");
+                var soul = (RectTransform)play.firstLane.soulGauge.transform.Find("Soul");
                 Assert.That(Vector2.Distance(Local(arcs.ArcRoot(0)), (Vector2)viewport.InverseTransformPoint(soul.TransformPoint(soul.rect.center))), Is.LessThan(0.1f));
             }
             finally

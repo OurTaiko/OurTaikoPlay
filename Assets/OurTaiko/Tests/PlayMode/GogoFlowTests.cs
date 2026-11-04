@@ -38,8 +38,8 @@ namespace OurTaiko.Tests
                 foreach (double time in new[] { 0.5, 1.04, 1.2, 1.6, 3.0, 1.04, 0.5 })
                 {
                     render.Invoke(play, new object[] { time });
-                    Assert.That(play.gogo.fire.enabled, Is.EqualTo(time >= 1 && time < 3));
-                    Assert.That(play.gogo.explosions.Any(i => i.enabled), Is.EqualTo(time >= 1 && time < 1.5));
+                    Assert.That(play.firstLane.gogo.fire.enabled, Is.EqualTo(time >= 1 && time < 3));
+                    Assert.That(play.firstLane.gogo.explosions.Any(i => i.enabled), Is.EqualTo(time >= 1 && time < 1.5));
                     if (time == 1.2 || time == 1.6)
                     {
                         yield return null;

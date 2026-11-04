@@ -33,7 +33,7 @@ namespace OurTaiko.Tests
                 if (!play.IsPaused) play.TogglePause();
                 // Hide the ordinary pause menu only for inspecting the saved score UI underneath.
                 play.pausePanel.SetActive(false);
-                var counter = play.scoreCounter;
+                var counter = play.firstLane.scoreCounter;
                 Assert.That(counter.additionTemplate, Is.Not.Null);
                 Assert.That(counter.Additions.Count, Is.Zero, "The initial total is not an earned score.");
                 var notes = play.Session.Chart.Notes;
@@ -62,9 +62,9 @@ namespace OurTaiko.Tests
                 var visible = counter.Additions.First(a => a.gameObject.activeSelf);
                 Assert.That(visible.GetComponent<Canvas>().overrideSorting, Is.True, "Floating digits must render above JudgeCounter.");
                 Assert.That(visible.GetComponent<Canvas>().sortingOrder,
-                    Is.GreaterThan(play.judgeCounter.GetComponentInParent<Canvas>().sortingOrder));
+                    Is.GreaterThan(play.firstLane.judgeCounter.GetComponentInParent<Canvas>().sortingOrder));
                 Assert.That(visible.GetComponent<Canvas>().sortingOrder,
-                    Is.LessThan(play.scoreCounter.scoreRank.GetComponent<Canvas>().sortingOrder));
+                    Is.LessThan(play.firstLane.scoreCounter.scoreRank.GetComponent<Canvas>().sortingOrder));
                 Assert.That(visible.GetComponent<CanvasGroup>().alpha, Is.GreaterThan(.99f));
                 Assert.That(visible.digits[0].color, Is.EqualTo((Color)new Color32(254, 102, 0, 255)));
                 if (practice)

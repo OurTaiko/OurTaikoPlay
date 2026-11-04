@@ -122,7 +122,7 @@ namespace OurTaiko
                 Progress = new DanProgress(Run.Entry.Course, statistics.Select(s => s.JudgeableNotes).ToList());
                 var routeNotes = Enumerable.Range(0, 3).Select(r => statistics.Sum(s => s.RouteNotes[r])).ToList();
                 Gauge = SoulGauge.Dan(Run.Entry.Songs.Select(s => (s.GaugeCourse, s.Level)).ToList(), routeNotes);
-                Lane = new PlayerLane(this, 0, this, options, autoPlay, new Online.PlayRecord()) { SharedGauge = Gauge };
+                Lane = new PlayerLane(this, 0, firstLane, options, autoPlay, new Online.PlayRecord()) { SharedGauge = Gauge };
                 ShowCourse();
                 BeginSong(0);
             }
@@ -297,8 +297,8 @@ namespace OurTaiko
                 Score = total.Score, MaxCombo = total.MaxCombo, GaugePoints = Gauge.Points, AutoPlay = autoPlay,
                 CustomJudge = judgeWindows.HasValue,
             };
-            if (ending != null) ending.BeginDan(courseResult.Verdict > 0);
-            endingDuration = ending != null ? ending.Duration : 0;
+            if (firstLane.ending != null) firstLane.ending.BeginDan(courseResult.Verdict > 0);
+            endingDuration = firstLane.ending != null ? firstLane.ending.Duration : 0;
             endingStartedAt = GameTimeline.FrameTime;
             endedAt = ChartTime;
         }
@@ -313,7 +313,7 @@ namespace OurTaiko
             double elapsed = GameTimeline.FrameTime - endingStartedAt;
             double time = Math.Max(ChartTime, endedAt + elapsed);
             Lane.ShowVisuals(time, time - visualOffset, false, false);
-            if (ending != null) ending.ShowTime(Math.Min(elapsed, endingDuration));
+            if (firstLane.ending != null) firstLane.ending.ShowTime(Math.Min(elapsed, endingDuration));
             music.SetAudioFade(SongEnd.Fade(elapsed, endingDuration));
             if (elapsed < endingDuration) return;
             resultShown = true;

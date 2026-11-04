@@ -131,7 +131,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 Assert.That(play.Session.Rolls, Is.Zero, "The hit is still waiting.");
                 Assert.That(play.DrumSounds, Is.Zero, "Its sound waits with it.");
-                Assert.That(play.drumFlashes.Any(f => f.enabled), Is.False);
+                Assert.That(play.firstLane.drumFlashes.Any(f => f.enabled), Is.False);
                 deadline = Time.realtimeSinceStartup + 5;
                 while (play.Session.Rolls == 0)
                 {
@@ -141,7 +141,7 @@ namespace OurTaiko.Tests
                 Assert.That(InputState.currentTime - pressed, Is.GreaterThanOrEqualTo(0.1));
                 Assert.That(play.Session.Rolls, Is.EqualTo(1));
                 Assert.That(play.DrumSounds, Is.EqualTo(1), "The judged hit sounds once, in the frame it is judged.");
-                Assert.That(play.drumFlashes[0].enabled, Is.True);
+                Assert.That(play.firstLane.drumFlashes[0].enabled, Is.True);
                 Assert.That(play.Record.Inputs[0].Ms, Is.EqualTo((double)TjaTime.Ms(play.SongTime)).Within(0.000001),
                     "Judgment uses the song time of the frame that publishes the hit.");
                 Assert.That(play.SongTime - pressedSong, Is.GreaterThanOrEqualTo(0.09));

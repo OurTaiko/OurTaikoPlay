@@ -46,7 +46,7 @@ namespace OurTaiko.Tests
                 Assert.That(roll.Find("Head").GetSiblingIndex(), Is.LessThan(roll.Find("Tail").GetSiblingIndex()));
 
                 // Second pass of draw_notes: all text above all notes, earlier text over later text.
-                Assert.That(play.mojiLayer.parent.GetSiblingIndex(), Is.EqualTo(play.noteLayer.parent.GetSiblingIndex() + 1));
+                Assert.That(play.firstLane.mojiLayer.parent.GetSiblingIndex(), Is.EqualTo(play.firstLane.noteLayer.parent.GetSiblingIndex() + 1));
                 for (int i = 1; i <= 6; i++)
                     Assert.That(play.MojiRoot(i - 1).GetSiblingIndex(), Is.GreaterThan(play.MojiRoot(i).GetSiblingIndex()));
                 for (int i = 1; i <= 6; i++)

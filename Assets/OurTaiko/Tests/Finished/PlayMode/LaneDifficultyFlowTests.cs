@@ -25,8 +25,8 @@ namespace OurTaiko.Tests
             Assert.That(play.Session, Is.Not.Null, "The chart should load.");
             Assert.That(play.laneDifficultySprites, Has.Length.EqualTo(5));
             var difficulty = SongInfo.DifficultyOf(course).Value;
-            Assert.That(play.laneDifficulty.sprite, Is.SameAs(play.laneDifficultySprites[(int)difficulty]));
-            Assert.That(play.laneDifficulty.sprite.name, Is.EqualTo("LaneDifficulty" + (int)difficulty));
+            Assert.That(play.firstLane.laneDifficulty.sprite, Is.SameAs(play.laneDifficultySprites[(int)difficulty]));
+            Assert.That(play.firstLane.laneDifficulty.sprite.name, Is.EqualTo("LaneDifficulty" + (int)difficulty));
         }
     }
 }

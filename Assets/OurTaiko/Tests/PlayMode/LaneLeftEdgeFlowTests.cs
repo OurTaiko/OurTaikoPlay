@@ -42,10 +42,10 @@ namespace OurTaiko.Tests
                 if (root != null && root.anchoredPosition.x < 0) drawnPastEdge = true;
             }
             Assert.That(drawnPastEdge, Is.True, "A note half past the lane's left edge is still drawn.");
-            var layer = play.noteLayer.GetComponentInParent<LaneSpriteLayer>();
+            var layer = play.firstLane.noteLayer.GetComponentInParent<LaneSpriteLayer>();
             yield return null;
             Assert.That(layer.Material.GetVector("_ClipRect").x, Is.LessThan(-1e5f), "Nothing clips the lane's left edge.");
-            Assert.That(play.noteLayer.parent.parent.Find("LaneForeground").GetComponent<Canvas>().sortingOrder, Is.GreaterThan(10),
+            Assert.That(play.firstLane.noteLayer.parent.parent.Find("LaneForeground").GetComponent<Canvas>().sortingOrder, Is.GreaterThan(10),
                 "The player cover is drawn over the notes.");
             Object.Destroy(song);
         }

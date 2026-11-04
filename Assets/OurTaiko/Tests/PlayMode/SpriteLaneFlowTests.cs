@@ -34,25 +34,25 @@ namespace OurTaiko.Tests
                 if (!play.IsPaused) play.TogglePause();
                 play.pausePanel.SetActive(false);
                 if (practice) play.practiceView.panel.SetActive(false);
-                var canvas = play.noteLayer.GetComponentInParent<Canvas>().rootCanvas;
+                var canvas = play.firstLane.noteLayer.GetComponentInParent<Canvas>().rootCanvas;
                 Assert.That(canvas.renderMode, Is.EqualTo(RenderMode.ScreenSpaceCamera));
-                Assert.That(play.noteLayer.GetComponentsInChildren<UnityEngine.UI.Graphic>(true), Is.Empty);
-                Assert.That(play.noteLayer.GetComponentsInChildren<CanvasRenderer>(true), Is.Empty);
-                Assert.That(play.mojiLayer.GetComponentsInChildren<CanvasRenderer>(true), Is.Empty);
-                var pass = play.noteLayer.GetComponent<LaneSpriteLayer>();
-                Assert.That(play.hitFace.GetComponentInParent<Canvas>().sortingOrder,
+                Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<UnityEngine.UI.Graphic>(true), Is.Empty);
+                Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<CanvasRenderer>(true), Is.Empty);
+                Assert.That(play.firstLane.mojiLayer.GetComponentsInChildren<CanvasRenderer>(true), Is.Empty);
+                var pass = play.firstLane.noteLayer.GetComponent<LaneSpriteLayer>();
+                Assert.That(play.firstLane.hitFace.GetComponentInParent<Canvas>().sortingOrder,
                     Is.LessThan(pass.GetComponent<SortingGroup>().sortingOrder));
-                Assert.That(play.hitRing.GetComponentInParent<Canvas>().sortingOrder,
-                    Is.GreaterThan(play.mojiLayer.GetComponent<SortingGroup>().sortingOrder));
-                Assert.That(play.balloonCounter.GetComponentInParent<Canvas>().sortingOrder,
-                    Is.GreaterThan(play.scoreCounter.GetComponentInParent<Canvas>().sortingOrder));
+                Assert.That(play.firstLane.hitRing.GetComponentInParent<Canvas>().sortingOrder,
+                    Is.GreaterThan(play.firstLane.mojiLayer.GetComponent<SortingGroup>().sortingOrder));
+                Assert.That(play.firstLane.balloonCounter.GetComponentInParent<Canvas>().sortingOrder,
+                    Is.GreaterThan(play.firstLane.scoreCounter.GetComponentInParent<Canvas>().sortingOrder));
 
                 var render = typeof(PlayScene).GetMethod("RenderNotes", BindingFlags.Instance | BindingFlags.NonPublic);
                 foreach (var time in new[] { 0.0, 2.0, 4.0, 7.0, 7.95, 8.5, 0.0 })
                 {
                     render.Invoke(play, new object[] { time });
                     Canvas.ForceUpdateCanvases();
-                    foreach (var sprite in play.noteLayer.GetComponentsInChildren<LaneSprite>())
+                    foreach (var sprite in play.firstLane.noteLayer.GetComponentsInChildren<LaneSprite>())
                     {
                         Assert.That(sprite.Renderer.sharedMaterial, Is.SameAs(pass.Material));
                         Assert.That(sprite.sprite.vertices.Length, Is.EqualTo(4), "Full rectangles preserve the original UI sprite sampling.");

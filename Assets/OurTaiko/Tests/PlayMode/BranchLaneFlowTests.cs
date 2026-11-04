@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
                 play.ConfirmPractice();
                 while (play.IsPaused) yield return null;
                 Assert.That(play.SongTime, Is.EqualTo(targetMeasure - 2).Within(.01));
-                var lane = play.branchLane;
+                var lane = play.firstLane.branchLane;
                 bool startsInBranch = targetMeasure > 2;
                 Assert.That(lane.currentLabel.sprite, Is.SameAs(startsInBranch ? lane.masterLabel : lane.normalLabel),
                     "The initial lane must describe the rewound position, even if the target is in a different section.");
@@ -94,7 +94,7 @@ namespace OurTaiko.Tests
                     yield return null;
                 }
                 var play = Object.FindAnyObjectByType<PlayScene>();
-                var lane = play.branchLane;
+                var lane = play.firstLane.branchLane;
                 void Check(BranchRoute route)
                 {
                     Assert.That(lane.currentLabel.sprite, Is.SameAs(route == BranchRoute.Normal ? lane.normalLabel

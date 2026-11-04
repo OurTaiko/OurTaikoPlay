@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
 
                 void ClearFlashes()
                 {
-                    foreach (var flash in play.drumFlashes)
+                    foreach (var flash in play.firstLane.drumFlashes)
                     {
                         var sampler = flash.GetComponent<ClipSampler>();
                         sampler.Sample(sampler.clip.length);
@@ -54,8 +54,8 @@ namespace OurTaiko.Tests
                 {
                     var note = play.Session.Chart.Notes[index];
                     int expectedFlash = (note.IsKa ? 2 : 0) + (strikes % 2 == 0 ? 1 : 0);
-                    for (int i = 0; i < play.drumFlashes.Length; i++)
-                        Assert.That(play.drumFlashes[i].enabled, Is.EqualTo(i == expectedFlash),
+                    for (int i = 0; i < play.firstLane.drumFlashes.Length; i++)
+                        Assert.That(play.firstLane.drumFlashes[i].enabled, Is.EqualTo(i == expectedFlash),
                             $"Strike {strikes + 1}, {note.Kind}: expected drum flash {expectedFlash}.");
                     if (result == Judgment.Roll) longKinds.Add(note.Kind);
                     strikes++;
@@ -137,7 +137,7 @@ namespace OurTaiko.Tests
                     if (result != Judgment.Roll) { lastNormal = GameTimeline.FrameTime; normalHits++; }
                     else observedLongNotes.Add(play.Session.Chart.Notes[index].Kind);
                 };
-                float displaySeconds = play.judgment.GetComponent<ClipSampler>().clip.length;
+                float displaySeconds = play.firstLane.judgment.GetComponent<ClipSampler>().clip.length;
                 while (normalHits < 5 || GameTimeline.FrameTime - lastNormal <= displaySeconds + .05)
                 {
                     // Every play view updates in Update, so the frame's state is complete once the coroutines run;
@@ -147,7 +147,7 @@ namespace OurTaiko.Tests
                         $"Observed {normalHits} normal hits; song time {play.SongTime:F3}, paused {play.IsPaused}.");
                     double elapsed = GameTimeline.FrameTime - lastNormal;
                     float expectedAlpha = elapsed < displaySeconds ? 1 : 0;
-                    Assert.That(play.judgment.color.a, Is.EqualTo(expectedAlpha).Within(.025f),
+                    Assert.That(play.firstLane.judgment.color.a, Is.EqualTo(expectedAlpha).Within(.025f),
                         $"Long-note hits must not extend the previous judgment text ({elapsed:F3}s since normal hit).");
                 }
                 Assert.That(observedLongNotes, Is.EquivalentTo(new[] { NoteKind.Balloon, NoteKind.Roll, NoteKind.BigRoll, NoteKind.Kusudama }));
@@ -194,10 +194,10 @@ namespace OurTaiko.Tests
                     yield return null;
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
                     if (judged == observed) continue;
-                    Assert.That(play.hitFace.IsPlaying && play.hitFace.image.enabled, Is.True,
+                    Assert.That(play.firstLane.hitFace.IsPlaying && play.firstLane.hitFace.image.enabled, Is.True,
                         "The face must remain visible on the actual judgment frame without manually sampling its clock");
-                    Assert.That(play.hitRing.IsPlaying && play.hitRing.image.enabled, Is.True);
-                    Assert.That(play.hitFace.image.color.a, Is.GreaterThan(0));
+                    Assert.That(play.firstLane.hitRing.IsPlaying && play.firstLane.hitRing.image.enabled, Is.True);
+                    Assert.That(play.firstLane.hitFace.image.color.a, Is.GreaterThan(0));
                     observed = judged;
                     if (observed == 1) TestCapture.Capture("HitFaceNativeClock.png");
                 }

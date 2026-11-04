@@ -33,15 +33,15 @@ namespace OurTaiko.Tests
             SceneSwitcher.Instance.Play(song, "Oni", auto);
             yield return WaitForPlay(practice);
             play = Object.FindAnyObjectByType<PlayScene>();
-            Assert.That(play.drumrollCounter, Is.Not.Null);
-            Assert.That(play.drumrollCounter.digitSprites, Is.EqualTo(play.balloonCounter.digitSprites),
+            Assert.That(play.firstLane.drumrollCounter, Is.Not.Null);
+            Assert.That(play.firstLane.drumrollCounter.digitSprites, Is.EqualTo(play.firstLane.balloonCounter.digitSprites),
                 "The fan and balloon must share the same digit sprites.");
-            var digit = play.drumrollCounter.digitSprites[0];
+            var digit = play.firstLane.drumrollCounter.digitSprites[0];
             Assert.That(digit.rect.size, Is.EqualTo(new Vector2(96, 112)));
             Assert.That(digit.texture.mipmapCount, Is.GreaterThan(1));
             Assert.That(digit.texture.filterMode, Is.EqualTo(FilterMode.Trilinear));
-            Assert.That(play.drumrollCounter.IsVisible, Is.False);
-            Assert.That(play.drumrollCounter.gameObject.activeSelf, Is.False);
+            Assert.That(play.firstLane.drumrollCounter.IsVisible, Is.False);
+            Assert.That(play.firstLane.drumrollCounter.gameObject.activeSelf, Is.False);
         }
 
         static IEnumerator WaitForPlay(bool practice)
@@ -67,7 +67,7 @@ namespace OurTaiko.Tests
             yield return StartPlay(practice, false);
             if (!play.IsPaused) play.TogglePause();
             play.pausePanel.SetActive(false);
-            var view = play.drumrollCounter;
+            var view = play.firstLane.drumrollCounter;
             var session = play.Session;
             // Hits are judged at the play clock's whole millisecond.
             double now = TjaTime.Truncate(play.SongTime - (song.audioOffsetMs + (double)SettingManager.EnsureInstance().Settings.play.audioOffsetMs) / 1000);
@@ -103,8 +103,8 @@ namespace OurTaiko.Tests
             AssertDigits(view, "1");
             // Balloons, kusudama and regular notes must never replace the roll's count.
             session.Hit(false, 6.1);
-            var balloonDigit = play.balloonCounter.number.GetChild(0).GetComponent<RectTransform>();
-            play.balloonCounter.ShowTime(now + .2);
+            var balloonDigit = play.firstLane.balloonCounter.number.GetChild(0).GetComponent<RectTransform>();
+            play.firstLane.balloonCounter.ShowTime(now + .2);
             Assert.That(balloonDigit.sizeDelta, Is.EqualTo(new Vector2(77, 90)),
                 "Sharing a higher-resolution sheet must not enlarge balloon digits.");
             session.Hit(false, 8.1);
@@ -131,8 +131,8 @@ namespace OurTaiko.Tests
                 view.RecordHit(2, 9, now);
                 SceneSwitcher.Instance.Restart();
                 yield return WaitForPlay(false);
-                Assert.That(Object.FindAnyObjectByType<PlayScene>().drumrollCounter.Count, Is.Zero);
-                Assert.That(Object.FindAnyObjectByType<PlayScene>().drumrollCounter.IsVisible, Is.False);
+                Assert.That(Object.FindAnyObjectByType<PlayScene>().firstLane.drumrollCounter.Count, Is.Zero);
+                Assert.That(Object.FindAnyObjectByType<PlayScene>().firstLane.drumrollCounter.IsVisible, Is.False);
             }
         }
 
@@ -140,7 +140,7 @@ namespace OurTaiko.Tests
         public IEnumerator AutoplayUpdatesBothRollSizesInTheRenderedScene()
         {
             yield return StartPlay(false, true);
-            var view = play.drumrollCounter;
+            var view = play.firstLane.drumrollCounter;
             bool small = false, big = false;
             float deadline = Time.realtimeSinceStartup + 20;
             while (!small || !big)
