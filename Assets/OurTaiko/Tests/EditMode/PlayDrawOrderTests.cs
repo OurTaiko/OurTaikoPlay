@@ -28,7 +28,8 @@ namespace OurTaiko.Tests
                 // Stable ordering retains hierarchy order within each independently sorted Canvas.
                 var actual = graphics.OrderBy(g => Order(g.transform))
                     .Select(g => AnimationUtility.CalculateTransformPath(g.transform, root.transform)
-                        .Replace("/LaneForeground", "").Replace("/Hud", "")).ToArray();
+                        .Replace("/LaneForeground", "").Replace("/Hud", "")
+                        .Replace("/LaneHud2P", "").Replace("/LaneHud", "")).ToArray();
                 // After a deliberate scene change, copy this file over the fixture.
                 Directory.CreateDirectory("TestResults");
                 File.WriteAllLines("TestResults/" + name + "DrawOrder.actual.txt", actual);

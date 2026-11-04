@@ -140,7 +140,8 @@ namespace OurTaiko.Tests
                 var gaugeCanvas = play.firstLane.soulGauge.GetComponent<Canvas>();
                 Assert.That(gaugeCanvas.overrideSorting && gaugeCanvas.sortingOrder == PlayScene.SoulGaugeOrder, Is.True);
                 Assert.That(gaugeCanvas.sortingOrder, Is.LessThan(play.firstLane.barLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
-                Assert.That(play.firstLane.soulGauge.transform.parent.GetComponent<Canvas>().sortingOrder, Is.GreaterThan(play.firstLane.mojiLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
+                Assert.That(play.firstLane.soulGauge.transform.parent, Is.SameAs(play.firstLane.hud.transform));
+                Assert.That(play.firstLane.hud.transform.parent.GetComponent<Canvas>().sortingOrder, Is.GreaterThan(play.firstLane.mojiLayer.GetComponent<UnityEngine.Rendering.SortingGroup>().sortingOrder));
                 // Halfway (0.5 s): -100 across and 50 down in 1280 pixels → -150, -75 here.
                 render.Invoke(play, new object[] { 0.5 });
                 var offset = new Vector2(-150, -75);

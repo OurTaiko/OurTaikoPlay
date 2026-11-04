@@ -5757,13 +5757,11 @@ MonoBehaviour:
   noteLayer: {fileID: 2709953370694208093}
   barLayer: {fileID: 2758777085126133005}
   mojiLayer: {fileID: 6522579867304388636}
-  balloonCounter: {fileID: 0}
   drumrollCounter: {fileID: 3713387178059251672}
   judgment: {fileID: 3384762231702459907}
   hitFace: {fileID: 4674436187408711697}
   hitRing: {fileID: 8883212177313896418}
-  soulGauge: {fileID: 0}
-  noteArcs: {fileID: 0}
+  hud: {fileID: 0}
   drumFlashes:
   - {fileID: 4492220379207683312}
   - {fileID: 1510725708783931339}
@@ -5771,8 +5769,6 @@ MonoBehaviour:
   - {fileID: 2413889712930051758}
   scoreCounter: {fileID: 8355179445037649305}
   combo: {fileID: 4204007911595723015}
-  comboAnnounce: {fileID: 0}
-  judgeCounter: {fileID: 0}
   timingFeedback: {fileID: 1626397140293655946}
   branchLane: {fileID: 1405604953279388187}
   gogo: {fileID: 5123686963201764453}
