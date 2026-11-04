@@ -46,6 +46,8 @@ def build_in_beta_review?
   UI.user_error!("App Store Connect app not found") unless app
   response = Spaceship::ConnectAPI.get_builds(
     filter: { app: app.id, "betaAppReviewSubmission.betaReviewState" => "WAITING_FOR_REVIEW,IN_REVIEW" },
+    # get_builds' default includes betaBuildMetrics, which App Store Connect no longer accepts.
+    includes: "buildBetaDetail",
     limit: 1
   )
   !response.to_models.empty?
