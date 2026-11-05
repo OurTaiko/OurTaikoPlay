@@ -31,7 +31,7 @@ namespace OurTaiko.Tests
             var hard = TjaParser.Parse(text, "Hard");
             Assert.That(hard.Notes.Select(n => n.Time), Is.EqualTo(new[] { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5 }));
             Assert.That(hard.Bars.Count, Is.EqualTo(2));
-            Assert.That(hard.Warnings, Is.SupersetOf(new[] { "#END missing", "Last measure without a comma" }));
+            Assert.That(hard.Warnings, Is.SupersetOf(new[] { "#END missing (line 7)", "Last measure without a comma (line 6)" }));
             var oni = TjaParser.Parse(text, "Oni");
             Assert.That((oni.Level, oni.Notes.Count, oni.Duration), Is.EqualTo((9, 2, 4.0)));
             Assert.That(SongInfo.Read(text).Courses().Select(c => (c.Difficulty, c.Level)),
@@ -99,7 +99,7 @@ namespace OurTaiko.Tests
             Assert.That(branched.Warnings, Has.Some.StartsWith("Notes between #BRANCHSTART"));
             var roll = Parse("5000,");
             Assert.That(roll.Notes.Single().EndTime, Is.EqualTo(roll.Duration));
-            Assert.That(roll.Warnings, Has.Some.EqualTo("An unended roll is ended by #END"));
+            Assert.That(roll.Warnings, Has.Some.EqualTo("An unended roll is ended by #END (line 7)"));
         }
         [Test] public void WrongColorDoesNotConsumeNoteAndMissResetsCombo()
         {
