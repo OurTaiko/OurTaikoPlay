@@ -13,10 +13,20 @@ namespace OurTaiko
         public int SelectedIndex { get; private set; }
         public bool IsClosing { get; private set; }
         Coroutine opening;
+        AudioSource sfx;
+        AudioClip ka;
 
         public void Show()
         {
             gameObject.SetActive(true);
+            if (sfx == null)
+            {
+                sfx = GetComponent<AudioSource>();
+                if (sfx == null) sfx = gameObject.AddComponent<AudioSource>();
+                sfx.playOnAwake = false;
+                ka = Resources.Load<SettingsOverlay>(SettingsOverlay.ResourceName)?.ka;
+                sfx.PrepareAudioEffects(ka);
+            }
             transform.SetAsLastSibling();
             IsClosing = false;
             group.alpha = 0;
@@ -66,12 +76,12 @@ namespace OurTaiko
                     case InputKey.MenuUp:
                     case InputKey.MenuLeft:
                     case InputKey.LeftKa:
-                        Select((SelectedIndex + buttons.Length - 1) % buttons.Length);
+                        Select((SelectedIndex + buttons.Length - 1) % buttons.Length, true);
                         return;
                     case InputKey.MenuDown:
                     case InputKey.MenuRight:
                     case InputKey.RightKa:
-                        Select((SelectedIndex + 1) % buttons.Length);
+                        Select((SelectedIndex + 1) % buttons.Length, true);
                         return;
                     case InputKey.Confirm:
                     case InputKey.LeftDon:
@@ -82,14 +92,16 @@ namespace OurTaiko
             }
         }
 
-        void Select(int index)
+        void Select(int index, bool playSound = false)
         {
+            bool changed = SelectedIndex != index;
             SelectedIndex = index;
             for (int i = 0; i < buttons.Length; i++)
             {
                 var selection = buttons[i].transform.Find("Selection");
                 if (selection != null) selection.gameObject.SetActive(i == index);
             }
+            if (changed && playSound) sfx.PlayAudioOneShot(ka);
         }
     }
 }

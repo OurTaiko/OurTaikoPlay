@@ -147,8 +147,14 @@ namespace OurTaiko.Tests
                 AssertMenuReceivesPointer(point, buttons[i]);
             }
             Assert.That(play.pauseMenu.SelectedIndex, Is.Zero);
+            var menuAudio = play.pauseMenu.GetComponent<AudioBus>();
+            Assert.That(menuAudio, Is.Not.Null);
+            Assert.That(menuAudio.PreparedEffects, Is.EqualTo(1), "Pause navigation reuses the menu ka sound.");
+            Assert.That(menuAudio.IsPlaying, Is.False, "Opening pause must not play a navigation sound.");
             yield return Press(Key.DownArrow);
             Assert.That(play.pauseMenu.SelectedIndex, Is.EqualTo(1));
+            Assert.That(menuAudio.IsPlaying, Is.True, "Changing the selected action must play ka while gameplay stays paused.");
+            Assert.That(play.music.IsAudioPlaying() || play.hitAudio.IsAudioPlaying(), Is.False);
             yield return Press(Key.UpArrow);
             Assert.That(play.pauseMenu.SelectedIndex, Is.Zero);
             yield return Press(Key.K);
