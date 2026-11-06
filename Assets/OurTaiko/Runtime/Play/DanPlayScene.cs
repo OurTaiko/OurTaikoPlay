@@ -83,6 +83,7 @@ namespace OurTaiko
         internal override double ChartTimeNow => ChartTime;
         internal override double JudgeOffset => judgeOffset;
         internal override bool AcceptsHits => songClock.Started && !switcher.IsInputBlocked && !IsPaused && !IsFinished && !SongEnded;
+        internal override float MovieLaneAlpha => movie != null ? movie.LaneAlpha : 1;
 
         IEnumerator Start()
         {
