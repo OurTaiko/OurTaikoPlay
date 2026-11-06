@@ -125,13 +125,30 @@ namespace OurTaiko.Tests
             finally { Cleanup(); LogAssert.ignoreFailingMessages = false; }
         }
 
+        // #LANE_ALPHA over a movie: the chart's opacity times the movie's (40%), not one overwriting
+        // the other.
+        [UnityTest]
+        public IEnumerator TheChartsLaneAlphaMultipliesTheMovies()
+        {
+            PlayScene play = null; BackgroundMovieView movie = null;
+            yield return Play(Fixture("testsrc.mp4"), false, false, (p, m) => { play = p; movie = m; },
+                chart: Chart.Replace("#START\n", "#START\n#LANE_ALPHA 50\n"));
+            try
+            {
+                Assert.That(movie.HasMovie, Is.True);
+                yield return Wait(() => play.SongTime >= 0.5);
+                Assert.That(movie.laneBackgrounds.All(g => Mathf.Approximately(g.alpha, .2f)), Is.True);
+            }
+            finally { Cleanup(); }
+        }
+
         static SongDefinition song;
 
-        static IEnumerator Play(string moviePath, bool practice, bool twoPlayers, Action<PlayScene, BackgroundMovieView> started, GameSettings settings = null)
+        static IEnumerator Play(string moviePath, bool practice, bool twoPlayers, Action<PlayScene, BackgroundMovieView> started, GameSettings settings = null, string chart = null)
         {
             SettingManager.EnsureInstance().UseUnsaved(settings ?? new GameSettings());
             song = ScriptableObject.CreateInstance<SongDefinition>();
-            song.chart = new TextAsset(Chart);
+            song.chart = new TextAsset(chart ?? Chart);
             song.music = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/OurTaiko/Audio/entry/bgm.ogg");
             song.moviePath = moviePath;
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
