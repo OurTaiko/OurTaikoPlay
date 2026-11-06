@@ -87,7 +87,7 @@ namespace OurTaiko
                 RollBodySprites = scene.rollBodySprites, RollTailSprites = scene.rollTailSprites, MojiSprites = scene.mojiSprites,
                 BalloonTailSprite = scene.balloonTailSprite, MojiRollSprite = scene.mojiRollSprite,
             }, v.balloonCounter);
-            renderer.Prepare(Session);
+            renderer.Prepare(Session, scene is PlayScene play && play.IsPractice);
             scene.hitAudio.PrepareAudioEffects(Don, Ka);
             scene.hitAudio.PrepareAudioEffects(v.comboAnnounce.voices);
             UpdateHud();
@@ -105,6 +105,8 @@ namespace OurTaiko
             Session = session;
             if (Session != null) Session.Judged += OnJudged;
         }
+
+        public void SetPracticeTiming(PlaySession attempt) => renderer.SetPracticeTiming(attempt);
 
         void ShowDifficulty(string course)
         {

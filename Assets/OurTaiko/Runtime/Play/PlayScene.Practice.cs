@@ -51,6 +51,7 @@ namespace OurTaiko
             songClock.Pause(); IsPaused = true; practiceRewinding = false;
             music.StopAudio(); hitAudio.StopAudio();
             PracticeStage = FirstPracticeStage;
+            Lane1.SetPracticeTiming(first || autoPlay ? null : Session);
             if (first) Session = new PlaySession(Session.Chart, judgeOffset, practiceBranch, 1, judgeWindows);
             RefreshPracticeBars();
             // The cursor is visual chart time, so a bar aligns exactly even with configured offsets.
@@ -99,7 +100,9 @@ namespace OurTaiko
             else
             {
                 Practice.Move(Math.Sign(direction), GameTimeline.FrameTime);
-                ResetPracticeAttempt(Practice.Target);
+                // Browsing only changes the preview. Build the new judgment session once on start,
+                // instead of allocating chart-sized state and resetting every effect on each step.
+                Lane1.ResetBranchLane(Practice.Target + VisualOffset);
                 songClock.Seek(Practice.Target + AudioOffset + VisualOffset, Practice.Speed);
             }
             ShowPracticePause();
@@ -109,6 +112,7 @@ namespace OurTaiko
             if (!CanAdjustPractice) return;
             pauseOpenedFrame = Time.frameCount;
             if (PracticeStage != PracticeStage.Speed) { PracticeStage++; ShowPracticePause(); return; }
+            Lane1.SetPracticeTiming(null);
             ResetPracticeAttempt(Practice.Target);
             practiceView.panel.SetActive(false);
             practiceRewinding = true;

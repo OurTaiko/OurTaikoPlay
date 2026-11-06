@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace OurTaiko
@@ -20,6 +21,12 @@ namespace OurTaiko
         readonly RectTransform noteLayer, barLayer, mojiLayer;
         readonly Sprite[] noteSprites, alternateNoteSprites, rollBodySprites, rollTailSprites, mojiSprites;
         readonly Sprite balloonTailSprite, mojiRollSprite;
+        PlaySession practiceTiming;
+        int[] practiceTimingRows = Array.Empty<int>();
+        bool[] practiceTimingDense = Array.Empty<bool>();
+        BranchRoute? timingRoute;
+        int timingBudgetFrame = -1, timingCreateBudget;
+        bool timingPending;
         // A balloon whose counter is up hides itself and its text.
         readonly BalloonCounterView balloonCounter;
         PlaySession Session;
@@ -52,6 +59,10 @@ namespace OurTaiko
             public RectTransform Root, Body, Tail;
             public LaneSprite Head, BodyImage, TailImage, BalloonTail;
             public float TailAspect;
+            public TextMeshPro Timing;
+            public double? TimingOffset;
+            public bool TimingMissed;
+            public int TimingRow;
         }
         sealed class MojiView
         {
@@ -68,6 +79,47 @@ namespace OurTaiko
             rollBodySprites = assets.RollBodySprites; rollTailSprites = assets.RollTailSprites; mojiSprites = assets.MojiSprites;
             balloonTailSprite = assets.BalloonTailSprite; mojiRollSprite = assets.MojiRollSprite;
             this.balloonCounter = balloonCounter;
+        }
+
+        // Keep the completed attempt separate from the fresh session used to browse measures.
+        public void SetPracticeTiming(PlaySession attempt)
+        {
+            if (practiceTiming == attempt) return;
+            practiceTiming = attempt;
+            if (attempt != null) PrepareTimingRows(attempt);
+            rendered = false;
+        }
+
+        void PrepareTimingRows(PlaySession attempt)
+        {
+            var route = attempt.ForcedBranch ?? BranchRoute.Normal;
+            if (practiceTimingRows.Length == attempt.Chart.Notes.Count && timingRoute == route) return;
+            if (practiceTimingRows.Length != attempt.Chart.Notes.Count)
+            {
+                practiceTimingRows = new int[attempt.Chart.Notes.Count];
+                practiceTimingDense = new bool[attempt.Chart.Notes.Count];
+            }
+            timingRoute = route;
+            int ordinal = 0, previous = -1;
+            var notes = attempt.Chart.Notes;
+            for (int i = 0; i < notes.Count; i++)
+            {
+                var note = notes[i];
+                practiceTimingDense[i] = false;
+                if (note.IsLong || note.IsMine || note.IsAdLib || !attempt.IsPracticePreviewActive(note)) continue;
+                // Stable note order, including misses, while browsing different portions of the lane.
+                practiceTimingRows[i] = ordinal++ % 2;
+                if (previous >= 0)
+                {
+                    // Division = 4 / quarter-beat gap. Division / |HS| > 32 is equivalent to
+                    // beatGap * |HS| < 1/8, without consulting rendered pixels or playback speed.
+                    double beatGap = note.Beat - notes[previous].Beat;
+                    double hs = Math.Abs(notes[previous].ScrollX);
+                    if (beatGap >= 0 && beatGap * hs < .125 - 1e-9)
+                        practiceTimingDense[previous] = practiceTimingDense[i] = true;
+                }
+                previous = i;
+            }
         }
 
         static RectTransform Rect(string name, Transform parent, float width, float height)
@@ -88,11 +140,15 @@ namespace OurTaiko
         // Only the notes on the lane own views; prewarm enough that the first screens do not allocate.
         // A 段位 course prepares the same renderer again for its next song: what the song before left
         // on the lane goes back to the pools first, and the lane windows are built for the new chart.
-        public void Prepare(PlaySession session)
+        public void Prepare(PlaySession session, bool practice = false)
         {
             for (int i = 0; i < shownNotes.Length; i++) { if (shownNotes[i] != null) ReleaseNote(i); if (shownMoji[i] != null) ReleaseMoji(i); }
             for (int i = 0; i < shownBars.Length; i++) if (shownBars[i] != null) ReleaseBar(i);
             noteWindow = barWindow = null; rendered = false; renderedSession = null;
+            practiceTiming = null;
+            practiceTimingRows = Array.Empty<int>();
+            practiceTimingDense = Array.Empty<bool>();
+            timingRoute = null;
             bool warm = notePool[PlainShape].Count > 0;
             Session = session;
             clocks = new ScrollClockTimeline(session.Chart);
@@ -100,7 +156,11 @@ namespace OurTaiko
             shownNotes = new NoteView[Session.Chart.Notes.Count];
             shownMoji = new MojiView[Session.Chart.Notes.Count];
             shownBars = new RectTransform[Session.Chart.Bars.Count];
-            if (warm) return;
+            if (warm)
+            {
+                if (practice) PrewarmTiming(session);
+                return;
+            }
             for (int i = 0; i < 32; i++) notePool[PlainShape].Push(NewNote(PlainShape));
             for (int i = 0; i < 2; i++) notePool[RollShape].Push(NewNote(RollShape));
             notePool[BalloonShape].Push(NewNote(BalloonShape));
@@ -110,6 +170,26 @@ namespace OurTaiko
                 for (int i = 0; i < 2; i++) mojiPool[1].Push(NewMoji(1));
             }
             for (int i = 0; i < 8; i++) barPool.Push(NewBar());
+            if (practice) PrewarmTiming(session);
+        }
+
+        void PrewarmTiming(PlaySession session)
+        {
+            PrepareTimingRows(session);
+            // Pay component/font/mesh setup behind the loading cover, not on the first pause.
+            int count = Math.Min(64, session.Chart.Notes.Count);
+            while (notePool[PlainShape].Count < count) notePool[PlainShape].Push(NewNote(PlainShape));
+            foreach (var view in notePool[PlainShape])
+            {
+                if (view.Timing != null) continue;
+                view.Root.gameObject.SetActive(true);
+                CreateTimingLabel(view);
+                view.Timing.text = "+0123456789-×";
+                view.Timing.ForceMeshUpdate(true);
+                view.Timing.text = "";
+                view.Timing.gameObject.SetActive(false);
+                view.Root.gameObject.SetActive(false);
+            }
         }
         NoteView NewNote(int shape)
         {
@@ -305,6 +385,12 @@ namespace OurTaiko
             if (!rebuilt && rendered && time == RenderedTime && Session == renderedSession && Session.Version == renderedVersion
                 && balloonCounter.NoteIndex == renderedBalloon && preview == renderedPreview) return false;
             rendered = true; renderedSession = Session; renderedVersion = Session.Version;
+            if (timingBudgetFrame != Time.frameCount)
+            {
+                timingBudgetFrame = Time.frameCount;
+                timingCreateBudget = 2;
+            }
+            timingPending = false;
             renderedBalloon = balloonCounter.NoteIndex; renderedPreview = preview;
             RenderedTime = time;
             int expression = Session.NoteExpressionFrame(time, preview);
@@ -348,6 +434,9 @@ namespace OurTaiko
                 else if (!view.Root.gameObject.activeSelf) view.Root.gameObject.SetActive(true);
                 view.Head.sprite = expression == 0 ? noteSprites[(int)note.Kind] : alternateNoteSprites[(int)note.Kind];
                 view.Root.anchoredPosition = pos;
+                ShowTiming(view, preview && practiceTiming != null ? practiceTiming.TimingOffsetMs(i) : null,
+                    preview && practiceTiming != null && practiceTiming.Missed[i] && !practiceTiming.Skipped[i],
+                    preview && practiceTiming != null && practiceTimingDense[i] ? practiceTimingRows[i] : 0);
                 if (view.BalloonTail != null) view.BalloonTail.enabled = balloonCounter.NoteIndex != i;
                 if (view.Body != null)
                 {
@@ -396,7 +485,59 @@ namespace OurTaiko
                 }
                 root.anchoredPosition = pos;
             }
+            if (timingPending) rendered = false;
             return true;
+        }
+
+        void CreateTimingLabel(NoteView view)
+        {
+            // The note's own SortingGroup, not a separately positioned UI canvas.
+            var rect = Rect("PracticeTiming", view.Root, 100, 32);
+            rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
+            rect.anchoredPosition = new Vector2(0, 72);
+            var label = view.Timing = rect.gameObject.AddComponent<TextMeshPro>();
+            label.isOrthographic = true;
+            label.fontSize = 26;
+            label.alignment = TextAlignmentOptions.Center;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.overflowMode = TextOverflowModes.Overflow;
+            label.GetComponent<MeshRenderer>().sortingOrder = 3;
+            label.UseUiFont();
+        }
+
+        void ShowTiming(NoteView view, double? offset, bool missed, int row)
+        {
+            if (!offset.HasValue && !missed)
+            {
+                if (view.TimingOffset.HasValue || view.TimingMissed)
+                {
+                    view.Timing.gameObject.SetActive(false);
+                    view.TimingOffset = null;
+                    view.TimingMissed = false;
+                }
+                return;
+            }
+            if (view.Timing == null)
+            {
+                // Extreme HS may exceed the warm pool. Fill it over frames, never all at once.
+                if (timingCreateBudget == 0) { timingPending = true; return; }
+                timingCreateBudget--;
+                CreateTimingLabel(view);
+            }
+            var label = view.Timing;
+            if (view.TimingRow != row)
+            {
+                label.rectTransform.anchoredPosition = new Vector2(0, 72 + row * 36);
+                view.TimingRow = row;
+            }
+            if (view.TimingOffset != offset || view.TimingMissed != missed)
+            {
+                label.gameObject.SetActive(true);
+                label.text = missed ? "×" : TimingFeedbackView.FormatOffset(offset.Value);
+                label.color = missed ? (Color)new Color32(200, 200, 200, 255) : TimingFeedbackView.OffsetColor(offset.Value);
+                view.TimingOffset = offset;
+                view.TimingMissed = missed;
+            }
         }
 
         // skip_note: a kusudama whose ball is up (hit by either seat) draws neither the note nor its text.

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -188,6 +189,68 @@ namespace OurTaiko.Tests
             Assert.That(SceneSwitcher.Instance.SelectedPlayScene, Is.EqualTo(SceneSwitcher.PracticeScene));
         }
         const string Plain = "TITLE:Practice Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n1111,\n#END";
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator PausedPracticeShowsNoteTimingAndAlternatesDenseDisplayedNotes()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false,
+                "TITLE:Timing Review\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#SCROLL 0.3\n1111111111111111,\n1111,\n1111,\n#END");
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Any(t => t.name == "PracticeTiming" && t.gameObject.activeInHierarchy), Is.False);
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            var attempt = play.Session;
+            var hitIndices = Enumerable.Range(0, 12).Where(i => i != 3 && i != 8).ToArray();
+            foreach (int i in hitIndices)
+                attempt.Hit(false, attempt.Chart.Notes[i].Time + (i % 2 == 0 ? .012 : -.008));
+            Assert.That(attempt.HitTimings.Count, Is.EqualTo(hitIndices.Length));
+            yield return Press(Key.Space);
+            Assert.That(play.IsPaused, Is.True);
+            Assert.That(play.pausePanel.activeSelf, Is.False, "Space opens the practice measure browser.");
+            Assert.That(play.Session.HitTimings.Count, Is.Zero, "Review must not carry judgments into the next attempt.");
+            // The synthetic judgments were seeded during preparation; browse to their measure.
+            var browsingSession = play.Session;
+            play.MovePractice(1);
+            yield return new WaitForSecondsRealtime(.3f);
+            Canvas.ForceUpdateCanvases();
+            Assert.That(play.Session, Is.SameAs(browsingSession), "Measure browsing must not rebuild chart-sized judgment state.");
+            var labels = hitIndices.Select(i => play.NoteRoot(i).Find("PracticeTiming").GetComponent<TMP_Text>()).ToArray();
+            for (int i = 0; i < labels.Length; i++)
+            {
+                Assert.That(labels[i].gameObject.activeInHierarchy, Is.True);
+                Assert.That(labels[i].text, Is.EqualTo(hitIndices[i] % 2 == 0 ? "+12" : "-8"));
+                Assert.That(labels[i].color, Is.EqualTo(hitIndices[i] % 2 == 0 ? TimingFeedbackView.LateColor : TimingFeedbackView.EarlyColor));
+                Assert.That(labels[i].rectTransform.anchoredPosition.x, Is.Zero, "Labels stay attached to their own note.");
+                Assert.That(labels[i].rectTransform.anchoredPosition.y, Is.EqualTo(72 + hitIndices[i] % 2 * 36),
+                    "Dense labels alternate by note order, including missed notes.");
+                Assert.That(labels[i], Is.TypeOf<TextMeshPro>(), "Timing shares the note's world-space sorting group.");
+            }
+            foreach (int missed in new[] { 3, 8 })
+            {
+                var label = play.NoteRoot(missed).Find("PracticeTiming").GetComponent<TMP_Text>();
+                Assert.That(label.gameObject.activeInHierarchy, Is.True);
+                Assert.That(label.text, Is.EqualTo("×"));
+                Assert.That(label.color, Is.EqualTo((Color)new Color32(200, 200, 200, 255)));
+                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(72 + missed % 2 * 36));
+            }
+            Assert.That(play.NoteRoot(12).Find("PracticeTiming")?.gameObject.activeSelf ?? false, Is.False,
+                "An unhit note has no timing value.");
+            TestCapture.Capture("PracticeTimingReview.png");
+            yield return new WaitForSecondsRealtime(.6f);
+            Assert.That(labels.All(t => t.gameObject.activeInHierarchy), Is.True, "Review does not fade like live hit feedback.");
+            play.MovePractice(1); yield return new WaitForSecondsRealtime(.25f);
+            play.MovePractice(-1); yield return new WaitForSecondsRealtime(.25f);
+            Assert.That(play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>().text, Is.EqualTo("+12"),
+                "Browsing measures must preserve the last attempt's review.");
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "Starting the next attempt hides the old review, including pooled notes.");
+            yield return Press(Key.Space);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "Pausing a new attempt with no hits must not show the previous attempt's values.");
+        }
         // Misses would select 普通 at both branches; practice must keep the menu's route instead.
         const string Branched = "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n3333,\n#BRANCHEND\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n#MEASURE 2/4\n33,\n33,\n#MEASURE 4/4\n#BRANCHEND\n1111,\n#END";
         [UnityTest]
