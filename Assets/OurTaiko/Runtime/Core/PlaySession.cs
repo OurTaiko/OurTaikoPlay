@@ -315,13 +315,9 @@ namespace OurTaiko
             // A #LEVELHOLD reached, or an empty or unreadable condition, keeps the route played so
             // far (Normal at first).
             if (IsLevelHeld || branch.Condition == BranchCondition.None) chosen = CurrentBranch;
-            // `l`: OpenTaiko's lower bounds — below master → 達人, below expert → 玄人.
-            else if (branch.Less) chosen = value < branch.MasterThreshold ? BranchRoute.Master
-                : value < branch.ExpertThreshold ? BranchRoute.Expert : BranchRoute.Normal;
-            // OpenTaiko tBranchJudge: master first, then expert; a negative threshold is reachable
-            // with no notes played (`p,-1,101` always picks 玄人).
-            else chosen = value >= branch.MasterThreshold ? BranchRoute.Master
-                : value >= branch.ExpertThreshold ? BranchRoute.Expert : BranchRoute.Normal;
+            // The thresholds of the route being played (fumen keeps a pair per route; TJA gives
+            // every route the same). 達人 first, then 玄人, or below them with `l`.
+            else chosen = branch.Choose(value, CurrentBranch);
             chosen = branch.ResolveRoute(ForcedBranch ?? chosen);
             if (branch.HoldRoutes[(int)chosen]) IsLevelHeld = true;
             selectedRoutes[branch.Id] = (int)chosen;
