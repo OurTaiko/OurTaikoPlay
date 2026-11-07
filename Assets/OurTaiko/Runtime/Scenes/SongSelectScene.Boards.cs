@@ -192,7 +192,7 @@ namespace OurTaiko
             if (TimerView == null) return;
             TimerView.Show(Manager.Phase == State.Browsing ? ListTimerSeconds : CourseTimerSeconds);
             // coin_overlay: the invite shows while a 2P join would still be allowed (songs played < 2).
-            Coins.ShowInvite(switcher.SongsPlayed < 2 && !Manager.TwoPlayers, now);
+            Coins.ShowInvite(switcher.SongsPlayed < 2 && !Manager.TwoPlayers && !switcher.PracticeMode, now);
         }
 
         void AddClick(Image image, Difficulty difficulty)
