@@ -81,6 +81,8 @@ namespace OurTaiko
 #else
         public bool singlePlayerDrumPad = false;
 #endif
+        // Note offsets and misses when browsing a paused or finished practice attempt.
+        public bool practiceTimingReview = true;
         public const int OffsetDefaultMs = 0, OffsetStepMs = 1;
         // A shifts the chart relative to music; B shifts judgment only. Positive means later.
         public int audioOffsetMs = OffsetDefaultMs;

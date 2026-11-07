@@ -44,7 +44,7 @@ namespace OurTaiko.Tests
             Assert.That(nav.Row.Id, Is.EqualTo("audio-offset"));
             Assert.That(nav.Move(-1, repeat: true), Is.EqualTo(SettingsNavigator.Result.Bumped), "A held key's repeats stop at the first row.");
             Assert.That(nav.Move(10), Is.EqualTo(SettingsNavigator.Result.Moved));
-            Assert.That(nav.Row.Id, Is.EqualTo("drum-pad"), "The last row, not a Return entry.");
+            Assert.That(nav.Row.Id, Is.EqualTo("practice-timing-review"), "The last row, not a Return entry.");
             Assert.That(nav.Move(1, repeat: true), Is.EqualTo(SettingsNavigator.Result.Bumped));
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
             Assert.That(nav.Back(), Is.EqualTo(SettingsNavigator.Result.Returned));
@@ -61,7 +61,7 @@ namespace OurTaiko.Tests
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
             Assert.That(nav.Page.Id, Is.EqualTo("play"), "The page stays selected.");
             nav.Confirm();
-            Focus(nav, "drum-pad");
+            Focus(nav, "practice-timing-review");
             Assert.That(nav.Move(1), Is.EqualTo(SettingsNavigator.Result.Returned), "Ka below the last row too.");
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
 

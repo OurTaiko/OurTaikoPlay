@@ -171,13 +171,13 @@ namespace OurTaiko.Tests
                 var notes = play.Session.Chart.Notes;
                 play.Session.Hit(false, notes[0].Time + play.Session.JudgeOffset - .02);
                 Assert.That(feedback.label.text, Is.EqualTo("-20ms"));
-                Assert.That(feedback.label.color, Is.EqualTo(TimingFeedbackView.EarlyColor));
+                Assert.That(feedback.label.color, Is.EqualTo(TimingOffsetText.EarlyColor));
                 Assert.That(feedback.label.raycastTarget, Is.False);
                 yield return null;
                 TestCapture.Capture("TimingEarly-" + (practice ? "Practice" : "Play") + ".png");
                 play.Session.Hit(false, notes[1].Time + play.Session.JudgeOffset + .05);
                 Assert.That(feedback.label.text, Is.EqualTo("+50ms"));
-                Assert.That(feedback.label.color, Is.EqualTo(TimingFeedbackView.LateColor));
+                Assert.That(feedback.label.color, Is.EqualTo(TimingOffsetText.LateColor));
                 yield return null;
                 TestCapture.Capture("TimingLate-" + (practice ? "Practice" : "Play") + ".png");
                 TestCapture.Capture("TimingLate720-" + (practice ? "Practice" : "Play") + ".png", 1280, 720);
@@ -187,7 +187,10 @@ namespace OurTaiko.Tests
                 Assert.That(feedback.label.text, Is.EqualTo("+90ms"), "Hit Bad still has a measured offset.");
                 if (practice)
                 {
+                    // Browsing measures only moves the preview; the attempt starts over when practice starts.
                     play.MovePractice(1);
+                    while (play.PracticeStage != PracticeStage.Speed) { yield return null; play.ConfirmPractice(); }
+                    yield return null; play.ConfirmPractice();
                     Assert.That(feedback.label.alpha, Is.Zero);
                     Assert.That(play.Session.HitTimings, Is.Empty);
                 }

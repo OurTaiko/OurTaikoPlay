@@ -135,6 +135,7 @@ namespace OurTaiko
                 if (secondLane != null) sessions.Add(AddLane(1, secondLane));
                 // Both seats' kusudama at the same time are one ball; a lone one is a balloon.
                 if (sessions.Count > 1) Kusudama.Share(sessions[0], sessions[1]);
+                if (IsPractice) AddPracticeAddOns();
                 for (int i = 0; i < lanes.Count; i++) lanes[i].Prepare(sessions[i]);
                 // The single-player scenes' don/ka are 1P's neiro (tests read them).
                 don = Lane1.Don; ka = Lane1.Ka;
@@ -343,7 +344,8 @@ namespace OurTaiko
         // its lane while the music fades out; ResultScene (which persists the result) follows.
         void Finish()
         {
-            if (IsPractice) { PausePractice(true); return; }
+            // Practice loops back to the first measure; the attempt it just completed stopped there.
+            if (IsPractice) { PracticeAttemptStopped?.Invoke(Session); PausePractice(true); return; }
             if (IsFinished) return;
             IsFinished = true;
             foreach (var lane in lanes)
@@ -386,7 +388,7 @@ namespace OurTaiko
             if (IsPractice && !IsFinished)
             {
                 if (pausePanel.activeSelf && !closingPauseMenu)
-                    StartCoroutine(ClosePauseMenu(() => { RestorePracticePads(); PausePractice(true); }));
+                    StartCoroutine(ClosePauseMenu(() => { RestorePracticePads(); PracticeAttemptCleared?.Invoke(); PausePractice(true); }));
                 return;
             }
             LeavePlay(() => SceneSwitcher.EnsureInstance().Restart());

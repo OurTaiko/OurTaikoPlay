@@ -41,6 +41,7 @@ namespace OurTaiko
 
         readonly PlaySceneBase scene;
         NoteLaneRenderer renderer;
+        readonly List<INoteLaneOverlay> overlays = new List<INoteLaneOverlay>();
         bool hitKa, nextAutoRight = true;
         double feedbackTime = -10;
         readonly double[] flashedAt = { -10, -10, -10, -10 };
@@ -80,13 +81,17 @@ namespace OurTaiko
             PutSoulGaugeUnderNotes();
             Session.Judged += OnJudged;
             if (v.branchLane != null) v.branchLane.Initialize(Session.Chart.Branches.Count > 0);
-            renderer ??= new NoteLaneRenderer(new NoteLaneRenderer.Assets
+            if (renderer == null)
             {
-                NoteLayer = v.noteLayer, BarLayer = v.barLayer, MojiLayer = v.mojiLayer,
-                NoteSprites = scene.noteSprites, AlternateNoteSprites = scene.alternateNoteSprites,
-                RollBodySprites = scene.rollBodySprites, RollTailSprites = scene.rollTailSprites, MojiSprites = scene.mojiSprites,
-                BalloonTailSprite = scene.balloonTailSprite, MojiRollSprite = scene.mojiRollSprite,
-            }, v.balloonCounter);
+                renderer = new NoteLaneRenderer(new NoteLaneRenderer.Assets
+                {
+                    NoteLayer = v.noteLayer, BarLayer = v.barLayer, MojiLayer = v.mojiLayer,
+                    NoteSprites = scene.noteSprites, AlternateNoteSprites = scene.alternateNoteSprites,
+                    RollBodySprites = scene.rollBodySprites, RollTailSprites = scene.rollTailSprites, MojiSprites = scene.mojiSprites,
+                    BalloonTailSprite = scene.balloonTailSprite, MojiRollSprite = scene.mojiRollSprite,
+                }, v.balloonCounter);
+                foreach (var overlay in overlays) renderer.AddOverlay(overlay);
+            }
             renderer.Prepare(Session);
             scene.hitAudio.PrepareAudioEffects(Don, Ka);
             scene.hitAudio.PrepareAudioEffects(v.comboAnnounce.voices);
@@ -104,6 +109,13 @@ namespace OurTaiko
             if (Session != null) Session.Judged -= OnJudged;
             Session = session;
             if (Session != null) Session.Judged += OnJudged;
+        }
+
+        // What a mode draws on this lane's notes (INoteLaneOverlay); add before Prepare.
+        public void AddOverlay(INoteLaneOverlay overlay)
+        {
+            overlays.Add(overlay);
+            renderer?.AddOverlay(overlay);
         }
 
         void ShowDifficulty(string course)
