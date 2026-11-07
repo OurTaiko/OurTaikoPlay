@@ -68,7 +68,7 @@ namespace OurTaiko.Tests
             var saved = GameSettings.FromJson(nav.Settings.ToJson());
             Assert.That(saved.general.language, Is.EqualTo("zh_tw"));
             Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
-            Assert.That(saved.play.singlePlayerDrumPad, Is.True);
+            Assert.That(saved.play.singlePlayerDrumPad, Is.EqualTo(PlaySettings.DrumPadDefault));
             Assert.That(GameSettings.FromJson("{}").general.Language, Is.EqualTo("en"));
             saved.general.language = "unknown";
             Assert.That(saved.general.Language, Is.EqualTo("en"));

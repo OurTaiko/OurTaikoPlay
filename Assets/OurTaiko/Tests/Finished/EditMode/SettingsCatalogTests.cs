@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using UnityEditor;
 
 namespace OurTaiko.Tests
 {
@@ -16,13 +17,32 @@ namespace OurTaiko.Tests
         [Test]
         public void SettingsJsonKeepsDefaultsForMissingFields()
         {
-            Assert.That(new GameSettings().play.singlePlayerDrumPad, Is.True);
-            Assert.That(GameSettings.FromJson("{}").play.singlePlayerDrumPad, Is.True);
-            Assert.That(GameSettings.FromJson("").play.singlePlayerDrumPad, Is.True);
-            var off = new GameSettings { play = new PlaySettings { singlePlayerDrumPad = false } };
-            Assert.That(GameSettings.FromJson(off.ToJson()).play.singlePlayerDrumPad, Is.False);
+            Assert.That(new GameSettings().play.singlePlayerDrumPad, Is.EqualTo(PlaySettings.DrumPadDefault));
+            Assert.That(GameSettings.FromJson("{}").play.singlePlayerDrumPad, Is.EqualTo(PlaySettings.DrumPadDefault));
+            Assert.That(GameSettings.FromJson("").play.singlePlayerDrumPad, Is.EqualTo(PlaySettings.DrumPadDefault));
+            Assert.That(GameSettings.FromJson("{\"play\":{\"audioOffsetMs\":3}}").play.singlePlayerDrumPad,
+                Is.EqualTo(PlaySettings.DrumPadDefault));
+            Assert.That(GameSettings.FromJson("{\"play\":null}").play.singlePlayerDrumPad,
+                Is.EqualTo(PlaySettings.DrumPadDefault));
             Assert.That(GameSettings.FromJson("{\"play\":{}}").display.targetFrameRate, Is.EqualTo(120));
             Assert.That(GameSettings.FromJson("{\"display\":{\"targetFrameRate\":60}}").display.vSync, Is.False);
+        }
+
+        [Test]
+        public void DrumPadDefaultsOnOnlyForMobileBuildTargets()
+        {
+            var target = EditorUserBuildSettings.activeBuildTarget;
+            bool mobile = target == BuildTarget.Android || target == BuildTarget.iOS;
+            Assert.That(new PlaySettings().singlePlayerDrumPad, Is.EqualTo(mobile));
+        }
+
+        [TestCase(true), TestCase(false)]
+        public void ExplicitDrumPadChoiceSurvivesLoadingAndSaving(bool enabled)
+        {
+            var settings = GameSettings.FromJson("{\"play\":{\"singlePlayerDrumPad\":"
+                + (enabled ? "true" : "false") + "}}");
+            Assert.That(settings.play.singlePlayerDrumPad, Is.EqualTo(enabled));
+            Assert.That(GameSettings.FromJson(settings.ToJson()).play.singlePlayerDrumPad, Is.EqualTo(enabled));
         }
 
         [Test]

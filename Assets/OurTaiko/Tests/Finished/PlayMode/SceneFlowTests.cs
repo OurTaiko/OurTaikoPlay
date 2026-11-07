@@ -167,6 +167,9 @@ namespace OurTaiko.Tests
         [UnityTest, Category("SpriteRendering")]
         public IEnumerator TouchDrumMatchesOriginalZonesAndSqueeze()
         {
+            var settings = SettingManager.EnsureInstance().Settings.Clone();
+            settings.play.singlePlayerDrumPad = true;
+            SettingManager.EnsureInstance().UseUnsaved(settings);
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             TestSongs.Select();

@@ -73,8 +73,14 @@ namespace OurTaiko
     [Serializable]
     public sealed class PlaySettings
     {
+#if UNITY_ANDROID || UNITY_IOS
+        public const bool DrumPadDefault = true;
+#else
+        public const bool DrumPadDefault = false;
+#endif
         // The touch drum in SinglePlayScene: enabled and visible, or disabled and hidden.
-        public bool singlePlayerDrumPad = true;
+        // Only mobile builds show it by default; an explicit saved choice wins on every platform.
+        public bool singlePlayerDrumPad = DrumPadDefault;
         public const int OffsetDefaultMs = 0, OffsetStepMs = 1;
         // A shifts the chart relative to music; B shifts judgment only. Positive means later.
         public int audioOffsetMs = OffsetDefaultMs;

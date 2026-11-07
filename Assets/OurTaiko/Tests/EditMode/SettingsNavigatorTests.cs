@@ -82,11 +82,12 @@ namespace OurTaiko.Tests
         {
             var nav = OnPage("play");
             Focus(nav, "drum-pad");
+            bool initial = nav.Settings.play.singlePlayerDrumPad;
             Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Changed));
-            Assert.That(nav.Settings.play.singlePlayerDrumPad, Is.False);
+            Assert.That(nav.Settings.play.singlePlayerDrumPad, Is.EqualTo(!initial));
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
             Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Changed));
-            Assert.That(nav.Settings.play.singlePlayerDrumPad, Is.True);
+            Assert.That(nav.Settings.play.singlePlayerDrumPad, Is.EqualTo(initial));
         }
 
         [Test]
