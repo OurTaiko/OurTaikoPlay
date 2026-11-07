@@ -43,6 +43,8 @@ namespace OurTaiko
             Measure = Math.Max(0, Array.FindLastIndex(bars, x => x <= position + 1e-7));
         }
         public double First => bars[0];
+        public double SnapToMeasure(double position)
+            => bars[Math.Max(0, Array.FindLastIndex(bars, x => x <= position + 1e-7))];
         public void Move(int direction, double now)
         {
             Update(now);

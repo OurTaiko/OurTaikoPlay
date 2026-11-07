@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -187,6 +188,79 @@ namespace OurTaiko.Tests
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
             Assert.That(SceneSwitcher.Instance.SelectedPlayScene, Is.EqualTo(SceneSwitcher.PracticeScene));
         }
+
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator SwitchingModesStartsFreshAttemptsAndPersistsTheSelectedMode()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false);
+            var switcher = SceneSwitcher.Instance;
+            int songsPlayed = switcher.SongsPlayed;
+            play.ConfirmPractice(); yield return null;
+            for (int i = 0; i < 4; i++) play.MovePractice(-1);
+            Assert.That(play.Practice.Speed, Is.EqualTo(.6));
+            play.Session.Hit(false, 0);
+            play.Record.Inputs.Add((0, Online.PlayRecord.TypeOf(false, false)));
+            play.TogglePause();
+            yield return new WaitForSecondsRealtime(.55f);
+            Assert.That(play.pauseMenu.buttons.Length, Is.EqualTo(4));
+            Assert.That(play.pauseMenu.ModeSwitchButton, Is.Not.Null);
+            Assert.That(play.pauseMenu.ModeSwitchButton.GetComponentInChildren<TMP_Text>().text,
+                Is.EqualTo("Switch to Normal Play"));
+            TestCapture.Capture("PracticeModeSwitchMenu.png");
+            var old = play;
+            play.pauseMenu.ModeSwitchButton.onClick.Invoke();
+            play.pauseMenu.ModeSwitchButton.onClick.Invoke();
+            Assert.That(old.pauseMenu.IsClosing, Is.True);
+            yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.GameScene && !switcher.IsInputBlocked
+                && Object.FindAnyObjectByType<PlayScene>()?.SongTime < 0);
+            play = Object.FindAnyObjectByType<PlayScene>();
+            Assert.That(old == null, Is.True, "Mode switching must destroy the old scene/session.");
+            Assert.That(switcher.PracticeMode, Is.False);
+            Assert.That(play.IsPractice, Is.False);
+            Assert.That(play.Session.ForcedBranch, Is.Null);
+            Assert.That(play.Session.Rate, Is.EqualTo(1));
+            Assert.That(play.music.pitch, Is.EqualTo(1));
+            Assert.That(play.Session.Score + play.Session.Bad + play.Session.Rolls, Is.Zero);
+            Assert.That(play.Record.Inputs, Is.Empty);
+            Assert.That(switcher.SelectedSong, Is.SameAs(song));
+            Assert.That(switcher.SelectedCourse, Is.EqualTo("Oni"));
+
+            yield return Wait(() => play.SongTime >= 2.2);
+            play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
+            Assert.That(play.pauseMenu.ModeSwitchButton.GetComponentInChildren<TMP_Text>().text,
+                Is.EqualTo("Switch to Practice"));
+            play.pauseMenu.ModeSwitchButton.onClick.Invoke();
+            yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked
+                && Object.FindAnyObjectByType<PlayScene>()?.IsPaused == true);
+            play = Object.FindAnyObjectByType<PlayScene>();
+            Assert.That(play.Practice.Target, Is.EqualTo(2).Within(.001), "Normal play enters practice at its current measure.");
+            Assert.That(play.Practice.Speed, Is.EqualTo(1), "The old practice speed must not survive a round trip.");
+            Assert.That(play.Session.Score + play.Session.Bad + play.Session.Rolls, Is.Zero);
+            Assert.That(play.Record.Inputs, Is.Empty);
+            Assert.That(switcher.TakePracticeEntry(out _, out _), Is.False, "The entry position is consumed only once.");
+
+            play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
+            play.Back();
+            yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !switcher.IsInputBlocked);
+            Assert.That(switcher.PracticeMode, Is.True);
+            switcher.Play(song, "Oni", false);
+            yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked
+                && Object.FindAnyObjectByType<PlayScene>()?.IsPaused == true);
+            play = Object.FindAnyObjectByType<PlayScene>();
+            Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First), "A later song must not reuse the mode-switch position.");
+            play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
+            play.pauseMenu.ModeSwitchButton.onClick.Invoke();
+            yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.GameScene && !switcher.IsInputBlocked
+                && Object.FindAnyObjectByType<PlayScene>()?.SongTime < 0);
+            play = Object.FindAnyObjectByType<PlayScene>();
+            play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
+            play.Back();
+            yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !switcher.IsInputBlocked);
+            Assert.That(switcher.PracticeMode, Is.False);
+            Assert.That(switcher.LastResult, Is.Null);
+            Assert.That(switcher.SongsPlayed, Is.EqualTo(songsPlayed), "Abandoned attempts do not count as completed songs.");
+            Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
+        }
         const string Plain = "TITLE:Practice Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n1111,\n#END";
         // Misses would select 普通 at both branches; practice must keep the menu's route instead.
         const string Branched = "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n3333,\n#BRANCHEND\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n#MEASURE 2/4\n33,\n33,\n#MEASURE 4/4\n#BRANCHEND\n1111,\n#END";
@@ -234,6 +308,7 @@ namespace OurTaiko.Tests
             yield return StartPractice(AudioBackend.BassSimple, false,
                 "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n#BRANCHSTART s,100,200\n#N\n1111,\n#E\n2222,\n#BRANCHEND\n1111,\n#END");
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
+            Assert.That(play.pauseMenu.ModeSwitchButton, Is.Null, "A practice-only chart must not offer normal play.");
             yield return Press(Key.K); yield return Press(Key.K);
             Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Master));
             var notes = play.Session.Chart.Notes;
@@ -258,7 +333,8 @@ namespace OurTaiko.Tests
             Assert.That(entry.view.boards.Count(b => b.practice), Is.EqualTo(1));
             Assert.That(entry.view.boards[2].practice, Is.True, "練習モード follows 演奏ゲーム and 段位道場.");
             Assert.That(entry.view.boards[2].scene, Is.EqualTo(SceneSwitcher.ServerLoginScene));
-            entry.Don(); yield return new WaitForSecondsRealtime(1.5f);
+            yield return Wait(() => entry.Flow.CanJoin(entry.Now) && !SceneSwitcher.Instance.IsInputBlocked);
+            entry.Don(); yield return Wait(() => entry.Flow.IsModeReady(entry.Now));
             entry.Ka(2); yield return new WaitForSecondsRealtime(0.3f); entry.Don();
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);

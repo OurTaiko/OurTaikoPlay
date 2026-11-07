@@ -1,7 +1,10 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace OurTaiko
 {
@@ -18,6 +21,7 @@ namespace OurTaiko
         // The menu's sounds live on their own scene object: Hide deactivates this panel, which would cut a
         // don still ringing (AudioBus.OnDisable stops everything), and the scene's hitAudio stays silent under pause.
         public AudioSource Sfx { get; private set; }
+        public Button ModeSwitchButton { get; private set; }
         Coroutine opening;
 
         void Awake()
@@ -33,6 +37,27 @@ namespace OurTaiko
         void OnDestroy()
         {
             if (Sfx != null) Destroy(Sfx.gameObject);
+        }
+
+        public void ConfigureModeSwitch(bool practice, UnityAction action)
+        {
+            if (ModeSwitchButton != null) return;
+            var back = buttons[2];
+            ModeSwitchButton = Instantiate(back, back.transform.parent);
+            ModeSwitchButton.name = "ModeSwitchButton";
+            ModeSwitchButton.onClick = new Button.ButtonClickedEvent();
+            ModeSwitchButton.onClick.AddListener(action);
+            if (Sfx != null) ModeSwitchButton.onClick.AddListener(() => Sfx.PlayAudioOneShot(don));
+            var label = ModeSwitchButton.GetComponentInChildren<TMP_Text>(true);
+            label.text = practice ? "Switch to Normal Play" : "Switch to Practice";
+            label.fontSize = 42;
+            buttons = new[] { buttons[0], buttons[1], ModeSwitchButton, back };
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                var rect = (RectTransform)buttons[i].transform;
+                rect.sizeDelta = new Vector2(rect.sizeDelta.x, 100);
+                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -202 - i * 110);
+            }
         }
 
         public void Show()
@@ -97,7 +122,7 @@ namespace OurTaiko
                     case InputKey.Confirm:
                     case InputKey.LeftDon:
                     case InputKey.RightDon:
-                        buttons[SelectedIndex].onClick.Invoke();
+                        if (buttons[SelectedIndex].IsInteractable()) buttons[SelectedIndex].onClick.Invoke();
                         return;
                 }
             }
