@@ -22,15 +22,21 @@ namespace OurTaiko
         double AudioOffset => audioOffset * Practice.Speed;
         double VisualOffset => visualOffset * Practice.Speed;
         double PracticeJudgeOffset => judgeOffset * Practice.Speed;
-        // The last attempt's offsets and misses over the paused lane: an overlay on the lane, so neither
-        // the lane nor its note renderer knows about practice.
-        PracticeTimingReview timingReview;
+        // What practice add-ons follow. Stopped: the attempt was paused or played to the song's end, and
+        // carries what it played. Cleared: it was thrown away (practice starts again, or the menu's restart).
+        public event Action<PlaySession> PracticeAttemptStopped;
+        public event Action PracticeAttemptCleared;
 
-        // Before the lane is prepared, so the review warms up behind the loading cover.
-        void AddPracticeTimingReview() => Lane1.AddOverlay(timingReview = new PracticeTimingReview(
-            () => SettingManager.EnsureInstance().Settings.play.practiceTimingReview));
-        // Auto play has nothing to review.
-        void ReviewPracticeAttempt() => timingReview.Attempt = autoPlay ? null : Session;
+        // The add-ons, before the lane is prepared so they warm up behind the loading cover. Each one
+        // is registered here and nowhere else.
+        void AddPracticeAddOns()
+        {
+            // The last attempt's offsets and misses over the paused lane (auto play has nothing to review).
+            var review = new PracticeTimingReview(() => SettingManager.EnsureInstance().Settings.play.practiceTimingReview);
+            Lane1.AddOverlay(review);
+            PracticeAttemptStopped += attempt => review.Attempt = autoPlay ? null : attempt;
+            PracticeAttemptCleared += () => review.Attempt = null;
+        }
 
         void InitializePractice()
         {
@@ -45,7 +51,7 @@ namespace OurTaiko
 
         void TogglePracticePause()
         {
-            if (!IsPaused) { ReviewPracticeAttempt(); PausePractice(false); return; }
+            if (!IsPaused) { PracticeAttemptStopped?.Invoke(Session); PausePractice(false); return; }
             if (practiceRewinding) return;
             if (pausePanel.activeSelf) { resumeButton.onClick.Invoke(); return; }
             DisableDrumPads();
@@ -124,7 +130,7 @@ namespace OurTaiko
             pauseOpenedFrame = Time.frameCount;
             pauseMenu.PlayConfirm();
             if (PracticeStage != PracticeStage.Speed) { PracticeStage++; ShowPracticePause(); return; }
-            timingReview.Attempt = null;
+            PracticeAttemptCleared?.Invoke();
             ResetPracticeAttempt(Practice.Target);
             practiceView.panel.SetActive(false);
             practiceRewinding = true;

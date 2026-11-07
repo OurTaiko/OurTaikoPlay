@@ -30,7 +30,7 @@ namespace OurTaiko
         Transform parking;
         readonly Stack<Label> free = new Stack<Label>();
         Label[] shown = Array.Empty<Label>();
-        // Per note: 1 puts its label below the note. Crowded neighbours alternate above and below.
+        // Per note, NoteLabelRows: Above or Below.
         sbyte[] rows = Array.Empty<sbyte>();
         BranchRoute? rowsRoute;
         bool active, changed, unfinished;
@@ -107,7 +107,7 @@ namespace OurTaiko
             int row = rows[index];
             if (label.Row != row)
             {
-                label.Text.rectTransform.anchoredPosition = new Vector2(0, row == 0 ? RowOffset : -RowOffset);
+                label.Text.rectTransform.anchoredPosition = new Vector2(0, row == NoteLabelRows.Above ? RowOffset : -RowOffset);
                 label.Row = row;
             }
             if (label.Offset != offset || label.Missed != missed)
@@ -152,43 +152,13 @@ namespace OurTaiko
             return new Label { Text = text };
         }
 
+        // Rows depend on the chart and the practice route only, so browsing never recomputes them.
         void PrepareRows(PlaySession session)
         {
-            var notes = session.Chart.Notes;
             var route = session.ForcedBranch ?? BranchRoute.Normal;
-            if (rows.Length == notes.Count && rowsRoute == route) return;
-            if (rows.Length != notes.Count) rows = new sbyte[notes.Count];
+            if (rows.Length == session.Chart.Notes.Count && rowsRoute == route) return;
+            rows = NoteLabelRows.Compute(session, clocks);
             rowsRoute = route;
-            // Numbered in note order, misses included, so a note keeps its row whatever part of the
-            // lane is browsed. A note with room on both sides stays above.
-            int ordinal = 0, previous = -1;
-            for (int i = 0; i < notes.Count; i++)
-            {
-                var note = notes[i];
-                rows[i] = 0;
-                if (note.IsLong || note.IsMine || note.IsAdLib || !session.IsPracticePreviewActive(note)) continue;
-                if (previous >= 0 && Crowded(notes[previous], note))
-                {
-                    rows[previous] = (sbyte)((ordinal - 1) % 2);
-                    rows[i] = (sbyte)(ordinal % 2);
-                }
-                ordinal++;
-                previous = i;
-            }
-        }
-
-        // Closer than a 32nd note at SCROLL 1 on both axes, measured where the lane draws them with the
-        // earlier note at the judge: so a vertical or complex #SCROLL, a #BPMCHANGE between them and
-        // HB/BM scroll all count, and playback speed does not.
-        bool Crowded(ChartNote earlier, ChartNote later)
-        {
-            // Distance cuts to whole pixels; on a 2^20-times finer grid the cut cannot move a note across
-            // the limit, and the two-unit margin keeps an exact 32nd (1/8 beat at SCROLL 1) apart.
-            const double Fine = 1 << 20, Travel = NoteScroll.MeasureWidth * Fine;
-            var a = NoteScroll.RawDistance(earlier, earlier.Time, clocks, Travel);
-            var b = NoteScroll.RawDistance(later, earlier.Time, clocks, Travel);
-            double limit = Travel / 32 - 2;
-            return Math.Abs(b.X - a.X) < limit && Math.Abs(b.Y - a.Y) < limit;
         }
     }
 }
