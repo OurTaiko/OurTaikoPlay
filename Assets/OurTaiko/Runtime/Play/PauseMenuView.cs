@@ -10,23 +10,25 @@ namespace OurTaiko
         public const float FadeDuration = 0.5f;
         public CanvasGroup group;
         public UnityEngine.UI.Button[] buttons;
+        // The menu sounds every other menu uses: ka when the selection moves, don when an action is taken.
+        public AudioClip don, ka;
         public int SelectedIndex { get; private set; }
         public bool IsClosing { get; private set; }
         Coroutine opening;
         AudioSource sfx;
-        AudioClip ka;
+
+        void Awake()
+        {
+            sfx = GetComponent<AudioSource>();
+            if (sfx == null) sfx = gameObject.AddComponent<AudioSource>();
+            sfx.PrepareAudioEffects(don, ka);
+            // Keyboard/drum confirmation invokes onClick too, so every way of choosing an action sounds once.
+            foreach (var button in buttons) button.onClick.AddListener(() => sfx.PlayAudioOneShot(don));
+        }
 
         public void Show()
         {
             gameObject.SetActive(true);
-            if (sfx == null)
-            {
-                sfx = GetComponent<AudioSource>();
-                if (sfx == null) sfx = gameObject.AddComponent<AudioSource>();
-                sfx.playOnAwake = false;
-                ka = Resources.Load<SettingsOverlay>(SettingsOverlay.ResourceName)?.ka;
-                sfx.PrepareAudioEffects(ka);
-            }
             transform.SetAsLastSibling();
             IsClosing = false;
             group.alpha = 0;
@@ -94,14 +96,13 @@ namespace OurTaiko
 
         void Select(int index, bool playSound = false)
         {
-            bool changed = SelectedIndex != index;
             SelectedIndex = index;
             for (int i = 0; i < buttons.Length; i++)
             {
                 var selection = buttons[i].transform.Find("Selection");
                 if (selection != null) selection.gameObject.SetActive(i == index);
             }
-            if (changed && playSound) sfx.PlayAudioOneShot(ka);
+            if (playSound) sfx.PlayAudioOneShot(ka);
         }
     }
 }

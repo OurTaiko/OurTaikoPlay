@@ -149,11 +149,13 @@ namespace OurTaiko.Tests
             Assert.That(play.pauseMenu.SelectedIndex, Is.Zero);
             var menuAudio = play.pauseMenu.GetComponent<AudioBus>();
             Assert.That(menuAudio, Is.Not.Null);
-            Assert.That(menuAudio.PreparedEffects, Is.EqualTo(1), "Pause navigation reuses the menu ka sound.");
-            Assert.That(menuAudio.IsPlaying, Is.False, "Opening pause must not play a navigation sound.");
+            Assert.That(play.pauseMenu.don, Is.Not.Null);
+            Assert.That(play.pauseMenu.ka, Is.Not.Null);
+            Assert.That(menuAudio.PreparedEffects, Is.EqualTo(2), "Pause prepares its don and ka before the first press.");
+            Assert.That(menuAudio.EffectPlays, Is.Zero, "Opening pause must not play a menu sound.");
             yield return Press(Key.DownArrow);
             Assert.That(play.pauseMenu.SelectedIndex, Is.EqualTo(1));
-            Assert.That(menuAudio.IsPlaying, Is.True, "Changing the selected action must play ka while gameplay stays paused.");
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Changing the selected action must play ka while gameplay stays paused.");
             Assert.That(play.music.IsAudioPlaying() || play.hitAudio.IsAudioPlaying(), Is.False);
             yield return Press(Key.UpArrow);
             Assert.That(play.pauseMenu.SelectedIndex, Is.Zero);
@@ -166,8 +168,10 @@ namespace OurTaiko.Tests
             yield return Press(Key.LeftArrow);
             Assert.That(play.pauseMenu.SelectedIndex, Is.Zero);
             Assert.That(play.Session.Rolls, Is.Zero, "Menu drum-key navigation must not judge gameplay notes.");
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(6), "Each of the six moves plays ka once.");
             yield return Press(Key.J);
             Assert.That(play.pauseMenu.IsClosing, Is.True);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(7), "Confirming an action plays don.");
             yield return WaitUntil(() => !play.IsPaused, "Keyboard confirmation did not resume.");
             Assert.That(play.Session.Rolls, Is.Zero, "The confirm press must not leak into gameplay.");
         }

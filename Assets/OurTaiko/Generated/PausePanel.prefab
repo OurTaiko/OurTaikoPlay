@@ -1406,6 +1406,8 @@ MonoBehaviour:
   - {fileID: 6745153577738635511}
   - {fileID: 6475903549511443175}
   - {fileID: 4383536494795732921}
+  don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}
+  ka: {fileID: 8300000, guid: b5d46904052a14efdbf9361bde1e09ae, type: 3}
 --- !u!223 &4108750609836761421
 Canvas:
   m_ObjectHideFlags: 0
