@@ -160,6 +160,26 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
+        public IEnumerator PracticeTimingReviewToggleIsOnByDefaultAndAppliesImmediately()
+        {
+            yield return OpenEntrySettingsBoard(e => e.Don());
+            var overlay = SettingsOverlay.Instance;
+            overlay.Move(2); overlay.Confirm();
+            var nav = overlay.Navigator;
+            overlay.Move(nav.Page.Rows.ToList().FindIndex(r => r.Id == "practice-timing-review"));
+            Assert.That(nav.Row.Label, Is.EqualTo("Practice Timing Review"));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("On"));
+            StartCapture();
+            yield return Settle();
+            Capture("SettingsPracticeTimingReview.png");
+            overlay.Confirm();
+            Assert.That(Settings.Settings.play.practiceTimingReview, Is.False);
+            Assert.That(GameSettings.FromJson(Settings.Settings.ToJson()).play.practiceTimingReview, Is.False);
+            overlay.Confirm();
+            Assert.That(Settings.Settings.play.practiceTimingReview, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator EveryPageShows()
         {
             yield return OpenEntrySettingsBoard(e => e.Don());

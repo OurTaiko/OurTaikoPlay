@@ -184,12 +184,21 @@ namespace OurTaiko.Tests
             yield return Wait(() => !play.IsPaused);
             var completed = play.Session;
             completed.Hit(false, completed.Chart.Notes[0].Time + .012);
+            var settingsManager = SettingManager.EnsureInstance();
+            var settings = settingsManager.Settings.Clone();
+            settings.play.practiceTimingReview = false;
+            settingsManager.Set(settings);
             // Let the remaining notes miss and exercise Finish(), rather than manually pausing.
             yield return Wait(() => play.IsPaused);
             Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First));
             Assert.That(play.Session, Is.Not.SameAs(completed));
             Assert.That(play.Session.HitTimings, Is.Empty, "The browsing session must not inherit judgments.");
             Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Any(t => t.name == "PracticeTiming" && t.gameObject.activeInHierarchy), Is.False);
+            settings.play.practiceTimingReview = true;
+            settingsManager.Set(settings);
+            yield return new WaitForSecondsRealtime(.15f);
             Canvas.ForceUpdateCanvases();
             var hit = play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>();
             var missed = play.NoteRoot(1).Find("PracticeTiming").GetComponent<TMP_Text>();
@@ -288,6 +297,59 @@ namespace OurTaiko.Tests
                 .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
                 "Pausing a new attempt with no hits must not show the previous attempt's values.");
         }
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator TimingReviewCanBeToggledDuringPauseWithoutChangingTheAttempt()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false,
+                Plain.Replace("#START", "#START\n#SCROLL 0.3"), timingReview: false);
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            var attempt = play.Session;
+            attempt.Hit(false, attempt.Chart.Notes[0].Time + .012);
+            attempt.Hit(false, attempt.Chart.Notes[2].Time + .012);
+            int score = attempt.Score, timings = attempt.HitTimings.Count, bad = attempt.Bad;
+            yield return Press(Key.Space);
+            var browsing = play.Session;
+            double target = play.Practice.Target;
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Any(t => t.name == "PracticeTiming"), Is.False,
+                "Starting with review disabled must not create timing text components.");
+            var manager = SettingManager.EnsureInstance();
+            var settings = manager.Settings.Clone();
+            settings.play.practiceTimingReview = true;
+            manager.Set(settings);
+            yield return new WaitForSecondsRealtime(.15f);
+            var hit = play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>();
+            var missed = play.NoteRoot(1).Find("PracticeTiming").GetComponent<TMP_Text>();
+            Assert.That(hit.gameObject.activeInHierarchy, Is.True);
+            Assert.That(hit.text, Is.EqualTo("+12"));
+            Assert.That(missed.gameObject.activeInHierarchy, Is.True);
+            Assert.That(missed.text, Is.EqualTo("×"));
+            TestCapture.Capture("PracticeTimingReviewEnabled.png");
+            settings.play.practiceTimingReview = false;
+            manager.Set(settings);
+            yield return null; yield return null;
+            Assert.That(hit.gameObject.activeInHierarchy || missed.gameObject.activeInHierarchy, Is.False,
+                "The unchanged paused frame must redraw when the display toggle changes.");
+            TestCapture.Capture("PracticeTimingReviewDisabled.png");
+            settings.play.practiceTimingReview = true;
+            manager.Set(settings);
+            yield return null; yield return null;
+            Assert.That(hit.gameObject.activeInHierarchy && missed.gameObject.activeInHierarchy, Is.True);
+            Assert.That(play.Session, Is.SameAs(browsing));
+            Assert.That(play.Practice.Target, Is.EqualTo(target));
+            Assert.That((attempt.Score, attempt.HitTimings.Count, attempt.Bad), Is.EqualTo((score, timings, bad)),
+                "Toggling review only changes visibility, not the recorded attempt.");
+            play.TogglePause();
+            yield return new WaitForSecondsRealtime(PauseMenuView.FadeDuration + .05f);
+            play.Restart();
+            yield return Wait(() => play.Session != browsing && !play.pausePanel.activeSelf);
+            Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First));
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "A manual restart must discard the old timing offsets and missed-note marks.");
+        }
+
         // Misses would select 普通 at both branches; practice must keep the menu's route instead.
         const string Branched = "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n3333,\n#BRANCHEND\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n#MEASURE 2/4\n33,\n33,\n#MEASURE 4/4\n#BRANCHEND\n1111,\n#END";
         [UnityTest]
@@ -343,9 +405,10 @@ namespace OurTaiko.Tests
             yield return Wait(() => play.Session.BranchHistory.Count == 1);
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
         }
-        IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain)
+        IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain, bool timingReview = true)
         {
             var settings = new GameSettings(); settings.audio.backend = backend; settings.play.inputDelayMs = 0;
+            settings.play.practiceTimingReview = timingReview;
             SettingManager.EnsureInstance().UseUnsaved(settings);
             var apply = AudioEngine.EnsureInstance().ApplyPendingSettingsAsync();
             while (!apply.IsCompleted) yield return null;

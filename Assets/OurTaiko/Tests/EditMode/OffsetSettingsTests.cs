@@ -90,6 +90,27 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void PracticeTimingReviewDefaultsOnAndPersistsInItsOwnGroup()
+        {
+            Assert.That(new GameSettings().play.practiceTimingReview, Is.True);
+            Assert.That(GameSettings.FromJson("{}").play.practiceTimingReview, Is.True);
+            Assert.That(GameSettings.FromJson("{\"play\":{\"audioOffsetMs\":3}}").play.practiceTimingReview, Is.True,
+                "Existing settings files without this field keep the feature enabled.");
+            var nav = OnPage("play");
+            var group = nav.Page.Groups.Single(g => g.Title == "Practice");
+            Assert.That(group.Rows.Single().Id, Is.EqualTo("practice-timing-review"));
+            nav.Move(nav.Page.Rows.ToList().FindIndex(r => r.Id == "practice-timing-review"));
+            Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.Toggle));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("On"));
+            nav.Confirm();
+            Assert.That(nav.Settings.play.practiceTimingReview, Is.False);
+            Assert.That(GameSettings.FromJson(nav.Settings.ToJson()).play.practiceTimingReview, Is.False);
+            Assert.That(nav.Settings.play.CustomJudgeWindows, Is.Null, "The display toggle does not change judgment settings.");
+            nav.Confirm();
+            Assert.That(GameSettings.FromJson(nav.Settings.ToJson()).play.practiceTimingReview, Is.True);
+        }
+
+        [Test]
         public void InputDelayDefaultsToZeroAndStaysInRange()
         {
             Assert.That(new GameSettings().play.inputDelayMs, Is.Zero);

@@ -50,7 +50,7 @@ namespace OurTaiko
         // What the last Render drew from; an identical frame (a still pause) is skipped.
         PlaySession renderedSession;
         int renderedVersion, renderedBalloon;
-        bool renderedPreview, rendered;
+        bool renderedPreview, renderedTimingReview, rendered;
         // Pool keys: the child objects a note or its text needs.
         const int PlainShape = 0, BalloonShape = 1, RollShape = 2;
         sealed class NoteView
@@ -86,7 +86,6 @@ namespace OurTaiko
         {
             if (practiceTiming == attempt) return;
             practiceTiming = attempt;
-            if (attempt != null) PrepareTimingRows(attempt);
             rendered = false;
         }
 
@@ -375,16 +374,20 @@ namespace OurTaiko
         }
         // Draws `session` at `time`. `preview` shows the routes a paused practice would play;
         // `hideSkipped` hides notes the practice attempt skipped. Returns false for an unchanged frame.
-        public bool Render(PlaySession session, double time, bool preview, bool hideSkipped)
+        public bool Render(PlaySession session, double time, bool preview, bool hideSkipped, bool timingReview = true)
         {
             Session = session;
             // #JPOSSCROLL moves the origin notes are placed from (OpenTaiko GetNoteOriginX/Y).
             var shift = JudgeShift.At(session.Chart.JudgeMoves, time);
             judge = new Vector2(JudgeLocalX + (float)shift.X, JudgeLocalY - (float)shift.Y);
             bool rebuilt = EnsureLaneWindows();
+            bool showTimingReview = timingReview && preview && practiceTiming != null;
             if (!rebuilt && rendered && time == RenderedTime && Session == renderedSession && Session.Version == renderedVersion
-                && balloonCounter.NoteIndex == renderedBalloon && preview == renderedPreview) return false;
+                && balloonCounter.NoteIndex == renderedBalloon && preview == renderedPreview
+                && showTimingReview == renderedTimingReview) return false;
             rendered = true; renderedSession = Session; renderedVersion = Session.Version;
+            renderedTimingReview = showTimingReview;
+            if (showTimingReview) PrepareTimingRows(practiceTiming);
             if (timingBudgetFrame != Time.frameCount)
             {
                 timingBudgetFrame = Time.frameCount;
@@ -434,9 +437,9 @@ namespace OurTaiko
                 else if (!view.Root.gameObject.activeSelf) view.Root.gameObject.SetActive(true);
                 view.Head.sprite = expression == 0 ? noteSprites[(int)note.Kind] : alternateNoteSprites[(int)note.Kind];
                 view.Root.anchoredPosition = pos;
-                ShowTiming(view, preview && practiceTiming != null ? practiceTiming.TimingOffsetMs(i) : null,
-                    preview && practiceTiming != null && practiceTiming.Missed[i] && !practiceTiming.Skipped[i],
-                    preview && practiceTiming != null && practiceTimingDense[i] ? practiceTimingRows[i] : 0);
+                ShowTiming(view, showTimingReview ? practiceTiming.TimingOffsetMs(i) : null,
+                    showTimingReview && practiceTiming.Missed[i] && !practiceTiming.Skipped[i],
+                    showTimingReview && practiceTimingDense[i] ? practiceTimingRows[i] : 0);
                 if (view.BalloonTail != null) view.BalloonTail.enabled = balloonCounter.NoteIndex != i;
                 if (view.Body != null)
                 {

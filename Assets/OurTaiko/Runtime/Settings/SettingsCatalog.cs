@@ -209,6 +209,10 @@ namespace OurTaiko
                 new SettingGroup("Touch",
                     SettingRow.Toggle("drum-pad", "Drumpad in Single Player", "Show the touch drum in single player mode and let touches and clicks hit it.",
                         s => s.play.singlePlayerDrumPad, (s, on) => s.play.singlePlayerDrumPad = on)),
+                new SettingGroup("Practice",
+                    SettingRow.Toggle("practice-timing-review", "Practice Timing Review",
+                        "Show note timing offsets and missed-note marks while browsing a paused or finished practice attempt.",
+                        s => s.play.practiceTimingReview, (s, on) => s.play.practiceTimingReview = on)),
             }),
             new SettingPage("display", "Display", "Frame rate and background movies", _ => new[]
             {
