@@ -141,6 +141,30 @@ namespace OurTaiko.Tests
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "The opening-frame input lock is silent.");
         }
 
+        [UnityTest]
+        public IEnumerator RouteAndSpeedChoicesSoundKaWhenTheyMove()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false, Branched);
+            var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
+            yield return Press(Key.D);
+            Assert.That(menuAudio.EffectPlays, Is.Zero, "The 普通 end of the route list is silent.");
+            yield return Press(Key.K);
+            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Changing the route plays one ka.");
+            yield return Press(Key.F); yield return Press(Key.F);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3));
+            yield return Press(Key.D);
+            Assert.That(play.Practice.SpeedTenths, Is.EqualTo(9));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(4), "Changing the speed plays one ka.");
+            for (int i = 0; i < 8; i++) play.MovePractice(-1);
+            Assert.That(play.Practice.SpeedTenths, Is.EqualTo(1));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(12));
+            play.MovePractice(-1);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(12), "The slowest speed is silent.");
+        }
+
         IEnumerator ExercisePlayback(AudioBackend backend)
         {
             yield return StartPractice(backend, true);
@@ -369,6 +393,29 @@ namespace OurTaiko.Tests
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
                 "Pausing a new attempt with no hits must not show the previous attempt's values.");
+        }
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator TimingLabelsAlternateOnlyWhereNotesCrowdOnScreen()
+        {
+            // 16ths at SCROLL 0.3 are 27 px apart across the lane, but 0.3+1i puts them 90 px apart up it:
+            // they never crowd, so every label stays above its note.
+            yield return StartPractice(AudioBackend.BassSimple, false,
+                "TITLE:Timing Review\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#SCROLL 0.3+1i\n1111111111111111,\n1111,\n1111,\n#END");
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            var attempt = play.Session;
+            for (int i = 0; i < 6; i++) attempt.Hit(false, attempt.Chart.Notes[i].Time + .012);
+            yield return Press(Key.Space);
+            play.MovePractice(1);
+            yield return new WaitForSecondsRealtime(.3f);
+            for (int i = 0; i < 6; i++)
+            {
+                var label = play.NoteRoot(i).Find("PracticeTiming").GetComponent<TMP_Text>();
+                Assert.That(label.gameObject.activeInHierarchy, Is.True);
+                Assert.That(label.text, Is.EqualTo("+12"));
+                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(72),
+                    "Notes spread apart by a vertical SCROLL keep their labels above.");
+            }
         }
         [UnityTest, Category("SpriteRendering")]
         public IEnumerator TimingReviewCanBeToggledDuringPauseWithoutChangingTheAttempt()

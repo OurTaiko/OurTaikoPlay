@@ -108,17 +108,24 @@ namespace OurTaiko
                 if (note.IsLong || note.IsMine || note.IsAdLib || !attempt.IsPracticePreviewActive(note)) continue;
                 // Stable note order, including misses, while browsing different portions of the lane.
                 practiceTimingRows[i] = ordinal++ % 2;
-                if (previous >= 0)
-                {
-                    // Division = 4 / quarter-beat gap. Division / |HS| > 32 is equivalent to
-                    // beatGap * |HS| < 1/8, without consulting rendered pixels or playback speed.
-                    double beatGap = note.Beat - notes[previous].Beat;
-                    double hs = Math.Abs(notes[previous].ScrollX);
-                    if (beatGap >= 0 && beatGap * hs < .125 - 1e-9)
-                        practiceTimingDense[previous] = practiceTimingDense[i] = true;
-                }
+                if (previous >= 0 && Dense(notes[previous], note))
+                    practiceTimingDense[previous] = practiceTimingDense[i] = true;
                 previous = i;
             }
+        }
+
+        // Closer than a 32nd note at SCROLL 1 on both axes, measured where the lane draws them with the
+        // earlier note at the judge: so a vertical or complex #SCROLL, a #BPMCHANGE between them and
+        // HB/BM scroll all count, and playback speed does not.
+        bool Dense(ChartNote earlier, ChartNote later)
+        {
+            // Distance cuts to whole pixels; on a 2^20-times finer grid the cut cannot move a note across
+            // the limit, and the two-unit margin keeps an exact 32nd (1/8 beat at SCROLL 1) sparse.
+            const double Fine = 1 << 20;
+            var a = NoteScroll.RawDistance(earlier, earlier.Time, clocks, TravelDistance * Fine);
+            var b = NoteScroll.RawDistance(later, earlier.Time, clocks, TravelDistance * Fine);
+            double limit = TravelDistance * Fine / 32 - 2;
+            return Math.Abs(b.X - a.X) < limit && Math.Abs(b.Y - a.Y) < limit;
         }
 
         static RectTransform Rect(string name, Transform parent, float width, float height)
