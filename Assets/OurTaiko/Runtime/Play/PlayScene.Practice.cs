@@ -25,6 +25,7 @@ namespace OurTaiko
 
         void InitializePractice()
         {
+            pauseMenu.PrepareAudio();
             Practice = new PracticeProgress();
             practiceView.previous.onClick.AddListener(() => MovePractice(-1));
             practiceView.next.onClick.AddListener(() => MovePractice(1));
@@ -45,12 +46,14 @@ namespace OurTaiko
             pauseOpenedFrame = Time.frameCount;
             pauseMenu.Show();
         }
-        void PausePractice(bool first)
+        void PausePractice(bool first, bool retainReview = false)
         {
             if (Practice == null) return;
             songClock.Pause(); IsPaused = true; practiceRewinding = false;
             music.StopAudio(); hitAudio.StopAudio();
             PracticeStage = FirstPracticeStage;
+            // Returning to the first measure at song end still reviews the completed attempt.
+            Lane1.SetPracticeTiming(autoPlay || (first && !retainReview) ? null : Session);
             if (first) Session = new PlaySession(Session.Chart, judgeOffset, practiceBranch, 1, judgeWindows);
             RefreshPracticeBars();
             // The cursor is visual chart time, so a bar aligns exactly even with configured offsets.
@@ -94,21 +97,28 @@ namespace OurTaiko
         public void MovePractice(int direction)
         {
             if (!CanAdjustPractice) return;
+            // ka whenever the choice moves, in every stage; nothing at either end of a range.
+            var before = (Practice.Target, Practice.SpeedTenths, practiceBranch);
             if (PracticeStage == PracticeStage.Speed) Practice.ChangeSpeed(Math.Sign(direction));
             else if (PracticeStage == PracticeStage.Branch) ChangePracticeBranch(Math.Sign(direction));
             else
             {
                 Practice.Move(Math.Sign(direction), GameTimeline.FrameTime);
-                ResetPracticeAttempt(Practice.Target);
+                // Browsing only changes the preview. Build the new judgment session once on start,
+                // instead of allocating chart-sized state and resetting every effect on each step.
+                Lane1.ResetBranchLane(Practice.Target + VisualOffset);
                 songClock.Seek(Practice.Target + AudioOffset + VisualOffset, Practice.Speed);
             }
+            if ((Practice.Target, Practice.SpeedTenths, practiceBranch) != before) pauseMenu.Sfx.PlayAudioOneShot(pauseMenu.ka);
             ShowPracticePause();
         }
         public void ConfirmPractice()
         {
             if (!CanAdjustPractice) return;
             pauseOpenedFrame = Time.frameCount;
+            pauseMenu.Sfx.PlayAudioOneShot(pauseMenu.don);
             if (PracticeStage != PracticeStage.Speed) { PracticeStage++; ShowPracticePause(); return; }
+            Lane1.SetPracticeTiming(null);
             ResetPracticeAttempt(Practice.Target);
             practiceView.panel.SetActive(false);
             practiceRewinding = true;

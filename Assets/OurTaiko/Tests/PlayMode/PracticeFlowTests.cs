@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -15,6 +16,7 @@ namespace OurTaiko.Tests
     {
         Keyboard keyboard;
         Mouse mouse;
+        Touchscreen touchscreen;
         SongDefinition song;
         PlayScene play;
         InputSettings.BackgroundBehavior background;
@@ -37,6 +39,7 @@ namespace OurTaiko.Tests
             yield return null;
             if (song != null) { Object.Destroy(song.chart); Object.Destroy(song); }
             InputSystem.RemoveDevice(keyboard); InputSystem.RemoveDevice(mouse);
+            if (touchscreen != null) { InputSystem.RemoveDevice(touchscreen); touchscreen = null; }
             InputSystem.settings.backgroundBehavior = background;
             InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
         }
@@ -66,6 +69,101 @@ namespace OurTaiko.Tests
             Assert.That(play.Session.Bad, Is.Zero, "Preparation must not count skipped notes as misses.");
         }
         [UnityTest, Category("SpriteRendering")] public IEnumerator NativePlaybackAndTwoLayerPause() => ExercisePlayback(AudioBackend.BassSimple);
+
+        [UnityTest]
+        public IEnumerator MeasureNavigationSoundsOnceForKeyboardMouseAndTouch()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false);
+            var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
+            Assert.That(menuAudio.PreparedEffects, Is.EqualTo(2));
+            Assert.That(menuAudio.EffectPlays, Is.Zero);
+            yield return Press(Key.D);
+            Assert.That(menuAudio.EffectPlays, Is.Zero, "The first-measure boundary is silent.");
+            yield return Press(Key.K);
+            Assert.That(play.Practice.Measure, Is.EqualTo(1));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "One keyboard move plays one ka.");
+            yield return Click(play.practiceView.previous);
+            Assert.That(play.Practice.Measure, Is.Zero);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(2), "One mouse move plays one ka.");
+            yield return Tap(play.practiceView.next);
+            Assert.That(play.Practice.Measure, Is.EqualTo(1));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "One touch move plays one ka.");
+            play.MovePractice(1);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(4));
+            play.MovePractice(1);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(4), "The last-measure boundary is silent.");
+            double bar = play.Practice.Target;
+            play.Practice.PauseAt(bar + .5, GameTimeline.FrameTime);
+            play.MovePractice(-1);
+            Assert.That(play.Practice.Target, Is.EqualTo(bar));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(5), "Returning from mid-measure to its bar also plays ka.");
+            Assert.That(play.hitAudio.IsAudioPlaying(), Is.False, "Browsing must not use the gameplay drum bus.");
+            play.TogglePause();
+            yield return new WaitForSecondsRealtime(PauseMenuView.FadeDuration + .05f);
+            Assert.That(play.pauseMenu.Sfx.GetComponent<AudioBus>(), Is.SameAs(menuAudio),
+                "Activating the pause menu must reuse its already prepared sound bus.");
+            int before = menuAudio.EffectPlays;
+            play.MovePractice(-1); play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(before), "The pause menu blocks practice sounds.");
+            play.TogglePause();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(before + 1), "The pause key chooses Resume and plays don once.");
+            play.MovePractice(-1); play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(before + 1), "Closing the pause menu still blocks practice sounds.");
+            yield return new WaitForSecondsRealtime(PauseMenuView.FadeDuration + .05f);
+            Assert.That(play.pausePanel.activeSelf, Is.False);
+            Assert.That(play.pauseMenu.Sfx.gameObject.activeInHierarchy, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator PracticeConfirmationSoundsOncePerStageAndSurvivesHidingThePanel()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false, Branched);
+            var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
+            yield return Press(Key.F);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Keyboard branch confirmation plays one don.");
+            yield return Click(play.practiceView.confirm);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(2), "Mouse measure confirmation plays one don.");
+            yield return Tap(play.practiceView.confirm);
+            Assert.That(play.practiceView.panel.activeSelf, Is.False);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "Touch speed confirmation plays one don.");
+            Assert.That(play.pauseMenu.Sfx.gameObject.activeInHierarchy, Is.True);
+            Assert.That(play.pauseMenu.Sfx.transform.IsChildOf(play.practiceView.panel.transform), Is.False,
+                "Practice controls must not own the sound host that keeps don ringing after they hide.");
+            play.MovePractice(1); play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "Rewinding ignores practice actions without sound.");
+            yield return Wait(() => !play.IsPaused);
+            play.MovePractice(1); play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "Playback ignores practice actions without sound.");
+            play.TogglePause();
+            play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "The opening-frame input lock is silent.");
+        }
+
+        [UnityTest]
+        public IEnumerator RouteAndSpeedChoicesSoundKaWhenTheyMove()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false, Branched);
+            var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
+            yield return Press(Key.D);
+            Assert.That(menuAudio.EffectPlays, Is.Zero, "The 普通 end of the route list is silent.");
+            yield return Press(Key.K);
+            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Changing the route plays one ka.");
+            yield return Press(Key.F); yield return Press(Key.F);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3));
+            yield return Press(Key.D);
+            Assert.That(play.Practice.SpeedTenths, Is.EqualTo(9));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(4), "Changing the speed plays one ka.");
+            for (int i = 0; i < 8; i++) play.MovePractice(-1);
+            Assert.That(play.Practice.SpeedTenths, Is.EqualTo(1));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(12));
+            play.MovePractice(-1);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(12), "The slowest speed is silent.");
+        }
 
         IEnumerator ExercisePlayback(AudioBackend backend)
         {
@@ -175,6 +273,48 @@ namespace OurTaiko.Tests
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.PracticeScene));
         }
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator FinishedPracticePreservesTimingReviewUntilTheNextAttempt()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false, Plain.Replace("#START", "#START\n#SCROLL 0.3"));
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            var completed = play.Session;
+            completed.Hit(false, completed.Chart.Notes[0].Time + .012);
+            var settingsManager = SettingManager.EnsureInstance();
+            var settings = settingsManager.Settings.Clone();
+            settings.play.practiceTimingReview = false;
+            settingsManager.Set(settings);
+            // Let the remaining notes miss and exercise Finish(), rather than manually pausing.
+            yield return Wait(() => play.IsPaused);
+            Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First));
+            Assert.That(play.Session, Is.Not.SameAs(completed));
+            Assert.That(play.Session.HitTimings, Is.Empty, "The browsing session must not inherit judgments.");
+            Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Any(t => t.name == "PracticeTiming" && t.gameObject.activeInHierarchy), Is.False);
+            settings.play.practiceTimingReview = true;
+            settingsManager.Set(settings);
+            yield return new WaitForSecondsRealtime(.15f);
+            Canvas.ForceUpdateCanvases();
+            var hit = play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>();
+            var missed = play.NoteRoot(1).Find("PracticeTiming").GetComponent<TMP_Text>();
+            Assert.That(hit.gameObject.activeInHierarchy, Is.True, "Song end must preserve the completed attempt's review.");
+            Assert.That(hit.text, Is.EqualTo("+12"));
+            Assert.That(missed.gameObject.activeInHierarchy, Is.True);
+            Assert.That(missed.text, Is.EqualTo("×"));
+            Assert.That(missed.color, Is.EqualTo((Color)new Color32(200, 200, 200, 255)));
+            TestCapture.Capture("PracticeTimingReviewAfterFinish.png");
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "Starting another attempt must clear the completed attempt's review.");
+            yield return Press(Key.Space);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "Pausing a fresh attempt must not restore the completed attempt's review.");
+        }
         [UnityTest]
         public IEnumerator DirectEditorSceneLaunchRetainsPracticeSelection()
         {
@@ -188,6 +328,148 @@ namespace OurTaiko.Tests
             Assert.That(SceneSwitcher.Instance.SelectedPlayScene, Is.EqualTo(SceneSwitcher.PracticeScene));
         }
         const string Plain = "TITLE:Practice Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n1111,\n#END";
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator PausedPracticeShowsNoteTimingAboveAndBelowDenseNotes()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false,
+                "TITLE:Timing Review\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#SCROLL 0.3\n1111111111111111,\n1111,\n1111,\n#END");
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Any(t => t.name == "PracticeTiming" && t.gameObject.activeInHierarchy), Is.False);
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            var attempt = play.Session;
+            var hitIndices = Enumerable.Range(0, 12).Where(i => i != 3 && i != 8).ToArray();
+            foreach (int i in hitIndices)
+                attempt.Hit(false, attempt.Chart.Notes[i].Time + (i % 2 == 0 ? .012 : -.008));
+            Assert.That(attempt.HitTimings.Count, Is.EqualTo(hitIndices.Length));
+            yield return Press(Key.Space);
+            Assert.That(play.IsPaused, Is.True);
+            Assert.That(play.pausePanel.activeSelf, Is.False, "Space opens the practice measure browser.");
+            Assert.That(play.Session.HitTimings.Count, Is.Zero, "Review must not carry judgments into the next attempt.");
+            // The synthetic judgments were seeded during preparation; browse to their measure.
+            var browsingSession = play.Session;
+            play.MovePractice(1);
+            yield return new WaitForSecondsRealtime(.3f);
+            Canvas.ForceUpdateCanvases();
+            Assert.That(play.Session, Is.SameAs(browsingSession), "Measure browsing must not rebuild chart-sized judgment state.");
+            var labels = hitIndices.Select(i => play.NoteRoot(i).Find("PracticeTiming").GetComponent<TMP_Text>()).ToArray();
+            for (int i = 0; i < labels.Length; i++)
+            {
+                Assert.That(labels[i].gameObject.activeInHierarchy, Is.True);
+                Assert.That(labels[i].text, Is.EqualTo(hitIndices[i] % 2 == 0 ? "+12" : "-8"));
+                Assert.That(labels[i].color, Is.EqualTo(hitIndices[i] % 2 == 0 ? TimingFeedbackView.LateColor : TimingFeedbackView.EarlyColor));
+                Assert.That(labels[i].rectTransform.anchoredPosition.x, Is.Zero, "Labels stay attached to their own note.");
+                Assert.That(labels[i].rectTransform.anchoredPosition.y, Is.EqualTo(hitIndices[i] % 2 == 0 ? 72 : -72),
+                    "Dense labels alternate above/below by note order, including missed notes.");
+                Assert.That(labels[i], Is.TypeOf<TextMeshPro>(), "Timing shares the note's world-space sorting group.");
+            }
+            foreach (int missed in new[] { 3, 8 })
+            {
+                var label = play.NoteRoot(missed).Find("PracticeTiming").GetComponent<TMP_Text>();
+                Assert.That(label.gameObject.activeInHierarchy, Is.True);
+                Assert.That(label.text, Is.EqualTo("×"));
+                Assert.That(label.color, Is.EqualTo((Color)new Color32(200, 200, 200, 255)));
+                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(missed % 2 == 0 ? 72 : -72));
+            }
+            Assert.That(play.NoteRoot(12).Find("PracticeTiming")?.gameObject.activeSelf ?? false, Is.False,
+                "An unhit note has no timing value.");
+            TestCapture.Capture("PracticeTimingReview.png");
+            yield return new WaitForSecondsRealtime(.6f);
+            Assert.That(labels.All(t => t.gameObject.activeInHierarchy), Is.True, "Review does not fade like live hit feedback.");
+            play.MovePractice(1); yield return new WaitForSecondsRealtime(.25f);
+            play.MovePractice(-1); yield return new WaitForSecondsRealtime(.25f);
+            Assert.That(play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>().text, Is.EqualTo("+12"),
+                "Browsing measures must preserve the last attempt's review.");
+            Assert.That(play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>().rectTransform.anchoredPosition.y,
+                Is.EqualTo(72), "Returning to an earlier measure preserves the above/below assignment.");
+            Assert.That(play.NoteRoot(1).Find("PracticeTiming").GetComponent<TMP_Text>().rectTransform.anchoredPosition.y,
+                Is.EqualTo(-72));
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "Starting the next attempt hides the old review, including pooled notes.");
+            yield return Press(Key.Space);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "Pausing a new attempt with no hits must not show the previous attempt's values.");
+        }
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator TimingLabelsAlternateOnlyWhereNotesCrowdOnScreen()
+        {
+            // 16ths at SCROLL 0.3 are 27 px apart across the lane, but 0.3+1i puts them 90 px apart up it:
+            // they never crowd, so every label stays above its note.
+            yield return StartPractice(AudioBackend.BassSimple, false,
+                "TITLE:Timing Review\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#SCROLL 0.3+1i\n1111111111111111,\n1111,\n1111,\n#END");
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            var attempt = play.Session;
+            for (int i = 0; i < 6; i++) attempt.Hit(false, attempt.Chart.Notes[i].Time + .012);
+            yield return Press(Key.Space);
+            play.MovePractice(1);
+            yield return new WaitForSecondsRealtime(.3f);
+            for (int i = 0; i < 6; i++)
+            {
+                var label = play.NoteRoot(i).Find("PracticeTiming").GetComponent<TMP_Text>();
+                Assert.That(label.gameObject.activeInHierarchy, Is.True);
+                Assert.That(label.text, Is.EqualTo("+12"));
+                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(72),
+                    "Notes spread apart by a vertical SCROLL keep their labels above.");
+            }
+        }
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator TimingReviewCanBeToggledDuringPauseWithoutChangingTheAttempt()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false,
+                Plain.Replace("#START", "#START\n#SCROLL 0.3"), timingReview: false);
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            var attempt = play.Session;
+            attempt.Hit(false, attempt.Chart.Notes[0].Time + .012);
+            attempt.Hit(false, attempt.Chart.Notes[2].Time + .012);
+            int score = attempt.Score, timings = attempt.HitTimings.Count, bad = attempt.Bad;
+            yield return Press(Key.Space);
+            var browsing = play.Session;
+            double target = play.Practice.Target;
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Any(t => t.name == "PracticeTiming"), Is.False,
+                "Starting with review disabled must not create timing text components.");
+            var manager = SettingManager.EnsureInstance();
+            var settings = manager.Settings.Clone();
+            settings.play.practiceTimingReview = true;
+            manager.Set(settings);
+            yield return new WaitForSecondsRealtime(.15f);
+            var hit = play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>();
+            var missed = play.NoteRoot(1).Find("PracticeTiming").GetComponent<TMP_Text>();
+            Assert.That(hit.gameObject.activeInHierarchy, Is.True);
+            Assert.That(hit.text, Is.EqualTo("+12"));
+            Assert.That(missed.gameObject.activeInHierarchy, Is.True);
+            Assert.That(missed.text, Is.EqualTo("×"));
+            TestCapture.Capture("PracticeTimingReviewEnabled.png");
+            settings.play.practiceTimingReview = false;
+            manager.Set(settings);
+            yield return null; yield return null;
+            Assert.That(hit.gameObject.activeInHierarchy || missed.gameObject.activeInHierarchy, Is.False,
+                "The unchanged paused frame must redraw when the display toggle changes.");
+            TestCapture.Capture("PracticeTimingReviewDisabled.png");
+            settings.play.practiceTimingReview = true;
+            manager.Set(settings);
+            yield return null; yield return null;
+            Assert.That(hit.gameObject.activeInHierarchy && missed.gameObject.activeInHierarchy, Is.True);
+            Assert.That(play.Session, Is.SameAs(browsing));
+            Assert.That(play.Practice.Target, Is.EqualTo(target));
+            Assert.That((attempt.Score, attempt.HitTimings.Count, attempt.Bad), Is.EqualTo((score, timings, bad)),
+                "Toggling review only changes visibility, not the recorded attempt.");
+            play.TogglePause();
+            yield return new WaitForSecondsRealtime(PauseMenuView.FadeDuration + .05f);
+            play.Restart();
+            yield return Wait(() => play.Session != browsing && !play.pausePanel.activeSelf);
+            Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First));
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "A manual restart must discard the old timing offsets and missed-note marks.");
+        }
+
         // Misses would select 普通 at both branches; practice must keep the menu's route instead.
         const string Branched = "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n3333,\n#BRANCHEND\n#BRANCHSTART p,10,20\n#N\n1111,\n#E\n2222,\n#M\n#MEASURE 2/4\n33,\n33,\n#MEASURE 4/4\n#BRANCHEND\n1111,\n#END";
         [UnityTest]
@@ -243,10 +525,11 @@ namespace OurTaiko.Tests
             yield return Wait(() => play.Session.BranchHistory.Count == 1);
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
         }
-        IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain)
+        IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain, bool timingReview = true)
         {
             var settings = new GameSettings(); settings.audio.backend = backend; settings.play.inputDelayMs = 0;
             settings.play.singlePlayerDrumPad = true;
+            settings.play.practiceTimingReview = timingReview;
             SettingManager.EnsureInstance().UseUnsaved(settings);
             var apply = AudioEngine.EnsureInstance().ApplyPendingSettingsAsync();
             while (!apply.IsCompleted) yield return null;
@@ -259,7 +542,8 @@ namespace OurTaiko.Tests
             Assert.That(entry.view.boards.Count(b => b.practice), Is.EqualTo(1));
             Assert.That(entry.view.boards[2].practice, Is.True, "練習モード follows 演奏ゲーム and 段位道場.");
             Assert.That(entry.view.boards[2].scene, Is.EqualTo(SceneSwitcher.ServerLoginScene));
-            entry.Don(); yield return new WaitForSecondsRealtime(1.5f);
+            yield return Wait(() => entry.Flow.CanJoin(entry.Now) && !SceneSwitcher.Instance.IsInputBlocked);
+            entry.Don(); yield return Wait(() => entry.Flow.IsModeReady(entry.Now));
             entry.Ka(2); yield return new WaitForSecondsRealtime(0.3f); entry.Don();
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
@@ -290,6 +574,16 @@ namespace OurTaiko.Tests
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(key)); yield return null;
             InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+        }
+        IEnumerator Tap(UnityEngine.UI.Button button)
+        {
+            if (touchscreen == null) touchscreen = InputSystem.AddDevice<Touchscreen>();
+            var rect = (RectTransform)button.transform;
+            var screen = RectTransformUtility.WorldToScreenPoint(rect.GetComponentInParent<Canvas>().rootCanvas.worldCamera, rect.TransformPoint(rect.rect.center));
+            InputSystem.QueueStateEvent(touchscreen, new TouchState { touchId = 1, phase = UnityEngine.InputSystem.TouchPhase.Began, position = screen, pressure = 1 });
+            yield return null;
+            InputSystem.QueueStateEvent(touchscreen, new TouchState { touchId = 1, phase = UnityEngine.InputSystem.TouchPhase.Ended, position = screen });
+            yield return null;
         }
     }
 }
