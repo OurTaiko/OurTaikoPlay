@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 namespace OurTaiko
 {
@@ -14,16 +15,24 @@ namespace OurTaiko
         public AudioClip don, ka;
         public int SelectedIndex { get; private set; }
         public bool IsClosing { get; private set; }
+        // The menu's sounds live on their own scene object: Hide deactivates this panel, which would cut a
+        // don still ringing (AudioBus.OnDisable stops everything), and the scene's hitAudio stays silent under pause.
+        public AudioSource Sfx { get; private set; }
         Coroutine opening;
-        AudioSource sfx;
 
         void Awake()
         {
-            sfx = GetComponent<AudioSource>();
-            if (sfx == null) sfx = gameObject.AddComponent<AudioSource>();
-            sfx.PrepareAudioEffects(don, ka);
+            var host = new GameObject("PauseMenuAudio");
+            if (gameObject.scene.IsValid()) SceneManager.MoveGameObjectToScene(host, gameObject.scene);
+            Sfx = host.AddComponent<AudioSource>();
+            Sfx.PrepareAudioEffects(don, ka);
             // Keyboard/drum confirmation invokes onClick too, so every way of choosing an action sounds once.
-            foreach (var button in buttons) button.onClick.AddListener(() => sfx.PlayAudioOneShot(don));
+            foreach (var button in buttons) button.onClick.AddListener(() => Sfx.PlayAudioOneShot(don));
+        }
+
+        void OnDestroy()
+        {
+            if (Sfx != null) Destroy(Sfx.gameObject);
         }
 
         public void Show()
@@ -96,13 +105,14 @@ namespace OurTaiko
 
         void Select(int index, bool playSound = false)
         {
+            bool moved = SelectedIndex != index;
             SelectedIndex = index;
             for (int i = 0; i < buttons.Length; i++)
             {
                 var selection = buttons[i].transform.Find("Selection");
                 if (selection != null) selection.gameObject.SetActive(i == index);
             }
-            if (playSound) sfx.PlayAudioOneShot(ka);
+            if (playSound && moved) Sfx.PlayAudioOneShot(ka);
         }
     }
 }

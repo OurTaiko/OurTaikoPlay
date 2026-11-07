@@ -38,7 +38,7 @@ namespace OurTaiko
         {
             if (!IsPaused) { PausePractice(false); return; }
             if (practiceRewinding) return;
-            if (pausePanel.activeSelf) { Resume(); return; }
+            if (pausePanel.activeSelf) { resumeButton.onClick.Invoke(); return; }
             DisableDrumPads();
             pauseButton.interactable = false;
             practiceView.panel.SetActive(false);
