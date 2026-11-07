@@ -42,18 +42,17 @@ namespace OurTaiko
         [Header("Wheel animation layout")]
         public Vector2 wheelCentre = new Vector2(960, 540);
         public float rowPitch = 135, expandGap = 120, rowCurve = 40;
+        // 練習モード over the stage's top centre, in the outlined white of フリープレイ below; normal play
+        // is the default and announces nothing, like the original.
         public TextMeshProUGUI ModeLabel { get; private set; }
 
         public void ShowPlayMode(bool practice)
         {
-            var badge = SkinUi.Image("PlayModeBadge", overlays.transform, null, 300, 48);
-            badge.rectTransform.Center(960, 48);
-            badge.color = practice ? new Color32(25, 90, 155, 240) : new Color32(180, 55, 35, 240);
-            ModeLabel = SkinUi.Text("ModeLabel", badge.transform, 30);
-            ModeLabel.rectTransform.anchorMin = ModeLabel.rectTransform.anchorMax = new Vector2(.5f, .5f);
-            ModeLabel.rectTransform.anchoredPosition = Vector2.zero;
-            ModeLabel.rectTransform.sizeDelta = new Vector2(300, 48);
-            ModeLabel.text = practice ? "练习模式" : "普通演奏";
+            if (!practice) return;
+            ModeLabel = SkinUi.Text("PracticeMode", overlays.transform, 40);
+            ModeLabel.characterSpacing = 2 * 100f / 40;
+            ModeLabel.text = "練習モード";
+            ModeLabel.rectTransform.Center(960, 48);
         }
     }
 }
