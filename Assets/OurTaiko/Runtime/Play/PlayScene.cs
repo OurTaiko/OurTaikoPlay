@@ -135,6 +135,7 @@ namespace OurTaiko
                 if (secondLane != null) sessions.Add(AddLane(1, secondLane));
                 // Both seats' kusudama at the same time are one ball; a lone one is a balloon.
                 if (sessions.Count > 1) Kusudama.Share(sessions[0], sessions[1]);
+                if (IsPractice) AddPracticeTimingReview();
                 for (int i = 0; i < lanes.Count; i++) lanes[i].Prepare(sessions[i]);
                 // The single-player scenes' don/ka are 1P's neiro (tests read them).
                 don = Lane1.Don; ka = Lane1.Ka;
@@ -343,7 +344,8 @@ namespace OurTaiko
         // its lane while the music fades out; ResultScene (which persists the result) follows.
         void Finish()
         {
-            if (IsPractice) { PausePractice(true, retainReview: true); return; }
+            // Back at the first measure, the completed attempt is still reviewed.
+            if (IsPractice) { ReviewPracticeAttempt(); PausePractice(true); return; }
             if (IsFinished) return;
             IsFinished = true;
             foreach (var lane in lanes)
@@ -386,7 +388,7 @@ namespace OurTaiko
             if (IsPractice && !IsFinished)
             {
                 if (pausePanel.activeSelf && !closingPauseMenu)
-                    StartCoroutine(ClosePauseMenu(() => { RestorePracticePads(); PausePractice(true); }));
+                    StartCoroutine(ClosePauseMenu(() => { RestorePracticePads(); timingReview.Attempt = null; PausePractice(true); }));
                 return;
             }
             LeavePlay(() => SceneSwitcher.EnsureInstance().Restart());
@@ -422,9 +424,7 @@ namespace OurTaiko
         {
             bool preview = IsPractice && IsPaused;
             bool hideSkipped = IsPractice && (!IsPaused || practiceRewinding);
-            // Read live so the settings overlay can toggle the review over a paused practice.
-            bool timingReview = preview && SettingManager.EnsureInstance().Settings.play.practiceTimingReview;
-            foreach (var lane in lanes) lane.RenderNotes(time, preview, hideSkipped, timingReview);
+            foreach (var lane in lanes) lane.RenderNotes(time, preview, hideSkipped);
         }
 
         public const int SoulGaugeOrder = -20;

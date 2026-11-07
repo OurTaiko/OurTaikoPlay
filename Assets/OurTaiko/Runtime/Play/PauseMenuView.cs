@@ -17,29 +17,34 @@ namespace OurTaiko
         public bool IsClosing { get; private set; }
         // The menu's sounds live on their own scene object: Hide deactivates this panel, which would cut a
         // don still ringing (AudioBus.OnDisable stops everything), and the scene's hitAudio stays silent under pause.
-        public AudioSource Sfx { get; private set; }
+        // Made on first use: the practice panel sounds these before this inactive panel receives Awake.
+        public AudioSource Sfx => sfx != null ? sfx : sfx = NewSfx();
+        AudioSource sfx;
         Coroutine opening;
+
+        // The selection moved / an action was chosen; the practice panel shares them.
+        public void PlayMove() => Sfx.PlayAudioOneShot(ka);
+        public void PlayConfirm() => Sfx.PlayAudioOneShot(don);
 
         void Awake()
         {
-            PrepareAudio();
+            if (sfx == null) sfx = NewSfx();
             // Keyboard/drum confirmation invokes onClick too, so every way of choosing an action sounds once.
-            foreach (var button in buttons) button.onClick.AddListener(() => Sfx.PlayAudioOneShot(don));
+            foreach (var button in buttons) button.onClick.AddListener(PlayConfirm);
         }
 
-        // Practice uses menu sounds before this inactive panel receives Awake.
-        public void PrepareAudio()
+        AudioSource NewSfx()
         {
-            if (Sfx != null) return;
             var host = new GameObject("PauseMenuAudio");
             if (gameObject.scene.IsValid()) SceneManager.MoveGameObjectToScene(host, gameObject.scene);
-            Sfx = host.AddComponent<AudioSource>();
-            Sfx.PrepareAudioEffects(don, ka);
+            var source = host.AddComponent<AudioSource>();
+            source.PrepareAudioEffects(don, ka);
+            return source;
         }
 
         void OnDestroy()
         {
-            if (Sfx != null) Destroy(Sfx.gameObject);
+            if (sfx != null) Destroy(sfx.gameObject);
         }
 
         public void Show()
@@ -119,7 +124,7 @@ namespace OurTaiko
                 var selection = buttons[i].transform.Find("Selection");
                 if (selection != null) selection.gameObject.SetActive(i == index);
             }
-            if (playSound && moved) Sfx.PlayAudioOneShot(ka);
+            if (playSound && moved) PlayMove();
         }
     }
 }

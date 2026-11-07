@@ -41,6 +41,7 @@ namespace OurTaiko
 
         readonly PlaySceneBase scene;
         NoteLaneRenderer renderer;
+        readonly List<INoteLaneOverlay> overlays = new List<INoteLaneOverlay>();
         bool hitKa, nextAutoRight = true;
         double feedbackTime = -10;
         readonly double[] flashedAt = { -10, -10, -10, -10 };
@@ -80,15 +81,18 @@ namespace OurTaiko
             PutSoulGaugeUnderNotes();
             Session.Judged += OnJudged;
             if (v.branchLane != null) v.branchLane.Initialize(Session.Chart.Branches.Count > 0);
-            renderer ??= new NoteLaneRenderer(new NoteLaneRenderer.Assets
+            if (renderer == null)
             {
-                NoteLayer = v.noteLayer, BarLayer = v.barLayer, MojiLayer = v.mojiLayer,
-                NoteSprites = scene.noteSprites, AlternateNoteSprites = scene.alternateNoteSprites,
-                RollBodySprites = scene.rollBodySprites, RollTailSprites = scene.rollTailSprites, MojiSprites = scene.mojiSprites,
-                BalloonTailSprite = scene.balloonTailSprite, MojiRollSprite = scene.mojiRollSprite,
-            }, v.balloonCounter);
-            renderer.Prepare(Session, scene is PlayScene play && play.IsPractice
-                && SettingManager.EnsureInstance().Settings.play.practiceTimingReview);
+                renderer = new NoteLaneRenderer(new NoteLaneRenderer.Assets
+                {
+                    NoteLayer = v.noteLayer, BarLayer = v.barLayer, MojiLayer = v.mojiLayer,
+                    NoteSprites = scene.noteSprites, AlternateNoteSprites = scene.alternateNoteSprites,
+                    RollBodySprites = scene.rollBodySprites, RollTailSprites = scene.rollTailSprites, MojiSprites = scene.mojiSprites,
+                    BalloonTailSprite = scene.balloonTailSprite, MojiRollSprite = scene.mojiRollSprite,
+                }, v.balloonCounter);
+                foreach (var overlay in overlays) renderer.AddOverlay(overlay);
+            }
+            renderer.Prepare(Session);
             scene.hitAudio.PrepareAudioEffects(Don, Ka);
             scene.hitAudio.PrepareAudioEffects(v.comboAnnounce.voices);
             UpdateHud();
@@ -107,7 +111,12 @@ namespace OurTaiko
             if (Session != null) Session.Judged += OnJudged;
         }
 
-        public void SetPracticeTiming(PlaySession attempt) => renderer.SetPracticeTiming(attempt);
+        // What a mode draws on this lane's notes (INoteLaneOverlay); add before Prepare.
+        public void AddOverlay(INoteLaneOverlay overlay)
+        {
+            overlays.Add(overlay);
+            renderer?.AddOverlay(overlay);
+        }
 
         void ShowDifficulty(string course)
         {
@@ -146,11 +155,10 @@ namespace OurTaiko
 
         // A paused practice previews its routes; while it plays (or rewinds) it hides what the
         // attempt skipped, and browsing measures keeps past notes.
-        // `timingReview` shows the practice attempt's offsets and misses over a paused preview.
-        public void RenderNotes(double time, bool preview, bool hideSkipped, bool timingReview = false)
+        public void RenderNotes(double time, bool preview, bool hideSkipped)
         {
             ShiftJudge(time);
-            if (!renderer.Render(Session, time, preview, hideSkipped, timingReview)) return;
+            if (!renderer.Render(Session, time, preview, hideSkipped)) return;
             if (Views.gogo != null) Views.gogo.ShowTime(Session, time, preview);
             ShowLaneAlpha(time, preview);
         }

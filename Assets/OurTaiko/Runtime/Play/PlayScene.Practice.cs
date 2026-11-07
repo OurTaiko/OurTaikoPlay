@@ -22,10 +22,18 @@ namespace OurTaiko
         double AudioOffset => audioOffset * Practice.Speed;
         double VisualOffset => visualOffset * Practice.Speed;
         double PracticeJudgeOffset => judgeOffset * Practice.Speed;
+        // The last attempt's offsets and misses over the paused lane: an overlay on the lane, so neither
+        // the lane nor its note renderer knows about practice.
+        PracticeTimingReview timingReview;
+
+        // Before the lane is prepared, so the review warms up behind the loading cover.
+        void AddPracticeTimingReview() => Lane1.AddOverlay(timingReview = new PracticeTimingReview(
+            () => SettingManager.EnsureInstance().Settings.play.practiceTimingReview));
+        // Auto play has nothing to review.
+        void ReviewPracticeAttempt() => timingReview.Attempt = autoPlay ? null : Session;
 
         void InitializePractice()
         {
-            pauseMenu.PrepareAudio();
             Practice = new PracticeProgress();
             practiceView.previous.onClick.AddListener(() => MovePractice(-1));
             practiceView.next.onClick.AddListener(() => MovePractice(1));
@@ -37,7 +45,7 @@ namespace OurTaiko
 
         void TogglePracticePause()
         {
-            if (!IsPaused) { PausePractice(false); return; }
+            if (!IsPaused) { ReviewPracticeAttempt(); PausePractice(false); return; }
             if (practiceRewinding) return;
             if (pausePanel.activeSelf) { resumeButton.onClick.Invoke(); return; }
             DisableDrumPads();
@@ -46,14 +54,12 @@ namespace OurTaiko
             pauseOpenedFrame = Time.frameCount;
             pauseMenu.Show();
         }
-        void PausePractice(bool first, bool retainReview = false)
+        void PausePractice(bool first)
         {
             if (Practice == null) return;
             songClock.Pause(); IsPaused = true; practiceRewinding = false;
             music.StopAudio(); hitAudio.StopAudio();
             PracticeStage = FirstPracticeStage;
-            // Returning to the first measure at song end still reviews the completed attempt.
-            Lane1.SetPracticeTiming(autoPlay || (first && !retainReview) ? null : Session);
             if (first) Session = new PlaySession(Session.Chart, judgeOffset, practiceBranch, 1, judgeWindows);
             RefreshPracticeBars();
             // The cursor is visual chart time, so a bar aligns exactly even with configured offsets.
@@ -109,16 +115,16 @@ namespace OurTaiko
                 Lane1.ResetBranchLane(Practice.Target + VisualOffset);
                 songClock.Seek(Practice.Target + AudioOffset + VisualOffset, Practice.Speed);
             }
-            if ((Practice.Target, Practice.SpeedTenths, practiceBranch) != before) pauseMenu.Sfx.PlayAudioOneShot(pauseMenu.ka);
+            if ((Practice.Target, Practice.SpeedTenths, practiceBranch) != before) pauseMenu.PlayMove();
             ShowPracticePause();
         }
         public void ConfirmPractice()
         {
             if (!CanAdjustPractice) return;
             pauseOpenedFrame = Time.frameCount;
-            pauseMenu.Sfx.PlayAudioOneShot(pauseMenu.don);
+            pauseMenu.PlayConfirm();
             if (PracticeStage != PracticeStage.Speed) { PracticeStage++; ShowPracticePause(); return; }
-            Lane1.SetPracticeTiming(null);
+            timingReview.Attempt = null;
             ResetPracticeAttempt(Practice.Target);
             practiceView.panel.SetActive(false);
             practiceRewinding = true;

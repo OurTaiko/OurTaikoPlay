@@ -357,7 +357,7 @@ namespace OurTaiko.Tests
             {
                 Assert.That(labels[i].gameObject.activeInHierarchy, Is.True);
                 Assert.That(labels[i].text, Is.EqualTo(hitIndices[i] % 2 == 0 ? "+12" : "-8"));
-                Assert.That(labels[i].color, Is.EqualTo(hitIndices[i] % 2 == 0 ? TimingFeedbackView.LateColor : TimingFeedbackView.EarlyColor));
+                Assert.That(labels[i].color, Is.EqualTo(hitIndices[i] % 2 == 0 ? TimingOffsetText.LateColor : TimingOffsetText.EarlyColor));
                 Assert.That(labels[i].rectTransform.anchoredPosition.x, Is.Zero, "Labels stay attached to their own note.");
                 Assert.That(labels[i].rectTransform.anchoredPosition.y, Is.EqualTo(hitIndices[i] % 2 == 0 ? 72 : -72),
                     "Dense labels alternate above/below by note order, including missed notes.");
