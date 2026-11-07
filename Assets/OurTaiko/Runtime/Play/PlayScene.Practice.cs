@@ -45,13 +45,14 @@ namespace OurTaiko
             pauseOpenedFrame = Time.frameCount;
             pauseMenu.Show();
         }
-        void PausePractice(bool first)
+        void PausePractice(bool first, bool retainReview = false)
         {
             if (Practice == null) return;
             songClock.Pause(); IsPaused = true; practiceRewinding = false;
             music.StopAudio(); hitAudio.StopAudio();
             PracticeStage = FirstPracticeStage;
-            Lane1.SetPracticeTiming(first || autoPlay ? null : Session);
+            // Returning to the first measure at song end still reviews the completed attempt.
+            Lane1.SetPracticeTiming(autoPlay || (first && !retainReview) ? null : Session);
             if (first) Session = new PlaySession(Session.Chart, judgeOffset, practiceBranch, 1, judgeWindows);
             RefreshPracticeBars();
             // The cursor is visual chart time, so a bar aligns exactly even with configured offsets.

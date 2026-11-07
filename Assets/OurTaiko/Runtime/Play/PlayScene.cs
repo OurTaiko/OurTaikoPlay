@@ -343,7 +343,7 @@ namespace OurTaiko
         // its lane while the music fades out; ResultScene (which persists the result) follows.
         void Finish()
         {
-            if (IsPractice) { PausePractice(true); return; }
+            if (IsPractice) { PausePractice(true, retainReview: true); return; }
             if (IsFinished) return;
             IsFinished = true;
             foreach (var lane in lanes)

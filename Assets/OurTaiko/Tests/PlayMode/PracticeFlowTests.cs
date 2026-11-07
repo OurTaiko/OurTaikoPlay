@@ -176,6 +176,39 @@ namespace OurTaiko.Tests
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.PracticeScene));
         }
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator FinishedPracticePreservesTimingReviewUntilTheNextAttempt()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false, Plain.Replace("#START", "#START\n#SCROLL 0.3"));
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            var completed = play.Session;
+            completed.Hit(false, completed.Chart.Notes[0].Time + .012);
+            // Let the remaining notes miss and exercise Finish(), rather than manually pausing.
+            yield return Wait(() => play.IsPaused);
+            Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First));
+            Assert.That(play.Session, Is.Not.SameAs(completed));
+            Assert.That(play.Session.HitTimings, Is.Empty, "The browsing session must not inherit judgments.");
+            Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
+            Canvas.ForceUpdateCanvases();
+            var hit = play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>();
+            var missed = play.NoteRoot(1).Find("PracticeTiming").GetComponent<TMP_Text>();
+            Assert.That(hit.gameObject.activeInHierarchy, Is.True, "Song end must preserve the completed attempt's review.");
+            Assert.That(hit.text, Is.EqualTo("+12"));
+            Assert.That(missed.gameObject.activeInHierarchy, Is.True);
+            Assert.That(missed.text, Is.EqualTo("×"));
+            Assert.That(missed.color, Is.EqualTo((Color)new Color32(200, 200, 200, 255)));
+            TestCapture.Capture("PracticeTimingReviewAfterFinish.png");
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Wait(() => !play.IsPaused);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "Starting another attempt must clear the completed attempt's review.");
+            yield return Press(Key.Space);
+            Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
+                "Pausing a fresh attempt must not restore the completed attempt's review.");
+        }
         [UnityTest]
         public IEnumerator DirectEditorSceneLaunchRetainsPracticeSelection()
         {
@@ -325,7 +358,8 @@ namespace OurTaiko.Tests
             Assert.That(entry.view.boards.Count(b => b.practice), Is.EqualTo(1));
             Assert.That(entry.view.boards[2].practice, Is.True, "練習モード follows 演奏ゲーム and 段位道場.");
             Assert.That(entry.view.boards[2].scene, Is.EqualTo(SceneSwitcher.ServerLoginScene));
-            entry.Don(); yield return new WaitForSecondsRealtime(1.5f);
+            yield return Wait(() => entry.Flow.CanJoin(entry.Now) && !SceneSwitcher.Instance.IsInputBlocked);
+            entry.Don(); yield return Wait(() => entry.Flow.IsModeReady(entry.Now));
             entry.Ka(2); yield return new WaitForSecondsRealtime(0.3f); entry.Don();
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
