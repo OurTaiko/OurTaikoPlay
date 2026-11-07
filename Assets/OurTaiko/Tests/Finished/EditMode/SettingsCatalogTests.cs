@@ -1,6 +1,5 @@
 using System.Linq;
 using NUnit.Framework;
-using UnityEditor;
 
 namespace OurTaiko.Tests
 {
@@ -17,23 +16,22 @@ namespace OurTaiko.Tests
         [Test]
         public void SettingsJsonKeepsDefaultsForMissingFields()
         {
-            Assert.That(new GameSettings().play.singlePlayerDrumPad, Is.EqualTo(PlaySettings.DrumPadDefault));
-            Assert.That(GameSettings.FromJson("{}").play.singlePlayerDrumPad, Is.EqualTo(PlaySettings.DrumPadDefault));
-            Assert.That(GameSettings.FromJson("").play.singlePlayerDrumPad, Is.EqualTo(PlaySettings.DrumPadDefault));
-            Assert.That(GameSettings.FromJson("{\"play\":{\"audioOffsetMs\":3}}").play.singlePlayerDrumPad,
-                Is.EqualTo(PlaySettings.DrumPadDefault));
-            Assert.That(GameSettings.FromJson("{\"play\":null}").play.singlePlayerDrumPad,
-                Is.EqualTo(PlaySettings.DrumPadDefault));
+            bool drumPad = new PlaySettings().singlePlayerDrumPad;
+            Assert.That(new GameSettings().play.singlePlayerDrumPad, Is.EqualTo(drumPad));
+            Assert.That(GameSettings.FromJson("{}").play.singlePlayerDrumPad, Is.EqualTo(drumPad));
+            Assert.That(GameSettings.FromJson("").play.singlePlayerDrumPad, Is.EqualTo(drumPad));
+            Assert.That(GameSettings.FromJson("{\"play\":{\"audioOffsetMs\":3}}").play.singlePlayerDrumPad, Is.EqualTo(drumPad));
+            Assert.That(GameSettings.FromJson("{\"play\":null}").play.singlePlayerDrumPad, Is.EqualTo(drumPad));
             Assert.That(GameSettings.FromJson("{\"play\":{}}").display.targetFrameRate, Is.EqualTo(120));
             Assert.That(GameSettings.FromJson("{\"display\":{\"targetFrameRate\":60}}").display.vSync, Is.False);
         }
 
         [Test]
-        public void DrumPadDefaultsOnOnlyForMobileBuildTargets()
+        public void DrumPadStartsOffInTheEditorWhateverTheBuildTarget()
         {
-            var target = EditorUserBuildSettings.activeBuildTarget;
-            bool mobile = target == BuildTarget.Android || target == BuildTarget.iOS;
-            Assert.That(new PlaySettings().singlePlayerDrumPad, Is.EqualTo(mobile));
+            // Only Android and iOS players default to on; the Editor compiles with the active build
+            // target's defines, so a Mac switched to iOS must not flip the default.
+            Assert.That(new PlaySettings().singlePlayerDrumPad, Is.False);
         }
 
         [TestCase(true), TestCase(false)]
