@@ -16,13 +16,31 @@ namespace OurTaiko.Tests
         [Test]
         public void SettingsJsonKeepsDefaultsForMissingFields()
         {
-            Assert.That(new GameSettings().play.singlePlayerDrumPad, Is.True);
-            Assert.That(GameSettings.FromJson("{}").play.singlePlayerDrumPad, Is.True);
-            Assert.That(GameSettings.FromJson("").play.singlePlayerDrumPad, Is.True);
-            var off = new GameSettings { play = new PlaySettings { singlePlayerDrumPad = false } };
-            Assert.That(GameSettings.FromJson(off.ToJson()).play.singlePlayerDrumPad, Is.False);
+            bool drumPad = new PlaySettings().singlePlayerDrumPad;
+            Assert.That(new GameSettings().play.singlePlayerDrumPad, Is.EqualTo(drumPad));
+            Assert.That(GameSettings.FromJson("{}").play.singlePlayerDrumPad, Is.EqualTo(drumPad));
+            Assert.That(GameSettings.FromJson("").play.singlePlayerDrumPad, Is.EqualTo(drumPad));
+            Assert.That(GameSettings.FromJson("{\"play\":{\"audioOffsetMs\":3}}").play.singlePlayerDrumPad, Is.EqualTo(drumPad));
+            Assert.That(GameSettings.FromJson("{\"play\":null}").play.singlePlayerDrumPad, Is.EqualTo(drumPad));
             Assert.That(GameSettings.FromJson("{\"play\":{}}").display.targetFrameRate, Is.EqualTo(120));
             Assert.That(GameSettings.FromJson("{\"display\":{\"targetFrameRate\":60}}").display.vSync, Is.False);
+        }
+
+        [Test]
+        public void DrumPadStartsOffInTheEditorWhateverTheBuildTarget()
+        {
+            // Only Android and iOS players default to on; the Editor compiles with the active build
+            // target's defines, so a Mac switched to iOS must not flip the default.
+            Assert.That(new PlaySettings().singlePlayerDrumPad, Is.False);
+        }
+
+        [TestCase(true), TestCase(false)]
+        public void ExplicitDrumPadChoiceSurvivesLoadingAndSaving(bool enabled)
+        {
+            var settings = GameSettings.FromJson("{\"play\":{\"singlePlayerDrumPad\":"
+                + (enabled ? "true" : "false") + "}}");
+            Assert.That(settings.play.singlePlayerDrumPad, Is.EqualTo(enabled));
+            Assert.That(GameSettings.FromJson(settings.ToJson()).play.singlePlayerDrumPad, Is.EqualTo(enabled));
         }
 
         [Test]

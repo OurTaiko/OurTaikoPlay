@@ -81,9 +81,10 @@ namespace OurTaiko.Tests
                 Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
                 view.TapRow(4);
                 Assert.That(nav.Row.Id, Is.EqualTo("drum-pad"));
-                Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.True);
+                bool initial = Settings.Settings.play.singlePlayerDrumPad;
+                Assert.That(initial, Is.EqualTo(new PlaySettings().singlePlayerDrumPad));
                 view.TapRow(4);
-                Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.False, "Applied and saved through SettingManager.");
+                Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.EqualTo(!initial), "Applied and saved through SettingManager.");
                 view.SetRow(4, 1);
                 Assert.That(Settings.Settings.play.singlePlayerDrumPad, Is.True);
                 view.SetRow(0, 5);

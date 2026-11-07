@@ -481,6 +481,7 @@ namespace OurTaiko.Tests
         IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain, bool timingReview = true)
         {
             var settings = new GameSettings(); settings.audio.backend = backend; settings.play.inputDelayMs = 0;
+            settings.play.singlePlayerDrumPad = true;
             settings.play.practiceTimingReview = timingReview;
             SettingManager.EnsureInstance().UseUnsaved(settings);
             var apply = AudioEngine.EnsureInstance().ApplyPendingSettingsAsync();

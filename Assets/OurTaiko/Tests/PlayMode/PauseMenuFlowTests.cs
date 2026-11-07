@@ -46,6 +46,7 @@ namespace OurTaiko.Tests
             // These tests check a press on the very next frame.
             var settings = SettingManager.EnsureInstance().Settings.Clone();
             settings.play.inputDelayMs = 0;
+            settings.play.singlePlayerDrumPad = true;
             SettingManager.EnsureInstance().UseUnsaved(settings);
         }
 
