@@ -82,6 +82,7 @@ namespace OurTaiko
         SceneSwitcher switcher;
         readonly List<DrumPad> pausedPads = new List<DrumPad>();
         bool closingPauseMenu;
+        bool switchingMode;
         bool resuming, resumeLostFocus;
         int resumeFrame = -1;
         int pauseOpenedFrame = -1;
@@ -130,6 +131,11 @@ namespace OurTaiko
             {
                 // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.
                 practiceBranch = BranchRoute.Normal;
+                if (IsPractice && switcher.TakePracticeEntry(out double entryPosition, out BranchRoute entryBranch))
+                {
+                    practiceEntryPosition = entryPosition;
+                    practiceBranch = entryBranch;
+                }
                 if (kusudama != null) kusudama.ResetDisplay();
                 var sessions = new List<PlaySession> { AddLane(0, firstLane) };
                 if (secondLane != null) sessions.Add(AddLane(1, secondLane));
@@ -153,6 +159,8 @@ namespace OurTaiko
                 resultText.text = "CHART COULD NOT LOAD\n<size=22>" + error.Message + "</size>";
             }
             if (IsFinished) yield break;
+            if (!IsTwoPlayer && (!IsPractice || Session.Chart.Branches.All(b => b.HasAllRoutes)))
+                pauseMenu.ConfigureModeSwitch(IsPractice, SwitchMode);
             while (switcher.IsInputBlocked) yield return null;
             // The full countdown starts only after the global cover has opened. Both seats play the same
             // file, so one OFFSET leads the song in.
@@ -397,6 +405,23 @@ namespace OurTaiko
             LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene));
         }
 
+        public void SwitchMode()
+        {
+            if (switchingMode || closingPauseMenu || switcher.IsInputBlocked || IsFinished || !IsPaused
+                || !pausePanel.activeSelf || IsTwoPlayer || Session == null || pauseMenu.ModeSwitchButton == null) return;
+            switchingMode = true;
+            double position = SongTime - audioOffset - visualOffset;
+            var branch = Session.DisplayBranchAt(ChartTime);
+            StartCoroutine(ClosePauseMenu(() =>
+            {
+                if (!switcher.SwitchPlayMode(!IsPractice, position, branch))
+                {
+                    switchingMode = false;
+                    pauseMenu.Show();
+                }
+            }));
+        }
+
         void LeavePlay(Action action)
         {
             if (closingPauseMenu || switcher.IsInputBlocked) return;
@@ -407,6 +432,7 @@ namespace OurTaiko
         {
             songClock.Pause(); IsPaused = true;
             music.StopAudio(); hitAudio.StopAudio();
+            InputManager.DropDelayed();
             DisableDrumPads();
         }
         void OnDestroy()
