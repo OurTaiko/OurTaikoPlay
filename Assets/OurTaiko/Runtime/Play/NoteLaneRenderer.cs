@@ -499,14 +499,18 @@ namespace OurTaiko
             var rect = Rect("PracticeTiming", view.Root, 100, 32);
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
             rect.anchoredPosition = new Vector2(0, 72);
+            // The font goes on before Awake: a TextMeshPro that wakes without one takes TMP's default
+            // LiberationSans and writes _CullMode on its shared material, dirtying that asset in the Editor.
+            rect.gameObject.SetActive(false);
             var label = view.Timing = rect.gameObject.AddComponent<TextMeshPro>();
+            label.UseUiFont();
+            rect.gameObject.SetActive(true);
             label.isOrthographic = true;
             label.fontSize = 26;
             label.alignment = TextAlignmentOptions.Center;
             label.textWrappingMode = TextWrappingModes.NoWrap;
             label.overflowMode = TextOverflowModes.Overflow;
             label.GetComponent<MeshRenderer>().sortingOrder = 3;
-            label.UseUiFont();
         }
 
         void ShowTiming(NoteView view, double? offset, bool missed, int row)
