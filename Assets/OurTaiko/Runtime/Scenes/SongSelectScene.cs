@@ -192,6 +192,7 @@ namespace OurTaiko
             BindCoursePanel();
             TimerView = new ArcadeTimerView(view.overlays, overlay);
             Coins = new CoinOverlayView(view.overlays, overlay);
+            view.ShowPlayMode(switcher.PracticeMode);
             // Slice the 90-cell Oni/Ura change sheets up front so the first flip does not hitch.
             UraFrames(ref uraToUraCells, uraChangeToUra);
             UraFrames(ref uraToOniCells, uraChangeToOni);

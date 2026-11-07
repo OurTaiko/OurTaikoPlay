@@ -243,6 +243,9 @@ namespace OurTaiko.Tests
             play.Back();
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !switcher.IsInputBlocked);
             Assert.That(switcher.PracticeMode, Is.True);
+            var select = Object.FindAnyObjectByType<SongSelectScene>();
+            Assert.That(select.view.ModeLabel.text, Is.EqualTo("练习模式"));
+            TestCapture.Capture("PracticeModeSongSelect.png");
             switcher.Play(song, "Oni", false);
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked
                 && Object.FindAnyObjectByType<PlayScene>()?.IsPaused == true);
@@ -257,6 +260,7 @@ namespace OurTaiko.Tests
             play.Back();
             yield return Wait(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !switcher.IsInputBlocked);
             Assert.That(switcher.PracticeMode, Is.False);
+            Assert.That(Object.FindAnyObjectByType<SongSelectScene>().view.ModeLabel.text, Is.EqualTo("普通演奏"));
             Assert.That(switcher.LastResult, Is.Null);
             Assert.That(switcher.SongsPlayed, Is.EqualTo(songsPlayed), "Abandoned attempts do not count as completed songs.");
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
