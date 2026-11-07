@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 namespace OurTaiko
 {
@@ -10,9 +11,29 @@ namespace OurTaiko
         public const float FadeDuration = 0.5f;
         public CanvasGroup group;
         public UnityEngine.UI.Button[] buttons;
+        // The menu sounds every other menu uses: ka when the selection moves, don when an action is taken.
+        public AudioClip don, ka;
         public int SelectedIndex { get; private set; }
         public bool IsClosing { get; private set; }
+        // The menu's sounds live on their own scene object: Hide deactivates this panel, which would cut a
+        // don still ringing (AudioBus.OnDisable stops everything), and the scene's hitAudio stays silent under pause.
+        public AudioSource Sfx { get; private set; }
         Coroutine opening;
+
+        void Awake()
+        {
+            var host = new GameObject("PauseMenuAudio");
+            if (gameObject.scene.IsValid()) SceneManager.MoveGameObjectToScene(host, gameObject.scene);
+            Sfx = host.AddComponent<AudioSource>();
+            Sfx.PrepareAudioEffects(don, ka);
+            // Keyboard/drum confirmation invokes onClick too, so every way of choosing an action sounds once.
+            foreach (var button in buttons) button.onClick.AddListener(() => Sfx.PlayAudioOneShot(don));
+        }
+
+        void OnDestroy()
+        {
+            if (Sfx != null) Destroy(Sfx.gameObject);
+        }
 
         public void Show()
         {
@@ -66,12 +87,12 @@ namespace OurTaiko
                     case InputKey.MenuUp:
                     case InputKey.MenuLeft:
                     case InputKey.LeftKa:
-                        Select((SelectedIndex + buttons.Length - 1) % buttons.Length);
+                        Select((SelectedIndex + buttons.Length - 1) % buttons.Length, true);
                         return;
                     case InputKey.MenuDown:
                     case InputKey.MenuRight:
                     case InputKey.RightKa:
-                        Select((SelectedIndex + 1) % buttons.Length);
+                        Select((SelectedIndex + 1) % buttons.Length, true);
                         return;
                     case InputKey.Confirm:
                     case InputKey.LeftDon:
@@ -82,14 +103,16 @@ namespace OurTaiko
             }
         }
 
-        void Select(int index)
+        void Select(int index, bool playSound = false)
         {
+            bool moved = SelectedIndex != index;
             SelectedIndex = index;
             for (int i = 0; i < buttons.Length; i++)
             {
                 var selection = buttons[i].transform.Find("Selection");
                 if (selection != null) selection.gameObject.SetActive(i == index);
             }
+            if (playSound && moved) Sfx.PlayAudioOneShot(ka);
         }
     }
 }

@@ -478,7 +478,8 @@ namespace OurTaiko
         public void TogglePause()
         {
             if (IsFinished || Session == null || !songClock.Started || switcher.IsInputBlocked || closingPauseMenu) return;
-            if (IsPaused) { Resume(); return; }
+            // The pause key chooses Resume like the menu's own button, so it sounds the same don.
+            if (IsPaused) { resumeButton.onClick.Invoke(); return; }
             songClock.Pause();
             IsPaused = true;
             pausedAt = GameTimeline.FrameTime;

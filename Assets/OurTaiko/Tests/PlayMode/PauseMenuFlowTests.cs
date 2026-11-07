@@ -147,8 +147,19 @@ namespace OurTaiko.Tests
                 AssertMenuReceivesPointer(point, buttons[i]);
             }
             Assert.That(play.pauseMenu.SelectedIndex, Is.Zero);
+            Assert.That(play.pauseMenu.Sfx, Is.Not.Null);
+            Assert.That(play.pauseMenu.Sfx.transform.IsChildOf(play.pausePanel.transform), Is.False,
+                "The menu's sounds live outside the panel, which Hide deactivates while a don may still ring.");
+            var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
+            Assert.That(menuAudio, Is.Not.Null);
+            Assert.That(play.pauseMenu.don, Is.Not.Null);
+            Assert.That(play.pauseMenu.ka, Is.Not.Null);
+            Assert.That(menuAudio.PreparedEffects, Is.EqualTo(2), "Pause prepares its don and ka before the first press.");
+            Assert.That(menuAudio.EffectPlays, Is.Zero, "Opening pause must not play a menu sound.");
             yield return Press(Key.DownArrow);
             Assert.That(play.pauseMenu.SelectedIndex, Is.EqualTo(1));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Changing the selected action must play ka while gameplay stays paused.");
+            Assert.That(play.music.IsAudioPlaying() || play.hitAudio.IsAudioPlaying(), Is.False);
             yield return Press(Key.UpArrow);
             Assert.That(play.pauseMenu.SelectedIndex, Is.Zero);
             yield return Press(Key.K);
@@ -160,10 +171,14 @@ namespace OurTaiko.Tests
             yield return Press(Key.LeftArrow);
             Assert.That(play.pauseMenu.SelectedIndex, Is.Zero);
             Assert.That(play.Session.Rolls, Is.Zero, "Menu drum-key navigation must not judge gameplay notes.");
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(6), "Each of the six moves plays ka once.");
             yield return Press(Key.J);
             Assert.That(play.pauseMenu.IsClosing, Is.True);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(7), "Confirming an action plays don.");
             yield return WaitUntil(() => !play.IsPaused, "Keyboard confirmation did not resume.");
             Assert.That(play.Session.Rolls, Is.Zero, "The confirm press must not leak into gameplay.");
+            Assert.That(play.pausePanel.activeInHierarchy, Is.False);
+            Assert.That(play.pauseMenu.Sfx.gameObject.activeInHierarchy, Is.True, "Hiding the panel must not silence the don it just played.");
         }
 
         [UnityTest, Category("SpriteRendering")]
@@ -185,8 +200,11 @@ namespace OurTaiko.Tests
             yield return Click(ScreenPoint((RectTransform)play.pauseButton.transform));
             yield return WaitForOpen();
             Assert.That(pad.enabled, Is.False);
+            var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
+            Assert.That(menuAudio.EffectPlays, Is.Zero);
             yield return Click(ScreenPoint((RectTransform)play.resumeButton.transform));
             Assert.That(play.pauseMenu.IsClosing, Is.True);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "A mouse click on an action plays don.");
             yield return WaitUntil(() => !play.IsPaused, "Mouse click did not resume.");
             Assert.That(play.Session.Rolls, Is.Zero);
 
@@ -195,6 +213,7 @@ namespace OurTaiko.Tests
             Assert.That(pad.enabled, Is.False);
             yield return Tap(ScreenPoint((RectTransform)play.resumeButton.transform));
             Assert.That(play.pauseMenu.IsClosing, Is.True);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(2), "A touch tap on an action plays don.");
             yield return WaitUntil(() => !play.IsPaused, "Touch tap did not resume.");
             Assert.That(play.Session.Rolls, Is.Zero, "Pointer menu clicks must never be drum hits.");
         }
@@ -211,6 +230,7 @@ namespace OurTaiko.Tests
             var oldPlay = play;
             yield return Press(Key.Enter);
             Assert.That(oldPlay.pauseMenu.IsClosing, Is.True);
+            Assert.That(oldPlay.pauseMenu.Sfx.GetComponent<AudioBus>().EffectPlays, Is.EqualTo(2), "Restart plays ka for the move and don for the choice.");
             yield return new WaitForSecondsRealtime(0.16f);
             Assert.That(SceneSwitcher.Instance.IsSwitching, Is.False, "Restart must wait for the menu to fade away.");
             Assert.That(Object.FindAnyObjectByType<PlayScene>(), Is.SameAs(oldPlay));
@@ -264,9 +284,12 @@ namespace OurTaiko.Tests
                 }
             }
             double frozenTime = play.SongTime;
+            var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
+            Assert.That(menuAudio.EffectPlays, Is.Zero, "Opening-frame presses and direct Resume calls make no menu sound.");
 
             yield return Press(Key.Space);
             Assert.That(play.pauseMenu.IsClosing, Is.True);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Closing with the pause key chooses Resume, so it plays don.");
             yield return new WaitForSecondsRealtime(0.15f);
             play.SendMessage("OnApplicationFocus", false);
             Assert.That(play.IsPaused, Is.True);
@@ -281,6 +304,7 @@ namespace OurTaiko.Tests
             play.SendMessage("OnApplicationFocus", true);
             yield return Press(Key.Enter);
             Assert.That(play.pauseMenu.IsClosing, Is.True, "A new keyboard confirmation can resume after focus returns.");
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(2));
             yield return WaitUntil(() => !play.IsPaused, "Resume stayed blocked after focus returned.");
             Assert.That(pad.enabled && play.pauseButton.interactable, Is.True);
             Assert.That(play.music.IsAudioPlaying(), Is.True);

@@ -36,6 +36,8 @@ namespace OurTaiko
         double seek, scheduledAt;
         bool pending;
         public int PreparedEffects => effects.Count;
+        // One-shots that started playing on this bus (tests count these instead of racing a short clip's end).
+        public int EffectPlays { get; private set; }
         public static int LiveNativeStreams => NativeAudioSample.LiveStreams;
         public double Length => main?.Length ?? 0;
         public int ActiveVoices
@@ -118,6 +120,7 @@ namespace OurTaiko
             // MajdataPlay rewinds the existing sample; it does not allocate overlapping voices.
             effectGroups[clip] = selected;
             effects[clip].Play(Volume(selected), false);
+            if (effects[clip].Playing) EffectPlays++;
         }
         public void Seek(double seconds)
         {
