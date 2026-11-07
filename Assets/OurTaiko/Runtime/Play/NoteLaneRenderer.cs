@@ -175,8 +175,9 @@ namespace OurTaiko
         void PrewarmTiming(PlaySession session)
         {
             PrepareTimingRows(session);
-            // Pay component/font/mesh setup behind the loading cover, not on the first pause.
-            int count = Math.Min(64, session.Chart.Notes.Count);
+            // Pay component/font/mesh setup behind the loading cover, not on the first pause. The warm
+            // plain pool is 32 views; a denser lane fills in at two labels a frame (ShowTiming).
+            int count = Math.Min(32, session.Chart.Notes.Count);
             while (notePool[PlainShape].Count < count) notePool[PlainShape].Push(NewNote(PlainShape));
             foreach (var view in notePool[PlainShape])
             {
@@ -374,7 +375,7 @@ namespace OurTaiko
         }
         // Draws `session` at `time`. `preview` shows the routes a paused practice would play;
         // `hideSkipped` hides notes the practice attempt skipped. Returns false for an unchanged frame.
-        public bool Render(PlaySession session, double time, bool preview, bool hideSkipped, bool timingReview = true)
+        public bool Render(PlaySession session, double time, bool preview, bool hideSkipped, bool timingReview = false)
         {
             Session = session;
             // #JPOSSCROLL moves the origin notes are placed from (OpenTaiko GetNoteOriginX/Y).

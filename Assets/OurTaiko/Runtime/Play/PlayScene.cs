@@ -422,7 +422,9 @@ namespace OurTaiko
         {
             bool preview = IsPractice && IsPaused;
             bool hideSkipped = IsPractice && (!IsPaused || practiceRewinding);
-            foreach (var lane in lanes) lane.RenderNotes(time, preview, hideSkipped);
+            // Read live so the settings overlay can toggle the review over a paused practice.
+            bool timingReview = preview && SettingManager.EnsureInstance().Settings.play.practiceTimingReview;
+            foreach (var lane in lanes) lane.RenderNotes(time, preview, hideSkipped, timingReview);
         }
 
         public const int SoulGaugeOrder = -20;

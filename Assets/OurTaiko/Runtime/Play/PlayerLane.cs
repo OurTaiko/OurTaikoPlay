@@ -146,11 +146,11 @@ namespace OurTaiko
 
         // A paused practice previews its routes; while it plays (or rewinds) it hides what the
         // attempt skipped, and browsing measures keeps past notes.
-        public void RenderNotes(double time, bool preview, bool hideSkipped)
+        // `timingReview` shows the practice attempt's offsets and misses over a paused preview.
+        public void RenderNotes(double time, bool preview, bool hideSkipped, bool timingReview = false)
         {
             ShiftJudge(time);
-            if (!renderer.Render(Session, time, preview, hideSkipped,
-                SettingManager.EnsureInstance().Settings.play.practiceTimingReview)) return;
+            if (!renderer.Render(Session, time, preview, hideSkipped, timingReview)) return;
             if (Views.gogo != null) Views.gogo.ShowTime(Session, time, preview);
             ShowLaneAlpha(time, preview);
         }
