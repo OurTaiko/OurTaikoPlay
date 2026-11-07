@@ -527,7 +527,8 @@ namespace OurTaiko
             var label = view.Timing;
             if (view.TimingRow != row)
             {
-                label.rectTransform.anchoredPosition = new Vector2(0, 72 + row * 36);
+                // Dense notes alternate above/below, leaving sparse notes above as before.
+                label.rectTransform.anchoredPosition = new Vector2(0, row == 0 ? 72 : -72);
                 view.TimingRow = row;
             }
             if (view.TimingOffset != offset || view.TimingMissed != missed)

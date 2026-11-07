@@ -190,7 +190,7 @@ namespace OurTaiko.Tests
         }
         const string Plain = "TITLE:Practice Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n1111,\n#END";
         [UnityTest, Category("SpriteRendering")]
-        public IEnumerator PausedPracticeShowsNoteTimingAndAlternatesDenseDisplayedNotes()
+        public IEnumerator PausedPracticeShowsNoteTimingAboveAndBelowDenseNotes()
         {
             yield return StartPractice(AudioBackend.BassSimple, false,
                 "TITLE:Timing Review\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#SCROLL 0.3\n1111111111111111,\n1111,\n1111,\n#END");
@@ -220,8 +220,8 @@ namespace OurTaiko.Tests
                 Assert.That(labels[i].text, Is.EqualTo(hitIndices[i] % 2 == 0 ? "+12" : "-8"));
                 Assert.That(labels[i].color, Is.EqualTo(hitIndices[i] % 2 == 0 ? TimingFeedbackView.LateColor : TimingFeedbackView.EarlyColor));
                 Assert.That(labels[i].rectTransform.anchoredPosition.x, Is.Zero, "Labels stay attached to their own note.");
-                Assert.That(labels[i].rectTransform.anchoredPosition.y, Is.EqualTo(72 + hitIndices[i] % 2 * 36),
-                    "Dense labels alternate by note order, including missed notes.");
+                Assert.That(labels[i].rectTransform.anchoredPosition.y, Is.EqualTo(hitIndices[i] % 2 == 0 ? 72 : -72),
+                    "Dense labels alternate above/below by note order, including missed notes.");
                 Assert.That(labels[i], Is.TypeOf<TextMeshPro>(), "Timing shares the note's world-space sorting group.");
             }
             foreach (int missed in new[] { 3, 8 })
@@ -230,7 +230,7 @@ namespace OurTaiko.Tests
                 Assert.That(label.gameObject.activeInHierarchy, Is.True);
                 Assert.That(label.text, Is.EqualTo("×"));
                 Assert.That(label.color, Is.EqualTo((Color)new Color32(200, 200, 200, 255)));
-                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(72 + missed % 2 * 36));
+                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(missed % 2 == 0 ? 72 : -72));
             }
             Assert.That(play.NoteRoot(12).Find("PracticeTiming")?.gameObject.activeSelf ?? false, Is.False,
                 "An unhit note has no timing value.");
@@ -241,6 +241,10 @@ namespace OurTaiko.Tests
             play.MovePractice(-1); yield return new WaitForSecondsRealtime(.25f);
             Assert.That(play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>().text, Is.EqualTo("+12"),
                 "Browsing measures must preserve the last attempt's review.");
+            Assert.That(play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>().rectTransform.anchoredPosition.y,
+                Is.EqualTo(72), "Returning to an earlier measure preserves the above/below assignment.");
+            Assert.That(play.NoteRoot(1).Find("PracticeTiming").GetComponent<TMP_Text>().rectTransform.anchoredPosition.y,
+                Is.EqualTo(-72));
             yield return Press(Key.F); yield return Press(Key.F);
             yield return Wait(() => !play.IsPaused);
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
