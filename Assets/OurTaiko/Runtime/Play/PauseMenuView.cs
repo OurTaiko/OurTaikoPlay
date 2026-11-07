@@ -20,23 +20,37 @@ namespace OurTaiko
         public bool IsClosing { get; private set; }
         // The menu's sounds live on their own scene object: Hide deactivates this panel, which would cut a
         // don still ringing (AudioBus.OnDisable stops everything), and the scene's hitAudio stays silent under pause.
-        public AudioSource Sfx { get; private set; }
+        // Made on first use: the practice panel sounds these before this inactive panel receives Awake.
+        public AudioSource Sfx => sfx != null ? sfx : sfx = NewSfx();
+        AudioSource sfx;
         public Button ModeSwitchButton { get; private set; }
         Coroutine opening;
+        bool awoke;
+
+        // The selection moved / an action was chosen; the practice panel shares them.
+        public void PlayMove() => Sfx.PlayAudioOneShot(ka);
+        public void PlayConfirm() => Sfx.PlayAudioOneShot(don);
 
         void Awake()
         {
+            awoke = true;
+            if (sfx == null) sfx = NewSfx();
+            // Keyboard/drum confirmation invokes onClick too, so every way of choosing an action sounds once.
+            foreach (var button in buttons) button.onClick.AddListener(PlayConfirm);
+        }
+
+        AudioSource NewSfx()
+        {
             var host = new GameObject("PauseMenuAudio");
             if (gameObject.scene.IsValid()) SceneManager.MoveGameObjectToScene(host, gameObject.scene);
-            Sfx = host.AddComponent<AudioSource>();
-            Sfx.PrepareAudioEffects(don, ka);
-            // Keyboard/drum confirmation invokes onClick too, so every way of choosing an action sounds once.
-            foreach (var button in buttons) button.onClick.AddListener(() => Sfx.PlayAudioOneShot(don));
+            var source = host.AddComponent<AudioSource>();
+            source.PrepareAudioEffects(don, ka);
+            return source;
         }
 
         void OnDestroy()
         {
-            if (Sfx != null) Destroy(Sfx.gameObject);
+            if (sfx != null) Destroy(sfx.gameObject);
         }
 
         public void ConfigureModeSwitch(bool practice, UnityAction action)
@@ -47,7 +61,8 @@ namespace OurTaiko
             ModeSwitchButton.name = "ModeSwitchButton";
             ModeSwitchButton.onClick = new Button.ButtonClickedEvent();
             ModeSwitchButton.onClick.AddListener(action);
-            if (Sfx != null) ModeSwitchButton.onClick.AddListener(() => Sfx.PlayAudioOneShot(don));
+            // Awake sounds every button in `buttons` once; a button added after it sounds itself.
+            if (awoke) ModeSwitchButton.onClick.AddListener(PlayConfirm);
             var label = ModeSwitchButton.GetComponentInChildren<TMP_Text>(true);
             label.text = practice ? "Switch to Normal Play" : "Switch to Practice";
             label.fontSize = 42;
@@ -137,7 +152,7 @@ namespace OurTaiko
                 var selection = buttons[i].transform.Find("Selection");
                 if (selection != null) selection.gameObject.SetActive(i == index);
             }
-            if (playSound && moved) Sfx.PlayAudioOneShot(ka);
+            if (playSound && moved) PlayMove();
         }
     }
 }

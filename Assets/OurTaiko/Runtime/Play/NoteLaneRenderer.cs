@@ -23,6 +23,8 @@ namespace OurTaiko
         // A balloon whose counter is up hides itself and its text.
         readonly BalloonCounterView balloonCounter;
         PlaySession Session;
+        // What a mode draws on the notes (INoteLaneOverlay); empty for most plays.
+        readonly List<INoteLaneOverlay> overlays = new List<INoteLaneOverlay>();
         public double RenderedTime { get; private set; }
         // Views come from pools while a note is on the lane; null when it is not drawn.
         public RectTransform NoteRoot(int index) => shownNotes[index]?.Root;
@@ -70,6 +72,14 @@ namespace OurTaiko
             this.balloonCounter = balloonCounter;
         }
 
+        // An overlay added before Prepare is prepared with the lane, behind the loading cover.
+        public void AddOverlay(INoteLaneOverlay overlay)
+        {
+            overlays.Add(overlay);
+            if (Session != null) overlay.Prepare(Session, clocks, noteLayer);
+            rendered = false;
+        }
+
         static RectTransform Rect(string name, Transform parent, float width, float height)
         {
             var r = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
@@ -100,6 +110,7 @@ namespace OurTaiko
             shownNotes = new NoteView[Session.Chart.Notes.Count];
             shownMoji = new MojiView[Session.Chart.Notes.Count];
             shownBars = new RectTransform[Session.Chart.Bars.Count];
+            foreach (var overlay in overlays) overlay.Prepare(session, clocks, noteLayer);
             if (warm) return;
             for (int i = 0; i < 32; i++) notePool[PlainShape].Push(NewNote(PlainShape));
             for (int i = 0; i < 2; i++) notePool[RollShape].Push(NewNote(RollShape));
@@ -207,6 +218,7 @@ namespace OurTaiko
             view.Root.gameObject.SetActive(false);
             notePool[view.Shape].Push(view);
             shownNotes[index] = null;
+            for (int k = 0; k < overlays.Count; k++) overlays[k].HideNote(index);
         }
         MojiView AcquireMoji(int index, ChartNote note)
         {
@@ -302,7 +314,9 @@ namespace OurTaiko
             var shift = JudgeShift.At(session.Chart.JudgeMoves, time);
             judge = new Vector2(JudgeLocalX + (float)shift.X, JudgeLocalY - (float)shift.Y);
             bool rebuilt = EnsureLaneWindows();
-            if (!rebuilt && rendered && time == RenderedTime && Session == renderedSession && Session.Version == renderedVersion
+            bool overlayChanged = false;
+            for (int k = 0; k < overlays.Count; k++) overlayChanged |= overlays[k].BeginFrame(Session, time, preview);
+            if (!rebuilt && !overlayChanged && rendered && time == RenderedTime && Session == renderedSession && Session.Version == renderedVersion
                 && balloonCounter.NoteIndex == renderedBalloon && preview == renderedPreview) return false;
             rendered = true; renderedSession = Session; renderedVersion = Session.Version;
             renderedBalloon = balloonCounter.NoteIndex; renderedPreview = preview;
@@ -348,6 +362,7 @@ namespace OurTaiko
                 else if (!view.Root.gameObject.activeSelf) view.Root.gameObject.SetActive(true);
                 view.Head.sprite = expression == 0 ? noteSprites[(int)note.Kind] : alternateNoteSprites[(int)note.Kind];
                 view.Root.anchoredPosition = pos;
+                for (int o = 0; o < overlays.Count; o++) overlays[o].ShowNote(i, note, view.Root);
                 if (view.BalloonTail != null) view.BalloonTail.enabled = balloonCounter.NoteIndex != i;
                 if (view.Body != null)
                 {
