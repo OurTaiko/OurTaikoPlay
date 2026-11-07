@@ -22,12 +22,19 @@ namespace OurTaiko
 
         void Awake()
         {
+            PrepareAudio();
+            // Keyboard/drum confirmation invokes onClick too, so every way of choosing an action sounds once.
+            foreach (var button in buttons) button.onClick.AddListener(() => Sfx.PlayAudioOneShot(don));
+        }
+
+        // Practice uses menu sounds before this inactive panel receives Awake.
+        public void PrepareAudio()
+        {
+            if (Sfx != null) return;
             var host = new GameObject("PauseMenuAudio");
             if (gameObject.scene.IsValid()) SceneManager.MoveGameObjectToScene(host, gameObject.scene);
             Sfx = host.AddComponent<AudioSource>();
             Sfx.PrepareAudioEffects(don, ka);
-            // Keyboard/drum confirmation invokes onClick too, so every way of choosing an action sounds once.
-            foreach (var button in buttons) button.onClick.AddListener(() => Sfx.PlayAudioOneShot(don));
         }
 
         void OnDestroy()

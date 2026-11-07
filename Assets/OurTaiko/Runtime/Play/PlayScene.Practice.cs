@@ -25,6 +25,7 @@ namespace OurTaiko
 
         void InitializePractice()
         {
+            pauseMenu.PrepareAudio();
             Practice = new PracticeProgress();
             practiceView.previous.onClick.AddListener(() => MovePractice(-1));
             practiceView.next.onClick.AddListener(() => MovePractice(1));
@@ -100,7 +101,9 @@ namespace OurTaiko
             else if (PracticeStage == PracticeStage.Branch) ChangePracticeBranch(Math.Sign(direction));
             else
             {
+                double target = Practice.Target;
                 Practice.Move(Math.Sign(direction), GameTimeline.FrameTime);
+                if (Practice.Target != target) pauseMenu.Sfx.PlayAudioOneShot(pauseMenu.ka);
                 // Browsing only changes the preview. Build the new judgment session once on start,
                 // instead of allocating chart-sized state and resetting every effect on each step.
                 Lane1.ResetBranchLane(Practice.Target + VisualOffset);
@@ -112,6 +115,7 @@ namespace OurTaiko
         {
             if (!CanAdjustPractice) return;
             pauseOpenedFrame = Time.frameCount;
+            pauseMenu.Sfx.PlayAudioOneShot(pauseMenu.don);
             if (PracticeStage != PracticeStage.Speed) { PracticeStage++; ShowPracticePause(); return; }
             Lane1.SetPracticeTiming(null);
             ResetPracticeAttempt(Practice.Target);

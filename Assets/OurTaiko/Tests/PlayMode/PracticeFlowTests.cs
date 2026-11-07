@@ -16,6 +16,7 @@ namespace OurTaiko.Tests
     {
         Keyboard keyboard;
         Mouse mouse;
+        Touchscreen touchscreen;
         SongDefinition song;
         PlayScene play;
         InputSettings.BackgroundBehavior background;
@@ -38,6 +39,7 @@ namespace OurTaiko.Tests
             yield return null;
             if (song != null) { Object.Destroy(song.chart); Object.Destroy(song); }
             InputSystem.RemoveDevice(keyboard); InputSystem.RemoveDevice(mouse);
+            if (touchscreen != null) { InputSystem.RemoveDevice(touchscreen); touchscreen = null; }
             InputSystem.settings.backgroundBehavior = background;
             InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
         }
@@ -67,6 +69,77 @@ namespace OurTaiko.Tests
             Assert.That(play.Session.Bad, Is.Zero, "Preparation must not count skipped notes as misses.");
         }
         [UnityTest, Category("SpriteRendering")] public IEnumerator NativePlaybackAndTwoLayerPause() => ExercisePlayback(AudioBackend.BassSimple);
+
+        [UnityTest]
+        public IEnumerator MeasureNavigationSoundsOnceForKeyboardMouseAndTouch()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false);
+            var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
+            Assert.That(menuAudio.PreparedEffects, Is.EqualTo(2));
+            Assert.That(menuAudio.EffectPlays, Is.Zero);
+            yield return Press(Key.D);
+            Assert.That(menuAudio.EffectPlays, Is.Zero, "The first-measure boundary is silent.");
+            yield return Press(Key.K);
+            Assert.That(play.Practice.Measure, Is.EqualTo(1));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "One keyboard move plays one ka.");
+            yield return Click(play.practiceView.previous);
+            Assert.That(play.Practice.Measure, Is.Zero);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(2), "One mouse move plays one ka.");
+            yield return Tap(play.practiceView.next);
+            Assert.That(play.Practice.Measure, Is.EqualTo(1));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "One touch move plays one ka.");
+            play.MovePractice(1);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(4));
+            play.MovePractice(1);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(4), "The last-measure boundary is silent.");
+            double bar = play.Practice.Target;
+            play.Practice.PauseAt(bar + .5, GameTimeline.FrameTime);
+            play.MovePractice(-1);
+            Assert.That(play.Practice.Target, Is.EqualTo(bar));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(5), "Returning from mid-measure to its bar also plays ka.");
+            Assert.That(play.hitAudio.IsAudioPlaying(), Is.False, "Browsing must not use the gameplay drum bus.");
+            play.TogglePause();
+            yield return new WaitForSecondsRealtime(PauseMenuView.FadeDuration + .05f);
+            Assert.That(play.pauseMenu.Sfx.GetComponent<AudioBus>(), Is.SameAs(menuAudio),
+                "Activating the pause menu must reuse its already prepared sound bus.");
+            int before = menuAudio.EffectPlays;
+            play.MovePractice(-1); play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(before), "The pause menu blocks practice sounds.");
+            play.TogglePause();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(before + 1), "The pause key chooses Resume and plays don once.");
+            play.MovePractice(-1); play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(before + 1), "Closing the pause menu still blocks practice sounds.");
+            yield return new WaitForSecondsRealtime(PauseMenuView.FadeDuration + .05f);
+            Assert.That(play.pausePanel.activeSelf, Is.False);
+            Assert.That(play.pauseMenu.Sfx.gameObject.activeInHierarchy, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator PracticeConfirmationSoundsOncePerStageAndSurvivesHidingThePanel()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false, Branched);
+            var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
+            yield return Press(Key.F);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Keyboard branch confirmation plays one don.");
+            yield return Click(play.practiceView.confirm);
+            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(2), "Mouse measure confirmation plays one don.");
+            yield return Tap(play.practiceView.confirm);
+            Assert.That(play.practiceView.panel.activeSelf, Is.False);
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "Touch speed confirmation plays one don.");
+            Assert.That(play.pauseMenu.Sfx.gameObject.activeInHierarchy, Is.True);
+            Assert.That(play.pauseMenu.Sfx.transform.IsChildOf(play.practiceView.panel.transform), Is.False,
+                "Practice controls must not own the sound host that keeps don ringing after they hide.");
+            play.MovePractice(1); play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "Rewinding ignores practice actions without sound.");
+            yield return Wait(() => !play.IsPaused);
+            play.MovePractice(1); play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "Playback ignores practice actions without sound.");
+            play.TogglePause();
+            play.ConfirmPractice();
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "The opening-frame input lock is silent.");
+        }
 
         IEnumerator ExercisePlayback(AudioBackend backend)
         {
@@ -453,6 +526,16 @@ namespace OurTaiko.Tests
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(key)); yield return null;
             InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+        }
+        IEnumerator Tap(UnityEngine.UI.Button button)
+        {
+            if (touchscreen == null) touchscreen = InputSystem.AddDevice<Touchscreen>();
+            var rect = (RectTransform)button.transform;
+            var screen = RectTransformUtility.WorldToScreenPoint(rect.GetComponentInParent<Canvas>().rootCanvas.worldCamera, rect.TransformPoint(rect.rect.center));
+            InputSystem.QueueStateEvent(touchscreen, new TouchState { touchId = 1, phase = UnityEngine.InputSystem.TouchPhase.Began, position = screen, pressure = 1 });
+            yield return null;
+            InputSystem.QueueStateEvent(touchscreen, new TouchState { touchId = 1, phase = UnityEngine.InputSystem.TouchPhase.Ended, position = screen });
+            yield return null;
         }
     }
 }
