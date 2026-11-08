@@ -238,6 +238,7 @@ namespace OurTaiko.Tests
             double clock = scene.SongTime;
             scene.TogglePause();
             Assert.That(scene.IsPaused, Is.True);
+            Assert.That(scene.pauseMenu.modeSwitch.interactable, Is.False, "段位道場 lists the mode switch greyed.");
             double held = scene.BetweenElapsedMs;
             yield return new WaitForSecondsRealtime(3f);
             Assert.That(scene.BetweenElapsedMs, Is.EqualTo(held).Within(1), "The doors wait with the song clock.");

@@ -1,7 +1,9 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace OurTaiko
 {
@@ -10,7 +12,9 @@ namespace OurTaiko
     {
         public const float FadeDuration = 0.5f;
         public CanvasGroup group;
-        public UnityEngine.UI.Button[] buttons;
+        // Resume, Restart, the mode switch and Back, in the prefab's order; `modeSwitch` is the third.
+        public Button[] buttons;
+        public Button modeSwitch;
         // The menu sounds every other menu uses: ka when the selection moves, don when an action is taken.
         public AudioClip don, ka;
         public int SelectedIndex { get; private set; }
@@ -47,6 +51,14 @@ namespace OurTaiko
             if (sfx != null) Destroy(sfx.gameObject);
         }
 
+        // The play scene offers the switch to the other single-player mode; the button stays greyed where
+        // it is not offered (段位道場, two players, a practice chart missing #E/#M).
+        public void OfferModeSwitch(bool practice)
+        {
+            modeSwitch.GetComponentInChildren<TMP_Text>(true).text = practice ? "Switch to Normal Play" : "Switch to Practice";
+            modeSwitch.interactable = true;
+        }
+
         public void Show()
         {
             gameObject.SetActive(true);
@@ -58,6 +70,8 @@ namespace OurTaiko
             // Navigation and submit are handled once through InputManager; the UI input module
             // remains responsible for mouse/touch clicks, without a second keyboard submit.
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+            // A button that cannot be chosen keeps its place in the list and shows greyed with its label.
+            foreach (var button in buttons) button.GetComponentInChildren<TMP_Text>(true).alpha = button.interactable ? 1 : .5f;
             Select(0);
             opening = StartCoroutine(Fade(1));
         }
@@ -109,7 +123,7 @@ namespace OurTaiko
                     case InputKey.Confirm:
                     case InputKey.LeftDon:
                     case InputKey.RightDon:
-                        buttons[SelectedIndex].onClick.Invoke();
+                        if (buttons[SelectedIndex].IsInteractable()) buttons[SelectedIndex].onClick.Invoke();
                         return;
                 }
             }

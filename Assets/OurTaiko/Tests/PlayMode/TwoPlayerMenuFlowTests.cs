@@ -60,6 +60,33 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
+        public IEnumerator PracticeStaysClosedToTwoPlayersLikeDan()
+        {
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+            yield return null;
+            var entry = Object.FindAnyObjectByType<EntryScene>();
+            entry.Join2P();
+            // The side screen takes no don in its first 120 ms.
+            yield return WaitUntil(() => entry.Flow.CanJoin(entry.Now), 2);
+            entry.Don();
+            yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 4);
+            yield return null;
+            int practice = System.Array.FindIndex(entry.view.boards, b => b.practice);
+            Assert.That(entry.IsSinglePlayerOnly(practice), Is.True);
+            Assert.That(entry.view.boards[practice].title.color.r, Is.LessThan(0.5f), "練習モード is greyed once 2P is in, like 段位道場.");
+            Assert.That(entry.view.boards[0].title.color.r, Is.EqualTo(1), "演奏ゲーム stays open to two players.");
+            for (int i = 0; i < entry.view.boards.Length && entry.Flow.SelectedMode != practice; i++) entry.Ka(1);
+            Assert.That(entry.Flow.SelectedMode, Is.EqualTo(practice));
+            entry.Don();
+            yield return null;
+            Assert.That(entry.Flow.IsSelected, Is.False, "A greyed board cannot be picked.");
+            Assert.That(entry.HasLeft, Is.False);
+            Assert.That(SceneSwitcher.Instance.PracticeMode, Is.False);
+        }
+
+        [UnityTest]
         public IEnumerator SecondPlayerJoinsOnSongSelectAndPicksItsOwnCourse()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);

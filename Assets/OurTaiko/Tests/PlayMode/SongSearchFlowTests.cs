@@ -171,6 +171,77 @@ namespace OurTaiko.Tests
             Assert.That(manager.Cursor.Selected, Is.EqualTo(Difficulty.Ura), "A Ura search must open the Ura side of the Oni card.");
         }
         [UnityTest]
+        public IEnumerator SwitchingPlayModesPreservesSearchFiltersResultsAndSelection()
+        {
+            TestData.UseServers(new ServerList());
+            root = Path.Combine(Application.temporaryCachePath, "search-mode-switch-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            File.Copy(Path.Combine(Application.dataPath, "OurTaiko/Audio/entry/bgm.ogg"), Path.Combine(root, "audio.ogg"));
+            foreach (string title in new[] { "Keyword A", "Keyword B", "Other song" })
+                File.WriteAllText(Path.Combine(root, title + ".tja"),
+                    "TITLE:" + title + "\nBPM:120\nWAVE:audio.ogg\nCOURSE:Oni\nLEVEL:8\n#START\n"
+                    + string.Concat(Enumerable.Repeat("1000,\n", 16)) + "#END\n");
+            LocalSongLibrary.EnsureInstance().UseRoot(root);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
+            var switcher = SceneSwitcher.Instance;
+            switcher.PracticeMode = false; switcher.TwoPlayers = false;
+            yield return Waits.Until(() => !switcher.IsInputBlocked);
+            var scene = Object.FindAnyObjectByType<SongSelectScene>();
+            var manager = scene.Manager;
+            manager.OpenFolderAt(manager.Items.ToList().FindIndex(i => i.Kind == K.Folder && manager.Folders[i.Folder].Key == SongSelectManager.LocalKey));
+            var entry = manager.Items.Single(i => i.Kind == K.Search && i.Folder >= 0);
+            manager.SelectItem(entry); manager.SelectItem(entry); yield return null;
+            Assert.That(scene.view.search.IsOpen, Is.True);
+            scene.view.search.Close(); yield return null;
+            var query = new SongSearchQuery("Keyword", Difficulty.Oni, 8, SongSearchOrder.UnPerfect);
+            yield return Await(manager.SearchAsync(query, CancellationToken.None));
+            Assert.That(manager.SearchCount, Is.EqualTo(2));
+            var results = manager.Folders.SelectMany(f => f.Songs).ToArray();
+            var selected = results[1];
+            scene.view.search.Open(); yield return null;
+            var filterLabels = scene.view.search.values.Select(v => v.text).ToArray();
+            scene.view.search.Close(); yield return null;
+
+            foreach (bool practice in new[] { true, false })
+            {
+                manager.SelectItem(manager.Items.Single(i => i.Song == selected));
+                switcher.Play(selected, "Oni", false);
+                yield return Waits.Until(() => !switcher.IsInputBlocked && Object.FindAnyObjectByType<PlayScene>()?.Session != null);
+                var play = Object.FindAnyObjectByType<PlayScene>();
+                Assert.That(play.IsPractice, Is.EqualTo(!practice));
+                play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
+                Assert.That(play.pausePanel.activeSelf, Is.True);
+                Assert.That(play.pauseMenu.modeSwitch.interactable, Is.True);
+                var previous = play;
+                play.pauseMenu.modeSwitch.onClick.Invoke();
+                yield return Waits.Until(() => !switcher.IsInputBlocked && previous == null
+                    && Object.FindAnyObjectByType<PlayScene>()?.Session != null);
+                play = Object.FindAnyObjectByType<PlayScene>();
+                Assert.That(play.IsPractice, Is.EqualTo(practice));
+                Assert.That(manager.SearchActive, Is.True, "Changing play scenes must not clear search.");
+                Assert.That(manager.SearchQuery, Is.SameAs(query));
+                play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
+                play.Back();
+                yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !switcher.IsInputBlocked);
+                scene = Object.FindAnyObjectByType<SongSelectScene>();
+                Assert.That(scene.Manager, Is.SameAs(manager));
+                Assert.That(manager.SearchActive, Is.True);
+                Assert.That(manager.SearchQuery, Is.SameAs(query));
+                Assert.That(manager.SearchScope, Is.EqualTo(SongSelectManager.LocalKey));
+                Assert.That(manager.SearchCount, Is.EqualTo(2));
+                Assert.That(manager.Folders.SelectMany(f => f.Songs), Is.EqualTo(results));
+                Assert.That(manager.FocusedSong, Is.SameAs(selected));
+                Assert.That(switcher.PracticeMode, Is.EqualTo(practice));
+                scene.view.search.Open(); yield return null;
+                Assert.That(scene.view.search.IsOpen, Is.True);
+                Assert.That(scene.view.search.keyword.text, Is.EqualTo(query.Keyword));
+                Assert.That(scene.view.search.values.Select(v => v.text), Is.EqualTo(filterLabels),
+                    "Difficulty, stars and sort order must refill from the applied query.");
+                scene.view.search.Close(); yield return null;
+            }
+        }
+
+        [UnityTest]
         public IEnumerator EditingCancelsAnOldRequestAndKeyboardFocusDoesNotMoveTheWheel()
         {
             first = new FanmadeFixture();

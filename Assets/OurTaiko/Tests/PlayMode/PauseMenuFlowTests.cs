@@ -126,7 +126,7 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest, Category("SpriteRendering")]
-        public IEnumerator TopmostMenuOwnsAllThreeActionsAndKeyboardNavigation()
+        public IEnumerator TopmostMenuOwnsAllFourActionsAndKeyboardNavigation()
         {
             yield return StartPlay();
             yield return Press(Key.Escape);
@@ -134,16 +134,17 @@ namespace OurTaiko.Tests
             yield return WaitForOpen();
             var menu = play.pausePanel.transform;
             Assert.That(menu.GetSiblingIndex(), Is.EqualTo(menu.parent.childCount - 1), "The pause menu must draw over all gameplay UI.");
-            var buttons = new[] { play.resumeButton, play.restartButton, play.backButton };
-            var labels = new[] { "Resume", "Restart", "Back to Song Select" };
+            var buttons = new[] { play.resumeButton, play.restartButton, play.pauseMenu.modeSwitch, play.backButton };
+            var labels = new[] { "Resume", "Restart", "Switch to Practice", "Back to Song Select" };
+            Assert.That(play.pauseMenu.buttons, Is.EqualTo(buttons), "Keyboard navigation follows the drawn order.");
             float previousY = float.PositiveInfinity;
             for (int i = 0; i < buttons.Length; i++)
             {
-                Assert.That(buttons[i].transform.IsChildOf(menu), Is.True, "Restart and Back belong inside the pause menu.");
+                Assert.That(buttons[i].transform.IsChildOf(menu), Is.True, "Every action belongs inside the pause menu.");
                 Assert.That(buttons[i].GetComponentInChildren<TMP_Text>().text, Is.EqualTo(labels[i]).IgnoreCase);
                 Assert.That(buttons[i].navigation.mode, Is.EqualTo(Navigation.Mode.None), "InputManager owns navigation; uGUI must not move twice.");
                 Vector2 point = ScreenPoint((RectTransform)buttons[i].transform);
-                Assert.That(point.y, Is.LessThan(previousY), "Actions must be ordered Resume, Restart, Back to Song Select.");
+                Assert.That(point.y, Is.LessThan(previousY), "Actions must be ordered Resume, Restart, Switch to Practice, Back to Song Select.");
                 previousY = point.y;
                 AssertMenuReceivesPointer(point, buttons[i]);
             }

@@ -130,6 +130,7 @@ namespace OurTaiko
             {
                 // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.
                 practiceBranch = BranchRoute.Normal;
+                TakeModeSwitchEntry();
                 if (kusudama != null) kusudama.ResetDisplay();
                 var sessions = new List<PlaySession> { AddLane(0, firstLane) };
                 if (secondLane != null) sessions.Add(AddLane(1, secondLane));
@@ -154,6 +155,7 @@ namespace OurTaiko
                 resultText.text = "CHART COULD NOT LOAD\n<size=22>" + error.Message + "</size>";
             }
             if (IsFinished) yield break;
+            AddModeSwitch();
             while (switcher.IsInputBlocked) yield return null;
             // The full countdown starts only after the global cover has opened. Both seats play the same
             // file, so one OFFSET leads the song in.
@@ -409,6 +411,7 @@ namespace OurTaiko
         {
             songClock.Pause(); IsPaused = true;
             music.StopAudio(); hitAudio.StopAudio();
+            InputManager.DropDelayed();
             DisableDrumPads();
         }
         void OnDestroy()

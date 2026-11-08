@@ -69,7 +69,7 @@ namespace OurTaiko
             if (first) Session = new PlaySession(Session.Chart, judgeOffset, practiceBranch, 1, judgeWindows);
             RefreshPracticeBars();
             // The cursor is visual chart time, so a bar aligns exactly even with configured offsets.
-            double position = first ? Practice.First : SongTime - AudioOffset - VisualOffset;
+            double position = first ? TakePracticeStart() : SongTime - AudioOffset - VisualOffset;
             Practice.PauseAt(position, GameTimeline.FrameTime);
             songClock.Seek(position + AudioOffset + VisualOffset, Practice.Speed);
             ResetPracticeAttempt(position);

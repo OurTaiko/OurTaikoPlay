@@ -42,5 +42,15 @@ namespace OurTaiko
         [Header("Wheel animation layout")]
         public Vector2 wheelCentre = new Vector2(960, 540);
         public float rowPitch = 135, expandGap = 120, rowCurve = 40;
+        // 練習モード over the stage's top centre, in the outlined white of フリープレイ below; normal play
+        // is the default and announces nothing, like the original.
+        public TextMeshProUGUI ModeLabel { get; private set; }
+
+        public void ShowPlayMode(bool practice)
+        {
+            if (!practice) return;
+            ModeLabel = CoinOverlayView.Text(overlays.transform, "PracticeMode", "練習モード");
+            ModeLabel.rectTransform.Center(960, 48);
+        }
     }
 }

@@ -222,8 +222,7 @@ namespace OurTaiko
                 return;
             }
             if (!Flow.IsModeReady(now) || Flow.IsSelected) return;
-            // 段位道場 is single-player only (box_manager.cpp leaves its board out once 2P is in).
-            if (Joined2P && Modes[Flow.SelectedMode].Scene == SceneSwitcher.DanSelectScene) return;
+            if (Joined2P && IsSinglePlayerOnly(Flow.SelectedMode)) return;
             Play(sfx, don, oneShot: true);
             // ゲーム設定 opens the settings overlay over the mode list instead of leaving Entry.
             if (Modes[Flow.SelectedMode].Scene == SceneSwitcher.SettingScene) { SettingsOverlay.Open(); return; }
@@ -251,6 +250,10 @@ namespace OurTaiko
             Flow.MoveMode(delta, now);
         }
 
+        // 段位道場 is single-player only (box_manager.cpp leaves its board out once 2P is in), and so is
+        // 練習モード: its scene has one lane.
+        public bool IsSinglePlayerOnly(int mode) => Modes[mode].Scene == SceneSwitcher.DanSelectScene || view.boards[mode].practice;
+
         static void Grey(EntryView.BoardView board, bool grey)
         {
             float v = grey ? 0.45f : 1;
@@ -275,9 +278,9 @@ namespace OurTaiko
             Board.Root.gameObject.SetActive(modeReady);
             if (modeReady)
                 Board.Show(now, now - modeShownAt, Flow.SelectedMode, Flow.BoardFade(now), Flow.SelectedAt.HasValue ? now - Flow.SelectedAt.Value : -1);
-            // With 2P in, the 段位道場 board stays greyed and cannot be picked.
+            // With 2P in, the single-player boards stay greyed and cannot be picked.
             for (int i = 0; i < view.boards.Length; i++)
-                if (view.boards[i].scene == SceneSwitcher.DanSelectScene) Grey(view.boards[i], Joined2P);
+                if (IsSinglePlayerOnly(i)) Grey(view.boards[i], Joined2P);
 
             if (Flow.State == EntryFlow.Phase.SelectSide) Credit.ShowWaiting(now - Flow.StartedAt, now - Flow.StartedAt);
             else if (!creditGone) creditGone = !Credit.ShowDecided(now - Flow.JoinedAt.Value, 0);

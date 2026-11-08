@@ -13,7 +13,7 @@ namespace OurTaiko
     public enum TransitionStyle { Fade, Curtain, Dan }
 
     // Global UI control, created before the first scene and retained across every load.
-    public sealed class SceneSwitcher : MonoBehaviour
+    public sealed partial class SceneSwitcher : MonoBehaviour
     {
         public const string GameScene = "SinglePlayScene";
         public const string PracticeScene = "PracticeScene";
@@ -164,16 +164,31 @@ namespace OurTaiko
         public void Play(SongDefinition song, string course, bool autoPlay, string course2P = null, bool autoPlay2P = false)
         {
             if (IsInputBlocked || song == null) return;
-            danLoadPending = false;
             Select(song, course, autoPlay, course2P, autoPlay2P);
-            completedSong = null; completedRecord = completedRecord2P = null;
-            Array.Clear(preparedCharts, 0, preparedCharts.Length);
+            ResetPendingPlay();
             if (!IsPlayScene(CurrentScene) && CurrentScene != ResultScene && CurrentScene != SongLoadingScene && !string.IsNullOrEmpty(CurrentScene))
                 ReturnScene = CurrentScene;
-            // song_select.cpp select_song: the rainbow curtain closes, SongLoadingScene loads under it.
+            LoadSelectedPlay();
+        }
+
+        // song_select.cpp select_song: the rainbow curtain closes, SongLoadingScene parses the chart and
+        // decodes the audio under it, then opens the selected play scene.
+        void LoadSelectedPlay()
+        {
             if (songTransition == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(SelectedPlayScene); return; }
-            ShowSongOnCurtain(song);
+            ShowSongOnCurtain(SelectedSong);
             SwitchScene(SongLoadingScene, TransitionStyle.Curtain, false);
+        }
+
+        // Nothing of an earlier play reaches the one about to load: no pending course load, no result
+        // still to be saved, no chart prepared for another play.
+        void ResetPendingPlay()
+        {
+            danLoadPending = false;
+            completedSong = null; completedRecord = completedRecord2P = null;
+            Array.Clear(preparedCharts, 0, preparedCharts.Length);
+            Array.Clear(preparedSongs, 0, preparedSongs.Length);
+            Array.Clear(preparedCourses, 0, preparedCourses.Length);
         }
 
         // 段位道場: the loading cover closes over the course select (with the course's plaque) and
@@ -186,8 +201,7 @@ namespace OurTaiko
             CurrentDan = new DanRun(entry);
             TwoPlayers = false; PracticeMode = false;
             Select(entry.Songs[0].Song, entry.Songs[0].Course, PlayOptions.ForSeat(0).auto);
-            completedSong = null; completedRecord = completedRecord2P = null;
-            Array.Clear(preparedCharts, 0, preparedCharts.Length);
+            ResetPendingPlay();
             ReturnScene = DanSelectScene;
             if (songTransition == null && danCover == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(DanPlayScene); return true; }
             danLoadPending = true;
@@ -221,6 +235,7 @@ namespace OurTaiko
         // decided here, alone or two together as the mode stands now.
         public void Select(SongDefinition song, string course = null, bool autoPlay = false, string course2P = null, bool autoPlay2P = false)
         {
+            ClearPracticeEntry();
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
             SelectedCourse2P = course2P ?? course; AutoPlay2P = autoPlay2P;
             SelectedSide = song != null ? song.PlayedSide(SelectedCourse, SeatBlocks.Seats[0], PlaysTwo) : "single";
