@@ -65,7 +65,6 @@ namespace OurTaiko
             if (awoke) ModeSwitchButton.onClick.AddListener(PlayConfirm);
             var label = ModeSwitchButton.GetComponentInChildren<TMP_Text>(true);
             label.text = practice ? "Switch to Normal Play" : "Switch to Practice";
-            label.fontSize = 42;
             buttons = new[] { buttons[0], buttons[1], ModeSwitchButton, back };
             for (int i = 0; i < buttons.Length; i++)
             {
