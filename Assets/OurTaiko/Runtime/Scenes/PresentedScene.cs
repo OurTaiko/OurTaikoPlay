@@ -3,14 +3,13 @@ using System.Threading.Tasks;
 using OurTaiko.Online;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace OurTaiko
 {
     // The first scene: a "Presented by OurTaiko" title card on black, in the manner of a publisher
     // card. Meanwhile OnlineManager signs in to the built-in servers and loads their song lists,
     // and the line at the bottom follows it. The card stays for at least `minimumSeconds` and until
-    // that work ends; Space (or a tap) skips it, interrupting the work where it is, and what is
+    // that work ends; a click or tap skips it, interrupting the work where it is, and what is
     // missing then can be loaded from Settings > OurTaiko Accounts. Entry follows.
     public sealed class PresentedScene : MonoBehaviour
     {
@@ -58,11 +57,9 @@ namespace OurTaiko
             if (!work.IsCompleted)
             {
                 progress.text = Skipped ? "Cancelling…" : online.Activity;
-                if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) Skip();
                 return;
             }
             progress.text = "";
-            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) Skip();
             if (!Skipped && elapsed < minimumSeconds) return;
             HasLeft = true;
             switcher.SwitchScene(SceneSwitcher.EntryScene);

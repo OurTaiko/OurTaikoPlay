@@ -368,7 +368,7 @@ namespace OurTaiko.Tests
             }
         }
 
-        // Space (or a tap) interrupts the startup requests and goes on to Entry with what arrived.
+        // A click or tap interrupts the startup requests and goes on to Entry with what arrived.
         [UnityTest]
         public IEnumerator PresentedCanBeSkippedBeforeTheServersAnswer()
         {

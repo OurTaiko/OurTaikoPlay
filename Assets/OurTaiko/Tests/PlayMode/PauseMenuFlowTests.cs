@@ -226,7 +226,7 @@ namespace OurTaiko.Tests
             yield return StartPlay();
             Assert.That(SceneSwitcher.Instance.ReturnScene, Is.EqualTo(SceneSwitcher.MenuScene),
                 "This test deliberately starts at Entry to distinguish Song Select from the old return destination.");
-            yield return Press(Key.Space);
+            yield return Press(Key.Escape);
             yield return WaitForOpen();
             yield return Press(Key.DownArrow);
             var oldPlay = play;
@@ -245,7 +245,7 @@ namespace OurTaiko.Tests
             Assert.That(play.SongTime, Is.LessThan(0), "Restart begins a new countdown.");
             Assert.That(play.IsPaused, Is.False);
 
-            yield return Press(Key.Space);
+            yield return Press(Key.Escape);
             yield return WaitForOpen();
             yield return Tap(ScreenPoint((RectTransform)play.backButton.transform));
             Assert.That(play.pauseMenu.IsClosing, Is.True);
@@ -263,8 +263,8 @@ namespace OurTaiko.Tests
             yield return StartPlay();
             // Model the valid uGUI execution order: its Pause callback can run after InputManager
             // publishes this frame's keyboard events but before PlayScene.Update consumes them.
-            var physicalKeys = new[] { Key.F, Key.Space, Key.Escape, Key.F1 };
-            var logicalKeys = new[] { InputKey.LeftDon, InputKey.Pause, InputKey.Back, InputKey.Restart };
+            var physicalKeys = new[] { Key.F, Key.Escape, Key.F1 };
+            var logicalKeys = new[] { InputKey.LeftDon, InputKey.Back, InputKey.Restart };
             for (int i = 0; i < physicalKeys.Length; i++)
             {
                 var callback = play.gameObject.AddComponent<PauseClickBeforePlayUpdate>();
@@ -289,9 +289,9 @@ namespace OurTaiko.Tests
             var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
             Assert.That(menuAudio.EffectPlays, Is.Zero, "Opening-frame presses and direct Resume calls make no menu sound.");
 
-            yield return Press(Key.Space);
+            yield return Press(Key.Escape);
             Assert.That(play.pauseMenu.IsClosing, Is.True);
-            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Closing with the pause key chooses Resume, so it plays don.");
+            Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Closing with Escape chooses Resume, so it plays don.");
             yield return new WaitForSecondsRealtime(0.15f);
             play.SendMessage("OnApplicationFocus", false);
             Assert.That(play.IsPaused, Is.True);
