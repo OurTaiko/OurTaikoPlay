@@ -342,13 +342,14 @@ namespace OurTaiko.Tests
             play.TogglePause();
             yield return new WaitForSecondsRealtime(.55f);
             Assert.That(play.pauseMenu.buttons.Length, Is.EqualTo(4));
-            Assert.That(play.pauseMenu.ModeSwitchButton, Is.Not.Null);
-            Assert.That(play.pauseMenu.ModeSwitchButton.GetComponentInChildren<TMP_Text>().text,
+            Assert.That(play.pauseMenu.buttons[2], Is.SameAs(play.pauseMenu.modeSwitch));
+            Assert.That(play.pauseMenu.modeSwitch.interactable, Is.True);
+            Assert.That(play.pauseMenu.modeSwitch.GetComponentInChildren<TMP_Text>().text,
                 Is.EqualTo("Switch to Normal Play"));
             TestCapture.Capture("PracticeModeSwitchMenu.png");
             var old = play;
-            play.pauseMenu.ModeSwitchButton.onClick.Invoke();
-            play.pauseMenu.ModeSwitchButton.onClick.Invoke();
+            play.pauseMenu.modeSwitch.onClick.Invoke();
+            play.pauseMenu.modeSwitch.onClick.Invoke();
             Assert.That(old.pauseMenu.IsClosing, Is.True);
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.GameScene && !switcher.IsInputBlocked
                 && Object.FindAnyObjectByType<PlayScene>()?.SongTime < 0);
@@ -366,9 +367,9 @@ namespace OurTaiko.Tests
 
             yield return Waits.Until(() => play.SongTime >= 2.2);
             play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
-            Assert.That(play.pauseMenu.ModeSwitchButton.GetComponentInChildren<TMP_Text>().text,
+            Assert.That(play.pauseMenu.modeSwitch.GetComponentInChildren<TMP_Text>().text,
                 Is.EqualTo("Switch to Practice"));
-            play.pauseMenu.ModeSwitchButton.onClick.Invoke();
+            play.pauseMenu.modeSwitch.onClick.Invoke();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked
                 && Object.FindAnyObjectByType<PlayScene>()?.IsPaused == true);
             play = Object.FindAnyObjectByType<PlayScene>();
@@ -391,7 +392,7 @@ namespace OurTaiko.Tests
             play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First), "A later song must not reuse the mode-switch position.");
             play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
-            play.pauseMenu.ModeSwitchButton.onClick.Invoke();
+            play.pauseMenu.modeSwitch.onClick.Invoke();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.GameScene && !switcher.IsInputBlocked
                 && Object.FindAnyObjectByType<PlayScene>()?.SongTime < 0);
             play = Object.FindAnyObjectByType<PlayScene>();
@@ -400,7 +401,6 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !switcher.IsInputBlocked);
             Assert.That(switcher.PracticeMode, Is.False);
             Assert.That(Object.FindAnyObjectByType<SongSelectScene>().view.ModeLabel, Is.Null, "Normal play is the default and shows no mode.");
-            Assert.That(switcher.LastResult, Is.Null);
             Assert.That(switcher.SongsPlayed, Is.EqualTo(songsPlayed), "Abandoned attempts do not count as completed songs.");
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
         }
@@ -593,7 +593,7 @@ namespace OurTaiko.Tests
             yield return StartPractice(AudioBackend.BassSimple, false,
                 "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n#BRANCHSTART s,100,200\n#N\n1111,\n#E\n2222,\n#BRANCHEND\n1111,\n#END");
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
-            Assert.That(play.pauseMenu.ModeSwitchButton, Is.Null, "A practice-only chart must not offer normal play.");
+            Assert.That(play.pauseMenu.modeSwitch.interactable, Is.False, "A practice-only chart must not offer normal play.");
             yield return Press(Key.K); yield return Press(Key.K);
             Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Master));
             var notes = play.Session.Chart.Notes;

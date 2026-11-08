@@ -251,8 +251,7 @@ namespace OurTaiko
         }
 
         // 段位道場 is single-player only (box_manager.cpp leaves its board out once 2P is in), and so is
-        // 練習モード: its scene has one lane, and the pause menu's switch to normal play would otherwise
-        // have to drop the joined 2P.
+        // 練習モード: its scene has one lane.
         public bool IsSinglePlayerOnly(int mode) => Modes[mode].Scene == SceneSwitcher.DanSelectScene || view.boards[mode].practice;
 
         static void Grey(EntryView.BoardView board, bool grey)

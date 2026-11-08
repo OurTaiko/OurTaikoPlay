@@ -16,11 +16,14 @@ namespace OurTaiko
             practiceEntryBranch = BranchRoute.Normal;
         }
 
-        // A mode change is a new single-player scene for the same song and course, loaded like Play()
-        // (SongLoadingScene parses and decodes under the curtain), never a live session with a flipped
-        // flag. Normal play always starts over; only practice takes the handed-over position. A joined
-        // 2P is never dropped: Entry keeps 2P out of practice, so this is not reached with two players.
-        public bool SwitchPlayMode(bool practice, double position, BranchRoute branch)
+        // Practice opens at the measure normal play left off, on the route the lane showed there.
+        public bool SwitchToPractice(double position, BranchRoute branch) => SwitchPlayMode(true, position, branch);
+        // Normal play always starts over.
+        public bool SwitchToNormalPlay() => SwitchPlayMode(false, null, BranchRoute.Normal);
+
+        // Loaded like Play() (SongLoadingScene parses and decodes under the curtain), for the same song
+        // and course. Refused with two players, whom a single-player scene would drop.
+        bool SwitchPlayMode(bool practice, double? entryPosition, BranchRoute entryBranch)
         {
             if (IsInputBlocked || SelectedSong == null || PracticeMode == practice || TwoPlayers
                 || (CurrentScene != GameScene && CurrentScene != PracticeScene)
@@ -28,12 +31,9 @@ namespace OurTaiko
             PracticeMode = practice;
             Select(SelectedSong, SelectedCourse, AutoPlay);
             ResetPendingPlay();
-            LastResult = LastResult2P = null;
-            if (practice)
-            {
-                practiceEntryPosition = position;
-                practiceEntryBranch = branch;
-            }
+            // After Select, which clears any earlier hand-over.
+            practiceEntryPosition = entryPosition;
+            practiceEntryBranch = entryBranch;
             InputManager.DropDelayed();
             LoadSelectedPlay();
             return true;

@@ -49,9 +49,7 @@ namespace OurTaiko
         public void ShowPlayMode(bool practice)
         {
             if (!practice) return;
-            ModeLabel = SkinUi.Text("PracticeMode", overlays.transform, 40);
-            ModeLabel.characterSpacing = 2 * 100f / 40;
-            ModeLabel.text = "練習モード";
+            ModeLabel = CoinOverlayView.Text(overlays.transform, "PracticeMode", "練習モード");
             ModeLabel.rectTransform.Center(960, 48);
         }
     }

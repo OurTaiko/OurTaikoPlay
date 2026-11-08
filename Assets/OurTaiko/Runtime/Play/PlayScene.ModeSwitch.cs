@@ -1,9 +1,10 @@
+using System;
 using System.Linq;
 
 namespace OurTaiko
 {
-    // The pause menu's "Switch to Practice" / "Switch to Normal Play" (PR #64). A mode change is a new
-    // single-player scene through SceneSwitcher.SwitchPlayMode, never a live session with a flipped
+    // The pause menu's "Switch to Practice" / "Switch to Normal Play". A mode change is a new
+    // single-player scene through SceneSwitcher.SwitchToPractice / SwitchToNormalPlay, never a live session with a flipped
     // flag: normal play hands over where it was, and practice opens at that measure on the branch it
     // showed; normal play always starts over. PlayScene calls the two hooks below and nothing else of this.
     public sealed partial class PlayScene
@@ -22,13 +23,15 @@ namespace OurTaiko
             }
         }
 
-        // After the chart loaded: two players never switch (Entry keeps a joined 2P out of practice, and
-        // the switch must not drop one), and a chart missing #E/#M only plays on a fixed route, so
-        // practice does not offer normal play for it (PlaySession would refuse).
+        // After the chart loaded. Two players never switch: the switch would have to drop the joined 2P
+        // (Entry keeps 2P out of practice for the same reason). A chart missing #E/#M only plays on a
+        // fixed route, so practice does not offer normal play for it (PlaySession would refuse).
+        // Where it is not offered the button stays greyed and has no action.
         void AddModeSwitch()
         {
-            if (!IsTwoPlayer && !switcher.TwoPlayers && (!IsPractice || Session.Chart.Branches.All(b => b.HasAllRoutes)))
-                pauseMenu.ConfigureModeSwitch(IsPractice, SwitchMode);
+            if (IsTwoPlayer || switcher.TwoPlayers || IsPractice && !Session.Chart.Branches.All(b => b.HasAllRoutes)) return;
+            pauseMenu.modeSwitch.onClick.AddListener(SwitchMode);
+            pauseMenu.OfferModeSwitch(IsPractice);
         }
 
         // The first practice pause's cursor: the handed-over measure once, otherwise the first bar.
@@ -41,16 +44,23 @@ namespace OurTaiko
 
         public void SwitchMode()
         {
-            if (switchingMode || closingPauseMenu || switcher.IsInputBlocked || IsFinished || !IsPaused
-                || !pausePanel.activeSelf || IsTwoPlayer || Session == null || pauseMenu.ModeSwitchButton == null) return;
+            // Only AddModeSwitch wires this, so two players and practice-only charts never get here.
+            if (!IsPaused || closingPauseMenu || switcher.IsInputBlocked || IsFinished || switchingMode || !pausePanel.activeSelf) return;
             switchingMode = true;
-            // The cursor and the route it shows are read at the same time, so a pause just inside a
-            // branch section hands over that section's measure with its route.
-            double position = SongTime - audioOffset - visualOffset;
-            var branch = Session.DisplayBranchAt(position);
+            Func<bool> load;
+            if (IsPractice) load = switcher.SwitchToNormalPlay;
+            else
+            {
+                // Normal play runs at speed 1, so the plain offsets give the cursor in visual chart time,
+                // as practice reads it. The route is read at that same time, so a pause just inside a
+                // branch section hands over that section's measure with its route.
+                double position = SongTime - audioOffset - visualOffset;
+                var branch = Session.DisplayBranchAt(position);
+                load = () => switcher.SwitchToPractice(position, branch);
+            }
             StartCoroutine(ClosePauseMenu(() =>
             {
-                if (!switcher.SwitchPlayMode(!IsPractice, position, branch))
+                if (!load())
                 {
                     switchingMode = false;
                     pauseMenu.Show();

@@ -286,6 +286,10 @@ PausePanel/Viewport1920x1080/Board/RestartButton
 PausePanel/Viewport1920x1080/Board/RestartButton/Outline
 PausePanel/Viewport1920x1080/Board/RestartButton/Selection
 PausePanel/Viewport1920x1080/Board/RestartButton/Label
+PausePanel/Viewport1920x1080/Board/ModeSwitchButton
+PausePanel/Viewport1920x1080/Board/ModeSwitchButton/Outline
+PausePanel/Viewport1920x1080/Board/ModeSwitchButton/Selection
+PausePanel/Viewport1920x1080/Board/ModeSwitchButton/Label
 PausePanel/Viewport1920x1080/Board/BackButton
 PausePanel/Viewport1920x1080/Board/BackButton/Outline
 PausePanel/Viewport1920x1080/Board/BackButton/Selection

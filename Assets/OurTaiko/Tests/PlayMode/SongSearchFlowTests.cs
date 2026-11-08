@@ -211,9 +211,9 @@ namespace OurTaiko.Tests
                 Assert.That(play.IsPractice, Is.EqualTo(!practice));
                 play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
                 Assert.That(play.pausePanel.activeSelf, Is.True);
-                Assert.That(play.pauseMenu.ModeSwitchButton, Is.Not.Null);
+                Assert.That(play.pauseMenu.modeSwitch.interactable, Is.True);
                 var previous = play;
-                play.pauseMenu.ModeSwitchButton.onClick.Invoke();
+                play.pauseMenu.modeSwitch.onClick.Invoke();
                 yield return Waits.Until(() => !switcher.IsInputBlocked && previous == null
                     && Object.FindAnyObjectByType<PlayScene>()?.Session != null);
                 play = Object.FindAnyObjectByType<PlayScene>();

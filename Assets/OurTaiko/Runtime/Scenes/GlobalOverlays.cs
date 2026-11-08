@@ -189,7 +189,8 @@ namespace OurTaiko
             message = inviteMessage;
         }
 
-        static TextMeshProUGUI Text(Transform parent, string name, string value)
+        // The credit line's text (size 40, white, 2 px apart), which other screens' announcements share.
+        public static TextMeshProUGUI Text(Transform parent, string name, string value)
         {
             var text = SkinUi.Text(name, parent, 40);
             text.characterSpacing = 2 * 100f / 40;

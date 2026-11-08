@@ -1,7 +1,6 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -13,7 +12,9 @@ namespace OurTaiko
     {
         public const float FadeDuration = 0.5f;
         public CanvasGroup group;
-        public UnityEngine.UI.Button[] buttons;
+        // Resume, Restart, the mode switch and Back, in the prefab's order; `modeSwitch` is the third.
+        public Button[] buttons;
+        public Button modeSwitch;
         // The menu sounds every other menu uses: ka when the selection moves, don when an action is taken.
         public AudioClip don, ka;
         public int SelectedIndex { get; private set; }
@@ -23,9 +24,7 @@ namespace OurTaiko
         // Made on first use: the practice panel sounds these before this inactive panel receives Awake.
         public AudioSource Sfx => sfx != null ? sfx : sfx = NewSfx();
         AudioSource sfx;
-        public Button ModeSwitchButton { get; private set; }
         Coroutine opening;
-        bool awoke;
 
         // The selection moved / an action was chosen; the practice panel shares them.
         public void PlayMove() => Sfx.PlayAudioOneShot(ka);
@@ -33,7 +32,6 @@ namespace OurTaiko
 
         void Awake()
         {
-            awoke = true;
             if (sfx == null) sfx = NewSfx();
             // Keyboard/drum confirmation invokes onClick too, so every way of choosing an action sounds once.
             foreach (var button in buttons) button.onClick.AddListener(PlayConfirm);
@@ -53,30 +51,12 @@ namespace OurTaiko
             if (sfx != null) Destroy(sfx.gameObject);
         }
 
-        public void ConfigureModeSwitch(bool practice, UnityAction action)
+        // The play scene offers the switch to the other single-player mode; the button stays greyed where
+        // it is not offered (段位道場, two players, a practice chart missing #E/#M).
+        public void OfferModeSwitch(bool practice)
         {
-            if (ModeSwitchButton != null) return;
-            var back = buttons[2];
-            ModeSwitchButton = Instantiate(back, back.transform.parent);
-            ModeSwitchButton.name = "ModeSwitchButton";
-            ModeSwitchButton.onClick = new Button.ButtonClickedEvent();
-            ModeSwitchButton.onClick.AddListener(action);
-            // Awake sounds every button in `buttons` once; a button added after it sounds itself.
-            if (awoke) ModeSwitchButton.onClick.AddListener(PlayConfirm);
-            var label = ModeSwitchButton.GetComponentInChildren<TMP_Text>(true);
-            label.text = practice ? "Switch to Normal Play" : "Switch to Practice";
-            // The prefab lays out three buttons; four share their span with the prefab's own gap.
-            var first = (RectTransform)buttons[0].transform;
-            float height = first.sizeDelta.y, pitch = (first.anchoredPosition.y - ((RectTransform)back.transform).anchoredPosition.y) / 2;
-            float gap = pitch - height, top = first.anchoredPosition.y + height / 2;
-            buttons = new[] { buttons[0], buttons[1], ModeSwitchButton, back };
-            height = (2 * pitch + height - (buttons.Length - 1) * gap) / buttons.Length;
-            for (int i = 0; i < buttons.Length; i++)
-            {
-                var rect = (RectTransform)buttons[i].transform;
-                rect.sizeDelta = new Vector2(rect.sizeDelta.x, height);
-                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, top - height / 2 - i * (height + gap));
-            }
+            modeSwitch.GetComponentInChildren<TMP_Text>(true).text = practice ? "Switch to Normal Play" : "Switch to Practice";
+            modeSwitch.interactable = true;
         }
 
         public void Show()
@@ -90,6 +70,8 @@ namespace OurTaiko
             // Navigation and submit are handled once through InputManager; the UI input module
             // remains responsible for mouse/touch clicks, without a second keyboard submit.
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+            // A button that cannot be chosen keeps its place in the list and shows greyed with its label.
+            foreach (var button in buttons) button.GetComponentInChildren<TMP_Text>(true).alpha = button.interactable ? 1 : .5f;
             Select(0);
             opening = StartCoroutine(Fade(1));
         }
