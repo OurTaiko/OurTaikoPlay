@@ -65,12 +65,17 @@ namespace OurTaiko
             if (awoke) ModeSwitchButton.onClick.AddListener(PlayConfirm);
             var label = ModeSwitchButton.GetComponentInChildren<TMP_Text>(true);
             label.text = practice ? "Switch to Normal Play" : "Switch to Practice";
+            // The prefab lays out three buttons; four share their span with the prefab's own gap.
+            var first = (RectTransform)buttons[0].transform;
+            float height = first.sizeDelta.y, pitch = (first.anchoredPosition.y - ((RectTransform)back.transform).anchoredPosition.y) / 2;
+            float gap = pitch - height, top = first.anchoredPosition.y + height / 2;
             buttons = new[] { buttons[0], buttons[1], ModeSwitchButton, back };
+            height = (2 * pitch + height - (buttons.Length - 1) * gap) / buttons.Length;
             for (int i = 0; i < buttons.Length; i++)
             {
                 var rect = (RectTransform)buttons[i].transform;
-                rect.sizeDelta = new Vector2(rect.sizeDelta.x, 100);
-                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -202 - i * 110);
+                rect.sizeDelta = new Vector2(rect.sizeDelta.x, height);
+                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, top - height / 2 - i * (height + gap));
             }
         }
 

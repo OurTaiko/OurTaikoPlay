@@ -185,7 +185,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
             var switcher = SceneSwitcher.Instance;
             switcher.PracticeMode = false; switcher.TwoPlayers = false;
-            yield return WaitFor(() => !switcher.IsInputBlocked);
+            yield return Waits.Until(() => !switcher.IsInputBlocked);
             var scene = Object.FindAnyObjectByType<SongSelectScene>();
             var manager = scene.Manager;
             manager.OpenFolderAt(manager.Items.ToList().FindIndex(i => i.Kind == K.Folder && manager.Folders[i.Folder].Key == SongSelectManager.LocalKey));
@@ -206,7 +206,7 @@ namespace OurTaiko.Tests
             {
                 manager.SelectItem(manager.Items.Single(i => i.Song == selected));
                 switcher.Play(selected, "Oni", false);
-                yield return WaitFor(() => !switcher.IsInputBlocked && Object.FindAnyObjectByType<PlayScene>()?.Session != null);
+                yield return Waits.Until(() => !switcher.IsInputBlocked && Object.FindAnyObjectByType<PlayScene>()?.Session != null);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.IsPractice, Is.EqualTo(!practice));
                 play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
@@ -214,7 +214,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.pauseMenu.ModeSwitchButton, Is.Not.Null);
                 var previous = play;
                 play.pauseMenu.ModeSwitchButton.onClick.Invoke();
-                yield return WaitFor(() => !switcher.IsInputBlocked && previous == null
+                yield return Waits.Until(() => !switcher.IsInputBlocked && previous == null
                     && Object.FindAnyObjectByType<PlayScene>()?.Session != null);
                 play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.IsPractice, Is.EqualTo(practice));
@@ -222,7 +222,7 @@ namespace OurTaiko.Tests
                 Assert.That(manager.SearchQuery, Is.SameAs(query));
                 play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
                 play.Back();
-                yield return WaitFor(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !switcher.IsInputBlocked);
+                yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !switcher.IsInputBlocked);
                 scene = Object.FindAnyObjectByType<SongSelectScene>();
                 Assert.That(scene.Manager, Is.SameAs(manager));
                 Assert.That(manager.SearchActive, Is.True);
@@ -428,13 +428,6 @@ namespace OurTaiko.Tests
             var hits = new List<RaycastResult>(); EventSystem.current.RaycastAll(data, hits);
             Assert.That(hits.Count, Is.GreaterThan(0)); data.pointerPressRaycast = hits[0];
             ExecuteEvents.ExecuteHierarchy(hits[0].gameObject, data, ExecuteEvents.pointerClickHandler);
-        }
-
-        static IEnumerator WaitFor(Func<bool> condition)
-        {
-            float end = Time.realtimeSinceStartup + 25;
-            while (!condition() && Time.realtimeSinceStartup < end) yield return null;
-            Assert.That(condition(), Is.True, "Scene transition timed out.");
         }
 
         static IEnumerator Await(System.Threading.Tasks.Task task)

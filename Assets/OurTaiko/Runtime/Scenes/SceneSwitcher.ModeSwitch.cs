@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace OurTaiko
@@ -17,30 +16,26 @@ namespace OurTaiko
             practiceEntryBranch = BranchRoute.Normal;
         }
 
-        // A mode change is a new single-player scene, never a live session with a flipped flag.
+        // A mode change is a new single-player scene for the same song and course, loaded like Play()
+        // (SongLoadingScene parses and decodes under the curtain), never a live session with a flipped
+        // flag. Normal play always starts over; only practice takes the handed-over position. A joined
+        // 2P is never dropped: Entry keeps 2P out of practice, so this is not reached with two players.
         public bool SwitchPlayMode(bool practice, double position, BranchRoute branch)
         {
-            string target = practice ? PracticeScene : GameScene;
-            if (IsInputBlocked || SelectedSong == null || PracticeMode == practice
+            if (IsInputBlocked || SelectedSong == null || PracticeMode == practice || TwoPlayers
                 || (CurrentScene != GameScene && CurrentScene != PracticeScene)
-                || !Application.CanStreamedLevelBeLoaded(target)) return false;
+                || !Application.CanStreamedLevelBeLoaded(practice ? PracticeScene : GameScene)) return false;
             PracticeMode = practice;
-            TwoPlayers = false;
             Select(SelectedSong, SelectedCourse, AutoPlay);
-            SelectedCourse2P = null; AutoPlay2P = false;
-            completedSong = null; completedRecord = completedRecord2P = null;
+            ResetPendingPlay();
             LastResult = LastResult2P = null;
-            danLoadPending = false;
-            Array.Clear(preparedCharts, 0, preparedCharts.Length);
-            Array.Clear(preparedSongs, 0, preparedSongs.Length);
-            Array.Clear(preparedCourses, 0, preparedCourses.Length);
             if (practice)
             {
                 practiceEntryPosition = position;
                 practiceEntryBranch = branch;
             }
             InputManager.DropDelayed();
-            SwitchScene(target);
+            LoadSelectedPlay();
             return true;
         }
 

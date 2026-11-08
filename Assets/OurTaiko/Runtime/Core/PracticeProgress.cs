@@ -40,11 +40,12 @@ namespace OurTaiko
         public void PauseAt(double position, double now)
         {
             Position = Target = from = to = position; began = now; Scrolling = false;
-            Measure = Math.Max(0, Array.FindLastIndex(bars, x => x <= position + 1e-7));
+            Measure = MeasureAt(position);
         }
         public double First => bars[0];
-        public double SnapToMeasure(double position)
-            => bars[Math.Max(0, Array.FindLastIndex(bars, x => x <= position + 1e-7))];
+        // The start of the measure a position lies in; before the first bar, the first.
+        public double SnapToMeasure(double position) => bars[MeasureAt(position)];
+        int MeasureAt(double position) => Math.Max(0, Array.FindLastIndex(bars, x => x <= position + 1e-7));
         public void Move(int direction, double now)
         {
             Update(now);
