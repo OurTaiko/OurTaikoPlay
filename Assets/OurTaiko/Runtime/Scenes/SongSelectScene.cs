@@ -257,6 +257,7 @@ namespace OurTaiko
             if (Manager.Phase == State.Decided && !voice.IsAudioPlaying() && !switcher.IsSwitching) Manager.StartSong();
             StepSwipe(now);
             UpdatePreview(now);
+            UpdateBgmMute();
             DrawBackground(now);
             var items = Manager.Items;
             for (int i = 0; i < items.Count; i++) DrawBoard(BoardOf(items[i]), i == Manager.Focused, now);
@@ -487,5 +488,14 @@ namespace OurTaiko
         }
 
         void StopPreview() => Preview.Stop();
+
+        // The exit board (the top-level back board that leaves song select) is silent: the
+        // selection BGM keeps running underneath and comes back as soon as the focus moves on.
+        void UpdateBgmMute()
+        {
+            var item = Manager.FocusedItem;
+            float fade = item != null && item.Kind == ItemKind.Back && item.Folder < 0 ? 0 : 1;
+            if (bgm.AudioFade() != fade) bgm.SetAudioFade(fade);
+        }
     }
 }
