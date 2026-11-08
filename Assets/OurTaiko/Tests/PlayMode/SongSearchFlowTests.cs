@@ -147,7 +147,8 @@ namespace OurTaiko.Tests
                 Is.EqualTo(new[] { SongSelectManager.LocalKey, SongSelectManager.ServerKey(firstId), SongSelectManager.ServerKey(secondId) }),
                 "Local, then each server's folder.");
             manager.OpenFolderAt(manager.Items.ToList().FindIndex(i => i.Kind == K.Folder && manager.Folders[i.Folder].Server == firstId));
-            var scoped = manager.Items.Single(i => i.Kind == K.Search && i.Folder >= 0);
+            var scoped = manager.Items.Single(i => i.Kind == K.Search);
+            Assert.That(scoped.Folder, Is.GreaterThanOrEqualTo(0), "An open source folder's search is the only one on the wheel.");
             Assert.That(manager.SearchDescription(scoped), Does.StartWith(manager.Folders[scoped.Folder].Title));
             manager.SelectItem(scoped); manager.SelectItem(scoped); yield return null;
             Assert.That(view.IsOpen, Is.True); view.Close(); yield return null;
