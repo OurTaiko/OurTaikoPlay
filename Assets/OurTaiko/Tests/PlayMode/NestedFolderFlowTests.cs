@@ -67,7 +67,8 @@ namespace OurTaiko.Tests
             manager.OpenFolderAt(0);
             yield return null;
             Assert.That(manager.OpenFolder, Is.EqualTo(SongSelectManager.LocalKey));
-            Assert.That(manager.Items.Select(i => i.Kind), Is.EqualTo(new[] { ItemKind.Back, ItemKind.Search, ItemKind.Folder, ItemKind.Song, ItemKind.Search }));
+            Assert.That(manager.Items.Select(i => i.Kind), Is.EqualTo(new[] { ItemKind.Back, ItemKind.Search, ItemKind.Folder, ItemKind.Song }),
+                "Local's own search stands in for the root one: one search on the wheel (#68).");
             Assert.That(manager.Items[1].Folder, Is.EqualTo(0), "The search inside Local searches Local only.");
 
             // Pack: もどる, the sub-folder before the songs, and もどる again before the seventh board after
@@ -84,7 +85,8 @@ namespace OurTaiko.Tests
             }));
             Assert.That(manager.Items.Where(i => i.Kind == ItemKind.Back).Select(i => i.Folder), Is.EqualTo(new[] { 1, 1 }), "Only Pack, the innermost, has もどる.");
             Assert.That(manager.SongAt(12).ReadDisplayInfo().Title, Is.EqualTo("Root song"));
-            Assert.That(manager.KindAt(13), Is.EqualTo(ItemKind.Search));
+            Assert.That(manager.Items.Count, Is.EqualTo(13), "The root song is last; no root search while Local is open.");
+            Assert.That(manager.Items.Count(i => i.Kind == ItemKind.Search), Is.EqualTo(1));
             Assert.That(manager.Items.Any(i => i.Kind == ItemKind.Back && i.Folder < 0), Is.False);
             Assert.That(manager.Items[3].Genre, Is.EqualTo(3), "Pack's songs wear its GAME genre.");
             Assert.That(manager.Items, Has.No.Member(localBack));
@@ -104,7 +106,7 @@ namespace OurTaiko.Tests
             Assert.That(subSong.ReadDisplayInfo().Title, Is.EqualTo("Sub song"));
             Assert.That(manager.Items[2].Genre, Is.EqualTo(2));
             Assert.That(manager.SongAt(3).ReadDisplayInfo().Title, Is.EqualTo("Pack 1"));
-            Assert.That(manager.Items.Count, Is.EqualTo(13), "Local's search, Sub's もどる and song, Pack's 8 songs, the root song and the root search.");
+            Assert.That(manager.Items.Count, Is.EqualTo(12), "Local's search, Sub's もどる and song, Pack's 8 songs and the root song.");
 
             // Closing from Sub's song closes Sub only and focuses its board; Pack's もどる boards return
             // (new items: the view gets them as Added). Reopening returns to the song.

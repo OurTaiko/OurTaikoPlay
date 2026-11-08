@@ -103,8 +103,8 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.Items.Select(i => i.Kind), Is.EqualTo(new[]
             {
                 SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Back, SongSelectManager.ItemKind.Search,
-                SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Search,
-            }), "The server opens on もどる, its own search and its categories.");
+                SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Folder,
+            }), "The server opens on もどる, its own search and its categories; its search stands in for the root one.");
             yield return Focus(select, 3);
             yield return new WaitForSecondsRealtime(0.8f);
             var folderView = select.wheel.GetComponentsInChildren<FolderBoardView>(false).Single(v => v.title.text == "Game");
@@ -119,8 +119,8 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.Items.Select(i => i.Kind), Is.EqualTo(new[]
             {
                 SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Search, SongSelectManager.ItemKind.Back,
-                SongSelectManager.ItemKind.Song, SongSelectManager.ItemKind.Folder, SongSelectManager.ItemKind.Search,
-            }), "Local, the server's search, Game's もどる and song, Pop, the root search.");
+                SongSelectManager.ItemKind.Song, SongSelectManager.ItemKind.Folder,
+            }), "Local, the server's search, Game's もどる and song, Pop.");
             Assert.That(select.Manager.Focused, Is.EqualTo(2));
             var song = select.Manager.SongAt(3);
             Assert.That(online.IsOnline(song), Is.True);
@@ -424,7 +424,7 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).Select(item => item.Folder), Is.EqualTo(new[] { 1 }));
             yield return Focus(select, 3);
             select.Manager.Confirm();
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(6));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(5));
             Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).Select(item => item.Folder), Is.EqualTo(new[] { 2 }));
             yield return Focus(select, 4);
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Folder));
@@ -433,14 +433,14 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.KindAt(2), Is.EqualTo(SongSelectManager.ItemKind.Folder), "Game closed again.");
             Assert.That(select.Manager.KindAt(3), Is.EqualTo(SongSelectManager.ItemKind.Back), "The empty Pop folder holds only もどる.");
             Assert.That(select.Manager.Focused, Is.EqualTo(3));
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(5));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(4));
             Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).Select(item => item.Folder), Is.EqualTo(new[] { 3 }));
             yield return new WaitForSecondsRealtime(0.4f);
             select.Manager.Confirm();
             Assert.That(select.Manager.OpenFolder, Is.EqualTo(select.Manager.Folders[1].Key));
             Assert.That(select.Manager.KindAt(4), Is.EqualTo(SongSelectManager.ItemKind.Folder));
             Assert.That(select.Manager.Focused, Is.EqualTo(4), "Closing focuses the folder board.");
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(6));
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(5));
             Assert.That(select.Manager.Items.Where(item => item.Kind == SongSelectManager.ItemKind.Back).Select(item => item.Folder), Is.EqualTo(new[] { 1 }), "The server's もどる is back.");
             // The server's もどる closes it too.
             yield return Focus(select, 1);
@@ -507,7 +507,7 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.BoardCount, Is.EqualTo(4));
             yield return Focus(select, 1);
             select.Manager.Confirm();
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(8), "Local, the server's もどる and search, 2 categories, 2 playlists and search.");
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(7), "Local, the server's もどる and search, 2 categories and 2 playlists.");
             yield return WaitUntil(() => online.Folders[2].Cover != null, 10);
             Assert.That(online.Folders[2].Cover.rect.size, Is.EqualTo(new Vector2(320, 200)));
             Assert.That(online.Folders[3].Cover, Is.Null);
@@ -564,9 +564,9 @@ namespace OurTaiko.Tests
             yield return Focus(select, 4);
             select.Manager.Confirm();
             // Pop holds the 1500 odd charts: もどる, then one more もどる after every seven songs (OpenTaiko).
-            // Around it: Local, the server's search and Game (its もどる hidden while Pop is open), and
-            // the root search after.
-            Assert.That(select.Manager.BoardCount, Is.EqualTo(3 + 1 + 1500 + 214 + 1));
+            // Before it: Local, the server's search and Game (its もどる hidden while Pop is open); no
+            // root search after, the server's own standing in for it.
+            Assert.That(select.Manager.BoardCount, Is.EqualTo(3 + 1 + 1500 + 214));
             Assert.That(select.Manager.KindAt(3), Is.EqualTo(SongSelectManager.ItemKind.Back));
             Assert.That(select.Manager.SongAt(4).ReadDisplayInfo().Title, Is.EqualTo("Bulk 1"));
             Assert.That(select.Manager.KindAt(11), Is.EqualTo(SongSelectManager.ItemKind.Back));

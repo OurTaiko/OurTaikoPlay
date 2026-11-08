@@ -495,8 +495,10 @@ namespace OurTaiko
         }
 
         // The wheel for the open path: each top-level folder, an open one as its block, then the root
-        // search and, with nothing open, the root もどる (which returns to Entry). A board that was on
-        // the wheel before keeps its item, so the view keeps its board.
+        // search and the root もどる (which returns to Entry) while nothing is open. An open source
+        // folder starts with its own search, which stands in for the root one, so the wheel shows a
+        // single search; search results keep the root search (their folders have none) to search
+        // again. A board that was on the wheel before keeps its item, so the view keeps its board.
         void Rebuild()
         {
             var reuse = new Dictionary<(ItemKind kind, int folder, int ordinal, SongDefinition song), WheelItem>();
@@ -528,7 +530,7 @@ namespace OurTaiko
             }
             var fresh = new List<WheelItem>();
             for (int f = 0; f < folders.Length; f++) if (parents[f] < 0) AddFolder(fresh, f);
-            fresh.Add(Take(ItemKind.Search, -1, 0, null, NewSearchItem));
+            if (open.Count == 0 || SearchActive) fresh.Add(Take(ItemKind.Search, -1, 0, null, NewSearchItem));
             if (open.Count == 0) fresh.Add(Take(ItemKind.Back, -1, 0, null, () => new WheelItem { Kind = ItemKind.Back }));
             items.Clear();
             items.AddRange(fresh);
