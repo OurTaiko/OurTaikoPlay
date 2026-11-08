@@ -212,6 +212,7 @@ namespace OurTaiko
             if (optionArt.hitSounds != null) { sfx.PrepareAudioEffects(optionArt.hitSounds.don); sfx.PrepareAudioEffects(optionArt.hitSounds.ka); }
             voice.PrepareAudioTracks(voiceEnter, voiceStartSong, optionArt.voice, voiceStartSong2P, voiceOptions2P, secondJoined);
             bgm.loop = true;
+            UpdateBgmMute();
             bgm.PlayAudio();
             PlayVoice(voiceEnter);
             started = true;
@@ -257,7 +258,6 @@ namespace OurTaiko
             if (Manager.Phase == State.Decided && !voice.IsAudioPlaying() && !switcher.IsSwitching) Manager.StartSong();
             StepSwipe(now);
             UpdatePreview(now);
-            UpdateBgmMute();
             DrawBackground(now);
             var items = Manager.Items;
             for (int i = 0; i < items.Count; i++) DrawBoard(BoardOf(items[i]), i == Manager.Focused, now);
@@ -335,11 +335,13 @@ namespace OurTaiko
             visuals.Clear();
             foreach (var item in Manager.Items) visuals[item] = new Board { Item = item };
             SetPositions(true, 0); OpenFocused(0); ChangeGenre(Manager.FocusedItem.Genre);
+            UpdateBgmMute();
             if (view.search != null) view.search.RefreshSummary();
         }
 
         void OnFocusChanged(WheelItem previous, SongSelectManager.FocusReason reason)
         {
+            UpdateBgmMute();
             // A swipe walking the focus lays the boards out itself and opens the board it rests on.
             if (swipeStepping)
             {
@@ -491,11 +493,11 @@ namespace OurTaiko
 
         // The exit board (the top-level back board that leaves song select) is silent: the
         // selection BGM keeps running underneath and comes back as soon as the focus moves on.
+        // Called wherever the focus can land: the first focus, FocusChanged and WheelRebuilt.
         void UpdateBgmMute()
         {
             var item = Manager.FocusedItem;
-            float fade = item != null && item.Kind == ItemKind.Back && item.Folder < 0 ? 0 : 1;
-            if (bgm.AudioFade() != fade) bgm.SetAudioFade(fade);
+            bgm.SetAudioFade(item != null && item.Kind == ItemKind.Back && item.Folder < 0 ? 0 : 1);
         }
     }
 }
