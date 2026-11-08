@@ -17,7 +17,6 @@ namespace OurTaiko
         PracticeStage FirstPracticeStage => Session.Chart.Branches.Count > 0 ? PracticeStage.Branch : PracticeStage.Measure;
         // The lane is scrolling back to the preparation lead-in; playback starts when it arrives.
         bool practiceRewinding;
-        double? practiceEntryPosition;
         // The offsets in chart seconds at the chosen speed. The clock runs at it whenever it plays, so
         // these agree with ChartTime; a seek to a new speed must use them, not the clock's old rate.
         double AudioOffset => audioOffset * Practice.Speed;
@@ -70,9 +69,7 @@ namespace OurTaiko
             if (first) Session = new PlaySession(Session.Chart, judgeOffset, practiceBranch, 1, judgeWindows);
             RefreshPracticeBars();
             // The cursor is visual chart time, so a bar aligns exactly even with configured offsets.
-            double position = first ? practiceEntryPosition.HasValue ? Practice.SnapToMeasure(practiceEntryPosition.Value)
-                : Practice.First : SongTime - AudioOffset - VisualOffset;
-            practiceEntryPosition = null;
+            double position = first ? TakePracticeStart() : SongTime - AudioOffset - VisualOffset;
             Practice.PauseAt(position, GameTimeline.FrameTime);
             songClock.Seek(position + AudioOffset + VisualOffset, Practice.Speed);
             ResetPracticeAttempt(position);

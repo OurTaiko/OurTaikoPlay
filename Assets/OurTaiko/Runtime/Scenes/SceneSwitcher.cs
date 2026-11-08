@@ -13,7 +13,7 @@ namespace OurTaiko
     public enum TransitionStyle { Fade, Curtain, Dan }
 
     // Global UI control, created before the first scene and retained across every load.
-    public sealed class SceneSwitcher : MonoBehaviour
+    public sealed partial class SceneSwitcher : MonoBehaviour
     {
         public const string GameScene = "SinglePlayScene";
         public const string PracticeScene = "PracticeScene";
@@ -101,8 +101,6 @@ namespace OurTaiko
         readonly TaikoChart[] preparedCharts = new TaikoChart[2];
         readonly SongDefinition[] preparedSongs = new SongDefinition[2];
         readonly string[] preparedCourses = new string[2];
-        double? practiceEntryPosition;
-        BranchRoute practiceEntryBranch;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
@@ -223,8 +221,7 @@ namespace OurTaiko
         // decided here, alone or two together as the mode stands now.
         public void Select(SongDefinition song, string course = null, bool autoPlay = false, string course2P = null, bool autoPlay2P = false)
         {
-            practiceEntryPosition = null;
-            practiceEntryBranch = BranchRoute.Normal;
+            ClearPracticeEntry();
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
             SelectedCourse2P = course2P ?? course; AutoPlay2P = autoPlay2P;
             SelectedSide = song != null ? song.PlayedSide(SelectedCourse, SeatBlocks.Seats[0], PlaysTwo) : "single";
@@ -277,44 +274,6 @@ namespace OurTaiko
             return chart;
         }
         public void Restart() => SwitchScene(SelectedPlayScene);
-
-        // A mode change is a new single-player scene, never a live session with a flipped flag.
-        public bool SwitchPlayMode(bool practice, double position, BranchRoute branch)
-        {
-            string target = practice ? PracticeScene : GameScene;
-            if (IsInputBlocked || SelectedSong == null || PracticeMode == practice
-                || (CurrentScene != GameScene && CurrentScene != PracticeScene)
-                || !Application.CanStreamedLevelBeLoaded(target)) return false;
-            PracticeMode = practice;
-            TwoPlayers = false;
-            Select(SelectedSong, SelectedCourse, AutoPlay);
-            SelectedCourse2P = null; AutoPlay2P = false;
-            completedSong = null; completedRecord = completedRecord2P = null;
-            LastResult = LastResult2P = null;
-            danLoadPending = false;
-            Array.Clear(preparedCharts, 0, preparedCharts.Length);
-            Array.Clear(preparedSongs, 0, preparedSongs.Length);
-            Array.Clear(preparedCourses, 0, preparedCourses.Length);
-            if (practice)
-            {
-                practiceEntryPosition = position;
-                practiceEntryBranch = branch;
-            }
-            InputManager.DropDelayed();
-            SwitchScene(target);
-            return true;
-        }
-
-        // Only the incoming practice scene consumes this; another song must start normally.
-        public bool TakePracticeEntry(out double position, out BranchRoute branch)
-        {
-            position = practiceEntryPosition ?? 0;
-            branch = practiceEntryBranch;
-            bool pending = PracticeMode && practiceEntryPosition.HasValue;
-            practiceEntryPosition = null;
-            practiceEntryBranch = BranchRoute.Normal;
-            return pending;
-        }
         public void ReturnToMenu() => SwitchScene(Application.CanStreamedLevelBeLoaded(ReturnScene) ? ReturnScene : MenuScene);
         public void ShowResult(PlayResult result, SongDefinition song = null, Online.PlayRecord record = null,
             PlayResult result2P = null, Online.PlayRecord record2P = null)
