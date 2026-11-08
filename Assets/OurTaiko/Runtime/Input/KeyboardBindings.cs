@@ -24,7 +24,7 @@ namespace OurTaiko
             new Binding(InputKey.LeftDon, Key.F), new Binding(InputKey.RightDon, Key.J),
             new Binding(InputKey.LeftKa, Key.D), new Binding(InputKey.RightKa, Key.K),
             new Binding(InputKey.Confirm, Key.Enter, Key.NumpadEnter), new Binding(InputKey.Back, Key.Escape),
-            new Binding(InputKey.Pause, Key.Space), new Binding(InputKey.Restart, Key.F1),
+            new Binding(InputKey.Pause), new Binding(InputKey.Restart, Key.F1),
             new Binding(InputKey.MenuLeft, Key.LeftArrow), new Binding(InputKey.MenuRight, Key.RightArrow),
             new Binding(InputKey.MenuUp, Key.UpArrow), new Binding(InputKey.MenuDown, Key.DownArrow),
             // YataiDON keys_2p.

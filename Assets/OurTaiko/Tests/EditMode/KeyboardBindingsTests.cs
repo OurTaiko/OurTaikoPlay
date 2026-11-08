@@ -41,6 +41,13 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void SpaceIsNotADefaultKey()
+        {
+            Assert.That(new GameSettings().general.keyboard.bindings.SelectMany(b => b.keys), Has.None.EqualTo(Key.Space));
+            Assert.That(KeyboardBindings.DefaultKeys(InputKey.Pause), Is.Empty);
+        }
+
+        [Test]
         public void AssignedKeysMoveOwnersAndRuntimeBindingsMatchSavedSettings()
         {
             var bindings = new KeyboardBindings();

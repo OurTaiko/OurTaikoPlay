@@ -310,7 +310,7 @@ namespace OurTaiko.Tests
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
                 "Starting another attempt must clear the completed attempt's review.");
-            yield return Press(Key.Space);
+            yield return Press(Key.Escape);
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
                 "Pausing a fresh attempt must not restore the completed attempt's review.");
@@ -419,9 +419,9 @@ namespace OurTaiko.Tests
             foreach (int i in hitIndices)
                 attempt.Hit(false, attempt.Chart.Notes[i].Time + (i % 2 == 0 ? .012 : -.008));
             Assert.That(attempt.HitTimings.Count, Is.EqualTo(hitIndices.Length));
-            yield return Press(Key.Space);
+            yield return Press(Key.Escape);
             Assert.That(play.IsPaused, Is.True);
-            Assert.That(play.pausePanel.activeSelf, Is.False, "Space opens the practice measure browser.");
+            Assert.That(play.pausePanel.activeSelf, Is.False, "Escape opens the practice measure browser.");
             Assert.That(play.Session.HitTimings.Count, Is.Zero, "Review must not carry judgments into the next attempt.");
             // The synthetic judgments were seeded during preparation; browse to their measure.
             var browsingSession = play.Session;
@@ -466,7 +466,7 @@ namespace OurTaiko.Tests
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
                 "Starting the next attempt hides the old review, including pooled notes.");
-            yield return Press(Key.Space);
+            yield return Press(Key.Escape);
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
                 "Pausing a new attempt with no hits must not show the previous attempt's values.");
@@ -482,7 +482,7 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => !play.IsPaused);
             var attempt = play.Session;
             for (int i = 0; i < 6; i++) attempt.Hit(false, attempt.Chart.Notes[i].Time + .012);
-            yield return Press(Key.Space);
+            yield return Press(Key.Escape);
             play.MovePractice(1);
             yield return new WaitForSecondsRealtime(.3f);
             for (int i = 0; i < 6; i++)
@@ -505,7 +505,7 @@ namespace OurTaiko.Tests
             attempt.Hit(false, attempt.Chart.Notes[0].Time + .012);
             attempt.Hit(false, attempt.Chart.Notes[2].Time + .012);
             int score = attempt.Score, timings = attempt.HitTimings.Count, bad = attempt.Bad;
-            yield return Press(Key.Space);
+            yield return Press(Key.Escape);
             var browsing = play.Session;
             double target = play.Practice.Target;
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
