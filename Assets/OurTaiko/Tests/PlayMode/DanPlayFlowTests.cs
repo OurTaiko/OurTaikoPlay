@@ -110,6 +110,12 @@ namespace OurTaiko.Tests
             Assert.That(scene.Gauge.Points, Is.GreaterThan(0));
             Assert.That(scene.firstLane.soulGauge.FilledCells, Is.GreaterThan(0));
             Assert.That(scene.Lane.Carry.Good, Is.EqualTo(11), "Song A's 良 carry into the course's counts.");
+            // 段位道場 has no score rank badge (issue #70), whatever the course's score.
+            Assert.That(ScoreRankUtil.FromScore(scene.Lane.Carry.Score, 1000000), Is.Not.EqualTo(ScoreRank.None), "A score that has a rank in a normal play.");
+            Assert.That(scene.firstLane.scoreCounter.scoreRank, Is.Null);
+            var badge = scene.firstLane.scoreCounter.GetComponentInChildren<PlayScoreRankView>(true);
+            Assert.That(badge.gameObject.activeSelf, Is.False);
+            Assert.That(badge.rank.image.enabled, Is.False);
             Assert.That(scene.Lane.DisplayCombo, Is.EqualTo(11), "The combo runs on into song B.");
             yield return new WaitForSecondsRealtime(3f);
             Assert.That(scene.view.between.gameObject.activeSelf, Is.True);
