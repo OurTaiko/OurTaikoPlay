@@ -181,9 +181,15 @@ namespace OurTaiko.Tests
                 yield return null;
                 TestCapture.Capture("TimingLate-" + (practice ? "Practice" : "Play") + ".png");
                 TestCapture.Capture("TimingLate720-" + (practice ? "Practice" : "Play") + ".png", 1280, 720);
+                var judgment = play.firstLane.judgment;
+                Assert.That(judgment.sprite, Is.SameAs(play.judgmentSprites[(int)Judgment.Ok - 1]));
                 play.Session.Advance(notes[2].Time + play.Session.JudgeOffset + .2, false);
-                Assert.That(feedback.label.alpha, Is.Zero, "A miss must not display an invented offset.");
+                Assert.That(play.Session.Missed[2], Is.True);
+                Assert.That(play.Session.Bad, Is.EqualTo(1), "The miss still counts as 不可.");
+                Assert.That(judgment.sprite, Is.SameAs(play.judgmentSprites[(int)Judgment.Ok - 1]), "A note nobody hit draws no 不可.");
+                Assert.That(feedback.label.text, Is.EqualTo("+50ms"), "A miss must not display an invented offset.");
                 play.Session.Hit(false, notes[3].Time + play.Session.JudgeOffset + .09);
+                Assert.That(judgment.sprite, Is.SameAs(play.judgmentSprites[(int)Judgment.Bad - 1]), "A press judged 不可 is drawn.");
                 Assert.That(feedback.label.text, Is.EqualTo("+90ms"), "Hit Bad still has a measured offset.");
                 if (practice)
                 {

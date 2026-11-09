@@ -265,15 +265,19 @@ namespace OurTaiko
             v.hitRing.Play(result, big, judgedAt);
             if (result != Judgment.Roll)
             {
-                double? offset = Session.TimingOffsetMs(index);
-                if (v.timingFeedback != null)
+                // A note nobody hit says nothing and leaves the last press's text alone: 不可 is drawn for a press only.
+                if (!Session.Missed[index])
                 {
-                    if (!AutoPlay && offset.HasValue) v.timingFeedback.Show(offset.Value);
-                    else v.timingFeedback.Clear();
+                    double? offset = Session.TimingOffsetMs(index);
+                    if (v.timingFeedback != null)
+                    {
+                        if (!AutoPlay && offset.HasValue) v.timingFeedback.Show(offset.Value);
+                        else v.timingFeedback.Clear();
+                    }
+                    // Long-note hits must not restart the previous normal judgment's text animation.
+                    feedbackTime = GameTimeline.FrameTime;
+                    v.judgment.sprite = scene.judgmentSprites[(int)result - 1];
                 }
-                // Long-note hits must not restart the previous normal judgment's text animation.
-                feedbackTime = GameTimeline.FrameTime;
-                v.judgment.sprite = scene.judgmentSprites[(int)result - 1];
             }
             else if (judged.Kind == NoteKind.Balloon)
             {
