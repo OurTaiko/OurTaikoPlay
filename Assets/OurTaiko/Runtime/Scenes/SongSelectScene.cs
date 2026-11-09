@@ -73,9 +73,7 @@ namespace OurTaiko
         const int UraCells = 90;
         static readonly string[] ChipNames = { "かんたん", "ふつう", "むずかしい", "おに", "おに(裏)" };
 
-        public const int ListTimerSeconds = 100, CourseTimerSeconds = 60;
         public SongSelectManager Manager { get; private set; }
-        public ArcadeTimerView TimerView { get; private set; }
         public CoinOverlayView Coins { get; private set; }
         public double CourseFade => Manager.Phase == State.Browsing ? 0 : Clamp01((Now - courseEnteredAt - CourseFadeDelayMs) / CourseFadeMs);
         public bool IsPreviewPlaying => preview != null && preview.IsAudioPlaying();
@@ -190,7 +188,6 @@ namespace OurTaiko
             backgroundPositions = backgroundTiles.Select(tile => tile.rectTransform.anchoredPosition).ToArray();
             currentGenre = previousGenre = Manager.FocusedItem.Genre;
             BindCoursePanel();
-            TimerView = new ArcadeTimerView(view.overlays, overlay);
             Coins = new CoinOverlayView(view.overlays, overlay);
             view.ShowPlayMode(switcher.PracticeMode);
             // Slice the 90-cell Oni/Ura change sheets up front so the first flip does not hitch.

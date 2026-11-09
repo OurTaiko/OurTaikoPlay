@@ -56,7 +56,7 @@ The repository includes TRIPLE HELIX, Input Calibration, and Branch Training exa
 
 Mouse and touch controls are supported, including on-screen drums during play. The pause menu contains **Resume / Restart / Back to Song Select**. For songs with both Oni and Ura Oni, press right ten consecutive times while on Oni to switch.
 
-A large note needs only one side of the drum for a full judgment. Only the earliest drum input in each frame is processed; this is an intentional gameplay rule. Autoplay results are neither saved nor uploaded. Menu timers are decorative and do not count down.
+A large note needs only one side of the drum for a full judgment. Only the earliest drum input in each frame is processed; this is an intentional gameplay rule. Autoplay results are neither saved nor uploaded. Menus have no timer and never rush a choice.
 
 ## Songs and user data
 

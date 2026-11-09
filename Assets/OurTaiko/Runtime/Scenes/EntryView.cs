@@ -55,7 +55,6 @@ namespace OurTaiko
         [Tooltip("nameplate_entry_right: 2P's plate, shown once 2P joins with its don.")]
         public NameplateView nameplate2P;
         public CanvasGroup nameplateGroup2P;
-        public Image[] timerDigits;
         public TextMeshProUGUI freePlay;
         public Image qrChip, inviteBubble;
         public TextMeshProUGUI invitePlayer, inviteMessage;

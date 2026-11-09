@@ -57,7 +57,7 @@ namespace OurTaiko
         public bool IsModeReady(double nowMs) => JoinedAt.HasValue && nowMs - JoinedAt.Value > CloudGateMs;
         public bool IsSelected => SelectedAt.HasValue;
 
-        // BoxManager::select_box. Input waits for the board; the timer may pick it as soon as it is up.
+        // BoxManager::select_box. Input waits for the board (the arcade's timer, not ported, may pick it as soon as it is up).
         public bool Select(double nowMs)
         {
             if (!IsModeReady(nowMs) || SelectedAt.HasValue) return false;

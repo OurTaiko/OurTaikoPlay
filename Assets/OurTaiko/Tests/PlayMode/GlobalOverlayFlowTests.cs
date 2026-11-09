@@ -9,7 +9,7 @@ namespace OurTaiko.Tests
     public sealed class GlobalOverlayFlowTests
     {
         [UnityTest]
-        public IEnumerator SongSelectShowsPlaceholderTimersChipAndInvite()
+        public IEnumerator SongSelectShowsChipAndInviteWithoutATimer()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
@@ -24,20 +24,14 @@ namespace OurTaiko.Tests
             Assert.That(select.Coins.QrChip.enabled, Is.True);
             Assert.That(select.Coins.HasInvite, Is.True);
 
-            // Placeholders: 100 on the list, 60 in course select, and neither counts down.
-            Assert.That(select.TimerView.Seconds, Is.EqualTo(100));
-            Assert.That(select.view.overlays.timerThreeDigits[2].enabled, Is.True, "Three digits.");
+            Assert.That(overlays.Find("Timer"), Is.Null, "Song select shows no timer.");
             yield return new WaitForSecondsRealtime(1.3f);
-            Assert.That(select.TimerView.Seconds, Is.EqualTo(100));
             Assert.That(select.Coins.BubbleAlpha, Is.GreaterThan(0), "The 2P invite shows while songs played < 2.");
             TestCapture.Capture("OverlaySongSelect.png");
             select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
             select.Manager.Confirm();
             yield return WaitUntil(() => select.CourseFade >= 1);
-            Assert.That(select.TimerView.Seconds, Is.EqualTo(60));
-            Assert.That(select.view.overlays.timerThreeDigits[2].enabled, Is.False);
             yield return new WaitForSecondsRealtime(1.2f);
-            Assert.That(select.TimerView.Seconds, Is.EqualTo(60));
             TestCapture.Capture("OverlayCourseSelect.png");
             Object.Destroy(SceneSwitcher.Instance.gameObject);
         }

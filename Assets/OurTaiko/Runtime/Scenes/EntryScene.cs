@@ -11,16 +11,14 @@ namespace OurTaiko
     // the credit screen waits for a drum face hit, 1P joins (nameplate and control guide fade in),
     // and once the join animation would have finished the mode list opens with 演奏ゲーム selected and
     // ゲーム設定 below it; ka moves between the boards and a face hit picks one: 演奏ゲーム goes to
-    // SongSelect, ゲーム設定 opens the settings overlay. The arcade's 60 s timer is shown as a placeholder that never
-    // counts down (user decision: the simulator does not limit the player's time). 2P joins at any
+    // SongSelect, ゲーム設定 opens the settings overlay. The arcade's 60 s timer is not shown (user
+    // decision: the simulator does not limit the player's time). 2P joins at any
     // time with its own don (issue #5): its nameplate fades in on the right and the invite goes away;
     // the play mode then plays both seats. Not ported: the 3D Don and its join cloud, the other
     // boards (特訓モード / きせかえ), the costume menu and the ALL.Net indicator. The screen is saved
     // in the scene (EntryView); Awake only binds it.
     public sealed class EntryScene : MonoBehaviour
     {
-        public const int TimerSeconds = 60;
-
         public RectTransform stage;
         public EntryView view;
 
@@ -38,7 +36,6 @@ namespace OurTaiko
         public AudioClip entryStart2P;
 
         public EntryFlow Flow { get; private set; }
-        public ArcadeTimerView TimerView { get; private set; }
         public EntryCredit Credit { get; private set; }
         public EntryModeList Board { get; private set; }
         public EntryMode[] Modes { get; private set; }
@@ -133,8 +130,6 @@ namespace OurTaiko
             if (nameplateGroup != null) nameplateGroup.alpha = 0;
             nameplateGroup2P = view.nameplateGroup2P;
             if (nameplateGroup2P != null) nameplateGroup2P.alpha = 0;
-            TimerView = new ArcadeTimerView(overlay, view.timerDigits);
-            TimerView.Show(TimerSeconds);
             Coins = new CoinOverlayView(overlay, view.freePlay, view.qrChip, view.inviteBubble, view.invitePlayer, view.inviteMessage);
             // Touch: on the credit screen a tap anywhere joins (the drum's face). On the mode list taps
             // work like SongSelect's boards: tap another board to move to it, tap the open board to

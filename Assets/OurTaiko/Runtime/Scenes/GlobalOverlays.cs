@@ -5,16 +5,12 @@ using UnityEngine.UI;
 
 namespace OurTaiko
 {
-    // Art for the Nijiiro global arcade chrome (Scripts/global/timer.lua, indicator.lua,
-    // coin_overlay.lua, entry_overlay.lua). Positions are the skin's texture.json origins.
+    // Art for the Nijiiro global arcade chrome (Scripts/global/indicator.lua, coin_overlay.lua,
+    // entry_overlay.lua). Positions are the skin's texture.json origins. The arcade's timer is
+    // not shown anywhere (user decision: the simulator does not limit the player's time).
     [Serializable]
     public sealed class ArcadeOverlayArt
     {
-        [Header("Timer")]
-        public Sprite timerBackground;
-        [Tooltip("counter_black frames 0-9.")]
-        public Sprite[] timerDigitsBlack;
-
         [Header("Control guide")]
         [Tooltip("ControlGuide.anim: global/indicator/background cells 210-324 (both sticks + 決定, the decide loop) at 30 fps.")]
         public AnimationClip guideClip;
@@ -23,71 +19,6 @@ namespace OurTaiko
         public Sprite qrChip;
         public Sprite cardChip, stageChip, danChip, inviteBubble;
         public TextAsset creditSideTimeline;
-    }
-
-    // Timer:draw — the 240x240 clock at (1669,12) with its digits centred 48 px apart. The arcade
-    // counts down (red clock, voices and an automatic pick at 0); here the timer is a placeholder
-    // that only shows its starting value (user decision: the simulator does not limit the player's time).
-    public sealed class ArcadeTimerView
-    {
-        const float DigitX = 1781, DigitY = 84, DigitMargin = 48;
-        readonly ArcadeOverlayArt art;
-        readonly Transform root;
-        readonly System.Collections.Generic.List<Image> digits = new System.Collections.Generic.List<Image>();
-        readonly Image[][] savedRows;
-
-        public int Seconds { get; private set; } = -1;
-
-        public ArcadeTimerView(Transform parent, ArcadeOverlayArt art)
-        {
-            this.art = art;
-            root = SkinUi.Rect("Timer", parent);
-            SkinUi.Image("Background", root, art.timerBackground).rectTransform.TopLeft(1669, 12);
-        }
-
-        // SongSelect keeps both supported placeholder layouts in the scene. Binding does not
-        // recreate graphics or reset their Inspector-authored positions, dimensions or styling.
-        public ArcadeTimerView(SongSelectOverlayView view, ArcadeOverlayArt art)
-            : this(art, view.timerTwoDigits, view.timerThreeDigits) { }
-
-        // Saved digit rows (Entry keeps one, for 60); a row shows only a value of its length.
-        public ArcadeTimerView(ArcadeOverlayArt art, params Image[][] rows)
-        {
-            savedRows = rows;
-            this.art = art;
-        }
-
-        public void Show(int seconds)
-        {
-            if (seconds == Seconds) return;
-            Seconds = seconds;
-            string text = seconds.ToString();
-            if (savedRows != null)
-            {
-                foreach (var row in savedRows) ShowSavedDigits(row, text);
-                return;
-            }
-            // song select's list timer shows 100
-            while (digits.Count < text.Length) digits.Add(SkinUi.Image("Digit" + digits.Count, root, art.timerDigitsBlack[0]));
-            for (int i = 0; i < digits.Count; i++)
-            {
-                digits[i].enabled = i < text.Length;
-                if (i >= text.Length) continue;
-                digits[i].sprite = art.timerDigitsBlack[text[i] - '0'];
-                digits[i].rectTransform.sizeDelta = digits[i].sprite.rect.size;
-                digits[i].rectTransform.TopLeft(DigitX - text.Length * DigitMargin / 2 + i * DigitMargin, DigitY);
-            }
-        }
-
-        void ShowSavedDigits(Image[] images, string text)
-        {
-            bool visible = images.Length == text.Length;
-            for (int i = 0; i < images.Length; i++)
-            {
-                images[i].enabled = visible;
-                if (visible) images[i].sprite = art.timerDigitsBlack[text[i] - '0'];
-            }
-        }
     }
 
     // Indicator:draw — the top-left control guide, a baked loop at 30 fps (every 2nd arcade frame).

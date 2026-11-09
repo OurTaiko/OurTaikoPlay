@@ -20,12 +20,12 @@ namespace OurTaiko.Tests
             Assert.That(entry, Is.Not.Null);
             Assert.That(entry.bgm.IsAudioPlaying(), Is.True);
 
-            // Credit screen: both rows fade in and blink; the timer stands at 60; no nameplate yet.
+            // Credit screen: both rows fade in and blink; no timer; no nameplate yet.
             yield return new WaitForSecondsRealtime(0.4f);
             Assert.That(entry.Flow.State, Is.EqualTo(EntryFlow.Phase.SelectSide));
             Assert.That(entry.Credit.Alpha, Is.EqualTo(1).Within(1e-3));
             Assert.That(entry.Board.Root.gameObject.activeSelf, Is.False);
-            Assert.That(entry.TimerView.Seconds, Is.EqualTo(60));
+            Assert.That(entry.stage.Find("Timer"), Is.Null, "Entry shows no timer.");
             Assert.That(entry.Nameplate.GetComponent<CanvasGroup>().alpha, Is.Zero);
             Assert.That(entry.Coins.BubbleAlpha, Is.Zero, "No 2P invite while the credit rows are up.");
             Assert.That(entry.Coins.FreePlay.text, Is.EqualTo("フリープレイ"));
@@ -51,7 +51,6 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(1f);
             Assert.That(entry.Board.Openness, Is.EqualTo(1).Within(1e-3));
             Assert.That(entry.Board.Fade, Is.EqualTo(1).Within(1e-3));
-            Assert.That(entry.TimerView.Seconds, Is.EqualTo(60), "The timer is a placeholder and never counts down.");
             TestCapture.Capture("EntryModeSelect.png");
 
             // A left ka at the top of the list changes nothing; a face hit plays `choose`, fades the
