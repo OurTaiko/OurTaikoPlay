@@ -33,7 +33,6 @@ namespace OurTaiko
         // running into it, which goes on until this song's first 不可.
         public DanSongStats Carry { get; set; }
         public int ComboCarry { get; set; }
-        public int KiwamiCarry { get; set; }
         bool comboCarried;
         public int DisplayCombo => comboCarried ? ComboCarry + Session.Combo : Session.Combo;
         public double GaugePoints => SharedGauge?.Points ?? Session.GaugePoints;
@@ -326,7 +325,7 @@ namespace OurTaiko
         {
             var v = Views;
             var c = Carry;
-            v.scoreCounter.Show(c.Score + Session.Score, KiwamiCarry + Session.KiwamiThreshold);
+            v.scoreCounter.Show(c.Score + Session.Score, Session.KiwamiThreshold);
             if (v.judgeCounter != null) v.judgeCounter.Show(c.Good + Session.Good, c.Ok + Session.Ok, c.Bad + Session.Bad, c.Rolls + Session.Rolls);
             int combo = DisplayCombo;
             v.combo.Show(combo);

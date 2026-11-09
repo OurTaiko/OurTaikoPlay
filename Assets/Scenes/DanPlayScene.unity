@@ -10578,6 +10578,14 @@ PrefabInstance:
       propertyPath: 'passCharacters.Array.data[1]'
       value: 
       objectReference: {fileID: 21300000, guid: 7a50c54215b0b430b9dc832c02e88209, type: 3}
+    - target: {fileID: 3921816877749073642, guid: e8bc5912fdcb44e658e72455c68bdae9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8355179445037649305, guid: e8bc5912fdcb44e658e72455c68bdae9, type: 3}
+      propertyPath: scoreRank
+      value:
+      objectReference: {fileID: 0}
     - target: {fileID: 8921521440184503563, guid: e8bc5912fdcb44e658e72455c68bdae9, type: 3}
       propertyPath: m_Name
       value: NoteLane

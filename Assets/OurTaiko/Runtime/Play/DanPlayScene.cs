@@ -279,7 +279,6 @@ namespace OurTaiko
             var finished = Stats();
             Lane.Carry += finished;
             Lane.ComboCarry = Lane.DisplayCombo;
-            Lane.KiwamiCarry += Session.KiwamiThreshold;
             Progress.Next();
             BeginSong(SongIndex + 1);
             StartSong();
