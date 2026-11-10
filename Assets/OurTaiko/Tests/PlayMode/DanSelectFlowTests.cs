@@ -50,7 +50,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
-            Assert.That(entry.Modes.Select(m => m.Title), Is.EqualTo(new[] { "演奏ゲーム", "段位道場", "練習モード", "ゲーム設定" }));
+            Assert.That(entry.Modes.Select(m => m.Title), Is.EqualTo(new[] { "演奏ゲーム", "段位道場", "練習モード", "ゴーストバトル", "ゲーム設定" }));
             Assert.That(entry.Modes[1].Scene, Is.EqualTo(SceneSwitcher.DanSelectScene));
             yield return new WaitForSecondsRealtime(0.2f);
             entry.Don();

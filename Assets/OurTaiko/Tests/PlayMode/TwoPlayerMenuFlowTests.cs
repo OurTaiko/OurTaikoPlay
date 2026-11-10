@@ -37,7 +37,11 @@ namespace OurTaiko.Tests
             Assert.That(SceneSwitcher.Instance.TwoPlayers, Is.False);
             Assert.That(entry.view.nameplateGroup2P.alpha, Is.Zero);
 
+            // The credit screen takes no join in its first 120 ms. 2P's don joins 2P alone; 1P's
+            // don then joins 1P beside it.
+            yield return WaitUntil(() => entry.Flow.CanJoin(entry.Now), 2);
             entry.Join2P();
+            Assert.That(entry.Lone2P, Is.True);
             Assert.That(entry.Joined2P, Is.True);
             Assert.That(entry.voice.clip, Is.SameAs(entry.entryStart2P));
             yield return new WaitForSecondsRealtime(0.25f);
@@ -46,6 +50,7 @@ namespace OurTaiko.Tests
             Assert.That(entry.view.nameplate2P.badge.sprite, Is.SameAs(entry.view.nameplate2P.secondBadge));
 
             entry.Don();
+            Assert.That(entry.TwoJoined, Is.True);
             yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 4);
             yield return new WaitForSecondsRealtime(0.5f);
             Assert.That(entry.Coins.BubbleAlpha, Is.Zero, "No 2P invite once 2P is in.");
@@ -67,10 +72,11 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
-            entry.Join2P();
             // The side screen takes no don in its first 120 ms.
             yield return WaitUntil(() => entry.Flow.CanJoin(entry.Now), 2);
+            entry.Join2P();
             entry.Don();
+            Assert.That(entry.TwoJoined, Is.True);
             yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 4);
             yield return null;
             int practice = System.Array.FindIndex(entry.view.boards, b => b.practice);

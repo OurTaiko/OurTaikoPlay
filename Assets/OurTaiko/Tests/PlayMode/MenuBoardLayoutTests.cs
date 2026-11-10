@@ -30,7 +30,7 @@ namespace OurTaiko.Tests
             Assert.That(entry.Flow.JoinedAt.HasValue, Is.True);
             yield return new WaitForSecondsRealtime(2);
             int count = entry.Board.Boards.Count;
-            Assert.That(count, Is.EqualTo(4));
+            Assert.That(count, Is.EqualTo(5));
             float? openY = null;
             for (int selected = 0; selected < count; selected++)
             {
@@ -57,9 +57,9 @@ namespace OurTaiko.Tests
             entry.view.boards[0].hitRelay.Clicked();
             yield return new WaitForSecondsRealtime(.7f);
             Assert.That(entry.Flow.SelectedMode, Is.Zero);
-            entry.view.boards[3].hitRelay.Clicked();
+            entry.view.boards[4].hitRelay.Clicked();
             yield return new WaitForSecondsRealtime(.7f);
-            entry.view.boards[3].hitRelay.Clicked();
+            entry.view.boards[4].hitRelay.Clicked();
             Assert.That(SettingsOverlay.IsOpen, Is.True);
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.EntryScene));
             SettingsOverlay.Instance.Close();

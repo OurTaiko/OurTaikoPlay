@@ -14,7 +14,10 @@ namespace OurTaiko
     // SongSelect, ゲーム設定 opens the settings overlay. The arcade's 60 s timer is not shown (user
     // decision: the simulator does not limit the player's time). 2P joins at any
     // time with its own don (issue #5): its nameplate fades in on the right and the invite goes away;
-    // the play mode then plays both seats. Not ported: the 3D Don and its join cloud, the other
+    // the play mode then plays both seats. A 2P don on the credit screen joins 2P alone: its plate
+    // fades in on the right, the 2P drum works the boards, every board stays open, and the player
+    // sits on the 2P side (Seating) in the screens that follow; 1P may still join with its don,
+    // which makes two players. Not ported: the 3D Don and its join cloud, the other
     // boards (特訓モード / きせかえ), the costume menu and the ALL.Net indicator. The screen is saved
     // in the scene (EntryView); Awake only binds it.
     public sealed class EntryScene : MonoBehaviour
@@ -44,6 +47,10 @@ namespace OurTaiko
         public NameplateView Nameplate { get; private set; }
         public bool HasLeft { get; private set; }
         public bool Joined2P => joined2PAt.HasValue;
+        public bool Joined1P => joined1PAt.HasValue;
+        // 2P joined first, and 1P has not joined since.
+        public bool Lone2P => Joined2P && !Joined1P;
+        public bool TwoJoined => Joined1P && Joined2P;
         // "1P's OurTaiko sign-in has expired…" when the account center refused a remembered
         // sign-in since the last Entry; empty otherwise.
         public string AccountNotice { get; private set; } = "";
@@ -52,7 +59,7 @@ namespace OurTaiko
         SceneSwitcher switcher;
         EntryBackground backdrop;
         CanvasGroup nameplateGroup, nameplateGroup2P;
-        double? joined2PAt;
+        double? joined1PAt, joined2PAt;
         bool announced, creditGone;
         double modeShownAt = double.NaN;
         CanvasGroup accountNotice;
@@ -67,6 +74,7 @@ namespace OurTaiko
             switcher = SceneSwitcher.EnsureInstance();
             // A new credit: whoever plays joins again.
             switcher.TwoPlayers = false;
+            Seating.SitTogether();
             double now = Now;
             Bind();
             Flow = new EntryFlow(now, Modes.Length);
@@ -158,7 +166,7 @@ namespace OurTaiko
         public void TapBoard(int index)
         {
             if (Flow.State != EntryFlow.Phase.SelectMode) { Don(); return; }
-            if (index == Flow.SelectedMode) Don();
+            if (index == Flow.SelectedMode) Decide();
             else Ka(index - Flow.SelectedMode);
         }
 
@@ -173,10 +181,15 @@ namespace OurTaiko
             double now = Now;
             if (!switcher.IsInputBlocked && !HasLeft)
             {
-                if (InputManager.P2.DonDown) Join2P();
-                if (InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Don();
-                else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft) || InputManager.GetKeyDown(InputKey.MenuUp)) Ka(-1);
-                else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight) || InputManager.GetKeyDown(InputKey.MenuDown)) Ka(1);
+                // A lone 2P's drum works the boards; 1P's don then joins 1P.
+                var p1 = InputManager.P1;
+                var p2 = InputManager.P2;
+                var lead = Lone2P ? p2 : p1;
+                if (p2.DonDown) Don2P();
+                if (p1.DonDown) Don();
+                else if (InputManager.GetKeyDown(InputKey.Confirm)) Decide();
+                else if (lead.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft) || InputManager.GetKeyDown(InputKey.MenuUp)) Ka(-1);
+                else if (lead.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight) || InputManager.GetKeyDown(InputKey.MenuDown)) Ka(1);
             }
             if (!announced && Flow.IsModeReady(now) && !voice.IsAudioPlaying())
             {
@@ -187,7 +200,8 @@ namespace OurTaiko
             {
                 HasLeft = true;
                 switcher.PracticeMode = view.boards[Flow.SelectedMode].practice;
-                switcher.TwoPlayers = Joined2P;
+                switcher.TwoPlayers = TwoJoined;
+                if (!TwoJoined) Seating.SitAlone(Lone2P ? 1 : 0);
                 string scene = Modes[Flow.SelectedMode].Scene;
                 // On the way to song select every folder closes and the songs folder is read again,
                 // so songs added since the last visit appear. The online songs are already listed:
@@ -202,7 +216,7 @@ namespace OurTaiko
             Show(now);
         }
 
-        // A drum face hit: join on the credit screen, decide on the board.
+        // 1P's don: 1P joins on the credit screen (or beside a lone 2P), then decides on the board.
         public void Don()
         {
             if (switcher.IsInputBlocked || HasLeft) return;
@@ -210,27 +224,59 @@ namespace OurTaiko
             if (Flow.State == EntryFlow.Phase.SelectSide)
             {
                 if (!Flow.Join(now)) return;
+                joined1PAt = now;
                 Play(sfx, cloud, oneShot: true);
                 Play(voice, entryStart);
                 Play(sfx, don, oneShot: true);
                 return;
             }
+            if (Lone2P) { Join1P(); return; }
+            Decide();
+        }
+
+        // 2P's don: 2P joins (alone on the credit screen, or beside 1P); a lone 2P's picks the board.
+        public void Don2P()
+        {
+            if (Lone2P) Decide();
+            else Join2P();
+        }
+
+        // The decide on the mode list, by whoever leads it (a tap, Enter, or the player's don).
+        public void Decide()
+        {
+            if (switcher.IsInputBlocked || HasLeft || Flow.State != EntryFlow.Phase.SelectMode) return;
+            double now = Now;
             if (!Flow.IsModeReady(now) || Flow.IsSelected) return;
-            if (Joined2P && IsSinglePlayerOnly(Flow.SelectedMode)) return;
+            if (TwoJoined && IsSinglePlayerOnly(Flow.SelectedMode)) return;
             Play(sfx, don, oneShot: true);
             // ゲーム設定 opens the settings overlay over the mode list instead of leaving Entry.
             if (Modes[Flow.SelectedMode].Scene == SceneSwitcher.SettingScene) { SettingsOverlay.Open(); return; }
             Flow.Select(now);
         }
 
-        // 2P's don: 2P joins (entry_start_2p), once.
+        // 2P's don: 2P joins (entry_start_2p), once: alone on the credit screen, or beside 1P.
         public void Join2P()
         {
             // Once a board is picked the players are settled (段位道場 must not take a late 2P).
             if (switcher.IsInputBlocked || HasLeft || Joined2P || Flow.IsSelected) return;
-            joined2PAt = Now;
+            double now = Now;
+            if (Flow.State == EntryFlow.Phase.SelectSide)
+            {
+                if (!Flow.Join(now)) return;
+                Play(sfx, cloud, oneShot: true);
+            }
+            joined2PAt = now;
             Play(sfx, don, oneShot: true);
             Play(voice, entryStart2P);
+        }
+
+        // 1P's don after 2P joined alone: 1P joins too, and the two play together.
+        public void Join1P()
+        {
+            if (switcher.IsInputBlocked || HasLeft || !Lone2P || Flow.IsSelected) return;
+            joined1PAt = Now;
+            Play(sfx, don, oneShot: true);
+            Play(voice, entryStart);
         }
 
         // A rim hit on the mode list: left ka selects the board above, right ka the one below. The
@@ -264,6 +310,9 @@ namespace OurTaiko
             source.PlayAudio();
         }
 
+        static float PlateAlpha(double? joinedAt, double now)
+            => joinedAt.HasValue ? (float)Math.Min(1, Math.Max(0, now - joinedAt.Value) / EntryFlow.NameplateFadeMs) : 0;
+
         void Show(double now)
         {
             backdrop.Show(now - Flow.StartedAt);
@@ -274,7 +323,7 @@ namespace OurTaiko
                 Board.Show(now, now - modeShownAt, Flow.SelectedMode, Flow.BoardFade(now), Flow.SelectedAt.HasValue ? now - Flow.SelectedAt.Value : -1);
             // With 2P in, the single-player boards stay greyed and cannot be picked.
             for (int i = 0; i < view.boards.Length; i++)
-                if (IsSinglePlayerOnly(i)) Grey(view.boards[i], Joined2P);
+                if (IsSinglePlayerOnly(i)) Grey(view.boards[i], TwoJoined);
 
             if (Flow.State == EntryFlow.Phase.SelectSide) Credit.ShowWaiting(now - Flow.StartedAt, now - Flow.StartedAt);
             else if (!creditGone) creditGone = !Credit.ShowDecided(now - Flow.JoinedAt.Value, 0);
@@ -284,11 +333,10 @@ namespace OurTaiko
             float plate = Flow.NameplateAlpha(now);
             if (Flow.JoinedAt.HasValue) Guide.Show(now - Flow.JoinedAt.Value, plate);
             else Guide.Show(now - Flow.StartedAt, 1);
-            if (nameplateGroup != null) nameplateGroup.alpha = plate;
-            if (nameplateGroup2P != null)
-                nameplateGroup2P.alpha = joined2PAt.HasValue ? (float)Math.Min(1, (now - joined2PAt.Value) / EntryFlow.NameplateFadeMs) : 0;
+            if (nameplateGroup != null) nameplateGroup.alpha = PlateAlpha(joined1PAt, now);
+            if (nameplateGroup2P != null) nameplateGroup2P.alpha = PlateAlpha(joined2PAt, now);
             // coin_overlay: the 2P invite appears once the credit rows are gone and only 1P is in.
-            Coins.ShowInvite(Flow.JoinedAt.HasValue && creditGone && !Joined2P, now - Flow.StartedAt);
+            Coins.ShowInvite(Joined1P && creditGone && !Joined2P, now - Flow.StartedAt);
             // The expiry notice holds, then fades out over its last half second.
             if (accountNotice != null)
                 accountNotice.alpha = (float)Math.Max(0, Math.Min(1, (AccountNoticeMs - (now - accountNoticeAt)) / 500));

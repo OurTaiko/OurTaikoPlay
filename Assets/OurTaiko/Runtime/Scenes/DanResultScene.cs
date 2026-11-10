@@ -111,7 +111,7 @@ namespace OurTaiko
             for (int i = 0; i < Result.Songs.Length; i++)
                 scores[i] = ResultScene.SaveScore(Result.Run.Song(i), Result.Songs[i], Result.Records != null && i < Result.Records.Length ? Result.Records[i] : null, 0, danServer);
             if (danServer != null)
-                DanUpload = Result.Upload = Online.OnlineManager.EnsureInstance().Client?.SubmitDanAttempt(course.Server, course.Id, Result.Verdict, Result.Songs.Length, scores);
+                DanUpload = Result.Upload = Online.OnlineManager.EnsureInstance().Client?.SubmitDanAttempt(course.Server, course.Id, Result.Verdict, Result.Songs.Length, scores, Seating.Physical(0));
         }
 
         // Once OurTaikoProfile has answered the upload, 1P's nameplate is read again for what it
@@ -123,7 +123,7 @@ namespace OurTaiko
             var award = online.Client?.Award(DanUpload);
             if (award == null) return;
             awardAnswered = true;
-            if (award.Profile?["granted"] is JObject) _ = online.RefreshNameplateAsync(0);
+            if (award.Profile?["granted"] is JObject) _ = online.RefreshNameplateAsync(Seating.Physical(0));
         }
 
         void Update()

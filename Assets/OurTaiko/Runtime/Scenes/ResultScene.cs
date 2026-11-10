@@ -100,6 +100,7 @@ namespace OurTaiko
             boards.Add(new ResultBoard(this, 0, view, Result, result2P != null));
             if (view.secondBoard != null) view.secondBoard.gameObject.SetActive(result2P != null);
             if (result2P != null) boards.Add(new ResultBoard(this, 1, view.secondBoard, result2P, true));
+            if (result2P != null && switcher.PlaysGhost) ShowGhostPlates(switcher.Ghost);
             if (view.secondAnalysis != null)
             {
                 view.secondAnalysis.gameObject.SetActive(result2P != null);
@@ -111,11 +112,30 @@ namespace OurTaiko
             switcher.SceneChanging += OnSceneChanging;
         }
 
+        // The player's plate on their side and the recording's player on the other.
+        void ShowGhostPlates(GhostMatch ghost)
+        {
+            var plates = new[] { view.nameplate, view.secondBoard.nameplate };
+            var controller = PlayerInfoController.EnsureInstance();
+            int own = Seating.Physical(0);
+            plates[ghost.PlayerLane]?.Pin(own == 0 ? controller.Info : controller.SecondInfo, ghost.PlayerLane);
+            plates[ghost.GhostLane]?.Pin(new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? "Ghost" : ghost.Nickname }, ghost.GhostLane);
+        }
+
         // Only entering ResultScene commits a completed play. Practice never enters this scene.
         // Consume before saving so scene reloads and Editor previews cannot submit a run twice.
         void SaveScores()
         {
             if (!switcher.TakeCompletedPlay(out var song, out var record, out var record2P)) return;
+            // A ghost battle keeps the player's play only, as the player's own (Seating); the
+            // recording's result is shown and never saved.
+            if (switcher.PlaysGhost)
+            {
+                bool below = switcher.Ghost.PlayerLane == 1;
+                var played = below ? switcher.LastResult2P : Result;
+                if (played != null) SaveScore(song, played, below ? record2P : record, 0);
+                return;
+            }
             SaveScore(song, Result, record, 0);
             if (switcher.LastResult2P != null) SaveScore(song, switcher.LastResult2P, record2P, 1);
         }
@@ -135,6 +155,8 @@ namespace OurTaiko
             // Auto play and a custom judge window are not real results.
             if (!result.IsRecordable) return null;
             if (!SongScores.IsOnline(song)) { ScoreStore.Shared.Save(result); return null; }
+            // A lone 2P's score is 2P's account's (Seating).
+            seat = Seating.Physical(seat);
             var online = Online.OnlineManager.Instance;
             var chart = online != null ? online.ChartOf(song) : null;
             if (chart == null) return null;
@@ -147,7 +169,7 @@ namespace OurTaiko
                 Drumroll = result.Rolls, MaxCombo = result.MaxCombo, ClearStatus = (int)result.StoredCrown,
                 AdLibGood = result.AdLibGood, AdLibOk = result.AdLibOk, Mines = result.Mines,
             };
-            var withAttempt = danServer != null ? online.Client.DanAttemptScore(danServer, chart, difficulty, score, record, result.Side) : null;
+            var withAttempt = danServer != null ? online.Client.DanAttemptScore(danServer, chart, difficulty, score, record, result.Side, seat) : null;
             if (withAttempt == null) online.Submit(chart, difficulty, score, record, seat, result.Side);
             return withAttempt;
         }

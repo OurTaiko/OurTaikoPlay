@@ -36,6 +36,8 @@ namespace OurTaiko
         public static InputKey Face(this InputKey key) => key >= InputKey.P2LeftDon ? (InputKey)(key - InputKey.P2LeftDon) : key;
         // A seat's key for a drum face.
         public static InputKey OfSeat(this InputKey face, int seat) => seat == 1 && face <= InputKey.RightKa ? face + (int)InputKey.P2LeftDon : face;
+        // A keyboard drum key as the seats sit (Seating): a lone 2P's drum is the player's, seat 0.
+        public static InputKey Seated(this InputKey key) => Seating.Lone == 1 && key.IsDrum() ? key.Face().OfSeat(1 - key.Seat()) : key;
     }
 
     // One seat's drum: its presses of the frame (keys named as 1P's faces) and its input lock.
@@ -57,7 +59,8 @@ namespace OurTaiko
     // raw keyboard events are collected as they arrive; once per frame (before any scene Update)
     // they are merged with the touch/mouse presses on registered DrumPad zones and published
     // as one time-ordered list of presses plus per-key flags. Players[seat] splits the drum
-    // presses by seat; touch and mouse drum zones always strike 1P.
+    // presses by seat; touch and mouse drum zones always strike 1P. A lone 2P's keyboard drum is
+    // reported as seat 0's (Seating), so every single-player screen answers it.
     public static class InputManager
     {
         static readonly int KeyCount = Enum.GetValues(typeof(InputKey)).Length;
@@ -140,7 +143,7 @@ namespace OurTaiko
                 if (control == null || control.isPressed) continue;
                 if (control.ReadValueFromEvent(eventPtr, out float value) && control.IsValueConsideredPressed(value))
                 {
-                    pending.Add(new InputPress(pair.Value, eventPtr.time));
+                    pending.Add(new InputPress(pair.Value.Seated(), eventPtr.time));
                     recorded[(int)pair.Value] = true;
                 }
             }
@@ -194,11 +197,11 @@ namespace OurTaiko
                 foreach (var physical in bindings[i])
                 {
                     var control = keyboard[physical];
-                    held[i] |= control.isPressed;
+                    held[(int)((InputKey)i).Seated()] |= control.isPressed;
                     pressed |= control.wasPressedThisFrame;
                 }
                 // Fallback if an event was missed: keep the press, ordered after the recorded ones.
-                if (pressed && !recorded[i]) pending.Add(new InputPress((InputKey)i, InputState.currentTime));
+                if (pressed && !recorded[i]) pending.Add(new InputPress(((InputKey)i).Seated(), InputState.currentTime));
             }
         }
 

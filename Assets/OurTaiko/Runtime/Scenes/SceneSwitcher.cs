@@ -21,9 +21,14 @@ namespace OurTaiko
         public const string DoublePlayScene = "DoublePlayScene";
         public bool PracticeMode { get; set; }
         // 2P joined with a don on Entry or SongSelect. Practice is single-player and ignores it.
-        public bool TwoPlayers { get; set; }
+        public bool TwoPlayers
+        {
+            get => twoPlayers;
+            set { twoPlayers = value; if (value) Seating.SitTogether(); }
+        }
+        bool twoPlayers;
         public bool PlaysTwo => TwoPlayers && !PracticeMode;
-        public string SelectedPlayScene => PracticeMode ? PracticeScene : TwoPlayers ? DoublePlayScene : GameScene;
+        public string SelectedPlayScene => PracticeMode ? PracticeScene : TwoPlayers || PlaysGhost ? DoublePlayScene : GameScene;
         public static bool IsPlayScene(string scene) => scene == GameScene || scene == PracticeScene || scene == DoublePlayScene;
         public const string SongSelectScene = "SongSelect", ResultScene = "Result", EntryScene = "Entry";
         // The first scene and where Back falls back to.
@@ -237,11 +242,11 @@ namespace OurTaiko
         public void Select(SongDefinition song, string course = null, bool autoPlay = false, string course2P = null, bool autoPlay2P = false)
         {
             ClearPracticeEntry();
-            Replay = null;
+            Replay = null; Ghost = null;
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
             SelectedCourse2P = course2P ?? course; AutoPlay2P = autoPlay2P;
-            SelectedSide = song != null ? song.PlayedSide(SelectedCourse, SeatBlocks.Seats[0], PlaysTwo) : "single";
-            SelectedSide2P = song != null ? song.PlayedSide(SelectedCourse2P, SeatBlocks.Seats[1], true) : "p2";
+            SelectedSide = song != null ? song.PlayedSide(SelectedCourse, Seating.Side(0), PlaysTwo) : "single";
+            SelectedSide2P = song != null ? song.PlayedSide(SelectedCourse2P, Seating.Side(1), true) : "p2";
         }
 
         public void ShowSongOnCurtain(SongDefinition song)

@@ -114,6 +114,29 @@ namespace OurTaiko.Tests
         public readonly ConcurrentDictionary<string, JObject> Idempotent = new ConcurrentDictionary<string, JObject>();
         public readonly ConcurrentBag<string> Requests = new ConcurrentBag<string>();
         public readonly List<JObject> AccountScores = new List<JObject>();
+        // GET /api/v1/replays (newest first, one page) and GET /api/v1/scores/{id}/replay: the listed
+        // plays and their recordings by score id.
+        public readonly List<JObject> Replays = new List<JObject>();
+        public readonly ConcurrentDictionary<string, JToken> ReplayRecords = new ConcurrentDictionary<string, JToken>();
+
+        // A recorded play of `chart`'s block on the replay list; isLatest false is a play of files
+        // replaced since (the list itself never has one, but the recording says so).
+        public JObject AddReplay(Chart chart, string course, PlayRecord record, string nickname, long score, string player = "", bool isLatest = true)
+        {
+            var row = new JObject
+            {
+                ["id"] = Hex(32), ["userId"] = UserId(nickname), ["songId"] = chart.Id, ["difficultyId"] = chart.BlockId(course, player),
+                ["course"] = course, ["side"] = Chart.Side(player), ["good"] = 0, ["ok"] = 0, ["bad"] = 0, ["score"] = score,
+                ["drumroll"] = 0, ["max_combo"] = 0, ["ClearStatus"] = 0, ["isLatest"] = isLatest,
+                ["submittedAt"] = DateTime.UtcNow.AddMinutes(-Replays.Count).ToString("o"), ["adlib"] = new JArray(0, 0), ["mines"] = 0,
+                ["hasReplay"] = true, ["title"] = chart.Title, ["titleTranslations"] = new JObject(), ["subtitle"] = chart.Subtitle,
+                ["level"] = chart.Difficulties.Find(d => d.Course == course && d.Player == player).Level, ["nickname"] = nickname, ["avatarUrl"] = "",
+            };
+            lock (Replays) Replays.Add(row);
+            ReplayRecords[(string)row["id"]] = record.ToJson();
+            return row;
+        }
+
         // GET /game/playlists for any signed-in account.
         public JArray AccountPlaylists = new JArray();
         public int Downloads;
@@ -279,6 +302,28 @@ namespace OurTaiko.Tests
                 {
                     if (user == null) { Reply(context, 401, new JObject()); return; }
                     Reply(context, 200, new JObject { ["playlists"] = AccountPlaylists, ["playlistVersion"] = 1 });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && path == "/api/v1/replays")
+                {
+                    JArray items;
+                    lock (Replays) items = new JArray(Replays.Where(r => (bool)r["isLatest"]).Select(r => r.DeepClone()));
+                    int page = int.TryParse(request.QueryString["page"], out int p) ? p : 1;
+                    Reply(context, 200, new JObject
+                    {
+                        ["items"] = page == 1 ? items : new JArray(), ["total"] = items.Count, ["page"] = page, ["pageSize"] = 20,
+                        ["sort"] = request.QueryString["sort"] ?? "recent",
+                    });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && parts.Length == 5 && parts[2] == "scores" && parts[4] == "replay")
+                {
+                    JObject row;
+                    lock (Replays) row = Replays.Find(r => (string)r["id"] == parts[3]);
+                    if (row == null || !ReplayRecords.TryGetValue(parts[3], out var recording)) { Reply(context, 404, new JObject { ["code"] = "REPLAY_NOT_FOUND" }); return; }
+                    var score = (JObject)row.DeepClone();
+                    foreach (var key in new[] { "title", "titleTranslations", "subtitle", "level", "nickname", "avatarUrl" }) score.Remove(key);
+                    Reply(context, 200, new JObject { ["score"] = score, ["nickname"] = row["nickname"], ["avatarUrl"] = "", ["replay"] = recording });
                     return;
                 }
                 if (request.HttpMethod == "POST" && path == "/api/v1/game/scores") { Score(context, user, request.Headers["Idempotency-Key"], JObject.Parse(body)); return; }

@@ -270,8 +270,9 @@ namespace OurTaiko
             else if (p2.DonDown) Confirm(1);
         }
 
-        // SongSelect2PScreen: 2P joins with its don while 1P is choosing (not in practice).
-        public bool CanJoinSecond => !TwoPlayers && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
+        // SongSelect2PScreen: 2P joins with its don while 1P is choosing (not in practice). A lone
+        // 2P (Seating) already holds the 2P side; 1P joins it on Entry.
+        public bool CanJoinSecond => !TwoPlayers && Seating.Lone == 0 && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
 
         public void JoinSecond()
         {
