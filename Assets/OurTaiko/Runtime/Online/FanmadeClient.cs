@@ -426,9 +426,9 @@ namespace OurTaiko.Online
                 }
                 Interlocked.Increment(ref revision);
                 SetStatus(e.Config.DisplayName + ": " + list.Count + " songs ready" + (e.IsAuthenticated ? "" : " (guest; scores disabled)"));
-                // A server that keeps an attempt's scores takes their upload keys with it; one that
-                // does not would refuse the field it does not know.
-                e.DanScoreKeys = snapshot["danScoreKeys"]?.Type == JTokenType.Integer && (long)snapshot["danScoreKeys"] == 1;
+                // A server that takes a 段位 attempt's scores with it; one that does not would refuse
+                // the field it does not know.
+                e.DanAttemptScores = snapshot["danAttemptScores"]?.Type == JTokenType.Integer && (long)snapshot["danAttemptScores"] == 1;
                 if (snapshot["danVersion"]?.Type == JTokenType.Integer && (long)snapshot["danVersion"] == 1) await LoadDansAsync(e, cancel);
                 else lock (sync) danLists.Remove(e.Id);
             }
@@ -455,19 +455,42 @@ namespace OurTaiko.Online
             }
         }
 
-        // Queues a 段位 attempt of a server's course for 1P's account, then sends it in the
-        // background like scores; the server asks OurTaikoProfile for its rewards. The queue key,
-        // or null when 1P is not signed in there. scoreKeys: the upload keys of the played songs'
-        // scores in song order (SubmitKeyed; null for a song that uploaded none), by which the
-        // server ties those scores to the attempt.
-        public string SubmitDanAttempt(string server, string courseId, int verdict, int songsPlayed, IReadOnlyList<string> scoreKeys = null)
+        // The endpoint 1P is signed in to at `server`, or null.
+        FanmadeEndpoint DanEndpoint(string server)
         {
             FanmadeEndpoint e;
             lock (sync) e = endpoints.Find(x => string.Equals(x.Config.baseUrl, server.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) && x.IsConnected);
-            if (e == null || !HasAccount(e, 0)) return null;
-            var body = new JObject { ["courseId"] = courseId, ["verdict"] = verdict, ["songsPlayed"] = songsPlayed };
-            if (e.DanScoreKeys && scoreKeys != null && scoreKeys.Count == songsPlayed)
-                body["scoreKeys"] = new JArray(scoreKeys.Select(k => k != null ? (JToken)k : JValue.CreateNull()));
+            return e != null && HasAccount(e, 0) ? e : null;
+        }
+
+        // A song's score for its 段位 attempt on `server` (SubmitDanAttempt's scores): the score as it
+        // is uploaded alone, with the hashes of the block and audio that were played, which the
+        // server checks as the game does for a score of its own. null when the server does not take
+        // an attempt's scores with it, or the chart is another server's: the score then goes up alone.
+        public JObject DanAttemptScore(string server, FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay, string side)
+        {
+            var e = DanEndpoint(server);
+            if (e == null || !e.DanAttemptScores || Endpoint(chart.Server) != e) return null;
+            var block = SideBlock(chart, difficulty, side);
+            if (block == null) return null;
+            var body = ScoreBody(block, score, replay);
+            body["chartHash"] = block.ChartHash; body["audioHash"] = chart.AudioHash;
+            return body;
+        }
+
+        // Queues a 段位 attempt of a server's course for 1P's account, then sends it in the
+        // background like scores; the server asks OurTaikoProfile for its rewards. The queue key,
+        // or null when 1P is not signed in there. scores: the played songs' scores in song order
+        // (DanAttemptScore; null for a song without one). The server saves them and the attempt
+        // together; without them the attempt only says how many songs were played.
+        public string SubmitDanAttempt(string server, string courseId, int verdict, int songsPlayed, IReadOnlyList<JObject> scores = null)
+        {
+            var e = DanEndpoint(server);
+            if (e == null) return null;
+            var body = new JObject { ["courseId"] = courseId, ["verdict"] = verdict };
+            if (e.DanAttemptScores && scores != null && scores.Count == songsPlayed)
+                body["scores"] = new JArray(scores.Select(v => v ?? (JToken)JValue.CreateNull()));
+            else body["songsPlayed"] = songsPlayed;
             string key = RandomKey();
             try
             {
@@ -535,27 +558,33 @@ namespace OurTaiko.Online
         // and sent once that account is signed in to the server again; null queues nothing offline.
         public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null,
             string offlineAccount = null)
-            => SubmitKeyed(chart, difficulty, score, replay, seat, side, offlineAccount) != null;
-
-        // As Submit; the key the score is uploaded with (its Idempotency-Key), or null when nothing
-        // is queued. A 段位 attempt names its songs' scores by these keys.
-        public string SubmitKeyed(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null,
-            string offlineAccount = null)
         {
             var block = SideBlock(chart, difficulty, side);
-            if (block == null) return null;
+            if (block == null) return false;
             var e = Endpoint(chart.Server);
             string account;
             if (e != null && e.IsConnected)
             {
-                if (!HasAccount(e, seat)) return null;
+                if (!HasAccount(e, seat)) return false;
                 account = e.AccountIdOf(seat);
             }
             else
             {
-                if (string.IsNullOrEmpty(offlineAccount) || Offline.Get(chart.Server, chart.Id) == null) return null;
+                if (string.IsNullOrEmpty(offlineAccount) || Offline.Get(chart.Server, chart.Id) == null) return false;
                 account = offlineAccount;
             }
+            try
+            {
+                UploadQueue.Enqueue(account, RandomKey(), ScoreBody(block, score, replay).ToString(Newtonsoft.Json.Formatting.None), block.ChartHash, chart.AudioHash, chart.Id);
+                RetryNow();
+                return true;
+            }
+            catch (Exception error) { SetStatus("Score queue error: " + error.Message); return false; }
+        }
+
+        // A score as POST /game/scores takes it.
+        static JObject ScoreBody(FanmadeDifficulty block, FanmadeScore score, PlayRecord replay)
+        {
             // The block that was played names the song and course.
             var body = new JObject { ["difficultyId"] = block.Id };
             body["good"] = score.Good; body["ok"] = score.Ok; body["bad"] = score.Bad; body["score"] = score.Score;
@@ -565,14 +594,7 @@ namespace OurTaiko.Online
             if (score.AdLibGood > 0 || score.AdLibOk > 0) body["adlib"] = new JArray(score.AdLibGood, score.AdLibOk);
             if (score.Mines > 0) body["mines"] = score.Mines;
             body["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull();
-            try
-            {
-                string key = RandomKey();
-                UploadQueue.Enqueue(account, key, body.ToString(Newtonsoft.Json.Formatting.None), block.ChartHash, chart.AudioHash, chart.Id);
-                RetryNow();
-                return key;
-            }
-            catch (Exception error) { SetStatus("Score queue error: " + error.Message); return null; }
+            return body;
         }
 
         // Called every frame: starts a background upload pass at most every 30 s and never waits for HTTP.
@@ -684,6 +706,22 @@ namespace OurTaiko.Online
                     await e.Transport.WaitAsync();
                     try { reply = Json.Parse(await e.AuthorizedAsync("/api/v1/game/dan-attempts", queued.Body, queued.Key)); }
                     finally { e.Transport.Release(); }
+                    // The scores the server saved with the attempt: 1P's, as if each had gone up alone.
+                    if (reply["scores"] is JArray saved)
+                        lock (sync)
+                        {
+                            foreach (var item in saved)
+                            {
+                                if (!(item is JObject)) continue;
+                                var score = FanmadeScore.From(item);
+                                foreach (var seat in e.Seats)
+                                {
+                                    if (!seat.IsAuthenticated || e.AccountIdOf(Array.IndexOf(e.Seats, seat)) != e.AccountIdOf(0)) continue;
+                                    if (!seat.Scores.Any(x => x.Id == score.Id)) seat.Scores.Add(score);
+                                    seat.IndexScore(score);
+                                }
+                            }
+                        }
                     var award = new DanAward
                     {
                         Profile = reply["profile"] as JObject,

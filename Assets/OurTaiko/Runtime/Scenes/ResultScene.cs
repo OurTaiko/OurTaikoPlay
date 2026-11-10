@@ -123,9 +123,14 @@ namespace OurTaiko
         // Local charts keep every seat's best in the one score database. Online, each seat uploads
         // its own course and block with its own account; a seat without a login is skipped (2P has
         // none yet). A play from the offline cache is queued for the seat's account on that server
-        // and goes up once the server connects again. Returns the key an online score is uploaded
-        // with (a 段位 attempt names its songs' scores by it), or null when none is.
-        internal static string SaveScore(SongDefinition song, PlayResult result, Online.PlayRecord record, int seat)
+        // and goes up once the server connects again.
+        internal static void SaveScore(SongDefinition song, PlayResult result, Online.PlayRecord record, int seat)
+            => SaveScore(song, result, record, seat, null);
+
+        // A 段位 song's score (1P's). On a server that takes an attempt's scores with it
+        // (`danServer`) the score is returned for the attempt instead of going up alone; null when
+        // it was saved or queued here, or is not a result to keep.
+        internal static Newtonsoft.Json.Linq.JObject SaveScore(SongDefinition song, PlayResult result, Online.PlayRecord record, int seat, string danServer)
         {
             // Auto play and a custom judge window are not real results.
             if (!result.IsRecordable) return null;
@@ -136,12 +141,15 @@ namespace OurTaiko
             int difficulty = (int)result.Difficulty;
             var best = online.Client.Best(chart, difficulty, seat, result.Side);
             if (best != null) result.PreviousBest = (int)Math.Min(int.MaxValue, Math.Max(result.PreviousBest, best.Score));
-            return online.SubmitKeyed(chart, difficulty, new Online.FanmadeScore
+            var score = new Online.FanmadeScore
             {
                 Good = result.Good, Ok = result.Ok, Bad = result.Bad, Score = result.Score,
                 Drumroll = result.Rolls, MaxCombo = result.MaxCombo, ClearStatus = (int)result.StoredCrown,
                 AdLibGood = result.AdLibGood, AdLibOk = result.AdLibOk, Mines = result.Mines,
-            }, record, seat, result.Side);
+            };
+            var withAttempt = danServer != null ? online.Client.DanAttemptScore(danServer, chart, difficulty, score, record, result.Side) : null;
+            if (withAttempt == null) online.Submit(chart, difficulty, score, record, seat, result.Side);
+            return withAttempt;
         }
 
 

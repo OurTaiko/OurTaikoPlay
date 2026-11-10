@@ -197,29 +197,41 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void AnAttemptNamesItsSongsScoresOnAServerThatKeepsThem()
+        public void AnAttemptGoesUpWithItsSongsScoresOnAServerThatTakesThem()
         {
             fixture.Dans = Newtonsoft.Json.Linq.JArray.Parse("[]");
-            fixture.DanScoreKeys = true;
+            fixture.DanAttemptScores = true;
             fixture.DanProfileReply = Newtonsoft.Json.Linq.JObject.Parse("{\"granted\":{}}");
             var e = Catalog();
-            Assert.That(e.DanScoreKeys, Is.True);
+            Assert.That(e.DanAttemptScores, Is.True);
             SignIn(e, 0, "don", "katsu");
             var listed = client.Chart(e.Id, chart.Id);
-            // The score's upload key is what the attempt names; a song that uploaded none is null.
-            string scoreKey = client.SubmitKeyed(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 500000, Good = 4, MaxCombo = 4 }, seat: 0, side: "single");
-            Assert.That(scoreKey, Has.Length.EqualTo(64));
-            Assert.That(client.UploadQueue.Pending(e.AccountIdOf(0)).Single().Key, Is.EqualTo(scoreKey));
-            Assert.That(client.SubmitKeyed(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, seat: 1, side: "p2"), Is.Null, "A guest seat uploads nothing.");
-            client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { scoreKey, null });
+            var record = new PlayRecord { Speed = 20 };
+            record.Inputs.Add((10, 1));
+            // The score is not queued on its own: it is part of the attempt, with what it was played on.
+            var score = client.DanAttemptScore(fixture.BaseUrl, listed, (int)Difficulty.Oni, new FanmadeScore { Score = 500000, Good = 4, MaxCombo = 4, ClearStatus = 1 }, record, "single");
+            Assert.That(client.UploadQueue.Pending(e.AccountIdOf(0)), Is.Empty);
+            Assert.That((long)score["difficultyId"], Is.EqualTo(chart.BlockId("Oni")));
+            Assert.That((string)score["audioHash"], Is.EqualTo(listed.AudioHash));
+            Assert.That((string)score["chartHash"], Is.Not.Empty);
+            Assert.That((int)score["replay_data"]["options"]["speed"], Is.EqualTo(20));
+            Assert.That(client.DanAttemptScore("https://elsewhere.example", listed, (int)Difficulty.Oni, new FanmadeScore(), null, "single"), Is.Null, "Another server's attempt does not take it.");
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single"), Is.Null);
+            client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { score, null });
             Drain();
-            var keys = (Newtonsoft.Json.Linq.JArray)fixture.DanAttempts.Single().Body["scoreKeys"];
-            Assert.That((string)keys[0], Is.EqualTo(scoreKey));
-            Assert.That(keys[1].Type, Is.EqualTo(Newtonsoft.Json.Linq.JTokenType.Null));
-            // Keys that do not cover the songs played are left out, not sent wrong.
-            client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { scoreKey });
+            var sent = fixture.DanAttempts.Single().Body;
+            Assert.That(sent.ContainsKey("songsPlayed"), Is.False, "The scores say how many songs were played.");
+            var scores = (Newtonsoft.Json.Linq.JArray)sent["scores"];
+            Assert.That((int)scores[0]["score"], Is.EqualTo(500000));
+            Assert.That(scores[1].Type, Is.EqualTo(Newtonsoft.Json.Linq.JTokenType.Null));
+            Assert.That(fixture.AcceptedScores, Is.Empty, "Nothing went to /game/scores.");
+            // What the server saved is the account's score from then on.
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(500000));
+            // Scores that do not cover the songs played are left out, not sent wrong.
+            client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { score });
             Drain();
-            Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scoreKeys"), Is.False);
+            Assert.That((int)fixture.DanAttempts.Last().Body["songsPlayed"], Is.EqualTo(2));
+            Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scores"), Is.False);
         }
 
         [Test]
@@ -247,10 +259,12 @@ namespace OurTaiko.Tests
             Assert.That((string)sent.Body["courseId"], Is.EqualTo("7"));
             Assert.That((int)sent.Body["verdict"], Is.EqualTo(4));
             Assert.That((int)sent.Body["songsPlayed"], Is.EqualTo(1));
-            // This server did not say it keeps an attempt's scores, so their keys stay out of the body.
-            client.SubmitDanAttempt(fixture.BaseUrl, "7", 4, 1, new[] { "0123456789abcdef" });
+            // This server did not say it takes an attempt's scores with it: a song's score goes up alone.
+            Assert.That(client.DanAttemptScore(fixture.BaseUrl, client.Chart(e.Id, chart.Id), (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, null, "single"), Is.Null);
+            client.SubmitDanAttempt(fixture.BaseUrl, "7", 4, 1, new[] { new Newtonsoft.Json.Linq.JObject() });
             Drain();
-            Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scoreKeys"), Is.False);
+            Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scores"), Is.False);
+            Assert.That((int)fixture.DanAttempts.Last().Body["songsPlayed"], Is.EqualTo(1));
             var award = client.Award(key);
             Assert.That((int)award.Profile["granted"]["dan"]["index"], Is.EqualTo(20));
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);

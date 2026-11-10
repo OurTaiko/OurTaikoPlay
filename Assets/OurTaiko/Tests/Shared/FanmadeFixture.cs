@@ -91,8 +91,9 @@ namespace OurTaiko.Tests
         public JArray Dans;
         // POST /game/dan-attempts: what was sent (body and user), and OurTaikoProfile's reply the
         // server passes back (null: Profile unreachable).
-        // The catalog says the server keeps an attempt's scores (danScoreKeys).
-        public bool DanScoreKeys;
+        // The catalog says the server takes an attempt's scores with it (danAttemptScores); it
+        // then saves them and answers with them.
+        public bool DanAttemptScores;
         public readonly ConcurrentQueue<(string User, JObject Body)> DanAttempts = new ConcurrentQueue<(string, JObject)>();
         public JObject DanProfileReply = JObject.Parse("{\"granted\":{\"dan\":null,\"titles\":[]},\"nameplate\":{}}");
         // OurTaikoProfile's public nameplates by user id (GET /api/v1/users/{id}/nameplate); a user
@@ -279,8 +280,22 @@ namespace OurTaiko.Tests
                     if (string.IsNullOrEmpty(request.Headers["Idempotency-Key"])) { Reply(context, 400, new JObject()); return; }
                     var attempt = JObject.Parse(body);
                     DanAttempts.Enqueue((user, attempt));
+                    // The scores sent with the attempt, saved: null for one that names no block here.
+                    JArray saved = null;
+                    if (attempt["scores"] is JArray sent)
+                    {
+                        saved = new JArray();
+                        foreach (var item in sent)
+                        {
+                            var chart = item is JObject o && o["difficultyId"]?.Type == JTokenType.Integer
+                                ? Charts.Find(c => c.Difficulties.Any(d => c.BlockId(d.Course, d.Player) == (long)o["difficultyId"])) : null;
+                            if (chart == null) { saved.Add(JValue.CreateNull()); continue; }
+                            saved.Add(Saved(chart, chart.Difficulties.Find(d => chart.BlockId(d.Course, d.Player) == (long)item["difficultyId"]), (JObject)item));
+                        }
+                    }
                     Reply(context, 200, new JObject
                     {
+                        ["scores"] = saved,
                         ["attempt"] = new JObject { ["id"] = Hex(32), ["courseId"] = attempt["courseId"], ["verdict"] = attempt["verdict"] },
                         ["profile"] = DanProfileReply ?? (JToken)JValue.CreateNull(),
                         ["profileError"] = DanProfileReply == null ? "OurTaikoProfile unreachable" : null,
@@ -366,9 +381,24 @@ namespace OurTaiko.Tests
             reply.Merge(Protocol);
             if (AccountCenter) reply["sso"] = new JObject { ["issuer"] = BaseUrl, ["service"] = Service };
             if (Dans != null) reply["danVersion"] = 1;
-            if (DanScoreKeys) reply["danScoreKeys"] = 1;
+            if (DanAttemptScores) reply["danAttemptScores"] = 1;
             ChangeBootstrap?.Invoke(reply);
             Reply(context, 200, reply);
+        }
+
+        // A score as the servers answer with it.
+        JObject Saved(Chart chart, (string Course, int Level, string Player) block, JObject body)
+        {
+            return new JObject
+            {
+                ["id"] = Hex(32), ["songId"] = IdToken(chart.Id), ["difficultyId"] = body["difficultyId"],
+                ["course"] = block.Course, ["side"] = Chart.Side(block.Player), ["isLatest"] = true,
+                ["good"] = body["good"], ["ok"] = body["ok"], ["bad"] = body["bad"], ["score"] = body["score"],
+                ["drumroll"] = body["drumroll"], ["max_combo"] = body["max_combo"],
+                ["ClearStatus"] = body["ClearStatus"] ?? new JValue(0),
+                // As the servers: always present, zero when the play sent none.
+                ["adlib"] = body["adlib"] ?? new JArray(0, 0), ["mines"] = body["mines"] ?? new JValue(0),
+            };
         }
 
         void Score(HttpListenerContext context, string user, string key, JObject body)
@@ -383,16 +413,7 @@ namespace OurTaiko.Tests
             var chart = Charts.Find(c => c.Difficulties.Any(d => c.BlockId(d.Course, d.Player) == (long)body["difficultyId"]));
             if (chart == null) { Reply(context, 404, new JObject()); return; }
             var block = chart.Difficulties.Find(d => chart.BlockId(d.Course, d.Player) == (long)body["difficultyId"]);
-            var score = new JObject
-            {
-                ["id"] = Hex(32), ["songId"] = IdToken(chart.Id), ["difficultyId"] = body["difficultyId"],
-                ["course"] = block.Course, ["side"] = Chart.Side(block.Player), ["isLatest"] = true,
-                ["good"] = body["good"], ["ok"] = body["ok"], ["bad"] = body["bad"], ["score"] = body["score"],
-                ["drumroll"] = body["drumroll"], ["max_combo"] = body["max_combo"],
-                ["ClearStatus"] = body["ClearStatus"] ?? new JValue(0),
-                // As the servers: always present, zero when the play sent none.
-                ["adlib"] = body["adlib"] ?? new JArray(0, 0), ["mines"] = body["mines"] ?? new JValue(0),
-            };
+            var score = Saved(chart, block, body);
             Idempotent[key] = score;
             AcceptedUsers.Enqueue(user);
             AcceptedScores.Enqueue(body);

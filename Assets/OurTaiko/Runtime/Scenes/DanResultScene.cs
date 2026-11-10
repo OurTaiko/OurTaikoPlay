@@ -103,13 +103,15 @@ namespace OurTaiko
                 PreviousBest = Result.PreviousBest = DanRecordStore.Shared.Save(DanRecordStore.Key(entry), entry.Course.Title(language), Result.Verdict,
                     Result.Score, Result.MaxCombo, Result.GaugePoints, Result.Songs.Length, songs, gaugePercent);
             }
-            // Each song's score goes up as a play of its own; the attempt names them by their upload keys.
-            var scoreKeys = new string[Result.Songs.Length];
-            for (int i = 0; i < Result.Songs.Length; i++)
-                scoreKeys[i] = ResultScene.SaveScore(Result.Run.Song(i), Result.Songs[i], Result.Records != null && i < Result.Records.Length ? Result.Records[i] : null, 0);
+            // Each song's score is a play of its own. A server that takes them with the attempt saves
+            // them first and the attempt with their ids; elsewhere they go up alone, as before.
             var course = Result.Run.Entry.Course;
-            if (Recorded && !course.IsLocal)
-                DanUpload = Result.Upload = Online.OnlineManager.EnsureInstance().Client?.SubmitDanAttempt(course.Server, course.Id, Result.Verdict, Result.Songs.Length, scoreKeys);
+            string danServer = Recorded && !course.IsLocal ? course.Server : null;
+            var scores = new Newtonsoft.Json.Linq.JObject[Result.Songs.Length];
+            for (int i = 0; i < Result.Songs.Length; i++)
+                scores[i] = ResultScene.SaveScore(Result.Run.Song(i), Result.Songs[i], Result.Records != null && i < Result.Records.Length ? Result.Records[i] : null, 0, danServer);
+            if (danServer != null)
+                DanUpload = Result.Upload = Online.OnlineManager.EnsureInstance().Client?.SubmitDanAttempt(course.Server, course.Id, Result.Verdict, Result.Songs.Length, scores);
         }
 
         // Once OurTaikoProfile has answered the upload, 1P's nameplate is read again for what it
