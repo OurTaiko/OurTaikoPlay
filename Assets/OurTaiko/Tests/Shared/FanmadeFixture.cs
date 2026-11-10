@@ -117,6 +117,8 @@ namespace OurTaiko.Tests
         // GET /api/v1/replays (newest first, one page) and GET /api/v1/scores/{id}/replay: the listed
         // plays and their recordings by score id.
         public readonly List<JObject> Replays = new List<JObject>();
+        // How many of the next replay list requests fail with a 500.
+        public int FailReplays;
         public readonly ConcurrentDictionary<string, JToken> ReplayRecords = new ConcurrentDictionary<string, JToken>();
 
         // A recorded play of `chart`'s block on the replay list; isLatest false is a play of files
@@ -306,6 +308,7 @@ namespace OurTaiko.Tests
                 }
                 if (request.HttpMethod == "GET" && path == "/api/v1/replays")
                 {
+                    if (FailReplays > 0) { FailReplays--; Reply(context, 500, new JObject { ["code"] = "INTERNAL" }); return; }
                     // categoryId: the songs of one catalog category; an unknown one is 400.
                     string category = request.QueryString["categoryId"];
                     if (!string.IsNullOrEmpty(category) && !Categories.Any(c => c.Id == category)) { Reply(context, 400, new JObject { ["code"] = "QUERY_INVALID" }); return; }

@@ -292,7 +292,8 @@ namespace OurTaiko
 
         // 段位道場 is single-player only (box_manager.cpp leaves its board out once 2P is in), and so is
         // 練習モード: its scene has one lane.
-        public bool IsSinglePlayerOnly(int mode) => Modes[mode].Scene == SceneSwitcher.DanSelectScene || view.boards[mode].practice;
+        // 段位道場, 練習モード and ゴーストバトル (one player against a recording) take one player.
+        public bool IsSinglePlayerOnly(int mode) => Modes[mode].Scene == SceneSwitcher.DanSelectScene || Modes[mode].Scene == SceneSwitcher.GhostSelectScene || view.boards[mode].practice;
 
         static void Grey(EntryView.BoardView board, bool grey)
         {

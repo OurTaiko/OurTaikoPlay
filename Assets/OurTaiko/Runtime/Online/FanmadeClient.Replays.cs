@@ -21,6 +21,8 @@ namespace OurTaiko.Online
         public bool IsLatest;
         public DateTime SubmittedAt;
 
+        // null for a row this version cannot play (an unknown course or side, an unusable id): the
+        // list skips it.
         public static FanmadeReplay From(JToken v, FanmadeEndpoint endpoint)
         {
             var r = new FanmadeReplay
@@ -37,7 +39,7 @@ namespace OurTaiko.Online
             if (v?["submittedAt"] is JValue at && at.Value is DateTime time) r.SubmittedAt = time.ToUniversalTime();
             else if (DateTime.TryParse(Json.Str(v, "submittedAt"), CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed)) r.SubmittedAt = parsed;
             if (!SafeId(r.ScoreId) || !Json.ChartId(r.SongId) || SongInfo.DifficultyOf(r.Course) == null
-                || (r.Side != "single" && r.Side != "p1" && r.Side != "p2")) throw new FanmadeException("API_REPLAY_INVALID");
+                || (r.Side != "single" && r.Side != "p1" && r.Side != "p2")) return null;
             return r;
         }
 
@@ -74,7 +76,13 @@ namespace OurTaiko.Online
                 if (!(reply["items"] is JArray items)) throw new FanmadeException("API_REPLAY_INVALID");
                 result.Total = (int)Json.Number(reply, "total");
                 result.PageSize = Math.Max(1, (int)Json.Number(reply, "pageSize"));
-                foreach (var value in items) result.Items.Add(FanmadeReplay.From(value, endpoint));
+                int skipped = 0;
+                foreach (var value in items)
+                {
+                    var replay = FanmadeReplay.From(value, endpoint);
+                    if (replay != null) result.Items.Add(replay); else skipped++;
+                }
+                if (skipped > 0) Log.Warn("Online", endpoint.Config.DisplayName + ": skipped " + skipped + " replay rows this version cannot read.");
             }
             catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw; }
             catch (HttpStatusException error) when (error.Status == 404) { result.Error = "no replay list"; result.Items.Clear(); }

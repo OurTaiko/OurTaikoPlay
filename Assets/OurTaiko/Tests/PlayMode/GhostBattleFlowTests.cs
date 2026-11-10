@@ -270,9 +270,34 @@ namespace OurTaiko.Tests
             Assert.That(switcher.LastResult2P.Good + switcher.LastResult2P.Ok + switcher.LastResult2P.Bad, Is.EqualTo(8));
             yield return Waits.Until(() => fixture.AcceptedScores.Count == 1, seconds: 10);
             Assert.That(fixture.AcceptedUsers.Single(), Is.EqualTo("ka"), "The lone 2P's play is 2P's account's.");
+            // The best a lone 2P sees is their own account's; 1P is a guest and has none.
+            var played = switcher.SelectedSong;
+            yield return Waits.Until(() => SongScores.Get(played, Difficulty.Oni) != null, seconds: 10);
+            Assert.That(SongScores.Get(played, Difficulty.Oni, 0), Is.Null);
             var result = Object.FindAnyObjectByType<ResultScene>();
             Assert.That(result.Boards[0].View.nameplate.Info.name, Is.EqualTo("Rival"));
             TestCapture.Capture("GhostResult2P.png");
+        }
+
+        [UnityTest]
+        public IEnumerator ACategoryThatFailedLoadsAgainWhenEntered()
+        {
+            var row = fixture.AddReplay(chart, "Oni", Recording(), "Rival", 978000);
+            fixture.FailReplays = 1;
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            TestData.UseServers(fixture);
+            yield return TestData.Connect();
+            yield return OpenList(false);
+            var list = Object.FindAnyObjectByType<GhostSelectScene>();
+            yield return Waits.Until(() => !list.IsLoading && fixture.Requests.Count(r => r == "GET /api/v1/replays") == 1, seconds: 10);
+            yield return null;
+            Assert.That(list.Rows, Is.Empty);
+            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/replays"), Is.EqualTo(1), "A failed page is not asked for again by itself.");
+            // Entering the server shows its category again, which asks once more.
+            list.Confirm();
+            yield return Waits.Until(() => list.Rows.Count == 1, () => "Rows: " + list.Status, 10);
+            Assert.That(list.Rows.Single().ScoreId, Is.EqualTo((string)row["id"]));
         }
 
         [UnityTest]
@@ -280,6 +305,8 @@ namespace OurTaiko.Tests
         {
             var row = fixture.AddReplay(chart, "Oni", Recording(), "Rival", 978000);
             for (int i = 0; i < 11; i++) fixture.AddReplay(chart, "Oni", Recording(), "Other" + i, 900000 + i);
+            // A row this version cannot play is skipped; the rest of its page is listed.
+            fixture.AddReplay(chart, "Oni", Recording(), "Odd", 1)["course"] = "Tower";
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             TestData.UseServers(fixture);

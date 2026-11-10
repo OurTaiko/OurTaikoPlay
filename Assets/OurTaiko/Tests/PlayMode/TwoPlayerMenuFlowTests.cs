@@ -83,6 +83,9 @@ namespace OurTaiko.Tests
             Assert.That(entry.IsSinglePlayerOnly(practice), Is.True);
             Assert.That(entry.view.boards[practice].title.color.r, Is.LessThan(0.5f), "練習モード is greyed once 2P is in, like 段位道場.");
             Assert.That(entry.view.boards[0].title.color.r, Is.EqualTo(1), "演奏ゲーム stays open to two players.");
+            int ghost = System.Array.FindIndex(entry.Modes, m => m.Scene == SceneSwitcher.GhostSelectScene);
+            Assert.That(entry.IsSinglePlayerOnly(ghost), Is.True);
+            Assert.That(entry.view.boards[ghost].title.color.r, Is.LessThan(0.5f), "ゴーストバトル is one player against a recording.");
             for (int i = 0; i < entry.view.boards.Length && entry.Flow.SelectedMode != practice; i++) entry.Ka(1);
             Assert.That(entry.Flow.SelectedMode, Is.EqualTo(practice));
             entry.Don();

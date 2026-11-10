@@ -70,9 +70,14 @@ namespace OurTaiko
         // The focused column: 0 servers, 1 categories, 2 plays.
         public int Column { get; private set; }
         // The column's entries: もどる first and after every ten.
-        public IReadOnlyList<Entry> Entries(int column) => column == 0 ? WithBacks(servers, s => new Entry(Kind.Server, server: s))
-            : column == 1 ? (CurrentServer is Server server ? WithBacks(server.Categories, c => new Entry(Kind.Category, category: c)) : Array.Empty<Entry>())
-            : CurrentCategory is Category category ? WithBacks(category.Rows, r => new Entry(Kind.Replay, replay: r)) : Array.Empty<Entry>();
+        public IReadOnlyList<Entry> Entries(int column) => Enumerable.Range(0, EntryCount(column)).Select(i => At(column, i)).ToList();
+        // How many entries the column has. Entries are counted and found by arithmetic (At), so
+        // drawing a long column every frame builds no list.
+        public int EntryCount(int column)
+        {
+            int items = column == 0 ? servers.Count : column == 1 ? CurrentServer?.Categories.Count ?? -1 : CurrentCategory?.Rows.Count ?? -1;
+            return items < 0 ? 0 : items == 0 ? 1 : items + (items + BackEvery - 1) / BackEvery;
+        }
         public int SelectedIn(int column) => column == 0 ? serverSelected : column == 1 ? CurrentServer?.Selected ?? 0 : CurrentCategory?.Selected ?? 0;
         public Entry Focused => At(Column, SelectedIn(Column));
         // The server and category the shelf shows, highlighted in their columns.
@@ -93,23 +98,17 @@ namespace OurTaiko
         // A pick failed: its message stays until the player moves.
         bool failed;
         readonly int[] first = new int[3];
+        float deadline, nextServerCheck;
 
-        static IReadOnlyList<Entry> WithBacks<T>(IReadOnlyList<T> items, Func<T, Entry> entry)
-        {
-            var entries = new List<Entry>(items.Count + items.Count / BackEvery + 1);
-            for (int i = 0; i < items.Count; i++)
-            {
-                if (i % BackEvery == 0) entries.Add(new Entry(Kind.Back));
-                entries.Add(entry(items[i]));
-            }
-            if (items.Count == 0) entries.Add(new Entry(Kind.Back));
-            return entries;
-        }
-
+        // The column's entry: もどる leads every group of BackEvery + 1 entries, and the group's others
+        // are the column's items in order. もどる too for an index outside the column.
         Entry At(int column, int index)
         {
-            var entries = Entries(column);
-            return index >= 0 && index < entries.Count ? entries[index] : new Entry(Kind.Back);
+            if (index < 0 || index >= EntryCount(column) || index % (BackEvery + 1) == 0) return new Entry(Kind.Back);
+            int item = index - index / (BackEvery + 1) - 1;
+            return column == 0 ? new Entry(Kind.Server, server: servers[item])
+                : column == 1 ? new Entry(Kind.Category, category: CurrentServer.Categories[item])
+                : new Entry(Kind.Replay, replay: CurrentCategory.Rows[item]);
         }
 
         void Awake()
@@ -127,7 +126,12 @@ namespace OurTaiko
             Show();
         }
 
-        void Start() => _ = LoadFirstAsync();
+        void Start()
+        {
+            Status = "Connecting…";
+            deadline = Time.realtimeSinceStartup + connectSeconds;
+            AddServers();
+        }
 
         void OnDestroy()
         {
@@ -139,6 +143,7 @@ namespace OurTaiko
 
         void Update()
         {
+            if (Time.realtimeSinceStartup >= nextServerCheck) AddServers();
             if (switcher.IsInputBlocked || HasLeft || IsStarting) { Show(); return; }
             if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.MenuLeft)) Back(leave: InputManager.GetKeyDown(InputKey.Back));
             else if (InputManager.PlayerKeyDown(InputKey.LeftDon) || InputManager.PlayerKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Confirm();
@@ -153,9 +158,10 @@ namespace OurTaiko
         {
             if (HasLeft || IsStarting) return;
             failed = false;
-            int count = Entries(Column).Count;
+            int count = EntryCount(Column);
             int next = Math.Max(0, Math.Min(count - 1, SelectedIn(Column) + delta));
-            if (next == SelectedIn(Column)) return;
+            // At the end of the plays, a push further asks again for a page that failed.
+            if (next == SelectedIn(Column)) { if (Column == 2 && delta > 0) LoadNearEnd(CurrentCategory, next); return; }
             Select(Column, next);
             Play(ka);
         }
@@ -165,10 +171,14 @@ namespace OurTaiko
             if (column == 0) serverSelected = index;
             else if (column == 1 && CurrentServer != null) CurrentServer.Selected = index;
             else if (column == 2 && CurrentCategory != null) CurrentCategory.Selected = index;
-            var category = CurrentCategory;
-            Open(category);
-            // Near the end of a category the next pages come in.
-            if (column == 2 && category != null && index >= Entries(2).Count - 3 && !category.IsLoading && category.NextPage.HasValue)
+            Open(CurrentCategory);
+            if (column == 2) LoadNearEnd(CurrentCategory, index);
+        }
+
+        // Near the end of a category the next page comes in (again, if it failed before).
+        void LoadNearEnd(Category category, int index)
+        {
+            if (category != null && category.Started && index >= EntryCount(2) - 3 && !category.IsLoading && category.NextPage.HasValue)
                 category.Loading = LoadMoreAsync(category);
         }
 
@@ -186,7 +196,9 @@ namespace OurTaiko
                     Play(don);
                     Column++;
                     // Into a column, on its first entry after もどる.
-                    if (SelectedIn(Column) == 0 && Entries(Column).Count > 1) Select(Column, 1);
+                    if (SelectedIn(Column) == 0 && EntryCount(Column) > 1) Select(Column, 1);
+                    // A category whose first page failed is asked for again.
+                    Open(CurrentCategory);
                     return;
             }
         }
@@ -205,7 +217,7 @@ namespace OurTaiko
         {
             if (HasLeft || IsStarting || switcher.IsInputBlocked || column > Column + 1) return;
             int index = first[column] + row;
-            if (index < 0 || index >= Entries(column).Count) return;
+            if (index < 0 || index >= EntryCount(column)) return;
             if (column == Column && index == SelectedIn(column)) { Confirm(); return; }
             failed = false;
             Column = column;
@@ -269,37 +281,36 @@ namespace OurTaiko
             _ => "Could not load that play (" + error.Message + ").",
         };
 
-        async Task LoadFirstAsync()
+        // Each connected server joins the shelf with すべて and its catalog categories, in catalog
+        // order: at the end of the shelf, whenever it connects, so no entry moves under the player.
+        // One that disconnects stays; its categories then say so.
+        void AddServers()
         {
-            var online = OnlineManager.EnsureInstance();
-            Status = "Connecting…";
-            float deadline = Time.realtimeSinceStartup + connectSeconds;
-            while (!(online.Client?.Endpoints.Any(e => e.IsConnected) ?? false))
+            nextServerCheck = Time.realtimeSinceStartup + 0.25f;
+            var client = OnlineManager.EnsureInstance().Client;
+            if (client != null)
+                foreach (var endpoint in client.Endpoints)
+                {
+                    if (!endpoint.IsConnected || servers.Any(s => s.Id == endpoint.Id)) continue;
+                    var server = new Server { Id = endpoint.Id, Name = endpoint.Config.DisplayName };
+                    server.Categories.Add(new Category { Title = "すべて", Server = endpoint.Id });
+                    foreach (var category in client.Categories.Where(c => c.Server == endpoint.Id))
+                        server.Categories.Add(new Category { Id = category.Id, Title = category.Title, Server = endpoint.Id });
+                    servers.Add(server);
+                }
+            if (connected) return;
+            if (servers.Count == 0)
             {
-                if (Time.realtimeSinceStartup > deadline || cancel.IsCancellationRequested) { Status = "No server is online, so there are no ghosts to battle."; return; }
-                await Awaitable.NextFrameAsync(cancel.Token);
+                if (Time.realtimeSinceStartup > deadline) Status = "No server is online, so there are no ghosts to battle.";
+                return;
             }
-            BuildShelf(online.Client);
             connected = true;
             Status = "";
             Open(CurrentCategory);
-            if (CurrentCategory?.Loading != null) await CurrentCategory.Loading;
         }
 
-        // Each connected server with すべて and its catalog categories, in catalog order.
-        void BuildShelf(FanmadeClient client)
-        {
-            foreach (var endpoint in client.Endpoints.Where(e => e.IsConnected))
-            {
-                var server = new Server { Id = endpoint.Id, Name = endpoint.Config.DisplayName };
-                server.Categories.Add(new Category { Title = "すべて", Server = endpoint.Id });
-                foreach (var category in client.Categories.Where(c => c.Server == endpoint.Id))
-                    server.Categories.Add(new Category { Id = category.Id, Title = category.Title, Server = endpoint.Id });
-                servers.Add(server);
-            }
-        }
-
-        // The category's first page comes in the first time it is shown.
+        // The category's first page comes in the first time it is shown, and is asked for again when
+        // it failed and the player comes back to the category.
         void Open(Category category)
         {
             if (category == null || category.Started || !connected) return;
@@ -318,10 +329,16 @@ namespace OurTaiko
             catch (OperationCanceledException) { return; }
             if (cancel.IsCancellationRequested) return;
             var reply = replies.FirstOrDefault();
-            if (reply == null) { category.Error = "offline"; category.NextPage = null; return; }
-            category.Error = reply.Error;
+            category.Error = reply == null ? "offline" : reply.Error;
+            if (category.Error != null)
+            {
+                // The page stays the next one, for the player's next move to ask again; a first page
+                // is asked for again when the category is next shown.
+                if (page == 1) category.Started = false;
+                return;
+            }
             category.NextPage = reply.HasMore ? page + 1 : (int?)null;
-            if (page == 1 && reply.Error == null) category.Total = reply.Total;
+            if (page == 1) category.Total = reply.Total;
             foreach (var item in reply.Items)
                 if (!category.Rows.Any(r => r.ScoreId == item.ScoreId)) category.Rows.Add(item);
         }
@@ -357,18 +374,17 @@ namespace OurTaiko
             for (int column = 0; column < view.columns.Length && column < 3; column++)
             {
                 var shelf = view.columns[column];
-                var entries = Entries(column);
-                int count = shelf.rows.Length, selected = SelectedIn(column);
+                int entries = EntryCount(column), count = shelf.rows.Length, selected = SelectedIn(column);
                 // The selected entry stays a third of the way down while the column scrolls.
-                first[column] = Math.Max(0, Math.Min(selected - count / 3, entries.Count - count));
+                first[column] = Math.Max(0, Math.Min(selected - count / 3, entries - count));
                 for (int i = 0; i < count; i++)
                 {
                     var v = shelf.rows[i];
                     int index = first[column] + i;
-                    bool shown = index < entries.Count && (column <= Column + 1 || connected);
+                    bool shown = index < entries;
                     v.root.gameObject.SetActive(shown);
                     if (!shown) continue;
-                    var entry = entries[index];
+                    var entry = At(column, index);
                     v.background.color = index != selected ? (entry.Kind == Kind.Back ? view.backColor : view.rowColor)
                         : column == Column ? view.selectedColor : view.highlightColor;
                     switch (entry.Kind)
