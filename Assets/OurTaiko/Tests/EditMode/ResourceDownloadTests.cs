@@ -61,8 +61,8 @@ namespace OurTaiko.Tests
             };
             cache = Path.Combine(Path.GetTempPath(), "ourtaiko-resources-" + Guid.NewGuid().ToString("N"));
             client = new FanmadeClient(cache);
-            endpoint = client.Add(api.Server("don", "katsu"));
-            Run(() => client.ConnectAsync(endpoint, false));
+            endpoint = client.Add(api.Server());
+            Run(() => api.ConnectAsync(client, endpoint, "don"));
         }
         [TearDown] public void Cleanup() { client.Dispose(); api.Dispose(); origin.Dispose(); Directory.Delete(cache, true); }
         [TestCase(null)] [TestCase("shift-jis")] [TestCase("invalid")]
@@ -70,7 +70,7 @@ namespace OurTaiko.Tests
         {
             chart.Encoding = encoding;
             chart.Tja = Encoding.UTF8.GetBytes("\uFEFF" + FanmadeFixture.SimpleTja());
-            Run(() => client.ConnectAsync(endpoint, false));
+            Run(() => client.LoadCatalogAsync(endpoint));
             var prepared = Run(() => client.PrepareAsync(client.Charts[0]));
             Assert.That(prepared.Tja, Does.Contain("TITLE:" + chart.Title));
             Assert.That(prepared.Tja.IndexOf('\uFEFF'), Is.EqualTo(-1));
@@ -154,7 +154,7 @@ namespace OurTaiko.Tests
             using var otherApi = new FanmadeFixture();
             otherApi.Charts.Add(new FanmadeFixture.Chart { Tja = chart.Tja, Audio = chart.Audio, Title = "Other server" });
             var other = client.Add(otherApi.Server());
-            Run(() => client.ConnectAsync(other, true));
+            Run(() => client.LoadCatalogAsync(other));
             var second = Run(() => client.PrepareAsync(client.Charts.Single(c => c.Server == other.Id)));
             Assert.That(second.AudioPath, Is.EqualTo(first.AudioPath));
             Assert.That(second.Tja, Does.Contain("TITLE:Other server\n"));
@@ -183,7 +183,7 @@ namespace OurTaiko.Tests
             using var otherApi = new FanmadeFixture();
             otherApi.Charts.Add(new FanmadeFixture.Chart { Tja = chart.Tja, Audio = chart.Audio });
             var other = client.Add(otherApi.Server());
-            Run(() => client.ConnectAsync(other, true));
+            Run(() => client.LoadCatalogAsync(other));
             var selected = client.Charts.ToArray();
             // Both requests finish verifying the same missing/damaged object before either publishes.
             using var ready = new System.Threading.Barrier(2);
@@ -228,7 +228,7 @@ namespace OurTaiko.Tests
         [Test] public void NumericChartIdsDownloadAndUploadLikeHexOnes()
         {
             chart.Id = "1617";
-            Run(() => client.ConnectAsync(endpoint, false));
+            Run(() => client.LoadCatalogAsync(endpoint));
             Assert.That(client.Charts.Single().Id, Is.EqualTo("1617"));
             var result = Run(() => client.PrepareAsync(client.Charts.Single()));
             Assert.That(TjaParser.Parse(result.Tja, "Oni").Level, Is.EqualTo(8));
@@ -243,32 +243,32 @@ namespace OurTaiko.Tests
         {
             var c = client.Charts[0]; api.ScoreFailures.Enqueue(503);
             client.Submit(c, 3, new FanmadeScore { Score = 99, ClearStatus = 1 }); Run(() => client.WaitForUploadsAsync());
-            var queued = client.UploadQueue.Pending(endpoint.Id).Single();
+            var queued = client.UploadQueue.Pending(endpoint.AccountId).Single();
             Assert.That(JObject.Parse(queued.Body).ContainsKey("versionId"), Is.False);
             Assert.That(queued.ChartHash, Is.EqualTo(c.Difficulties[3].ChartHash));
             chart.Audio = new byte[] { 10 }; client.RetryNow(); Run(() => client.WaitForUploadsAsync());
-            Assert.That(client.PendingCount(endpoint), Is.Zero); Assert.That(client.UploadQueue.RejectedCount(endpoint.Id), Is.EqualTo(1));
+            Assert.That(client.PendingCount(endpoint), Is.Zero); Assert.That(client.UploadQueue.RejectedCount(endpoint.AccountId), Is.EqualTo(1));
             Assert.That(api.AcceptedScores, Is.Empty);
         }
         [Test] public void BestScoresFollowTheLatestBootstrap()
         {
             api.AddAccountScore("don", chart, "Oni", 500, 3);
-            Run(() => client.ConnectAsync(endpoint, false));
+            Run(() => api.ConnectAsync(client, endpoint, "don"));
             Assert.That(client.Best(client.Charts[0], 3).ClearStatus, Is.EqualTo(3));
-            api.AccountScores.Clear(); Run(() => client.ConnectAsync(endpoint, false));
+            api.AccountScores.Clear(); Run(() => api.ConnectAsync(client, endpoint, "don"));
             Assert.That(client.Best(client.Charts[0], 3), Is.Null);
         }
         [Test] public void QueuedScoresWithoutFileHashesAreKeptAsRejected()
         {
-            client.UploadQueue.Enqueue(endpoint.Id, new string('c', 64), "{\"songId\":\"" + chart.Id + "\"}");
+            client.UploadQueue.Enqueue(endpoint.AccountId, new string('c', 64), "{\"songId\":\"" + chart.Id + "\"}");
             client.RetryNow(); Run(() => client.WaitForUploadsAsync());
-            Assert.That(client.UploadQueue.RejectedCount(endpoint.Id), Is.EqualTo(1)); Assert.That(api.AcceptedScores, Is.Empty);
+            Assert.That(client.UploadQueue.RejectedCount(endpoint.AccountId), Is.EqualTo(1)); Assert.That(api.AcceptedScores, Is.Empty);
         }
         [Test] public void CoursesMatchStartPlayerInsteadOfArrayPosition()
         {
             chart.Difficulties.Clear(); chart.Difficulties.Add(("Oni", 9, "P2")); chart.Difficulties.Add(("Oni", 8, "P1"));
             chart.Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P1\n1,\n#END\n#START P2\n2,\n#END\n");
-            Run(() => client.ConnectAsync(endpoint, false));
+            Run(() => client.LoadCatalogAsync(endpoint));
             var result = Run(() => client.PrepareAsync(client.Charts[0]));
             string text = result.Tja;
             // The copy keeps both blocks with their player; the parser reads the side asked for.
@@ -285,7 +285,7 @@ namespace OurTaiko.Tests
         {
             movie = new byte[] { 0, 0, 0, 24, (byte)'f', (byte)'t', (byte)'y', (byte)'p' };
             chart.MovieOffset = -1.5;
-            Run(() => client.ConnectAsync(endpoint, false));
+            Run(() => client.LoadCatalogAsync(endpoint));
             var plain = Run(() => client.PrepareAsync(client.Charts[0]));
             Assert.That(plain.Chart.MoviePath, Is.Null);
             Assert.That(plain.Chart.MovieOffset, Is.EqualTo(-1.5));

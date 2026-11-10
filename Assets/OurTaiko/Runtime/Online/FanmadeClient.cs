@@ -27,9 +27,6 @@ namespace OurTaiko.Online
         public string Status { get { lock (sync) return status; } }
         // Bumped whenever charts or scores change, so views know to refresh.
         public long Revision => Interlocked.Read(ref revision);
-        // Catalog snapshots loaded / total of the running ConnectAsync (one per server).
-        public (int Done, int Total) CatalogProgress { get { lock (sync) return catalogProgress; } }
-        public void ResetCatalogProgress() { lock (sync) catalogProgress = (0, 0); }
         public bool IsUploading => uploads != null && !uploads.IsCompleted;
 
         readonly object sync = new object();
@@ -46,7 +43,6 @@ namespace OurTaiko.Online
         // What each uploaded 段位 attempt (by its queue key) got back: OurTaikoProfile's reply, or why it has none.
         readonly Dictionary<string, DanAward> danAwards = new Dictionary<string, DanAward>();
         string status = "";
-        (int, int) catalogProgress;
         long revision;
         Task uploads;
         DateTime retryAt = DateTime.MinValue;
@@ -127,7 +123,7 @@ namespace OurTaiko.Online
         public FanmadeEndpoint Endpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id); }
 
         // The endpoint of a server whose catalog is loaded now; null otherwise. A server that is
-        // listed but not connected (unreachable at start-up, start-up skipped, a failed login) has
+        // listed but not connected (unreachable at start-up, start-up skipped) has
         // no catalog to play from, so its charts play from the offline cache as if it were absent.
         FanmadeEndpoint ConnectedEndpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id && e.IsConnected); }
 
@@ -149,7 +145,7 @@ namespace OurTaiko.Online
             Interlocked.Increment(ref revision);
         }
 
-        // A second connected entry for the same API and account is reused.
+        // A second entry for a connected server is reused.
         public FanmadeEndpoint Add(ServerConfig config)
         {
             var endpoint = new FanmadeEndpoint(config);
@@ -157,7 +153,7 @@ namespace OurTaiko.Online
             {
                 int existing = endpoints.FindIndex(e => e.Id == endpoint.Id);
                 if (existing >= 0 && endpoints[existing].IsConnected) { endpoint.Dispose(); return endpoints[existing]; }
-                // A retry with another password replaces the endpoint that has not connected.
+                // One that has not connected is replaced.
                 if (existing >= 0) { endpoints[existing].Dispose(); endpoints.RemoveAt(existing); }
                 endpoints.Add(endpoint);
             }
@@ -180,46 +176,6 @@ namespace OurTaiko.Online
                 endpoints.RemoveAll(match);
             }
             Interlocked.Increment(ref revision);
-        }
-
-        // Changes the account of a server without touching its catalog. The scores of the previous
-        // account are dropped; the endpoint is a guest until LoginAsync succeeds.
-        public void SetAccount(FanmadeEndpoint e, string username, string password)
-        {
-            lock (sync)
-            {
-                if (!e.SetAccount(username, password)) return;
-                e.Scores.Clear(); e.Best.Clear();
-                personalPlaylists.Remove(e.Id); personalLists.Remove(e.Id);
-            }
-            Interlocked.Increment(ref revision);
-        }
-
-        // Logs in on its own and loads the account's scores and playlists; the catalog is neither needed nor
-        // loaded, and is the same whether an account is signed in or not.
-        public async Task LoginAsync(FanmadeEndpoint e, CancellationToken cancel = default)
-        {
-            if (!e.HasValidUrl()) throw new FanmadeException("SERVER_URL_INVALID");
-            await e.Transport.WaitAsync(cancel);
-            try { await SignInAsync(e, cancel); }
-            finally { e.Transport.Release(); }
-            Interlocked.Increment(ref revision);
-            RetryNow();
-        }
-
-        // Login, GET /game/scores and GET /game/playlists, with the caller holding the endpoint's
-        // transport. A guest (no account) has neither.
-        async Task SignInAsync(FanmadeEndpoint e, CancellationToken cancel)
-        {
-            try { await e.LoginAsync(cancel); }
-            catch (Exception error)
-            {
-                SetStatus(e.Config.DisplayName + ": " + error.Message);
-                // A refused account is a guest: its earlier scores and playlists are not shown any longer.
-                if (!e.IsAuthenticated) SetAccountData(e, 0, new List<FanmadeScore>(), null);
-                throw;
-            }
-            await LoadAccountDataAsync(e, 0, cancel);
         }
 
         // GET /game/scores (and, for 1P, GET /game/playlists) of a signed-in seat, with the caller
@@ -333,24 +289,6 @@ namespace OurTaiko.Online
             return playlists;
         }
 
-        // Logs in with the account's scores (unless `guest`), then loads the complete catalog. A rejected login
-        // throws HTTP_401/403 without touching the catalog; the caller may then retry as a guest.
-        // Only servers declaring the current game protocol are accepted.
-        public async Task ConnectAsync(FanmadeEndpoint e, bool guest, CancellationToken cancel = default)
-        {
-            if (!e.HasValidUrl()) throw new FanmadeException("SERVER_URL_INVALID");
-            await e.Transport.WaitAsync(cancel);
-            try
-            {
-                lock (sync) { e.IsConnected = false; charts.Remove(e.Id); categoryLists.Remove(e.Id); playlistLists.Remove(e.Id); personalLists.Remove(e.Id); }
-                if (guest) { e.BecomeGuest(); SetAccountData(e, 0, new List<FanmadeScore>(), null); }
-                else await SignInAsync(e, cancel);
-                await BootstrapAsync(e, cancel);
-            }
-            finally { e.Transport.Release(); }
-            Update();
-        }
-
         // One GET /game/catalog (the public song list, the same signed in or not), with the caller
         // holding the endpoint's transport.
         async Task BootstrapAsync(FanmadeEndpoint e, CancellationToken cancel)
@@ -358,7 +296,6 @@ namespace OurTaiko.Online
             try
             {
                 SetStatus(e.Config.DisplayName + ": loading catalog");
-                lock (sync) catalogProgress = (0, 1);
                 var snapshot = Json.Parse(await e.RequestAsync("/api/v1/game/catalog", cancel: cancel));
                 if (!SupportsProtocol(snapshot)) throw new FanmadeException("SERVER_PROTOCOL_UNSUPPORTED");
                 if (!(snapshot["categories"] is JArray categoryList)
@@ -422,7 +359,6 @@ namespace OurTaiko.Online
                     ReadPersonalPlaylists(e);
                     e.ChartCount = list.Count;
                     e.IsConnected = true;
-                    catalogProgress = (1, 1);
                 }
                 Interlocked.Increment(ref revision);
                 SetStatus(e.Config.DisplayName + ": " + list.Count + " songs ready" + (e.IsAuthenticated ? "" : " (guest; scores disabled)"));
@@ -513,7 +449,7 @@ namespace OurTaiko.Online
 
         // The catalog's "sso": where a game signed in to an OurTaiko account trades it for a session
         // of this server. Optional; anything but an https issuer (http only on loopback, for
-        // development) and a plain service name is ignored, and the server takes a password instead.
+        // development) and a plain service name is ignored, and nobody can sign in to the server.
         static (string Issuer, string Service) ReadSso(JToken value)
         {
             if (!(value is JObject sso) || sso["issuer"]?.Type != JTokenType.String || sso["service"]?.Type != JTokenType.String) return ("", "");

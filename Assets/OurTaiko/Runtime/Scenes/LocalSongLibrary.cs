@@ -8,7 +8,7 @@ namespace OurTaiko
 {
     // Global holder of the local songs (OurTaikoPlayer's tja_path), created before the first scene
     // and kept across loads like OnlineManager. LocalSongScanner reads the configured roots on a
-    // worker thread; ServerLogin starts a rescan each time, and the first read waits for it. Each
+    // worker thread; Entry starts a rescan each time it leaves for song select, and the first read waits for it. Each
     // chart keeps its SongDefinition across rescans, so the selected song survives a refresh.
     public sealed class LocalSongLibrary : MonoBehaviour
     {

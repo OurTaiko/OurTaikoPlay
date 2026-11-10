@@ -128,7 +128,7 @@ namespace OurTaiko
             var standIns = DanCourseLoader.LoadServerTest(Path.Combine(GamePaths.Root, DanCourseLoader.ServerTestFolder), resolver);
             pages.Clear();
             pages.AddRange(DanSelectPages.Build(DanCourseLoader.LoadLocal(library.Roots, resolver), servers, standIns,
-                Online.ServerList.BuiltIn[0].Url, Online.ServerList.BuiltIn[1].Url));
+                Online.ServerConfig.BuiltIn[0].Url, Online.ServerConfig.BuiltIn[1].Url));
             foreach (var entry in pages.SelectMany(p => p.Courses).Concat(servers).Distinct())
             {
                 if (entry.Error != null) Log.Warn("Dan", $"Dan course {entry.Path}: {entry.Error}");

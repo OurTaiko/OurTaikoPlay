@@ -31,8 +31,6 @@ namespace OurTaiko
         public const string SongLoadingScene = "SongLoadingScene";
         // The ゲーム設定 board's scene value in Entry; the board opens the settings overlay.
         public const string SettingScene = "GlobalSettingScene";
-        // Online server login, between Entry's 演奏ゲーム and SongSelect.
-        public const string ServerLoginScene = "ServerLogin";
         // The first scene: the title card shown while the built-in servers connect.
         public const string PresentedScene = "Presented";
         // 段位道場: Entry's board opens the course select; a course is played in DanPlayScene.

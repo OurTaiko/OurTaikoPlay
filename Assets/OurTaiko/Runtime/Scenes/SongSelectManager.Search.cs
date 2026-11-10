@@ -81,7 +81,7 @@ namespace OurTaiko
             searchSongs.AddRange(found.Distinct().OrderByDescending(NeedsClear));
             var errors = replies.Where(r => r.Error != null).Select(r => r.Endpoint.Config.DisplayName + ": " + r.Error).ToList();
             string scopeUrl = server != null ? online.Client.Endpoint(server)?.Config.baseUrl.TrimEnd('/') : null;
-            foreach (var config in online.EnabledServers)
+            foreach (var config in online.BuiltInServers)
             {
                 string url = (config.baseUrl ?? "").TrimEnd('/');
                 if (scope == LocalKey || server != null && url != scopeUrl) continue;

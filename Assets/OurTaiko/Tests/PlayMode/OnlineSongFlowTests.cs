@@ -11,9 +11,10 @@ using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
-    // ServerLogin → SongSelect → download on the loading curtain → play → score upload, against the
-    // local fixture API.
-    public sealed class ServerLoginFlowTests
+    // The servers' songs in SongSelect → download on the loading curtain → play → score upload, and
+    // the startup on the Presented card, against the local fixture API standing in for a built-in
+    // server.
+    public sealed class OnlineSongFlowTests
     {
         FanmadeFixture fixture;
         FanmadeFixture.Chart chart;
@@ -39,53 +40,24 @@ namespace OurTaiko.Tests
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             var previous = SceneManager.GetActiveScene();
-            SceneManager.SetActiveScene(SceneManager.CreateScene("ServerLoginTearDown"));
+            SceneManager.SetActiveScene(SceneManager.CreateScene("OnlineSongTearDown"));
             yield return SceneManager.UnloadSceneAsync(previous);
             fixture.Dispose();
-            TestData.UseServers(new ServerList());
+            TestData.UseServers();
         }
 
         [UnityTest]
-        public IEnumerator LoginListsOnlineChartsThenDownloadsPlaysAndUploads()
+        public IEnumerator ASignedInAccountListsOnlineChartsThenDownloadsPlaysAndUploads()
         {
             fixture.AddAccountScore("don", chart, "Oni", 1002540, 1);
             fixture.AccountScores[0]["bad"] = 10;
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
-            TestData.UseServers(new ServerList { servers = { fixture.Server("don", "wrong") } });
+            TestData.UseServers(fixture);
+            yield return TestData.Connect("don");
             var online = OnlineManager.Instance;
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
-            yield return null;
-            var login = Object.FindAnyObjectByType<ServerLoginScene>();
-            var view = login.view;
-            Assert.That(view.serverName.text, Is.EqualTo("Fixture"));
-            Assert.That(view.serverUrl.text, Is.EqualTo(fixture.BaseUrl));
-            Assert.That(view.username.text, Is.EqualTo("don"));
-            Assert.That(login.Focus, Is.EqualTo(ServerLoginView.Item.Login), "Remembered credentials focus ログイン.");
-            Assert.That(login.IsBusy, Is.False, "autoLogin is off, so nothing is sent yet.");
-            TestCapture.Capture("ServerLogin.png");
-
-            // Wrong password: an error, and the scene stays for another try.
-            login.Activate(ServerLoginView.Item.Login);
-            Assert.That(login.IsBusy, Is.True);
-            yield return WaitUntil(() => !login.IsBusy, 10);
-            Assert.That(view.message.text, Does.Contain("正しくありません"));
-            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.ServerLoginScene));
-            TestCapture.Capture("ServerLoginError.png");
-
-            // Ka moves the focus round the fields and buttons.
-            login.Move(1);
-            Assert.That(login.Focus, Is.EqualTo(ServerLoginView.Item.Guest));
-            login.Move(-2);
-            Assert.That(login.Focus, Is.EqualTo(ServerLoginView.Item.Password));
-
-            view.password.text = "katsu";
-            login.Activate(ServerLoginView.Item.Login);
-            yield return WaitUntil(() => login.Outcomes[0] == ServerLoginScene.Outcome.LoggedIn, 10);
-            Assert.That(view.message.text, Does.Contain("DON"));
-            Assert.That(online.Servers.servers[0].password, Is.EqualTo("katsu"));
-            Assert.That(online.Servers.servers[0].autoLogin, Is.True, "A successful login is remembered for next time.");
-            yield return WaitForScene(SceneSwitcher.SongSelectScene);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
+            yield return new WaitForSecondsRealtime(.6f);
 
             // The server's folder follows Local; inside it the categories are closed folders: Game (1 song) and Pop (empty).
             var select = Object.FindAnyObjectByType<SongSelectScene>();
@@ -143,7 +115,7 @@ namespace OurTaiko.Tests
             yield return WaitUntil(() => select.CourseFade >= 1, 5);
             Assert.That(select.Manager.Cursor.Selected, Is.EqualTo(Difficulty.Oni));
             yield return null;
-            Assert.That(select.view.bestScore.DisplayedScore, Is.EqualTo(1002540), "Best score comes from login bootstrap.");
+            Assert.That(select.view.bestScore.DisplayedScore, Is.EqualTo(1002540), "Best score comes from the account's scores.");
             Assert.That(select.view.bestScore.group.alpha, Is.EqualTo(1));
             Assert.That(select.view.cards[(int)Difficulty.Oni].crown.sprite, Is.SameAs(select.smallCrowns[1]));
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
@@ -208,27 +180,24 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator PracticeEntryLogsInShowsHistoryAndDownloadsWithoutUploadingPracticeScores()
+        public IEnumerator PracticeEntryShowsHistoryAndDownloadsWithoutUploadingPracticeScores()
         {
             fixture.AddAccountScore("don", chart, "Oni", 1002540, 1);
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
-            TestData.UseServers(new ServerList { servers = { fixture.Server("don", "katsu") } });
+            TestData.UseServers(fixture);
+            yield return TestData.Connect("don");
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
+            // Entry takes no don in its first moments, and no decide before the board is up.
+            yield return Waits.Until(() => entry.Flow.CanJoin(entry.Now) && !SceneSwitcher.Instance.IsInputBlocked);
             entry.Don();
-            yield return new WaitForSecondsRealtime(1.5f);
+            yield return Waits.Until(() => entry.Flow.IsModeReady(entry.Now));
             entry.Ka(2);
             yield return new WaitForSecondsRealtime(.3f);
             entry.Don();
-            yield return WaitForScene(SceneSwitcher.ServerLoginScene);
-            Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
-            var login = Object.FindAnyObjectByType<ServerLoginScene>();
-            Assert.That(login.view.message.text, Does.Contain("過去のスコア"));
-            login.Activate(ServerLoginView.Item.Login);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            Assert.That(fixture.Requests, Does.Contain("POST /api/v1/game/login"));
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
 
             var select = Object.FindAnyObjectByType<SongSelectScene>();
@@ -270,13 +239,9 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             fixture.AddAccountScore("don", chart, "Oni", 500000, 0);
-            TestData.UseServers(new ServerList { servers = { fixture.Server("don", "katsu") } });
+            TestData.UseServers(fixture);
+            yield return TestData.Connect("don");
             var online = OnlineManager.Instance;
-            var endpoint = online.Client.Add(online.Servers.servers[0]);
-            var connect = online.Client.ConnectAsync(endpoint, false);
-            yield return WaitUntil(() => connect.IsCompleted, 10);
-            connect.GetAwaiter().GetResult();
-            online.RefreshSongs();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(.6f);
             var select = Object.FindAnyObjectByType<SongSelectScene>();
@@ -318,7 +283,7 @@ namespace OurTaiko.Tests
         // The built-in servers connect on the Presented card before Entry: one song list, then the
         // password an older version left in the settings signs in once at the account center and
         // is erased; the account's session for the server is traded there, and the nickname goes
-        // on the nameplate. ServerLogin then has nothing to ask and keeps those songs.
+        // on the nameplate. Song select then lists those songs without asking again.
         [UnityTest]
         public IEnumerator PresentedSignsInAndLoadsTheBuiltInSongListBeforeEntry()
         {
@@ -331,10 +296,8 @@ namespace OurTaiko.Tests
                 var settings = new GameSettings();
                 settings.accounts.p1Username = "don"; settings.accounts.p1Password = "katsu";
                 manager.UseUnsaved(settings);
-                TestData.UseServers(new ServerList());
-                online.UseUnsaved(new ServerList(), TestData.OnlineCache, ("Built-in", fixture.BaseUrl));
-                online.UseAccounts(new AccountStore(null, "test"), new AccountCenter(fixture.BaseUrl));
-                Assert.That(online.Servers.servers, Is.Empty, "Built-in servers are not part of servers.json.");
+                fixture.Name = "Built-in";
+                TestData.UseServers(fixture);
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.PresentedScene);
                 yield return null;
                 var presented = Object.FindAnyObjectByType<PresentedScene>();
@@ -356,8 +319,8 @@ namespace OurTaiko.Tests
 
                 Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
-                yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
-                yield return WaitForScene(SceneSwitcher.SongSelectScene);
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
+                yield return null;
                 Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/catalog"), Is.EqualTo(1), "Song select does not load the list again.");
                 Assert.That(Object.FindAnyObjectByType<SongSelectScene>().Manager.Folders.Skip(2).Select(f => f.Title), Is.EqualTo(new[] { "Game", "Pop" }));
             }
@@ -375,8 +338,8 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             var online = OnlineManager.EnsureInstance();
-            TestData.UseServers(new ServerList());
-            online.UseUnsaved(new ServerList(), TestData.OnlineCache, ("Built-in", fixture.BaseUrl));
+            fixture.Name = "Built-in";
+            TestData.UseServers(fixture);
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.PresentedScene);
             var presented = Object.FindAnyObjectByType<PresentedScene>();
             presented.minimumSeconds = 60;
@@ -388,33 +351,16 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator GuestSkipAndADownloadErrorReturnToTheSongList()
+        public IEnumerator AGuestOpensOneCategoryAtATimeAndADownloadErrorReturnsToTheSongList()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
-            var down = new ServerConfig { name = "Down", baseUrl = "http://127.0.0.1:9", enabled = true };
-            var disabled = new ServerConfig { name = "Off", baseUrl = fixture.BaseUrl, enabled = false };
-            TestData.UseServers(new ServerList { servers = { fixture.Server(), disabled, down } });
+            TestData.UseServers(fixture);
+            yield return TestData.Connect();
             var online = OnlineManager.Instance;
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
-            yield return null;
-            var login = Object.FindAnyObjectByType<ServerLoginScene>();
-            Assert.That(login.Focus, Is.EqualTo(ServerLoginView.Item.Username), "No account yet: the name field first.");
-            Assert.That(login.view.progress.text, Is.EqualTo("1 / 2"), "Disabled servers are not shown.");
-            login.Activate(ServerLoginView.Item.Login);
-            Assert.That(login.IsBusy, Is.False, "ログイン without an account only asks for one.");
-            login.Activate(ServerLoginView.Item.Guest);
-            yield return WaitUntil(() => login.ServerIndex == 1, 10);
-            Assert.That(login.Outcomes[0], Is.EqualTo(ServerLoginScene.Outcome.Guest));
-            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"));
-
-            // The unreachable server fails as a guest too; スキップ leaves it out.
-            login.Activate(ServerLoginView.Item.Guest);
-            yield return WaitUntil(() => !login.IsBusy, 10);
-            Assert.That(login.view.message.text, Does.Contain("NETWORK_"));
-            login.Activate(ServerLoginView.Item.Skip);
-            yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            Assert.That(login.Outcomes, Is.EqualTo(new[] { ServerLoginScene.Outcome.Guest, ServerLoginScene.Outcome.Skipped }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/catalog" }), "A guest only reads the song list.");
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
+            yield return new WaitForSecondsRealtime(.6f);
 
             // Only one category at a time: opening Pop closes Game; もどる closes Pop again. While a
             // category is open only its もどる shows; the server's returns when the category closes.
@@ -494,12 +440,11 @@ namespace OurTaiko.Tests
                     ["cover"] = new JObject { ["url"] = link, ["headUrl"] = link, ["sha256"] = FanmadeFixture.Sha(cover), ["size"] = cover.Length, ["contentType"] = "image/png" } },
                 new JObject { ["id"] = "daily", ["title"] = "Daily Challenge", ["genre"] = "VARIETY", ["kind"] = "system", ["owner"] = "", ["chartIds"] = new JArray(chart.Id) },
             };
-            TestData.UseServers(new ServerList { servers = { fixture.Server() } });
+            TestData.UseServers(fixture);
+            yield return TestData.Connect();
             var online = OnlineManager.Instance;
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
-            yield return null;
-            Object.FindAnyObjectByType<ServerLoginScene>().Activate(ServerLoginView.Item.Guest);
-            yield return WaitForScene(SceneSwitcher.SongSelectScene);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
+            yield return new WaitForSecondsRealtime(.6f);
 
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.Folders.Skip(2).Select(f => (f.Title, f.Genre, f.Songs.Length)),
@@ -548,14 +493,11 @@ namespace OurTaiko.Tests
             yield return null;
             for (int i = 0; i < 3000; i++)
                 fixture.Charts.Add(new FanmadeFixture.Chart { Title = "Bulk " + i, Tja = chart.Tja, Audio = chart.Audio, Categories = new[] { i % 2 == 0 ? "game" : "pop" } });
-            TestData.UseServers(new ServerList { servers = { fixture.Server() } });
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
-            yield return null;
-            var login = Object.FindAnyObjectByType<ServerLoginScene>();
-            login.Activate(ServerLoginView.Item.Guest);
-            yield return WaitUntil(() => login.IsBusy == false, 60);
-            Assert.That(login.view.message.text, Does.Contain("3001 曲"));
-            yield return WaitForScene(SceneSwitcher.SongSelectScene, 30);
+            TestData.UseServers(fixture);
+            yield return TestData.Connect();
+            Assert.That(OnlineManager.Instance.Songs.Count, Is.EqualTo(3001));
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
+            yield return new WaitForSecondsRealtime(.6f);
 
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.BoardCount, Is.EqualTo(4));
@@ -588,12 +530,12 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator WithoutServersTheSceneGoesStraightToSongSelect()
+        public IEnumerator WithoutServersSongSelectListsLocalSearchAndTheRootBack()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
-            yield return SceneManager.LoadSceneAsync(SceneSwitcher.ServerLoginScene);
-            yield return WaitForScene(SceneSwitcher.SongSelectScene);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
+            yield return null;
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.BoardCount, Is.EqualTo(3), "The Local folder, the search folder and the root もどる.");
             Assert.That(select.Manager.Focused, Is.Zero, "Local is focused, not もどる.");

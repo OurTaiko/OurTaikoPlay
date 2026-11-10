@@ -42,8 +42,8 @@ namespace OurTaiko.Tests
 
         FanmadeEndpoint Connect()
         {
-            var endpoint = client.Add(fixture.Server("don", "katsu"));
-            Run(() => client.ConnectAsync(endpoint, false));
+            var endpoint = client.Add(fixture.Server());
+            Run(() => fixture.ConnectAsync(client, endpoint, "don"));
             return endpoint;
         }
 
@@ -97,14 +97,17 @@ namespace OurTaiko.Tests
         }
 
         // A server that is listed but not connected still plays from the cache: its endpoint stays
-        // after a failed connection (ServerLogin, an unreachable built-in server).
+        // after a failed connection (an unreachable built-in server at the next start).
         [Test]
         public void ACachedChartPlaysWhenItsServerFailsToConnect()
         {
-            var endpoint = Connect();
+            string id = Connect().Id;
             Run(() => client.PrepareAsync(client.Charts.First(c => c.Id == first.Id)));
+            client.Reset();
+            var endpoint = client.Add(fixture.Server());
+            Assert.That(endpoint.Id, Is.EqualTo(id));
             fixture.Dispose();
-            Assert.That(() => Run(() => client.ConnectAsync(endpoint, false)), Throws.Exception);
+            Assert.That(() => Run(() => client.LoadCatalogAsync(endpoint)), Throws.Exception);
             Assert.That(client.Endpoint(endpoint.Id), Is.SameAs(endpoint), "The endpoint stays after the failure.");
             Assert.That(endpoint.IsConnected, Is.False);
             int requests = fixture.Requests.Count;
@@ -127,7 +130,7 @@ namespace OurTaiko.Tests
             var endpoint = Connect();
             Run(() => client.PrepareAsync(client.Charts.First(c => c.Id == first.Id)));
             client.Reset();
-            var listed = client.Add(fixture.Server("don", "katsu"));
+            var listed = client.Add(fixture.Server());
             Assert.That(listed.Id, Is.EqualTo(endpoint.Id));
             Assert.That(listed.IsConnected, Is.False);
             int downloads = fixture.Downloads, requests = fixture.Requests.Count;
@@ -185,7 +188,7 @@ namespace OurTaiko.Tests
             var endpoint = Connect();
             Run(() => client.PrepareAsync(client.Charts.First(c => c.Id == first.Id)));
             first.Title = "Renamed"; first.Audio = new byte[] { 7, 7, 7 };
-            Run(() => client.ConnectAsync(endpoint, false));
+            Run(() => client.LoadCatalogAsync(endpoint));
             Run(() => client.PrepareAsync(client.Charts.First(c => c.Id == first.Id)));
             var entry = client.Offline.Get(endpoint.Id, first.Id);
             Assert.That(entry.ToChart().Title, Is.EqualTo("Renamed"));

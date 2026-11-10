@@ -26,7 +26,7 @@ namespace OurTaiko.Tests
             cache = Path.Combine(Path.GetTempPath(), "rank-test-" + Guid.NewGuid().ToString("N"));
             client = new FanmadeClient(cache);
             var endpoint = client.Add(api.Server());
-            Task.Run(() => client.ConnectAsync(endpoint, true)).GetAwaiter().GetResult();
+            Task.Run(() => client.LoadCatalogAsync(endpoint)).GetAwaiter().GetResult();
             selected = client.Charts[0];
         }
 

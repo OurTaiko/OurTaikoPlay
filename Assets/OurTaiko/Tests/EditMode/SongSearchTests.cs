@@ -49,8 +49,8 @@ namespace OurTaiko.Tests
             {
                 Task.Run(async () =>
                 {
-                    await client.ConnectAsync(client.Add(a.Server()), true);
-                    await client.ConnectAsync(client.Add(b.Server()), true);
+                    await client.LoadCatalogAsync(client.Add(a.Server()));
+                    await client.LoadCatalogAsync(client.Add(b.Server()));
                     var results = await client.SearchAsync(new SongSearchQuery("夜 & ?", Difficulty.Oni, 8));
                     Assert.That(results.Length, Is.EqualTo(2)); Assert.That(results.All(r => r.Error == null && r.Charts.Count == 1), Is.True);
                     Assert.That(results[0].Charts[0].Server, Is.Not.EqualTo(results[1].Charts[0].Server));
@@ -81,7 +81,7 @@ namespace OurTaiko.Tests
             {
                 Task.Run(async () =>
                 {
-                    await client.ConnectAsync(client.Add(fixture.Server("don", "katsu")), false);
+                    await fixture.ConnectAsync(client, client.Add(fixture.Server()), "don");
                     var query = new SongSearchQuery("", Difficulty.Oni, 8, SongSearchOrder.UnFullCombo);
                     var reply = (await client.SearchAsync(query)).Single();
                     Assert.That(reply.Error, Is.Null); Assert.That(reply.Charts.Count, Is.EqualTo(1));

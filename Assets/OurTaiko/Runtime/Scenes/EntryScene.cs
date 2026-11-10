@@ -189,14 +189,13 @@ namespace OurTaiko
                 switcher.PracticeMode = view.boards[Flow.SelectedMode].practice;
                 switcher.TwoPlayers = Joined2P;
                 string scene = Modes[Flow.SelectedMode].Scene;
-                // With no server configured in servers.json there is nothing to log in to: song
-                // select follows directly, after the refresh ServerLogin does on the way. The online
-                // songs are already listed: OnlineManager rebuilds them whenever they change.
-                if (scene == SceneSwitcher.ServerLoginScene && !Online.OnlineManager.EnsureInstance().Servers.servers.Exists(server => server.enabled))
+                // On the way to song select every folder closes and the songs folder is read again,
+                // so songs added since the last visit appear. The online songs are already listed:
+                // OnlineManager rebuilds them whenever they change.
+                if (scene == SceneSwitcher.SongSelectScene)
                 {
                     SongSelectManager.EnsureInstance().Reset();
                     LocalSongLibrary.EnsureInstance().Refresh();
-                    scene = SceneSwitcher.SongSelectScene;
                 }
                 switcher.SwitchScene(scene);
             }

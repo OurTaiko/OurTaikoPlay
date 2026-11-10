@@ -8,13 +8,14 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using OurTaiko.Online;
 
 namespace OurTaiko.Tests
 {
     // A local stand-in for the Fanmade backend's game API (Fanmade/backend internal/httpapi
-    // server.go + game.go), as tests/fanmade/fixture.py is for OurTaikoPlayer: login, bootstrap,
+    // server.go + game.go), as tests/fanmade/fixture.py is for OurTaikoPlayer: bootstrap,
     // category lists, chart details, signed resource manifests (served by the fixture itself
     // unless a test replaces Manifest) and idempotent score submission. It is also the account
     // center its catalog names (OurTaikoSSO's /api/v1/game/account/* and /api/v1/game/tokens).
@@ -84,7 +85,7 @@ namespace OurTaiko.Tests
             ["scoreReplayVersion"] = 1, ["audioPreviewVersion"] = 1,
         };
         // The catalog's "sso": this fixture is the account center and "fixture" the service. False:
-        // a server that only takes a password.
+        // a server that names no account center.
         public bool AccountCenter = true;
         public const string Service = "fixture";
         // GET /game/dans; null: a server without 段位 courses (no danVersion in the catalog).
@@ -151,21 +152,36 @@ namespace OurTaiko.Tests
             };
         }
 
-        public ServerConfig Server(string username = "", string password = "", string name = "Fixture") => new ServerConfig
+        // What the game calls this server when it stands in for a built-in one.
+        public string Name = "Fixture";
+
+        public ServerConfig Server() => new ServerConfig { name = Name, baseUrl = BaseUrl };
+
+        AccountCenter center;
+
+        // The server's song list on a FanmadeClient of its own and, with a user, that user signed
+        // in to the seat as the game does: once at the account center (this fixture), then a
+        // session of this server traded for the sign-in.
+        public async Task ConnectAsync(FanmadeClient client, FanmadeEndpoint e, string user = null, string password = "katsu", int seat = 0)
         {
-            name = name, baseUrl = BaseUrl, username = username, password = password, enabled = true,
-        };
+            await client.LoadCatalogAsync(e);
+            if (user == null) return;
+            center ??= new AccountCenter(BaseUrl);
+            var account = await center.LoginAsync(user, password, "Test");
+            string service = e.SsoService;
+            string session = await center.TradeAsync(account.Token, service);
+            await client.UseAccountAsync(e, seat, session, account.UserId, account.Nickname, c => center.TradeAsync(account.Token, service, c));
+        }
 
         // A playable chart: `measures` 4/4 measures of don at the given BPM.
         public static string SimpleTja(string course = "Oni", int measures = 1, double bpm = 240)
             => $"TITLE:Original Title\nSUBTITLE:--old\nWAVE:old.ogg\nBPM:{bpm}\nOFFSET:0\nCOURSE:{course}\nLEVEL:3\n#START\n"
                + string.Concat(Enumerable.Repeat("1111,\n", measures)) + "#END\n";
 
-        public void Invalidate() => tokens.Clear();  // every issued token expires
-
         public void Dispose()
         {
             stopped = true;
+            center?.Dispose();
             try { listener.Stop(); listener.Close(); } catch (ObjectDisposedException) { }
         }
 
@@ -213,7 +229,6 @@ namespace OurTaiko.Tests
                 if (auth.StartsWith("Bearer ", StringComparison.Ordinal) && !tokens.TryGetValue(auth.Substring(7), out user))
                 { Reply(context, 401, new JObject { ["error"] = "SESSION" }); return; }
                 var parts = path.Trim('/').Split('/');
-                if (request.HttpMethod == "POST" && path == "/api/v1/game/login") { Login(context, JObject.Parse(body)); return; }
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/catalog") { Bootstrap(context); return; }
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/search")
                 {
@@ -307,20 +322,6 @@ namespace OurTaiko.Tests
             catch (Exception error) { Reply(context, 500, new JObject { ["error"] = error.Message }); }
         }
 
-        void Login(HttpListenerContext context, JObject body)
-        {
-            string username = (string)body["username"], password = (string)body["password"];
-            if (!Users.TryGetValue(username ?? "", out var expected) || expected != password)
-            { Reply(context, 401, new JObject { ["code"] = "LOGIN_INVALID" }); return; }
-            string token = Hex(64);
-            tokens[token] = username;
-            Reply(context, 200, new JObject
-            {
-                ["user"] = new JObject { ["id"] = "u-" + username, ["username"] = username, ["nickname"] = username.ToUpperInvariant() },
-                ["accessToken"] = token, ["expiresIn"] = 3600,
-            });
-        }
-
         // The account center: sign in once, check, sign out, and trade the sign-in for a session here.
         void Account(HttpListenerContext context, string path, string auth, string body)
         {
@@ -363,7 +364,7 @@ namespace OurTaiko.Tests
             }
         }
 
-        // Every game session (traded or logged in) ends, as when they expire: the next request is 401.
+        // Every game session ends, as when they expire: the next request is 401.
         public void ExpireSessions() => tokens.Clear();
 
         // GET /game/catalog: public, the same for every caller.

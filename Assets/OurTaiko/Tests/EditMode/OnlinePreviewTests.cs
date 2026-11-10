@@ -41,8 +41,8 @@ namespace OurTaiko.Tests
             };
             cache = Path.Combine(Path.GetTempPath(), "preview-test-" + Guid.NewGuid().ToString("N"));
             client = new FanmadeClient(cache);
-            var endpoint = client.Add(api.Server("don","katsu"));
-            Run(() => client.ConnectAsync(endpoint,false));
+            var endpoint = client.Add(api.Server());
+            Run(() => api.ConnectAsync(client, endpoint, "don"));
         }
         static T Run<T>(Func<Task<T>> work) => Task.Run(work).GetAwaiter().GetResult();
         static void Run(Func<Task> work) => Task.Run(work).GetAwaiter().GetResult();

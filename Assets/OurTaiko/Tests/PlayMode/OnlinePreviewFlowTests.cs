@@ -17,7 +17,6 @@ namespace OurTaiko.Tests
     public sealed class OnlinePreviewFlowTests
     {
         FanmadeFixture api, origin;
-        FanmadeEndpoint endpoint;
         long downloaded;
         int requests, wrongMethod, delayMs;
         byte[] audio, previewAudio;
@@ -47,23 +46,20 @@ namespace OurTaiko.Tests
                 r.ContentLength64 = audio.Length; r.OutputStream.Write(audio, 0, audio.Length); r.Close();
                 Interlocked.Add(ref downloaded, audio.Length); return true;
             };
-            TestData.UseServers(new ServerList());
-            endpoint = OnlineManager.Instance.Client.Add(api.Server());
+            TestData.UseServers(api);
         }
         [UnityTearDown] public IEnumerator Cleanup()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             var old = SceneManager.GetActiveScene(); SceneManager.SetActiveScene(SceneManager.CreateScene("PreviewTearDown"));
             yield return SceneManager.UnloadSceneAsync(old);
-            api.Dispose(); origin.Dispose(); TestData.UseServers(new ServerList());
+            api.Dispose(); origin.Dispose(); TestData.UseServers();
         }
         [UnityTest] public IEnumerator SwitchingWhileDownloadIsPendingCancelsTheOldPreview()
         {
             delayMs = 600;
             var online = OnlineManager.Instance;
-            var connect = online.Client.ConnectAsync(endpoint, true); while (!connect.IsCompleted) yield return null;
-            Assert.That(connect.IsCompletedSuccessfully, Is.True, connect.Exception?.ToString());
-            online.RefreshSongs();
+            yield return TestData.Connect();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(1);
             var select = Object.FindAnyObjectByType<SongSelectScene>();
@@ -106,9 +102,7 @@ namespace OurTaiko.Tests
             AudioEngine.EnsureInstance();
             try {
             var online = OnlineManager.Instance;
-            var connect = online.Client.ConnectAsync(endpoint, true); while (!connect.IsCompleted) yield return null;
-            Assert.That(connect.IsCompletedSuccessfully, Is.True, connect.Exception?.ToString());
-            online.RefreshSongs();
+            yield return TestData.Connect();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(1);
             var select = Object.FindAnyObjectByType<SongSelectScene>();

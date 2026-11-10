@@ -68,7 +68,7 @@ namespace OurTaiko
         // The innermost open folder's key, or null.
         public string OpenFolder => open.Count > 0 ? folders[open[open.Count - 1]].Key : null;
         // The innermost folder song select had open, reopened with the folders around it when it
-        // comes back from a song; ServerLogin closes every folder again (Reset).
+        // comes back from a song; Entry closes every folder again (Reset).
         public string OpenFolderKey { get; private set; }
         public State Phase { get; private set; } = State.Browsing;
         // Each seat's course cursor (2P's only once it has joined), 演奏オプション menu and decision.
@@ -146,7 +146,7 @@ namespace OurTaiko
             if (Instance == this) Instance = null;
         }
 
-        // ServerLogin: the next song select starts with every folder closed.
+        // Entry: the next song select starts with every folder closed.
         public void Reset() { OpenFolderKey = null; openIndex.Clear(); ClearSearchState(); }
 
         // ---------------------------------------------------------------- loading

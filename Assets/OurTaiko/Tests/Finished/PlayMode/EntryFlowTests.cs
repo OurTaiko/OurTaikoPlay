@@ -66,7 +66,7 @@ namespace OurTaiko.Tests
             float deadline = Time.realtimeSinceStartup + 20;
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
             while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene);
-            // With no additional server enabled, ServerLogin is not loaded at all.
+            // Song select follows Entry directly.
             Assert.That(SceneSwitcher.LastScene, Is.EqualTo(SceneSwitcher.EntryScene));
         }
 

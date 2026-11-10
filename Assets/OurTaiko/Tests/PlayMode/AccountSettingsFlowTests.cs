@@ -37,10 +37,8 @@ namespace OurTaiko.Tests
                     ["chartIds"] = new Newtonsoft.Json.Linq.JArray(chart.Id) },
             };
             online = OnlineManager.EnsureInstance();
-            TestData.UseServers(new ServerList());
-            online.UseUnsaved(new ServerList(), TestData.OnlineCache, ("Built-in", fixture.BaseUrl));
-            online.UseAccounts(new AccountStore(null, "test"), new AccountCenter(fixture.BaseUrl));
-            online.UseProfiles(new ProfileCenter(fixture.BaseUrl));
+            fixture.Name = "Built-in";
+            TestData.UseServers(fixture);
             fixture.Nameplates[FanmadeFixture.UserId("don")] = new Newtonsoft.Json.Linq.JObject
             {
                 ["title"] = new Newtonsoft.Json.Linq.JObject { ["id"] = "master", ["name"] = "太鼓の達人", ["nameTranslations"] = new Newtonsoft.Json.Linq.JObject { ["en"] = "Taiko Master" }, ["style"] = "gold" },
@@ -59,7 +57,7 @@ namespace OurTaiko.Tests
             PlayerInfoController.Instance.UseUnsaved(new PlayerInfo());
             PlayerInfoController.Instance.SetSecond(null);
             SettingManager.EnsureInstance().UseUnsaved(new GameSettings());
-            TestData.UseServers(new ServerList());
+            TestData.UseServers();
             fixture.Dispose();
             if (Directory.Exists(directory)) Directory.Delete(directory, true);
         }

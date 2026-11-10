@@ -42,23 +42,23 @@ namespace OurTaiko.Tests
         static void Run(Func<Task> body) => Task.Run(body).GetAwaiter().GetResult();
         static T Run<T>(Func<Task<T>> body) => Task.Run(body).GetAwaiter().GetResult();
 
-        FanmadeEndpoint Connect(bool guest, string user = "don", string password = "katsu")
+        // The song list, and unless a guest, don signed in to 1P's seat with its OurTaiko account.
+        FanmadeEndpoint Connect(bool guest)
         {
-            var endpoint = client.Add(fixture.Server(user, password));
-            Run(() => client.ConnectAsync(endpoint, guest));
+            var endpoint = client.Add(fixture.Server());
+            Run(() => fixture.ConnectAsync(client, endpoint, guest ? null : "don"));
             return endpoint;
         }
 
         [Test]
-        public void GuestLoadsEveryCategoryAsOneFlatListWithoutLoggingIn()
+        public void GuestLoadsEveryCategoryAsOneFlatListWithoutSigningIn()
         {
             var endpoint = Connect(guest: true);
             Assert.That(endpoint.IsConnected, Is.True);
             Assert.That(endpoint.IsAuthenticated, Is.False);
-            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"));
             Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/catalog" }));
             Assert.That(fixture.Downloads, Is.Zero);
-            Assert.That(client.CatalogProgress, Is.EqualTo((1, 1)));
+            Assert.That(client.Add(fixture.Server()), Is.SameAs(endpoint), "A connected endpoint is reused.");
             // First is in both categories but listed once, under the first category.
             Assert.That(client.Charts.Select(c => c.Title), Is.EqualTo(new[] { "First", "Second" }));
             Assert.That(client.Charts[0].Genre, Is.EqualTo("GAME"));
@@ -75,17 +75,21 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void LoginLoadsTheAccountsBestScores()
+        public void SigningInLoadsTheAccountsBestScores()
         {
             fixture.AddAccountScore("don", first, "Oni", 500000);
             fixture.AddAccountScore("don", first, "Oni", 700000);
             fixture.AddAccountScore("other", first, "Oni", 900000);
             var endpoint = Connect(guest: false);
             Assert.That(endpoint.IsAuthenticated, Is.True);
-            Assert.That(endpoint.Nickname, Is.EqualTo("DON"));
+            Assert.That(endpoint.Seats[0].Nickname, Is.EqualTo("DON"));
             Assert.That(client.Best(client.Charts[0], (int)Difficulty.Oni).Score, Is.EqualTo(700000));
             Assert.That(client.Best(client.Charts[0], (int)Difficulty.Hard), Is.Null);
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "POST /api/v1/game/login", "GET /api/v1/game/scores", "GET /api/v1/game/playlists", "GET /api/v1/game/catalog" }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[]
+            {
+                "GET /api/v1/game/catalog", "POST /api/v1/game/account/login", "POST /api/v1/game/tokens",
+                "GET /api/v1/game/scores", "GET /api/v1/game/playlists",
+            }));
         }
 
         [Test]
@@ -127,7 +131,7 @@ namespace OurTaiko.Tests
                 new JObject { ["id"] = "daily", ["title"] = "Daily Challenge", ["genre"] = "VARIETY", ["kind"] = "system", ["owner"] = "",
                     ["chartIds"] = new JArray(first.Id) },
             };
-            Run(() => client.ConnectAsync(client.Endpoints[0], true));
+            Run(() => client.LoadCatalogAsync(client.Endpoints[0]));
             Assert.That(client.Playlists.Select(p => (p.Id, p.Title, p.Genre, p.Kind, p.Owner, p.ServerName)), Is.EqualTo(new[]
             {
                 ("mine", "Mine", "VOCALOID", "owned", "DON", "Fixture"), ("daily", "Daily Challenge", "VARIETY", "system", "", "Fixture"),
@@ -155,13 +159,13 @@ namespace OurTaiko.Tests
             JArray With(JObject cover) => new JArray(new JObject { ["id"] = "mine", ["title"] = "Mine", ["genre"] = "GAME", ["kind"] = "owned", ["owner"] = "",
                 ["chartIds"] = new JArray(first.Id), ["cover"] = cover });
             fixture.ChangeBootstrap = reply => reply["playlists"] = With(Cover(FanmadeFixture.Sha(picture), picture.Length));
-            Run(() => client.ConnectAsync(client.Endpoints[0], true));
+            Run(() => client.LoadCatalogAsync(client.Endpoints[0]));
             Assert.That(served, Is.Zero, "Connecting does not download pictures.");
             Assert.That(Run(() => client.PlaylistCoverAsync(client.Playlists[0])), Is.EqualTo(picture));
             Assert.That(Run(() => client.PlaylistCoverAsync(client.Playlists[0])), Is.EqualTo(picture));
             Assert.That(served, Is.EqualTo(1));
             fixture.ChangeBootstrap = reply => reply["playlists"] = With(Cover(new string('0', 64), picture.Length));
-            Run(() => client.ConnectAsync(client.Endpoints[0], true));
+            Run(() => client.LoadCatalogAsync(client.Endpoints[0]));
             Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PlaylistCoverAsync(client.Playlists[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
             foreach (var (bad, code) in new[]
             {
@@ -172,7 +176,7 @@ namespace OurTaiko.Tests
             })
             {
                 fixture.ChangeBootstrap = reply => reply["playlists"] = With(bad);
-                Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(client.Endpoints[0], true))).Message, Is.EqualTo(code));
+                Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(client.Endpoints[0]))).Message, Is.EqualTo(code));
             }
 
             foreach (var broken in new JToken[]
@@ -183,7 +187,7 @@ namespace OurTaiko.Tests
             })
             {
                 fixture.ChangeBootstrap = reply => reply["playlists"] = broken;
-                var error = Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(client.Endpoints[0], true)));
+                var error = Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(client.Endpoints[0])));
                 Assert.That(error.Message, Is.EqualTo("API_PLAYLIST_INVALID"));
             }
         }
@@ -225,7 +229,7 @@ namespace OurTaiko.Tests
                 }
             };
             var endpoint = client.Add(fixture.Server());
-            var error = Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(endpoint, guest: true)));
+            var error = Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(endpoint)));
             Assert.That(error.Message, Is.EqualTo(code));
             Assert.That(endpoint.IsConnected, Is.False);
             Assert.That(client.Charts, Is.Empty);
@@ -274,29 +278,13 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void RejectedCredentialsThrowAndAGuestRetryStillConnects()
-        {
-            var endpoint = client.Add(fixture.Server("don", "wrong"));
-            var error = Assert.Throws<HttpStatusException>(() => Run(() => client.ConnectAsync(endpoint, guest: false)));
-            Assert.That(error.Status, Is.EqualTo(401));
-            Assert.That(endpoint.IsConnected, Is.False);
-            Assert.That(client.Charts, Is.Empty);
-            Run(() => client.ConnectAsync(endpoint, guest: true));
-            Assert.That(endpoint.IsConnected && !endpoint.IsAuthenticated, Is.True);
-            Assert.That(client.Charts.Count, Is.EqualTo(2));
-            // A retry with another password replaces the unconnected endpoint of the same account.
-            var retry = client.Add(fixture.Server("don", "katsu"));
-            Assert.That(retry, Is.SameAs(endpoint), "A connected endpoint is reused.");
-        }
-
-        [Test]
         public void AnUnreachableServerReportsANetworkCode()
         {
             var endpoint = client.Add(new ServerConfig { name = "Down", baseUrl = "http://127.0.0.1:9" });
-            var error = Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(endpoint, guest: true)));
+            var error = Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(endpoint)));
             Assert.That(error.Message, Does.StartWith("NETWORK_"));
             var invalid = client.Add(new ServerConfig { name = "Bad", baseUrl = "ftp://example.com" });
-            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(invalid, guest: true))).Message, Is.EqualTo("SERVER_URL_INVALID"));
+            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(invalid))).Message, Is.EqualTo("SERVER_URL_INVALID"));
         }
 
         [Test]
@@ -330,10 +318,10 @@ namespace OurTaiko.Tests
             Assert.That(fixture.Downloads, Is.EqualTo(3));
             Assert.That(File.ReadAllBytes(audio), Is.EqualTo(first.Audio));
 
-            // Another account on the same server reuses the verified objects.
+            // Another client of the same server reuses the verified objects.
             using var other = new FanmadeClient(cache, Path.Combine(cache, "other.sqlite3"));
-            var guest = other.Add(fixture.Server(name: "Guest"));
-            Run(() => other.ConnectAsync(guest, true));
+            var guest = other.Add(fixture.Server());
+            Run(() => other.LoadCatalogAsync(guest));
             Assert.That(Run(() => other.PrepareAsync(other.Charts[0])).AudioPath, Is.EqualTo(audio));
             Assert.That(fixture.Downloads, Is.EqualTo(3));
         }
@@ -426,12 +414,13 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void AnExpiredTokenLogsInAgain()
+        public void AnExpiredSessionIsTradedForAgain()
         {
             Connect(guest: false);
-            fixture.Invalidate();
+            fixture.ExpireSessions();
             Run(() => client.PrepareAsync(client.Charts[0]));
-            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/login"), Is.EqualTo(2));
+            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens"), Is.EqualTo(2));
+            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/account/login"), Is.EqualTo(1), "The password is not asked for again.");
         }
 
         [Test]
@@ -445,7 +434,7 @@ namespace OurTaiko.Tests
             Assert.That(client.Submit(chart, (int)Difficulty.Oni, new FanmadeScore { Good = 3, Score = 3000, MaxCombo = 3, ClearStatus = 3 }, record), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(client.PendingCount(endpoint), Is.EqualTo(1), "A temporary failure keeps the queued request.");
-            string queued = client.UploadQueue.Pending(endpoint.Id)[0].Body;
+            string queued = client.UploadQueue.Pending(endpoint.AccountId)[0].Body;
 
             client.RetryNow();
             Run(() => client.WaitForUploadsAsync());
@@ -471,7 +460,7 @@ namespace OurTaiko.Tests
             client.Submit(client.Charts[0], (int)Difficulty.Oni, new FanmadeScore { Score = 1 });
             Run(() => client.WaitForUploadsAsync());
             Assert.That(client.PendingCount(endpoint), Is.Zero);
-            Assert.That(client.UploadQueue.RejectedCount(endpoint.Id), Is.EqualTo(1));
+            Assert.That(client.UploadQueue.RejectedCount(endpoint.AccountId), Is.EqualTo(1));
         }
 
         [Test]
@@ -503,7 +492,7 @@ namespace OurTaiko.Tests
             Connect(guest: false);
             Assert.That(client.Charts.Select(c => c.Title), Is.EquivalentTo(new[] { "First", "Second" }));
             Assert.That(client.Best(client.Charts.Single(c => c.Title == "First"), (int)Difficulty.Oni).Score, Is.EqualTo(600000));
-            Assert.That(fixture.GzippedReplies, Is.GreaterThanOrEqualTo(3), "Login, catalog and scores came packed.");
+            Assert.That(fixture.GzippedReplies, Is.GreaterThanOrEqualTo(3), "Catalog, scores and playlists came packed.");
         }
 
         [Test]
@@ -526,7 +515,7 @@ namespace OurTaiko.Tests
         {
             fixture.Protocol.Remove(capability);
             var endpoint = client.Add(fixture.Server());
-            var error = Assert.Throws<FanmadeException>(() => Run(() => client.ConnectAsync(endpoint, guest: true)));
+            var error = Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(endpoint)));
             Assert.That(error.Message, Is.EqualTo("SERVER_PROTOCOL_UNSUPPORTED"));
             Assert.That(endpoint.IsConnected, Is.False);
             Assert.That(client.Charts, Is.Empty);
@@ -655,20 +644,9 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void BuiltInServersStayOutOfTheServerListAndGenresMapToBoardFrames()
+        public void TheBuiltInServersAreTheTwoOurTaikoOnesAndGenresMapToBoardFrames()
         {
-            Assert.That(ServerList.BuiltIn.Select(b => b.Url), Is.EqualTo(new[] { "https://fanmade.ourtaiko.org", "https://database.ourtaiko.org" }));
-            Assert.That(new ServerList().servers, Is.Empty);
-            // A file of an older version listed the built-in addresses; only the additional servers stay.
-            var old = new ServerList { servers =
-            {
-                new ServerConfig { name = "OurTaiko Fanmade", baseUrl = "https://fanmade.ourtaiko.org/" },
-                new ServerConfig { name = "Mine", baseUrl = "https://example.org" },
-                new ServerConfig { name = "OurTaiko Database", baseUrl = "https://database.ourtaiko.org", enabled = false },
-            } };
-            Assert.That(old.RemoveBuiltIn(), Is.True);
-            Assert.That(old.servers.Select(s => s.name), Is.EqualTo(new[] { "Mine" }));
-            Assert.That(old.RemoveBuiltIn(), Is.False);
+            Assert.That(ServerConfig.BuiltIn.Select(b => b.Url), Is.EqualTo(new[] { "https://fanmade.ourtaiko.org", "https://database.ourtaiko.org" }));
             Assert.That(OnlineManager.GenreFrame("GAME"), Is.EqualTo(3));
             Assert.That(OnlineManager.GenreFrame("ボーカロイド"), Is.EqualTo(8));
             Assert.That(OnlineManager.GenreFrame("Unknown"), Is.EqualTo(0));

@@ -619,7 +619,7 @@ namespace OurTaiko.Tests
             var entry = Object.FindAnyObjectByType<EntryScene>();
             Assert.That(entry.view.boards.Count(b => b.practice), Is.EqualTo(1));
             Assert.That(entry.view.boards[2].practice, Is.True, "練習モード follows 演奏ゲーム and 段位道場.");
-            Assert.That(entry.view.boards[2].scene, Is.EqualTo(SceneSwitcher.ServerLoginScene));
+            Assert.That(entry.view.boards[2].scene, Is.EqualTo(SceneSwitcher.SongSelectScene));
             yield return Waits.Until(() => entry.Flow.CanJoin(entry.Now) && !SceneSwitcher.Instance.IsInputBlocked);
             entry.Don(); yield return Waits.Until(() => entry.Flow.IsModeReady(entry.Now));
             entry.Ka(2); yield return new WaitForSecondsRealtime(0.3f); entry.Don();

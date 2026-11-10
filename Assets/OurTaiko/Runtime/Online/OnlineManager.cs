@@ -10,7 +10,7 @@ namespace OurTaiko.Online
 {
     // A server category as a song-select folder: its songs in API order (shared SongDefinitions).
     // Global holder of the online servers, created before the first scene and kept across loads
-    // (like SettingManager). It reads servers.json, signs in to the built-in servers and loads their
+    // (like SettingManager). It signs in to the built-in servers and loads their
     // song lists (at startup from the Presented scene, later from the settings), owns the FanmadeClient, pumps its score
     // uploads every frame and turns the connected catalog into SongDefinitions and category
     // folders for song select.
@@ -18,10 +18,6 @@ namespace OurTaiko.Online
     {
         public static OnlineManager Instance { get; private set; }
 
-        // The additional servers of servers.json; the built-in ones are not in it.
-        public ServerList Servers { get; private set; } = new ServerList();
-        // null for unsaved data (tests); otherwise where Servers is read from and written to.
-        public string FilePath { get; private set; }
         public FanmadeClient Client { get; private set; }
         // The connected catalog as playable songs; the same instance for a chart until Reset.
         public IReadOnlyList<SongDefinition> Songs => songs;
@@ -76,7 +72,6 @@ namespace OurTaiko.Online
             DontDestroyOnLoad(gameObject);
             UseCache(Path.Combine(GamePaths.Root, "cache", "fanmade"),
                 Path.Combine(GamePaths.Root, "scores.sqlite3"));
-            Load(Path.Combine(GamePaths.Root, ServerList.FileName));
             UseAccounts(new AccountStore(Path.Combine(GamePaths.Root, AccountStore.FileName), DeviceSecret()), new AccountCenter());
             UseProfiles(new ProfileCenter());
         }
@@ -96,9 +91,10 @@ namespace OurTaiko.Online
             Instance = null;
         }
 
-        (string Name, string Url)[] builtIn = ServerList.BuiltIn;
+        (string Name, string Url)[] builtIn = ServerConfig.BuiltIn;
 
-        // The built-in servers. Players sign in to them through their OurTaiko accounts.
+        // The servers the game connects to: the built-in ones (tests name their own). Players sign
+        // in to them through their OurTaiko accounts.
         public IReadOnlyList<ServerConfig> BuiltInServers => builtIn.Select(b => new ServerConfig { name = b.Name, baseUrl = b.Url }).ToArray();
 
         // 1P's and 2P's OurTaiko accounts on this device, and the account center they sign in at.
@@ -116,7 +112,7 @@ namespace OurTaiko.Online
         public string LoginSummary { get; private set; } = "";
         public string SongListSummary { get; private set; } = "";
         public bool IsBusy { get; private set; }
-        // The built-in servers' connections, kept while ServerLogin reconnects the others.
+        // The built-in servers' connections.
         readonly List<FanmadeEndpoint> builtInEndpoints = new List<FanmadeEndpoint>();
 
         // Startup: load every built-in song list, then sign the accounts in (which loads their
@@ -397,34 +393,15 @@ namespace OurTaiko.Online
             else if (player.Info.ToJson() != info.ToJson()) player.Set(info);
         }
 
-        public IEnumerable<ServerConfig> EnabledServers => BuiltInServers.Concat(Servers.servers.Where(s => s.enabled));
-
-        // A missing file is created empty so it can be found and edited.
-        public void Load(string path)
+        // Tests use a cache folder and accounts that never touch the player's files, and no server
+        // unless they name their own in place of the built-in ones.
+        public void UseUnsaved(string cacheRoot = null, params (string Name, string Url)[] servers)
         {
-            FilePath = path;
-            builtIn = ServerList.BuiltIn;
-            ServerList list = null;
-            try
-            {
-                list = ServerList.Read(path) ?? new ServerList();
-                if (list.RemoveBuiltIn() || !File.Exists(path)) list.Write(path);
-            }
-            catch (Exception error) { Log.Warn("Online", "Ignoring unreadable server list: " + error.Message); }
-            Servers = list ?? new ServerList();
-        }
-
-        // Tests use servers (and a cache folder) that never touch the player's files, and no
-        // built-in server unless they name their own.
-        public void UseUnsaved(ServerList list, string cacheRoot = null, params (string Name, string Url)[] builtInServers)
-        {
-            FilePath = null;
-            builtIn = builtInServers ?? Array.Empty<(string, string)>();
+            builtIn = servers ?? Array.Empty<(string, string)>();
             builtInEndpoints.Clear();
             // Nothing listens there: a test that signs in names its own account center.
             UseAccounts(new AccountStore(null, "test"), new AccountCenter("http://127.0.0.1:9"));
             UseProfiles(new ProfileCenter("http://127.0.0.1:9"));
-            Servers = list ?? new ServerList();
             if (cacheRoot != null) UseCache(cacheRoot);
             else Disconnect();
         }
@@ -460,16 +437,6 @@ namespace OurTaiko.Online
             catch (AggregateException error) { Log.Warn("Online", "Could not read the cached charts: " + error.GetBaseException().Message); }
         }
 
-        // Remembers the account ServerLogin used, in the same servers.json entry.
-        public void Remember(int index, string username, string password, bool autoLogin)
-        {
-            var server = Servers.servers[index];
-            server.username = username ?? ""; server.password = password ?? ""; server.autoLogin = autoLogin;
-            if (string.IsNullOrEmpty(FilePath)) return;
-            try { Servers.Write(FilePath); }
-            catch (Exception error) { Log.Warn("Online", "Could not save the server list: " + error.Message); }
-        }
-
         // Forgets every connection and catalog song.
         public void Disconnect()
         {
@@ -477,10 +444,6 @@ namespace OurTaiko.Online
             builtInEndpoints.Clear();
             ClearSongs();
         }
-
-        // Forgets the servers.json connections (ServerLogin starts them over each time); the built-in
-        // servers stay as they are.
-        public void DisconnectAdditional() => Client.Remove(e => !builtInEndpoints.Contains(e));
 
         // Publishes the client's catalog as songs, reusing the instances of charts already listed,
         // and the offline cache of the servers that are not connected after it.
@@ -588,8 +551,8 @@ namespace OurTaiko.Online
             foreach (var server in cached.Where(entry => !connected.Contains(Url(entry.ServerUrl))).GroupBy(entry => entry.Server))
             {
                 string url = Url(server.First().ServerUrl);
-                // The name the player gave the server now, else the one it had when the chart was cached.
-                string name = EnabledServers.FirstOrDefault(s => string.Equals(Url(s.baseUrl), url, StringComparison.OrdinalIgnoreCase))?.DisplayName
+                // The name the server has now, else the one it had when the chart was cached.
+                string name = BuiltInServers.FirstOrDefault(s => string.Equals(Url(s.baseUrl), url, StringComparison.OrdinalIgnoreCase))?.DisplayName
                     ?? server.First().ServerName;
                 string label = name + " · " + OfflineLabel;
                 var categories = new List<(string Id, string Title, string Genre, List<SongDefinition> Songs)>();
@@ -631,37 +594,26 @@ namespace OurTaiko.Online
 
         // Queues a finished play for upload: on a connected server under the seat's account there;
         // on an unreachable one under the account the seat would sign in with (OfflineAccountId),
-        // sent once that server connects again. False when nothing is queued (a guest, or no
-        // account for the server).
+        // sent once that server connects again. False when nothing is queued (a guest, or a server
+        // the game does not connect to).
         public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null)
             => Client.Submit(chart, difficulty, score, replay, seat, side, OfflineAccountId(chart.Server, seat));
 
         // The queue key a seat's scores have on a server that is not connected (what
-        // FanmadeEndpoint.AccountIdOf gives once it is): on a built-in server the seat's remembered
-        // OurTaiko account, on a servers.json server its configured 1P username. null without one.
+        // FanmadeEndpoint.AccountIdOf gives once it is): the seat's remembered OurTaiko account on
+        // a built-in server. null without one, and for the cache of any other server.
         public string OfflineAccountId(string server, int seat)
         {
             var entry = cached.FirstOrDefault(x => x.Server == server);
             if (entry == null || seat < 0 || seat >= Accounts.Seats.Length) return null;
             string url = Url(entry.ServerUrl);
-            string user;
-            if (builtIn.Any(b => string.Equals(Url(b.Url), url, StringComparison.OrdinalIgnoreCase)))
-            {
-                var account = Accounts.Seats[seat];
-                if (!account.IsSignedIn || account.UserId.Length == 0) return null;
-                user = "sso:" + account.UserId;
-            }
-            else
-            {
-                if (seat != 0) return null;
-                var config = Servers.servers.FirstOrDefault(s => s.enabled && s.HasCredentials && string.Equals(Url(s.baseUrl), url, StringComparison.OrdinalIgnoreCase));
-                if (config == null) return null;
-                user = config.username;
-            }
-            return FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(url + "\n" + user));
+            if (!builtIn.Any(b => string.Equals(Url(b.Url), url, StringComparison.OrdinalIgnoreCase))) return null;
+            var account = Accounts.Seats[seat];
+            if (!account.IsSignedIn || account.UserId.Length == 0) return null;
+            return FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(url + "\n" + "sso:" + account.UserId));
         }
 
-        // The display name of a server by endpoint id: a configured one's, else the name its
+        // The display name of a server by endpoint id: a connected one's, else the name its
         // offline cache remembers; the id itself when neither knows it.
         public string ServerDisplayName(string server)
         {

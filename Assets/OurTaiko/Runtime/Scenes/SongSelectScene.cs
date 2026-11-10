@@ -13,7 +13,7 @@ namespace OurTaiko
 {
     // Nijiiro single-player song select (scenes/song_select.cpp + Scripts/song_select/song_select.lua):
     // the vertical song-board wheel, the course-select panel and the 演奏オプション panel behind the option
-    // button. ServerLogin's categories follow the local songs as closed genre folders; a folder opens
+    // button. The servers' categories follow the local songs as closed genre folders; a folder opens
     // inline (Navigator::load_current_directory without child folders): its board turns into もどる,
     // its songs follow with a もどる every ten songs, and opening another folder closes it first.
     // A root もどる ends the list (the wheel wraps, so it sits above the first song) and leaves for

@@ -27,7 +27,7 @@ namespace OurTaiko.Tests
             var previous = SceneManager.GetActiveScene();
             SceneManager.SetActiveScene(SceneManager.CreateScene("NestedFolderTearDown"));
             yield return SceneManager.UnloadSceneAsync(previous);
-            TestData.UseServers(new ServerList());
+            TestData.UseServers();
             TestSongs.Install();
             if (root != null) Directory.Delete(root, true);
         }
@@ -45,7 +45,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator SubFoldersOpenInsideTheirFolderAndCloseFromTheInside()
         {
-            TestData.UseServers(new ServerList());
+            TestData.UseServers();
             root = Path.Combine(Application.temporaryCachePath, "nested-songs-" + Guid.NewGuid().ToString("N"));
             Write("root.tja", Chart("Root song"));
             Write("Pack/box.def", "#TITLE:Pack\n#GENRE:GAME\n");

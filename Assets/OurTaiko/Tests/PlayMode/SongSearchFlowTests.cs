@@ -29,7 +29,7 @@ namespace OurTaiko.Tests
             var previous = SceneManager.GetActiveScene();
             SceneManager.SetActiveScene(SceneManager.CreateScene("SearchTearDown"));
             yield return SceneManager.UnloadSceneAsync(previous);
-            first?.Dispose(); second?.Dispose(); TestData.UseServers(new ServerList());
+            first?.Dispose(); second?.Dispose(); TestData.UseServers();
             TestSongs.Install();
             if (root != null) Directory.Delete(root, true);
         }
@@ -41,11 +41,10 @@ namespace OurTaiko.Tests
             first.Charts.Add(new FanmadeFixture.Chart { Title = "Keyword online A" });
             // Uncategorized songs are absent from bootstrap's categories but still searchable/playable.
             second.Charts.Add(new FanmadeFixture.Chart { Title = "Keyword online B", Categories = Array.Empty<string>() });
-            TestData.UseServers(new ServerList { servers = { first.Server(), second.Server() } });
+            TestData.UseServers(first, second);
+            yield return TestData.Connect();
             var online = OnlineManager.Instance;
-            var connect = System.Threading.Tasks.Task.WhenAll(online.Client.ConnectAsync(online.Client.Add(first.Server()), true), online.Client.ConnectAsync(online.Client.Add(second.Server()), true));
-            yield return Await(connect); online.RefreshSongs();
-            string IdOf(FanmadeFixture fixture) => online.Client.Endpoints.First(e => e.Config.baseUrl.TrimEnd('/') == fixture.Server().baseUrl.TrimEnd('/')).Id;
+            string IdOf(FanmadeFixture fixture) => online.Client.Endpoints.First(e => e.Config.baseUrl.TrimEnd('/') == fixture.BaseUrl.TrimEnd('/')).Id;
             string firstId = IdOf(first), secondId = IdOf(second);
             root = Path.Combine(Application.temporaryCachePath, "search-songs-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(Path.Combine(root, "Folder"));
@@ -174,7 +173,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator SwitchingPlayModesPreservesSearchFiltersResultsAndSelection()
         {
-            TestData.UseServers(new ServerList());
+            TestData.UseServers();
             root = Path.Combine(Application.temporaryCachePath, "search-mode-switch-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(root);
             File.Copy(Path.Combine(Application.dataPath, "OurTaiko/Audio/entry/bgm.ogg"), Path.Combine(root, "audio.ogg"));
@@ -247,10 +246,9 @@ namespace OurTaiko.Tests
         {
             first = new FanmadeFixture();
             first.Charts.Add(new FanmadeFixture.Chart { Title = "Fresh song" });
-            TestData.UseServers(new ServerList { servers = { first.Server() } });
+            TestData.UseServers(first);
+            yield return TestData.Connect();
             var online = OnlineManager.Instance;
-            yield return Await(online.Client.ConnectAsync(online.Client.Add(first.Server()), true));
-            online.RefreshSongs();
             var originalBackground = InputSystem.settings.backgroundBehavior;
             var originalEditor = InputSystem.settings.editorInputBehaviorInPlayMode;
             InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
@@ -349,7 +347,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator KeywordNeedsASecondPointerClickAndDoneKeepsTheDialogOpen()
         {
-            TestData.UseServers(new ServerList()); TestSongs.Install();
+            TestData.UseServers(); TestSongs.Install();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
             var scene = Object.FindAnyObjectByType<SongSelectScene>(); var view = scene.view.search;
             view.Open(); yield return null;
@@ -378,7 +376,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator DismissingTheTouchKeyboardKeepsTextAndDoesNotReactivateIt()
         {
-            TestData.UseServers(new ServerList()); TestSongs.Install();
+            TestData.UseServers(); TestSongs.Install();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
             var scene = Object.FindAnyObjectByType<SongSelectScene>(); var view = scene.view.search;
             view.Open(); yield return null;
