@@ -71,6 +71,11 @@ namespace OurTaiko.Tests
             TestCapture.Capture("DanSelectIntro.png");
             scene.Ka(1);
             Assert.That(scene.Flow.Selected, Is.Zero, "No input while the doors play.");
+            // Issue #39: the music and the welcome voice wait for the doors to part.
+            Assert.That(scene.MusicStarted, Is.False, "No music while the doors are shut.");
+            Assert.That(scene.bgm.IsAudioPlaying(), Is.False);
+            Assert.That(scene.voice.IsAudioPlaying(), Is.False);
+            yield return WaitUntil(() => scene.MusicStarted, 4);
             yield return WaitUntil(() => scene.IntroDone, 4);
             Assert.That(scene.intro.gameObject.activeSelf, Is.False);
             Assert.That(scene.Courses.Count, Is.EqualTo(3));
@@ -234,6 +239,7 @@ namespace OurTaiko.Tests
             // Not from Entry: only the doors' opening plays.
             Assert.That(scene.FullIntro, Is.False);
             yield return WaitUntil(() => scene.IntroDone, 3);
+            Assert.That(scene.MusicStarted, Is.True);
             // The chip three to the right of the selected one.
             var target = view.chips.First(c => c.root.gameObject.activeSelf
                 && Mathf.Abs(c.root.anchoredPosition.x - (DanSelectScene.RibbonCenter + 3 * DanSelectScene.RibbonSpacing)) < 0.5f);

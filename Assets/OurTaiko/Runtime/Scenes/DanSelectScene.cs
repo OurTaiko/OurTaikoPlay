@@ -17,7 +17,8 @@ namespace OurTaiko
     // yellow board, and a don opens the confirmation (オプション / はい / いいえ). Courses that cannot
     // be played (a song not found, a broken file) are listed greyed out with the reason. The 段位道場
     // doors (DanIntroView) open over it first, the whole intro after Entry, and the screen takes input
-    // once they have. No timer (user decision: the simulator does not limit the player's time).
+    // once they have. The music and the welcome voice start as the doors part (YataiDON starts them
+    // with the screen; issue #39). No timer (user decision: the simulator does not limit the player's time).
     // Three pages (DanSelectPages): ローカル, Fanmade and Database, the online ones listing only the
     // official courses and ending with the 外伝 entry, where a course's code is typed to challenge
     // it (GET /api/v1/game/dans/{code}); the course then joins the page.
@@ -53,6 +54,9 @@ namespace OurTaiko
         // The doors play once the cover has opened; the screen takes input after them.
         public bool FullIntro { get; private set; }
         public bool IntroDone => intro == null || !intro.IsPlaying && !double.IsNaN(introStartedAt);
+        // The music and the welcome voice wait for the doors to part (issue #39).
+        public bool MusicStarted { get; private set; }
+        bool introSoundPlayed;
 
         List<DanCourseEntry> courses = new List<DanCourseEntry>();
         readonly List<DanSelectPage> pages = new List<DanSelectPage>();
@@ -98,6 +102,12 @@ namespace OurTaiko
             voice.SetAudioGroup(AudioGroup.Voice);
             sfx.PrepareAudioEffects(don, ka, cancel, confirmBox, introSound);
             voice.PrepareAudioTracks(confirmVoice, enterVoice, optionsVoice);
+        }
+
+        void StartMusic()
+        {
+            if (MusicStarted) return;
+            MusicStarted = true;
             if (bgm.clip != null) { bgm.loop = true; bgm.PlayAudio(); }
             Play(voice, enterVoice);
         }
@@ -109,6 +119,7 @@ namespace OurTaiko
 
         void OnSceneChanging(string scene)
         {
+            MusicStarted = true;
             bgm.StopAudio(); voice.StopAudio();
         }
 
@@ -206,14 +217,23 @@ namespace OurTaiko
 
         void ShowIntro(double now)
         {
-            if (intro == null || !intro.IsPlaying) return;
+            if (intro == null || !intro.IsPlaying) { StartMusic(); return; }
             if (double.IsNaN(introStartedAt))
             {
                 if (switcher.IsInputBlocked) return;
                 introStartedAt = now;
-                if (FullIntro) Play(sfx, introSound, true);
             }
-            intro.Show(DanIntroView.Frame(FullIntro, now - introStartedAt));
+            // The stamps' sound starts so that its hits fall on the kanji (DanIntroView.Hits).
+            if (FullIntro && !introSoundPlayed && now - introStartedAt >= DanIntroView.SoundDelayMs)
+            {
+                introSoundPlayed = true;
+                Play(sfx, introSound, true);
+                // The doors follow the sound from the frame it actually started on.
+                introStartedAt = now - DanIntroView.SoundDelayMs;
+            }
+            double frame = DanIntroView.Frame(FullIntro, now - introStartedAt);
+            if (frame >= DanIntroView.OpenFrom) StartMusic();
+            intro.Show(frame);
         }
 
         void HandleInput(double now)

@@ -66,5 +66,24 @@ namespace OurTaiko.Tests
             Assert.That(DanSelectScene.CursorAlpha(6 * 5 / 0.06), Is.EqualTo(0.301f).Within(1e-4), "Frame 30 is the dimmest.");
             Assert.That(DanSelectScene.CursorAlpha(1000), Is.EqualTo(1).Within(1e-4), "One loop per second.");
         }
+
+        [Test]
+        public void TheWholeIntroLandsEachKanjiAndTheDoorsOnTheSoundsHits()
+        {
+            const double f = DanIntroView.FrameMs;
+            double sound = DanIntroView.SoundDelayMs;
+            Assert.That(sound, Is.EqualTo(801.67).Within(0.01), "60 fps up to the first kanji at frame 75.");
+            Assert.That(DanIntroView.Frame(true, 0), Is.EqualTo(DanIntroView.FullFrom));
+            Assert.That(DanIntroView.Frame(true, 35 * f), Is.EqualTo(40).Within(1e-6));
+            // 段, 位, 道, 場 land and the doors part on the hits of dan_intro.ogg.
+            Assert.That(DanIntroView.Frame(true, sound + 365), Is.EqualTo(75).Within(1e-6));
+            Assert.That(DanIntroView.Frame(true, sound + 945), Is.EqualTo(100).Within(1e-6));
+            Assert.That(DanIntroView.Frame(true, sound + 1455), Is.EqualTo(126).Within(1e-6));
+            Assert.That(DanIntroView.Frame(true, sound + 1945), Is.EqualTo(153).Within(1e-6));
+            Assert.That(DanIntroView.Frame(true, sound + 2400), Is.EqualTo(182).Within(1e-6));
+            Assert.That(DanIntroView.Frame(true, sound + 2400 + 80 * f), Is.EqualTo(DanIntroView.End).Within(1e-6), "60 fps again after.");
+            // Only the opening: 60 fps from frame 182, no sound to follow.
+            Assert.That(DanIntroView.Frame(false, 80 * f), Is.EqualTo(DanIntroView.End).Within(1e-6));
+        }
     }
 }
