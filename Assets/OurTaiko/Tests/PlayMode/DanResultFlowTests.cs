@@ -203,7 +203,7 @@ namespace OurTaiko.Tests
             SceneSwitcher.EnsureInstance().ShowDanResult(result);
             yield return WaitForScene(SceneSwitcher.DanResultScene);
             var screen = Object.FindAnyObjectByType<DanResultScene>();
-            var tap = screen.TapArea;
+            var tap = screen.view.tapArea;
             Assert.That(tap, Is.Not.Null);
             // Nothing else on the screen catches the tap, in the middle or at a corner.
             foreach (var at in new[] { new Vector2(Screen.width / 2f, Screen.height / 2f), new Vector2(4, 4) })

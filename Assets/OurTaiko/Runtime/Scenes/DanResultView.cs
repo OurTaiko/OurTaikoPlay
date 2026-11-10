@@ -109,6 +109,10 @@ namespace OurTaiko
         [Tooltip("congrats/text_01 and text_02 (達人) 0..3: ja, en, ko, zh.")]
         public Sprite[] congratsText1, congratsText2;
 
+        [Header("Input")]
+        [Tooltip("A clear full-screen area on top of everything: a tap or click anywhere is a drum hit.")]
+        public ResultPointerControl tapArea;
+
         [Header("Global chrome")]
         public RectTransform noSave;
         public NameplateView nameplate;

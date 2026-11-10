@@ -38,8 +38,6 @@ namespace OurTaiko
         public bool Congratulates { get; private set; }
         // The upload of a server course's attempt (FanmadeClient queue key), null for none.
         public string DanUpload { get; private set; }
-        // Touch and the mouse: a tap anywhere is a drum hit (the screen has no drum pad).
-        public ResultPointerControl TapArea { get; private set; }
 
         bool awardAnswered;
 
@@ -70,25 +68,7 @@ namespace OurTaiko
             try { Save(); }
             catch (Exception error) { Log.Exception("Dan", error, this); }
             Bind();
-            BindTapArea();
             Show(Now);
-        }
-
-        // A clear full-screen hit target over the whole result, like ResultScene's action area:
-        // InputManager only turns touches and clicks into drum presses on a DrumPad, which only
-        // the play scenes have.
-        void BindTapArea()
-        {
-            var canvas = view.GetComponentInParent<Canvas>().rootCanvas;
-            var area = new GameObject("TapArea", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(ResultPointerControl));
-            var rect = (RectTransform)area.transform;
-            rect.SetParent(canvas.transform, false);
-            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
-            rect.offsetMin = rect.offsetMax = Vector2.zero;
-            rect.SetAsLastSibling();
-            area.GetComponent<Image>().color = Color.clear;
-            TapArea = area.GetComponent<ResultPointerControl>();
-            TapArea.Clicked = Don;
         }
 
         void Start()
@@ -256,6 +236,9 @@ namespace OurTaiko
             var run = Result.Run;
             var course = run.Entry.Course;
             DanUpload ??= Result.Upload;
+            // Touch and the mouse: InputManager makes drum presses only on a DrumPad, which the
+            // result has none of, so a tap anywhere is a drum hit through this area.
+            view.tapArea.Clicked = Don;
             string language = SettingManager.EnsureInstance().Settings.general.Language;
             for (int i = 0; i < view.plates.Length; i++)
             {
