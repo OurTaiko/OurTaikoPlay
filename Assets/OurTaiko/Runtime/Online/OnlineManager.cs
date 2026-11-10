@@ -634,7 +634,10 @@ namespace OurTaiko.Online
         // sent once that server connects again. False when nothing is queued (a guest, or no
         // account for the server).
         public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null)
-            => Client.Submit(chart, difficulty, score, replay, seat, side, OfflineAccountId(chart.Server, seat));
+            => SubmitKeyed(chart, difficulty, score, replay, seat, side) != null;
+        // As Submit; the score's upload key, or null when nothing is queued.
+        public string SubmitKeyed(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null)
+            => Client.SubmitKeyed(chart, difficulty, score, replay, seat, side, OfflineAccountId(chart.Server, seat));
 
         // The queue key a seat's scores have on a server that is not connected (what
         // FanmadeEndpoint.AccountIdOf gives once it is): on a built-in server the seat's remembered

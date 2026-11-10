@@ -197,6 +197,32 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void AnAttemptNamesItsSongsScoresOnAServerThatKeepsThem()
+        {
+            fixture.Dans = Newtonsoft.Json.Linq.JArray.Parse("[]");
+            fixture.DanScoreKeys = true;
+            fixture.DanProfileReply = Newtonsoft.Json.Linq.JObject.Parse("{\"granted\":{}}");
+            var e = Catalog();
+            Assert.That(e.DanScoreKeys, Is.True);
+            SignIn(e, 0, "don", "katsu");
+            var listed = client.Chart(e.Id, chart.Id);
+            // The score's upload key is what the attempt names; a song that uploaded none is null.
+            string scoreKey = client.SubmitKeyed(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 500000, Good = 4, MaxCombo = 4 }, seat: 0, side: "single");
+            Assert.That(scoreKey, Has.Length.EqualTo(64));
+            Assert.That(client.UploadQueue.Pending(e.AccountIdOf(0)).Single().Key, Is.EqualTo(scoreKey));
+            Assert.That(client.SubmitKeyed(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, seat: 1, side: "p2"), Is.Null, "A guest seat uploads nothing.");
+            client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { scoreKey, null });
+            Drain();
+            var keys = (Newtonsoft.Json.Linq.JArray)fixture.DanAttempts.Single().Body["scoreKeys"];
+            Assert.That((string)keys[0], Is.EqualTo(scoreKey));
+            Assert.That(keys[1].Type, Is.EqualTo(Newtonsoft.Json.Linq.JTokenType.Null));
+            // Keys that do not cover the songs played are left out, not sent wrong.
+            client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { scoreKey });
+            Drain();
+            Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scoreKeys"), Is.False);
+        }
+
+        [Test]
         public void ServerCoursesComeWithTheCatalogAndAttemptsGoUpWithTheirAward()
         {
             fixture.Dans = Newtonsoft.Json.Linq.JArray.Parse("[{\"format\":1,\"id\":\"7\",\"title\":{\"ja\":\"十段\"},\"color\":3,\"official\":true," +
@@ -221,6 +247,10 @@ namespace OurTaiko.Tests
             Assert.That((string)sent.Body["courseId"], Is.EqualTo("7"));
             Assert.That((int)sent.Body["verdict"], Is.EqualTo(4));
             Assert.That((int)sent.Body["songsPlayed"], Is.EqualTo(1));
+            // This server did not say it keeps an attempt's scores, so their keys stay out of the body.
+            client.SubmitDanAttempt(fixture.BaseUrl, "7", 4, 1, new[] { "0123456789abcdef" });
+            Drain();
+            Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scoreKeys"), Is.False);
             var award = client.Award(key);
             Assert.That((int)award.Profile["granted"]["dan"]["index"], Is.EqualTo(20));
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);

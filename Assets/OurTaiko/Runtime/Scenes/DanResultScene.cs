@@ -103,11 +103,13 @@ namespace OurTaiko
                 PreviousBest = Result.PreviousBest = DanRecordStore.Shared.Save(DanRecordStore.Key(entry), entry.Course.Title(language), Result.Verdict,
                     Result.Score, Result.MaxCombo, Result.GaugePoints, Result.Songs.Length, songs, gaugePercent);
             }
+            // Each song's score goes up as a play of its own; the attempt names them by their upload keys.
+            var scoreKeys = new string[Result.Songs.Length];
             for (int i = 0; i < Result.Songs.Length; i++)
-                ResultScene.SaveScore(Result.Run.Song(i), Result.Songs[i], Result.Records != null && i < Result.Records.Length ? Result.Records[i] : null, 0);
+                scoreKeys[i] = ResultScene.SaveScore(Result.Run.Song(i), Result.Songs[i], Result.Records != null && i < Result.Records.Length ? Result.Records[i] : null, 0);
             var course = Result.Run.Entry.Course;
             if (Recorded && !course.IsLocal)
-                DanUpload = Result.Upload = Online.OnlineManager.EnsureInstance().Client?.SubmitDanAttempt(course.Server, course.Id, Result.Verdict, Result.Songs.Length);
+                DanUpload = Result.Upload = Online.OnlineManager.EnsureInstance().Client?.SubmitDanAttempt(course.Server, course.Id, Result.Verdict, Result.Songs.Length, scoreKeys);
         }
 
         // Once OurTaikoProfile has answered the upload, 1P's nameplate is read again for what it

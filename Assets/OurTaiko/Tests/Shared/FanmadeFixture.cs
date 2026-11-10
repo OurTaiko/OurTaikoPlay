@@ -91,6 +91,8 @@ namespace OurTaiko.Tests
         public JArray Dans;
         // POST /game/dan-attempts: what was sent (body and user), and OurTaikoProfile's reply the
         // server passes back (null: Profile unreachable).
+        // The catalog says the server keeps an attempt's scores (danScoreKeys).
+        public bool DanScoreKeys;
         public readonly ConcurrentQueue<(string User, JObject Body)> DanAttempts = new ConcurrentQueue<(string, JObject)>();
         public JObject DanProfileReply = JObject.Parse("{\"granted\":{\"dan\":null,\"titles\":[]},\"nameplate\":{}}");
         // OurTaikoProfile's public nameplates by user id (GET /api/v1/users/{id}/nameplate); a user
@@ -364,6 +366,7 @@ namespace OurTaiko.Tests
             reply.Merge(Protocol);
             if (AccountCenter) reply["sso"] = new JObject { ["issuer"] = BaseUrl, ["service"] = Service };
             if (Dans != null) reply["danVersion"] = 1;
+            if (DanScoreKeys) reply["danScoreKeys"] = 1;
             ChangeBootstrap?.Invoke(reply);
             Reply(context, 200, reply);
         }

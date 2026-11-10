@@ -426,6 +426,9 @@ namespace OurTaiko.Online
                 }
                 Interlocked.Increment(ref revision);
                 SetStatus(e.Config.DisplayName + ": " + list.Count + " songs ready" + (e.IsAuthenticated ? "" : " (guest; scores disabled)"));
+                // A server that keeps an attempt's scores takes their upload keys with it; one that
+                // does not would refuse the field it does not know.
+                e.DanScoreKeys = snapshot["danScoreKeys"]?.Type == JTokenType.Integer && (long)snapshot["danScoreKeys"] == 1;
                 if (snapshot["danVersion"]?.Type == JTokenType.Integer && (long)snapshot["danVersion"] == 1) await LoadDansAsync(e, cancel);
                 else lock (sync) danLists.Remove(e.Id);
             }
@@ -454,13 +457,17 @@ namespace OurTaiko.Online
 
         // Queues a 段位 attempt of a server's course for 1P's account, then sends it in the
         // background like scores; the server asks OurTaikoProfile for its rewards. The queue key,
-        // or null when 1P is not signed in there.
-        public string SubmitDanAttempt(string server, string courseId, int verdict, int songsPlayed)
+        // or null when 1P is not signed in there. scoreKeys: the upload keys of the played songs'
+        // scores in song order (SubmitKeyed; null for a song that uploaded none), by which the
+        // server ties those scores to the attempt.
+        public string SubmitDanAttempt(string server, string courseId, int verdict, int songsPlayed, IReadOnlyList<string> scoreKeys = null)
         {
             FanmadeEndpoint e;
             lock (sync) e = endpoints.Find(x => string.Equals(x.Config.baseUrl, server.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) && x.IsConnected);
             if (e == null || !HasAccount(e, 0)) return null;
             var body = new JObject { ["courseId"] = courseId, ["verdict"] = verdict, ["songsPlayed"] = songsPlayed };
+            if (e.DanScoreKeys && scoreKeys != null && scoreKeys.Count == songsPlayed)
+                body["scoreKeys"] = new JArray(scoreKeys.Select(k => k != null ? (JToken)k : JValue.CreateNull()));
             string key = RandomKey();
             try
             {
@@ -528,19 +535,25 @@ namespace OurTaiko.Online
         // and sent once that account is signed in to the server again; null queues nothing offline.
         public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null,
             string offlineAccount = null)
+            => SubmitKeyed(chart, difficulty, score, replay, seat, side, offlineAccount) != null;
+
+        // As Submit; the key the score is uploaded with (its Idempotency-Key), or null when nothing
+        // is queued. A 段位 attempt names its songs' scores by these keys.
+        public string SubmitKeyed(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null,
+            string offlineAccount = null)
         {
             var block = SideBlock(chart, difficulty, side);
-            if (block == null) return false;
+            if (block == null) return null;
             var e = Endpoint(chart.Server);
             string account;
             if (e != null && e.IsConnected)
             {
-                if (!HasAccount(e, seat)) return false;
+                if (!HasAccount(e, seat)) return null;
                 account = e.AccountIdOf(seat);
             }
             else
             {
-                if (string.IsNullOrEmpty(offlineAccount) || Offline.Get(chart.Server, chart.Id) == null) return false;
+                if (string.IsNullOrEmpty(offlineAccount) || Offline.Get(chart.Server, chart.Id) == null) return null;
                 account = offlineAccount;
             }
             // The block that was played names the song and course.
@@ -554,11 +567,12 @@ namespace OurTaiko.Online
             body["replay_data"] = replay != null ? replay.ToJson() : JValue.CreateNull();
             try
             {
-                UploadQueue.Enqueue(account, RandomKey(), body.ToString(Newtonsoft.Json.Formatting.None), block.ChartHash, chart.AudioHash, chart.Id);
+                string key = RandomKey();
+                UploadQueue.Enqueue(account, key, body.ToString(Newtonsoft.Json.Formatting.None), block.ChartHash, chart.AudioHash, chart.Id);
                 RetryNow();
-                return true;
+                return key;
             }
-            catch (Exception error) { SetStatus("Score queue error: " + error.Message); return false; }
+            catch (Exception error) { SetStatus("Score queue error: " + error.Message); return null; }
         }
 
         // Called every frame: starts a background upload pass at most every 30 s and never waits for HTTP.

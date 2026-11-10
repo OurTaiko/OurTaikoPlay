@@ -60,6 +60,8 @@ namespace OurTaiko.Online
         // What 1P's pending scores are queued under (AccountIdOf(0)).
         public string AccountId => AccountIdOf(0);
         public bool IsConnected { get; internal set; }
+        // The catalog's danScoreKeys: 段位 attempts may name their songs' scores (scoreKeys).
+        public bool DanScoreKeys { get; internal set; }
         // 1P, the seat every servers.json server and the catalog belong to.
         public bool IsAuthenticated => Seats[0].IsAuthenticated;
         public int ChartCount { get; internal set; } = -1;

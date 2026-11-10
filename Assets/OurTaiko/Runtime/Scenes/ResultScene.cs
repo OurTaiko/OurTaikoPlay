@@ -123,19 +123,20 @@ namespace OurTaiko
         // Local charts keep every seat's best in the one score database. Online, each seat uploads
         // its own course and block with its own account; a seat without a login is skipped (2P has
         // none yet). A play from the offline cache is queued for the seat's account on that server
-        // and goes up once the server connects again.
-        internal static void SaveScore(SongDefinition song, PlayResult result, Online.PlayRecord record, int seat)
+        // and goes up once the server connects again. Returns the key an online score is uploaded
+        // with (a 段位 attempt names its songs' scores by it), or null when none is.
+        internal static string SaveScore(SongDefinition song, PlayResult result, Online.PlayRecord record, int seat)
         {
             // Auto play and a custom judge window are not real results.
-            if (!result.IsRecordable) return;
-            if (!SongScores.IsOnline(song)) { ScoreStore.Shared.Save(result); return; }
+            if (!result.IsRecordable) return null;
+            if (!SongScores.IsOnline(song)) { ScoreStore.Shared.Save(result); return null; }
             var online = Online.OnlineManager.Instance;
             var chart = online != null ? online.ChartOf(song) : null;
-            if (chart == null) return;
+            if (chart == null) return null;
             int difficulty = (int)result.Difficulty;
             var best = online.Client.Best(chart, difficulty, seat, result.Side);
             if (best != null) result.PreviousBest = (int)Math.Min(int.MaxValue, Math.Max(result.PreviousBest, best.Score));
-            online.Submit(chart, difficulty, new Online.FanmadeScore
+            return online.SubmitKeyed(chart, difficulty, new Online.FanmadeScore
             {
                 Good = result.Good, Ok = result.Ok, Bad = result.Bad, Score = result.Score,
                 Drumroll = result.Rolls, MaxCombo = result.MaxCombo, ClearStatus = (int)result.StoredCrown,
