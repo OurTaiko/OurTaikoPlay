@@ -182,7 +182,7 @@ namespace OurTaiko
             // battle has its record's.
             var chart = switcher.TakePreparedChart(song, course, seat);
             if (IsReplay) chart = PrepareReplayChart(course, switcher.SideOf(seat));
-            if (IsGhost) chart = PrepareGhostChart();
+            if (IsGhost) chart ??= PrepareGhostChart(song, ghost);
             chart ??= PrepareChart(song, course, switcher.SideOf(seat), side);
             bool recorded = IsGhost && seat == 1;
             var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : !recorded && switcher.AutoPlayOf(seat), new Online.PlayRecord

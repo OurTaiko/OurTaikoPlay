@@ -84,16 +84,10 @@ namespace OurTaiko
         // a shared key (Confirm, Back, the menu keys).
         public static bool PlayerKeyDown(InputKey key) => key <= InputKey.RightKa ? Player.GetKeyDown(key) : GetKeyDown(key);
         // This frame's presses a single-player screen reads, in order: the shared keys and the
-        // player's own drum, named by face.
-        public static IEnumerable<InputPress> PlayerPresses
-        {
-            get
-            {
-                foreach (var press in frame)
-                    if (!press.Key.IsDrum()) yield return press;
-                    else if (press.Key.Seat() == Seating.Side) yield return new InputPress(press.Key.Face(), press.Time);
-            }
-        }
+        // player's own drum, named by face. Filled once a frame with the seats' presses (the side a
+        // lone player sits on changes only as Entry is left).
+        public static IReadOnlyList<InputPress> PlayerPresses => playerFrame;
+        static readonly List<InputPress> playerFrame = new List<InputPress>();
 
         // Presses of this frame in the order they happened.
         public static IReadOnlyList<InputPress> PressesThisFrame => frame;
@@ -133,7 +127,7 @@ namespace OurTaiko
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
-            pending.Clear(); frame.Clear(); pads.Clear();
+            pending.Clear(); frame.Clear(); playerFrame.Clear(); pads.Clear();
             foreach (var player in players) player.frame.Clear();
             Array.Clear(pressedThisFrame, 0, KeyCount); Array.Clear(held, 0, KeyCount);
             Array.Clear(recorded, 0, KeyCount);
@@ -181,8 +175,14 @@ namespace OurTaiko
         static void SplitBySeat()
         {
             foreach (var player in players) player.frame.Clear();
+            playerFrame.Clear();
             foreach (var press in frame)
-                if (press.Key.IsDrum()) players[press.Key.Seat()].frame.Add(new InputPress(press.Key.Face(), press.Time));
+            {
+                if (!press.Key.IsDrum()) { playerFrame.Add(press); continue; }
+                var face = new InputPress(press.Key.Face(), press.Time);
+                players[press.Key.Seat()].frame.Add(face);
+                if (press.Key.Seat() == Seating.Side) playerFrame.Add(face);
+            }
         }
 
         // Forgets the drum presses still waiting out DrumDelay.

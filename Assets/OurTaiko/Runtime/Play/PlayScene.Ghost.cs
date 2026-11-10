@@ -35,7 +35,9 @@ namespace OurTaiko
             random = (RandomMode)ghost.Record.Random, neiro = seat == 0 ? PlayOptions.ForSeat(Seating.Side).neiro : PlayOptions.Mute,
         };
 
-        TaikoChart PrepareGhostChart()
+        // The recording's block with its options, one for each lane. The song loading scene prepares
+        // both behind its curtain; a restart parses here.
+        public static TaikoChart PrepareGhostChart(SongDefinition song, GhostMatch ghost)
         {
             var chart = song.ParseBlock(ghost.Course, ghost.Side);
             ChartModifiers.Apply(chart, ghost.Record);

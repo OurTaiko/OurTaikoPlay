@@ -61,7 +61,13 @@ namespace OurTaiko
             // GameScreen::init_tja, moved behind the curtain: the parse and Player::reset_chart's options.
             try
             {
-                switcher.SetPreparedChart(song, course, PlayScene.PrepareChart(song, course, switcher.SideOf(0), Seating.Side));
+                // A ghost battle's lanes both read the recording's block with its options.
+                if (switcher.PlaysGhost)
+                {
+                    switcher.SetPreparedChart(song, course, PlayScene.PrepareGhostChart(song, switcher.Ghost));
+                    switcher.SetPreparedChart(song, switcher.SelectedCourse2P, PlayScene.PrepareGhostChart(song, switcher.Ghost), 1);
+                }
+                else switcher.SetPreparedChart(song, course, PlayScene.PrepareChart(song, course, switcher.SideOf(0), Seating.Side));
                 // 2P reads its own block of its own course with its own options.
                 if (switcher.PlaysTwo)
                     switcher.SetPreparedChart(song, switcher.SelectedCourse2P, PlayScene.PrepareChart(song, switcher.SelectedCourse2P, switcher.SideOf(1), 1), 1);
