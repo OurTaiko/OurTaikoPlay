@@ -236,6 +236,9 @@ namespace OurTaiko
             var run = Result.Run;
             var course = run.Entry.Course;
             DanUpload ??= Result.Upload;
+            // Touch and the mouse: InputManager makes drum presses only on a DrumPad, which the
+            // result has none of, so a tap anywhere is a drum hit through this area.
+            view.tapArea.Clicked = Don;
             string language = SettingManager.EnsureInstance().Settings.general.Language;
             for (int i = 0; i < view.plates.Length; i++)
             {
