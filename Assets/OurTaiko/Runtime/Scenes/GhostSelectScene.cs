@@ -9,17 +9,18 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // ゴーストバトル's list (issue #53): every recorded play the built-in servers keep (GET
-    // /api/v1/replays), newest first, one category at a time. The category bar above the rows holds
-    // すべて, then the servers' catalog categories merged by id: a category both servers list (pop,
-    // game, …) is one entry that asks both, one only a server lists asks that server. Each category
-    // keeps its own rows, paging and place. ← → switch category; on the drum, left ka from the first
-    // row reaches the bar, where ka switches category and don returns to the rows. Ka (↑ ↓) moves,
-    // don picks, Back returns to Entry; a tap selects a row and a tap on the selected one picks it,
-    // and the bar's arrows switch category. Picking downloads the recording and plays it against
-    // the player (SceneSwitcher.PlayGhost) on its own song and block, which the song loading scene
-    // downloads like any online song. Plays of replaced files are not listed, and one whose song has
-    // changed since the list came is refused with a message.
+    // ゴーストバトル's list (issue #53) as a shelf of three columns: the connected built-in servers,
+    // the highlighted server's categories (すべて, then its catalog categories), and the highlighted
+    // category's recorded plays (GET /api/v1/replays?categoryId=), newest first. Every column opens
+    // with もどる and has another after every ten entries. The highlighted entry of a column shows
+    // what the next column holds; each category loads its first page the first time it is shown and
+    // the next ones near its end, and every column keeps its place. Ka (↑ ↓) moves in the focused
+    // column; don (→) enters a server or category or picks a play; もどる, Back (←) return to the
+    // column on the left, and from the servers to Entry. A tap selects an entry, a tap on the
+    // selected one opens it. Picking downloads the recording and plays it against the player
+    // (SceneSwitcher.PlayGhost) on its own song and block, which the song loading scene downloads
+    // like any online song. Plays of replaced files are not listed, and one whose song has changed
+    // since the list came is refused with a message.
     public sealed class GhostSelectScene : MonoBehaviour
     {
         public GhostSelectView view;
@@ -27,58 +28,100 @@ namespace OurTaiko
         public AudioClip don, ka;
         // How long the list waits for a server to connect before saying there is none.
         public float connectSeconds = 10;
+        public const int BackEvery = 10;
+        public const string BackLabel = "もどる";
 
-        // One entry of the category bar and the plays listed under it.
+        public enum Kind { Back, Server, Category, Replay }
+
+        // One shelf entry: もどる or what it names.
+        public readonly struct Entry
+        {
+            public readonly Kind Kind;
+            public readonly Server Server;
+            public readonly Category Category;
+            public readonly FanmadeReplay Replay;
+            public Entry(Kind kind, Server server = null, Category category = null, FanmadeReplay replay = null)
+            { Kind = kind; Server = server; Category = category; Replay = replay; }
+        }
+
+        public sealed class Server
+        {
+            public string Id = "", Name = "";
+            public readonly List<Category> Categories = new List<Category>();
+            internal int Selected = 1;
+        }
+
+        // A server's category and the plays listed under it.
         public sealed class Category
         {
             // A catalog category's id; null for すべて.
-            public string Id, Title = "";
-            // The endpoints asked (their Ids).
-            public readonly List<string> Servers = new List<string>();
+            public string Id, Title = "", Server = "";
             public readonly List<FanmadeReplay> Rows = new List<FanmadeReplay>();
-            // The servers' totals so far.
             public int Total { get; internal set; }
-            // The next page each server lists, or none once it has no more (or failed).
-            internal readonly Dictionary<string, int> NextPage = new Dictionary<string, int>();
-            internal readonly List<string> Errors = new List<string>();
-            internal Task Loading;
-            internal bool Started;
-            internal int Selected;
+            public bool Started { get; internal set; }
             public bool IsLoading => Loading != null && !Loading.IsCompleted;
+            internal int? NextPage;
+            internal string Error;
+            internal Task Loading;
+            internal int Selected = 1;
         }
 
-        public IReadOnlyList<Category> Categories => categories;
-        public int CategoryIndex { get; private set; }
-        public Category Current => CategoryIndex < categories.Count ? categories[CategoryIndex] : null;
-        public IReadOnlyList<FanmadeReplay> Rows => Current?.Rows ?? (IReadOnlyList<FanmadeReplay>)Array.Empty<FanmadeReplay>();
-        // -1 while the category bar has the focus.
-        public int Selected { get; private set; }
-        public bool OnCategoryBar => Selected < 0;
-        public FanmadeReplay SelectedRow => Selected >= 0 && Selected < Rows.Count ? Rows[Selected] : null;
+        public IReadOnlyList<Server> Servers => servers;
+        // The focused column: 0 servers, 1 categories, 2 plays.
+        public int Column { get; private set; }
+        // The column's entries: もどる first and after every ten.
+        public IReadOnlyList<Entry> Entries(int column) => column == 0 ? WithBacks(servers, s => new Entry(Kind.Server, server: s))
+            : column == 1 ? (CurrentServer is Server server ? WithBacks(server.Categories, c => new Entry(Kind.Category, category: c)) : Array.Empty<Entry>())
+            : CurrentCategory is Category category ? WithBacks(category.Rows, r => new Entry(Kind.Replay, replay: r)) : Array.Empty<Entry>();
+        public int SelectedIn(int column) => column == 0 ? serverSelected : column == 1 ? CurrentServer?.Selected ?? 0 : CurrentCategory?.Selected ?? 0;
+        public Entry Focused => At(Column, SelectedIn(Column));
+        // The server and category the shelf shows, highlighted in their columns.
+        public Server CurrentServer => At(0, serverSelected).Server;
+        public Category CurrentCategory => CurrentServer is Server server ? At(1, server.Selected).Category : null;
+        public IReadOnlyList<FanmadeReplay> Rows => CurrentCategory?.Rows ?? (IReadOnlyList<FanmadeReplay>)Array.Empty<FanmadeReplay>();
+        public FanmadeReplay SelectedRow => Column == 2 ? Focused.Replay : null;
         public string Status { get; private set; } = "";
-        public bool IsLoading => !connected || (Current?.IsLoading ?? false);
+        public bool IsLoading => !connected || (CurrentCategory?.IsLoading ?? false);
         public bool IsStarting { get; private set; }
         public bool HasLeft { get; private set; }
 
-        readonly List<Category> categories = new List<Category>();
+        readonly List<Server> servers = new List<Server>();
+        int serverSelected = 1;
         SceneSwitcher switcher;
         CancellationTokenSource cancel;
         bool connected;
         // A pick failed: its message stays until the player moves.
         bool failed;
-        int first;
+        readonly int[] first = new int[3];
+
+        static IReadOnlyList<Entry> WithBacks<T>(IReadOnlyList<T> items, Func<T, Entry> entry)
+        {
+            var entries = new List<Entry>(items.Count + items.Count / BackEvery + 1);
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (i % BackEvery == 0) entries.Add(new Entry(Kind.Back));
+                entries.Add(entry(items[i]));
+            }
+            if (items.Count == 0) entries.Add(new Entry(Kind.Back));
+            return entries;
+        }
+
+        Entry At(int column, int index)
+        {
+            var entries = Entries(column);
+            return index >= 0 && index < entries.Count ? entries[index] : new Entry(Kind.Back);
+        }
 
         void Awake()
         {
             switcher = SceneSwitcher.EnsureInstance();
             cancel = new CancellationTokenSource();
-            for (int i = 0; i < view.rows.Length; i++)
-            {
-                int index = i;
-                if (view.rows[i].relay != null) view.rows[i].relay.Clicked = () => Tap(index);
-            }
-            if (view.categoryPrevious != null) view.categoryPrevious.Clicked = () => SwitchCategory(-1);
-            if (view.categoryNext != null) view.categoryNext.Clicked = () => SwitchCategory(1);
+            for (int c = 0; c < view.columns.Length; c++)
+                for (int i = 0; i < view.columns[c].rows.Length; i++)
+                {
+                    int column = c, row = i;
+                    if (view.columns[c].rows[i].relay != null) view.columns[c].rows[i].relay.Clicked = () => Tap(column, row);
+                }
             if (sfx != null) { sfx.SetAudioGroup(AudioGroup.Effects); sfx.PrepareAudioEffects(don, ka); }
             switcher.SceneChanging += OnSceneChanging;
             Show();
@@ -97,51 +140,77 @@ namespace OurTaiko
         void Update()
         {
             if (switcher.IsInputBlocked || HasLeft || IsStarting) { Show(); return; }
-            bool don = InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
-            bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa), rightKa = InputManager.GetKeyDown(InputKey.RightKa);
-            if (InputManager.GetKeyDown(InputKey.Back)) Leave();
-            else if (InputManager.GetKeyDown(InputKey.MenuLeft) || OnCategoryBar && leftKa) SwitchCategory(-1);
-            else if (InputManager.GetKeyDown(InputKey.MenuRight) || OnCategoryBar && rightKa) SwitchCategory(1);
-            else if (OnCategoryBar && (don || InputManager.GetKeyDown(InputKey.MenuDown))) Move(1);
-            else if (don) Pick();
-            else if (leftKa || InputManager.GetKeyDown(InputKey.MenuUp)) Move(-1);
-            else if (rightKa || InputManager.GetKeyDown(InputKey.MenuDown)) Move(1);
+            if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.MenuLeft)) Back(leave: InputManager.GetKeyDown(InputKey.Back));
+            else if (InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Confirm();
+            else if (InputManager.GetKeyDown(InputKey.MenuRight)) { if (Focused.Kind != Kind.Back && Focused.Kind != Kind.Replay) Confirm(); }
+            else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuUp)) Move(-1);
+            else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuDown)) Move(1);
             Show();
         }
 
-        // Up from the first row is the category bar; down from the bar is the first row.
+        // Moves in the focused column; the columns to its right follow the new highlight.
         public void Move(int delta)
         {
             if (HasLeft || IsStarting) return;
             failed = false;
-            int count = Rows.Count;
-            int next = Math.Max(-1, Math.Min(count - 1, Selected + delta));
-            if (next != Selected) { Selected = next; Play(ka); }
-            // Near the end the next pages come in.
-            var category = Current;
-            if (category != null && count > 0 && Selected >= count - 2 && !category.IsLoading && category.NextPage.Count > 0) category.Loading = LoadMoreAsync(category);
-        }
-
-        // The category left (-1) or right (+1) of the current one, with its own place in its rows.
-        public void SwitchCategory(int delta)
-        {
-            if (categories.Count == 0 || HasLeft || IsStarting || switcher.IsInputBlocked) return;
-            int next = Math.Max(0, Math.Min(categories.Count - 1, CategoryIndex + delta));
-            failed = false;
+            int count = Entries(Column).Count;
+            int next = Math.Max(0, Math.Min(count - 1, SelectedIn(Column) + delta));
+            if (next == SelectedIn(Column)) return;
+            Select(Column, next);
             Play(ka);
-            if (next == CategoryIndex) return;
-            if (!OnCategoryBar) Current.Selected = Selected;
-            CategoryIndex = next;
-            if (!OnCategoryBar) Selected = Math.Min(Current.Selected, Math.Max(0, Current.Rows.Count - 1));
-            Open(Current);
         }
 
-        public void Tap(int row)
+        void Select(int column, int index)
         {
-            int index = first + row;
-            if (index < 0 || index >= Rows.Count || HasLeft || IsStarting || switcher.IsInputBlocked) return;
-            if (index == Selected) Pick();
-            else Move(index - Selected);
+            if (column == 0) serverSelected = index;
+            else if (column == 1 && CurrentServer != null) CurrentServer.Selected = index;
+            else if (column == 2 && CurrentCategory != null) CurrentCategory.Selected = index;
+            var category = CurrentCategory;
+            Open(category);
+            // Near the end of a category the next pages come in.
+            if (column == 2 && category != null && index >= Entries(2).Count - 3 && !category.IsLoading && category.NextPage.HasValue)
+                category.Loading = LoadMoreAsync(category);
+        }
+
+        // Don on the focused entry: もどる returns, a server or category is entered, a play is raced.
+        public void Confirm()
+        {
+            if (HasLeft || IsStarting || switcher.IsInputBlocked || !connected) return;
+            failed = false;
+            var entry = Focused;
+            switch (entry.Kind)
+            {
+                case Kind.Back: Back(leave: true); return;
+                case Kind.Replay: Pick(); return;
+                default:
+                    Play(don);
+                    Column++;
+                    // Into a column, on its first entry after もどる.
+                    if (SelectedIn(Column) == 0 && Entries(Column).Count > 1) Select(Column, 1);
+                    return;
+            }
+        }
+
+        // One column to the left; from the servers, back to Entry when `leave`.
+        public void Back(bool leave = true)
+        {
+            if (HasLeft || IsStarting || switcher.IsInputBlocked) return;
+            failed = false;
+            if (Column > 0) { Column--; Play(ka); return; }
+            if (leave) Leave();
+        }
+
+        // A tap selects an entry (and focuses its column); a tap on the focused entry opens it.
+        public void Tap(int column, int row)
+        {
+            if (HasLeft || IsStarting || switcher.IsInputBlocked || column > Column + 1) return;
+            int index = first[column] + row;
+            if (index < 0 || index >= Entries(column).Count) return;
+            if (column == Column && index == SelectedIn(column)) { Confirm(); return; }
+            failed = false;
+            Column = column;
+            Select(column, index);
+            Play(ka);
         }
 
         public void Leave()
@@ -210,69 +279,60 @@ namespace OurTaiko
                 if (Time.realtimeSinceStartup > deadline || cancel.IsCancellationRequested) { Status = "No server is online, so there are no ghosts to battle."; return; }
                 await Awaitable.NextFrameAsync(cancel.Token);
             }
-            BuildCategories(online.Client);
+            BuildShelf(online.Client);
             connected = true;
-            Open(Current);
-            if (Current != null) await Current.Loading;
+            Status = "";
+            Open(CurrentCategory);
+            if (CurrentCategory?.Loading != null) await CurrentCategory.Loading;
         }
 
-        // すべて, then the connected servers' catalog categories merged by id, in catalog order.
-        void BuildCategories(FanmadeClient client)
+        // Each connected server with すべて and its catalog categories, in catalog order.
+        void BuildShelf(FanmadeClient client)
         {
-            var servers = client.Endpoints.Where(e => e.IsConnected).Select(e => e.Id).ToList();
-            var all = new Category { Title = "すべて" };
-            all.Servers.AddRange(servers);
-            categories.Add(all);
-            foreach (var category in client.Categories.Where(c => servers.Contains(c.Server)))
+            foreach (var endpoint in client.Endpoints.Where(e => e.IsConnected))
             {
-                var entry = categories.Find(c => c.Id == category.Id);
-                if (entry == null) categories.Add(entry = new Category { Id = category.Id, Title = category.Title });
-                if (!entry.Servers.Contains(category.Server)) entry.Servers.Add(category.Server);
+                var server = new Server { Id = endpoint.Id, Name = endpoint.Config.DisplayName };
+                server.Categories.Add(new Category { Title = "すべて", Server = endpoint.Id });
+                foreach (var category in client.Categories.Where(c => c.Server == endpoint.Id))
+                    server.Categories.Add(new Category { Id = category.Id, Title = category.Title, Server = endpoint.Id });
+                servers.Add(server);
             }
         }
 
-        // The category's first pages come in the first time it is shown.
+        // The category's first page comes in the first time it is shown.
         void Open(Category category)
         {
-            if (category == null || category.Started) return;
+            if (category == null || category.Started || !connected) return;
             category.Started = true;
-            foreach (var server in category.Servers) category.NextPage[server] = 1;
+            category.NextPage = 1;
             category.Loading = LoadMoreAsync(category);
         }
 
         async Task LoadMoreAsync(Category category)
         {
             var client = OnlineManager.EnsureInstance().Client;
-            if (client == null || category.NextPage.Count == 0) return;
-            var wanted = category.NextPage.ToList();
-            FanmadeReplayPage[][] replies;
-            try { replies = await Task.WhenAll(wanted.Select(p => client.ReplaysAsync(p.Value, "recent", cancel.Token, p.Key, category.Id))); }
+            if (client == null || !category.NextPage.HasValue) return;
+            int page = category.NextPage.Value;
+            FanmadeReplayPage[] replies;
+            try { replies = await client.ReplaysAsync(page, "recent", cancel.Token, category.Server, category.Id); }
             catch (OperationCanceledException) { return; }
             if (cancel.IsCancellationRequested) return;
-            bool current = category == Current;
-            var selected = current ? SelectedRow : null;
-            int total = 0;
-            foreach (var page in replies.SelectMany(x => x))
-            {
-                if (page.Error != null) category.Errors.Add(page.Endpoint.Config.DisplayName + ": " + page.Error);
-                if (page.HasMore) category.NextPage[page.Endpoint.Id] = page.Page + 1;
-                else category.NextPage.Remove(page.Endpoint.Id);
-                total += page.Total;
-                foreach (var item in page.Items)
-                    if (!category.Rows.Any(r => r.Server == item.Server && r.ScoreId == item.ScoreId)) category.Rows.Add(item);
-            }
-            if (wanted.All(p => p.Value == 1)) category.Total = total;
-            category.Rows.Sort((a, b) => b.SubmittedAt.CompareTo(a.SubmittedAt));
-            if (selected != null) Selected = Math.Max(0, category.Rows.IndexOf(selected));
+            var reply = replies.FirstOrDefault();
+            if (reply == null) { category.Error = "offline"; category.NextPage = null; return; }
+            category.Error = reply.Error;
+            category.NextPage = reply.HasMore ? page + 1 : (int?)null;
+            if (page == 1 && reply.Error == null) category.Total = reply.Total;
+            foreach (var item in reply.Items)
+                if (!category.Rows.Any(r => r.ScoreId == item.ScoreId)) category.Rows.Add(item);
         }
 
         string CategoryStatus(Category category)
         {
-            if (category == null) return Status;
+            if (category == null) return "";
             if (category.IsLoading && category.Rows.Count == 0) return "Loading…";
-            if (category.Rows.Count == 0)
-                return category.Errors.Count > 0 ? string.Join(" · ", category.Errors) : category.Id == null ? "No one has recorded a play yet." : "No recorded plays in this category yet.";
-            return string.Join(" · ", category.Errors);
+            if (category.Error != null) return category.Error;
+            if (category.Rows.Count == 0) return category.Id == null ? "No one has recorded a play on this server yet." : "No recorded plays in this category yet.";
+            return "";
         }
 
         void Play(AudioClip clip)
@@ -287,34 +347,45 @@ namespace OurTaiko
 
         public static string Detail(FanmadeReplay row)
             => CourseName(row.Course) + " ★" + row.Level + (row.Side != "single" ? " " + row.Side.ToUpperInvariant() : "")
-               + "   " + (string.IsNullOrEmpty(row.Nickname) ? "?" : row.Nickname) + "   " + row.ServerName;
+               + "   " + (string.IsNullOrEmpty(row.Nickname) ? "?" : row.Nickname);
+
+        static string Count(Category category) => category.Started && !category.IsLoading && category.Error == null ? category.Total + " 件" : "";
 
         void Show()
         {
             if (view == null) return;
-            var rows = Rows;
-            int count = view.rows.Length;
-            // The selected row stays a third of the way down while the list scrolls.
-            first = Math.Max(0, Math.Min(Selected - count / 3, rows.Count - count));
-            for (int i = 0; i < count; i++)
+            for (int column = 0; column < view.columns.Length && column < 3; column++)
             {
-                var v = view.rows[i];
-                int index = first + i;
-                bool shown = index < rows.Count;
-                v.root.gameObject.SetActive(shown);
-                if (!shown) continue;
-                var row = rows[index];
-                v.background.color = index == Selected ? view.selectedColor : view.rowColor;
-                v.title.text = row.Title;
-                v.detail.text = Detail(row);
-                v.score.text = row.Score.ToString("N0", CultureInfo.InvariantCulture);
+                var shelf = view.columns[column];
+                var entries = Entries(column);
+                int count = shelf.rows.Length, selected = SelectedIn(column);
+                // The selected entry stays a third of the way down while the column scrolls.
+                first[column] = Math.Max(0, Math.Min(selected - count / 3, entries.Count - count));
+                for (int i = 0; i < count; i++)
+                {
+                    var v = shelf.rows[i];
+                    int index = first[column] + i;
+                    bool shown = index < entries.Count && (column <= Column + 1 || connected);
+                    v.root.gameObject.SetActive(shown);
+                    if (!shown) continue;
+                    var entry = entries[index];
+                    v.background.color = index != selected ? (entry.Kind == Kind.Back ? view.backColor : view.rowColor)
+                        : column == Column ? view.selectedColor : view.highlightColor;
+                    switch (entry.Kind)
+                    {
+                        case Kind.Back: v.title.text = BackLabel; v.detail.text = ""; v.score.text = ""; break;
+                        case Kind.Server:
+                            v.title.text = entry.Server.Name;
+                            v.detail.text = Count(entry.Server.Categories[0]); v.score.text = ""; break;
+                        case Kind.Category:
+                            v.title.text = entry.Category.Title; v.detail.text = Count(entry.Category); v.score.text = ""; break;
+                        default:
+                            v.title.text = entry.Replay.Title; v.detail.text = Detail(entry.Replay);
+                            v.score.text = entry.Replay.Score.ToString("N0", CultureInfo.InvariantCulture); break;
+                    }
+                }
             }
-            var category = Current;
-            if (view.category != null)
-                view.category.text = category == null ? "" : category.Title + (category.Started && !category.IsLoading ? "（" + category.Total + "）" : "")
-                    + "　" + (CategoryIndex + 1) + "/" + categories.Count;
-            if (view.categoryBar != null) view.categoryBar.color = OnCategoryBar ? view.selectedColor : view.rowColor;
-            if (view.status != null) view.status.text = IsStarting || failed || !connected ? Status : CategoryStatus(category);
+            if (view.status != null) view.status.text = IsStarting || failed || !connected ? Status : CategoryStatus(CurrentCategory);
         }
     }
 }
