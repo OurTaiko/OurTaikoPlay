@@ -8,13 +8,13 @@ OurTaikoPlay is a taiko rhythm game written from scratch in Unity and C#, drawin
 
 ## Features
 
-- **A complete single-player flow**: Entry → server login / guest access → song selection → loading → gameplay → results, with pause, restart, and return to song selection.
+- **A complete single-player flow**: Entry → song selection → loading → gameplay → results, with pause, restart, and return to song selection.
 - **Two-player play**: 2P can join on Entry or song select and play side by side in DoublePlayScene (with a shared kusudama); results show 2P's board on the right. Each seat can sign in with its own OurTaiko account and shows its OurTaikoProfile nameplate.
 - **Dan courses**: Entry's 段位道場 board opens a three-page course select plus a 外伝 entry that takes a course code. Nijiiro's dan intro, loading, background and result presentation are ported; a course ends with 合格 or 不合格 and its records are kept. Server-provided courses can be played and attempts uploaded for rewards; nameplates show a two-layer dan emblem (五級 to 達人).
 - **Song select**: nested box.def folders, inertial wheel swiping, held arrows that repeat, a ka that skips seven boards while scrolling, and song lists and search results grouped by source.
 - **Nijiiro presentation**: song boards, difficulty cards, nameplates, soul gauge, dancers, crowns, and seven ScoreRank icons—including 粋, 雅, and 極—with a results animation.
 - **TJA gameplay**: common note types, drumrolls, balloons, BPM and scroll changes, and Normal / Expert / Master branches.
-- **Online catalogs and scores**: built-in Fanmade and ESE server configurations, account login, guest browsing, category folders, chart and audio downloads, best-score retrieval, and queued score uploads with retries.
+- **Online catalogs and scores**: the two built-in servers only (OurTaiko Fanmade and OurTaiko Database), OurTaiko account sign-in, guest browsing, category folders, chart and audio downloads, best-score retrieval, and queued score uploads with retries.
 - **Score display**: local records stored in SQLite; online history supplied by the server. Song selection shows best scores, crowns, and ScoreRank. Online crowns use `ClearStatus`.
 - **Play and system settings**: autoplay, speed, Doron, swapped note colors, randomization, drum sounds, volume groups, audio backend, frame rate, and an on-screen drum toggle.
 - **Native audio**: BASS decoding and mixing, with a design inspired by MajdataPlay. Output uses the cross-platform BassSimple backend, plus BassWASAPI / BassASIO on Windows. There is no Unity audio backend (its latency is too high); with no output device the game runs muted.
@@ -37,8 +37,7 @@ git submodule update --init --recursive
 1. Open the project in Unity Hub and wait for package resolution and asset imports to finish.
 2. Open `Assets/Scenes/Entry.unity` and press Play.
 3. Hit Don or tap the screen to join, then choose 「演奏ゲーム」.
-4. Log in to a server, continue as a guest, or skip the servers to use local songs.
-5. Choose a song and difficulty, then play.
+4. Choose a song and difficulty, then play.
 
 The repository includes TRIPLE HELIX, Input Calibration, and Branch Training examples. The latter two are silent calibration / practice charts. Choose 「ゲーム設定」 on Entry to open system settings.
 
@@ -60,7 +59,7 @@ A large note needs only one side of the drum for a full judgment. Only the earli
 
 ## Songs and user data
 
-Online servers are configured in `servers.json` in the data folder, with `https://fanmade.ourtaiko.org` and `https://ese-backend.llx.life` included by default. Set an entry's `enabled` field to `false` to disable it.
+The game connects to its two built-in servers only, `https://fanmade.ourtaiko.org` and `https://database.ourtaiko.org`; other servers cannot be added. Scores are uploaded once a player signs in with an OurTaiko account on the accounts page of 「ゲーム設定」; without one, the servers are browsed and played as a guest. A `servers.json` left in the data folder by an older version is no longer read and is left untouched.
 
 Every song played online is cached with its chart and audio under `cache/` in the data folder. When a server cannot be reached, song select shows a folder named after that server and marked as its offline cache, listing the cached songs under their original categories; they play without the server. Once the server connects again its full catalog shows instead. Scores of offline plays are queued under the account the seat uses on that server and uploaded once it connects again.
 
@@ -83,7 +82,6 @@ If the desktop game folder is read-only (for example a macOS app still in its do
 | `settings.json` | System settings, including volume, display, and advanced audio parameters |
 | `options.json` | Play options |
 | `player.json` | Player nameplate |
-| `servers.json` | Online server and login configuration |
 | `scores.sqlite3` | Local best scores, pending uploads separated by server / account, and the index of cached charts |
 
 General → Language currently changes song titles and subtitles only, falling back to the chart's own TITLE / SUBTITLE when a translation is missing. Full menu localization is not yet available. README translations are independent of the in-game language setting.
