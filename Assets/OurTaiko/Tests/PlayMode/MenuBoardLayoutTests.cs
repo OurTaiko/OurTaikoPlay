@@ -18,39 +18,40 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator TheThreeVisibleEntryModesStayInsideAndClickable()
+        public IEnumerator TheOpenEntryModeStaysAtTheCentreAndEveryBoardShows()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
-            entry.Don(); yield return new WaitForSecondsRealtime(2);
+            // The credit screen takes no join for its first 120 ms.
+            yield return new WaitForSecondsRealtime(.3f);
+            entry.Don();
+            Assert.That(entry.Flow.JoinedAt.HasValue, Is.True);
+            yield return new WaitForSecondsRealtime(2);
             int count = entry.Board.Boards.Count;
             Assert.That(count, Is.EqualTo(4));
+            float? openY = null;
             for (int selected = 0; selected < count; selected++)
             {
                 if (selected > 0) entry.Ka(1);
                 yield return new WaitForSecondsRealtime(.7f);
                 Canvas.ForceUpdateCanvases();
-                // Three boards show at a time, the selected one among them.
-                int first = EntryModeList.FirstVisible(selected, count);
-                foreach (var board in entry.Board.Boards.Skip(first).Take(3))
+                // As on the arcade, the list never shifts as a group: the open board keeps the
+                // centre slot at either end, and every board stays shown in its slot.
+                var open = entry.Board.Boards[selected];
+                float y = StageY(entry, open.Hit.rectTransform);
+                openY ??= y;
+                Assert.That(y, Is.EqualTo(openY.Value).Within(.5f), "The open board keeps its place.");
+                Assert.That(y, Is.EqualTo(entry.stage.rect.height / 2).Within(60), "The open board sits at the stage's middle.");
+                AssertTopHit(open.Hit.gameObject, open.Hit.rectTransform);
+                foreach (var board in entry.Board.Boards)
                 {
                     Assert.That(board.Root.gameObject.activeInHierarchy, Is.True);
                     Assert.That(board.Fade, Is.GreaterThan(.99));
-                    var rect = board.Hit.rectTransform;
-                    var corners = new Vector3[4]; rect.GetWorldCorners(corners);
-                    foreach (var corner in corners)
-                    {
-                        var point = entry.stage.InverseTransformPoint(corner);
-                        float y = entry.stage.rect.yMax - point.y;
-                        Assert.That(y, Is.InRange(entry.stage.rect.height * entry.view.modeSafeArea.x - .1f,
-                            entry.stage.rect.height * entry.view.modeSafeArea.y + .1f));
-                    }
-                    AssertTopHit(board.Hit.gameObject, rect);
                 }
-                TestCapture.Capture("EntryThreeModes" + selected + ".png");
-                TestCapture.Capture("EntryThreeModes720-" + selected + ".png", 1280, 720);
+                TestCapture.Capture("EntryModes" + selected + ".png");
+                TestCapture.Capture("EntryModes720-" + selected + ".png", 1280, 720);
             }
             // Clicking the first board moves focus; clicking settings twice opens the settings overlay.
             entry.view.boards[0].hitRelay.Clicked();
@@ -89,6 +90,13 @@ namespace OurTaiko.Tests
             AssertTopHit(back.panelClosed.gameObject, back.panelClosed.rectTransform);
             TestCapture.Capture("ReturnBoardOpen.png");
             TestCapture.Capture("ReturnBoardOpen720.png", 1280, 720);
+        }
+
+        // A rect's centre, in design pixels from the stage's top.
+        static float StageY(EntryScene entry, RectTransform rect)
+        {
+            var point = entry.stage.InverseTransformPoint(rect.TransformPoint(rect.rect.center));
+            return entry.stage.rect.yMax - point.y;
         }
 
         static void AssertTopHit(GameObject expected, RectTransform rect)
