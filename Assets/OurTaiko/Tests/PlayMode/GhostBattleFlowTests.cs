@@ -135,6 +135,32 @@ namespace OurTaiko.Tests
             Assert.That(list.view.rows[1].root.gameObject.activeSelf, Is.False);
             TestCapture.Capture("GhostSelect.png");
 
+            // The category bar: すべて, then the catalog's categories (Game holds the song, Pop nothing).
+            Assert.That(list.Categories.Select(c => c.Title), Is.EqualTo(new[] { "すべて", "Game", "Pop" }));
+            Assert.That(list.view.category.text, Does.StartWith("すべて（1）"));
+            list.SwitchCategory(1);
+            yield return Waits.Until(() => !list.IsLoading, seconds: 10);
+            yield return null;
+            Assert.That(list.Current.Id, Is.EqualTo("game"));
+            Assert.That(list.Rows.Single().ScoreId, Is.EqualTo((string)row["id"]));
+            list.SwitchCategory(1);
+            yield return Waits.Until(() => !list.IsLoading, seconds: 10);
+            yield return null;
+            Assert.That(list.Current.Id, Is.EqualTo("pop"));
+            Assert.That(list.Rows, Is.Empty);
+            Assert.That(list.view.status.text, Does.Contain("category"));
+            Assert.That(list.view.rows[0].root.gameObject.activeSelf, Is.False);
+            TestCapture.Capture("GhostSelectEmptyCategory.png");
+            // Left ka from the first row reaches the bar; ka there switches back, don returns to the rows.
+            list.view.categoryPrevious.Clicked();
+            list.SwitchCategory(-1);
+            Assert.That(list.Current.Id, Is.Null);
+            list.Move(-1);
+            Assert.That(list.OnCategoryBar, Is.True);
+            list.Move(1);
+            Assert.That(list.SelectedRow.ScoreId, Is.EqualTo((string)row["id"]));
+            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/replays"), Is.EqualTo(3), "Each category loads once.");
+
             yield return Race(list);
             var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.IsGhost, Is.True);

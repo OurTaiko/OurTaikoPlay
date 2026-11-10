@@ -306,8 +306,12 @@ namespace OurTaiko.Tests
                 }
                 if (request.HttpMethod == "GET" && path == "/api/v1/replays")
                 {
+                    // categoryId: the songs of one catalog category; an unknown one is 400.
+                    string category = request.QueryString["categoryId"];
+                    if (!string.IsNullOrEmpty(category) && !Categories.Any(c => c.Id == category)) { Reply(context, 400, new JObject { ["code"] = "QUERY_INVALID" }); return; }
                     JArray items;
-                    lock (Replays) items = new JArray(Replays.Where(r => (bool)r["isLatest"]).Select(r => r.DeepClone()));
+                    lock (Replays) items = new JArray(Replays.Where(r => (bool)r["isLatest"]
+                        && (string.IsNullOrEmpty(category) || Charts.Any(c => c.Id == (string)r["songId"] && c.Categories.Contains(category)))).Select(r => r.DeepClone()));
                     int page = int.TryParse(request.QueryString["page"], out int p) ? p : 1;
                     Reply(context, 200, new JObject
                     {
