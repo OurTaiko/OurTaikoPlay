@@ -14,11 +14,14 @@ namespace OurTaiko
         public readonly Difficulty? Difficulty;
         public readonly int Level;
         public readonly SongSearchOrder Order;
+        // The side that confirmed the search (0 1P, 1 2P): its account's plays decide the 未フルコンボ /
+        // 未ドンダフル order.
+        public readonly int Seat;
         readonly Regex keywordPattern;
         public string ApiOrder => Order == SongSearchOrder.UnFullCombo ? "unfc" : Order == SongSearchOrder.UnPerfect ? "unperfect" : "default";
-        public SongSearchQuery(string keyword = "", Difficulty? difficulty = null, int level = 0, SongSearchOrder order = SongSearchOrder.Default)
+        public SongSearchQuery(string keyword = "", Difficulty? difficulty = null, int level = 0, SongSearchOrder order = SongSearchOrder.Default, int seat = 0)
         {
-            Keyword = (keyword ?? "").Trim(); Difficulty = difficulty; Level = level; Order = order;
+            Keyword = (keyword ?? "").Trim(); Difficulty = difficulty; Level = level; Order = order; Seat = seat == 1 ? 1 : 0;
             if (Encoding.UTF8.GetByteCount(Keyword) > 200) throw new ArgumentException("Keyword must be at most 200 UTF-8 bytes.");
             if (difficulty.HasValue && ((int)difficulty < 0 || (int)difficulty > 4) || level < 0 || level > 10 || !Enum.IsDefined(typeof(SongSearchOrder), order))
                 throw new ArgumentOutOfRangeException(nameof(difficulty));

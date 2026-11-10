@@ -9,12 +9,14 @@ namespace OurTaiko
         public static bool IsOnline(SongDefinition song) => song != null &&
             (IsOnlineKey(song.name) || (Online.OnlineManager.Instance != null && Online.OnlineManager.Instance.IsOnline(song)));
 
-        public static ScoreStore.Record Get(SongDefinition song, Difficulty difficulty)
+        // An online song's best is the account's of `seat`: by default the side a lone player sits on
+        // (Seating; 1P's with two players). Local songs keep one record for every seat.
+        public static ScoreStore.Record Get(SongDefinition song, Difficulty difficulty, int seat = -1)
         {
             if (song == null || difficulty < Difficulty.Easy || difficulty > Difficulty.Ura) return null;
             if (!IsOnline(song)) return ScoreStore.Shared.Get(song.ScoreKey, difficulty);
             var manager = Online.OnlineManager.Instance;
-            var best = manager?.Client.Best(manager.ChartOf(song), (int)difficulty);
+            var best = manager?.Client.Best(manager.ChartOf(song), (int)difficulty, seat < 0 ? Seating.Side : seat);
             if (best == null) return null;
             // The server's ClearStatus is authoritative: 0 none, 1 silver, 2 gold, 3 rainbow.
             // Missing (old server/history) or unknown values never imply a crown from judgments.

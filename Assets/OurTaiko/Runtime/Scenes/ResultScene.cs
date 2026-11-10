@@ -246,6 +246,18 @@ namespace OurTaiko
         // drum (Seating: 1P, or a lone 2P's 2P).
         void HandleInput()
         {
+            // A ghost battle has one player: only their own drum works the result, and their ka turns
+            // both boards' pages together.
+            if (boards.Count > 1 && switcher.PlaysGhost)
+            {
+                foreach (var press in InputManager.Players[Seating.Side].PressesThisFrame)
+                {
+                    if (press.Key.IsKa()) for (int board = 0; board < boards.Count; board++) ChangePage(board, press.Key.IsRight() ? 1 : -1);
+                    else Don(switcher.Ghost.PlayerLane);
+                    break;
+                }
+                return;
+            }
             for (int board = 0; board < boards.Count; board++)
                 foreach (var press in InputManager.Players[boards.Count > 1 ? board : Seating.Side].PressesThisFrame)
                 {
