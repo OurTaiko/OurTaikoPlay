@@ -38,8 +38,8 @@ namespace OurTaiko
             get => second ??= Load(System.IO.Path.Combine(GamePaths.Root, "options_2p.json"));
             set => second = value;
         }
-        // A lone 2P plays with 2P's options (Seating).
-        public static PlayOptions ForSeat(int seat) => Seating.Physical(seat) == 1 ? Second : Shared;
+        // The options of a seat (0 1P, 1 2P); a lone player's are their side's (Seating.Side).
+        public static PlayOptions ForSeat(int seat) => seat == 1 ? Second : Shared;
 
         public static PlayOptions Load(string path)
         {

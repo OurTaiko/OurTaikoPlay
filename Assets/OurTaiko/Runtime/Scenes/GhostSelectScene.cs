@@ -141,10 +141,10 @@ namespace OurTaiko
         {
             if (switcher.IsInputBlocked || HasLeft || IsStarting) { Show(); return; }
             if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.MenuLeft)) Back(leave: InputManager.GetKeyDown(InputKey.Back));
-            else if (InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Confirm();
+            else if (InputManager.PlayerKeyDown(InputKey.LeftDon) || InputManager.PlayerKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Confirm();
             else if (InputManager.GetKeyDown(InputKey.MenuRight)) { if (Focused.Kind != Kind.Back && Focused.Kind != Kind.Replay) Confirm(); }
-            else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuUp)) Move(-1);
-            else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuDown)) Move(1);
+            else if (InputManager.PlayerKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuUp)) Move(-1);
+            else if (InputManager.PlayerKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuDown)) Move(1);
             Show();
         }
 

@@ -237,8 +237,8 @@ namespace OurTaiko
             if (Switcher.IsInputBlocked || SearchDialogOpen) return;
             // song_select.cpp: the back key leaves for Entry from any state (an open option panel closes first).
             if (InputManager.GetKeyDown(InputKey.Back)) { Back(); return; }
-            bool leftKa = InputManager.GetKeyDown(InputKey.LeftKa), rightKa = InputManager.GetKeyDown(InputKey.RightKa);
-            bool donHit = InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
+            bool leftKa = InputManager.PlayerKeyDown(InputKey.LeftKa), rightKa = InputManager.PlayerKeyDown(InputKey.RightKa);
+            bool donHit = InputManager.PlayerKeyDown(InputKey.LeftDon) || InputManager.PlayerKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm);
             bool left, right;
             if (Phase == State.Browsing)
             {
@@ -272,7 +272,7 @@ namespace OurTaiko
 
         // SongSelect2PScreen: 2P joins with its don while 1P is choosing (not in practice). A lone
         // 2P (Seating) already holds the 2P side; 1P joins it on Entry.
-        public bool CanJoinSecond => !TwoPlayers && Seating.Lone == 0 && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
+        public bool CanJoinSecond => !TwoPlayers && Seating.Side == 0 && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
 
         public void JoinSecond()
         {
@@ -641,9 +641,12 @@ namespace OurTaiko
 
         // SongSelectPlayer::handle_input_selecting: don on the option button opens ModifierSelector.
         // 2P's menu edits 2P's own options in the same panel on the right.
+        // A cursor's side: the second cursor is 2P's; the first is 1P's, or a lone 2P's (Seating).
+        static int SideOf(int seat) => seat == 1 ? 1 : Seating.Side;
+
         void OpenOptions(int seat)
         {
-            menus[seat] = new OptionMenu(PlayOptions.ForSeat(seat), hitSoundCount);
+            menus[seat] = new OptionMenu(PlayOptions.ForSeat(SideOf(seat)), hitSoundCount);
             OptionsOpened?.Invoke(seat, menus[seat]);
             VoiceRequested?.Invoke(seat == 0 ? Voice.Options : Voice.Options2P);
         }
@@ -664,7 +667,7 @@ namespace OurTaiko
         {
             if (menus[seat] == null) return;
             menus[seat] = null;
-            PlayOptions.ForSeat(seat).Save();
+            PlayOptions.ForSeat(SideOf(seat)).Save();
         }
 
         // CActPlayOption: the up/down arrows walk the option rows (wrapping) of the lowest seat whose

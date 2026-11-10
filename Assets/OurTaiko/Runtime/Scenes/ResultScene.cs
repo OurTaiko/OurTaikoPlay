@@ -117,7 +117,7 @@ namespace OurTaiko
         {
             var plates = new[] { view.nameplate, view.secondBoard.nameplate };
             var controller = PlayerInfoController.EnsureInstance();
-            int own = Seating.Physical(0);
+            int own = Seating.Side;
             plates[ghost.PlayerLane]?.Pin(own == 0 ? controller.Info : controller.SecondInfo, ghost.PlayerLane);
             plates[ghost.GhostLane]?.Pin(new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? "Ghost" : ghost.Nickname }, ghost.GhostLane);
         }
@@ -133,10 +133,11 @@ namespace OurTaiko
             {
                 bool below = switcher.Ghost.PlayerLane == 1;
                 var played = below ? switcher.LastResult2P : Result;
-                if (played != null) SaveScore(song, played, below ? record2P : record, 0);
+                if (played != null) SaveScore(song, played, below ? record2P : record, Seating.Side);
                 return;
             }
-            SaveScore(song, Result, record, 0);
+            // A lone player's score is their side's account's (Seating; 1P's with two players).
+            SaveScore(song, Result, record, Seating.Side);
             if (switcher.LastResult2P != null) SaveScore(song, switcher.LastResult2P, record2P, 1);
         }
 
@@ -155,8 +156,6 @@ namespace OurTaiko
             // Auto play and a custom judge window are not real results.
             if (!result.IsRecordable) return null;
             if (!SongScores.IsOnline(song)) { ScoreStore.Shared.Save(result); return null; }
-            // A lone 2P's score is 2P's account's (Seating).
-            seat = Seating.Physical(seat);
             var online = Online.OnlineManager.Instance;
             var chart = online != null ? online.ChartOf(song) : null;
             if (chart == null) return null;
@@ -242,15 +241,16 @@ namespace OurTaiko
         bool RevealEnded => boards.All(board => board.Sequence.RevealEndMs > 0);
         bool CanAdvance => boards.All(board => board.Sequence.CanAdvance);
 
-        // Each seat's first drum press of the frame: its ka turns its own board's pages, a don from
-        // either seat skips or leaves.
+        // Each board's player's first drum press of the frame: its ka turns its own board's pages, a
+        // don from either skips or leaves. A single board is the lone player's, on their own side's
+        // drum (Seating: 1P, or a lone 2P's 2P).
         void HandleInput()
         {
-            for (int seat = 0; seat < InputManager.Players.Count; seat++)
-                foreach (var press in InputManager.Players[seat].PressesThisFrame)
+            for (int board = 0; board < boards.Count; board++)
+                foreach (var press in InputManager.Players[boards.Count > 1 ? board : Seating.Side].PressesThisFrame)
                 {
-                    if (press.Key.IsKa()) ChangePage(seat, press.Key.IsRight() ? 1 : -1);
-                    else Don(seat);
+                    if (press.Key.IsKa()) ChangePage(board, press.Key.IsRight() ? 1 : -1);
+                    else Don(board);
                     break;
                 }
         }

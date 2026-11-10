@@ -267,7 +267,7 @@ namespace OurTaiko
             else if (Pressed(InputKey.MenuDown)) SwitchPage(1);
         }
 
-        static bool Pressed(params InputKey[] keys) => keys.Any(InputManager.GetKeyDown);
+        static bool Pressed(params InputKey[] keys) => keys.Any(InputManager.PlayerKeyDown);
 
         // A drum face hit: the confirmation opens on a playable course, or decides there.
         public void Don()
@@ -289,7 +289,7 @@ namespace OurTaiko
             {
                 case DanSelectFlow.Choice.Option:
                     Play(sfx, don, true);
-                    Options = new OptionMenu(PlayOptions.ForSeat(0), optionArt.hitSounds != null ? optionArt.hitSounds.Count : 0);
+                    Options = new OptionMenu(PlayOptions.ForSeat(Seating.Side), optionArt.hitSounds != null ? optionArt.hitSounds.Count : 0);
                     optionPanel.Open(Options, now);
                     Play(voice, optionsVoice);
                     break;
@@ -377,7 +377,7 @@ namespace OurTaiko
         void Begin(DanCourseEntry entry)
         {
             switcher.SelectedDan = entry;
-            PlayOptions.ForSeat(0).Save();
+            PlayOptions.ForSeat(Seating.Side).Save();
             if (!Application.CanStreamedLevelBeLoaded(SceneSwitcher.DanPlayScene))
             {
                 Log.Warn("Dan", "DanPlayScene is not in the build.");
@@ -470,7 +470,7 @@ namespace OurTaiko
         void Show(double now)
         {
             PollLookup();
-            if (optionPanel.Draw(now)) { Options = null; PlayOptions.ForSeat(0).Save(); Flow.OptionsClosed(); }
+            if (optionPanel.Draw(now)) { Options = null; PlayOptions.ForSeat(Seating.Side).Save(); Flow.OptionsClosed(); }
             view.empty.gameObject.SetActive(courses.Count == 0);
             view.board.gameObject.SetActive(courses.Count > 0);
             ShowRibbon(now);

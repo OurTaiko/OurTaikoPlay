@@ -36,8 +36,6 @@ namespace OurTaiko
         public static InputKey Face(this InputKey key) => key >= InputKey.P2LeftDon ? (InputKey)(key - InputKey.P2LeftDon) : key;
         // A seat's key for a drum face.
         public static InputKey OfSeat(this InputKey face, int seat) => seat == 1 && face <= InputKey.RightKa ? face + (int)InputKey.P2LeftDon : face;
-        // A keyboard drum key as the seats sit (Seating): a lone 2P's drum is the player's, seat 0.
-        public static InputKey Seated(this InputKey key) => Seating.Lone == 1 && key.IsDrum() ? key.Face().OfSeat(1 - key.Seat()) : key;
     }
 
     // One seat's drum: its presses of the frame (keys named as 1P's faces) and its input lock.
@@ -59,8 +57,9 @@ namespace OurTaiko
     // raw keyboard events are collected as they arrive; once per frame (before any scene Update)
     // they are merged with the touch/mouse presses on registered DrumPad zones and published
     // as one time-ordered list of presses plus per-key flags. Players[seat] splits the drum
-    // presses by seat; touch and mouse drum zones always strike 1P. A lone 2P's keyboard drum is
-    // reported as seat 0's (Seating), so every single-player screen answers it.
+    // presses by seat; touch and mouse drum zones strike the side a lone player sits on (Seating:
+    // 1P, or a lone 2P's 2P). Single-player screens read the drum of that side (Player, PlayerKeyDown,
+    // PlayerPresses), so a lone 2P plays on 2P's drum and 1P's drum does nothing for them.
     public static class InputManager
     {
         static readonly int KeyCount = Enum.GetValues(typeof(InputKey)).Length;
@@ -79,6 +78,22 @@ namespace OurTaiko
         public static IReadOnlyList<PlayerInput> Players => players;
         public static PlayerInput P1 => players[0];
         public static PlayerInput P2 => players[1];
+        // The drum of the side the lone player sits on (Seating.Side); 1P's with two players.
+        public static PlayerInput Player => players[Seating.Side];
+        // A single-player screen's key: a drum face (LeftDon..RightKa) of the player's own drum, or
+        // a shared key (Confirm, Back, the menu keys).
+        public static bool PlayerKeyDown(InputKey key) => key <= InputKey.RightKa ? Player.GetKeyDown(key) : GetKeyDown(key);
+        // This frame's presses a single-player screen reads, in order: the shared keys and the
+        // player's own drum, named by face.
+        public static IEnumerable<InputPress> PlayerPresses
+        {
+            get
+            {
+                foreach (var press in frame)
+                    if (!press.Key.IsDrum()) yield return press;
+                    else if (press.Key.Seat() == Seating.Side) yield return new InputPress(press.Key.Face(), press.Time);
+            }
+        }
 
         // Presses of this frame in the order they happened.
         public static IReadOnlyList<InputPress> PressesThisFrame => frame;
@@ -143,7 +158,7 @@ namespace OurTaiko
                 if (control == null || control.isPressed) continue;
                 if (control.ReadValueFromEvent(eventPtr, out float value) && control.IsValueConsideredPressed(value))
                 {
-                    pending.Add(new InputPress(pair.Value.Seated(), eventPtr.time));
+                    pending.Add(new InputPress(pair.Value, eventPtr.time));
                     recorded[(int)pair.Value] = true;
                 }
             }
@@ -197,11 +212,11 @@ namespace OurTaiko
                 foreach (var physical in bindings[i])
                 {
                     var control = keyboard[physical];
-                    held[(int)((InputKey)i).Seated()] |= control.isPressed;
+                    held[i] |= control.isPressed;
                     pressed |= control.wasPressedThisFrame;
                 }
                 // Fallback if an event was missed: keep the press, ordered after the recorded ones.
-                if (pressed && !recorded[i]) pending.Add(new InputPress(((InputKey)i).Seated(), InputState.currentTime));
+                if (pressed && !recorded[i]) pending.Add(new InputPress((InputKey)i, InputState.currentTime));
             }
         }
 
@@ -223,6 +238,7 @@ namespace OurTaiko
             foreach (var pad in pads)
             {
                 if (!pad.TryHit(position, out var key)) continue;
+                key = key.OfSeat(Seating.Side);
                 held[(int)key] = true;
                 if (pressed) { pending.Add(new InputPress(key, time)); pad.Press(); }
                 return;

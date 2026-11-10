@@ -175,13 +175,15 @@ namespace OurTaiko
         PlaySession AddLane(int seat, LaneViews views)
         {
             string course = switcher.CourseOf(seat);
-            var options = IsReplay ? ReplayOptions() : IsGhost ? GhostOptions(seat) : PlayOptions.ForSeat(seat);
+            // The first lane is played on the lone player's side (Seating) unless two play.
+            int side = seat == 0 ? Seating.Side : seat;
+            var options = IsReplay ? ReplayOptions() : IsGhost ? GhostOptions(seat) : PlayOptions.ForSeat(side);
             // The loading scene prepared the chart with the seat's own options; a replay or a ghost
             // battle has its record's.
             var chart = switcher.TakePreparedChart(song, course, seat);
             if (IsReplay) chart = PrepareReplayChart(course, switcher.SideOf(seat));
             if (IsGhost) chart = PrepareGhostChart();
-            chart ??= PrepareChart(song, course, switcher.SideOf(seat), seat);
+            chart ??= PrepareChart(song, course, switcher.SideOf(seat), side);
             bool recorded = IsGhost && seat == 1;
             var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : !recorded && switcher.AutoPlayOf(seat), new Online.PlayRecord
             {
@@ -192,6 +194,7 @@ namespace OurTaiko
             });
             lane.Record.SetOptions(options, chart);
             lane.Replay = recorded ? new ReplayFeed(ghost.Record) : replay;
+            lane.DrumSeat = side;
             lanes.Add(lane);
             // The recording's times are judged as played, without the player's offset.
             var session = new PlaySession(chart, recorded ? 0 : judgeOffset, IsPractice ? ForcedBranch : null, 1, judgeWindows);
@@ -229,7 +232,7 @@ namespace OurTaiko
         public static TaikoChart PrepareChart(DanResolvedSong song)
         {
             var chart = song.Song.ParseBlock(song.Course, song.Side);
-            ChartModifiers.Apply(chart, PlayOptions.ForSeat(0), new System.Random());
+            ChartModifiers.Apply(chart, PlayOptions.ForSeat(Seating.Side), new System.Random());
             return chart;
         }
 

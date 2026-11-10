@@ -174,11 +174,11 @@ namespace OurTaiko
             if (InputManager.GetKeyDown(InputKey.MenuUp)) MoveRow(-1, SongSelectManager.Sound.Ka);
             else if (InputManager.GetKeyDown(InputKey.MenuDown)) MoveRow(1, SongSelectManager.Sound.Ka);
             else if (row == 0 && InputManager.GetKeyDown(InputKey.Confirm)) BeginKeyword();
-            else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft))
+            else if (InputManager.PlayerKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft))
             { if (row > 0 && row < 4) Change(row - 1, -1); else MoveRow(-1, SongSelectManager.Sound.Ka); }
-            else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight))
+            else if (InputManager.PlayerKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight))
             { if (row > 0 && row < 4) Change(row - 1, 1); else MoveRow(1, SongSelectManager.Sound.Ka); }
-            else if (InputManager.GetKeyDown(InputKey.Confirm) || InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon))
+            else if (InputManager.GetKeyDown(InputKey.Confirm) || InputManager.PlayerKeyDown(InputKey.LeftDon) || InputManager.PlayerKeyDown(InputKey.RightDon))
             {
                 if (row < 4) MoveRow(1, SongSelectManager.Sound.Don);
                 else if (row == 4) Submit(); else Close();

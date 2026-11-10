@@ -32,7 +32,7 @@ namespace OurTaiko
         PlayOptions GhostOptions(int seat) => new PlayOptions
         {
             speed = ghost.Record.Speed, inverse = ghost.Record.Inverse, display = ghost.Record.Display,
-            random = (RandomMode)ghost.Record.Random, neiro = seat == 0 ? PlayOptions.ForSeat(0).neiro : PlayOptions.Mute,
+            random = (RandomMode)ghost.Record.Random, neiro = seat == 0 ? PlayOptions.ForSeat(Seating.Side).neiro : PlayOptions.Mute,
         };
 
         TaikoChart PrepareGhostChart()
@@ -46,7 +46,7 @@ namespace OurTaiko
         void ShowGhostPlates()
         {
             var controller = PlayerInfoController.EnsureInstance();
-            var own = Seating.Physical(0) == 0 ? controller.Info : controller.SecondInfo;
+            var own = Seating.Side == 0 ? controller.Info : controller.SecondInfo;
             var rival = new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? "Ghost" : ghost.Nickname };
             foreach (var plate in FindObjectsByType<NameplateView>(FindObjectsInactive.Include))
                 if (plate.gameObject.scene == gameObject.scene) plate.Pin(plate.seat == ghost.PlayerLane ? own : rival, plate.seat);

@@ -11,7 +11,7 @@ namespace OurTaiko
         public string Nickname = "", ScoreId = "", Server = "";
         public long Score;
         // The lane the player takes: 0 above (1P), 1 below (2P).
-        public int PlayerLane => Seating.Lone;
+        public int PlayerLane => Seating.Side;
         public int GhostLane => 1 - PlayerLane;
     }
 

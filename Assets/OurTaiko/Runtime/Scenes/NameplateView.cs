@@ -25,9 +25,10 @@ namespace OurTaiko
         public Sprite[] danTexts, goldDanTexts;
         [Tooltip("0 = 1P, 1 = 2P.")]
         public int seat;
-        // The seat whose player the plate shows: a lone 2P's plate stands where 1P's would (Seating).
-        // A pinned plate shows a given player on a given side (a ghost battle's result) instead.
-        int Shown => pinned != null ? pinnedSide : Seating.Physical(seat);
+        // The side whose player the plate shows: a single-player screen's plate (seat 0) shows the
+        // lone player, 1P or a lone 2P (Seating). A pinned plate shows a given player on a given side
+        // (a ghost battle) instead.
+        int Shown => pinned != null ? pinnedSide : seat == 0 ? Seating.Side : seat;
         PlayerInfo pinned;
         int pinnedSide;
         int applied = -1;

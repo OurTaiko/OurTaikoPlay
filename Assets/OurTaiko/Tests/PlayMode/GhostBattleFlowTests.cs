@@ -105,7 +105,7 @@ namespace OurTaiko.Tests
             // A lone 2P's own don picks the board (1P's would join 1P).
             if (lone2P) entry.Don2P(); else entry.Don();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.GhostSelectScene && !SceneSwitcher.Instance.IsInputBlocked, seconds: 10);
-            Assert.That(Seating.Lone, Is.EqualTo(lone2P ? 1 : 0));
+            Assert.That(Seating.Side, Is.EqualTo(lone2P ? 1 : 0));
         }
 
         static IEnumerator Race(GhostSelectScene list)
@@ -236,9 +236,8 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => signIn.IsCompleted, seconds: 10);
             signIn.GetAwaiter().GetResult();
             yield return OpenList(true);
-            // The lone 2P's own options and drum are the player's now.
-            Assert.That(PlayOptions.ForSeat(0), Is.SameAs(PlayOptions.Second));
-            Assert.That(InputKey.P2LeftDon.Seated(), Is.EqualTo(InputKey.LeftDon));
+            // A lone 2P is 2P: their own drum, nothing remapped.
+            Assert.That(InputManager.Player, Is.SameAs(InputManager.P2));
 
             var list = Object.FindAnyObjectByType<GhostSelectScene>();
             yield return Waits.Until(() => list.Rows.Count == 1, () => "Rows: " + list.Status, 10);
@@ -250,8 +249,14 @@ namespace OurTaiko.Tests
             var plates = Object.FindObjectsByType<NameplateView>(FindObjectsInactive.Include).Where(p => p.gameObject.scene == play.gameObject.scene).ToList();
             Assert.That(plates.Single(p => p.seat == 0).Info.name, Is.EqualTo("Rival"));
 
-            // 2P's drum key strikes the player's lane; 1P's does nothing.
+            // 1P's drum key does nothing for a lone 2P; 2P's strikes the player's lane.
             yield return Waits.Until(() => play.Lane1.Session != null && play.SongTime > 0.5, seconds: 10);
+            Assert.That(play.Lane1.DrumSeat, Is.EqualTo(1));
+            var p1Don = InputManager.GetBinding(InputKey.LeftDon)[0];
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(p1Don), clock += 0.001);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(), clock += 0.001);
+            yield return null; yield return null;
+            Assert.That(play.Lane1.Record.Inputs, Is.Empty, "1P's drum is not the lone 2P's.");
             var p2Don = InputManager.GetBinding(InputKey.P2LeftDon)[0];
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(p2Don), clock += 0.001);
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(), clock += 0.001);
