@@ -15,6 +15,8 @@ namespace OurTaiko
     public sealed class DanIntroView : MonoBehaviour
     {
         public const double FullFrom = 5, OpenFrom = 182, End = 262, FrameMs = 1000.0 / 60;
+        // Label `out`: the dojo picture, opaque until now, fades and uncovers the course board.
+        public const double Reveal = 253;
         const float DoorWidth = 1200, Kanji = 400, AtlasWidth = 2000, AtlasHeight = 1080;
         // The kanji cells of the atlas (段, 位, 道, 場) and the track that places each.
         static readonly (string Track, float X, float Y)[] Cells = { ("#7@4", 1200, 0), ("#9@5", 1600, 0), ("#11@6", 1200, 400), ("#13@7", 1600, 400) };
