@@ -70,6 +70,7 @@ namespace OurTaiko.Editor
 
         public static void BuildMacOS() => Build(BuildTarget.StandaloneOSX);
         public static void BuildWindows() => Build(BuildTarget.StandaloneWindows64);
+        public static void BuildLinux() => Build(BuildTarget.StandaloneLinux64);
         public static void BuildAndroid() => Build(BuildTarget.Android);
         public static void BuildIOS() => Build(BuildTarget.iOS);
 
@@ -125,6 +126,7 @@ namespace OurTaiko.Editor
             {
                 case BuildTarget.StandaloneOSX: return "Builds/macOS/OurTaikoPlay.app";
                 case BuildTarget.StandaloneWindows64: return "Builds/Windows/OurTaikoPlay.exe";
+                case BuildTarget.StandaloneLinux64: return "Builds/Linux/OurTaikoPlay.x86_64";
                 case BuildTarget.Android: return "Builds/Android/OurTaikoPlay.apk";
                 case BuildTarget.iOS: return "Builds/iOS";
                 default: throw new ArgumentOutOfRangeException(nameof(target));

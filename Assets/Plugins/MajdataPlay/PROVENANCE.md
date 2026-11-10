@@ -15,13 +15,16 @@ Only playback is kept. Left out:
   `Internal/MediaCodecEncoderSelector.cs`, `Internal/AudioSampleKernels.cs`,
   `Interop/AndroidMediaCodecEncoderQuery.cs`, `Resources/FFmpegCaptureNv12.shader`,
   `Editor/FFmpegCameraCapturerEditor.cs` (recording).
-- Native builds for Linux, Windows x86/arm64 and Android armeabi-v7a (not OurTaikoPlay targets).
+- Native builds for Windows x86/arm64 and Android armeabi-v7a (not OurTaikoPlay targets).
 
 Changes:
 
 - `Runtime/MajdataPlay.FFmpeg.asmdef`: no MajdataPlay.IO, MajRenderPipe or Platform.Android
-  references; no Linux or Windows x86 platforms.
+  references; no Windows x86 platform.
 - `Runtime/AssemblyInfo.cs`: internals visible to `OurTaiko.Tests` only.
+- `Native/Linux`: restored unmodified from the pinned revision for Linux x64 builds,
+  including FFmpeg 9.0.1, its libva/libdrm dependencies, the ABI 4 Unity bridge,
+  licenses, build manifests and Linux PluginImporter metadata (bridge Preload enabled).
 - `Runtime/Interop/AndroidContentInterop.cs`: the Android application context through Unity's
   `AndroidJavaClass` instead of MajdataPlay's generated Java bindings.
 - `Native/macOS`: the arm64 and x86_64 dylibs merged with `lipo` into universal ones (ad-hoc

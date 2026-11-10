@@ -139,7 +139,12 @@ Packages/packages-lock.json linguist-generated
 *.dll                   lfs
 *.pdb                   lfs
 *.so                    lfs
+*.so.[0-9]              lfs
+*.so.[0-9]*[0-9]        lfs
 Assets/Plugins/MajdataPlay/FFmpeg/Native/**/*.dylib lfs
+
+# Preserve exact upstream patches and license texts.
+Assets/Plugins/MajdataPlay/FFmpeg/Native/Linux/** -whitespace
 
 # Fonts
 *.otf                   lfs
