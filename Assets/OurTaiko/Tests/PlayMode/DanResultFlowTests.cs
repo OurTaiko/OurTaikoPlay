@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
@@ -189,6 +190,54 @@ namespace OurTaiko.Tests
             Assert.That(screen.view.plates[1].banner.color.a, Is.EqualTo(0.45f).Within(1e-3));
             Assert.That(screen.view.plates[1].unreached.color.a, Is.EqualTo(1), "The 未到達 mark itself is not dimmed.");
             Assert.That(screen.view.bestScore.gameObject.activeSelf, Is.False);
+        }
+
+        // Issue #72: touch and the mouse step through the result like the drum, down to leaving.
+        [UnityTest]
+        public IEnumerator ATapAnywhereIsADrumHit()
+        {
+            var entry = Course("[{\"type\":\"bad\",\"range\":\"less\",\"value\":[1]}]");
+            var result = Played(entry, failOut: true);
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.DanSelectScene);
+            yield return null;
+            SceneSwitcher.EnsureInstance().ShowDanResult(result);
+            yield return WaitForScene(SceneSwitcher.DanResultScene);
+            var screen = Object.FindAnyObjectByType<DanResultScene>();
+            var tap = screen.TapArea;
+            Assert.That(tap, Is.Not.Null);
+            // Nothing else on the screen catches the tap, in the middle or at a corner.
+            foreach (var at in new[] { new Vector2(Screen.width / 2f, Screen.height / 2f), new Vector2(4, 4) })
+            {
+                Canvas.ForceUpdateCanvases();
+                var hits = new System.Collections.Generic.List<RaycastResult>();
+                EventSystem.current.RaycastAll(Pointer(at), hits);
+                Assert.That(hits.FirstOrDefault().gameObject, Is.SameAs(tap.gameObject), "Top hit at " + at);
+            }
+
+            yield return new WaitForSecondsRealtime(0.6f);
+            Tap(tap);
+            Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Songs), "The first tap lands the plates.");
+            yield return new WaitForSecondsRealtime(0.6f);
+            Tap(tap);
+            Assert.That(screen.Flow.State, Is.EqualTo(DanResultFlow.Phase.Totals));
+            yield return new WaitForSecondsRealtime(0.6f);
+            Tap(tap);
+            Assert.That(screen.Flow.Skipped, Is.True, "A tap before the stamp lands everything.");
+            yield return new WaitForSecondsRealtime(1.1f);
+            Tap(tap);
+            Assert.That(screen.HasLeft, Is.True, "不合格: a tap after the stamp leaves.");
+            yield return WaitForScene(SceneSwitcher.DanSelectScene);
+        }
+
+        static PointerEventData Pointer(Vector2 at) => new PointerEventData(EventSystem.current)
+        {
+            pointerId = 3, button = PointerEventData.InputButton.Left, position = at,
+        };
+
+        static void Tap(ResultPointerControl control)
+        {
+            var data = Pointer(new Vector2(Screen.width / 2f, Screen.height / 2f));
+            control.OnPointerDown(data); control.OnPointerUp(data); control.OnPointerClick(data);
         }
 
         static IEnumerator WaitUntil(System.Func<bool> condition, float seconds)
