@@ -851,6 +851,30 @@ MonoBehaviour:
     m_Key: display.chara3DDesc
     m_Metadata:
       m_Items: []
+  - m_Id: 2299837700431872
+    m_Key: sound.backendNote.alsa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209088
+    m_Key: sound.alsa.unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209089
+    m_Key: sound.alsa.choose
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209090
+    m_Key: sound.alsa.reserved
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209091
+    m_Key: sound.alsa.device
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209092
+    m_Key: sound.alsa.deviceDesc
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -619,7 +619,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 133161110
-    m_Localized: Heard on BassSimple
+    m_Localized: Heard on {0}
     m_Metadata:
       m_Items: []
   - m_Id: 133161111
@@ -852,6 +852,30 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 1659643498586112
     m_Localized: Show the 3D Don beside the lane, in song select, Entry and the results. Dress it up on net.ourtaiko.org.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837700431872
+    m_Localized: ALSA hardware; reserves the whole card, including its microphone
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209088
+    m_Localized: Not selected / unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209089
+    m_Localized: Choose a hardware output
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209090
+    m_Localized: "{0} \xB7 Card output and inputs reserved"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209091
+    m_Localized: ALSA Hardware Output
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209092
+    m_Localized: 'Reserves the entire card: other apps cannot use its output or microphone. Requires a ReserveDevice1 manager. USB port changes require reselection.'
     m_Metadata:
       m_Items: []
   references:

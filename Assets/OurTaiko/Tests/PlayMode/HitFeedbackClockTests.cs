@@ -69,7 +69,13 @@ namespace OurTaiko.Tests
                 if (practice)
                 {
                     // Seeking after an odd number of strikes must start the next attempt on the right.
+                    var previous = play.Session;
                     play.MovePractice(0);
+                    // Browsing only changes the preview; confirming measure then speed starts a new attempt.
+                    play.ConfirmPractice();
+                    yield return null;
+                    play.ConfirmPractice();
+                    Assert.That(play.Session, Is.Not.SameAs(previous), "Starting practice rebuilds the judgment session.");
                     strikes = 0;
                     play.Session.Judged += Observe;
                     play.Session.Advance(2, true);

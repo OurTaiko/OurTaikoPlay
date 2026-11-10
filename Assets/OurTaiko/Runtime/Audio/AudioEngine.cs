@@ -43,6 +43,9 @@ namespace OurTaiko
         bool applying;
         bool initialized;
         bool nativeInitialized;
+        LinuxAudioReservation linuxReservation;
+        LinuxAudioDevice linuxDevice;
+        bool linuxRecoveryPending;
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
         static readonly WasapiProcedure WasapiCallback = ReadWasapi;
         bool wasapiInitialized, asioInitialized;
@@ -100,8 +103,18 @@ namespace OurTaiko
                 Log.Error("Audio", Diagnostics);
                 return;
             }
+            if (backend == AudioBackend.LinuxAlsaExclusive)
+            {
+                try { InitLinuxAlsa(options); }
+                catch (Exception error)
+                {
+                    FreeNative();
+                    if (!allowFallback) throw;
+                    Failure = error.Message;
+                }
+            }
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
-            if (backend != AudioBackend.BassSimple)
+            if (backend != AudioBackend.BassSimple && backend != AudioBackend.LinuxAlsaExclusive)
             {
                 try
                 {
@@ -119,9 +132,9 @@ namespace OurTaiko
             if (!allowFallback && (backend == AudioBackend.BassWASAPI || backend == AudioBackend.BassASIO))
                 throw new PlatformNotSupportedException("This audio backend requires Windows");
 #endif
-            if (Mixer == 0)
+            if (Mixer == 0 && !Available)
             {
-                try { InitBass(options, -1); }
+                try { InitSharedBass(options); }
                 catch (Exception error)
                 {
                     FreeNative();
@@ -141,7 +154,10 @@ namespace OurTaiko
                 Log.Error("Audio", Diagnostics);
                 return;
             }
-            Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + $"; {options.Rate} Hz requested; device period {options.Period(SoundSettings.Platform)} ms requested; buffer {options.Buffer(SoundSettings.Platform)} ms requested; stream buffering disabled; output latency {OutputLatency * 1000:0.0} ms";
+            string device = Silent ? "" : linuxDevice != null ? linuxDevice.Name + " (" + linuxDevice.Driver + ")"
+                : Backend.UsesPositionClock() && Bass.GetDeviceInfo(Bass.CurrentDevice, out var actualDevice) ? actualDevice.Name + " (" + actualDevice.Driver + ")" : "native output";
+            Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + "; " + device + $"; {options.Rate} Hz requested; device period {options.Period(SoundSettings.Platform)} ms requested; buffer {options.Buffer(SoundSettings.Platform)} ms requested; stream buffering disabled; reported output latency {OutputLatency * 1000:0.0} ms (not end-to-end)";
+            if (linuxDevice != null) Diagnostics += "; " + linuxDevice.HardwareParameters();
             if (Failure != null) Diagnostics += "; fallback: " + Failure;
             if (Silent) Log.Warn("Audio", Diagnostics);
             else Log.Info("Audio", Diagnostics);
@@ -158,6 +174,63 @@ namespace OurTaiko
             OutputLatency = device == Bass.NoSoundDevice ? 0 : Math.Max(0, Bass.Info.Latency) / 1000.0;
             Backend = AudioBackend.BassSimple;
             Available = true;
+        }
+        void InitLinuxAlsa(AudioOptions options)
+        {
+            if (SoundSettings.Platform != SoundPlatform.Linux)
+                throw new PlatformNotSupportedException("ALSA exclusive requires Linux");
+            var devices = LinuxAudioDevices.Enumerate(out string enumerationFailure);
+            var device = LinuxAudioDevices.Resolve(devices, options.linuxAlsaDevice);
+            if (device == null) throw new InvalidOperationException(enumerationFailure ?? "Selected ALSA hardware device is missing or not selected; select an available output");
+            if (SimulateDeviceFailure) throw new InvalidOperationException("ALSA initialization: simulated failure");
+            device.CheckUnmanagedUsers();
+            linuxRecoveryPending = true;
+            linuxReservation = new LinuxAudioReservation(device.Card);
+            // ReserveDevice1's response precedes PipeWire's asynchronous PCM close. Only retry
+            // transient busy/driver errors, with a bounded deadline; never steal an active client.
+            var waiting = System.Diagnostics.Stopwatch.StartNew();
+            while (true)
+            {
+                try { InitBass(options, device.BassIndex); }
+                catch (InvalidOperationException) when (!nativeInitialized && waiting.ElapsedMilliseconds < 1000
+                    && (Bass.LastError == Errors.Busy || Bass.LastError == Errors.Driver))
+                {
+                    Thread.Sleep(10);
+                    continue;
+                }
+                if ((Bass.Info.InitFlags & DeviceInitFlags.DMix) == 0) break;
+                // A failed direct open can race the manager's close: BASS's automatic dmix
+                // retry may succeed a moment later. Close it and retry direct hardware instead.
+                Check(Bass.Free(), "Close shared ALSA retry");
+                nativeInitialized = false;
+                Available = false;
+                OutputLatency = 0;
+                if (waiting.ElapsedMilliseconds >= 1000)
+                    throw new InvalidOperationException("ALSA hardware was unavailable; BASS tried shared dmix output");
+                Thread.Sleep(10);
+            }
+            linuxDevice = device;
+            Backend = AudioBackend.LinuxAlsaExclusive;
+        }
+        void InitSharedBass(AudioOptions options)
+        {
+            var waiting = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                while (true)
+                {
+                    try { InitBass(options, -1); return; }
+                    // After closing our reservation, the manager must rebuild the shared sink.
+                    // Its D-Bus ownership alone does not mean that the sink is ready yet.
+                    catch (InvalidOperationException) when (linuxRecoveryPending && !SimulateDeviceFailure
+                        && !nativeInitialized && waiting.ElapsedMilliseconds < 2000
+                        && (Bass.LastError == Errors.Busy || Bass.LastError == Errors.Driver || Bass.LastError == Errors.Unknown))
+                    {
+                        Thread.Sleep(10);
+                    }
+                }
+            }
+            finally { linuxRecoveryPending = false; }
         }
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
         void InitWasapi(AudioOptions options)
@@ -292,7 +365,17 @@ namespace OurTaiko
             System.Threading.Volatile.Write(ref callbackMixer, 0);
 #endif
             if (Mixer != 0) { Bass.StreamFree(Mixer); Mixer = 0; }
-            if (nativeInitialized) { Bass.Free(); nativeInitialized = false; }
+            try
+            {
+                if (nativeInitialized) { Bass.Free(); nativeInitialized = false; }
+            }
+            finally
+            {
+                linuxDevice = null;
+                if (linuxReservation != null) linuxRecoveryPending = true;
+                linuxReservation?.Dispose();
+                linuxReservation = null;
+            }
         }
         void OnDestroy()
         {

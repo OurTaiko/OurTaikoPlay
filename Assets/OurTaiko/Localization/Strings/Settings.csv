@@ -113,6 +113,12 @@ sound.backendNote.autoOther,BassSimple on this device,このデバイスでは B
 sound.backendNote.wasapi,"Windows audio, shared or exclusive",Windows のオーディオ（共有／排他）,Windows 音频，共享或独占,Note under BassWASAPI
 sound.backendNote.asio,Requires an installed ASIO driver,ASIO ドライバのインストールが必要,需要已安装的 ASIO 驱动,Note under BassASIO
 sound.backendNote.simple,Cross-platform output,クロスプラットフォームの出力,跨平台输出,Note under BassSimple
+sound.backendNote.alsa,"ALSA hardware; reserves the whole card, including its microphone",ALSA ハードウェア。マイクを含むカード全体を予約します,ALSA 硬件；预留整个声卡（包括麦克风）,Note under LinuxAlsaExclusive
+sound.alsa.unavailable,Not selected / unavailable,未選択／利用不可,未选择／不可用,Missing ALSA selection
+sound.alsa.choose,Choose a hardware output,ハードウェア出力を選んでください,请选择硬件输出,ALSA selection hint
+sound.alsa.reserved,{0} · Card output and inputs reserved,{0} · カードの出力と入力を予約,{0} · 预留声卡输出及输入,{0} driver name
+sound.alsa.device,ALSA Hardware Output,ALSA ハードウェア出力,ALSA 硬件输出,ALSA device row
+sound.alsa.deviceDesc,Reserves the entire card: other apps cannot use its output or microphone. Requires a ReserveDevice1 manager. USB port changes require reselection.,カード全体を予約します。他のアプリはその出力やマイクを使えません。ReserveDevice1 マネージャーが必要です。USB ポートを変えた場合は選び直してください。,预留整个声卡：其他应用无法使用其输出或麦克风。需要 ReserveDevice1 管理器。更换 USB 接口后需重新选择。,ALSA whole-card warning
 sound.devicePeriod,Output Period,出力周期,输出周期,Row
 sound.devicePeriodDesc.windows,Shorter periods reduce delay but may crackle. Windows controls the actual period.,短いほど遅延が減りますが、音が割れることがあります。実際の周期は Windows が決めます。,周期越短延迟越低，但可能出现爆音。实际周期由 Windows 决定。,Output Period description (Windows)
 sound.devicePeriodDesc.other,Shorter periods reduce delay but may crackle. The device may choose a different period.,短いほど遅延が減りますが、音が割れることがあります。デバイスが別の周期を選ぶことがあります。,周期越短延迟越低，但可能出现爆音。设备可能选择不同的周期。,Output Period description (other platforms)
@@ -151,7 +157,7 @@ sound.clock,Song Clock,曲の時計,歌曲时钟,Row: what the notes follow whil
 sound.clockDesc,"What the notes follow while the music plays. Changing it shifts the picture and the judgment by the output latency, so set the offsets again.",曲の再生中に音符が合わせる基準です。変えると表示と判定が出力遅延の分ずれるので、オフセットを設定し直してください。,音乐播放时音符跟随的基准。更改后画面和判定会偏移一个输出延迟，请重新设置偏移。,Song Clock description
 sound.clock.heard,Heard,聴こえる音,听到,Song Clock option: the music heard now
 sound.clock.sent,Sent,送出した音,送出,Song Clock option: the music handed to the device now
-sound.clockNote.autoHeard,Heard on BassSimple,BassSimple では聴こえる音,BassSimple 上为听到,Note under Automatic
+sound.clockNote.autoHeard,Heard on {0},{0} では聴こえる音,{0} 上为听到,Note under Automatic; {0} backend name
 sound.clockNote.autoSent,Sent on {0},{0} では送出した音,{0} 上为送出,Note under Automatic; {0} backend name
 sound.clockNote.heard,The music coming out of the speakers now. Autoplay drums start early to match.,いまスピーカーから出ている音楽。オートの太鼓音はそれに合わせて早めに鳴ります。,此刻从扬声器发出的音乐。自动演奏的鼓声会提前播放以对齐。,Note under Heard
 sound.clockNote.sent,The music handed to the device now. The picture runs ahead by the output latency.,いまデバイスに渡している音楽。表示は出力遅延の分だけ先に進みます。,此刻交给设备的音乐。画面会领先一个输出延迟。,Note under Sent

@@ -147,7 +147,7 @@ namespace OurTaiko
             string sound = engine == null ? null
                 : !engine.Available ? T("audio.none", engine.Failure)
                 : engine.Silent ? T("audio.silent", engine.Failure)
-                : T("audio.current", engine.Backend);
+                : T("audio.current", engine.Diagnostics);
             bool pending = engine != null && engine.HasPendingDeviceChanges;
             if (pending) sound += "   ·   " + T("audio.pending");
             View.Show(Navigator, status, sound, pending);

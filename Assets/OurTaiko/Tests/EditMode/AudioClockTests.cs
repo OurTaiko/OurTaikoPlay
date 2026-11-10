@@ -34,6 +34,15 @@ namespace OurTaiko.Tests
             Assert.That(Parts(new ClockTiming(true, AudioBackend.BassWASAPI, -1)), Is.EqualTo((0.0, 0.0, 0.0)));
         }
 
+        [TestCase(AudioClock.Automatic)]
+        [TestCase(AudioClock.Heard)]
+        [TestCase(AudioClock.Sent)]
+        public void AlsaKeepsBassSimplePositionClockAndAutoplaySemantics(AudioClock clock)
+        {
+            Assert.That(AudioBackend.LinuxAlsaExclusive.UsesPositionClock(), Is.True);
+            Assert.That(Parts(Timing(clock, AudioBackend.LinuxAlsaExclusive)), Is.EqualTo(Parts(Timing(clock, AudioBackend.BassSimple))));
+        }
+
         [Test] public void TheSettingIsSavedAndAnUnknownValueIsAutomatic()
         {
             Assert.That(new GameSettings().audio.clock, Is.EqualTo(AudioClock.Automatic));
@@ -48,7 +57,7 @@ namespace OurTaiko.Tests
             // The device is not reopened for it.
             Assert.That(new AudioOptions().SameDeviceSettings(settings.audio), Is.True);
             Assert.That(SettingsCatalog.Sound(SoundPlatform.Desktop, AudioBackend.Automatic).SelectMany(g => g.Rows).Single(r => r.Id == "clock").OptionNotes[0],
-                Is.EqualTo(L10n.Get("Settings", "sound.clockNote.autoHeard")));
+                Is.EqualTo(L10n.Format("Settings", "sound.clockNote.autoHeard", "BassSimple")));
         }
 
         [Test] public void AHeardClockStartsBehindTheTrackByTheDelay()

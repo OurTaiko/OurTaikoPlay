@@ -235,7 +235,7 @@ namespace OurTaiko
         void TickSong()
         {
             var engine = AudioEngine.EnsureInstance();
-            double? playback = engine.Backend == AudioBackend.BassSimple && music.IsAudioPlaying()
+            double? playback = engine.Backend.UsesPositionClock() && music.IsAudioPlaying()
                 ? music.AudioPosition() + engine.Timing.PositionLead * songClock.Rate : null;
             songClock.Update(GameTimeline.AudioFrameTime, playback);
             StartDueMusic();

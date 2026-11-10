@@ -12,6 +12,7 @@ namespace OurTaiko.Editor
         public int callbackOrder => 0;
         public void OnPreprocessBuild(BuildReport report)
         {
+            LinuxPlayerAudioOutput.Validate(report.summary.platform);
             if (report.summary.platform == BuildTarget.StandaloneWindows)
                 throw new BuildFailedException("The supplied BASS Windows libraries are x64. Select Windows x86_64.");
             Configure();
@@ -66,7 +67,7 @@ namespace OurTaiko.Editor
                 }
                 plugin.SaveAndReimport();
             }
-            // Native playback reads the original file. Keep Unity references unloaded; the explicit Unity backend loads them on demand.
+            // Native playback reads the original file. Unity clips remain unloaded metadata/reference keys.
             foreach (var guid in AssetDatabase.FindAssets("t:AudioClip", new[] { "Assets/OurTaiko" }))
             {
                 var importer = AssetImporter.GetAtPath(AssetDatabase.GUIDToAssetPath(guid)) as AudioImporter;

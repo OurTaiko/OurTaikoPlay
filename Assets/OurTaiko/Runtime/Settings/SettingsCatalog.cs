@@ -336,12 +336,15 @@ namespace OurTaiko
             var backends = platform == SoundPlatform.Windows
                 // The cross-platform BassSimple output comes last.
                 ? new[] { AudioBackend.Automatic, AudioBackend.BassWASAPI, AudioBackend.BassASIO, AudioBackend.BassSimple }
-                : new[] { AudioBackend.Automatic, AudioBackend.BassSimple };
+                : platform == SoundPlatform.Linux
+                    ? new[] { AudioBackend.Automatic, AudioBackend.LinuxAlsaExclusive, AudioBackend.BassSimple }
+                    : new[] { AudioBackend.Automatic, AudioBackend.BassSimple };
             string Note(AudioBackend b) => b switch
             {
                 AudioBackend.Automatic => T(platform == SoundPlatform.Windows ? "sound.backendNote.autoWindows" : "sound.backendNote.autoOther"),
                 AudioBackend.BassWASAPI => T("sound.backendNote.wasapi"),
                 AudioBackend.BassASIO => T("sound.backendNote.asio"),
+                AudioBackend.LinuxAlsaExclusive => T("sound.backendNote.alsa"),
                 _ => T("sound.backendNote.simple"),
             };
             var volumes = new SettingGroup(T("sound.group.volume"),
@@ -365,7 +368,26 @@ namespace OurTaiko
             if (Array.IndexOf(backends, backend) < 0) backend = AudioBackend.Automatic;
             var selected = backend == AudioBackend.Automatic
                 ? (platform == SoundPlatform.Windows ? AudioBackend.BassWASAPI : AudioBackend.BassSimple) : backend;
-            if (selected == AudioBackend.BassSimple)
+            if (selected == AudioBackend.LinuxAlsaExclusive)
+            {
+                var devices = LinuxAudioDevices.Enumerate(out string failure);
+                var labels = new List<string> { T("sound.alsa.unavailable") };
+                var notes = new List<string> { failure ?? T("sound.alsa.choose") };
+                foreach (var device in devices)
+                {
+                    labels.Add(device.Name);
+                    notes.Add(T("sound.alsa.reserved", device.Driver));
+                }
+                output.Add(SettingRow.Choice("linux-alsa-device", T("sound.alsa.device"),
+                    T("sound.alsa.deviceDesc"),
+                    labels, s =>
+                    {
+                        var device = LinuxAudioDevices.Resolve(devices, s.audio.linuxAlsaDevice);
+                        for (int i = 0; i < devices.Count; i++) if (devices[i] == device) return i + 1;
+                        return 0;
+                    }, (s, i) => s.audio.linuxAlsaDevice = i == 0 ? "" : devices[i - 1].Id, list: true, notes: notes).OnClose());
+            }
+            if (selected.UsesPositionClock())
             {
                 output.Add(Device("device-period", T("sound.devicePeriod"),
                     T(platform == SoundPlatform.Windows ? "sound.devicePeriodDesc.windows" : "sound.devicePeriodDesc.other"),
@@ -404,7 +426,7 @@ namespace OurTaiko
                 new[] { T("sound.automatic"), T("sound.clock.heard"), T("sound.clock.sent") }, s => (int)s.audio.Clock, (s, i) => s.audio.clock = (AudioClock)i,
                 list: true, notes: new[]
                 {
-                    selected == AudioBackend.BassSimple ? T("sound.clockNote.autoHeard") : T("sound.clockNote.autoSent", selected),
+                    selected.UsesPositionClock() ? T("sound.clockNote.autoHeard", selected) : T("sound.clockNote.autoSent", selected),
                     T("sound.clockNote.heard"),
                     T("sound.clockNote.sent"),
                 });

@@ -166,6 +166,7 @@ namespace OurTaiko.Editor
             WriteStatus(new Result { status = "Building", platform = target.ToString(), output = output });
             var preloaded = PlayerSettings.GetPreloadedAssets();
             string savedBuildNumber = PlayerSettings.iOS.buildNumber;
+            using var unityAudio = new LinuxPlayerAudioOutput(target);
             try
             {
                 // The iOS build number is the commit count; it applies to this export only.
@@ -205,6 +206,7 @@ namespace OurTaiko.Editor
                 // Input System's build hook temporarily adds its settings to this project list.
                 PlayerSettings.SetPreloadedAssets(preloaded);
                 PlayerSettings.iOS.buildNumber = savedBuildNumber;
+                if (target == BuildTarget.StandaloneLinux64) AudioAssetBuild.Cleanup();
                 AssetDatabase.SaveAssets();
             }
         }
