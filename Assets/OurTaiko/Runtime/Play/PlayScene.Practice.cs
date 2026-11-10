@@ -14,7 +14,8 @@ namespace OurTaiko
         // Practice never evaluates branches: every branch takes the route chosen in the menu.
         public BranchRoute PracticeBranch => practiceBranch;
         BranchRoute practiceBranch;
-        PracticeStage FirstPracticeStage => Session.Chart.Branches.Count > 0 ? PracticeStage.Branch : PracticeStage.Measure;
+        // A replay takes the routes the play took, so it has no route to choose.
+        PracticeStage FirstPracticeStage => Session.Chart.Branches.Count > 0 && !IsReplay ? PracticeStage.Branch : PracticeStage.Measure;
         // The lane is scrolling back to the preparation lead-in; playback starts when it arrives.
         bool practiceRewinding;
         // The offsets in chart seconds at the chosen speed. The clock runs at it whenever it plays, so
@@ -66,7 +67,7 @@ namespace OurTaiko
             songClock.Pause(); IsPaused = true; practiceRewinding = false;
             music.StopAudio(); hitAudio.StopAudio();
             PracticeStage = FirstPracticeStage;
-            if (first) Session = new PlaySession(Session.Chart, judgeOffset, practiceBranch, 1, judgeWindows);
+            if (first) Session = new PlaySession(Session.Chart, judgeOffset, ForcedBranch, 1, judgeWindows);
             RefreshPracticeBars();
             // The cursor is visual chart time, so a bar aligns exactly even with configured offsets.
             double position = first ? TakePracticeStart() : SongTime - AudioOffset - VisualOffset;
@@ -80,7 +81,9 @@ namespace OurTaiko
         void ResetPracticeAttempt(double position)
         {
             var previous = Session;
-            Session = PlaySession.PracticeAt(previous.Chart, position + VisualOffset, previous, practiceBranch, Practice.Speed);
+            // A replay is judged again from its first press up to here, at the speed it was played.
+            Session = IsReplay ? replay.SessionAt(previous.Chart, position + VisualOffset)
+                : PlaySession.PracticeAt(previous.Chart, position + VisualOffset, previous, practiceBranch, Practice.Speed);
             Lane1.ResetBranchLane(position + VisualOffset);
             Lane1.ResetAttempt();
         }
@@ -147,6 +150,8 @@ namespace OurTaiko
             practiceRewinding = false;
             music.pitch = (float)Practice.Speed;
             songClock.Seek(Practice.PlaybackStart(AudioOffset, VisualOffset, PracticeJudgeOffset), Practice.Speed);
+            // A replay plays its lead-in too: the record is judged up to where playback starts.
+            if (IsReplay) { Session = replay.SessionAt(Session.Chart, ChartTime); Lane1.ResetAttempt(); }
             // The preparation lead-in may start in a different section than the practice target.
             Lane1.ResetBranchLane(ChartTime);
             songClock.Resume(GameTimeline.AudioNow);

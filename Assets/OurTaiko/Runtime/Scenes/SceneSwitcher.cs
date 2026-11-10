@@ -73,6 +73,9 @@ namespace OurTaiko
         public string SelectedSide { get; private set; } = "single";
         public string SelectedSide2P { get; private set; } = "p2";
         public string SideOf(int seat) => seat == 1 ? SelectedSide2P : SelectedSide;
+        // A recorded play for the practice scene to show instead of a play (PlayScene.Replay.cs). Set
+        // after Select, which clears it; it stays for restarts of that song.
+        public Online.PlayRecord Replay { get; set; }
         public bool AutoPlayOf(int seat) => seat == 1 ? AutoPlay2P : AutoPlay;
         // Scene that started the current song; Back and the result screen return there.
         public string ReturnScene { get; private set; } = MenuScene;
@@ -236,6 +239,7 @@ namespace OurTaiko
         public void Select(SongDefinition song, string course = null, bool autoPlay = false, string course2P = null, bool autoPlay2P = false)
         {
             ClearPracticeEntry();
+            Replay = null;
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
             SelectedCourse2P = course2P ?? course; AutoPlay2P = autoPlay2P;
             SelectedSide = song != null ? song.PlayedSide(SelectedCourse, SeatBlocks.Seats[0], PlaysTwo) : "single";

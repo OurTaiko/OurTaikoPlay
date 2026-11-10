@@ -153,6 +153,7 @@ namespace OurTaiko
             Lane.Record.AudioOffsetMs = (int)Math.Round((audioOffset + judgeOffset) * 1000);
             Lane.Record.VisualOffsetMs = (int)Math.Round((visualOffset - judgeOffset) * 1000);
             Lane.Record.Inputs.Clear();
+            Lane.Record.SetOptions(Lane.Options, session.Chart);
             Lane.Prepare(session);
             Lane.ResetEffects();
             Lane.ResetBranchLane(0);
@@ -271,9 +272,7 @@ namespace OurTaiko
             // save_song_score: a song counts as cleared unless the course failed out on it.
             result.IsClear = !FailedOut;
             songResults.Add(result);
-            var record = new Online.PlayRecord { AudioOffsetMs = Lane.Record.AudioOffsetMs, VisualOffsetMs = Lane.Record.VisualOffsetMs };
-            record.Inputs.AddRange(Lane.Record.Inputs);
-            songRecords.Add(record);
+            songRecords.Add(Lane.Record.Copy());
         }
 
         void NextSong()

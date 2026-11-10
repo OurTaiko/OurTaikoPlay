@@ -115,6 +115,7 @@ namespace OurTaiko
             visualOffset = song.visualOffsetMs / 1000.0;
             judgeOffset = autoPlay ? 0 : playSettings.judgeOffsetMs / 1000.0;
             judgeWindows = playSettings.CustomJudgeWindows;
+            TakeReplay();
             InputManager.DrumDelay = Math.Min(Math.Max(0, playSettings.inputDelayMs), PlaySettings.InputDelayMaxMs) / 1000.0;
             pauseButton.onClick.AddListener(TogglePause);
             resumeButton.onClick.AddListener(Resume);
@@ -126,7 +127,7 @@ namespace OurTaiko
             // Disabled and hidden together: an inactive pad neither draws nor registers with InputManager,
             // and pause/resume only re-enables the pads it disabled itself.
             // The touch drum is a single-player setting; two players use the keyboard.
-            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad && !IsTwoPlayer);
+            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad && !IsTwoPlayer && !IsReplay);
             try
             {
                 // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.
@@ -171,8 +172,11 @@ namespace OurTaiko
         PlaySession AddLane(int seat, LaneViews views)
         {
             string course = switcher.CourseOf(seat);
-            var options = PlayOptions.ForSeat(seat);
-            var chart = switcher.TakePreparedChart(song, course, seat) ?? PrepareChart(song, course, switcher.SideOf(seat), seat);
+            var options = IsReplay ? ReplayOptions() : PlayOptions.ForSeat(seat);
+            // The loading scene prepared the chart with the seat's own options; a replay has its record's.
+            var chart = switcher.TakePreparedChart(song, course, seat);
+            if (IsReplay) chart = PrepareReplayChart(course, switcher.SideOf(seat));
+            chart ??= PrepareChart(song, course, switcher.SideOf(seat), seat);
             var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : switcher.AutoPlayOf(seat), new Online.PlayRecord
             {
                 // Replay v1 stores already corrected judgment time. Keep its two-offset convention:
@@ -180,8 +184,10 @@ namespace OurTaiko
                 AudioOffsetMs = (int)Math.Round((audioOffset + judgeOffset) * 1000),
                 VisualOffsetMs = (int)Math.Round((visualOffset - judgeOffset) * 1000),
             });
+            lane.Record.SetOptions(options, chart);
+            lane.Replay = replay;
             lanes.Add(lane);
-            var session = new PlaySession(chart, judgeOffset, IsPractice ? practiceBranch : (BranchRoute?)null, 1, judgeWindows);
+            var session = new PlaySession(chart, judgeOffset, IsPractice ? ForcedBranch : null, 1, judgeWindows);
             foreach (string warning in session.Chart.Warnings) Log.Warn("Play", "Ignored TJA command: " + warning);
             return session;
         }

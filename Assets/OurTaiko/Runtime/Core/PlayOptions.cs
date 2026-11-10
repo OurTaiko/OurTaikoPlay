@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -100,18 +101,47 @@ namespace OurTaiko
         // objects/5 x level pick, which also counted bar lines and rolls).
         public const double KimagureChance = 0.3, DetarameChance = 0.5;
 
+        // The notes ランダム flipped in each prepared chart, for the play's record (PlayRecord.Flipped).
+        static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TaikoChart, List<int>> flippedNotes
+            = new System.Runtime.CompilerServices.ConditionalWeakTable<TaikoChart, List<int>>();
+        public static IReadOnlyList<int> FlippedIn(TaikoChart chart)
+            => flippedNotes.TryGetValue(chart, out var flipped) ? flipped : (IReadOnlyList<int>)Array.Empty<int>();
+
+        // A recorded play's chart again: the same options, and ランダム's flips as they fell.
+        public static void Apply(TaikoChart chart, Online.PlayRecord record)
+        {
+            var flipped = new HashSet<int>(record.Flipped);
+            double speed = record.Speed / (double)PlayOptions.DefaultSpeed;
+            for (int i = 0; i < chart.Notes.Count; i++)
+            {
+                var note = chart.Notes[i];
+                if (record.Display) note.Display = false;
+                if (record.Inverse) note.Kind = Swap(note.Kind);
+                if (flipped.Contains(i)) note.Kind = Swap(note.Kind);
+                note.ScrollX *= speed;
+            }
+            foreach (var bar in chart.Bars) bar.ScrollX *= speed;
+            NoteMoji.Assign(chart);
+            flippedNotes.Remove(chart);
+            flippedNotes.Add(chart, new List<int>(record.Flipped));
+        }
+
         public static void Apply(TaikoChart chart, PlayOptions options, System.Random random)
         {
+            var flips = new List<int>();
             double chance = options.random == RandomMode.Kimagure ? KimagureChance
                 : options.random == RandomMode.Detarame ? DetarameChance : 0;
             double speed = options.speed / (double)PlayOptions.DefaultSpeed;
-            foreach (var note in chart.Notes)
+            for (int i = 0; i < chart.Notes.Count; i++)
             {
+                var note = chart.Notes[i];
                 if (options.display) note.Display = false;
                 if (options.inverse) note.Kind = Swap(note.Kind);
-                if (chance > 0 && Swap(note.Kind) != note.Kind && random.NextDouble() < chance) note.Kind = Swap(note.Kind);
+                if (chance > 0 && Swap(note.Kind) != note.Kind && random.NextDouble() < chance) { note.Kind = Swap(note.Kind); flips.Add(i); }
                 note.ScrollX *= speed;
             }
+            flippedNotes.Remove(chart);
+            flippedNotes.Add(chart, flips);
             foreach (var bar in chart.Bars) bar.ScrollX *= speed;
             // apply_modifiers ends with modifier_moji, so the text follows swapped colours.
             NoteMoji.Assign(chart);

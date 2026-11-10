@@ -21,6 +21,8 @@ namespace OurTaiko
         public PlayOptions Options { get; }
         // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
         public Online.PlayRecord Record { get; }
+        // A recorded play striking this drum instead of the seat's input (PlayScene.Replay.cs).
+        public ReplayFeed Replay { get; set; }
         public PlayResult Result { get; internal set; }
         // Drum sounds started so far.
         public int DrumSounds { get; private set; }
@@ -132,9 +134,20 @@ namespace OurTaiko
         public void Advance(double time)
         {
             if (AutoPlay) SoundAhead(time);
+            // Each recorded press is judged at its own time, before the frame's, as the play judged it.
+            if (Replay != null)
+                while (Replay.TryTake(time, out double at, out bool ka, out bool right)) ReplayHit(ka, right, at);
             Session.Advance(time, AutoPlay);
             UpdateBranchLane(time);
-            if (!AutoPlay) HitFirstDrumPress();
+            if (!AutoPlay && Replay == null) HitFirstDrumPress();
+        }
+
+        void ReplayHit(bool isKa, bool right, double time)
+        {
+            PlayDrum(isKa);
+            Feedback(isKa, right);
+            hitKa = isKa;
+            Session.Hit(isKa, time);
         }
 
         // Presentation can keep running after the result is captured, without advancing judgment.
@@ -424,10 +437,12 @@ namespace OurTaiko
             Record.Inputs.Clear();
             ResetSoundAhead();
             nextAutoRight = true;
-            lastCombo = 0;
+            // A replay opens with what the play had by then; a practice attempt has nothing.
+            lastCombo = DisplayCombo;
             v.comboAnnounce.Hide();
             ResetEffects();
             v.soulGauge.Initialize(GaugeThreshold);
+            if (GaugePoints > 0) v.soulGauge.SetPoints(GaugePoints, -1e6);
             UpdateHud();
         }
 

@@ -457,7 +457,7 @@ namespace OurTaiko.Tests
             Assert.That((long)body["max_combo"], Is.EqualTo(3));
             Assert.That((int)body["ClearStatus"], Is.EqualTo(3));
             var replay = (JObject)body["replay_data"];
-            Assert.That((int)replay["version"], Is.EqualTo(1));
+            Assert.That((int)replay["version"], Is.EqualTo(2));
             Assert.That((int)replay["audio_offset_ms"], Is.EqualTo(12));
             Assert.That(replay["inputs"].ToString(Newtonsoft.Json.Formatting.None), Is.EqualTo("[[100.5,1],[100.5,3],[-20.0,0]]"));
             Assert.That(client.Best(chart, (int)Difficulty.Oni).Score, Is.EqualTo(3000));
