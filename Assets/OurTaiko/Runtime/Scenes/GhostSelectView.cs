@@ -20,6 +20,10 @@ namespace OurTaiko
 
         public RectTransform stage;
         public TextMeshProUGUI heading, status, hint;
+        [Header("Category bar")]
+        public Image categoryBar;
+        public TextMeshProUGUI category;
+        public PointerRelay categoryPrevious, categoryNext;
         public RowView[] rows;
         public Color rowColor = new Color(0, 0, 0, 0.55f), selectedColor = new Color(0.93f, 0.33f, 0.16f, 0.92f);
     }

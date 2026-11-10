@@ -57,17 +57,20 @@ namespace OurTaiko.Online
     public sealed partial class FanmadeClient
     {
         // A page of every connected server's replay list, each on its own: one failure never discards
-        // the other servers' rows. sort is recent or score.
-        public Task<FanmadeReplayPage[]> ReplaysAsync(int page, string sort = "recent", CancellationToken cancel = default, string server = null)
-            => Task.WhenAll(Endpoints.Where(e => e.IsConnected && (server == null || e.Id == server)).Select(e => ReplayPageAsync(e, page, sort, cancel)));
+        // the other servers' rows. sort is recent or score; categoryId (a catalog category's id)
+        // narrows to that category's songs.
+        public Task<FanmadeReplayPage[]> ReplaysAsync(int page, string sort = "recent", CancellationToken cancel = default, string server = null, string categoryId = null)
+            => Task.WhenAll(Endpoints.Where(e => e.IsConnected && (server == null || e.Id == server)).Select(e => ReplayPageAsync(e, page, sort, categoryId, cancel)));
 
-        async Task<FanmadeReplayPage> ReplayPageAsync(FanmadeEndpoint endpoint, int page, string sort, CancellationToken cancel)
+        async Task<FanmadeReplayPage> ReplayPageAsync(FanmadeEndpoint endpoint, int page, string sort, string categoryId, CancellationToken cancel)
         {
             var result = new FanmadeReplayPage { Endpoint = endpoint, Page = page };
             await endpoint.Transport.WaitAsync(cancel);
             try
             {
-                var reply = Json.Parse(await endpoint.RequestAsync("/api/v1/replays?page=" + page + "&sort=" + Uri.EscapeDataString(sort), cancel: cancel));
+                string path = "/api/v1/replays?page=" + page + "&sort=" + Uri.EscapeDataString(sort);
+                if (!string.IsNullOrEmpty(categoryId)) path += "&categoryId=" + Uri.EscapeDataString(categoryId);
+                var reply = Json.Parse(await endpoint.RequestAsync(path, cancel: cancel));
                 if (!(reply["items"] is JArray items)) throw new FanmadeException("API_REPLAY_INVALID");
                 result.Total = (int)Json.Number(reply, "total");
                 result.PageSize = Math.Max(1, (int)Json.Number(reply, "pageSize"));
