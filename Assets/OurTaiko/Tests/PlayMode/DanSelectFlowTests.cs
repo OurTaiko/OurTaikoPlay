@@ -71,10 +71,12 @@ namespace OurTaiko.Tests
             TestCapture.Capture("DanSelectIntro.png");
             scene.Ka(1);
             Assert.That(scene.Flow.Selected, Is.Zero, "No input while the doors play.");
-            // Issue #39: the music and the welcome voice wait for the doors to part.
+            // Issue #39: the music and the welcome voice wait for the board to show.
             Assert.That(scene.MusicStarted, Is.False, "No music while the doors are shut.");
             Assert.That(scene.bgm.IsAudioPlaying(), Is.False);
             Assert.That(scene.voice.IsAudioPlaying(), Is.False);
+            yield return WaitUntil(() => scene.intro.doorRight.rectTransform.anchoredPosition.x > 1500, 4);
+            Assert.That(scene.MusicStarted, Is.False, "Still none with the doors open and the dojo picture up.");
             yield return WaitUntil(() => scene.MusicStarted, 4);
             yield return WaitUntil(() => scene.IntroDone, 4);
             Assert.That(scene.intro.gameObject.activeSelf, Is.False);
