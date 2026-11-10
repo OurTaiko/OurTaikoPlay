@@ -144,6 +144,7 @@ Assets/Plugins/MajdataPlay/FFmpeg/Native/**/*.dylib lfs
 # Fonts
 *.otf                   lfs
 *.ttf                   lfs
+*.TTF                   lfs
 
 # Executable/Installer
 *.apk                   lfs
