@@ -200,10 +200,8 @@ namespace OurTaiko.Tests
         public void AnAttemptGoesToDanResultsWithItsSongsScores()
         {
             fixture.Dans = Newtonsoft.Json.Linq.JArray.Parse("[]");
-            fixture.DanResults = true;
             fixture.DanProfileReply = Newtonsoft.Json.Linq.JObject.Parse("{\"granted\":{}}");
             var e = Catalog();
-            Assert.That(e.DanResults, Is.True);
             SignIn(e, 0, "don", "katsu");
             var listed = client.Chart(e.Id, chart.Id);
             var record = new PlayRecord { Speed = 20 };
@@ -228,12 +226,20 @@ namespace OurTaiko.Tests
             Assert.That(fixture.AcceptedScores, Is.Empty, "Nothing went to /game/scores.");
             // What the server saved is the account's score from then on.
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(500000));
-            // Scores that do not cover the songs played are left out, not sent wrong.
+            // One entry a song played, whatever was given.
             client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { score });
             Drain();
-            Assert.That((int)fixture.DanAttempts.Last().Body["songsPlayed"], Is.EqualTo(2));
-            Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scores"), Is.False);
-            Assert.That(fixture.DanAttemptPaths.Last(), Is.EqualTo("/api/v1/game/dan-attempts"), "A count is the older address's form.");
+            var padded = (Newtonsoft.Json.Linq.JArray)fixture.DanAttempts.Last().Body["scores"];
+            Assert.That(padded.Count, Is.EqualTo(2));
+            Assert.That(padded[1].Type, Is.EqualTo(Newtonsoft.Json.Linq.JTokenType.Null));
+            Assert.That(fixture.DanAttemptPaths, Is.All.EqualTo("/api/v1/game/dan-results"));
+            // An attempt a version before this one left in the queue, a count of songs, still goes
+            // where that form is taken.
+            client.DanQueue.Enqueue(e.AccountIdOf(0), "0123456789abcdef0123456789abcdef", "{\"courseId\":\"7\",\"verdict\":1,\"songsPlayed\":1}");
+            client.RetryNow();
+            Drain();
+            Assert.That(fixture.DanAttemptPaths.Last(), Is.EqualTo("/api/v1/game/dan-attempts"));
+            Assert.That((int)fixture.DanAttempts.Last().Body["songsPlayed"], Is.EqualTo(1));
         }
 
         [Test]
@@ -260,14 +266,10 @@ namespace OurTaiko.Tests
             Assert.That(sent.User, Is.EqualTo("don"));
             Assert.That((string)sent.Body["courseId"], Is.EqualTo("7"));
             Assert.That((int)sent.Body["verdict"], Is.EqualTo(4));
-            Assert.That((int)sent.Body["songsPlayed"], Is.EqualTo(1));
-            // This server has no dan-results: a song's score goes up alone, the attempt to dan-attempts.
-            Assert.That(client.DanAttemptScore(fixture.BaseUrl, client.Chart(e.Id, chart.Id), (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, null, "single"), Is.Null);
-            client.SubmitDanAttempt(fixture.BaseUrl, "7", 4, 1, new[] { new Newtonsoft.Json.Linq.JObject() });
-            Drain();
-            Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scores"), Is.False);
-            Assert.That((int)fixture.DanAttempts.Last().Body["songsPlayed"], Is.EqualTo(1));
-            Assert.That(fixture.DanAttemptPaths, Is.All.EqualTo("/api/v1/game/dan-attempts"));
+            // A song without a score of its own is still a song played.
+            Assert.That(sent.Body.ContainsKey("songsPlayed"), Is.False);
+            Assert.That(((Newtonsoft.Json.Linq.JArray)sent.Body["scores"]).Single().Type, Is.EqualTo(Newtonsoft.Json.Linq.JTokenType.Null));
+            Assert.That(fixture.DanAttemptPaths.Single(), Is.EqualTo("/api/v1/game/dan-results"));
             var award = client.Award(key);
             Assert.That((int)award.Profile["granted"]["dan"]["index"], Is.EqualTo(20));
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);
@@ -290,12 +292,12 @@ namespace OurTaiko.Tests
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);
 
             // While the server is down the attempt waits in the queue.
-            fixture.Fail["/api/v1/game/dan-attempts"] = 503;
+            fixture.Fail["/api/v1/game/dan-results"] = 503;
             string waiting = client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 1);
             Drain();
             Assert.That(client.Award(waiting), Is.Null);
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)).Length, Is.EqualTo(1));
-            fixture.Fail.TryRemove("/api/v1/game/dan-attempts", out _);
+            fixture.Fail.TryRemove("/api/v1/game/dan-results", out _);
             Drain();
             Assert.That(client.Award(waiting), Is.Not.Null);
         }

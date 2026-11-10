@@ -52,7 +52,7 @@ namespace OurTaiko.Online
         }
     }
 
-    // 段位 attempts waiting for their server (POST /api/v1/game/dan-attempts), in the same file as
+    // 段位 attempts waiting for their server (POST /api/v1/game/dan-results), in the same file as
     // the scores. Endpoint is the account's queue key (FanmadeEndpoint.AccountIdOf).
     public sealed class PendingDanQueue
     {
