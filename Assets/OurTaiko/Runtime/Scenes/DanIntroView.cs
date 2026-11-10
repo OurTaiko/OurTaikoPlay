@@ -8,6 +8,10 @@ namespace OurTaiko
     // plays (frames 5..262): the shut doors under a black scrim that eases to half, 段 位 道 場
     // stamped in one by one, then the doors part, the scrim clears and the dojo picture pushes in
     // and fades. From anywhere else only the opening plays (182..262).
+    // The whole intro goes with song_select/dan_intro, whose drum hits come every ~0.5 s while the
+    // clip at 60 fps stamps the kanji every 25–27 frames: the clip is paced so that each kanji lands
+    // (frames 75, 100, 126, 153) on its hit and the doors part (182) on the last, boom (user
+    // feedback; YataiDON plays the sound at the start and the clip at 60 fps throughout).
     public sealed class DanIntroView : MonoBehaviour
     {
         public const double FullFrom = 5, OpenFrom = 182, End = 262, FrameMs = 1000.0 / 60;
@@ -30,8 +34,26 @@ namespace OurTaiko
 
         public void Hide() => gameObject.SetActive(false);
 
-        // The frame `elapsedMs` into the intro; false once it is over.
-        public static double Frame(bool full, double elapsedMs) => (full ? FullFrom : OpenFrom) + elapsedMs / FrameMs;
+        // The hits of dan_intro.ogg (ms into the sound, measured) and the frames they go with.
+        static readonly (double Ms, double Frame)[] Hits = { (365, 75), (945, 100), (1455, 126), (1945, 153), (2400, 182) };
+        // When the sound starts in the whole intro: the clip runs at 60 fps up to the first kanji.
+        public static readonly double SoundDelayMs = (Hits[0].Frame - FullFrom) * FrameMs - Hits[0].Ms;
+
+        // The frame `elapsedMs` into the intro (past End once it is over).
+        public static double Frame(bool full, double elapsedMs)
+        {
+            if (!full) return OpenFrom + elapsedMs / FrameMs;
+            double t = elapsedMs - SoundDelayMs;
+            if (t <= Hits[0].Ms) return FullFrom + elapsedMs / FrameMs;
+            for (int i = 1; i < Hits.Length; i++)
+            {
+                if (t > Hits[i].Ms) continue;
+                var (a, b) = (Hits[i - 1], Hits[i]);
+                return a.Frame + (b.Frame - a.Frame) * (t - a.Ms) / (b.Ms - a.Ms);
+            }
+            var last = Hits[Hits.Length - 1];
+            return last.Frame + (t - last.Ms) / FrameMs;
+        }
 
         public void Show(double f)
         {
