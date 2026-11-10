@@ -29,6 +29,12 @@ namespace OurTaiko
         // Test seam: makes every device fail so the silent output is exercised without hardware.
         public static bool SimulateDeviceFailure { get; set; }
         public int Mixer { get; private set; }
+        // Seconds between handing a sound to the output and hearing it, as the output reports it: BASS_INFO
+        // latency (BassSimple; 0 on the silent device), the WASAPI buffer, the ASIO output latency.
+        // Tests set it, so the look-ahead runs without a device.
+        public double OutputLatency { get; set; }
+        // The clock setting (AudioOptions.clock) for this output; read live.
+        public ClockTiming Timing => new ClockTiming(SettingManager.EnsureInstance().Settings.audio.HeardClock(Backend), Backend, OutputLatency);
         public float[,] MixingMatrix { get; private set; }
         AudioOptions appliedOptions;
         public bool HasPendingDeviceChanges => appliedOptions != null && !appliedOptions.SameDeviceSettings(SettingManager.EnsureInstance().Settings.audio);
@@ -72,7 +78,7 @@ namespace OurTaiko
         }
         void InitializeOutput(AudioOptions options, bool allowFallback)
         {
-            Backend = AudioBackend.BassSimple; Failure = null; Silent = false; Available = false;
+            Backend = AudioBackend.BassSimple; Failure = null; Silent = false; Available = false; OutputLatency = 0;
             var backend = options.Backend;
             try
             {
@@ -135,7 +141,7 @@ namespace OurTaiko
                 Log.Error("Audio", Diagnostics);
                 return;
             }
-            Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + $"; {options.Rate} Hz requested; device period {options.Period(SoundSettings.Platform)} ms requested; buffer {options.Buffer(SoundSettings.Platform)} ms requested; stream buffering disabled";
+            Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + $"; {options.Rate} Hz requested; device period {options.Period(SoundSettings.Platform)} ms requested; buffer {options.Buffer(SoundSettings.Platform)} ms requested; stream buffering disabled; output latency {OutputLatency * 1000:0.0} ms";
             if (Failure != null) Diagnostics += "; fallback: " + Failure;
             if (Silent) Log.Warn("Audio", Diagnostics);
             else Log.Info("Audio", Diagnostics);
@@ -149,6 +155,7 @@ namespace OurTaiko
             if (SimulateDeviceFailure && device != Bass.NoSoundDevice) throw new InvalidOperationException("BASS device initialization: simulated failure");
             Check(Bass.Init(device, options.Rate), "BASS device initialization");
             nativeInitialized = true;
+            OutputLatency = device == Bass.NoSoundDevice ? 0 : Math.Max(0, Bass.Info.Latency) / 1000.0;
             Backend = AudioBackend.BassSimple;
             Available = true;
         }
@@ -178,6 +185,9 @@ namespace OurTaiko
             }
             if (!wasapiInitialized) throw new InvalidOperationException("WASAPI exclusive/shared initialization failed");
             Check(BassWasapi.GetInfo(out var info), "WASAPI format");
+            // The mixer feeds the device 32-bit float; the buffer length is in bytes.
+            double bytesPerSecond = (double)info.Frequency * info.Channels * sizeof(float);
+            OutputLatency = bytesPerSecond > 0 ? Math.Max(0, info.BufferLength) / bytesPerSecond : 0;
             Mixer = BassMix.CreateMixerStream(info.Frequency, info.Channels, BassFlags.Float | BassFlags.Decode | BassFlags.MixerNonStop);
             Check(Mixer != 0, "WASAPI mixer");
             Bass.ChannelSetAttribute(Mixer, ChannelAttribute.Buffer, 0);
@@ -207,6 +217,8 @@ namespace OurTaiko
             BassAsio.ChannelSetFormat(false, 1, AsioSampleFormat.Float);
             if (!BassAsio.Start(Math.Max(0, options.asioBufferSamples)))
                 throw new InvalidOperationException("ASIO stereo output: " + BassAsio.LastError);
+            double asioRate = BassAsio.Rate;
+            OutputLatency = asioRate > 0 ? Math.Max(0, BassAsio.GetLatency(false)) / asioRate : 0;
             Backend = AudioBackend.BassASIO;
             Available = true;
         }

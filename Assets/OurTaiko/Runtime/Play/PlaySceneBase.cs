@@ -32,6 +32,8 @@ namespace OurTaiko
         internal abstract double ChartTimeNow { get; }
         internal abstract double JudgeOffset { get; }
         internal abstract bool AcceptsHits { get; }
+        // Chart seconds per real second (practice speed).
+        internal virtual double ClockRate => 1;
         // The lane backgrounds' opacity under the background movie (BackgroundMovieView.LaneAlpha;
         // 1 without one). #LANE_ALPHA is multiplied by it.
         internal virtual float MovieLaneAlpha => 1;

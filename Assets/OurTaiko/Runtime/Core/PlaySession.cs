@@ -368,6 +368,16 @@ namespace OurTaiko
             return !resolved[i];
         }
 
+        // How many hits Advance(time, true) will have made on long note `i` by `time`, counted from
+        // its start (the same 15 a second; a balloon stops at its count).
+        public int AutoLongHitsBy(int i, double time)
+        {
+            var note = Chart.Notes[i];
+            if (!note.IsLong || note.Time > time || time < practiceStart) return 0;
+            int hits = (int)(Math.Max(0, Math.Min(time, note.EndTime) - Math.Max(note.Time, practiceStart)) * 15) + 1;
+            return note.IsBalloon && kusudamas[i] == null ? Math.Min(hits, note.BalloonHits) : hits;
+        }
+
         public Judgment Hit(bool ka, double time)
         {
             Advance(time, false);

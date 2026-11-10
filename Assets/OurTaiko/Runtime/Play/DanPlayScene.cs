@@ -195,7 +195,7 @@ namespace OurTaiko
             if (position >= music.AudioLength()) { songClock.SkipTrack(); return; }
             music.SeekAudio(position);
             music.PlayAudio();
-            songClock.TrackStarted(GameTimeline.AudioNow);
+            songClock.TrackStarted(GameTimeline.AudioNow, AudioEngine.EnsureInstance().Timing.StartDelay);
         }
 
         void Update()
@@ -233,7 +233,9 @@ namespace OurTaiko
 
         void TickSong()
         {
-            double? playback = AudioEngine.EnsureInstance().Backend == AudioBackend.BassSimple && music.IsAudioPlaying() ? music.AudioPosition() : null;
+            var engine = AudioEngine.EnsureInstance();
+            double? playback = engine.Backend == AudioBackend.BassSimple && music.IsAudioPlaying()
+                ? music.AudioPosition() + engine.Timing.PositionLead * songClock.Rate : null;
             songClock.Update(GameTimeline.AudioFrameTime, playback);
             StartDueMusic();
             if (movie != null) movie.Show(SongTime - movieOffset, songClock.Rate, !IsPaused);

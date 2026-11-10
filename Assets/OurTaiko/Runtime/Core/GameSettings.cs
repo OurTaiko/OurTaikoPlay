@@ -30,6 +30,7 @@ namespace OurTaiko
             settings.audio ??= new AudioOptions();
             settings.audio.volume ??= new SoundVolumes();
             settings.audio.backend = settings.audio.Backend;
+            settings.audio.clock = settings.audio.Clock;
             settings.accounts ??= new AccountSettings();
             return settings;
         }

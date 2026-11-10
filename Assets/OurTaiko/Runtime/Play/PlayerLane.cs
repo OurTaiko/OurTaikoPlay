@@ -64,6 +64,7 @@ namespace OurTaiko
         {
             if (Session != null) Session.Judged -= OnJudged;
             Session = session;
+            ResetSoundAhead();
             comboCarried = ComboCarry > 0;
             lastCombo = DisplayCombo;
             var v = Views;
@@ -107,6 +108,7 @@ namespace OurTaiko
         {
             if (Session != null) Session.Judged -= OnJudged;
             Session = session;
+            ResetSoundAhead();
             if (Session != null) Session.Judged += OnJudged;
         }
 
@@ -129,6 +131,7 @@ namespace OurTaiko
         // Judges this frame and draws the branch that is shown.
         public void Advance(double time)
         {
+            if (AutoPlay) SoundAhead(time);
             Session.Advance(time, AutoPlay);
             UpdateBranchLane(time);
             if (!AutoPlay) HitFirstDrumPress();
@@ -208,6 +211,68 @@ namespace OurTaiko
             DrumSounds++;
         }
 
+        // Autoplay starts each strike's sound one output latency before its judgment while the play clock is
+        // the heard position of the music (AudioOptions.clock): a sound started at a note's time is itself
+        // heard one latency later, so the drum would come after the music. A clock on the sent position
+        // needs no lead (ClockTiming.SoundLead is 0). The note is still
+        // judged, and its effects shown, on time; the judgment skips the sounds already started.
+        // A strike the look-ahead did not see (a branch decided within the latency, a chart whose notes
+        // are not in time order) sounds at its judgment as before.
+        int[] aheadStrikes = Array.Empty<int>(), aheadOwed = Array.Empty<int>();
+        readonly List<int> aheadOpen = new List<int>();
+        readonly HashSet<int> aheadPopped = new HashSet<int>();
+        int aheadHead;
+
+        void ResetSoundAhead()
+        {
+            int count = Session?.Chart.Notes.Count ?? 0;
+            aheadStrikes = new int[count]; aheadOwed = new int[count];
+            aheadOpen.Clear(); aheadPopped.Clear(); aheadHead = 0;
+        }
+
+        void SoundAhead(double time)
+        {
+            var engine = AudioEngine.Instance;
+            double lead = engine != null ? engine.Timing.SoundLead * scene.ClockRate : 0;
+            if (lead <= 0) return;
+            time += lead;
+            var notes = Session.Chart.Notes;
+            for (int k = aheadOpen.Count - 1; k >= 0; k--)
+                if (!SoundAhead(aheadOpen[k], time)) aheadOpen.RemoveAt(k);
+            for (; aheadHead < notes.Count && notes[aheadHead].Time <= time; aheadHead++)
+                if (SoundAhead(aheadHead, time)) aheadOpen.Add(aheadHead);
+        }
+
+        // Returns whether the note may have more to sound later: a long note still running, or a note on
+        // a branch not decided yet.
+        bool SoundAhead(int i, double time)
+        {
+            var note = Session.Chart.Notes[i];
+            if (Session.Resolved[i] || note.IsMine) return false;
+            if (!Session.IsActive(note)) return Session.SelectedRoute(note.BranchId) == null;
+            if (!note.IsLong)
+            {
+                StrikeAhead(i, note);
+                return false;
+            }
+            int hits = Session.AutoLongHitsBy(i, time);
+            while (aheadStrikes[i] < hits) StrikeAhead(i, note);
+            if (note.Kind == NoteKind.Balloon && Session.KusudamaOf(i) == null && aheadStrikes[i] >= note.BalloonHits)
+            {
+                if (aheadPopped.Add(i)) scene.hitAudio.PlayAudioOneShot(scene.balloonPop);
+                return false;
+            }
+            return time < note.EndTime;
+        }
+
+        void StrikeAhead(int i, ChartNote note)
+        {
+            aheadStrikes[i]++; aheadOwed[i]++;
+            PlayDrum(note.IsKa);
+            if (note.IsKadon) PlayDrum(true);
+            if (note.IsAdLib && scene.adLibHit != null) scene.hitAudio.PlayAudioOneShot(scene.adLibHit, AudioGroup.Drum);
+        }
+
         // The drum sounds in the frame that judges the press, so it waits out the input delay with the judgment.
         public void Hit(bool isKa, bool right)
         {
@@ -245,18 +310,21 @@ namespace OurTaiko
                 else SharedGauge?.ApplyJudgment(result, Session.GaugeRoute(index));
                 v.soulGauge.SetPoints(GaugePoints, ChartTime);
             }
+            // Autoplay: this strike's sounds were started ahead (SoundAhead).
+            bool sounded = AutoPlay && index < aheadOwed.Length && aheadOwed[index] > 0;
+            if (sounded) aheadOwed[index]--;
             if (AutoPlay)
             {
                 // Alternate actual strikes, including every hit within the same long note. A Kadon
                 // strikes don and ka together with opposite hands.
                 var struck = Session.Chart.Notes[index];
-                PlayDrum(struck.IsKa);
+                if (!sounded) PlayDrum(struck.IsKa);
                 Feedback(struck.IsKa, nextAutoRight);
-                if (struck.IsKadon) { PlayDrum(true); Feedback(true, !nextAutoRight); }
+                if (struck.IsKadon) { if (!sounded) PlayDrum(true); Feedback(true, !nextAutoRight); }
                 nextAutoRight = !nextAutoRight;
             }
             SpawnArc(index, result);
-            if (judged.IsAdLib && scene.adLibHit != null) scene.hitAudio.PlayAudioOneShot(scene.adLibHit, AudioGroup.Drum);
+            if (judged.IsAdLib && scene.adLibHit != null && !sounded) scene.hitAudio.PlayAudioOneShot(scene.adLibHit, AudioGroup.Drum);
             if (judged.IsMine && scene.mineHit != null) scene.hitAudio.PlayAudioOneShot(scene.mineHit, AudioGroup.Drum);
             bool big = judged.IsBigNote || judged.IsKadon;
             double judgedAt = ChartTime;
@@ -282,7 +350,7 @@ namespace OurTaiko
             {
                 v.balloonCounter.RecordHit(index, judged.BalloonHits, Session.LongHits[index], judged.EndTime + scene.JudgeOffset,
                     ChartTime);
-                if (Session.LongHits[index] == judged.BalloonHits) scene.hitAudio.PlayAudioOneShot(scene.balloonPop);
+                if (Session.LongHits[index] == judged.BalloonHits && !aheadPopped.Remove(index)) scene.hitAudio.PlayAudioOneShot(scene.balloonPop);
             }
             else if (judged.Kind == NoteKind.Kusudama && Session.KusudamaOf(index) is Kusudama ball)
             {
@@ -354,6 +422,7 @@ namespace OurTaiko
         {
             var v = Views;
             Record.Inputs.Clear();
+            ResetSoundAhead();
             nextAutoRight = true;
             lastCombo = 0;
             v.comboAnnounce.Hide();

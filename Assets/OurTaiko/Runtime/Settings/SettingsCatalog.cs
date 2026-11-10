@@ -388,7 +388,16 @@ namespace OurTaiko
                 100, 5, 100, 1, a => a.updatePeriodMs, (a, v) => a.updatePeriodMs = v, Unit("ms"), "ms"));
             output.Add(Device("stream-buffer", "BASS Stream Buffer", "At least 1 ms above the stream update period. Playback streams disable this buffer.",
                 1000, 6, 5000, 1, a => a.playbackBufferMs, (a, v) => a.playbackBufferMs = v, Unit("ms"), "ms"));
-            return new[] { volumes, new SettingGroup("Output", output.ToArray()) };
+            // Not a device setting: it applies at once.
+            var clock = SettingRow.Choice("clock", "Song Clock", "What the notes follow while the music plays. Changing it shifts the picture and the judgment by the output latency, so set the offsets again.",
+                new[] { "Automatic", "Heard", "Sent" }, s => (int)s.audio.Clock, (s, i) => s.audio.clock = (AudioClock)i,
+                list: true, notes: new[]
+                {
+                    selected == AudioBackend.BassSimple ? "Heard on BassSimple" : "Sent on " + selected,
+                    "The music coming out of the speakers now. Autoplay drums start early to match.",
+                    "The music handed to the device now. The picture runs ahead by the output latency.",
+                });
+            return new[] { volumes, new SettingGroup("Output", output.ToArray()), new SettingGroup("Timing", clock) };
         }
     }
 

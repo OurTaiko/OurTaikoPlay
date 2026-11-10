@@ -64,12 +64,14 @@ namespace OurTaiko
         }
 
         // MajdataPlay: _audioStartTime = timer - _audioTrackStartAt right after Play().
-        public void TrackStarted(double now)
+        // `heardAfter`: real seconds until what was just started is heard. The clock is set back by it, so
+        // it reads the heard position instead of the sent one (ClockTiming.StartDelay).
+        public void TrackStarted(double now, double heardAfter = 0)
         {
             if (TrackDue(now) == null) return;
             trackWaiting = false;
             trackStart = trackPosition;
-            origin = now - trackPosition / Rate;
+            origin = now + heardAfter - trackPosition / Rate;
         }
 
         // Nothing is left to play (no audio, or the position is past its end): the clock runs on alone.
