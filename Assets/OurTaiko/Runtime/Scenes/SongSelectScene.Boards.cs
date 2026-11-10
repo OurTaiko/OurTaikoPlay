@@ -191,7 +191,7 @@ namespace OurTaiko
         {
             if (Coins == null) return;
             // coin_overlay: the invite shows while a 2P join would still be allowed (songs played < 2).
-            Coins.ShowInvite(switcher.SongsPlayed < 2 && !Manager.TwoPlayers && Seating.Side == 0 && !switcher.PracticeMode, now);
+            Coins.ShowInvite(switcher.SongsPlayed < 2 && !Manager.TwoPlayers && Seating.Side == Side.P1 && !switcher.PracticeMode, now);
         }
 
         void AddClick(Image image, Difficulty difficulty)

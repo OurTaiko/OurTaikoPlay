@@ -128,7 +128,7 @@ namespace OurTaiko
             status.text = ""; Draw();
         }
         // The search button (a tap, Enter): the lone player's side, 1P with two players.
-        public void Submit() => Submit(Seating.Side);
+        public void Submit() => Submit(Seating.Side.Index());
 
         // `seat`: the side whose don confirmed; its account's plays order the result.
         public async void Submit(int seat)
@@ -161,7 +161,7 @@ namespace OurTaiko
         {
             for (int seat = 0; seat < InputManager.Players.Count; seat++)
             {
-                if (!manager.TwoPlayers && seat != Seating.Side) continue;
+                if (!manager.TwoPlayers && seat != Seating.Side.Index()) continue;
                 if (InputManager.Players[seat].GetKeyDown(a) || InputManager.Players[seat].GetKeyDown(b)) return seat;
             }
             return -1;
@@ -199,7 +199,7 @@ namespace OurTaiko
             {
                 if (row < 4) MoveRow(1, SongSelectManager.Sound.Don);
                 // The search is made by the side whose don confirmed it.
-                else if (row == 4) Submit(donSeat >= 0 ? donSeat : Seating.Side); else Close();
+                else if (row == 4) Submit(donSeat >= 0 ? donSeat : Seating.Side.Index()); else Close();
             }
             Draw();
         }

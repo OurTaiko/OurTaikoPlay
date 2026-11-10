@@ -272,7 +272,7 @@ namespace OurTaiko
 
         // SongSelect2PScreen: 2P joins with its don while 1P is choosing (not in practice). A lone
         // 2P (Seating) already holds the 2P side; 1P joins it on Entry.
-        public bool CanJoinSecond => !TwoPlayers && Seating.Side == 0 && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
+        public bool CanJoinSecond => !TwoPlayers && Seating.Side == Side.P1 && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
 
         public void JoinSecond()
         {
@@ -642,7 +642,7 @@ namespace OurTaiko
         // SongSelectPlayer::handle_input_selecting: don on the option button opens ModifierSelector.
         // 2P's menu edits 2P's own options in the same panel on the right.
         // A cursor's side: the second cursor is 2P's; the first is 1P's, or a lone 2P's (Seating).
-        static int SideOf(int seat) => seat == 1 ? 1 : Seating.Side;
+        static int SideOf(int seat) => seat == 1 ? 1 : Seating.Side.Index();
 
         void OpenOptions(int seat)
         {

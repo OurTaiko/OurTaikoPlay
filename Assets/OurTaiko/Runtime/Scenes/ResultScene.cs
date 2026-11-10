@@ -117,7 +117,7 @@ namespace OurTaiko
         {
             var plates = new[] { view.nameplate, view.secondBoard.nameplate };
             var controller = PlayerInfoController.EnsureInstance();
-            int own = Seating.Side;
+            int own = Seating.Side.Index();
             plates[ghost.PlayerLane]?.Pin(own == 0 ? controller.Info : controller.SecondInfo, ghost.PlayerLane);
             plates[ghost.GhostLane]?.Pin(new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? "Ghost" : ghost.Nickname }, ghost.GhostLane);
         }
@@ -133,11 +133,11 @@ namespace OurTaiko
             {
                 bool below = switcher.Ghost.PlayerLane == 1;
                 var played = below ? switcher.LastResult2P : Result;
-                if (played != null) SaveScore(song, played, below ? record2P : record, Seating.Side);
+                if (played != null) SaveScore(song, played, below ? record2P : record, Seating.Side.Index());
                 return;
             }
             // A lone player's score is their side's account's (Seating; 1P's with two players).
-            SaveScore(song, Result, record, Seating.Side);
+            SaveScore(song, Result, record, Seating.Side.Index());
             if (switcher.LastResult2P != null) SaveScore(song, switcher.LastResult2P, record2P, 1);
         }
 
@@ -250,7 +250,7 @@ namespace OurTaiko
             // both boards' pages together.
             if (boards.Count > 1 && switcher.PlaysGhost)
             {
-                foreach (var press in InputManager.Players[Seating.Side].PressesThisFrame)
+                foreach (var press in InputManager.Players[Seating.Side.Index()].PressesThisFrame)
                 {
                     if (press.Key.IsKa()) for (int board = 0; board < boards.Count; board++) ChangePage(board, press.Key.IsRight() ? 1 : -1);
                     else Don(switcher.Ghost.PlayerLane);
@@ -259,7 +259,7 @@ namespace OurTaiko
                 return;
             }
             for (int board = 0; board < boards.Count; board++)
-                foreach (var press in InputManager.Players[boards.Count > 1 ? board : Seating.Side].PressesThisFrame)
+                foreach (var press in InputManager.Players[boards.Count > 1 ? board : Seating.Side.Index()].PressesThisFrame)
                 {
                     if (press.Key.IsKa()) ChangePage(board, press.Key.IsRight() ? 1 : -1);
                     else Don(board);

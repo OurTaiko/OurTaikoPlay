@@ -67,7 +67,7 @@ namespace OurTaiko
                     switcher.SetPreparedChart(song, course, PlayScene.PrepareGhostChart(song, switcher.Ghost));
                     switcher.SetPreparedChart(song, switcher.SelectedCourse2P, PlayScene.PrepareGhostChart(song, switcher.Ghost), 1);
                 }
-                else switcher.SetPreparedChart(song, course, PlayScene.PrepareChart(song, course, switcher.SideOf(0), Seating.Side));
+                else switcher.SetPreparedChart(song, course, PlayScene.PrepareChart(song, course, switcher.SideOf(0), Seating.Side.Index()));
                 // 2P reads its own block of its own course with its own options.
                 if (switcher.PlaysTwo)
                     switcher.SetPreparedChart(song, switcher.SelectedCourse2P, PlayScene.PrepareChart(song, switcher.SelectedCourse2P, switcher.SideOf(1), 1), 1);

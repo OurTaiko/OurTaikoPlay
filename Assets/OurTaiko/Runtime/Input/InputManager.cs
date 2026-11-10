@@ -79,7 +79,7 @@ namespace OurTaiko
         public static PlayerInput P1 => players[0];
         public static PlayerInput P2 => players[1];
         // The drum of the side the lone player sits on (Seating.Side); 1P's with two players.
-        public static PlayerInput Player => players[Seating.Side];
+        public static PlayerInput Player => players[Seating.Side.Index()];
         // A single-player screen's key: a drum face (LeftDon..RightKa) of the player's own drum, or
         // a shared key (Confirm, Back, the menu keys).
         public static bool PlayerKeyDown(InputKey key) => key <= InputKey.RightKa ? Player.GetKeyDown(key) : GetKeyDown(key);
@@ -181,7 +181,7 @@ namespace OurTaiko
                 if (!press.Key.IsDrum()) { playerFrame.Add(press); continue; }
                 var face = new InputPress(press.Key.Face(), press.Time);
                 players[press.Key.Seat()].frame.Add(face);
-                if (press.Key.Seat() == Seating.Side) playerFrame.Add(face);
+                if (press.Key.Seat() == Seating.Side.Index()) playerFrame.Add(face);
             }
         }
 
@@ -238,7 +238,7 @@ namespace OurTaiko
             foreach (var pad in pads)
             {
                 if (!pad.TryHit(position, out var key)) continue;
-                key = key.OfSeat(Seating.Side);
+                key = key.OfSeat(Seating.Side.Index());
                 held[(int)key] = true;
                 if (pressed) { pending.Add(new InputPress(key, time)); pad.Press(); }
                 return;

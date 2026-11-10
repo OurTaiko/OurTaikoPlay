@@ -16,7 +16,7 @@ namespace OurTaiko
             if (song == null || difficulty < Difficulty.Easy || difficulty > Difficulty.Ura) return null;
             if (!IsOnline(song)) return ScoreStore.Shared.Get(song.ScoreKey, difficulty);
             var manager = Online.OnlineManager.Instance;
-            var best = manager?.Client.Best(manager.ChartOf(song), (int)difficulty, seat < 0 ? Seating.Side : seat);
+            var best = manager?.Client.Best(manager.ChartOf(song), (int)difficulty, seat < 0 ? Seating.Side.Index() : seat);
             if (best == null) return null;
             // The server's ClearStatus is authoritative: 0 none, 1 silver, 2 gold, 3 rainbow.
             // Missing (old server/history) or unknown values never imply a crown from judgments.

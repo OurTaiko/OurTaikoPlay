@@ -206,7 +206,7 @@ namespace OurTaiko
             SelectedDan = entry;
             CurrentDan = new DanRun(entry);
             TwoPlayers = false; PracticeMode = false;
-            Select(entry.Songs[0].Song, entry.Songs[0].Course, PlayOptions.ForSeat(Seating.Side).auto);
+            Select(entry.Songs[0].Song, entry.Songs[0].Course, PlayOptions.ForSeat(Seating.Side.Index()).auto);
             ResetPendingPlay();
             ReturnScene = DanSelectScene;
             if (songTransition == null && danCover == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(DanPlayScene); return true; }
@@ -246,7 +246,7 @@ namespace OurTaiko
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
             SelectedCourse2P = course2P ?? course; AutoPlay2P = autoPlay2P;
             // A lone player reads their own side's blocks (Seating.Side: 1P, or a lone 2P's 2P).
-            SelectedSide = song != null ? song.PlayedSide(SelectedCourse, SeatBlocks.Seats[Seating.Side], PlaysTwo) : "single";
+            SelectedSide = song != null ? song.PlayedSide(SelectedCourse, SeatBlocks.Seats[Seating.Side.Index()], PlaysTwo) : "single";
             SelectedSide2P = song != null ? song.PlayedSide(SelectedCourse2P, SeatBlocks.Seats[1], true) : "p2";
         }
 

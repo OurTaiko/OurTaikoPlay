@@ -28,7 +28,7 @@ namespace OurTaiko
         // The side whose player the plate shows: a single-player screen's plate (seat 0) shows the
         // lone player, 1P or a lone 2P (Seating). A pinned plate shows a given player on a given side
         // (a ghost battle) instead.
-        int Shown => pinned != null ? pinnedSide : seat == 0 ? Seating.Side : seat;
+        int Shown => pinned != null ? pinnedSide : seat == 0 ? Seating.Side.Index() : seat;
         PlayerInfo pinned;
         int pinnedSide;
         int applied = -1;

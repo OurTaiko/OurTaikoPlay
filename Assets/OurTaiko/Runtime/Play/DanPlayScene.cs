@@ -99,7 +99,7 @@ namespace OurTaiko
                 switcher.SwitchScene(SceneSwitcher.DanSelectScene);
                 yield break;
             }
-            var options = PlayOptions.ForSeat(Seating.Side);
+            var options = PlayOptions.ForSeat(Seating.Side.Index());
             autoPlay = options.auto;
             var playSettings = SettingManager.EnsureInstance().Settings.play;
             playedAudioOffsetMs = playSettings.audioOffsetMs;
@@ -123,7 +123,7 @@ namespace OurTaiko
                 Progress = new DanProgress(Run.Entry.Course, statistics.Select(s => s.JudgeableNotes).ToList());
                 var routeNotes = Enumerable.Range(0, 3).Select(r => statistics.Sum(s => s.RouteNotes[r])).ToList();
                 Gauge = SoulGauge.Dan(Run.Entry.Songs.Select(s => (s.GaugeCourse, s.Level)).ToList(), routeNotes);
-                Lane = new PlayerLane(this, 0, firstLane, options, autoPlay, new Online.PlayRecord()) { SharedGauge = Gauge, DrumSeat = Seating.Side };
+                Lane = new PlayerLane(this, 0, firstLane, options, autoPlay, new Online.PlayRecord()) { SharedGauge = Gauge, DrumSeat = Seating.Side.Index() };
                 ShowCourse();
                 BeginSong(0);
             }

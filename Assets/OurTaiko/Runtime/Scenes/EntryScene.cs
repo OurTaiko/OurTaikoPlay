@@ -201,7 +201,7 @@ namespace OurTaiko
                 HasLeft = true;
                 switcher.PracticeMode = view.boards[Flow.SelectedMode].practice;
                 switcher.TwoPlayers = TwoJoined;
-                if (!TwoJoined) Seating.SitAlone(Lone2P ? 1 : 0);
+                if (!TwoJoined) Seating.SitAlone(Lone2P ? Side.P2 : Side.P1);
                 string scene = Modes[Flow.SelectedMode].Scene;
                 // On the way to song select every folder closes and the songs folder is read again,
                 // so songs added since the last visit appear. The online songs are already listed:

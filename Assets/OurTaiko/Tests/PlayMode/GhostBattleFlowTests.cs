@@ -105,7 +105,7 @@ namespace OurTaiko.Tests
             // A lone 2P's own don picks the board (1P's would join 1P).
             if (lone2P) entry.Don2P(); else entry.Don();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.GhostSelectScene && !SceneSwitcher.Instance.IsInputBlocked, seconds: 10);
-            Assert.That(Seating.Side, Is.EqualTo(lone2P ? 1 : 0));
+            Assert.That(Seating.Side, Is.EqualTo(lone2P ? Side.P2 : Side.P1));
         }
 
         static IEnumerator Race(GhostSelectScene list)
