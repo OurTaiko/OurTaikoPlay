@@ -91,9 +91,11 @@ namespace OurTaiko.Tests
         public JArray Dans;
         // POST /game/dan-attempts: what was sent (body and user), and OurTaikoProfile's reply the
         // server passes back (null: Profile unreachable).
-        // The catalog says the server takes an attempt's scores with it (danAttemptScores); it
-        // then saves them and answers with them.
-        public bool DanAttemptScores;
+        // The server has POST /game/dan-results (the catalog's danResultsVersion): it saves the
+        // scores sent with an attempt and answers with them. Without it that address is 404.
+        public bool DanResults;
+        // The address each attempt came to.
+        public readonly ConcurrentQueue<string> DanAttemptPaths = new ConcurrentQueue<string>();
         public readonly ConcurrentQueue<(string User, JObject Body)> DanAttempts = new ConcurrentQueue<(string, JObject)>();
         public JObject DanProfileReply = JObject.Parse("{\"granted\":{\"dan\":null,\"titles\":[]},\"nameplate\":{}}");
         // OurTaikoProfile's public nameplates by user id (GET /api/v1/users/{id}/nameplate); a user
@@ -274,8 +276,9 @@ namespace OurTaiko.Tests
                     else Reply(context, 200, new JObject { ["dans"] = Dans, ["danVersion"] = 1 });
                     return;
                 }
-                if (request.HttpMethod == "POST" && path == "/api/v1/game/dan-attempts")
+                if (request.HttpMethod == "POST" && (path == "/api/v1/game/dan-attempts" || path == "/api/v1/game/dan-results" && DanResults))
                 {
+                    DanAttemptPaths.Enqueue(path);
                     if (user == null) { Reply(context, 401, new JObject()); return; }
                     if (string.IsNullOrEmpty(request.Headers["Idempotency-Key"])) { Reply(context, 400, new JObject()); return; }
                     var attempt = JObject.Parse(body);
@@ -381,7 +384,7 @@ namespace OurTaiko.Tests
             reply.Merge(Protocol);
             if (AccountCenter) reply["sso"] = new JObject { ["issuer"] = BaseUrl, ["service"] = Service };
             if (Dans != null) reply["danVersion"] = 1;
-            if (DanAttemptScores) reply["danAttemptScores"] = 1;
+            if (DanResults) reply["danResultsVersion"] = 1;
             ChangeBootstrap?.Invoke(reply);
             Reply(context, 200, reply);
         }

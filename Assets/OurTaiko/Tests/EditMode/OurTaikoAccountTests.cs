@@ -197,13 +197,13 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void AnAttemptGoesUpWithItsSongsScoresOnAServerThatTakesThem()
+        public void AnAttemptGoesToDanResultsWithItsSongsScores()
         {
             fixture.Dans = Newtonsoft.Json.Linq.JArray.Parse("[]");
-            fixture.DanAttemptScores = true;
+            fixture.DanResults = true;
             fixture.DanProfileReply = Newtonsoft.Json.Linq.JObject.Parse("{\"granted\":{}}");
             var e = Catalog();
-            Assert.That(e.DanAttemptScores, Is.True);
+            Assert.That(e.DanResults, Is.True);
             SignIn(e, 0, "don", "katsu");
             var listed = client.Chart(e.Id, chart.Id);
             var record = new PlayRecord { Speed = 20 };
@@ -220,6 +220,7 @@ namespace OurTaiko.Tests
             client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { score, null });
             Drain();
             var sent = fixture.DanAttempts.Single().Body;
+            Assert.That(fixture.DanAttemptPaths.Single(), Is.EqualTo("/api/v1/game/dan-results"));
             Assert.That(sent.ContainsKey("songsPlayed"), Is.False, "The scores say how many songs were played.");
             var scores = (Newtonsoft.Json.Linq.JArray)sent["scores"];
             Assert.That((int)scores[0]["score"], Is.EqualTo(500000));
@@ -232,6 +233,7 @@ namespace OurTaiko.Tests
             Drain();
             Assert.That((int)fixture.DanAttempts.Last().Body["songsPlayed"], Is.EqualTo(2));
             Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scores"), Is.False);
+            Assert.That(fixture.DanAttemptPaths.Last(), Is.EqualTo("/api/v1/game/dan-attempts"), "A count is the older address's form.");
         }
 
         [Test]
@@ -259,12 +261,13 @@ namespace OurTaiko.Tests
             Assert.That((string)sent.Body["courseId"], Is.EqualTo("7"));
             Assert.That((int)sent.Body["verdict"], Is.EqualTo(4));
             Assert.That((int)sent.Body["songsPlayed"], Is.EqualTo(1));
-            // This server did not say it takes an attempt's scores with it: a song's score goes up alone.
+            // This server has no dan-results: a song's score goes up alone, the attempt to dan-attempts.
             Assert.That(client.DanAttemptScore(fixture.BaseUrl, client.Chart(e.Id, chart.Id), (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, null, "single"), Is.Null);
             client.SubmitDanAttempt(fixture.BaseUrl, "7", 4, 1, new[] { new Newtonsoft.Json.Linq.JObject() });
             Drain();
             Assert.That(fixture.DanAttempts.Last().Body.ContainsKey("scores"), Is.False);
             Assert.That((int)fixture.DanAttempts.Last().Body["songsPlayed"], Is.EqualTo(1));
+            Assert.That(fixture.DanAttemptPaths, Is.All.EqualTo("/api/v1/game/dan-attempts"));
             var award = client.Award(key);
             Assert.That((int)award.Profile["granted"]["dan"]["index"], Is.EqualTo(20));
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);

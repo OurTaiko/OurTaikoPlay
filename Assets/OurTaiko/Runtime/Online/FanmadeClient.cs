@@ -426,9 +426,9 @@ namespace OurTaiko.Online
                 }
                 Interlocked.Increment(ref revision);
                 SetStatus(e.Config.DisplayName + ": " + list.Count + " songs ready" + (e.IsAuthenticated ? "" : " (guest; scores disabled)"));
-                // A server that takes a 段位 attempt's scores with it; one that does not would refuse
-                // the field it does not know.
-                e.DanAttemptScores = snapshot["danAttemptScores"]?.Type == JTokenType.Integer && (long)snapshot["danAttemptScores"] == 1;
+                // A server with dan-results takes a 段位 attempt with its scores there; one without only
+                // has the older dan-attempts.
+                e.DanResults = snapshot["danResultsVersion"]?.Type == JTokenType.Integer && (long)snapshot["danResultsVersion"] == 1;
                 if (snapshot["danVersion"]?.Type == JTokenType.Integer && (long)snapshot["danVersion"] == 1) await LoadDansAsync(e, cancel);
                 else lock (sync) danLists.Remove(e.Id);
             }
@@ -465,12 +465,12 @@ namespace OurTaiko.Online
 
         // A song's score for its 段位 attempt on `server` (SubmitDanAttempt's scores): the score as it
         // is uploaded alone, with the hashes of the block and audio that were played, which the
-        // server checks as the game does for a score of its own. null when the server does not take
-        // an attempt's scores with it, or the chart is another server's: the score then goes up alone.
+        // server checks as the game does for a score of its own. null when the server has no
+        // dan-results, or the chart is another server's: the score then goes up alone.
         public JObject DanAttemptScore(string server, FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay, string side)
         {
             var e = DanEndpoint(server);
-            if (e == null || !e.DanAttemptScores || Endpoint(chart.Server) != e) return null;
+            if (e == null || !e.DanResults || Endpoint(chart.Server) != e) return null;
             var block = SideBlock(chart, difficulty, side);
             if (block == null) return null;
             var body = ScoreBody(block, score, replay);
@@ -481,14 +481,16 @@ namespace OurTaiko.Online
         // Queues a 段位 attempt of a server's course for 1P's account, then sends it in the
         // background like scores; the server asks OurTaikoProfile for its rewards. The queue key,
         // or null when 1P is not signed in there. scores: the played songs' scores in song order
-        // (DanAttemptScore; null for a song without one). The server saves them and the attempt
-        // together; without them the attempt only says how many songs were played.
+        // (DanAttemptScore; null for a song without one), which go with the attempt to
+        // /game/dan-results: the server saves them and the attempt together. Without them (a
+        // server that only has the deprecated /game/dan-attempts) the attempt says how many songs
+        // were played and the scores go up alone.
         public string SubmitDanAttempt(string server, string courseId, int verdict, int songsPlayed, IReadOnlyList<JObject> scores = null)
         {
             var e = DanEndpoint(server);
             if (e == null) return null;
             var body = new JObject { ["courseId"] = courseId, ["verdict"] = verdict };
-            if (e.DanAttemptScores && scores != null && scores.Count == songsPlayed)
+            if (e.DanResults && scores != null && scores.Count == songsPlayed)
                 body["scores"] = new JArray(scores.Select(v => v ?? (JToken)JValue.CreateNull()));
             else body["songsPlayed"] = songsPlayed;
             string key = RandomKey();
@@ -704,7 +706,9 @@ namespace OurTaiko.Online
                 {
                     JObject reply;
                     await e.Transport.WaitAsync();
-                    try { reply = Json.Parse(await e.AuthorizedAsync("/api/v1/game/dan-attempts", queued.Body, queued.Key)); }
+                    // An attempt queued with its scores goes to dan-results; one with a count is the older form.
+                    string path = Json.Parse(queued.Body)["scores"] is JArray ? "/api/v1/game/dan-results" : "/api/v1/game/dan-attempts";
+                    try { reply = Json.Parse(await e.AuthorizedAsync(path, queued.Body, queued.Key)); }
                     finally { e.Transport.Release(); }
                     // The scores the server saved with the attempt: 1P's, as if each had gone up alone.
                     if (reply["scores"] is JArray saved)
