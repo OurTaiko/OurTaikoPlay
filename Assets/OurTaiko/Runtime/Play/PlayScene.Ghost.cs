@@ -20,7 +20,7 @@ namespace OurTaiko
         // Before the lanes are made.
         void TakeGhost()
         {
-            if (!IsTwoPlayer || IsPractice || !switcher.PlaysGhost) return;
+            if (secondLane == null || IsPractice || !switcher.PlaysGhost) return;
             ghost = switcher.Ghost;
             autoPlay = false;
             judgeWindows = null;

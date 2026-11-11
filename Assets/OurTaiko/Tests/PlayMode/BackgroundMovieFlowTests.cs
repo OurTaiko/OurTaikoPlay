@@ -68,7 +68,7 @@ namespace OurTaiko.Tests
             yield return Play(Fixture("testsrc.mp4"), false, true, (p, m) => { play = p; movie = m; });
             try
             {
-                Assert.That(play.IsTwoPlayer, Is.True);
+                Assert.That(play.secondLane, Is.Not.Null);
                 Assert.That(movie.laneBackgrounds.Length, Is.EqualTo(6));
                 yield return Wait(() => play.SongTime >= 2);
                 Assert.That(movie.IsShowing, Is.True);

@@ -83,7 +83,7 @@ namespace OurTaiko.Tests
                 + "#START P1\n5,\n0,\n8,\n#END\n#START P2\n5,\n0,\n8,\n1,\n#END");
             yield return PlayBoth(song);
             var play = Object.FindAnyObjectByType<PlayScene>();
-            Assert.That(play.IsTwoPlayer, Is.True);
+            Assert.That(play.secondLane, Is.Not.Null);
             Assert.That(play.Lanes.Count, Is.EqualTo(2));
             var first = play.Lanes[0].Session; var second = play.Lanes[1].Session;
             Assert.That(first.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.Zero, "1P reads the P1 block.");

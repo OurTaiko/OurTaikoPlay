@@ -23,13 +23,14 @@ namespace OurTaiko
             }
         }
 
-        // After the chart loaded. Two players never switch: the switch would have to drop the joined 2P
-        // (Entry keeps 2P out of practice for the same reason). A chart missing #E/#M only plays on a
-        // fixed route, so practice does not offer normal play for it (PlaySession would refuse).
+        // After the chart loaded. Two players never switch, as the switch would drop 2P (Entry keeps 2P
+        // out of practice for the same reason), nor does a ghost battle, which would drop its recording.
+        // A chart missing #E/#M only plays on a fixed route, so practice does not offer normal play for
+        // it (PlaySession would refuse).
         // Where it is not offered the button stays greyed and has no action.
         void AddModeSwitch()
         {
-            if (IsReplay || IsTwoPlayer || switcher.Seated.Count == 2 || IsPractice && !Session.Chart.Branches.All(b => b.HasAllRoutes)) return;
+            if (IsReplay || switcher.Seated.Count == 2 || IsGhost || IsPractice && !Session.Chart.Branches.All(b => b.HasAllRoutes)) return;
             pauseMenu.modeSwitch.onClick.AddListener(SwitchMode);
             pauseMenu.OfferModeSwitch(IsPractice);
         }

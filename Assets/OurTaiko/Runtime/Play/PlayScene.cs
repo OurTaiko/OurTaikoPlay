@@ -30,7 +30,6 @@ namespace OurTaiko
         public IReadOnlyList<PlayerLane> Lanes => lanes;
         readonly List<PlayerLane> lanes = new List<PlayerLane>();
         public PlayerLane Lane1 => lanes.Count > 0 ? lanes[0] : null;
-        public bool IsTwoPlayer => secondLane != null;
         public PlaySession Session
         {
             get => Lane1?.Session;
@@ -128,8 +127,8 @@ namespace OurTaiko
             // Disabled and hidden together: an inactive pad neither draws nor registers with InputManager,
             // and pause/resume only re-enables the pads it disabled itself.
             // The touch drum is a single-player setting; two players use the keyboard. A ghost battle
-            // has one player, whom the touch drum strikes (seat 0).
-            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad && (!IsTwoPlayer || IsGhost) && !IsReplay);
+            // has one player, whose side the touch drum strikes (InputManager.Lead).
+            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad && switcher.Seated.Count < 2 && !IsReplay);
             try
             {
                 // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.
