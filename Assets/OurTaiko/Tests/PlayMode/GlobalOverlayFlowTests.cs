@@ -45,7 +45,7 @@ namespace OurTaiko.Tests
             yield return null;
             var result = Object.FindAnyObjectByType<ResultScene>();
             Assert.That(result.Coins, Is.Not.Null);
-            Assert.That(result.Coins.FreePlay.text, Is.EqualTo("フリープレイ"));
+            Assert.That(result.Coins.FreePlay.text, Is.EqualTo(L10n.Get("Menu", "overlay.freePlay")));
             Assert.That(result.Coins.QrChip, Is.Null);
             Assert.That(result.Coins.HasInvite, Is.False);
             var line = result.Coins.FreePlay.transform.parent;

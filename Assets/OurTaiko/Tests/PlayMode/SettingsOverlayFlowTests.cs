@@ -51,7 +51,7 @@ namespace OurTaiko.Tests
             yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 3);
             yield return new WaitForSecondsRealtime(0.8f);
             for (int i = 0; i < 4; i++) { entry.Ka(1); yield return new WaitForSecondsRealtime(0.6f); }
-            Assert.That(entry.Modes[entry.Flow.SelectedMode].Title, Is.EqualTo("ゲーム設定"));
+            Assert.That(entry.Modes[entry.Flow.SelectedMode].Title, Is.EqualTo(L10n.Get("Menu", "entry.settings.title")));
             use(entry);
         }
 
@@ -168,8 +168,8 @@ namespace OurTaiko.Tests
             overlay.Move(2); overlay.Confirm();
             var nav = overlay.Navigator;
             overlay.Move(nav.Page.Rows.ToList().FindIndex(r => r.Id == "practice-timing-review"));
-            Assert.That(nav.Row.Label, Is.EqualTo("Practice Timing Review"));
-            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("On"));
+            Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "play.practiceReview")));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.on")));
             StartCapture();
             yield return Settle();
             Capture("SettingsPracticeTimingReview.png");

@@ -1,0 +1,39 @@
+key,en,ja,zh-Hans,comment
+result.songNumber,Song {0},{0}曲目,第{0}首,Result screen: how many songs were played this session
+result.message.miss,Try a little\nharder!,もう少し\nがんばるドン!,再加把劲\n咚!,Result speech line when the Soul Gauge ended low
+result.message.near,So close!,おしかったドン,好可惜咚,Result speech line when the clear was narrowly missed
+result.message.success,Nice rhythm!,ノリノリだドン,节奏很棒咚,Result speech line on a clear
+result.message.perfect,Great job!,よくできたドン！,做得好咚！,Result speech line with a full Soul Gauge
+result.newBest,New Best Score!,ベストスコア更新！,最高分更新！,Result board caption on a new high score
+result.freePlay,Free Play,フリープレイ,自由游玩,Credit line at the bottom of the result screen
+page.score,Result,成績発表,成绩,Result screen page name: score page
+page.details,Judge Details,判定詳細,判定详情,Result screen page name and heading: timing analysis page
+page.backToSelect,Back to Song Select,曲えらびにもどる,返回选曲,Result screen action button when the results are done
+page.skip,Skip,演出スキップ,跳过演出,Result screen action button while the results animate
+analysis.counts,Hits {0}    Misses {1},有効打 {0}    見のがし {1},有效击打 {0}    漏打 {1},Timing page: judged hits and missed notes
+analysis.customJudge,Custom judge · Not ranked,カスタム判定・記録対象外,自定义判定 不计成绩,"Timing page: the play used custom judge windows, so it does not count"
+analysis.sides,Early {0}    Late {1},はやい {0}    おそい {1},早 {0}    晚 {1},Timing page: hits before / after the note
+analysis.exact,Exact {0},ジャスト {0},零偏差 {0},Timing page: hits with zero offset
+analysis.autoPlay,Auto play records no timing,オート演奏ではタイミングを記録しません,自动演奏不统计手动偏差,Timing page when the play was on Auto
+analysis.noHits,No notes were hit,叩いた音符がありません,暂无有效击打,Timing page when nothing was hit
+analysis.meanLegend,Dashed line: average offset,点線：平均のずれ,虚线：平均偏差,Timing histogram legend for the dashed mean line
+analysis.leanEarly,Early,はやめ,偏早,Timing histogram legend: the average is early
+analysis.leanLate,Late,おそめ,偏晚,Timing histogram legend: the average is late
+analysis.centered,Centered,ちょうど,居中,Timing histogram legend: the average is exactly on time
+analysis.axisX,Early ← offset ms → Late    5 ms per bar,はやい ← ずれ ms → おそい    1本 5 ms,早 ← 偏差 ms → 晚    每格 5 ms,Timing histogram x-axis title
+analysis.axisY,Count,回数,次数,Timing histogram y-axis title
+analysis.mean,Mean Offset,平均のずれ,平均偏差,Timing page metric caption
+analysis.deviation,Std. Deviation,標準偏差,标准差,Timing page metric caption
+analysis.meanAbsolute,Mean Abs. Offset,平均絶対ずれ,平均绝对偏差,Timing page metric caption
+analysis.windows,Bands: <color=#9A7700>GOOD</color> / <color=#B45329>OK</color> / <color=#3975A0>BAD</color>,背景：<color=#9A7700>良</color> / <color=#B45329>可</color> / <color=#3975A0>不可</color>,底色：<color=#9A7700>良</color> / <color=#B45329>可</color> / <color=#3975A0>不可</color>,Timing histogram legend: background colours of the judge windows
+calibration.adjustAudio,Adjust A (Audio Offset),調整 A（音声オフセット）,调整 A（音频偏移）,Timing page button: apply the suggested audio offset
+calibration.adjustJudge,Adjust B (Judge Offset),調整 B（判定オフセット）,调整 B（判定偏移）,Timing page button: apply the suggested judge offset
+calibration.adjusted,Adjusted · {0},調整済み · {0},已调整 · {0},Timing page: offset already applied; {0} = new value in ms
+calibration.saveFailed,Could not save. Please try again.,保存できませんでした。もう一度お試しください,保存失败，请重试,Timing page status when saving the offset failed
+calibration.autoPlay,No suggestion for Auto play,オート演奏では提案しません,自动演奏不提供偏移建议,Timing page status
+calibration.noHits,No hits to base a suggestion on,有効な打撃がないため提案できません,暂无有效击打，无法推荐,Timing page status
+calibration.notRecorded,This play didn't record its offsets; no suggestion,このプレイはオフセット設定が記録されていないため提案できません,本局未记录偏移设置，无法推荐,Timing page status
+calibration.changed,Offsets have changed since; play again,オフセット設定が変わりました。もう一度プレイしてください,偏移设置已变化，请重新游玩,Timing page status when the settings changed after this play
+calibration.saved,Saved {0}; applies from your next play,{0} を保存しました。次のプレイから反映されます,已保存 {0}，下次游玩生效,"Timing page status; {0} = A, B or A / B"
+calibration.belowOne,Average offset under 1 ms; no change needed,平均のずれが 1 ms 未満のため調整不要,平均偏差不足 1 ms，无需调整,Timing page status
+calibration.hint,Each fix corrects ½ of the average · Once each per play,1回で平均のずれの½を補正・各項目この演奏で1回まで,每次修正平均偏差的 ½ · 每项限本局一次,Timing page status explaining the adjust buttons

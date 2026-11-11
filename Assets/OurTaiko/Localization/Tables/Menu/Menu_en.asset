@@ -1,0 +1,439 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Menu_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 55385085153b94140be5642210ebe85c, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 154132480
+    m_Localized: Taiko Mode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132481
+    m_Localized: Pick any song you like
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132482
+    m_Localized: and difficulty, and play!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132483
+    m_Localized: Dan-i Dojo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132484
+    m_Localized: Play three songs in a row
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132485
+    m_Localized: and aim to pass every exam!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132486
+    m_Localized: Pass to have your skill ranked!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132487
+    m_Localized: Practice Mode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132488
+    m_Localized: Pick the measures and speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132489
+    m_Localized: and practice again and again!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132490
+    m_Localized: Ghost Battle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132491
+    m_Localized: Take on another player's
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132492
+    m_Localized: recording on the same chart!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132493
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132494
+    m_Localized: Here you can change
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132495
+    m_Localized: the game's settings!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132496
+    m_Localized: 1 Player
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132497
+    m_Localized: 2 Players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132498
+    m_Localized: Hit the drum to start!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132499
+    m_Localized: '{0}''s OurTaiko sign-in has expired. Sign in again in the game settings.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132500
+    m_Localized: '{0} and {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132501
+    m_Localized: Free Play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132502
+    m_Localized: 2 Players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132503
+    m_Localized: Hit the drum to start!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132504
+    m_Localized: 'Click / Tap: Skip'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132505
+    m_Localized: "Cancelling\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132506
+    m_Localized: Local
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132507
+    m_Localized: Search / Sort
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132508
+    m_Localized: "Keyword \xB7 Difficulty \xB7 Stars \xB7 FC / AP"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132509
+    m_Localized: "{0} songs\u3000{1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132510
+    m_Localized: '{0}: offline'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132511
+    m_Localized: Extreme (Ura)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132512
+    m_Localized: Practice Mode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132513
+    m_Localized: Personal Best
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132514
+    m_Localized: Song search
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132515
+    m_Localized: All
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132516
+    m_Localized: Difficulty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132517
+    m_Localized: Stars
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132518
+    m_Localized: Sort by
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132519
+    m_Localized: Keyword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132520
+    m_Localized: Title / Subtitle / Maker
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132521
+    m_Localized: Default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132522
+    m_Localized: Not FC first
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132523
+    m_Localized: Not AP first
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132524
+    m_Localized: Search
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132525
+    m_Localized: "Searching\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132526
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132527
+    m_Localized: Keyword is too long (200 bytes).
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132528
+    m_Localized: 'Search failed: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132529
+    m_Localized: 'Results: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132530
+    m_Localized: Close the keyboard to finish typing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132531
+    m_Localized: Tap Keyword again to type
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132532
+    m_Localized: "Tap Keyword to select \xB7 Tap arrows to change filters"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132533
+    m_Localized: 'Enter: finish typing'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132534
+    m_Localized: 'Enter / click Keyword again: start typing'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132535
+    m_Localized: "Don / Tab / \u2191\u2193 Select \xB7 Ka Change \xB7 Enter Confirm"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132536
+    m_Localized: Song Options
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132537
+    m_Localized: Speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132538
+    m_Localized: Vanish
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132539
+    m_Localized: Inverse
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132540
+    m_Localized: Random
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132541
+    m_Localized: Drum Sound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132542
+    m_Localized: Auto
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132543
+    m_Localized: Skip Performance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132544
+    m_Localized: On
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132545
+    m_Localized: Off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132546
+    m_Localized: Whimsical
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132547
+    m_Localized: Messy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132548
+    m_Localized: Mute
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132549
+    m_Localized: Taiko
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132550
+    m_Localized: Festival
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132551
+    m_Localized: Dogs & Cats
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132552
+    m_Localized: Deluxe Taiko
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132553
+    m_Localized: Drum Kit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132554
+    m_Localized: Tambourine
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132555
+    m_Localized: Wada Don
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132556
+    m_Localized: Hand Clap
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132557
+    m_Localized: Conga
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132558
+    m_Localized: 8-bit Taiko
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132559
+    m_Localized: Soiya
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132560
+    m_Localized: Mecha Don
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132561
+    m_Localized: Funassyi
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132562
+    m_Localized: Rap
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132563
+    m_Localized: Mr. Hosogai
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132564
+    m_Localized: Akemi-chan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132565
+    m_Localized: Synth Drum
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132566
+    m_Localized: Shuriken
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132567
+    m_Localized: Bubble Wrap
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132568
+    m_Localized: Electric Guitar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132569
+    m_Localized: Fish
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132570
+    m_Localized: "Loading audio\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132571
+    m_Localized: "Checking the server\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132572
+    m_Localized: "Preparing the chart\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132573
+    m_Localized: Chart {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132574
+    m_Localized: Audio {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132575
+    m_Localized: Video {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132576
+    m_Localized: waiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132577
+    m_Localized: verifying
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132578
+    m_Localized: cached
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132579
+    m_Localized: done
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132580
+    m_Localized: Download failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132581
+    m_Localized: Could not load the audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132582
+    m_Localized: Could not decode the audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132583
+    m_Localized: Could not load the chart
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

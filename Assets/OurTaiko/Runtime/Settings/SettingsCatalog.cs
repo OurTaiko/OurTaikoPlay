@@ -55,7 +55,7 @@ namespace OurTaiko
         public int Move(int value, int delta) => Clamp((int)Math.Max(int.MinValue, Math.Min(int.MaxValue, (long)value + (long)delta * Step)));
         public string Format(int value) => Kind switch
         {
-            SettingKind.Toggle => value != 0 ? "On" : "Off",
+            SettingKind.Toggle => SettingsCatalog.T(value != 0 ? "value.on" : "value.off"),
             SettingKind.Choice or SettingKind.List => value >= 0 && value < Options.Count ? Options[value] : "",
             _ => format != null ? format(value) : value.ToString(),
         };
@@ -65,9 +65,9 @@ namespace OurTaiko
         // The value as the row shows it.
         public string Display(GameSettings settings) => Kind switch
         {
-            SettingKind.Keys => settings.general.keyboard.Get(Key).Count == 0 ? "Unbound" : string.Join("  ", settings.general.keyboard.Get(Key)),
+            SettingKind.Keys => settings.general.keyboard.Get(Key).Count == 0 ? SettingsCatalog.T("value.unbound") : string.Join("  ", settings.general.keyboard.Get(Key)),
             SettingKind.Action => Status,
-            SettingKind.Text => GetText(settings).Length == 0 ? "Not set" : GetText(settings),
+            SettingKind.Text => GetText(settings).Length == 0 ? SettingsCatalog.T("value.notSet") : GetText(settings),
             SettingKind.Password => "",
             _ => Format(Get(settings)),
         };
@@ -75,8 +75,8 @@ namespace OurTaiko
         // The footer line for the focused row.
         public string Hint => Kind switch
         {
-            SettingKind.Number or SettingKind.Slider => $"Default {Format(Default)}  ·  Step {stepText ?? Step.ToString()}",
-            SettingKind.Keys => "Mouse and touch work even when unbound",
+            SettingKind.Number or SettingKind.Slider => SettingsCatalog.T("hint.number", Format(Default), stepText ?? Step.ToString()),
+            SettingKind.Keys => SettingsCatalog.T("hint.keys"),
             _ => "",
         };
         string stepText;
@@ -100,7 +100,7 @@ namespace OurTaiko
         }
 
         public static SettingRow Keys(InputKey key) => new SettingRow("key-" + key, SettingKind.Keys, KeyboardBindings.Label(key),
-            "A key moves here from any other action it was bound to.") { Key = key };
+            SettingsCatalog.T("keys.desc")) { Key = key };
 
         public static SettingRow Action(string id, string label, string description, string actionLabel)
             => new SettingRow(id, SettingKind.Action, label, description) { ActionId = id, ActionLabel = actionLabel };
@@ -132,17 +132,22 @@ namespace OurTaiko
     public sealed class SettingPage
     {
         public string Id { get; }
-        public string Title { get; }
-        public string Subtitle { get; }
+        // Read again on every use, so a page follows a change of language.
+        public string Title => title();
+        public string Subtitle => subtitle();
         // The page shows the audio engine's output banner (the current device, pending changes).
         public bool ShowsAudioOutput { get; }
         public IReadOnlyList<SettingGroup> Groups { get; private set; } = Array.Empty<SettingGroup>();
         public IReadOnlyList<SettingRow> Rows { get; private set; } = Array.Empty<SettingRow>();
         readonly Func<GameSettings, IReadOnlyList<SettingGroup>> build;
+        readonly Func<string> title, subtitle;
 
         public SettingPage(string id, string title, string subtitle, Func<GameSettings, IReadOnlyList<SettingGroup>> build, bool audioOutput = false)
+            : this(id, () => title, () => subtitle, build, audioOutput) { }
+
+        public SettingPage(string id, Func<string> title, Func<string> subtitle, Func<GameSettings, IReadOnlyList<SettingGroup>> build, bool audioOutput = false)
         {
-            Id = id; Title = title; Subtitle = subtitle; ShowsAudioOutput = audioOutput; this.build = build;
+            Id = id; this.title = title; this.subtitle = subtitle; ShowsAudioOutput = audioOutput; this.build = build;
             Refresh(new GameSettings());
         }
 
@@ -173,80 +178,84 @@ namespace OurTaiko
         // Followed by the seat: sign-in-0 is 1P's.
         public const string SignIn = "sign-in-", SignOut = "sign-out-";
 
+        // The overlay's text: Assets/OurTaiko/Localization/Strings/Settings.csv.
+        public const string Table = "Settings";
+        internal static string T(string key) => L10n.Get(Table, key);
+        internal static string T(string key, params object[] args) => L10n.Format(Table, key, args);
+
         static string Signed(int ms) => (ms > 0 ? "+" : "") + ms + " ms";
 
         public static IReadOnlyList<SettingPage> Pages(SoundPlatform platform) => new[]
         {
-            new SettingPage("general", "General", "Song titles and the log", _ => new[]
+            new SettingPage("general", () => T("general.title"), () => T("general.subtitle"), _ => new[]
             {
-                new SettingGroup("Language",
-                    SettingRow.Choice("language", "Song Title Language",
-                        "Song titles and subtitles. Missing translations use the original title. Menus are unchanged.",
+                // The game's language: the interface and the song titles. Each language is named in itself.
+                new SettingGroup(T("general.group.language"),
+                    SettingRow.Choice("language", T("general.language"), T("general.languageDesc"),
                         GeneralSettings.LanguageNames,
                         s => Array.IndexOf(GeneralSettings.Languages, s.general.Language),
                         (s, i) => s.general.language = GeneralSettings.Languages[i], list: true)),
-                new SettingGroup("Diagnostics",
-                    SettingRow.Choice("log-level", "Log Level",
-                        "The least severe messages written to the log (the Logs folder and the console).",
+                new SettingGroup(T("general.group.diagnostics"),
+                    SettingRow.Choice("log-level", T("general.logLevel"), T("general.logLevelDesc"),
                         GeneralSettings.LogLevels.Select(l => l.ToString()).ToArray(),
                         s => Array.IndexOf(GeneralSettings.LogLevels, s.general.LogLevel),
                         (s, i) => s.general.logLevel = GeneralSettings.LogLevels[i].ToString(), list: true,
-                        notes: new[] { "Everything", "Normal activity and problems", "Problems only", "Failures only" }),
-                    SettingRow.Toggle("input-log", "Input Log",
-                        "Write every key event, drum press and judgment to the log, to find lost hits. Needs Log Level Info or Debug; leave it off otherwise.",
+                        notes: new[] { T("general.logLevelNote.debug"), T("general.logLevelNote.info"), T("general.logLevelNote.warning"), T("general.logLevelNote.error") }),
+                    SettingRow.Toggle("input-log", T("general.inputLog"), T("general.inputLogDesc"),
                         s => s.general.inputLog, (s, on) => s.general.inputLog = on)),
             }),
-            new SettingPage("controls", "Controls", "Keyboard keys for both drums and the menus", _ => new[]
+            new SettingPage("controls", () => T("controls.title"), () => T("controls.subtitle"), _ => new[]
             {
-                new SettingGroup("1P Drum", Seat(0)),
-                new SettingGroup("2P Drum", Seat(1)),
-                new SettingGroup("Menus", KeyboardBindings.SettingsOrder.Where(k => !k.IsDrum()).Select(SettingRow.Keys).ToArray()),
+                new SettingGroup(T("controls.group.p1Drum"), Seat(0)),
+                new SettingGroup(T("controls.group.p2Drum"), Seat(1)),
+                new SettingGroup(T("controls.group.menus"), KeyboardBindings.SettingsOrder.Where(k => !k.IsDrum()).Select(SettingRow.Keys).ToArray()),
             }),
-            new SettingPage("play", "Play", "Timing, judgment and touch", settings => new[]
+            new SettingPage("play", () => T("play.title"), () => T("play.subtitle"), settings => new[]
             {
-                new SettingGroup("Timing", Timing(settings)) { Diagram = SettingDiagram.JudgeWindow },
-                new SettingGroup("Input",
-                    SettingRow.Number("input-delay", "Input Delay", "Delay drum hits before judgment, sound and effects, like the arcade.",
+                new SettingGroup(T("play.group.timing"), Timing(settings)) { Diagram = SettingDiagram.JudgeWindow },
+                new SettingGroup(T("play.group.input"),
+                    SettingRow.Number("input-delay", T("play.inputDelay"), T("play.inputDelayDesc"),
                         PlaySettings.InputDelayDefaultMs, PlaySettings.OffsetStepMs, s => s.play.inputDelayMs, (s, v) => s.play.inputDelayMs = v,
-                        v => v == 0 ? "Off" : v + " ms", 0, PlaySettings.InputDelayMaxMs, stepText: "1 ms")),
-                new SettingGroup("Touch",
-                    SettingRow.Toggle("drum-pad", "Drumpad in Single Player", "Show the touch drum in single player mode and let touches and clicks hit it.",
+                        v => v == 0 ? T("value.off") : v + " ms", 0, PlaySettings.InputDelayMaxMs, stepText: "1 ms")),
+                new SettingGroup(T("play.group.touch"),
+                    SettingRow.Toggle("drum-pad", T("play.drumPad"), T("play.drumPadDesc"),
                         s => s.play.singlePlayerDrumPad, (s, on) => s.play.singlePlayerDrumPad = on)),
-                new SettingGroup("Hit Feedback",
-                    SettingRow.Choice("timing-display", "Timing Offset",
-                        "Which hits show how many ms early (blue) or late (red) they were, beside the lane. BAD never shows it.",
-                        TimingDisplays.Names, s => (int)s.play.TimingDisplay, (s, i) => s.play.timingDisplay = (TimingDisplay)i)),
-                new SettingGroup("Practice",
-                    SettingRow.Toggle("practice-timing-review", "Practice Timing Review",
-                        "Show note timing offsets and missed-note marks while browsing a paused or finished practice attempt.",
+                new SettingGroup(T("play.group.hitFeedback"),
+                    SettingRow.Choice("timing-display", T("play.timingDisplay"), T("play.timingDisplayDesc"),
+                        TimingDisplayNames(), s => (int)s.play.TimingDisplay, (s, i) => s.play.timingDisplay = (TimingDisplay)i)),
+                new SettingGroup(T("play.group.practice"),
+                    SettingRow.Toggle("practice-timing-review", T("play.practiceReview"), T("play.practiceReviewDesc"),
                         s => s.play.practiceTimingReview, (s, on) => s.play.practiceTimingReview = on)),
             }),
-            new SettingPage("display", "Display", "Frame rate and background movies", _ => new[]
+            new SettingPage("display", () => T("display.title"), () => T("display.subtitle"), _ => new[]
             {
-                new SettingGroup("Rendering",
-                    SettingRow.Choice("frame-rate", "Frame Rate", "The highest frame rate the game renders at.",
-                        new[] { "120", "60", "Unlimited" },
+                new SettingGroup(T("display.group.rendering"),
+                    SettingRow.Choice("frame-rate", T("display.frameRate"), T("display.frameRateDesc"),
+                        new[] { "120", "60", T("display.unlimited") },
                         s => Array.IndexOf(DisplaySettings.FrameRates, s.display.targetFrameRate),
                         (s, i) => s.display.targetFrameRate = DisplaySettings.FrameRates[i]),
-                    SettingRow.Toggle("vsync", "VSync", "Wait for the display refresh before each frame. While on, the refresh rate replaces Frame Rate.",
+                    SettingRow.Toggle("vsync", T("display.vsync"), T("display.vsyncDesc"),
                         s => s.display.vSync, (s, on) => s.display.vSync = on)),
-                new SettingGroup("Background Movie",
-                    SettingRow.Toggle("movie", "Background Movie", "Play the chart's movie behind the lanes, and download it with online charts.",
+                new SettingGroup(T("display.group.movie"),
+                    SettingRow.Toggle("movie", T("display.movie"), T("display.movieDesc"),
                         s => s.display.backgroundMovie, (s, on) => s.display.backgroundMovie = on),
-                    SettingRow.Number("lane-opacity", "Lane Opacity", "How opaque the lanes are while a movie plays. 100%: as without a movie.",
+                    SettingRow.Number("lane-opacity", T("display.laneOpacity"), T("display.laneOpacityDesc"),
                         DisplaySettings.MovieLaneOpacityDefault, DisplaySettings.MovieLaneOpacityStep,
                         s => s.display.movieLaneOpacity, (s, v) => s.display.movieLaneOpacity = v, v => v + "%", 0, 100, slider: true, stepText: DisplaySettings.MovieLaneOpacityStep + "%")),
             }),
-            new SettingPage("sound", "Sound", "Volumes and the output device", s => Sound(platform, s.audio.Backend), audioOutput: true),
-            new SettingPage("accounts", "Accounts", "OurTaiko accounts for 1P and 2P", _ => new[]
+            new SettingPage("sound", () => T("sound.title"), () => T("sound.subtitle"), s => Sound(platform, s.audio.Backend), audioOutput: true),
+            new SettingPage("accounts", () => T("accounts.title"), () => T("accounts.subtitle"), _ => new[]
             {
                 new SettingGroup("1P", Account(0)),
                 new SettingGroup("2P", Account(1)),
-                new SettingGroup("Servers",
-                    SettingRow.Action(RefreshSongList, "Refresh Song List", "Load the built-in servers' song lists again.", "Refresh"),
-                    SettingRow.Action(RefreshLogin, "Refresh Login", "Check both accounts and sign them in to the built-in servers again.", "Refresh")),
+                new SettingGroup(T("accounts.group.servers"),
+                    SettingRow.Action(RefreshSongList, T("accounts.refreshSongList"), T("accounts.refreshSongListDesc"), T("accounts.refresh")),
+                    SettingRow.Action(RefreshLogin, T("accounts.refreshLogin"), T("accounts.refreshLoginDesc"), T("accounts.refresh"))),
             }),
         };
+
+        // TimingDisplays.Names in the selected language, in TimingDisplay order.
+        public static string[] TimingDisplayNames() => new[] { T("play.timingDisplay.goodAndOk"), L10n.Get("Common", "judge.ok"), T("value.off") };
 
         // Offset A, Offset B and the judgment windows, which the diagram under them draws. The three
         // window rows exist only while the custom windows are on.
@@ -254,21 +263,20 @@ namespace OurTaiko
         {
             var rows = new List<SettingRow>
             {
-                SettingRow.Number("audio-offset", "Offset A (Audio)", "Move the chart relative to the music. Negative: earlier; positive: later.",
+                SettingRow.Number("audio-offset", T("play.audioOffset"), T("play.audioOffsetDesc"),
                     PlaySettings.OffsetDefaultMs, PlaySettings.OffsetStepMs, s => s.play.audioOffsetMs, (s, v) => s.play.audioOffsetMs = v, Signed, stepText: "1 ms"),
-                SettingRow.Number("judge-offset", "Offset B (Judgment)", "Move the judgment window only. Negative: earlier; positive: later.",
+                SettingRow.Number("judge-offset", T("play.judgeOffset"), T("play.judgeOffsetDesc"),
                     PlaySettings.OffsetDefaultMs, PlaySettings.OffsetStepMs, s => s.play.judgeOffsetMs, (s, v) => s.play.judgeOffsetMs = v, Signed, stepText: "1 ms"),
-                SettingRow.Toggle(JudgeCustom, "Custom Judgment Window",
-                    "Judge every difficulty and mode with your own GOOD/OK/BAD windows. Off: each difficulty's standard windows. While on, no score is saved or uploaded.",
+                SettingRow.Toggle(JudgeCustom, T("play.judgeCustom"), T("play.judgeCustomDesc"),
                     s => s.play.customJudgeWindow, (s, on) => s.play.customJudgeWindow = on),
             };
             if (settings.play.customJudgeWindow)
                 for (int window = 0; window < 3; window++)
                 {
                     int w = window;
-                    string name = JudgeNames[w];
-                    rows.Add(SettingRow.Number(JudgeRows[w], name + " Window",
-                        "A hit this many ms or less from the note, early or late, is " + name + ". " + JudgeOrder[w],
+                    string name = L10n.Get("Common", JudgeNames[w]);
+                    rows.Add(SettingRow.Number(JudgeRows[w], T("play.judgeWindow", name),
+                        T("play.judgeWindowDesc", name, T(JudgeOrder[w])),
                         PlaySettings.StandardJudgeMs[w], 1, s => s.play.JudgeMs(w), (s, v) => s.play.SetJudgeMs(w, v),
                         v => v + " ms", PlaySettings.JudgeWindowMinMs, PlaySettings.JudgeWindowMaxMs, stepText: "1 ms"));
                 }
@@ -277,13 +285,9 @@ namespace OurTaiko
 
         public const string JudgeCustom = "judge-custom";
         public static readonly string[] JudgeRows = { "judge-good", "judge-ok", "judge-bad" };
-        static readonly string[] JudgeNames = { "GOOD", "OK", "BAD" };
-        static readonly string[] JudgeOrder =
-        {
-            "Raising it past OK raises OK too.",
-            "It stays between GOOD and BAD, moving them along.",
-            "Beyond it a hit counts for nothing. Lowering it below OK lowers OK too.",
-        };
+        // Common's judgment names and this table's line on how each window moves the others.
+        static readonly string[] JudgeNames = { "judge.good", "judge.ok", "judge.bad" };
+        static readonly string[] JudgeOrder = { "play.judgeOrder.good", "play.judgeOrder.ok", "play.judgeOrder.bad" };
 
         static SettingRow[] Seat(int seat) => KeyboardBindings.SettingsOrder.Where(k => k.IsDrum() && k.Seat() == seat).Select(SettingRow.Keys).ToArray();
 
@@ -293,17 +297,16 @@ namespace OurTaiko
             string player = (seat + 1) + "P";
             return new[]
             {
-                SettingRow.Text("username-" + seat, "Username", player + "'s OurTaiko account (sso.ourtaiko.org). Enter the password below to sign in.",
+                SettingRow.Text("username-" + seat, T("accounts.username"), T("accounts.usernameDesc", player),
                     s => seat == 0 ? s.accounts.p1Username : s.accounts.p2Username,
                     (s, text) => { if (seat == 0) s.accounts.p1Username = text.Trim(); else s.accounts.p2Username = text.Trim(); }),
-                SettingRow.Password(SignIn + seat, "Password",
-                    "Signs in as soon as it is entered. The password is not saved; the sign-in lasts while " + player + " plays at least once every 30 days."),
-                SettingRow.Action(SignOut + seat, "Sign Out", "Sign " + player + " out of its OurTaiko account on this device.", "Sign Out"),
+                SettingRow.Password(SignIn + seat, T("accounts.password"), T("accounts.passwordDesc", player)),
+                SettingRow.Action(SignOut + seat, T("accounts.signOut"), T("accounts.signOutDesc", player), T("accounts.signOut")),
             };
         }
 
         static SettingRow Volume(string id, string label, string description, Func<SoundVolumes, float> get, Action<SoundVolumes, float> set)
-            => SettingRow.Number(id, label, description + " 0% mutes this group.", 100, 5,
+            => SettingRow.Number(id, label, T("sound.volumeDesc", description), 100, 5,
                 s => Mathf.Clamp(Mathf.RoundToInt(get(s.audio.volume) * 100 / 5f) * 5, 0, 200), (s, v) => set(s.audio.volume, v / 100f),
                 v => v + "%", 0, 200, slider: true, stepText: "5%");
 
@@ -320,7 +323,7 @@ namespace OurTaiko
             Func<AudioOptions, float> get, Action<AudioOptions, float> set)
             => SettingRow.Number(id, label, description, defaultValue, 1,
                 s => Math.Clamp(Mathf.RoundToInt(get(s.audio) * 10000), min, max), (s, v) => set(s.audio, Math.Clamp(v, min, max) / 10000f),
-                v => v == 0 ? "System Default" : (v / 10m).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + " ms", min, max,
+                v => v == 0 ? T("sound.systemDefault") : (v / 10m).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + " ms", min, max,
                 stepText: "0.1 ms").OnClose();
 
         static SettingRow DeviceToggle(string id, string label, string description, Func<AudioOptions, bool> get, Action<AudioOptions, bool> set)
@@ -334,23 +337,24 @@ namespace OurTaiko
                 : new[] { AudioBackend.Automatic, AudioBackend.BassSimple };
             string Note(AudioBackend b) => b switch
             {
-                AudioBackend.Automatic => platform == SoundPlatform.Windows ? "BassWASAPI on Windows" : "BassSimple on this device",
-                AudioBackend.BassWASAPI => "Windows audio, shared or exclusive",
-                AudioBackend.BassASIO => "Requires an installed ASIO driver",
-                _ => "Cross-platform output",
+                AudioBackend.Automatic => T(platform == SoundPlatform.Windows ? "sound.backendNote.autoWindows" : "sound.backendNote.autoOther"),
+                AudioBackend.BassWASAPI => T("sound.backendNote.wasapi"),
+                AudioBackend.BassASIO => T("sound.backendNote.asio"),
+                _ => T("sound.backendNote.simple"),
             };
-            var volumes = new SettingGroup("Volume",
-                Volume("master-volume", "Master", "Overall volume.", v => v.master, (v, n) => v.master = n),
-                Volume("bgm-volume", "BGM", "Music in menus and the result screen.", v => v.bgm, (v, n) => v.bgm = n),
-                Volume("track-volume", "Track", "Song playback and song previews.", v => v.track, (v, n) => v.track = n),
-                Volume("drum-volume", "Drum", "Don and ka during gameplay. Changing it plays a don.", v => v.drum, (v, n) => v.drum = n).Previews(AudioGroup.Drum),
-                Volume("effects-volume", "Effects", "Menu feedback, balloon pops and result effects.", v => v.effects, (v, n) => v.effects = n),
-                Volume("voice-volume", "Voice", "Entry, song selection, combo and result voices.", v => v.voice, (v, n) => v.voice = n).Previews(AudioGroup.Voice));
+            var volumes = new SettingGroup(T("sound.group.volume"),
+                Volume("master-volume", T("sound.master"), T("sound.masterDesc"), v => v.master, (v, n) => v.master = n),
+                Volume("bgm-volume", T("sound.bgm"), T("sound.bgmDesc"), v => v.bgm, (v, n) => v.bgm = n),
+                Volume("track-volume", T("sound.track"), T("sound.trackDesc"), v => v.track, (v, n) => v.track = n),
+                Volume("drum-volume", T("sound.drum"), T("sound.drumDesc"), v => v.drum, (v, n) => v.drum = n).Previews(AudioGroup.Drum),
+                Volume("effects-volume", T("sound.effects"), T("sound.effectsDesc"), v => v.effects, (v, n) => v.effects = n),
+                Volume("voice-volume", T("sound.voice"), T("sound.voiceDesc"), v => v.voice, (v, n) => v.voice = n).Previews(AudioGroup.Voice));
 
             var output = new List<SettingRow>
             {
-                SettingRow.Choice("backend", "Output Backend", "How the game talks to the audio device. ASIO requires a driver.",
-                    Array.ConvertAll(backends, b => b.ToString()),
+                // The backends keep their names; only Automatic is a word.
+                SettingRow.Choice("backend", T("sound.backend"), T("sound.backendDesc"),
+                    Array.ConvertAll(backends, b => b == AudioBackend.Automatic ? T("sound.automatic") : b.ToString()),
                     s => Array.IndexOf(backends, s.audio.backend), (s, i) => s.audio.backend = backends[i],
                     list: true, notes: Array.ConvertAll(backends, Note)).OnClose(),
             };
@@ -361,50 +365,48 @@ namespace OurTaiko
                 ? (platform == SoundPlatform.Windows ? AudioBackend.BassWASAPI : AudioBackend.BassSimple) : backend;
             if (selected == AudioBackend.BassSimple)
             {
-                output.Add(Device("device-period", "Output Period", "Shorter periods reduce delay but may crackle. "
-                    + (platform == SoundPlatform.Windows ? "Windows controls the actual period." : "The device may choose a different period."),
-                    0, 0, 100, 1, a => a.devicePeriodMs, (a, v) => a.devicePeriodMs = v, Unit("ms", $"Default ({new AudioOptions().Period(platform)} ms)"), "ms"));
-                output.Add(Device("device-buffer", "Device Buffer", "0: default; other values are raised to at least twice the output period. "
-                    + (platform == SoundPlatform.IOS || platform == SoundPlatform.Desktop ? "macOS and iOS ignore this request." : "The system may choose a different buffer."),
-                    0, 0, 1000, 1, a => a.deviceBufferMs, (a, v) => a.deviceBufferMs = v, Unit("ms", "Default"), "ms"));
+                output.Add(Device("device-period", T("sound.devicePeriod"),
+                    T(platform == SoundPlatform.Windows ? "sound.devicePeriodDesc.windows" : "sound.devicePeriodDesc.other"),
+                    0, 0, 100, 1, a => a.devicePeriodMs, (a, v) => a.devicePeriodMs = v, Unit("ms", T("sound.defaultMs", new AudioOptions().Period(platform))), "ms"));
+                output.Add(Device("device-buffer", T("sound.deviceBuffer"),
+                    T(platform == SoundPlatform.IOS || platform == SoundPlatform.Desktop ? "sound.deviceBufferDesc.apple" : "sound.deviceBufferDesc.other"),
+                    0, 0, 1000, 1, a => a.deviceBufferMs, (a, v) => a.deviceBufferMs = v, Unit("ms", T("sound.default")), "ms"));
                 if (platform == SoundPlatform.Android)
-                    output.Add(DeviceToggle("android-aaudio", "Android AAudio", "Use AAudio output when available.", a => a.androidAAudio, (a, v) => a.androidAAudio = v));
+                    output.Add(DeviceToggle("android-aaudio", T("sound.aaudio"), T("sound.aaudioDesc"), a => a.androidAAudio, (a, v) => a.androidAAudio = v));
             }
             else if (selected == AudioBackend.BassWASAPI)
             {
-                output.Add(DeviceToggle("wasapi-exclusive", "WASAPI Exclusive", "Request exclusive access to the output device. Falls back to shared mode if unavailable.", a => a.wasapiExclusive, (a, v) => a.wasapiExclusive = v));
-                output.Add(DeviceToggle("wasapi-raw", "WASAPI Raw Mode", "Request output without Windows audio enhancements. Falls back if unsupported.", a => a.wasapiRaw, (a, v) => a.wasapiRaw = v));
-                output.Add(DeviceToggle("wasapi-async", "WASAPI Async Mode", "Prefill audio to reduce dropouts at the cost of extra delay. Exclusive mode only.", a => a.wasapiAsync, (a, v) => a.wasapiAsync = v));
-                output.Add(Milliseconds("wasapi-buffer", "WASAPI Buffer", "Buffer per block in exclusive mode (two blocks). Shared mode uses its own buffer.",
+                output.Add(DeviceToggle("wasapi-exclusive", T("sound.wasapiExclusive"), T("sound.wasapiExclusiveDesc"), a => a.wasapiExclusive, (a, v) => a.wasapiExclusive = v));
+                output.Add(DeviceToggle("wasapi-raw", T("sound.wasapiRaw"), T("sound.wasapiRawDesc"), a => a.wasapiRaw, (a, v) => a.wasapiRaw = v));
+                output.Add(DeviceToggle("wasapi-async", T("sound.wasapiAsync"), T("sound.wasapiAsyncDesc"), a => a.wasapiAsync, (a, v) => a.wasapiAsync = v));
+                output.Add(Milliseconds("wasapi-buffer", T("sound.wasapiBuffer"), T("sound.wasapiBufferDesc"),
                     60, 50, 5000, a => a.wasapiBufferSeconds, (a, v) => a.wasapiBufferSeconds = v));
-                output.Add(Milliseconds("wasapi-period", "WASAPI Period", "Shared-mode period; 0: system default. Ignored in exclusive mode.",
+                output.Add(Milliseconds("wasapi-period", T("sound.wasapiPeriod"), T("sound.wasapiPeriodDesc"),
                     0, 0, 1000, a => a.wasapiPeriodSeconds, (a, v) => a.wasapiPeriodSeconds = v));
             }
             else if (selected == AudioBackend.BassASIO)
             {
-                output.Add(Device("asio-device", "ASIO Device Index", "Driver index, starting at 0. Requires an installed ASIO driver.",
+                output.Add(Device("asio-device", T("sound.asioDevice"), T("sound.asioDeviceDesc"),
                     0, 0, int.MaxValue, 1, a => a.asioDevice, (a, v) => a.asioDevice = v, v => v.ToString()));
-                output.Add(Device("asio-buffer", "ASIO Buffer", "Buffer length in samples; 0: driver default. Driver-supported sizes only.",
-                    0, 0, 65536, 1, a => a.asioBufferSamples, (a, v) => a.asioBufferSamples = v, Unit("samples", "Driver Default"), "samples"));
+                output.Add(Device("asio-buffer", T("sound.asioBuffer"), T("sound.asioBufferDesc"),
+                    0, 0, 65536, 1, a => a.asioBufferSamples, (a, v) => a.asioBufferSamples = v, Unit(T("sound.samples"), T("sound.driverDefault")), T("sound.samples")));
             }
-            output.Add(Device("sample-rate", "Sample Rate", selected == AudioBackend.BassWASAPI
-                ? "BASS initialization rate. WASAPI output uses the device's negotiated format."
-                : "Requested sample rate. The output device may use a different rate.",
+            output.Add(Device("sample-rate", T("sound.sampleRate"), T(selected == AudioBackend.BassWASAPI ? "sound.sampleRateDesc.wasapi" : "sound.sampleRateDesc.other"),
                 44100, 8000, 192000, 100, a => a.Rate, (a, v) => a.sampleRate = v, Unit("Hz"), "Hz"));
-            output.Add(Device("stream-update", "BASS Stream Update Period", "Stream buffering is disabled during playback; this does not control the output-device period.",
+            output.Add(Device("stream-update", T("sound.streamUpdate"), T("sound.streamUpdateDesc"),
                 100, 5, 100, 1, a => a.updatePeriodMs, (a, v) => a.updatePeriodMs = v, Unit("ms"), "ms"));
-            output.Add(Device("stream-buffer", "BASS Stream Buffer", "At least 1 ms above the stream update period. Playback streams disable this buffer.",
+            output.Add(Device("stream-buffer", T("sound.streamBuffer"), T("sound.streamBufferDesc"),
                 1000, 6, 5000, 1, a => a.playbackBufferMs, (a, v) => a.playbackBufferMs = v, Unit("ms"), "ms"));
             // Not a device setting: it applies at once.
-            var clock = SettingRow.Choice("clock", "Song Clock", "What the notes follow while the music plays. Changing it shifts the picture and the judgment by the output latency, so set the offsets again.",
-                new[] { "Automatic", "Heard", "Sent" }, s => (int)s.audio.Clock, (s, i) => s.audio.clock = (AudioClock)i,
+            var clock = SettingRow.Choice("clock", T("sound.clock"), T("sound.clockDesc"),
+                new[] { T("sound.automatic"), T("sound.clock.heard"), T("sound.clock.sent") }, s => (int)s.audio.Clock, (s, i) => s.audio.clock = (AudioClock)i,
                 list: true, notes: new[]
                 {
-                    selected == AudioBackend.BassSimple ? "Heard on BassSimple" : "Sent on " + selected,
-                    "The music coming out of the speakers now. Autoplay drums start early to match.",
-                    "The music handed to the device now. The picture runs ahead by the output latency.",
+                    selected == AudioBackend.BassSimple ? T("sound.clockNote.autoHeard") : T("sound.clockNote.autoSent", selected),
+                    T("sound.clockNote.heard"),
+                    T("sound.clockNote.sent"),
                 });
-            return new[] { volumes, new SettingGroup("Output", output.ToArray()), new SettingGroup("Timing", clock) };
+            return new[] { volumes, new SettingGroup(T("sound.group.output"), output.ToArray()), new SettingGroup(T("sound.group.timing"), clock) };
         }
     }
 

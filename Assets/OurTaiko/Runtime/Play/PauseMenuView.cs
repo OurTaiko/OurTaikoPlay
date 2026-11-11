@@ -25,6 +25,8 @@ namespace OurTaiko
         public AudioSource Sfx => sfx != null ? sfx : sfx = NewSfx();
         AudioSource sfx;
         Coroutine opening;
+        // Whether the mode switch leads back to a normal play (it is offered in practice).
+        bool switchesToNormal;
 
         // The selection moved / an action was chosen; the practice panel shares them.
         public void PlayMove() => Sfx.PlayAudioOneShot(ka);
@@ -55,8 +57,16 @@ namespace OurTaiko
         // it is not offered (段位道場, two players, a practice chart missing #E/#M).
         public void OfferModeSwitch(bool practice)
         {
-            modeSwitch.GetComponentInChildren<TMP_Text>(true).text = practice ? "Switch to Normal Play" : "Switch to Practice";
+            switchesToNormal = practice;
+            ShowModeSwitchLabel();
             modeSwitch.interactable = true;
+        }
+
+        // Set in code, not by a LocalizedText: enabling the panel would put back the prefab's label.
+        void ShowModeSwitchLabel()
+        {
+            var label = modeSwitch != null ? modeSwitch.GetComponentInChildren<TMP_Text>(true) : null;
+            if (label != null) label.text = L10n.Get("Play", switchesToNormal ? "pause.switchToNormal" : "pause.switchToPractice");
         }
 
         public void Show()
@@ -70,6 +80,7 @@ namespace OurTaiko
             // Navigation and submit are handled once through InputManager; the UI input module
             // remains responsible for mouse/touch clicks, without a second keyboard submit.
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+            ShowModeSwitchLabel();
             // A button that cannot be chosen keeps its place in the list and shows greyed with its label.
             foreach (var button in buttons) button.GetComponentInChildren<TMP_Text>(true).alpha = button.interactable ? 1 : .5f;
             Select(0);

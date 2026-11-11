@@ -1,0 +1,177 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Result_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: e18cb1a4ef02e467a8b9fcd43fc55a48, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 128966656
+    m_Localized: Song {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966657
+    m_Localized: 'Try a little
+
+      harder!'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966658
+    m_Localized: So close!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966659
+    m_Localized: Nice rhythm!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966660
+    m_Localized: Great job!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966661
+    m_Localized: New Best Score!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966662
+    m_Localized: Free Play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966663
+    m_Localized: Result
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966664
+    m_Localized: Judge Details
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966665
+    m_Localized: Back to Song Select
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966666
+    m_Localized: Skip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966667
+    m_Localized: Hits {0}    Misses {1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966668
+    m_Localized: "Custom judge \xB7 Not ranked"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966669
+    m_Localized: Early {0}    Late {1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966670
+    m_Localized: Exact {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966671
+    m_Localized: Auto play records no timing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966672
+    m_Localized: No notes were hit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966673
+    m_Localized: 'Dashed line: average offset'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966674
+    m_Localized: Early
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966675
+    m_Localized: Late
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966676
+    m_Localized: Centered
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966677
+    m_Localized: "Early \u2190 offset ms \u2192 Late    5 ms per bar"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966678
+    m_Localized: Count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966679
+    m_Localized: Mean Offset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966680
+    m_Localized: Std. Deviation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966681
+    m_Localized: Mean Abs. Offset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966682
+    m_Localized: 'Bands: <color=#9A7700>GOOD</color> / <color=#B45329>OK</color> / <color=#3975A0>BAD</color>'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966683
+    m_Localized: Adjust A (Audio Offset)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966684
+    m_Localized: Adjust B (Judge Offset)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966685
+    m_Localized: "Adjusted \xB7 {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966686
+    m_Localized: Could not save. Please try again.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966687
+    m_Localized: No suggestion for Auto play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966688
+    m_Localized: No hits to base a suggestion on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966689
+    m_Localized: This play didn't record its offsets; no suggestion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966690
+    m_Localized: Offsets have changed since; play again
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966691
+    m_Localized: Saved {0}; applies from your next play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966692
+    m_Localized: Average offset under 1 ms; no change needed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966693
+    m_Localized: "Each fix corrects \xBD of the average \xB7 Once each per play"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

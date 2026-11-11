@@ -1,0 +1,58 @@
+key,en,ja,zh-Hans,comment
+select.pageLocal,Local,ローカル,本地,Dan-i Dojo select: page tab and code-entry title for the local courses
+select.gaiden,Gaiden,外伝,外传,Dan-i Dojo select: the entry where a course code is typed; written top to bottom on its chip and plate
+select.gaidenHint,Enter a dan code to take on a course that is not listed.\nHit Don to enter a code,段位コードを入力して、一覧にない段位に挑戦できます。\nドンでコードを入力,输入段位代码，可以挑战列表中没有的段位。\n敲击咚输入代码,Dan-i Dojo select: shown on the Gaiden plate instead of songs
+select.best,Best,自己ベスト,个人最佳,Dan-i Dojo select: small label under each exam condition before the player's best value
+select.empty,No dan courses\nPut .otdan.json files in Dan/ in a song folder,段位がありません\n曲フォルダの Dan/ に .otdan.json を置いてください,没有段位\n请把 .otdan.json 放进歌曲文件夹的 Dan/ 中,Dan-i Dojo select: shown when no course is found (scene label)
+code.title,Enter Dan Code,段位コードを入力,输入段位代码,Dan code entry: dialog title
+code.titleFor,Enter {0} Dan Code,{0} の段位コードを入力,输入{0}的段位代码,Dan code entry: dialog title; {0} = page name (Local / Fanmade / Database)
+code.hint,Enter: confirm   Esc: back,Enter で決定　Esc で戻る,Enter 确定　Esc 返回,Dan code entry: key hint (key names stay)
+code.invalid,Enter a 6-character code of letters and digits.,英数字 6 文字のコードを入力してください,请输入 6 位字母或数字的代码,Dan code entry: the typed code is not 6 letters/digits
+code.notConnected,Not connected to the server.,サーバーに接続していません,未连接到服务器,Dan code entry: the page's server is offline
+code.searching,Searching…,検索中…,搜索中…,Dan code entry: waiting for the server
+code.notFound,No dan course has the code {0}.,コード {0} の段位はありません,没有代码为 {0} 的段位,Dan code entry: server has no course; {0} = code
+code.failed,Could not get the course: {0},取得できませんでした: {0},获取失败：{0},Dan code entry: lookup failed; {0} = error from the server
+exam.gaugeMore,{0}% or more,{0} ％以上,{0} ％以上,Dan exam caption: soul gauge at least {0} percent
+exam.gaugeLess,under {0}%,{0} ％未満,少于 {0} ％,Dan exam caption: soul gauge below {0} percent
+exam.more,{0} or more,{0} 以上,{0} 以上,Dan exam caption: count at least {0}
+exam.less,under {0},{0} 未満,少于 {0},Dan exam caption: count below {0} (e.g. BAD)
+play.loadFailed,CHART COULD NOT LOAD\n<size=22>{0}</size>,譜面を読み込めませんでした\n<size=22>{0}</size>,无法加载谱面\n<size=22>{0}</size>,Dan play: panel title when a chart fails to load; {0} = error
+play.restart,RESTART,やりなおす,重新开始,Dan play: button on the load-failed panel (scene label)
+play.soulGauge,Soul Gauge,魂ゲージ,魂槽,Dan play: name of the soul gauge exam over the gauge (scene label)
+result.notRecorded,This attempt is not recorded,今回の挑戦は記録されません,本次挑战不会被记录,Dan result: note when the run is not saved (e.g. Auto) (scene label)
+resolve.songNotFound,Song not found: {0},曲が見つかりません: {0},找不到歌曲：{0},"Dan select: course cannot be played; {0} = song title, hash or id"
+resolve.noChart,No {0} chart: {1},{0}の譜面がありません: {1},没有{0}谱面：{1},"Dan select: course cannot be played; {0} = difficulty name, {1} = song"
+resolve.songChanged,Song has changed: {0},曲が変更されました: {0},歌曲已变更：{0},Dan select: server song's chart changed since the course was made; {0} = song
+options.title,Song Options,演奏オプション,演奏选项,Dan select: play options panel title (scene label)
+options.speed,Speed,はやさ,速度,Dan select: play option name (scene label)
+options.vanish,Vanish,ドロン,隐身,Dan select: play option name (scene label)
+options.inverse,Inverse,あべこべ,反转,Dan select: play option name (scene label)
+options.random,Random,ランダム,随机,Dan select: play option name (scene label)
+options.drumSound,Drum Sound,音色,音色,Dan select: play option name (scene label)
+options.auto,Auto,オート,自动,Dan select: play option name (scene label)
+options.skip,Skip Performance,演奏スキップ,跳过演奏,Dan select: play option name (scene label)
+rank.shokyu,初級,初級,初级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu10,十級,十級,十级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu9,九級,九級,九级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu8,八級,八級,八级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu7,七級,七級,七级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu6,六級,六級,六级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu5,五級,五級,五级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu4,四級,四級,四级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu3,三級,三級,三级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu2,二級,二級,二级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kyu1,一級,一級,一级,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.shodan,初段,初段,初段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.dan2,二段,二段,二段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.dan3,三段,三段,三段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.dan4,四段,四段,四段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.dan5,五段,五段,五段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.dan6,六段,六段,六段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.dan7,七段,七段,七段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.dan8,八段,八段,八段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.dan9,九段,九段,九段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.dan10,十段,十段,十段,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.kuroto,玄人,玄人,玄人,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.meijin,名人,名人,名人,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.chojin,超人,超人,超人,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"
+rank.tatsujin,達人,達人,达人,"Dan rank name on a course chip, two characters top to bottom; English keeps the kanji (the chip fits two CJK characters)"

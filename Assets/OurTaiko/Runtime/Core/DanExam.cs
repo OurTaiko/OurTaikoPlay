@@ -67,6 +67,14 @@ namespace OurTaiko
             return value < border.Red ? 0 : value >= border.Gold ? 2 : 1;
         }
 
+        // A border as the screens write it (skin_config dan_exam_text_*): "100 ％以上", "5 未満".
+        public string Caption(int red)
+        {
+            bool less = Range == DanExamRange.Less;
+            string key = Type == DanExamType.Gauge ? (less ? "exam.gaugeLess" : "exam.gaugeMore") : (less ? "exam.less" : "exam.more");
+            return L10n.Format("Dan", key, red);
+        }
+
         // YataiDON dan_bar_state: the art state of a bar at `value` (live = during play, when a less
         // exam never shows max; nearEnd/justBeforeEnd = under 10% / 5% of the notes remain).
         public string BarState(DanBorder border, int value, bool live = false, bool nearEnd = false, bool justBeforeEnd = false)

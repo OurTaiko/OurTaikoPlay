@@ -408,13 +408,13 @@ namespace OurTaiko
         {
             if (!IsEnteringCode || lookup != null) return;
             string code = DanSelectPages.CleanCode(typed);
-            if (code == null) { codeEntry.Say("英数字 6 文字のコードを入力してください"); return; }
+            if (code == null) { codeEntry.Say(L10n.Get("Dan", "code.invalid")); return; }
             string server = pages[Page].Server;
             var endpoint = Online.OnlineManager.EnsureInstance().Client?.Endpoints
                 .FirstOrDefault(e => string.Equals(e.Config.baseUrl.TrimEnd('/'), server, StringComparison.OrdinalIgnoreCase) && e.IsConnected);
-            if (endpoint == null) { codeEntry.Say("サーバーに接続していません"); return; }
+            if (endpoint == null) { codeEntry.Say(L10n.Get("Dan", "code.notConnected")); return; }
             Play(sfx, don, true);
-            codeEntry.Say("検索中…");
+            codeEntry.Say(L10n.Get("Dan", "code.searching"));
             codeEntry.field.interactable = false;
             lookupCode = code;
             lookup = endpoint.RequestAsync("/api/v1/game/dans/" + code);
@@ -430,14 +430,14 @@ namespace OurTaiko
             if (task.IsFaulted || task.IsCanceled)
             {
                 var error = task.Exception?.InnerExceptions.FirstOrDefault();
-                codeEntry.Say(error is Online.HttpStatusException { Status: 404 } ? "コード " + lookupCode + " の段位はありません" : "取得できませんでした: " + (error?.Message ?? "?"));
+                codeEntry.Say(error is Online.HttpStatusException { Status: 404 } ? L10n.Format("Dan", "code.notFound", lookupCode) : L10n.Format("Dan", "code.failed", error?.Message ?? "?"));
                 return;
             }
             DanCourseEntry entry;
             try { entry = resolver.Resolve(DanCourse.From(Online.Json.Parse(task.Result), pages[Page].Server), pages[Page].Server + "/api/v1/game/dans/" + lookupCode); }
             catch (Exception error) when (error is FormatException || error is Online.FanmadeException)
             {
-                codeEntry.Say("取得できませんでした: " + error.Message);
+                codeEntry.Say(L10n.Format("Dan", "code.failed", error.Message));
                 return;
             }
             int index = DanSelectPages.Insert(pages[Page], entry);
@@ -579,7 +579,7 @@ namespace OurTaiko
                 foreach (var row in view.songs) row.root.gameObject.SetActive(false);
                 view.exams.gameObject.SetActive(false);
                 view.error.gameObject.SetActive(true);
-                view.error.text = "段位コードを入力して、一覧にない段位に挑戦できます。\nドンでコードを入力";
+                view.error.text = L10n.Get("Dan", "select.gaidenHint");
                 return;
             }
             for (int i = 0; i < view.songs.Length; i++)
@@ -671,12 +671,8 @@ namespace OurTaiko
             return exam.Type == DanExamType.Gauge ? value + " %" : value.ToString();
         }
 
-        // skin_config dan_exam_text_* (ja), as the rest of the Nijiiro screens are: "100 ％以上", "5 未満".
-        static string Caption(DanExam exam, int red)
-        {
-            string range = exam.Range == DanExamRange.Less ? "未満" : "以上";
-            return exam.Type == DanExamType.Gauge ? $"{red} ％{range}" : $"{red} {range}";
-        }
+        // skin_config dan_exam_text_*: "100 ％以上", "5 未満".
+        static string Caption(DanExam exam, int red) => exam.Caption(red);
 
         void ShowConfirm(double now)
         {

@@ -38,9 +38,9 @@ namespace OurTaiko.Tests
                 yield return null;
                 // Right ka twice reaches Play, don opens it on Offset A, don starts adjusting it.
                 yield return Press(keyboard, Key.K); yield return Press(keyboard, Key.K);
-                Assert.That(nav.Page.Title, Is.EqualTo("Play"));
+                Assert.That(nav.Page.Title, Is.EqualTo(L10n.Get("Settings", "play.title")));
                 yield return Press(keyboard, Key.F);
-                Assert.That(nav.Row.Label, Is.EqualTo("Offset A (Audio)"));
+                Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "play.audioOffset")));
                 yield return Press(keyboard, Key.F);
                 Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Adjust));
                 yield return Press(keyboard, Key.D);
@@ -50,7 +50,7 @@ namespace OurTaiko.Tests
                 Assert.That(settings.Settings.play.audioOffsetMs, Is.EqualTo(-1));
                 // The arrows adjust a number directly; the stepper buttons do too.
                 overlay.Move(1);
-                Assert.That(nav.Row.Label, Is.EqualTo("Offset B (Judgment)"));
+                Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "play.judgeOffset")));
                 yield return Press(keyboard, Key.RightArrow); yield return Press(keyboard, Key.RightArrow); yield return Press(keyboard, Key.LeftArrow);
                 Assert.That(settings.Settings.play.judgeOffsetMs, Is.EqualTo(1));
                 overlay.View.SetRow(1, nav.Row.Move(nav.Row.Get(nav.Settings), 1));

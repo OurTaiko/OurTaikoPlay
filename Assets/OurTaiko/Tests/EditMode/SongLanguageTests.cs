@@ -60,17 +60,22 @@ namespace OurTaiko.Tests
         public void GeneralLanguageIsSavedAndOldSettingsKeepTheirDefaults()
         {
             var settings = GameSettings.FromJson("{\"general\":null,\"audio\":{\"deviceBufferMs\":73}}");
-            Assert.That(settings.general.Language, Is.EqualTo("en"));
+            Assert.That(settings.general.Language, Is.EqualTo(GeneralSettings.SystemLanguage()), "No choice yet: the system's language.");
             var nav = new SettingsNavigator(SettingsCatalog.Pages(SoundPlatform.Desktop), settings);
-            Assert.That(nav.Page.Title, Is.EqualTo("General"));
+            Assert.That(nav.Page.Title, Is.EqualTo(L10n.Get("Settings", "general.title")));
             nav.Confirm(); nav.Confirm();
-            nav.TapSheet(3);
+            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { "English", "日本語", "简体中文" }), "Each language in its own name.");
+            nav.TapSheet(2);
             var saved = GameSettings.FromJson(nav.Settings.ToJson());
-            Assert.That(saved.general.language, Is.EqualTo("zh_tw"));
+            Assert.That(saved.general.language, Is.EqualTo("zh"));
             Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
             Assert.That(saved.play.singlePlayerDrumPad, Is.EqualTo(new PlaySettings().singlePlayerDrumPad));
-            Assert.That(GameSettings.FromJson("{}").general.Language, Is.EqualTo("en"));
+            Assert.That(GameSettings.FromJson("{}").general.Language, Is.EqualTo(GeneralSettings.SystemLanguage()));
             saved.general.language = "unknown";
+            Assert.That(saved.general.Language, Is.EqualTo(GeneralSettings.SystemLanguage()));
+            saved.general.language = "zh_tw";
+            Assert.That(saved.general.Language, Is.EqualTo("zh"), "Saves from before interface localization.");
+            saved.general.language = "ko";
             Assert.That(saved.general.Language, Is.EqualTo("en"));
         }
     }

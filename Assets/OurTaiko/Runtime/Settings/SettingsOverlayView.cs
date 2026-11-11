@@ -36,7 +36,7 @@ namespace OurTaiko
         CanvasGroup group;
         RectTransform panel, rail, viewport, list, sheet, modal, ring, glow;
         Image shade, ringImage, glowImage, sheetShade, modalShade;
-        TextMeshProUGUI breadcrumb, footerText, donHint, modalTitle, modalText, sheetTitle, sheetText;
+        TextMeshProUGUI headerTitle, breadcrumb, footerText, backHint, donHint, moveHint, modalTitle, modalText, sheetTitle, sheetText;
         readonly TextMeshProUGUI[] seatNames = new TextMeshProUGUI[2];
         readonly Image[] seatDots = new Image[2];
         RectTransform hints, sheetViewport, sheetList, card;
@@ -113,7 +113,7 @@ namespace OurTaiko
             var header = Node("Header", panel);
             Stretch(header, 0, 0, 0, -1); header.anchorMin = new Vector2(0, 1); header.sizeDelta = new Vector2(0, HeaderHeight);
             header.anchoredPosition = new Vector2(0, -HeaderHeight / 2);
-            var title = Label("Title", header, "Settings", 36, Ink, TextAlignmentOptions.MidlineLeft);
+            var title = headerTitle = Label("Title", header, T("overlay.title"), 36, Ink, TextAlignmentOptions.MidlineLeft);
             Pin(title.rectTransform, 36, HeaderHeight / 2, left: true, width: 220);
             breadcrumb = Label("Breadcrumb", header, "", 27, Section, TextAlignmentOptions.MidlineLeft);
             Pin(breadcrumb.rectTransform, 36 + title.preferredWidth + 21, HeaderHeight / 2, left: true, width: 700);
@@ -181,17 +181,17 @@ namespace OurTaiko
             hints.anchorMin = hints.anchorMax = new Vector2(1, 0.5f); hints.pivot = new Vector2(1, 0.5f);
             hints.sizeDelta = new Vector2(720, FooterHeight); hints.anchoredPosition = new Vector2(-36, 0);
             float x = 720;
-            x = Hint(x, "Back", out _, () => Keycap(hints, "Esc"));
-            x = Hint(x, "Select", out donHint, () => SettingsShapes.Dot("Don", hints, Don, 33).rectTransform);
-            Hint(x, "Move", out _, () => SettingsShapes.Dot("Ka", hints, Cyan, 33, ring: true).rectTransform);
+            x = Hint(x, "Back", T("footer.back"), out backHint, () => Keycap(hints, "Esc"));
+            x = Hint(x, "Select", T("footer.select"), out donHint, () => SettingsShapes.Dot("Don", hints, Don, 33).rectTransform);
+            Hint(x, "Move", T("footer.move"), out moveHint, () => SettingsShapes.Dot("Ka", hints, Cyan, 33, ring: true).rectTransform);
             // Phones and tablets are touched; their drums are on screen.
             hints.gameObject.SetActive(!Application.isMobilePlatform);
         }
 
         // Lays one footer key hint out leftwards from x; returns where the next one ends.
-        float Hint(float x, string text, out TextMeshProUGUI label, Func<RectTransform> icon)
+        float Hint(float x, string name, string text, out TextMeshProUGUI label, Func<RectTransform> icon)
         {
-            label = Label("Hint " + text, hints, text, 27, Ink, TextAlignmentOptions.MidlineLeft);
+            label = Label("Hint " + name, hints, text, 27, Ink, TextAlignmentOptions.MidlineLeft);
             label.rectTransform.sizeDelta = new Vector2(130, 45);
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = label.rectTransform.pivot = new Vector2(0, 0.5f);
             label.rectTransform.anchoredPosition = new Vector2(x - 130, 0);
@@ -317,6 +317,21 @@ namespace OurTaiko
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
         }
 
+        // The fixed labels again, in the language just selected; the rows and the sheet are rebuilt
+        // on the next Show.
+        public void Relabel()
+        {
+            headerTitle.text = T("overlay.title");
+            Pin(breadcrumb.rectTransform, 36 + headerTitle.preferredWidth + 21, HeaderHeight / 2, left: true, width: 700);
+            backHint.text = T("footer.back");
+            moveHint.text = T("footer.move");
+            rowsSignature = null;
+            shownSheetRow = -1;
+        }
+
+        static string T(string key) => SettingsCatalog.T(key);
+        static string T(string key, params object[] args) => SettingsCatalog.T(key, args);
+
         public void Bump(int direction)
         {
             bumpAt = Time.unscaledTime;
@@ -329,7 +344,7 @@ namespace OurTaiko
             for (int seat = 0; seat < 2; seat++)
             {
                 string name = seat == 0 ? p1 : p2;
-                seatNames[seat].text = string.IsNullOrEmpty(name) ? "Not signed in" : name;
+                seatNames[seat].text = string.IsNullOrEmpty(name) ? T("status.notSignedIn") : name;
                 Recolor(seatNames[seat], string.IsNullOrEmpty(name) ? Muted : Ink);
             }
         }
@@ -357,16 +372,16 @@ namespace OurTaiko
             footerText.text = !string.IsNullOrEmpty(status) ? status : FooterHint(nav);
             donHint.text = nav.Zone switch
             {
-                SettingsZone.Rail => nav.OnClose ? "Close" : "Open",
-                SettingsZone.Adjust => "Keep",
-                SettingsZone.Sheet => "Choose",
+                SettingsZone.Rail => nav.OnClose ? L10n.Get("Common", "close") : T("don.open"),
+                SettingsZone.Adjust => T("don.keep"),
+                SettingsZone.Sheet => T("don.choose"),
                 _ => nav.Row?.Kind switch
                 {
-                    SettingKind.Toggle => "Flip",
-                    SettingKind.Choice or SettingKind.Number or SettingKind.Slider => "Adjust",
-                    SettingKind.Action => "Run",
-                    SettingKind.Text or SettingKind.Password => "Type",
-                    _ => "Choose",
+                    SettingKind.Toggle => T("don.flip"),
+                    SettingKind.Choice or SettingKind.Number or SettingKind.Slider => T("don.adjust"),
+                    SettingKind.Action => T("don.run"),
+                    SettingKind.Text or SettingKind.Password => T("don.type"),
+                    _ => T("don.choose"),
                 },
             };
             int focus = nav.Zone == SettingsZone.Rail ? -1 - nav.PageIndex : nav.Zone == SettingsZone.Sheet ? 1000 + nav.SheetIndex : nav.RowIndex;
@@ -376,8 +391,8 @@ namespace OurTaiko
 
         static string FooterHint(SettingsNavigator nav)
         {
-            if (nav.Zone == SettingsZone.Rail) return nav.Page?.Subtitle ?? "Close Settings";
-            if (nav.Zone == SettingsZone.Adjust) return nav.Row.Label + "  ·  Ka changes, Don keeps, Esc cancels";
+            if (nav.Zone == SettingsZone.Rail) return nav.Page?.Subtitle ?? T("overlay.closeSettings");
+            if (nav.Zone == SettingsZone.Adjust) return T("footer.adjusting", nav.Row.Label);
             var row = nav.Row;
             if (row == null) return "";
             return row.Hint.Length > 0 ? row.Label + "  ·  " + row.Hint : row.Label;
@@ -405,7 +420,7 @@ namespace OurTaiko
                 root.offsetMin = new Vector2(21, 0); root.offsetMax = new Vector2(-21, 0);
                 root.sizeDelta = new Vector2(-42, RailItem);
                 root.anchoredPosition = new Vector2(0, close ? 24 : -24 - i * (RailItem + 9));
-                label.text = close ? "Close" : nav.Pages[i].Title;
+                label.text = close ? L10n.Get("Common", "close") : nav.Pages[i].Title;
                 bool selected = i == nav.PageIndex;
                 box.color = selected ? Selected : Color.clear;
                 Recolor(label, selected ? Ink : Muted);
@@ -474,7 +489,7 @@ namespace OurTaiko
             Top(legend.rectTransform, 36, 22, -36, 44);
             var noteStrip = Node("NoteLabel", root);
             Top(noteStrip, DiagramPad, 72, -DiagramPad, 32);
-            var noteLabel = Label("Text", noteStrip, "NOTE", 22, Muted, TextAlignmentOptions.Bottom);
+            var noteLabel = Label("Text", noteStrip, T("diagram.note"), 22, Muted, TextAlignmentOptions.Bottom);
             noteLabel.characterSpacing = 6;
             Place(noteLabel.rectTransform, 0.5f, 200, 0.5f);
             var plot = Node("Plot", root);
@@ -531,17 +546,17 @@ namespace OurTaiko
                 {
                     double ms = state.Range * (i - Ticks / 2) / (Ticks / 2);
                     string number = (ms > 0 ? "+" : "") + Math.Round(ms) + " ms";
-                    ticks[i].text = i == 0 ? "EARLY  " + number : i == Ticks - 1 ? number + "  LATE" : number;
+                    ticks[i].text = i == 0 ? T("diagram.early", number) : i == Ticks - 1 ? T("diagram.late", number) : number;
                     Place(grid[i].rectTransform, state.X(ms), 2, 0.5f);
                 }
                 string Ms(double value) => Math.Round(value).ToString(System.Globalization.CultureInfo.InvariantCulture) + " ms";
                 string Name(string name, Color color) => "<color=#" + ColorUtility.ToHtmlStringRGB(color) + ">" + name + "</color>";
-                legend.text = Name("GOOD", GoodBand) + "  " + Ms(state.Good) + "      " + Name("OK", OkBand) + "  " + Ms(state.Ok)
-                    + "      " + Name("BAD", BadBand) + "  " + Ms(state.Bad)
-                    + (state.Offset != 0 ? "      Offset B  " + (state.Offset > 0 ? "+" : "") + Ms(state.Offset) : "");
+                legend.text = Name(L10n.Get("Common", "judge.good"), GoodBand) + "  " + Ms(state.Good) + "      " + Name(L10n.Get("Common", "judge.ok"), OkBand) + "  " + Ms(state.Ok)
+                    + "      " + Name(L10n.Get("Common", "judge.bad"), BadBand) + "  " + Ms(state.Bad)
+                    + (state.Offset != 0 ? "      " + T("diagram.offsetB") + "  " + (state.Offset > 0 ? "+" : "") + Ms(state.Offset) : "");
                 caption.text = state.Custom
-                    ? "<color=#" + ColorUtility.ToHtmlStringRGB(Amber) + ">Custom windows for every difficulty  ·  scores are not saved or uploaded</color>"
-                    : "Standard windows of Oni and Ura. Easy and Normal are wider: 42 / 108 / 125 ms.";
+                    ? "<color=#" + ColorUtility.ToHtmlStringRGB(Amber) + ">" + T("diagram.custom") + "</color>"
+                    : T("diagram.standard");
             });
         }
 
@@ -606,7 +621,7 @@ namespace OurTaiko
                 if (signature != shownSheetRow || sheetItems.Count != options.Count) { BuildSheetItems(nav, options); sheetScroll = sheetScrollTarget = 0; }
                 shownSheetRow = signature;
                 sheetTitle.text = nav.Row.Label;
-                sheetText.text = nav.Row.Description + (nav.Row.AppliesOnClose ? "  Applies when you close Settings." : "");
+                sheetText.text = nav.Row.Description + (nav.Row.AppliesOnClose ? "  " + T("sheet.appliesOnClose") : "");
                 float textHeight = sheetText.GetPreferredValues(sheetText.text, SheetWidth - 72, 0).y;
                 Top(sheetText.rectTransform, 36, 102, -36, textHeight + 4);
                 sheetViewport.offsetMax = new Vector2(-24, -(102 + textHeight + 18));
@@ -672,15 +687,15 @@ namespace OurTaiko
             field.gameObject.SetActive(typing);
             if (!typing && !capture) return;
             string group = nav.Page.Groups[nav.Page.GroupOf(nav.RowIndex)].Title;
-            modalTitle.text = capture ? "Press a key for " + nav.Row.Label : (group.Length <= 2 ? group + "  ·  " : "") + nav.Row.Label;
+            modalTitle.text = capture ? T("modal.pressKey", nav.Row.Label) : (group.Length <= 2 ? group + "  ·  " : "") + nav.Row.Label;
             modalText.text = capture
-                ? "Any key is added, including Enter and Escape. Tap outside this card to cancel."
-                : nav.Row.Kind == SettingKind.Password ? "Enter signs in. The password is not saved.  Esc: cancel" : "Enter: save   Esc: cancel";
+                ? T("modal.captureHint")
+                : T(nav.Row.Kind == SettingKind.Password ? "modal.passwordHint" : "modal.textHint");
             Top(modalText.rectTransform, 54, capture ? 138 : 300, -54, 90);
             if (typing && !was)
             {
                 field.contentType = nav.Row.Kind == SettingKind.Password ? TMP_InputField.ContentType.Password : TMP_InputField.ContentType.Standard;
-                ((TextMeshProUGUI)field.placeholder).text = nav.Row.Kind == SettingKind.Password ? "Password" : "Username";
+                ((TextMeshProUGUI)field.placeholder).text = T(nav.Row.Kind == SettingKind.Password ? "accounts.password" : "accounts.username");
                 field.SetTextWithoutNotify(nav.Row.GetText(nav.Settings));
                 field.ForceLabelUpdate();
                 field.Select();
@@ -906,8 +921,8 @@ namespace OurTaiko
                 if (row.AppliesOnClose)
                 {
                     var tag = SettingsShapes.Box("OnClose", Root, Alpha(Amber, 0.16f), 12);
-                    var text = Label("Text", tag.transform, "On close", 22, Amber, TextAlignmentOptions.Center);
-                    float width = text.GetPreferredValues("On close").x + 28;
+                    var text = Label("Text", tag.transform, T("row.onClose"), 22, Amber, TextAlignmentOptions.Center);
+                    float width = text.GetPreferredValues(text.text).x + 28;
                     tag.rectTransform.sizeDelta = new Vector2(width, 40);
                     Center(text.rectTransform, width, 40);
                     tag.rectTransform.anchorMin = tag.rectTransform.anchorMax = tag.rectTransform.pivot = new Vector2(0, 1);
@@ -1014,7 +1029,12 @@ namespace OurTaiko
                         Add(add.rectTransform);
                         Center(Label("Plus", add.transform, "+", 42, Ink, TextAlignmentOptions.Center).rectTransform, 84, 84);
                         var keys = settings.general.keyboard.Get(row.Key);
-                        if (keys.Count == 0) Text("Unbound", 200, 30, TextAlignmentOptions.MidlineRight).color = Muted;
+                        if (keys.Count == 0)
+                        {
+                            var unbound = Text("Unbound", 200, 30, TextAlignmentOptions.MidlineRight);
+                            unbound.text = T("value.unbound");
+                            unbound.color = Muted;
+                        }
                         foreach (var key in keys.Reverse())
                         {
                             var cap = SettingsShapes.Box("Key " + key, control, Ink, 15);
@@ -1112,7 +1132,7 @@ namespace OurTaiko
                         Recolor(value, row.GetText(nav.Settings).Length == 0 ? Muted : Ink);
                         break;
                     case SettingKind.Password:
-                        value.text = "Type to sign in";
+                        value.text = T("row.typeToSignIn");
                         Recolor(value, Muted);
                         break;
                 }

@@ -40,15 +40,15 @@ namespace OurTaiko.Tests
             Assert.That(GameSettings.FromJson("{\"audio\":{\"clock\":9}}").audio.clock, Is.EqualTo(AudioClock.Automatic));
             var settings = new GameSettings();
             var row = SettingsCatalog.Sound(SoundPlatform.Windows, AudioBackend.BassWASAPI).SelectMany(g => g.Rows).Single(r => r.Id == "clock");
-            Assert.That(row.Options, Is.EqualTo(new[] { "Automatic", "Heard", "Sent" }));
-            Assert.That(row.OptionNotes[0], Is.EqualTo("Sent on BassWASAPI"));
+            Assert.That(row.Options, Is.EqualTo(new[] { L10n.Get("Settings", "sound.automatic"), L10n.Get("Settings", "sound.clock.heard"), L10n.Get("Settings", "sound.clock.sent") }));
+            Assert.That(row.OptionNotes[0], Is.EqualTo(L10n.Format("Settings", "sound.clockNote.autoSent", "BassWASAPI")));
             Assert.That(row.AppliesOnClose, Is.False);
             row.Set(settings, 1);
             Assert.That(settings.Clone().audio.clock, Is.EqualTo(AudioClock.Heard));
             // The device is not reopened for it.
             Assert.That(new AudioOptions().SameDeviceSettings(settings.audio), Is.True);
             Assert.That(SettingsCatalog.Sound(SoundPlatform.Desktop, AudioBackend.Automatic).SelectMany(g => g.Rows).Single(r => r.Id == "clock").OptionNotes[0],
-                Is.EqualTo("Heard on BassSimple"));
+                Is.EqualTo(L10n.Get("Settings", "sound.clockNote.autoHeard")));
         }
 
         [Test] public void AHeardClockStartsBehindTheTrackByTheDelay()

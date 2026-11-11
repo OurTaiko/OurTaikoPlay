@@ -1,0 +1,172 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Play Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Play
+  m_TableCollectionNameGuidString: 96e73f9a78bad4dc2b528dd4492d8a25
+  m_Entries:
+  - m_Id: 133160960
+    m_Key: pause.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160961
+    m_Key: pause.resume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160962
+    m_Key: pause.restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160963
+    m_Key: pause.switchToPractice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160964
+    m_Key: pause.switchToNormal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160965
+    m_Key: pause.backToSelect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160966
+    m_Key: pause.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160967
+    m_Key: practice.branch.heading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160968
+    m_Key: practice.branch.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160969
+    m_Key: practice.speed.heading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160970
+    m_Key: practice.speed.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160971
+    m_Key: practice.measure.heading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160972
+    m_Key: practice.measure.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160973
+    m_Key: practice.branch.normal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160974
+    m_Key: practice.branch.expert
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160975
+    m_Key: practice.branch.master
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160976
+    m_Key: practice.confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160977
+    m_Key: play.chartLoadFailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160978
+    m_Key: play.restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160979
+    m_Key: ghost.defaultName
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160980
+    m_Key: ghostSelect.heading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160981
+    m_Key: ghostSelect.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160982
+    m_Key: ghostSelect.all
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160983
+    m_Key: ghostSelect.count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160984
+    m_Key: ghostSelect.connecting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160985
+    m_Key: ghostSelect.noServer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160986
+    m_Key: ghostSelect.loadingPlay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160987
+    m_Key: ghostSelect.startFailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160988
+    m_Key: ghostSelect.outdated
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160989
+    m_Key: ghostSelect.unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160990
+    m_Key: ghostSelect.unreadable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160991
+    m_Key: ghostSelect.serverOffline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160992
+    m_Key: ghostSelect.loadFailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160993
+    m_Key: ghostSelect.offline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160994
+    m_Key: ghostSelect.noPlaysServer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160995
+    m_Key: ghostSelect.noPlaysCategory
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 8757538902004465780
+  references:
+    version: 2
+    RefIds:
+    - rid: 8757538902004465780
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1794378579022

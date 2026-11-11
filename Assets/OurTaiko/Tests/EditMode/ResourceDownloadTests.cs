@@ -294,7 +294,7 @@ namespace OurTaiko.Tests
             var prepared = Run(() => client.PrepareAsync(client.Charts[0], progress: p => last = p, movie: true));
             Assert.That(File.ReadAllBytes(prepared.Chart.MoviePath), Is.EqualTo(movie));
             Assert.That(last.Movie.Status, Is.EqualTo(FileProgress.State.Complete));
-            Assert.That(SongLoadingScene.Describe(new DownloadProgress { Step = DownloadProgress.Stage.Files, Movie = last.Movie }), Does.Contain("映像 完了"));
+            Assert.That(SongLoadingScene.Describe(new DownloadProgress { Step = DownloadProgress.Stage.Files, Movie = last.Movie }), Does.Contain(L10n.Format("Menu", "loading.movieFile", L10n.Get("Menu", "loading.complete"))));
             Run(() => client.PrepareAsync(client.Charts[0], movie: true));
             Assert.That(movieGets, Is.EqualTo(1), "the second preparation plays the cached copy");
             Assert.That(forbidden, Is.Zero);

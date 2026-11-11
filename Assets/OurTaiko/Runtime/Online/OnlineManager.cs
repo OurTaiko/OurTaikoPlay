@@ -217,11 +217,11 @@ namespace OurTaiko.Online
                     if (!account.IsSignedIn)
                     {
                         foreach (var e in endpoints) Client.SignOut(e, seat);
-                        if (seat == 0) results.Add(who + ": guest (not signed in)");
+                        if (seat == 0) results.Add(Item(who, L10n.Get("Online", "summary.guest")));
                         continue;
                     }
-                    if (cancel.IsCancellationRequested) { results.Add(who + ": cancelled"); continue; }
-                    Activity = $"Checking {who}'s OurTaiko account…";
+                    if (cancel.IsCancellationRequested) { results.Add(Item(who, L10n.Get("Online", "summary.cancelled"))); continue; }
+                    Activity = L10n.Format("Online", "activity.checkingAccount", who);
                     try
                     {
                         await Center.RefreshAsync(account, cancel);
@@ -231,26 +231,26 @@ namespace OurTaiko.Online
                     catch (HttpStatusException error) when (error.Status == 401)
                     {
                         Expire(seat, endpoints);
-                        results.Add(who + ": sign-in expired");
+                        results.Add(Item(who, L10n.Get("Online", "summary.signInExpired")));
                         continue;
                     }
                     catch (Exception error)
                     {
                         Log.Warn("Online", $"{who}'s account check failed: {error.Message}");
-                        results.Add(who + ": " + (cancel.IsCancellationRequested ? "cancelled" : "offline (" + error.Message + ")"));
+                        results.Add(Item(who, cancel.IsCancellationRequested ? L10n.Get("Online", "summary.cancelled") : L10n.Format("Online", "summary.offline", error.Message)));
                         continue;
                     }
                     foreach (var e in endpoints)
                     {
                         string name = e.Config.DisplayName;
-                        if (cancel.IsCancellationRequested) { results.Add(who + " " + name + ": cancelled"); continue; }
+                        if (cancel.IsCancellationRequested) { results.Add(Item(who + " " + name, L10n.Get("Online", "summary.cancelled"))); continue; }
                         if (e.SsoService.Length == 0 || e.SsoIssuer != Center.Issuer)
                         {
                             Client.SignOut(e, seat);
-                            results.Add(who + " " + name + ": " + (e.IsConnected ? "no OurTaiko account sign-in" : "song list not loaded"));
+                            results.Add(Item(who + " " + name, L10n.Get("Online", e.IsConnected ? "summary.noAccountSignIn" : "summary.songListNotLoaded")));
                             continue;
                         }
-                        Activity = $"Signing {who} in to {name}…";
+                        Activity = L10n.Format("Online", "activity.signingIn", who, name);
                         try
                         {
                             string service = e.SsoService, accountToken = account.Token;
@@ -259,18 +259,18 @@ namespace OurTaiko.Online
                             await Client.UseAccountAsync(e, seat, session, account.UserId, account.Nickname,
                                 c => center.TradeAsync(accountToken, service, c), cancel);
                             any = true;
-                            results.Add(who + " " + name + ": signed in as " + account.Nickname);
+                            results.Add(Item(who + " " + name, L10n.Format("Online", "summary.signedInAs", account.Nickname)));
                         }
                         catch (HttpStatusException error) when (error.Status == 401)
                         {
                             Expire(seat, endpoints);
-                            results.Add(who + ": sign-in expired");
+                            results.Add(Item(who, L10n.Get("Online", "summary.signInExpired")));
                             break;
                         }
                         catch (Exception error)
                         {
                             Log.Warn("Online", $"{who}'s sign-in to {name} failed: {error.Message}");
-                            results.Add(who + " " + name + ": " + (cancel.IsCancellationRequested ? "cancelled" : Describe(error)));
+                            results.Add(Item(who + " " + name, cancel.IsCancellationRequested ? L10n.Get("Online", "summary.cancelled") : Describe(error)));
                         }
                     }
                 }
@@ -313,18 +313,18 @@ namespace OurTaiko.Online
                 {
                     var e = endpoints[i];
                     string name = e.Config.DisplayName;
-                    if (cancel.IsCancellationRequested) { results.Add(name + ": cancelled"); continue; }
-                    Activity = $"Loading song list ({i + 1} / {endpoints.Count}): {name}…";
+                    if (cancel.IsCancellationRequested) { results.Add(Item(name, L10n.Get("Online", "summary.cancelled"))); continue; }
+                    Activity = L10n.Format("Online", "activity.loadingSongList", i + 1, endpoints.Count, name);
                     try
                     {
                         await Client.LoadCatalogAsync(e, cancel);
-                        results.Add($"{name}: {e.ChartCount} songs");
+                        results.Add(Item(name, L10n.Format("Online", "summary.songs", e.ChartCount)));
                         Log.Info("Online", $"Song list of {name}: {e.ChartCount} songs");
                     }
                     catch (Exception error)
                     {
                         Log.Warn("Online", $"Song list of {name} failed: {error.Message}");
-                        results.Add(name + ": " + (cancel.IsCancellationRequested ? "cancelled" : Describe(error)));
+                        results.Add(Item(name, cancel.IsCancellationRequested ? L10n.Get("Online", "summary.cancelled") : Describe(error)));
                     }
                 }
                 if (this != null && refresh) RefreshSongs();
@@ -333,9 +333,12 @@ namespace OurTaiko.Online
         }
 
         public static string Describe(Exception error) =>
-            error is HttpStatusException status && (status.Status == 401 || status.Status == 403) ? "wrong username or password"
-            : error is HttpStatusException { Status: 429 } ? "too many sign-in attempts, try again later"
-            : "failed (" + error.Message + ")";
+            error is HttpStatusException status && (status.Status == 401 || status.Status == 403) ? L10n.Get("Online", "error.wrongPassword")
+            : error is HttpStatusException { Status: 429 } ? L10n.Get("Online", "error.tooManyAttempts")
+            : L10n.Format("Online", "error.failed", error.Message);
+
+        // One line of LoginSummary or SongListSummary: "1P Fanmade: …".
+        static string Item(string who, string what) => L10n.Format("Online", "summary.item", who, what);
 
         // One connection per built-in server, created signed out; the accounts are set when signing in.
         IReadOnlyList<FanmadeEndpoint> BuiltInEndpoints()
@@ -632,14 +635,8 @@ namespace OurTaiko.Online
         }
 
         // What the folders of an unreachable server's cache say they are, in the player's language.
-        public static string OfflineLabel => Words("offline cache", "オフラインキャッシュ", "本地缓存");
-        static string OtherLabel => Words("Other", "その他", "其他");
-
-        static string Words(string en, string ja, string zh)
-        {
-            string language = SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language ?? "en" : "en";
-            return language == "ja" ? ja : language.StartsWith("zh", StringComparison.Ordinal) ? zh : en;
-        }
+        public static string OfflineLabel => L10n.Get("Online", "label.offlineCache");
+        static string OtherLabel => L10n.Get("Online", "label.other");
 
         public static string SongKey(FanmadeChart chart) => "fanmade/" + chart.Server + "/" + chart.Id;
 

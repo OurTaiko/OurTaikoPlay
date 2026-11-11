@@ -47,8 +47,8 @@ namespace OurTaiko.Tests
         public void FrameRateOffers120By60AndUnlimited()
         {
             var nav = OnPage("display");
-            Assert.That(nav.Row.Label, Is.EqualTo("Frame Rate"));
-            Assert.That(nav.Row.Options, Is.EqualTo(new[] { "120", "60", "Unlimited" }));
+            Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "display.frameRate")));
+            Assert.That(nav.Row.Options, Is.EqualTo(new[] { "120", "60", L10n.Get("Settings", "display.unlimited") }));
             Assert.That(nav.Row.Get(nav.Settings), Is.Zero, "120 is the default.");
             nav.Confirm(); nav.Move(1); nav.Confirm();
             Assert.That(nav.Settings.display.targetFrameRate, Is.EqualTo(60));
@@ -69,10 +69,10 @@ namespace OurTaiko.Tests
         {
             var nav = OnPage("display");
             nav.Move(1);
-            Assert.That(nav.Row.Label, Is.EqualTo("VSync"));
+            Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "display.vsync")));
             Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.Toggle));
-            Assert.That(nav.Page.Rows.Select(r => r.Label), Is.EqualTo(new[] { "Frame Rate", "VSync", "Background Movie", "Lane Opacity" }));
-            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("Off"), "Off is the default.");
+            Assert.That(nav.Page.Rows.Select(r => r.Label), Is.EqualTo(new[] { "frameRate", "vsync", "movie", "laneOpacity" }.Select(key => L10n.Get("Settings", "display." + key))));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.off")), "Off is the default.");
             nav.Confirm();
             Assert.That(nav.Settings.display.vSync, Is.True);
             Assert.That(GameSettings.FromJson(nav.Settings.ToJson()).display.vSync, Is.True);
@@ -83,12 +83,12 @@ namespace OurTaiko.Tests
         {
             var nav = OnPage("display");
             nav.Move(2);
-            Assert.That(nav.Row.Label, Is.EqualTo("Background Movie"));
-            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("On"), "On is the default.");
+            Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "display.movie")));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.on")), "On is the default.");
             nav.Confirm();
             Assert.That(nav.Settings.display.backgroundMovie, Is.False);
             nav.Move(1);
-            Assert.That(nav.Row.Label, Is.EqualTo("Lane Opacity"));
+            Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "display.laneOpacity")));
             Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.Slider));
             Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("40%"));
             Assert.That(nav.Row.Move(100, 1), Is.EqualTo(100));

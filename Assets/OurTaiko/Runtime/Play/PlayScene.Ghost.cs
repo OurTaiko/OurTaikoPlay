@@ -49,7 +49,7 @@ namespace OurTaiko
         {
             var controller = PlayerInfoController.EnsureInstance();
             var own = switcher.Lead == Side.P1 ? controller.Info : controller.SecondInfo;
-            var rival = new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? "Ghost" : ghost.Nickname };
+            var rival = new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? L10n.Get("Play", "ghost.defaultName") : ghost.Nickname };
             foreach (var plate in FindObjectsByType<NameplateView>(FindObjectsInactive.Include))
                 if (plate.gameObject.scene == gameObject.scene) plate.Pin(plate.seat == ghost.PlayerLane ? own : rival, plate.seat);
         }

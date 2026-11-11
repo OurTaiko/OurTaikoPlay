@@ -1,0 +1,167 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Play_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 96e73f9a78bad4dc2b528dd4492d8a25, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 133160960
+    m_Localized: PAUSED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160961
+    m_Localized: Resume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160962
+    m_Localized: Restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160963
+    m_Localized: Switch to Practice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160964
+    m_Localized: Switch to Normal Play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160965
+    m_Localized: Back to Song Select
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160966
+    m_Localized: "\u2191 / \u2193 \xB7 Enter   Space / Esc \xB7 Resume"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160967
+    m_Localized: Chart Branch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160968
+    m_Localized: 'Ka: change branch    Don: choose measure'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160969
+    m_Localized: Playback Speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160970
+    m_Localized: 'Ka: change speed    Don: start practice'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160971
+    m_Localized: Measure
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160972
+    m_Localized: 'Ka: previous / next measure    Don: set speed'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160973
+    m_Localized: Normal Branch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160974
+    m_Localized: Expert Branch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160975
+    m_Localized: Master Branch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160976
+    m_Localized: Confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160977
+    m_Localized: CHART COULD NOT LOAD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160978
+    m_Localized: RESTART
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160979
+    m_Localized: Ghost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160980
+    m_Localized: Ghost Battle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160981
+    m_Localized: "Ka: Select\u3000\u3000Don: Confirm\u3000\u3000Esc: Back"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160982
+    m_Localized: All
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160983
+    m_Localized: '{0} plays'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160984
+    m_Localized: "Connecting\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160985
+    m_Localized: No server is online, so there are no ghosts to battle.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160986
+    m_Localized: "Loading {0}'s play\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160987
+    m_Localized: Could not start the battle.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160988
+    m_Localized: This song was changed after that play; pick another.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160989
+    m_Localized: That play is no longer available.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160990
+    m_Localized: That recording cannot be read by this version.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160991
+    m_Localized: Its server is offline.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160992
+    m_Localized: Could not load that play ({0}).
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160993
+    m_Localized: Offline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160994
+    m_Localized: No one has recorded a play on this server yet.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160995
+    m_Localized: No recorded plays in this category yet.
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

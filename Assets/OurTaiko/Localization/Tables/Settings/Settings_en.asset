@@ -1,0 +1,851 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Settings_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 2a185a638057348dbbad39c7696cb86b, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 133160960
+    m_Localized: On
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160961
+    m_Localized: Off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160962
+    m_Localized: Unbound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160963
+    m_Localized: Not set
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160964
+    m_Localized: "Default {0}  \xB7  Step {1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160965
+    m_Localized: Mouse and touch work even when unbound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160966
+    m_Localized: A key moves here from any other action it was bound to.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160967
+    m_Localized: Add a Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160968
+    m_Localized: Remove {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160969
+    m_Localized: Reset to Default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160970
+    m_Localized: Clear All
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160971
+    m_Localized: 1P Left Don
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160972
+    m_Localized: 1P Right Don
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160973
+    m_Localized: 1P Left Ka
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160974
+    m_Localized: 1P Right Ka
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160975
+    m_Localized: 2P Left Don
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160976
+    m_Localized: 2P Right Don
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160977
+    m_Localized: 2P Left Ka
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160978
+    m_Localized: 2P Right Ka
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160979
+    m_Localized: Confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160980
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160981
+    m_Localized: Pause
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160982
+    m_Localized: Restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160983
+    m_Localized: Menu Left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160984
+    m_Localized: Menu Right
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160985
+    m_Localized: Menu Up
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160986
+    m_Localized: Menu Down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160987
+    m_Localized: General
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160988
+    m_Localized: Language of the interface and song titles, and the log
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160989
+    m_Localized: Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160990
+    m_Localized: System Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160991
+    m_Localized: The language of menus and messages, and of song titles and subtitles. Songs without a translation keep their original title.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160992
+    m_Localized: Diagnostics
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160993
+    m_Localized: Log Level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160994
+    m_Localized: The least severe messages written to the log (the Logs folder and the console).
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160995
+    m_Localized: Everything
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160996
+    m_Localized: Normal activity and problems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160997
+    m_Localized: Problems only
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160998
+    m_Localized: Failures only
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160999
+    m_Localized: Input Log
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161000
+    m_Localized: Write every key event, drum press and judgment to the log, to find lost hits. Needs Log Level Info or Debug; leave it off otherwise.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161001
+    m_Localized: Controls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161002
+    m_Localized: Keyboard keys for both drums and the menus
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161003
+    m_Localized: 1P Drum
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161004
+    m_Localized: 2P Drum
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161005
+    m_Localized: Menus
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161006
+    m_Localized: Play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161007
+    m_Localized: Timing, judgment and touch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161008
+    m_Localized: Timing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161009
+    m_Localized: Input
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161010
+    m_Localized: Touch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161011
+    m_Localized: Hit Feedback
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161012
+    m_Localized: Practice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161013
+    m_Localized: Offset A (Audio)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161014
+    m_Localized: 'Move the chart relative to the music. Negative: earlier; positive: later.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161015
+    m_Localized: Offset B (Judgment)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161016
+    m_Localized: 'Move the judgment window only. Negative: earlier; positive: later.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161017
+    m_Localized: Custom Judgment Window
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161018
+    m_Localized: 'Judge every difficulty and mode with your own GOOD/OK/BAD windows. Off: each difficulty''s standard windows. While on, no score is saved or uploaded.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161019
+    m_Localized: '{0} Window'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161020
+    m_Localized: A hit this many ms or less from the note, early or late, is {0}. {1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161021
+    m_Localized: Raising it past OK raises OK too.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161022
+    m_Localized: It stays between GOOD and BAD, moving them along.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161023
+    m_Localized: Beyond it a hit counts for nothing. Lowering it below OK lowers OK too.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161024
+    m_Localized: Input Delay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161025
+    m_Localized: Delay drum hits before judgment, sound and effects, like the arcade.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161026
+    m_Localized: Drumpad in Single Player
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161027
+    m_Localized: Show the touch drum in single player mode and let touches and clicks hit it.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161028
+    m_Localized: Timing Offset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161029
+    m_Localized: Which hits show how many ms early (blue) or late (red) they were, beside the lane. BAD never shows it.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161030
+    m_Localized: GOOD + OK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161031
+    m_Localized: Practice Timing Review
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161032
+    m_Localized: Show note timing offsets and missed-note marks while browsing a paused or finished practice attempt.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161033
+    m_Localized: Display
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161034
+    m_Localized: Frame rate and background movies
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161035
+    m_Localized: Rendering
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161036
+    m_Localized: Frame Rate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161037
+    m_Localized: The highest frame rate the game renders at.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161038
+    m_Localized: Unlimited
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161039
+    m_Localized: VSync
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161040
+    m_Localized: Wait for the display refresh before each frame. While on, the refresh rate replaces Frame Rate.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161041
+    m_Localized: Background Movie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161042
+    m_Localized: Background Movie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161043
+    m_Localized: Play the chart's movie behind the lanes, and download it with online charts.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161044
+    m_Localized: Lane Opacity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161045
+    m_Localized: 'How opaque the lanes are while a movie plays. 100%: as without a movie.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161046
+    m_Localized: Sound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161047
+    m_Localized: Volumes and the output device
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161048
+    m_Localized: Volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161049
+    m_Localized: Output
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161050
+    m_Localized: Timing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161051
+    m_Localized: '{0} 0% mutes this group.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161052
+    m_Localized: Master
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161053
+    m_Localized: Overall volume.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161054
+    m_Localized: BGM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161055
+    m_Localized: Music in menus and the result screen.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161056
+    m_Localized: Track
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161057
+    m_Localized: Song playback and song previews.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161058
+    m_Localized: Drum
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161059
+    m_Localized: Don and ka during gameplay. Changing it plays a don.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161060
+    m_Localized: Effects
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161061
+    m_Localized: Menu feedback, balloon pops and result effects.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161062
+    m_Localized: Voice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161063
+    m_Localized: Entry, song selection, combo and result voices.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161064
+    m_Localized: Output Backend
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161065
+    m_Localized: How the game talks to the audio device. ASIO requires a driver.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161066
+    m_Localized: Automatic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161067
+    m_Localized: BassWASAPI on Windows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161068
+    m_Localized: BassSimple on this device
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161069
+    m_Localized: Windows audio, shared or exclusive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161070
+    m_Localized: Requires an installed ASIO driver
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161071
+    m_Localized: Cross-platform output
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161072
+    m_Localized: Output Period
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161073
+    m_Localized: Shorter periods reduce delay but may crackle. Windows controls the actual period.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161074
+    m_Localized: Shorter periods reduce delay but may crackle. The device may choose a different period.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161075
+    m_Localized: Default ({0} ms)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161076
+    m_Localized: Default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161077
+    m_Localized: Device Buffer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161078
+    m_Localized: '0: default; other values are raised to at least twice the output period. macOS and iOS ignore this request.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161079
+    m_Localized: '0: default; other values are raised to at least twice the output period. The system may choose a different buffer.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161080
+    m_Localized: Android AAudio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161081
+    m_Localized: Use AAudio output when available.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161082
+    m_Localized: WASAPI Exclusive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161083
+    m_Localized: Request exclusive access to the output device. Falls back to shared mode if unavailable.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161084
+    m_Localized: WASAPI Raw Mode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161085
+    m_Localized: Request output without Windows audio enhancements. Falls back if unsupported.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161086
+    m_Localized: WASAPI Async Mode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161087
+    m_Localized: Prefill audio to reduce dropouts at the cost of extra delay. Exclusive mode only.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161088
+    m_Localized: WASAPI Buffer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161089
+    m_Localized: Buffer per block in exclusive mode (two blocks). Shared mode uses its own buffer.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161090
+    m_Localized: WASAPI Period
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161091
+    m_Localized: 'Shared-mode period; 0: system default. Ignored in exclusive mode.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161092
+    m_Localized: System Default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161093
+    m_Localized: ASIO Device Index
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161094
+    m_Localized: Driver index, starting at 0. Requires an installed ASIO driver.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161095
+    m_Localized: ASIO Buffer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161096
+    m_Localized: 'Buffer length in samples; 0: driver default. Driver-supported sizes only.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161097
+    m_Localized: Driver Default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161098
+    m_Localized: samples
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161099
+    m_Localized: Sample Rate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161100
+    m_Localized: BASS initialization rate. WASAPI output uses the device's negotiated format.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161101
+    m_Localized: Requested sample rate. The output device may use a different rate.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161102
+    m_Localized: BASS Stream Update Period
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161103
+    m_Localized: Stream buffering is disabled during playback; this does not control the output-device period.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161104
+    m_Localized: BASS Stream Buffer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161105
+    m_Localized: At least 1 ms above the stream update period. Playback streams disable this buffer.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161106
+    m_Localized: Song Clock
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161107
+    m_Localized: What the notes follow while the music plays. Changing it shifts the picture and the judgment by the output latency, so set the offsets again.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161108
+    m_Localized: Heard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161109
+    m_Localized: Sent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161110
+    m_Localized: Heard on BassSimple
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161111
+    m_Localized: Sent on {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161112
+    m_Localized: The music coming out of the speakers now. Autoplay drums start early to match.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161113
+    m_Localized: The music handed to the device now. The picture runs ahead by the output latency.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161114
+    m_Localized: Accounts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161115
+    m_Localized: OurTaiko accounts for 1P and 2P
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161116
+    m_Localized: Servers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161117
+    m_Localized: Username
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161118
+    m_Localized: '{0}''s OurTaiko account (sso.ourtaiko.org). Enter the password below to sign in.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161119
+    m_Localized: Password
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161120
+    m_Localized: Signs in as soon as it is entered. The password is not saved; the sign-in lasts while {0} plays at least once every 30 days.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161121
+    m_Localized: Sign Out
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161122
+    m_Localized: Sign {0} out of its OurTaiko account on this device.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161123
+    m_Localized: Refresh Song List
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161124
+    m_Localized: Load the built-in servers' song lists again.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161125
+    m_Localized: Refresh Login
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161126
+    m_Localized: Check both accounts and sign them in to the built-in servers again.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161127
+    m_Localized: Refresh
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161128
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161129
+    m_Localized: Close Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161130
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161131
+    m_Localized: Select
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161132
+    m_Localized: Move
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161133
+    m_Localized: "{0}  \xB7  Ka changes, Don keeps, Esc cancels"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161134
+    m_Localized: Open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161135
+    m_Localized: Keep
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161136
+    m_Localized: Choose
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161137
+    m_Localized: Flip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161138
+    m_Localized: Adjust
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161139
+    m_Localized: Run
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161140
+    m_Localized: Type
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161141
+    m_Localized: On close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161142
+    m_Localized: Type to sign in
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161143
+    m_Localized: Applies when you close Settings.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161144
+    m_Localized: Press a key for {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161145
+    m_Localized: Any key is added, including Enter and Escape. Tap outside this card to cancel.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161146
+    m_Localized: 'Enter signs in. The password is not saved.  Esc: cancel'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161147
+    m_Localized: 'Enter: save   Esc: cancel'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161148
+    m_Localized: NOTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161149
+    m_Localized: EARLY  {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161150
+    m_Localized: '{0}  LATE'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161151
+    m_Localized: Offset B
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161152
+    m_Localized: "Custom windows for every difficulty  \xB7  scores are not saved or uploaded"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161153
+    m_Localized: 'Standard windows of Oni and Ura. Easy and Normal are wider: 42 / 108 / 125 ms.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161154
+    m_Localized: 'No audio output: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161155
+    m_Localized: 'No output device (silent): {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161156
+    m_Localized: 'Current output: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161157
+    m_Localized: Output changes apply when you close Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161158
+    m_Localized: 'Signed in: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161159
+    m_Localized: Not signed in
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161160
+    m_Localized: "Working\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161161
+    m_Localized: Done
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161162
+    m_Localized: Still busy with the previous request.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161163
+    m_Localized: Enter {0}P's username first.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161164
+    m_Localized: "{0}P signed in as {1}.   \xB7   {2}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161165
+    m_Localized: '{0}P signed out.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161166
+    m_Localized: '{0}P is not signed in.'
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

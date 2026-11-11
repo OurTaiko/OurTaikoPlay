@@ -465,11 +465,7 @@ namespace OurTaiko
             return travel;
         }
 
-        static string Caption(DanExam exam, int red)
-        {
-            string range = exam.Range == DanExamRange.Less ? "未満" : "以上";
-            return exam.Type == DanExamType.Gauge ? $"{red} ％{range}" : $"{red} {range}";
-        }
+        static string Caption(DanExam exam, int red) => exam.Caption(red);
 
         Sprite Bar(string state, bool song) => state switch
         {

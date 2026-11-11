@@ -25,6 +25,9 @@ namespace OurTaiko.Tests
         public void Setup()
         {
             directory = Path.Combine(Application.temporaryCachePath, "accounts-" + System.Guid.NewGuid());
+            // English, so that the nameplate title below is the English one wherever the test runs.
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "settings.json"), "{\"general\":{\"language\":\"en\"}}");
             SettingManager.EnsureInstance().Load(Path.Combine(directory, "settings.json"));
             fixture = new FanmadeFixture();
             fixture.Users["ka"] = "don";
@@ -70,7 +73,7 @@ namespace OurTaiko.Tests
             yield return null;
             var overlay = SettingsOverlay.Open();
             overlay.Move(5);
-            Assert.That(overlay.Navigator.Page.Title, Is.EqualTo("Accounts"));
+            Assert.That(overlay.Navigator.Page.Title, Is.EqualTo(L10n.Get("Settings", "accounts.title")));
             overlay.Confirm();
             use(overlay);
         }
@@ -96,20 +99,20 @@ namespace OurTaiko.Tests
             yield return OpenAccounts(o => overlay = o);
             var nav = overlay.Navigator;
             var rows = nav.Page.Rows;
-            Assert.That(rows.Take(4).Select(r => r.Label), Is.EqualTo(new[] { "Username", "Password", "Sign Out", "Username" }));
-            Assert.That(nav.Page.Groups.Select(g => g.Title), Is.EqualTo(new[] { "1P", "2P", "Servers" }));
-            Assert.That(rows[2].Display(nav.Settings), Is.EqualTo("Not signed in"));
+            Assert.That(rows.Take(4).Select(r => r.Label), Is.EqualTo(new[] { "username", "password", "signOut", "username" }.Select(key => L10n.Get("Settings", "accounts." + key))));
+            Assert.That(nav.Page.Groups.Select(g => g.Title), Is.EqualTo(new[] { "1P", "2P", L10n.Get("Settings", "accounts.group.servers") }));
+            Assert.That(rows[2].Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "status.notSignedIn")));
 
             // The song list first: it names the account center the server takes accounts from.
             Select(overlay, 6);
-            Assert.That(nav.Row.Label, Is.EqualTo("Refresh Song List"));
+            Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "accounts.refreshSongList")));
             overlay.Confirm();
-            yield return WaitUntil(() => nav.Row.Status == "Done");
+            yield return WaitUntil(() => nav.Row.Status == L10n.Get("Settings", "status.done"));
             Assert.That(online.Songs.Count, Is.EqualTo(1));
 
             // A password without a username asks for the username.
             yield return Type(overlay, 1, "katsu");
-            Assert.That(overlay.Status, Is.EqualTo("Enter 1P's username first."));
+            Assert.That(overlay.Status, Is.EqualTo(L10n.Format("Settings", "status.enterUsername", 1)));
             Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/account/login"));
 
             yield return Type(overlay, 0, "don");
@@ -121,11 +124,11 @@ namespace OurTaiko.Tests
             Assert.That(overlay.View.Field.text, Is.Empty);
             overlay.View.Field.text = "katsu";
             overlay.View.Field.onSubmit.Invoke("katsu");
-            yield return WaitUntil(() => online.Accounts.Seats[0].IsSignedIn && !online.IsBusy && rows[2].Status.StartsWith("Signed in"));
+            yield return WaitUntil(() => online.Accounts.Seats[0].IsSignedIn && !online.IsBusy && rows[2].Status == L10n.Format("Settings", "status.signedIn", "DON"));
             yield return null;
-            Assert.That(overlay.Status, Does.StartWith("1P signed in as DON."));
+            Assert.That(overlay.Status, Does.StartWith(L10n.Format("Settings", "status.signedInAs", 1, "DON", "")));
             Assert.That(rows[1].Display(nav.Settings), Is.Empty, "The password row keeps nothing.");
-            Assert.That(rows[2].Display(nav.Settings), Is.EqualTo("Signed in: DON"));
+            Assert.That(rows[2].Display(nav.Settings), Is.EqualTo(L10n.Format("Settings", "status.signedIn", "DON")));
             var plate = PlayerInfoController.Instance.Info;
             Assert.That(plate.name, Is.EqualTo("DON"), "The nickname goes on the nameplate.");
             Assert.That(plate.title, Is.EqualTo("Taiko Master"), "The title Profile says 1P wears, in the song language (English by default).");
@@ -144,13 +147,13 @@ namespace OurTaiko.Tests
 
             // A wrong password says so and keeps the sign-in there is.
             yield return Type(overlay, 1, "wrong");
-            yield return WaitUntil(() => overlay.Status.Contains("wrong username or password"));
+            yield return WaitUntil(() => overlay.Status.Contains(L10n.Get("Online", "error.wrongPassword")));
             Assert.That(online.Accounts.Seats[0].IsSignedIn, Is.True);
 
             // 2P signs in with an account of its own; its plate shows its nickname.
             yield return Type(overlay, 3, "ka");
             yield return Type(overlay, 4, "don");
-            yield return WaitUntil(() => online.Accounts.Seats[1].IsSignedIn && !online.IsBusy && rows[5].Status.StartsWith("Signed in"));
+            yield return WaitUntil(() => online.Accounts.Seats[1].IsSignedIn && !online.IsBusy && rows[5].Status == L10n.Format("Settings", "status.signedIn", "KA"));
             var second = PlayerInfoController.Instance.SecondInfo;
             Assert.That(second.name, Is.EqualTo("KA"));
             Assert.That(second.title, Is.EqualTo("虹"));
@@ -162,7 +165,7 @@ namespace OurTaiko.Tests
             // Signing 1P out forgets it here and at the account center; 2P stays.
             Select(overlay, 2);
             overlay.Confirm();
-            yield return WaitUntil(() => !online.Accounts.Seats[0].IsSignedIn && rows[2].Status == "Not signed in");
+            yield return WaitUntil(() => !online.Accounts.Seats[0].IsSignedIn && rows[2].Status == L10n.Get("Settings", "status.notSignedIn"));
             Assert.That(overlay.Status, Is.EqualTo("1P signed out."));
             Assert.That(online.Client.Best(listed, (int)Difficulty.Oni), Is.Null, "A guest has no scores.");
             Assert.That(online.Client.Playlists, Is.Empty, "A guest has no playlists of its own.");
@@ -204,7 +207,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
-            Assert.That(entry.AccountNotice, Is.EqualTo("1P's OurTaiko sign-in has expired. Sign in again in the game settings."));
+            Assert.That(entry.AccountNotice, Is.EqualTo(L10n.Format("Menu", "entry.accountExpired", "1P")));
             yield return null;
             TestCapture.Capture("EntryAccountExpired.png");
             Assert.That(online.TakeExpired(0), Is.False, "Entry says it once.");

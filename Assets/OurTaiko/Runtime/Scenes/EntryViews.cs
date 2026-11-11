@@ -116,10 +116,13 @@ namespace OurTaiko
         }
     }
 
-    // One mode board of the Entry list: its saved title and the scene it opens.
+    // One mode board of the Entry list: its saved title and the scene it opens. The title is read
+    // from its label, which shows it in the selected language.
     public sealed class EntryMode
     {
-        public string Title, Scene;
+        public TMP_Text Label;
+        public string Scene;
+        public string Title => Label != null ? Label.text : "";
     }
 
     // EntryBox:draw (Nijiiro box.lua): the arcade mode list. The selected board sits open at the
@@ -282,7 +285,7 @@ namespace OurTaiko
             cursor = view.cursor; closed = view.closed; open = view.open; flash = view.flash;
             title = view.title; info = view.info;
             Hit = view.hit;
-            Mode = new EntryMode { Title = title.text, Scene = view.scene };
+            Mode = new EntryMode { Label = title, Scene = view.scene };
             basePosition = Root.anchoredPosition - new Vector2(savedSlot.x, -savedSlot.y);
         }
 

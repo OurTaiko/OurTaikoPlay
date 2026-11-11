@@ -85,7 +85,7 @@ namespace OurTaiko
             if (freePlay)
             {
                 // credit: size 40, white
-                FreePlay = Text(root, "FreePlay", "フリープレイ");
+                FreePlay = Text(root, "FreePlay", L10n.Get("Menu", "overlay.freePlay"));
                 FreePlay.rectTransform.Center(960, 1046);
             }
             if (qrChip)
@@ -96,10 +96,10 @@ namespace OurTaiko
             if (!invite) return;
             bubble = SkinUi.Image("InviteBubble", root, art.inviteBubble);
             bubble.rectTransform.TopLeft(1492, 638);
-            player = Text(root, "InvitePlayer", "2人プレイ");
+            player = Text(root, "InvitePlayer", L10n.Get("Menu", "overlay.invitePlayer"));
             player.rectTransform.Center(SeatX, PlayerY);
             player.Squeeze(BubbleWidth);
-            message = Text(root, "InviteMessage", "太鼓をたたいてスタート!");
+            message = Text(root, "InviteMessage", L10n.Get("Menu", "overlay.inviteMessage"));
             message.rectTransform.Center(SeatX, MessageY);
             message.Squeeze(BubbleWidth);
             ShowInvite(false, 0);

@@ -1,0 +1,208 @@
+key,en,ja,zh-Hans,comment
+value.on,On,オン,开,Toggle row value
+value.off,Off,オフ,关,"Toggle row value; also an option meaning off (Input Delay 0, Timing Offset)"
+value.unbound,Unbound,未設定,未绑定,Key row with no key bound
+value.notSet,Not set,未入力,未设置,Text row (username) left empty
+hint.number,Default {0}  ·  Step {1},初期値 {0}  ·  刻み {1},默认 {0}  ·  步长 {1},"Footer hint of a number/slider row; {0} default value, {1} step"
+hint.keys,Mouse and touch work even when unbound,割り当てがなくてもマウスとタッチで操作できます,未绑定时也可以用鼠标和触摸操作,Footer hint of a key row
+keys.desc,A key moves here from any other action it was bound to.,ほかの操作に割り当て済みのキーは、ここに移ります。,已绑定到其他操作的按键会移到这里。,Description of every key row
+keys.add,Add a Key,キーを追加,添加按键,Key row sheet entry
+keys.remove,Remove {0},{0} を外す,移除 {0},Key row sheet entry; {0} key name
+keys.reset,Reset to Default,初期設定に戻す,恢复默认,Key row sheet entry
+keys.clear,Clear All,すべて外す,全部清除,Key row sheet entry
+key.leftDon,1P Left Don,1P 左ドン,1P 左咚,Input action name in Settings > Controls
+key.rightDon,1P Right Don,1P 右ドン,1P 右咚,Input action name in Settings > Controls
+key.leftKa,1P Left Ka,1P 左カッ,1P 左咔,Input action name in Settings > Controls
+key.rightKa,1P Right Ka,1P 右カッ,1P 右咔,Input action name in Settings > Controls
+key.p2LeftDon,2P Left Don,2P 左ドン,2P 左咚,Input action name in Settings > Controls
+key.p2RightDon,2P Right Don,2P 右ドン,2P 右咚,Input action name in Settings > Controls
+key.p2LeftKa,2P Left Ka,2P 左カッ,2P 左咔,Input action name in Settings > Controls
+key.p2RightKa,2P Right Ka,2P 右カッ,2P 右咔,Input action name in Settings > Controls
+key.confirm,Confirm,決定,确定,Input action name in Settings > Controls
+key.back,Back,もどる,返回,Input action name in Settings > Controls
+key.pause,Pause,ポーズ,暂停,Input action name in Settings > Controls
+key.restart,Restart,リスタート,重新开始,Input action name in Settings > Controls
+key.menuLeft,Menu Left,メニュー左,菜单左,Input action name in Settings > Controls
+key.menuRight,Menu Right,メニュー右,菜单右,Input action name in Settings > Controls
+key.menuUp,Menu Up,メニュー上,菜单上,Input action name in Settings > Controls
+key.menuDown,Menu Down,メニュー下,菜单下,Input action name in Settings > Controls
+general.title,General,全般,通用,Settings page (rail and page title)
+general.subtitle,"Language of the interface and song titles, and the log",画面と曲名の言語、ログ,界面与歌名的语言、日志,General page subtitle
+general.group.language,Language,言語,语言,General group
+general.language,System Language,システム言語,系统语言,Row: the game's language (interface and song titles); options are each language's own name
+general.languageDesc,"The language of menus and messages, and of song titles and subtitles. Songs without a translation keep their original title.",メニューやメッセージ、曲名とサブタイトルの言語です。翻訳のない曲は元の曲名のままです。,菜单、提示以及歌名和副标题的语言。没有翻译的歌曲显示原标题。,System Language row description
+general.group.diagnostics,Diagnostics,診断,诊断,General group
+general.logLevel,Log Level,ログレベル,日志级别,Row; options are the level names Debug/Info/Warning/Error
+general.logLevelDesc,The least severe messages written to the log (the Logs folder and the console).,ログ（Logs フォルダとコンソール）に書き出すメッセージの最低レベルです。,写入日志（Logs 文件夹和控制台）的最低消息级别。,Log Level row description
+general.logLevelNote.debug,Everything,すべて,全部,Note under the Debug option
+general.logLevelNote.info,Normal activity and problems,通常の動作と問題,常规活动和问题,Note under the Info option
+general.logLevelNote.warning,Problems only,問題のみ,仅问题,Note under the Warning option
+general.logLevelNote.error,Failures only,失敗のみ,仅失败,Note under the Error option
+general.inputLog,Input Log,入力ログ,输入日志,Row
+general.inputLogDesc,"Write every key event, drum press and judgment to the log, to find lost hits. Needs Log Level Info or Debug; leave it off otherwise.",キー操作・太鼓の入力・判定をすべてログに書き出し、抜けた入力を調べます。ログレベル Info か Debug が必要です。ふだんはオフにしてください。,把每个按键事件、击鼓和判定写入日志，用于查找丢失的击打。需要日志级别为 Info 或 Debug；平时请保持关闭。,Input Log row description
+controls.title,Controls,キー設定,按键,Settings page
+controls.subtitle,Keyboard keys for both drums and the menus,1P・2P の太鼓とメニューのキー,1P、2P 太鼓与菜单的键盘按键,Controls page subtitle
+controls.group.p1Drum,1P Drum,1P 太鼓,1P 太鼓,Controls group
+controls.group.p2Drum,2P Drum,2P 太鼓,2P 太鼓,Controls group
+controls.group.menus,Menus,メニュー,菜单,Controls group
+play.title,Play,演奏,演奏,Settings page
+play.subtitle,"Timing, judgment and touch",タイミング・判定・タッチ,偏移、判定与触屏,Play page subtitle
+play.group.timing,Timing,タイミング,偏移,Play group (offsets and judgment windows)
+play.group.input,Input,入力,输入,Play group
+play.group.touch,Touch,タッチ,触屏,Play group
+play.group.hitFeedback,Hit Feedback,判定表示,击打反馈,Play group
+play.group.practice,Practice,練習,练习,Play group
+play.audioOffset,Offset A (Audio),オフセット A（音）,偏移 A（音频）,Row
+play.audioOffsetDesc,Move the chart relative to the music. Negative: earlier; positive: later.,曲に対して譜面をずらします。マイナスで早く、プラスで遅くなります。,相对音乐移动谱面。负数：提前；正数：推迟。,Offset A description
+play.judgeOffset,Offset B (Judgment),オフセット B（判定）,偏移 B（判定）,Row
+play.judgeOffsetDesc,Move the judgment window only. Negative: earlier; positive: later.,判定の幅だけをずらします。マイナスで早く、プラスで遅くなります。,只移动判定范围。负数：提前；正数：推迟。,Offset B description
+play.judgeCustom,Custom Judgment Window,判定幅カスタム,自定义判定范围,Row
+play.judgeCustomDesc,"Judge every difficulty and mode with your own GOOD/OK/BAD windows. Off: each difficulty's standard windows. While on, no score is saved or uploaded.",すべての難易度とモードを、自分で決めた良・可・不可の判定幅で判定します。オフ：各難易度の標準の幅。オンの間はスコアを保存・送信しません。,所有难度和模式都使用自定义的良/可/不可判定范围。关：各难度的标准范围。开启期间不保存也不上传成绩。,Custom Judgment Window description
+play.judgeWindow,{0} Window,{0}の判定幅,{0}判定范围,Row of one custom window; {0} judgment name (GOOD/OK/BAD)
+play.judgeWindowDesc,"A hit this many ms or less from the note, early or late, is {0}. {1}",音符から前後この ms 以内の打撃は{0}になります。{1},距离音符前后不超过这么多毫秒的击打判为{0}。{1},"Custom window row description; {0} judgment name, {1} one of play.judgeOrder.*"
+play.judgeOrder.good,Raising it past OK raises OK too.,可より大きくすると可も上がります。,调到超过可时，可也会一起调大。,GOOD window: how it moves the others
+play.judgeOrder.ok,"It stays between GOOD and BAD, moving them along.",良と不可の間に収まり、はみ出すと良・不可も動きます。,保持在良与不可之间，会带动它们一起移动。,OK window: how it moves the others
+play.judgeOrder.bad,Beyond it a hit counts for nothing. Lowering it below OK lowers OK too.,これより外れた打撃は無効です。可より小さくすると可も下がります。,超出此范围的击打不计。调到小于可时，可也会一起调小。,BAD window: how it moves the others
+play.inputDelay,Input Delay,入力遅延,输入延迟,Row
+play.inputDelayDesc,"Delay drum hits before judgment, sound and effects, like the arcade.",アーケードのように、太鼓の入力を判定・音・演出の前に遅らせます。,像街机一样，在判定、声音和效果之前延迟击鼓输入。,Input Delay description
+play.drumPad,Drumpad in Single Player,ひとりプレイのタッチ太鼓,单人游玩触屏鼓,Row
+play.drumPadDesc,Show the touch drum in single player mode and let touches and clicks hit it.,ひとりプレイでタッチ太鼓を表示し、タッチやクリックで叩けるようにします。,在单人模式中显示触屏鼓，可以用触摸和点击敲击。,Drumpad row description
+play.timingDisplay,Timing Offset,タイミング表示,偏差显示,Row: when the early/late ms shows beside the lane
+play.timingDisplayDesc,"Which hits show how many ms early (blue) or late (red) they were, beside the lane. BAD never shows it.",どの判定で、何 ms はやい（青）かおそい（赤）かをレーンの横に表示するかを選びます。不可では表示しません。,选择哪些击打在轨道旁显示早（蓝）或晚（红）了多少毫秒。不可从不显示。,Timing Offset description
+play.timingDisplay.goodAndOk,GOOD + OK,良 + 可,良 + 可,Timing Offset option: shown for GOOD and OK
+play.practiceReview,Practice Timing Review,練習のタイミング確認,练习偏差回顾,Row
+play.practiceReviewDesc,Show note timing offsets and missed-note marks while browsing a paused or finished practice attempt.,一時停止中や終了後の練習を見返すとき、音符ごとのタイミングと見逃しの印を表示します。,回看暂停或结束的练习时，显示每个音符的偏差和漏打标记。,Practice Timing Review description
+display.title,Display,画面,画面,Settings page
+display.subtitle,Frame rate and background movies,フレームレートと背景ムービー,帧率与背景视频,Display page subtitle
+display.group.rendering,Rendering,描画,渲染,Display group
+display.frameRate,Frame Rate,フレームレート,帧率,Row
+display.frameRateDesc,The highest frame rate the game renders at.,ゲームを描画する最大のフレームレートです。,游戏渲染的最高帧率。,Frame Rate description
+display.unlimited,Unlimited,無制限,无限制,Frame Rate option
+display.vsync,VSync,垂直同期,垂直同步,Row
+display.vsyncDesc,"Wait for the display refresh before each frame. While on, the refresh rate replaces Frame Rate.",毎フレーム、画面の更新を待ちます。オンの間はフレームレートの代わりにリフレッシュレートになります。,每帧等待显示器刷新。开启时以刷新率代替帧率设置。,VSync description
+display.group.movie,Background Movie,背景ムービー,背景视频,Display group
+display.movie,Background Movie,背景ムービー,背景视频,Row
+display.movieDesc,"Play the chart's movie behind the lanes, and download it with online charts.",譜面のムービーをレーンの後ろに再生し、オンライン譜面ではムービーもダウンロードします。,在轨道后方播放谱面的视频，下载在线谱面时也一并下载。,Background Movie description
+display.laneOpacity,Lane Opacity,レーンの不透明度,轨道不透明度,Row
+display.laneOpacityDesc,How opaque the lanes are while a movie plays. 100%: as without a movie.,ムービー再生中のレーンの不透明度です。100%：ムービーがないときと同じ。,播放视频时轨道的不透明度。100%：与没有视频时相同。,Lane Opacity description
+sound.title,Sound,サウンド,声音,Settings page
+sound.subtitle,Volumes and the output device,音量と出力デバイス,音量与输出设备,Sound page subtitle
+sound.group.volume,Volume,音量,音量,Sound group
+sound.group.output,Output,出力,输出,Sound group
+sound.group.timing,Timing,タイミング,计时,Sound group (song clock)
+sound.volumeDesc,{0} 0% mutes this group.,{0}0% で消音します。,{0}0% 为静音。,Volume row description; {0} the group's own sentence
+sound.master,Master,マスター,总音量,Volume row
+sound.masterDesc,Overall volume.,全体の音量。,整体音量。,Volume row description
+sound.bgm,BGM,BGM,BGM,Volume row
+sound.bgmDesc,Music in menus and the result screen.,メニューと成績発表の音楽。,菜单和成绩画面的音乐。,Volume row description
+sound.track,Track,曲,歌曲,Volume row
+sound.trackDesc,Song playback and song previews.,演奏中の曲と曲の試聴。,演奏中的歌曲和歌曲试听。,Volume row description
+sound.drum,Drum,太鼓,太鼓,Volume row
+sound.drumDesc,Don and ka during gameplay. Changing it plays a don.,演奏中のドンとカッ。変えるとドンが鳴ります。,演奏中的咚和咔。调整时会播放一声咚。,Volume row description
+sound.effects,Effects,効果音,音效,Volume row
+sound.effectsDesc,"Menu feedback, balloon pops and result effects.",メニューの操作音、風船の破裂、成績発表の効果音。,菜单操作音、气球破裂和成绩画面的音效。,Volume row description
+sound.voice,Voice,ボイス,语音,Volume row
+sound.voiceDesc,"Entry, song selection, combo and result voices.",エントリー・曲えらび・コンボ・成績発表のボイス。,开始画面、选曲、连击和成绩画面的语音。,Volume row description
+sound.backend,Output Backend,出力方式,输出后端,Row; options keep the backend names except Automatic
+sound.backendDesc,How the game talks to the audio device. ASIO requires a driver.,オーディオデバイスへの出力方法です。ASIO にはドライバが必要です。,游戏与音频设备通信的方式。ASIO 需要驱动。,Output Backend description
+sound.automatic,Automatic,自動,自动,Option of Output Backend and Song Clock
+sound.backendNote.autoWindows,BassWASAPI on Windows,Windows では BassWASAPI,Windows 上为 BassWASAPI,Note under Automatic (Windows)
+sound.backendNote.autoOther,BassSimple on this device,このデバイスでは BassSimple,本设备上为 BassSimple,Note under Automatic (other platforms)
+sound.backendNote.wasapi,"Windows audio, shared or exclusive",Windows のオーディオ（共有／排他）,Windows 音频，共享或独占,Note under BassWASAPI
+sound.backendNote.asio,Requires an installed ASIO driver,ASIO ドライバのインストールが必要,需要已安装的 ASIO 驱动,Note under BassASIO
+sound.backendNote.simple,Cross-platform output,クロスプラットフォームの出力,跨平台输出,Note under BassSimple
+sound.devicePeriod,Output Period,出力周期,输出周期,Row
+sound.devicePeriodDesc.windows,Shorter periods reduce delay but may crackle. Windows controls the actual period.,短いほど遅延が減りますが、音が割れることがあります。実際の周期は Windows が決めます。,周期越短延迟越低，但可能出现爆音。实际周期由 Windows 决定。,Output Period description (Windows)
+sound.devicePeriodDesc.other,Shorter periods reduce delay but may crackle. The device may choose a different period.,短いほど遅延が減りますが、音が割れることがあります。デバイスが別の周期を選ぶことがあります。,周期越短延迟越低，但可能出现爆音。设备可能选择不同的周期。,Output Period description (other platforms)
+sound.defaultMs,Default ({0} ms),既定（{0} ms）,默认（{0} ms）,Output Period value 0; {0} the platform's period
+sound.default,Default,既定,默认,Device Buffer value 0
+sound.deviceBuffer,Device Buffer,デバイスバッファ,设备缓冲,Row
+sound.deviceBufferDesc.apple,0: default; other values are raised to at least twice the output period. macOS and iOS ignore this request.,0：既定。ほかの値は出力周期の 2 倍以上に引き上げられます。macOS と iOS はこの指定を無視します。,0：默认；其他值至少提高到输出周期的两倍。macOS 和 iOS 会忽略此请求。,"Device Buffer description (macOS, iOS)"
+sound.deviceBufferDesc.other,0: default; other values are raised to at least twice the output period. The system may choose a different buffer.,0：既定。ほかの値は出力周期の 2 倍以上に引き上げられます。システムが別のバッファを選ぶことがあります。,0：默认；其他值至少提高到输出周期的两倍。系统可能选择不同的缓冲。,Device Buffer description (other platforms)
+sound.aaudio,Android AAudio,Android AAudio,Android AAudio,Row
+sound.aaudioDesc,Use AAudio output when available.,使えるときは AAudio で出力します。,可用时使用 AAudio 输出。,Android AAudio description
+sound.wasapiExclusive,WASAPI Exclusive,WASAPI 排他モード,WASAPI 独占,Row
+sound.wasapiExclusiveDesc,Request exclusive access to the output device. Falls back to shared mode if unavailable.,出力デバイスの排他使用を要求します。使えないときは共有モードになります。,请求独占输出设备。不可用时退回共享模式。,WASAPI Exclusive description
+sound.wasapiRaw,WASAPI Raw Mode,WASAPI Raw モード,WASAPI Raw 模式,Row
+sound.wasapiRawDesc,Request output without Windows audio enhancements. Falls back if unsupported.,Windows のオーディオ補正なしの出力を要求します。未対応なら通常の出力になります。,请求不经 Windows 音频增强的输出。不支持时回退。,WASAPI Raw Mode description
+sound.wasapiAsync,WASAPI Async Mode,WASAPI 非同期モード,WASAPI 异步模式,Row
+sound.wasapiAsyncDesc,Prefill audio to reduce dropouts at the cost of extra delay. Exclusive mode only.,音を先に用意して途切れを減らしますが、遅延が増えます。排他モードのみ。,预先填充音频以减少断音，但会增加延迟。仅限独占模式。,WASAPI Async Mode description
+sound.wasapiBuffer,WASAPI Buffer,WASAPI バッファ,WASAPI 缓冲,Row
+sound.wasapiBufferDesc,Buffer per block in exclusive mode (two blocks). Shared mode uses its own buffer.,排他モードでのブロックごとのバッファ（2 ブロック）。共有モードは独自のバッファを使います。,独占模式下每块的缓冲（共两块）。共享模式使用自己的缓冲。,WASAPI Buffer description
+sound.wasapiPeriod,WASAPI Period,WASAPI 周期,WASAPI 周期,Row
+sound.wasapiPeriodDesc,Shared-mode period; 0: system default. Ignored in exclusive mode.,共有モードの周期。0：システムの既定。排他モードでは無視されます。,共享模式的周期；0：系统默认。独占模式下忽略。,WASAPI Period description
+sound.systemDefault,System Default,システム既定,系统默认,WASAPI Buffer/Period value 0
+sound.asioDevice,ASIO Device Index,ASIO デバイス番号,ASIO 设备编号,Row
+sound.asioDeviceDesc,"Driver index, starting at 0. Requires an installed ASIO driver.",ドライバの番号（0 から）。ASIO ドライバのインストールが必要です。,驱动编号，从 0 开始。需要已安装的 ASIO 驱动。,ASIO Device Index description
+sound.asioBuffer,ASIO Buffer,ASIO バッファ,ASIO 缓冲,Row
+sound.asioBufferDesc,Buffer length in samples; 0: driver default. Driver-supported sizes only.,サンプル数で指定するバッファ長。0：ドライバの既定。ドライバが対応するサイズのみ。,以采样数计的缓冲长度；0：驱动默认。仅限驱动支持的大小。,ASIO Buffer description
+sound.driverDefault,Driver Default,ドライバ既定,驱动默认,ASIO Buffer value 0
+sound.samples,samples,サンプル,采样,Unit after a number (ASIO Buffer)
+sound.sampleRate,Sample Rate,サンプリングレート,采样率,Row
+sound.sampleRateDesc.wasapi,BASS initialization rate. WASAPI output uses the device's negotiated format.,BASS の初期化レートです。WASAPI の出力はデバイスと決めた形式を使います。,BASS 初始化采样率。WASAPI 输出使用与设备协商的格式。,Sample Rate description (WASAPI)
+sound.sampleRateDesc.other,Requested sample rate. The output device may use a different rate.,要求するサンプリングレートです。出力デバイスが別のレートを使うことがあります。,请求的采样率。输出设备可能使用不同的采样率。,Sample Rate description (other backends)
+sound.streamUpdate,BASS Stream Update Period,BASS ストリーム更新周期,BASS 流更新周期,Row
+sound.streamUpdateDesc,Stream buffering is disabled during playback; this does not control the output-device period.,再生中はストリームのバッファリングを無効にしています。出力デバイスの周期はこれでは変わりません。,播放时流缓冲已禁用；此项不控制输出设备的周期。,BASS Stream Update Period description
+sound.streamBuffer,BASS Stream Buffer,BASS ストリームバッファ,BASS 流缓冲,Row
+sound.streamBufferDesc,At least 1 ms above the stream update period. Playback streams disable this buffer.,ストリーム更新周期より 1 ms 以上長くします。再生用のストリームはこのバッファを使いません。,至少比流更新周期长 1 ms。播放流会禁用此缓冲。,BASS Stream Buffer description
+sound.clock,Song Clock,曲の時計,歌曲时钟,Row: what the notes follow while the music plays
+sound.clockDesc,"What the notes follow while the music plays. Changing it shifts the picture and the judgment by the output latency, so set the offsets again.",曲の再生中に音符が合わせる基準です。変えると表示と判定が出力遅延の分ずれるので、オフセットを設定し直してください。,音乐播放时音符跟随的基准。更改后画面和判定会偏移一个输出延迟，请重新设置偏移。,Song Clock description
+sound.clock.heard,Heard,聴こえる音,听到,Song Clock option: the music heard now
+sound.clock.sent,Sent,送出した音,送出,Song Clock option: the music handed to the device now
+sound.clockNote.autoHeard,Heard on BassSimple,BassSimple では聴こえる音,BassSimple 上为听到,Note under Automatic
+sound.clockNote.autoSent,Sent on {0},{0} では送出した音,{0} 上为送出,Note under Automatic; {0} backend name
+sound.clockNote.heard,The music coming out of the speakers now. Autoplay drums start early to match.,いまスピーカーから出ている音楽。オートの太鼓音はそれに合わせて早めに鳴ります。,此刻从扬声器发出的音乐。自动演奏的鼓声会提前播放以对齐。,Note under Heard
+sound.clockNote.sent,The music handed to the device now. The picture runs ahead by the output latency.,いまデバイスに渡している音楽。表示は出力遅延の分だけ先に進みます。,此刻交给设备的音乐。画面会领先一个输出延迟。,Note under Sent
+accounts.title,Accounts,アカウント,账号,Settings page
+accounts.subtitle,OurTaiko accounts for 1P and 2P,1P と 2P の OurTaiko アカウント,1P 与 2P 的 OurTaiko 账号,Accounts page subtitle
+accounts.group.servers,Servers,サーバー,服务器,Accounts group
+accounts.username,Username,ユーザー名,用户名,Row; also the text field's placeholder
+accounts.usernameDesc,{0}'s OurTaiko account (sso.ourtaiko.org). Enter the password below to sign in.,{0} の OurTaiko アカウント（sso.ourtaiko.org）。下でパスワードを入力するとログインします。,{0} 的 OurTaiko 账号（sso.ourtaiko.org）。在下方输入密码即可登录。,Username description; {0} seat (1P/2P)
+accounts.password,Password,パスワード,密码,Row; also the text field's placeholder
+accounts.passwordDesc,Signs in as soon as it is entered. The password is not saved; the sign-in lasts while {0} plays at least once every 30 days.,入力するとすぐにログインします。パスワードは保存しません。{0} が 30 日に 1 回以上プレイしていればログインは続きます。,输入后立即登录。密码不会保存；只要 {0} 每 30 天至少游玩一次，登录就会保持。,Password description; {0} seat (1P/2P)
+accounts.signOut,Sign Out,ログアウト,退出登录,Row and its button
+accounts.signOutDesc,Sign {0} out of its OurTaiko account on this device.,このデバイスで {0} の OurTaiko アカウントからログアウトします。,在本设备上退出 {0} 的 OurTaiko 账号。,Sign Out description; {0} seat (1P/2P)
+accounts.refreshSongList,Refresh Song List,曲リストを更新,刷新歌曲列表,Row
+accounts.refreshSongListDesc,Load the built-in servers' song lists again.,内蔵サーバーの曲リストを読み込み直します。,重新加载内置服务器的歌曲列表。,Refresh Song List description
+accounts.refreshLogin,Refresh Login,ログインを更新,刷新登录,Row
+accounts.refreshLoginDesc,Check both accounts and sign them in to the built-in servers again.,両方のアカウントを確認し、内蔵サーバーにログインし直します。,检查两个账号并重新登录内置服务器。,Refresh Login description
+accounts.refresh,Refresh,更新,刷新,Button of the refresh rows
+overlay.title,Settings,設定,设置,Overlay header title
+overlay.closeSettings,Close Settings,設定を閉じる,关闭设置,Footer hint on the rail's Close entry
+footer.back,Back,もどる,返回,Footer key hint (Esc)
+footer.select,Select,決定,选择,"Footer key hint (Don), before the first draw"
+footer.move,Move,移動,移动,Footer key hint (Ka)
+footer.adjusting,"{0}  ·  Ka changes, Don keeps, Esc cancels",{0}  ·  カッで変更、ドンで決定、Esc で取り消し,{0}  ·  咔 调整，咚 确定，Esc 取消,Footer while a row is adjusted; {0} row label
+don.open,Open,ひらく,打开,Footer Don hint on a page
+don.keep,Keep,決定,确定,Footer Don hint while adjusting
+don.choose,Choose,えらぶ,选择,Footer Don hint in a sheet / list row
+don.flip,Flip,切りかえ,切换,Footer Don hint on a toggle
+don.adjust,Adjust,調整,调整,Footer Don hint on a choice/number row
+don.run,Run,実行,执行,Footer Don hint on an action row
+don.type,Type,入力,输入,Footer Don hint on a text row
+row.onClose,On close,閉じると反映,关闭时生效,Badge on device rows applied when the overlay closes
+row.typeToSignIn,Type to sign in,入力してログイン,输入以登录,Value shown on a password row
+sheet.appliesOnClose,Applies when you close Settings.,設定を閉じると反映されます。,关闭设置时生效。,Appended to a device row's description in the sheet
+modal.pressKey,Press a key for {0},{0} のキーを押してください,请按下 {0} 的按键,Key capture card title; {0} action name
+modal.captureHint,"Any key is added, including Enter and Escape. Tap outside this card to cancel.",Enter や Escape も含め、押したキーが追加されます。取り消すにはカードの外をタップします。,任何按键都会被添加，包括 Enter 和 Escape。点击卡片外部可取消。,Key capture card text
+modal.passwordHint,Enter signs in. The password is not saved.  Esc: cancel,Enter でログイン。パスワードは保存しません。  Esc：取り消し,按 Enter 登录。密码不会保存。  Esc：取消,Password card text
+modal.textHint,Enter: save   Esc: cancel,Enter：保存   Esc：取り消し,Enter：保存   Esc：取消,Text card text
+diagram.note,NOTE,音符,音符,Judgment window diagram: label over the note line
+diagram.early,EARLY  {0},はやい  {0},早  {0},"Diagram axis, left end; {0} ms"
+diagram.late,{0}  LATE,{0}  おそい,{0}  晚,"Diagram axis, right end; {0} ms"
+diagram.offsetB,Offset B,オフセット B,偏移 B,Diagram legend
+diagram.custom,Custom windows for every difficulty  ·  scores are not saved or uploaded,全難易度でカスタム判定幅  ·  スコアは保存・送信されません,所有难度使用自定义判定范围  ·  不保存也不上传成绩,Diagram caption while custom windows are on
+diagram.standard,Standard windows of Oni and Ura. Easy and Normal are wider: 42 / 108 / 125 ms.,おに・裏の標準の判定幅です。かんたん・ふつうはより広く、42 / 108 / 125 ms です。,魔王与里魔王的标准判定范围。简单和普通更宽：42 / 108 / 125 ms。,Diagram caption with the standard windows
+audio.none,No audio output: {0},音声出力なし：{0},无音频输出：{0},Sound page banner; {0} reason
+audio.silent,No output device (silent): {0},出力デバイスなし（無音）：{0},无输出设备（静音）：{0},Sound page banner; {0} reason
+audio.current,Current output: {0},現在の出力：{0},当前输出：{0},Sound page banner; {0} backend name
+audio.pending,Output changes apply when you close Settings,出力の変更は設定を閉じると反映されます,输出更改将在关闭设置时生效,Sound page banner suffix
+status.signedIn,Signed in: {0},ログイン中：{0},已登录：{0},Sign Out row status; {0} nickname
+status.notSignedIn,Not signed in,未ログイン,未登录,Sign Out row status and header seat chip
+status.working,Working…,処理中…,处理中…,Action row status while running
+status.done,Done,完了,完成,Action row status when finished
+status.busy,Still busy with the previous request.,前の処理がまだ終わっていません。,上一个请求仍在进行中。,Footer message
+status.enterUsername,Enter {0}P's username first.,先に {0}P のユーザー名を入力してください。,请先输入 {0}P 的用户名。,Footer message; {0} seat number
+status.signedInAs,{0}P signed in as {1}.   ·   {2},{0}P が {1} でログインしました。   ·   {2},{0}P 已以 {1} 登录。   ·   {2},"Footer message; {0} seat number, {1} nickname, {2} login summary"
+status.signedOut,{0}P signed out.,{0}P がログアウトしました。,{0}P 已退出登录。,Footer message; {0} seat number
+status.seatNotSignedIn,{0}P is not signed in.,{0}P はログインしていません。,{0}P 未登录。,Footer message; {0} seat number

@@ -28,7 +28,7 @@ namespace OurTaiko.Tests
             Assert.That(entry.stage.Find("Timer"), Is.Null, "Entry shows no timer.");
             Assert.That(entry.Nameplate.GetComponent<CanvasGroup>().alpha, Is.Zero);
             Assert.That(entry.Coins.BubbleAlpha, Is.Zero, "No 2P invite while the credit rows are up.");
-            Assert.That(entry.Coins.FreePlay.text, Is.EqualTo("フリープレイ"));
+            Assert.That(entry.Coins.FreePlay.text, Is.EqualTo(L10n.Get("Menu", "overlay.freePlay")));
             Assert.That(entry.Guide.Image.color.a, Is.EqualTo(1));
             TestCapture.Capture("EntryCredit.png");
 

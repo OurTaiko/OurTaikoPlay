@@ -57,34 +57,46 @@ namespace OurTaiko
                 string label = reference.Title.Length > 0 ? reference.Title : reference.Sha256.Length > 0 ? reference.Sha256 : reference.Id;
                 var song = course.IsLocal ? FindLocal(reference) : serverSong?.Invoke(course.Server, reference.Id);
                 string tjaCourse = null, side = "single", chartHash = ""; int level = 0;
-                string error = song == null ? "Song not found: " + label : Block(song, reference, out tjaCourse, out side, out level, out chartHash);
-                if (error != null) { entry.Error = error.EndsWith(": ") ? error + label : error; entry.Songs.Clear(); return entry; }
+                string error = song == null ? L10n.Format("Dan", "resolve.songNotFound", label) : Block(song, reference, label, out tjaCourse, out side, out level, out chartHash);
+                if (error != null) { entry.Error = error; entry.Songs.Clear(); return entry; }
                 entry.Songs.Add(new DanResolvedSong { Ref = reference, Song = song, Course = tjaCourse, Side = side, Level = level, ChartHash = chartHash });
             }
             return entry;
         }
 
-        string Block(SongDefinition song, DanSongRef reference, out string tjaCourse, out string side, out int level, out string chartHash)
+        // Null when the song has the block, else why it cannot be played (label names the song).
+        string Block(SongDefinition song, DanSongRef reference, string label, out string tjaCourse, out string side, out int level, out string chartHash)
         {
             tjaCourse = null; side = "single"; level = 0; chartHash = "";
-            string missing = "No " + SongInfo.CourseName(reference.Difficulty) + " chart: ";
+            string Missing() => L10n.Format("Dan", "resolve.noChart", DifficultyName(reference.Difficulty), label);
             var online = song.onlineChart;
             if (online != null)
             {
                 // The server says whether the block the course named is still the one it was set up on.
-                if (!reference.Available) return "Song has changed: ";
+                if (!reference.Available) return L10n.Format("Dan", "resolve.songChanged", label);
                 var block = reference.Side.Length > 0
                     ? online.Blocks.Find(b => b.Course == SongInfo.CourseName(reference.Difficulty) && b.Side == reference.Side)
                     : online.Difficulties[(int)reference.Difficulty];
-                if (block == null) return missing;
+                if (block == null) return Missing();
                 tjaCourse = block.Course; side = block.Side; level = block.Level; chartHash = block.ChartHash;
                 return null;
             }
             var course = Info(song)?.Course(reference.Difficulty);
-            if (course == null) return missing;
+            if (course == null) return Missing();
             tjaCourse = course.Course; side = course.Side; level = course.Level;
             return null;
         }
+
+        // A course's name in the player's language (Common difficulty.*).
+        static string DifficultyName(Difficulty difficulty) => difficulty switch
+        {
+            Difficulty.Easy => L10n.Get("Common", "difficulty.easy"),
+            Difficulty.Normal => L10n.Get("Common", "difficulty.normal"),
+            Difficulty.Hard => L10n.Get("Common", "difficulty.hard"),
+            Difficulty.Oni => L10n.Get("Common", "difficulty.oni"),
+            Difficulty.Ura => L10n.Get("Common", "difficulty.ura"),
+            _ => SongInfo.CourseName(difficulty),
+        };
 
         SongDefinition FindLocal(DanSongRef reference)
         {

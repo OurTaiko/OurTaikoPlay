@@ -42,7 +42,7 @@ namespace OurTaiko
         // CSongDict.tReinsertBackButtons: an open folder starts with もどる, and another comes before
         // every seventh board after it.
         const int BackEvery = 7;
-        public const string BackLabel = "もどる";
+        public static string BackLabel => L10n.Get("Common", "back");
 
         public static SongSelectManager Instance { get; private set; }
 
@@ -53,7 +53,7 @@ namespace OurTaiko
         // connected (its categories, marked as cache). A source with nothing to show has no folder.
         public const string LocalKey = "source:local";
         public static string ServerKey(string server) => "source:server/" + server;
-        public static string LocalTitle => Words("Local", "ローカル", "本地谱面");
+        public static string LocalTitle => L10n.Get("Menu", "select.local");
         // Every folder, each followed by the folders inside it (WheelItem.Folder indexes it).
         public IReadOnlyList<SongFolder> Folders => folders;
         public IReadOnlyList<WheelItem> Items => items;

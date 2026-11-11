@@ -1,0 +1,856 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Settings Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Settings
+  m_TableCollectionNameGuidString: 2a185a638057348dbbad39c7696cb86b
+  m_Entries:
+  - m_Id: 133160960
+    m_Key: value.on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160961
+    m_Key: value.off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160962
+    m_Key: value.unbound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160963
+    m_Key: value.notSet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160964
+    m_Key: hint.number
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160965
+    m_Key: hint.keys
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160966
+    m_Key: keys.desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160967
+    m_Key: keys.add
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160968
+    m_Key: keys.remove
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160969
+    m_Key: keys.reset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160970
+    m_Key: keys.clear
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160971
+    m_Key: key.leftDon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160972
+    m_Key: key.rightDon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160973
+    m_Key: key.leftKa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160974
+    m_Key: key.rightKa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160975
+    m_Key: key.p2LeftDon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160976
+    m_Key: key.p2RightDon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160977
+    m_Key: key.p2LeftKa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160978
+    m_Key: key.p2RightKa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160979
+    m_Key: key.confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160980
+    m_Key: key.back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160981
+    m_Key: key.pause
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160982
+    m_Key: key.restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160983
+    m_Key: key.menuLeft
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160984
+    m_Key: key.menuRight
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160985
+    m_Key: key.menuUp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160986
+    m_Key: key.menuDown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160987
+    m_Key: general.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160988
+    m_Key: general.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160989
+    m_Key: general.group.language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160990
+    m_Key: general.language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160991
+    m_Key: general.languageDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160992
+    m_Key: general.group.diagnostics
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160993
+    m_Key: general.logLevel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160994
+    m_Key: general.logLevelDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160995
+    m_Key: general.logLevelNote.debug
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160996
+    m_Key: general.logLevelNote.info
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160997
+    m_Key: general.logLevelNote.warning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160998
+    m_Key: general.logLevelNote.error
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160999
+    m_Key: general.inputLog
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161000
+    m_Key: general.inputLogDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161001
+    m_Key: controls.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161002
+    m_Key: controls.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161003
+    m_Key: controls.group.p1Drum
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161004
+    m_Key: controls.group.p2Drum
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161005
+    m_Key: controls.group.menus
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161006
+    m_Key: play.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161007
+    m_Key: play.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161008
+    m_Key: play.group.timing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161009
+    m_Key: play.group.input
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161010
+    m_Key: play.group.touch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161011
+    m_Key: play.group.hitFeedback
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161012
+    m_Key: play.group.practice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161013
+    m_Key: play.audioOffset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161014
+    m_Key: play.audioOffsetDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161015
+    m_Key: play.judgeOffset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161016
+    m_Key: play.judgeOffsetDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161017
+    m_Key: play.judgeCustom
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161018
+    m_Key: play.judgeCustomDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161019
+    m_Key: play.judgeWindow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161020
+    m_Key: play.judgeWindowDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161021
+    m_Key: play.judgeOrder.good
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161022
+    m_Key: play.judgeOrder.ok
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161023
+    m_Key: play.judgeOrder.bad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161024
+    m_Key: play.inputDelay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161025
+    m_Key: play.inputDelayDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161026
+    m_Key: play.drumPad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161027
+    m_Key: play.drumPadDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161028
+    m_Key: play.timingDisplay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161029
+    m_Key: play.timingDisplayDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161030
+    m_Key: play.timingDisplay.goodAndOk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161031
+    m_Key: play.practiceReview
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161032
+    m_Key: play.practiceReviewDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161033
+    m_Key: display.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161034
+    m_Key: display.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161035
+    m_Key: display.group.rendering
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161036
+    m_Key: display.frameRate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161037
+    m_Key: display.frameRateDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161038
+    m_Key: display.unlimited
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161039
+    m_Key: display.vsync
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161040
+    m_Key: display.vsyncDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161041
+    m_Key: display.group.movie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161042
+    m_Key: display.movie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161043
+    m_Key: display.movieDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161044
+    m_Key: display.laneOpacity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161045
+    m_Key: display.laneOpacityDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161046
+    m_Key: sound.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161047
+    m_Key: sound.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161048
+    m_Key: sound.group.volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161049
+    m_Key: sound.group.output
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161050
+    m_Key: sound.group.timing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161051
+    m_Key: sound.volumeDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161052
+    m_Key: sound.master
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161053
+    m_Key: sound.masterDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161054
+    m_Key: sound.bgm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161055
+    m_Key: sound.bgmDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161056
+    m_Key: sound.track
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161057
+    m_Key: sound.trackDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161058
+    m_Key: sound.drum
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161059
+    m_Key: sound.drumDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161060
+    m_Key: sound.effects
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161061
+    m_Key: sound.effectsDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161062
+    m_Key: sound.voice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161063
+    m_Key: sound.voiceDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161064
+    m_Key: sound.backend
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161065
+    m_Key: sound.backendDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161066
+    m_Key: sound.automatic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161067
+    m_Key: sound.backendNote.autoWindows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161068
+    m_Key: sound.backendNote.autoOther
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161069
+    m_Key: sound.backendNote.wasapi
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161070
+    m_Key: sound.backendNote.asio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161071
+    m_Key: sound.backendNote.simple
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161072
+    m_Key: sound.devicePeriod
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161073
+    m_Key: sound.devicePeriodDesc.windows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161074
+    m_Key: sound.devicePeriodDesc.other
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161075
+    m_Key: sound.defaultMs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161076
+    m_Key: sound.default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161077
+    m_Key: sound.deviceBuffer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161078
+    m_Key: sound.deviceBufferDesc.apple
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161079
+    m_Key: sound.deviceBufferDesc.other
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161080
+    m_Key: sound.aaudio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161081
+    m_Key: sound.aaudioDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161082
+    m_Key: sound.wasapiExclusive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161083
+    m_Key: sound.wasapiExclusiveDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161084
+    m_Key: sound.wasapiRaw
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161085
+    m_Key: sound.wasapiRawDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161086
+    m_Key: sound.wasapiAsync
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161087
+    m_Key: sound.wasapiAsyncDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161088
+    m_Key: sound.wasapiBuffer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161089
+    m_Key: sound.wasapiBufferDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161090
+    m_Key: sound.wasapiPeriod
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161091
+    m_Key: sound.wasapiPeriodDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161092
+    m_Key: sound.systemDefault
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161093
+    m_Key: sound.asioDevice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161094
+    m_Key: sound.asioDeviceDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161095
+    m_Key: sound.asioBuffer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161096
+    m_Key: sound.asioBufferDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161097
+    m_Key: sound.driverDefault
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161098
+    m_Key: sound.samples
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161099
+    m_Key: sound.sampleRate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161100
+    m_Key: sound.sampleRateDesc.wasapi
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161101
+    m_Key: sound.sampleRateDesc.other
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161102
+    m_Key: sound.streamUpdate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161103
+    m_Key: sound.streamUpdateDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161104
+    m_Key: sound.streamBuffer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161105
+    m_Key: sound.streamBufferDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161106
+    m_Key: sound.clock
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161107
+    m_Key: sound.clockDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161108
+    m_Key: sound.clock.heard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161109
+    m_Key: sound.clock.sent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161110
+    m_Key: sound.clockNote.autoHeard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161111
+    m_Key: sound.clockNote.autoSent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161112
+    m_Key: sound.clockNote.heard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161113
+    m_Key: sound.clockNote.sent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161114
+    m_Key: accounts.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161115
+    m_Key: accounts.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161116
+    m_Key: accounts.group.servers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161117
+    m_Key: accounts.username
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161118
+    m_Key: accounts.usernameDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161119
+    m_Key: accounts.password
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161120
+    m_Key: accounts.passwordDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161121
+    m_Key: accounts.signOut
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161122
+    m_Key: accounts.signOutDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161123
+    m_Key: accounts.refreshSongList
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161124
+    m_Key: accounts.refreshSongListDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161125
+    m_Key: accounts.refreshLogin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161126
+    m_Key: accounts.refreshLoginDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161127
+    m_Key: accounts.refresh
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161128
+    m_Key: overlay.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161129
+    m_Key: overlay.closeSettings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161130
+    m_Key: footer.back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161131
+    m_Key: footer.select
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161132
+    m_Key: footer.move
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161133
+    m_Key: footer.adjusting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161134
+    m_Key: don.open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161135
+    m_Key: don.keep
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161136
+    m_Key: don.choose
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161137
+    m_Key: don.flip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161138
+    m_Key: don.adjust
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161139
+    m_Key: don.run
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161140
+    m_Key: don.type
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161141
+    m_Key: row.onClose
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161142
+    m_Key: row.typeToSignIn
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161143
+    m_Key: sheet.appliesOnClose
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161144
+    m_Key: modal.pressKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161145
+    m_Key: modal.captureHint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161146
+    m_Key: modal.passwordHint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161147
+    m_Key: modal.textHint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161148
+    m_Key: diagram.note
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161149
+    m_Key: diagram.early
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161150
+    m_Key: diagram.late
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161151
+    m_Key: diagram.offsetB
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161152
+    m_Key: diagram.custom
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161153
+    m_Key: diagram.standard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161154
+    m_Key: audio.none
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161155
+    m_Key: audio.silent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161156
+    m_Key: audio.current
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161157
+    m_Key: audio.pending
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161158
+    m_Key: status.signedIn
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161159
+    m_Key: status.notSignedIn
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161160
+    m_Key: status.working
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161161
+    m_Key: status.done
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161162
+    m_Key: status.busy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161163
+    m_Key: status.enterUsername
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161164
+    m_Key: status.signedInAs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161165
+    m_Key: status.signedOut
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133161166
+    m_Key: status.seatNotSignedIn
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 8757538902004465782
+  references:
+    version: 2
+    RefIds:
+    - rid: 8757538902004465782
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1794378579303

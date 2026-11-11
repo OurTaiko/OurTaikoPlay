@@ -140,13 +140,21 @@ namespace OurTaiko
             switch (row)
             {
                 case OptionRow.Speed: return (options.speed / 10.0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
-                case OptionRow.Random: return options.random == RandomMode.Kimagure ? "きまぐれ" : options.random == RandomMode.Detarame ? "でたらめ" : "しない";
+                case OptionRow.Random: return L10n.Get("Menu", options.random == RandomMode.Kimagure ? "options.random.whimsical" : options.random == RandomMode.Detarame ? "options.random.messy" : "options.off");
                 case OptionRow.Neiro:
                     int slot = Menu.NeiroSlot;
-                    return art.hitSounds != null && slot < art.hitSounds.Count ? art.hitSounds.names[slot] : "無音";
-                case OptionRow.Skip: return "しない";
-                default: return Menu.IsChanged(row) ? "する" : "しない";
+                    return art.hitSounds != null && slot < art.hitSounds.Count ? NeiroName(slot) : L10n.Get("Menu", "options.mute");
+                case OptionRow.Skip: return L10n.Get("Menu", "options.off");
+                default: return L10n.Get("Menu", Menu.IsChanged(row) ? "options.on" : "options.off");
             }
+        }
+
+        // A set's name in the selected language (Menu options.neiro.<index>, in HitSounds.asset's
+        // order), else the asset's own name.
+        string NeiroName(int slot)
+        {
+            string key = "options.neiro." + slot;
+            return L10n.Has("Menu", key) ? L10n.Get("Menu", key) : art.hitSounds.names[slot];
         }
 
         Sprite Icon(OptionRow row)

@@ -131,7 +131,7 @@ namespace OurTaiko
             {
                 Log.Exception("Play", error);
                 IsFinished = true; resultPanel.SetActive(true);
-                resultText.text = "CHART COULD NOT LOAD\n<size=22>" + error.Message + "</size>";
+                resultText.text = L10n.Format("Dan", "play.loadFailed", error.Message);
             }
             if (IsFinished) yield break;
             // The first song's doors and clock start once the curtain has opened, as PlayScene's.
@@ -343,7 +343,7 @@ namespace OurTaiko
                 view.gaugePlate.anchoredPosition = new Vector2(Mathf.Max(0, Mathf.Floor((float)(x - 586 + 24) + 0.5f)), view.gaugePlate.anchoredPosition.y);
                 // The cabinet's white strip, centred on that cell over the bar (YataiDON ships it but does not draw it).
                 if (view.gaugeCell != null) view.gaugeCell.anchoredPosition = new Vector2(Mathf.Floor((float)x - 14 + 0.5f), view.gaugeCell.anchoredPosition.y);
-                view.gaugeValue.text = $"{gauge.Course.Red} ％{(gauge.Range == DanExamRange.Less ? "未満" : "以上")}";
+                view.gaugeValue.text = gauge.Caption(gauge.Course.Red);
             }
             view.between.gameObject.SetActive(false);
         }
@@ -369,7 +369,7 @@ namespace OurTaiko
             row.frameBackAll.enabled = row.frameFrontAll.enabled = all;
             row.overlay1.enabled = row.overlay2.enabled = !all;
             row.icon.sprite = view.icons[(int)exam.Type];
-            row.caption.text = state.HasBorder ? $"{state.Red} {(exam.Range == DanExamRange.Less ? "未満" : "以上")}" : "―";
+            row.caption.text = state.HasBorder ? exam.Caption(state.Red) : "―";
             float full = all ? 972 : 648;
             if (state.Failed) Fill(row.bar, row.rainbow, view.barFail, null, full, "fail", false);
             else Fill(row.bar, row.rainbow, BarSprite(state.BarState, false), all ? view.rainbowAll : view.rainbow, full * state.Progress, state.BarState, false);

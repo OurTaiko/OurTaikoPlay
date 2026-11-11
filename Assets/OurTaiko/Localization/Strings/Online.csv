@@ -1,0 +1,19 @@
+key,en,ja,zh-Hans,comment
+activity.checkingAccount,Checking {0}'s OurTaiko account…,{0} の OurTaiko アカウントを確認中…,正在检查 {0} 的 OurTaiko 账号…,Startup / settings progress line; {0} = seat (1P/2P)
+activity.signingIn,Signing {0} in to {1}…,{0} を {1} にログイン中…,正在将 {0} 登录到 {1}…,"Startup / settings progress line; {0} = seat, {1} = server name"
+activity.loadingSongList,Loading song list ({0} / {1}): {2}…,曲リストを読み込み中 ({0} / {1}): {2}…,正在加载歌曲列表 ({0} / {1})：{2}…,"Startup / settings progress line; {0}/{1} = server number/count, {2} = server name"
+summary.item,{0}: {1},{0}: {1},{0}：{1},"One part of the sign-in / song list summary; {0} = seat and/or server, {1} = what happened"
+summary.guest,guest (not signed in),ゲスト (ログインしていません),游客（未登录）,Sign-in summary: the seat has no account
+summary.cancelled,cancelled,キャンセルしました,已取消,Sign-in / song list summary
+summary.signInExpired,sign-in expired,ログインの有効期限が切れました,登录已过期,Sign-in summary: the account center refused the saved sign-in
+summary.offline,offline ({0}),オフライン ({0}),离线（{0}）,Sign-in summary: account center unreachable; {0} = error
+summary.noAccountSignIn,no OurTaiko account sign-in,OurTaiko アカウントでログインできません,不支持 OurTaiko 账号登录,Sign-in summary: the server does not accept OurTaiko accounts
+summary.songListNotLoaded,song list not loaded,曲リストが読み込まれていません,歌曲列表未加载,Sign-in summary: the server is not connected
+summary.signedInAs,signed in as {0},{0} でログインしました,已登录为 {0},Sign-in summary; {0} = nickname
+summary.songs,{0} songs,{0} 曲,{0} 首歌曲,Song list summary: songs loaded from a server
+error.wrongPassword,wrong username or password,ユーザー名またはパスワードが違います,用户名或密码错误,Sign-in error (HTTP 401/403)
+error.tooManyAttempts,"too many sign-in attempts, try again later",ログインの試行回数が多すぎます。しばらくしてからお試しください,登录尝试次数过多，请稍后再试,Sign-in error (HTTP 429)
+error.failed,failed ({0}),失敗しました ({0}),失败（{0}）,Sign-in / song list error; {0} = error message
+label.offlineCache,offline cache,オフラインキャッシュ,本地缓存,Song select: server name of an unreachable server's cached folders
+label.other,Other,その他,其他,Song select: folder of cached songs with no known genre
+replays.noList,no replay list,リプレイ一覧がありません,没有回放列表,Ghost Battle select: the server has no replay list

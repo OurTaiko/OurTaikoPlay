@@ -88,7 +88,7 @@ namespace OurTaiko.Tests
             nav = overlay.Navigator;
             overlay.View.TapPage(1); overlay.View.TapPage(1);
             overlay.View.OpenRow(0);
-            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { "Add a Key", "Reset to Default", "Clear All" }));
+            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { L10n.Get("Settings", "keys.add"), L10n.Get("Settings", "keys.reset"), L10n.Get("Settings", "keys.clear") }));
             yield return new WaitForSecondsRealtime(0.3f);
             AssertClickable(Option(overlay, 1));
             Option(overlay, 1).Clicked();
@@ -114,7 +114,8 @@ namespace OurTaiko.Tests
             Assert.That(nav.Row.Key, Is.EqualTo(InputKey.LeftDon));
             Assert.That(Keycaps(overlay, nav.Row.Id), Is.EqualTo(new[] { "Key X" }));
             overlay.Confirm();
-            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { "Add a Key", "Remove X", "Reset to Default", "Clear All" }));
+            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { L10n.Get("Settings", "keys.add"), L10n.Format("Settings", "keys.remove", "X"),
+                    L10n.Get("Settings", "keys.reset"), L10n.Get("Settings", "keys.clear") }));
             overlay.View.TapSheet(2);
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
             Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F }));

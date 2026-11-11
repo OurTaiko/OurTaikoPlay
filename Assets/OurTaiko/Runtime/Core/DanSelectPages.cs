@@ -19,8 +19,10 @@ namespace OurTaiko
 
     public static class DanSelectPages
     {
-        public const string LocalTitle = "ローカル", FanmadeTitle = "Fanmade", DatabaseTitle = "Database";
-        public const string GaidenTitle = "外伝", GaidenId = "gaiden";
+        public const string FanmadeTitle = "Fanmade", DatabaseTitle = "Database";
+        public const string GaidenId = "gaiden";
+        public static string LocalTitle => L10n.Get("Dan", "select.pageLocal");
+        public static string GaidenTitle => L10n.Get("Dan", "select.gaiden");
         // box/folder 6: the green plaque.
         public const int GaidenColor = 6;
 

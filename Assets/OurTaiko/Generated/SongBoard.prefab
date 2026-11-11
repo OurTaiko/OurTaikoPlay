@@ -318,7 +318,7 @@ MonoBehaviour:
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
+  m_ActiveFontFeatures: 6e72656bu
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
@@ -982,6 +982,7 @@ GameObject:
   - component: {fileID: 8045378568881361681}
   - component: {fileID: 4618187430364341970}
   - component: {fileID: 3863289962692889145}
+  - component: {fileID: 6587205154645876500}
   m_Layer: 0
   m_Name: Course
   m_TagString: Untagged
@@ -1086,7 +1087,7 @@ MonoBehaviour:
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
+  m_ActiveFontFeatures: 6e72656bu
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
@@ -1108,6 +1109,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6587205154645876500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3781518762961243881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Common
+  key: difficulty.oni
 --- !u!1 &3977684383694732851
 GameObject:
   m_ObjectHideFlags: 0
@@ -1282,6 +1297,7 @@ GameObject:
   - component: {fileID: 3630575794776581604}
   - component: {fileID: 1190306075521566485}
   - component: {fileID: 1484891782135056199}
+  - component: {fileID: 8631834389613149939}
   m_Layer: 0
   m_Name: Course
   m_TagString: Untagged
@@ -1386,7 +1402,7 @@ MonoBehaviour:
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
+  m_ActiveFontFeatures: 6e72656bu
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
@@ -1408,6 +1424,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &8631834389613149939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4125604859999471298}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Menu
+  key: select.courseUra
 --- !u!1 &4242577588549509716
 GameObject:
   m_ObjectHideFlags: 0
@@ -1569,6 +1599,7 @@ GameObject:
   - component: {fileID: 4112177077398556399}
   - component: {fileID: 2565945655340227336}
   - component: {fileID: 3547635016327046334}
+  - component: {fileID: 8641732633906249464}
   m_Layer: 0
   m_Name: Course
   m_TagString: Untagged
@@ -1673,7 +1704,7 @@ MonoBehaviour:
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
+  m_ActiveFontFeatures: 6e72656bu
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
@@ -1695,6 +1726,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &8641732633906249464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5177838292744927473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Common
+  key: difficulty.easy
 --- !u!1 &5959632912576209058
 GameObject:
   m_ObjectHideFlags: 0
@@ -1885,7 +1930,7 @@ MonoBehaviour:
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
+  m_ActiveFontFeatures: 6e72656bu
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
@@ -2143,6 +2188,7 @@ GameObject:
   - component: {fileID: 1378856491691943500}
   - component: {fileID: 297696417814352370}
   - component: {fileID: 1507187207791998544}
+  - component: {fileID: 9196765982882843227}
   m_Layer: 0
   m_Name: Course
   m_TagString: Untagged
@@ -2247,7 +2293,7 @@ MonoBehaviour:
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
+  m_ActiveFontFeatures: 6e72656bu
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
@@ -2269,6 +2315,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &9196765982882843227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6797534637177990298}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Common
+  key: difficulty.normal
 --- !u!1 &6920627799185812935
 GameObject:
   m_ObjectHideFlags: 0
@@ -2961,6 +3021,7 @@ GameObject:
   - component: {fileID: 8948675838205858967}
   - component: {fileID: 3024536406395821796}
   - component: {fileID: 4400862931405307805}
+  - component: {fileID: 5694308143374278192}
   m_Layer: 0
   m_Name: Course
   m_TagString: Untagged
@@ -3065,7 +3126,7 @@ MonoBehaviour:
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
+  m_ActiveFontFeatures: 6e72656bu
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
@@ -3087,6 +3148,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5694308143374278192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8769150783731390525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Common
+  key: difficulty.hard
 --- !u!1 &8807162075412295189
 GameObject:
   m_ObjectHideFlags: 0

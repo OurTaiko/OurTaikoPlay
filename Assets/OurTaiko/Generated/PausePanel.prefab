@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7710396887970812902}
   - component: {fileID: 6509040023850320751}
   - component: {fileID: 4549625290527336505}
+  - component: {fileID: 2020997581671649924}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -137,6 +138,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &2020997581671649924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 383909085858431788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Play
+  key: pause.backToSelect
 --- !u!1 &554422491772340916
 GameObject:
   m_ObjectHideFlags: 0
@@ -148,6 +163,7 @@ GameObject:
   - component: {fileID: 9218149174699886147}
   - component: {fileID: 3356656990730355891}
   - component: {fileID: 4154336554726034556}
+  - component: {fileID: 6497096570569683552}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -274,6 +290,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6497096570569683552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 554422491772340916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Play
+  key: pause.resume
 --- !u!1 &2327060465181036495
 GameObject:
   m_ObjectHideFlags: 0
@@ -562,6 +592,7 @@ GameObject:
   - component: {fileID: 1894665640948824182}
   - component: {fileID: 89698954452005615}
   - component: {fileID: 1116830025170757804}
+  - component: {fileID: 7233823243125681894}
   m_Layer: 0
   m_Name: Title
   m_TagString: Untagged
@@ -688,6 +719,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7233823243125681894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3648049264541741193}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Play
+  key: pause.title
 --- !u!1 &4260473566887096146
 GameObject:
   m_ObjectHideFlags: 0
@@ -699,6 +744,7 @@ GameObject:
   - component: {fileID: 8835907616573300323}
   - component: {fileID: 1760614087500958927}
   - component: {fileID: 4146749676293509512}
+  - component: {fileID: 5586964680271197814}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -825,6 +871,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5586964680271197814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4260473566887096146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Play
+  key: pause.hint
 --- !u!1 &4414957045944799484
 GameObject:
   m_ObjectHideFlags: 0
@@ -836,6 +896,7 @@ GameObject:
   - component: {fileID: 4721639977851534483}
   - component: {fileID: 3526065065043529135}
   - component: {fileID: 6679947399148872933}
+  - component: {fileID: 1239607502043724778}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -962,6 +1023,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1239607502043724778
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4414957045944799484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Play
+  key: pause.restart
 --- !u!1 &4461620441871152507
 GameObject:
   m_ObjectHideFlags: 0
@@ -973,6 +1048,7 @@ GameObject:
   - component: {fileID: 9006975521736421767}
   - component: {fileID: 8240493798029384814}
   - component: {fileID: 2132322393090587}
+  - component: {fileID: 5033672721557411288}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -1099,6 +1175,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5033672721557411288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4461620441871152507}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Common
+  key: back
 --- !u!1 &5173380099839015549
 GameObject:
   m_ObjectHideFlags: 0

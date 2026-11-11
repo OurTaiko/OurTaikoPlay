@@ -1,0 +1,444 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Menu Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Menu
+  m_TableCollectionNameGuidString: 55385085153b94140be5642210ebe85c
+  m_Entries:
+  - m_Id: 154132480
+    m_Key: entry.enso.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132481
+    m_Key: entry.enso.info0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132482
+    m_Key: entry.enso.info1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132483
+    m_Key: entry.dan.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132484
+    m_Key: entry.dan.info0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132485
+    m_Key: entry.dan.info1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132486
+    m_Key: entry.dan.info2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132487
+    m_Key: entry.practice.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132488
+    m_Key: entry.practice.info0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132489
+    m_Key: entry.practice.info1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132490
+    m_Key: entry.ghost.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132491
+    m_Key: entry.ghost.info0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132492
+    m_Key: entry.ghost.info1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132493
+    m_Key: entry.settings.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132494
+    m_Key: entry.settings.info0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132495
+    m_Key: entry.settings.info1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132496
+    m_Key: entry.credit.onePlayer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132497
+    m_Key: entry.credit.twoPlayers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132498
+    m_Key: entry.credit.start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132499
+    m_Key: entry.accountExpired
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132500
+    m_Key: entry.seatsAnd
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132501
+    m_Key: overlay.freePlay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132502
+    m_Key: overlay.invitePlayer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132503
+    m_Key: overlay.inviteMessage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132504
+    m_Key: presented.skipHint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132505
+    m_Key: presented.cancelling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132506
+    m_Key: select.local
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132507
+    m_Key: select.searchTitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132508
+    m_Key: select.searchDescription
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132509
+    m_Key: select.folderSongs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132510
+    m_Key: select.serverOffline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132511
+    m_Key: select.courseUra
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132512
+    m_Key: select.practiceMode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132513
+    m_Key: select.bestScore
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132514
+    m_Key: search.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132515
+    m_Key: search.all
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132516
+    m_Key: search.difficulty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132517
+    m_Key: search.stars
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132518
+    m_Key: search.sortBy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132519
+    m_Key: search.keyword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132520
+    m_Key: search.keywordPlaceholder
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132521
+    m_Key: search.order.default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132522
+    m_Key: search.order.notFc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132523
+    m_Key: search.order.notAp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132524
+    m_Key: search.search
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132525
+    m_Key: search.searching
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132526
+    m_Key: search.back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132527
+    m_Key: search.keywordTooLong
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132528
+    m_Key: search.failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132529
+    m_Key: search.results
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132530
+    m_Key: search.hint.touchTyping
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132531
+    m_Key: search.hint.touchKeyword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132532
+    m_Key: search.hint.touchRows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132533
+    m_Key: search.hint.keysTyping
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132534
+    m_Key: search.hint.keysKeyword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132535
+    m_Key: search.hint.keysRows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132536
+    m_Key: options.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132537
+    m_Key: options.speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132538
+    m_Key: options.vanish
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132539
+    m_Key: options.inverse
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132540
+    m_Key: options.random
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132541
+    m_Key: options.drumSound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132542
+    m_Key: options.auto
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132543
+    m_Key: options.skip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132544
+    m_Key: options.on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132545
+    m_Key: options.off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132546
+    m_Key: options.random.whimsical
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132547
+    m_Key: options.random.messy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132548
+    m_Key: options.mute
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132549
+    m_Key: options.neiro.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132550
+    m_Key: options.neiro.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132551
+    m_Key: options.neiro.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132552
+    m_Key: options.neiro.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132553
+    m_Key: options.neiro.4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132554
+    m_Key: options.neiro.5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132555
+    m_Key: options.neiro.6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132556
+    m_Key: options.neiro.7
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132557
+    m_Key: options.neiro.8
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132558
+    m_Key: options.neiro.9
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132559
+    m_Key: options.neiro.10
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132560
+    m_Key: options.neiro.11
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132561
+    m_Key: options.neiro.12
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132562
+    m_Key: options.neiro.13
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132563
+    m_Key: options.neiro.14
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132564
+    m_Key: options.neiro.15
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132565
+    m_Key: options.neiro.16
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132566
+    m_Key: options.neiro.17
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132567
+    m_Key: options.neiro.18
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132568
+    m_Key: options.neiro.19
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132569
+    m_Key: options.neiro.20
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132570
+    m_Key: loading.audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132571
+    m_Key: loading.checking
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132572
+    m_Key: loading.preparing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132573
+    m_Key: loading.chartFile
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132574
+    m_Key: loading.audioFile
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132575
+    m_Key: loading.movieFile
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132576
+    m_Key: loading.waiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132577
+    m_Key: loading.verifying
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132578
+    m_Key: loading.cached
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132579
+    m_Key: loading.complete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132580
+    m_Key: loading.downloadFailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132581
+    m_Key: loading.audioLoadFailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132582
+    m_Key: loading.audioDecodeFailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 154132583
+    m_Key: loading.chartLoadFailed
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 8757538902004465778
+  references:
+    version: 2
+    RefIds:
+    - rid: 8757538902004465778
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1794378578703

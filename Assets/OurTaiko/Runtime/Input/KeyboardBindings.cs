@@ -72,16 +72,13 @@ namespace OurTaiko
             foreach (var binding in bindings) InputManager.SetBinding(binding.action, binding.keys);
         }
 
-        public string Format(InputKey action) => Get(action).Count == 0 ? "Unbound" : string.Join(" / ", Get(action));
-        public static string Label(InputKey action) => action switch
+        public string Format(InputKey action) => Get(action).Count == 0 ? L10n.Get(SettingsCatalog.Table, "value.unbound") : string.Join(" / ", Get(action));
+        // The action's name in Settings > Controls (Settings table, key.<action in lowerCamel>).
+        public static string Label(InputKey action) => L10n.Get(SettingsCatalog.Table, LabelKey(action));
+        public static string LabelKey(InputKey action)
         {
-            InputKey.LeftDon => "1P Left Don", InputKey.RightDon => "1P Right Don",
-            InputKey.LeftKa => "1P Left Ka", InputKey.RightKa => "1P Right Ka",
-            InputKey.P2LeftDon => "2P Left Don", InputKey.P2RightDon => "2P Right Don",
-            InputKey.P2LeftKa => "2P Left Ka", InputKey.P2RightKa => "2P Right Ka",
-            InputKey.MenuLeft => "Menu Left", InputKey.MenuRight => "Menu Right",
-            InputKey.MenuUp => "Menu Up", InputKey.MenuDown => "Menu Down",
-            _ => action.ToString(),
-        };
+            string name = action.ToString();
+            return "key." + char.ToLowerInvariant(name[0]) + name.Substring(1);
+        }
     }
 }

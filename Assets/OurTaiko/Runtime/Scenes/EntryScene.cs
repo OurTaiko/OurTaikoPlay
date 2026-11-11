@@ -109,7 +109,8 @@ namespace OurTaiko
             if (online == null) return;
             var seats = Enumerable.Range(0, FanmadeEndpoint.SeatCount).Where(online.TakeExpired).Select(s => (s + 1) + "P").ToArray();
             if (seats.Length == 0) return;
-            AccountNotice = string.Join(" and ", seats) + "'s OurTaiko sign-in has expired. Sign in again in the game settings.";
+            string who = seats.Length == 1 ? seats[0] : L10n.Format("Menu", "entry.seatsAnd", seats[0], seats[1]);
+            AccountNotice = L10n.Format("Menu", "entry.accountExpired", who);
             var bar = SkinUi.Image("AccountNotice", stage, null, 1500, 84);
             bar.color = new Color(0, 0, 0, 0.72f);
             bar.rectTransform.Center(960, 150);

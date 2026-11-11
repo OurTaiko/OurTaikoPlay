@@ -336,10 +336,10 @@ namespace OurTaiko.Tests
             Assert.That(entry.Songs[0].Level, Is.EqualTo(10));
 
             var missing = resolver.Resolve(DanCourse.Parse(Course("[{\"chart\":{\"sha256\":\"" + Hash2 + "\"},\"title\":\"Nowhere\"}]")));
-            Assert.That(missing.Error, Is.EqualTo("Song not found: Nowhere"));
+            Assert.That(missing.Error, Is.EqualTo(L10n.Format("Dan", "resolve.songNotFound", "Nowhere")));
             Assert.That(missing.Songs, Is.Empty);
             var noCourse = resolver.Resolve(DanCourse.Parse(Course("[{\"chart\":{\"sha256\":\"" + Hash1 + "\",\"course\":\"Easy\"},\"title\":\"First\"}]")));
-            Assert.That(noCourse.Error, Is.EqualTo("No Easy chart: First"));
+            Assert.That(noCourse.Error, Is.EqualTo(L10n.Format("Dan", "resolve.noChart", L10n.Get("Common", "difficulty.easy"), "First")));
         }
 
         [Test]
@@ -360,14 +360,14 @@ namespace OurTaiko.Tests
             Assert.That(found.Songs[0].Level, Is.EqualTo(9));
             Assert.That(found.Songs[0].ChartHash, Is.EqualTo("v1:" + Hash1), "the played block's content hash keys the record");
             Assert.That(asked[0], Is.EqualTo(("https://example.test", "42")));
-            Assert.That(Resolve("{\"id\":\"43\"}").Error, Does.StartWith("Song not found"));
+            Assert.That(Resolve("{\"id\":\"43\"}").Error, Is.EqualTo(L10n.Format("Dan", "resolve.songNotFound", "43")));
             // The server says when the block is no longer the one the course was set up on.
-            Assert.That(resolver.Resolve(DanCourse.Parse(Course("[{\"chart\":{\"id\":\"42\",\"side\":\"single\"},\"available\":false}]"), "https://example.test")).Error, Does.StartWith("Song has changed"));
-            Assert.That(Resolve("{\"id\":\"42\",\"side\":\"p2\"}").Error, Does.StartWith("No Oni chart"));
-            Assert.That(Resolve("{\"id\":\"42\",\"course\":\"Hard\"}").Error, Does.StartWith("No Hard chart"));
+            Assert.That(resolver.Resolve(DanCourse.Parse(Course("[{\"chart\":{\"id\":\"42\",\"side\":\"single\"},\"available\":false}]"), "https://example.test")).Error, Is.EqualTo(L10n.Format("Dan", "resolve.songChanged", "42")));
+            Assert.That(Resolve("{\"id\":\"42\",\"side\":\"p2\"}").Error, Is.EqualTo(L10n.Format("Dan", "resolve.noChart", L10n.Get("Common", "difficulty.oni"), "42")));
+            Assert.That(Resolve("{\"id\":\"42\",\"course\":\"Hard\"}").Error, Is.EqualTo(L10n.Format("Dan", "resolve.noChart", L10n.Get("Common", "difficulty.hard"), "42")));
             var offline = new DanCourseResolver(Array.Empty<SongDefinition>(), null);
             Assert.That(offline.Resolve(DanCourse.Parse(Course("[{\"chart\":{\"id\":\"42\"}}]"), "https://example.test")).Error,
-                Does.StartWith("Song not found"), "Not signed in to the server: nothing is found.");
+                Is.EqualTo(L10n.Format("Dan", "resolve.songNotFound", "42")), "Not signed in to the server: nothing is found.");
         }
 
         [Test]
@@ -439,7 +439,7 @@ namespace OurTaiko.Tests
                 Assert.That(served[0].Course.Id, Is.EqualTo("2026-10-21"), "A date-like id stays a string.");
                 Assert.That(served[2].Error, Does.Contain("wrong type"));
                 Assert.That(served.All(e => e.Course.Server == "https://example.test"), Is.True, "The trailing slash is dropped.");
-                Assert.That(served[0].Error, Does.StartWith("Song not found"));
+                Assert.That(served[0].Error, Is.EqualTo(L10n.Format("Dan", "resolve.songNotFound", "42")));
                 Assert.That(served[1].Error, Does.Contain("title"));
             }
             finally { if (Directory.Exists(root)) Directory.Delete(root, true); }

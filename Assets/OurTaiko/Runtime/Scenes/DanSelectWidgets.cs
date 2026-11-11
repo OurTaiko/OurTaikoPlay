@@ -57,7 +57,7 @@ namespace OurTaiko
             var scrim = DanSelectUi.Box("Scrim", root, 0, 0, 1920, 1080, new Color(0, 0, 0, 0.6f));
             scrim.gameObject.AddComponent<PointerRelay>().Clicked = cancel;
             var box = DanSelectUi.Box("Box", root, 560, 300, 800, 320, new Color(0.08f, 0.08f, 0.1f, 0.96f));
-            title = DanSelectUi.Text("Title", box.rectTransform, style, "段位コードを入力", 36, 0, 24, 800, 50);
+            title = DanSelectUi.Text("Title", box.rectTransform, style, L10n.Get("Dan", "code.title"), 36, 0, 24, 800, 50);
             // TMP's stock input field, restyled: six capitals, wide spacing, the scene's font.
             var resources = new TMP_DefaultControls.Resources();
             var fieldObject = TMP_DefaultControls.CreateInputField(resources);
@@ -84,14 +84,14 @@ namespace OurTaiko
             }
             if (field.placeholder is TextMeshProUGUI placeholder) placeholder.text = "ABC123";
             message = DanSelectUi.Text("Message", box.rectTransform, style, "", 24, 0, 200, 800, 40);
-            var hint = DanSelectUi.Text("Hint", box.rectTransform, style, "Enter で決定　Esc で戻る", 22, 0, 250, 800, 40);
+            var hint = DanSelectUi.Text("Hint", box.rectTransform, style, L10n.Get("Dan", "code.hint"), 22, 0, 250, 800, 40);
             hint.color = new Color(1, 1, 1, 0.6f);
             root.gameObject.SetActive(false);
         }
 
         public void Open(string pageTitle)
         {
-            title.text = pageTitle + " の段位コードを入力";
+            title.text = L10n.Format("Dan", "code.titleFor", pageTitle);
             field.text = "";
             field.interactable = true;
             message.text = "";
@@ -159,7 +159,7 @@ namespace OurTaiko
     // as wide as it, so they line up with the caption however the board is laid out.
     public sealed class ExamBestLines
     {
-        public const string Label = "自己ベスト";
+        public static string Label => L10n.Get("Dan", "select.best");
         const float LineHeight = 30, LabelSize = 20, ValueSize = 26, Below = 42, LabelInset = 12;
         // The gauge box art (exam_gauge_box) carries a white pill at its foot for this line (its
         // rows 735..762 on screen, the caption's top at 666): the line sits on the pill.
