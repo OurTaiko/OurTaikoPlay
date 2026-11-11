@@ -18,8 +18,10 @@ namespace OurTaiko
         public HitSoundLibrary hitSounds;
         public Sprite[] laneDifficultySprites;
         public Sprite[] noteSprites;
-        [Tooltip("Nijiiro expression frame 1, indexed by NoteKind like noteSprites; alternates every eighth note at 50 combo.")]
+        [Tooltip("Nijiiro second face, indexed by NoteKind like noteSprites: the open mouth of a small note, the closed mouth of a big one. Notes open and close together every eighth note from 10 combo, every sixteenth from 50.")]
         public Sprite[] alternateNoteSprites;
+        [Tooltip("Nijiiro angry face, indexed by NoteKind; alternates with the closed face every sixteenth from 100 combo. Empty where the art has none (the open mouth is used).")]
+        public Sprite[] angryNoteSprites;
         public Sprite[] rollBodySprites, rollTailSprites;
         public Sprite balloonTailSprite;
         public Sprite[] mojiSprites;

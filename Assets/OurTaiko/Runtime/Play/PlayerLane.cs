@@ -90,7 +90,7 @@ namespace OurTaiko
                 renderer = new NoteLaneRenderer(new NoteLaneRenderer.Assets
                 {
                     NoteLayer = v.noteLayer, BarLayer = v.barLayer, MojiLayer = v.mojiLayer,
-                    NoteSprites = scene.noteSprites, AlternateNoteSprites = scene.alternateNoteSprites,
+                    NoteSprites = scene.noteSprites, AlternateNoteSprites = scene.alternateNoteSprites, AngryNoteSprites = scene.angryNoteSprites,
                     RollBodySprites = scene.rollBodySprites, RollTailSprites = scene.rollTailSprites, MojiSprites = scene.mojiSprites,
                     BalloonTailSprite = scene.balloonTailSprite, MojiRollSprite = scene.mojiRollSprite,
                 }, v.balloonCounter);

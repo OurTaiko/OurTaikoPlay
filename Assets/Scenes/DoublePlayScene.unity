@@ -4274,6 +4274,24 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 1678580101, guid: 35c88b130e4b742368a255c10449afff, type: 3}
+  angryNoteSprites:
+  - {fileID: 0}
+  - {fileID: 81761464, guid: 35c88b130e4b742368a255c10449afff, type: 3}
+  - {fileID: -1337118550, guid: 35c88b130e4b742368a255c10449afff, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: -236860003, guid: 35c88b130e4b742368a255c10449afff, type: 3}
+  - {fileID: 0}
+  - {fileID: 726820174, guid: 35c88b130e4b742368a255c10449afff, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   rollBodySprites:
   - {fileID: -391363771, guid: 35c88b130e4b742368a255c10449afff, type: 3}
   - {fileID: 1456176127, guid: 35c88b130e4b742368a255c10449afff, type: 3}
