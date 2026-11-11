@@ -1,7 +1,7 @@
 namespace OurTaiko
 {
     // ゴーストバトル (issue #53): the player against someone's recorded play of the same block. It
-    // plays in DoublePlayScene: the player in the lane of their side (Seating: 1P above, a lone 2P
+    // plays in DoublePlayScene: the player in the lane of their side (SceneSwitcher.Lead: 1P above, a lone 2P
     // below) and the recording striking the other lane (PlayScene.Ghost.cs).
     public sealed class GhostMatch
     {
@@ -11,7 +11,7 @@ namespace OurTaiko
         public string Nickname = "", ScoreId = "", Server = "";
         public long Score;
         // The lane the player takes: 0 above (1P), 1 below (2P).
-        public int PlayerLane => Seating.Side.Index();
+        public int PlayerLane => SceneSwitcher.EnsureInstance().Lead.Index();
         public int GhostLane => 1 - PlayerLane;
     }
 
@@ -28,7 +28,7 @@ namespace OurTaiko
         public bool PlayGhost(SongDefinition song, GhostMatch match)
         {
             if (IsInputBlocked || song == null || match?.Record == null) return false;
-            TwoPlayers = false; PracticeMode = false;
+            SeatLeadAlone(); PracticeMode = false;
             Select(song, match.Course, false);
             SelectedCourse2P = match.Course; AutoPlay2P = false;
             SelectedSide = SelectedSide2P = match.Side;

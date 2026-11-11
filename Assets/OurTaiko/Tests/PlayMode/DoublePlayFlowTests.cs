@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
             InputSystem.settings.backgroundBehavior = originalBackground;
             InputSystem.settings.editorInputBehaviorInPlayMode = originalEditorBehavior;
             PlayOptions.Shared = originalFirst; PlayOptions.Second = originalSecond;
-            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.TwoPlayers = false;
+            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.SetSeats(Side.P1);
         }
 
         void Press(params Key[] order)
@@ -64,7 +64,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             while (SceneSwitcher.Instance.IsInputBlocked) yield return null;
-            SceneSwitcher.Instance.TwoPlayers = true;
+            SceneSwitcher.Instance.SetSeats(Side.P1, Side.P2);
             SceneSwitcher.Instance.Play(song, "Oni", auto1P, "Oni", false);
             float deadline = Time.realtimeSinceStartup + 20;
             while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.DoublePlayScene)

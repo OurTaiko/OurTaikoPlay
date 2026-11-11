@@ -175,8 +175,8 @@ namespace OurTaiko
         PlaySession AddLane(int seat, LaneViews views)
         {
             string course = switcher.CourseOf(seat);
-            // The first lane is played on the lone player's side (Seating) unless two play.
-            int side = seat == 0 ? Seating.Side.Index() : seat;
+            // The first lane is played on the leading side (SceneSwitcher.Lead) unless two play.
+            int side = seat == 0 ? switcher.Lead.Index() : seat;
             var options = IsReplay ? ReplayOptions() : IsGhost ? GhostOptions(seat) : PlayOptions.ForSeat(side);
             // The loading scene prepared the chart with the seat's own options; a replay or a ghost
             // battle has its record's.
@@ -232,7 +232,7 @@ namespace OurTaiko
         public static TaikoChart PrepareChart(DanResolvedSong song)
         {
             var chart = song.Song.ParseBlock(song.Course, song.Side);
-            ChartModifiers.Apply(chart, PlayOptions.ForSeat(Seating.Side.Index()), new System.Random());
+            ChartModifiers.Apply(chart, PlayOptions.ForSeat(InputManager.Lead.Index()), new System.Random());
             return chart;
         }
 

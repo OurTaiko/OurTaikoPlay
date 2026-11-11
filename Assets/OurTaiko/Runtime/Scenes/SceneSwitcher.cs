@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
@@ -20,15 +21,36 @@ namespace OurTaiko
         // Both seats play here once 2P has joined (issue #5).
         public const string DoublePlayScene = "DoublePlayScene";
         public bool PracticeMode { get; set; }
-        // 2P joined with a don on Entry or SongSelect. Practice is single-player and ignores it.
-        public bool TwoPlayers
+        // The sides with a player this credit: 1P, 2P (a player who joined alone with the 2P drum on
+        // Entry) or both. Entry seats them as it is left, and 2P may join a lone 1P in song select. A
+        // switcher that never passed Entry (a scene opened directly) has one player, on 1P.
+        public IReadOnlyCollection<Side> Seated => seated;
+        readonly HashSet<Side> seated = new HashSet<Side> { Side.P1 };
+        public bool IsSeated(Side side) => seated.Contains(side);
+        // The side that leads what there is one of: a lone player's own side, 1P when two play. Its
+        // drum works the menus and every single-player mode, and its options, account and nameplate
+        // are the lone player's. InputManager.Lead follows it.
+        public Side Lead => seated.Contains(Side.P1) ? Side.P1 : Side.P2;
+
+        // Seats these sides, and only these (1P alone when none is given).
+        public void SetSeats(params Side[] sides)
         {
-            get => twoPlayers;
-            set { twoPlayers = value; if (value) Seating.SitTogether(); }
+            seated.Clear();
+            foreach (var side in sides) seated.Add(side);
+            if (seated.Count == 0) seated.Add(Side.P1);
+            InputManager.Lead = Lead;
         }
-        bool twoPlayers;
-        public bool PlaysTwo => TwoPlayers && !PracticeMode;
-        public string SelectedPlayScene => PracticeMode ? PracticeScene : TwoPlayers || PlaysGhost ? DoublePlayScene : GameScene;
+
+        // A side joins the players already seated.
+        public void Seat(Side side)
+        {
+            seated.Add(side);
+            InputManager.Lead = Lead;
+        }
+
+        // A single-player mode: the leading player stays, the other leaves (a lone 2P stays 2P).
+        public void SeatLeadAlone() => SetSeats(Lead);
+        public string SelectedPlayScene => PracticeMode ? PracticeScene : seated.Count == 2 || PlaysGhost ? DoublePlayScene : GameScene;
         public static bool IsPlayScene(string scene) => scene == GameScene || scene == PracticeScene || scene == DoublePlayScene;
         public const string SongSelectScene = "SongSelect", ResultScene = "Result", EntryScene = "Entry";
         // The first scene and where Back falls back to.
@@ -141,6 +163,7 @@ namespace OurTaiko
                 throw new InvalidOperationException("SceneSwitcher requires its transition CanvasGroup and loading text.");
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            InputManager.Lead = Lead;
             SceneManager.activeSceneChanged -= OnUnitySceneChanged;
             SceneManager.activeSceneChanged += OnUnitySceneChanged;
             CurrentScene = SceneManager.GetActiveScene().name;
@@ -205,8 +228,8 @@ namespace OurTaiko
             CurrentDan?.Release();
             SelectedDan = entry;
             CurrentDan = new DanRun(entry);
-            TwoPlayers = false; PracticeMode = false;
-            Select(entry.Songs[0].Song, entry.Songs[0].Course, PlayOptions.ForSeat(Seating.Side.Index()).auto);
+            SeatLeadAlone(); PracticeMode = false;
+            Select(entry.Songs[0].Song, entry.Songs[0].Course, PlayOptions.ForSeat(Lead.Index()).auto);
             ResetPendingPlay();
             ReturnScene = DanSelectScene;
             if (songTransition == null && danCover == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(DanPlayScene); return true; }
@@ -245,8 +268,8 @@ namespace OurTaiko
             Replay = null; Ghost = null;
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
             SelectedCourse2P = course2P ?? course; AutoPlay2P = autoPlay2P;
-            // A lone player reads their own side's blocks (Seating.Side: 1P, or a lone 2P's 2P).
-            SelectedSide = song != null ? song.PlayedSide(SelectedCourse, SeatBlocks.Seats[Seating.Side.Index()], PlaysTwo) : "single";
+            // The first seat reads its own side's blocks (Lead: 1P, or a lone 2P's 2P).
+            SelectedSide = song != null ? song.PlayedSide(SelectedCourse, SeatBlocks.Seats[Lead.Index()], seated.Count == 2) : "single";
             SelectedSide2P = song != null ? song.PlayedSide(SelectedCourse2P, SeatBlocks.Seats[1], true) : "p2";
         }
 
@@ -472,6 +495,7 @@ namespace OurTaiko
             transitionCancellation?.Cancel();
             transitionCancellation?.Dispose();
             Instance = null; MainCamera = null;
+            InputManager.Lead = Side.P1;
         }
     }
 }

@@ -66,7 +66,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.UnloadSceneAsync(previous);
             fixture.Dispose();
             TestData.UseServers();
-            Seating.SitTogether();
+            SceneSwitcher.EnsureInstance().SetSeats(Side.P1);
             if (saved != null) SettingManager.EnsureInstance().UseUnsaved(saved);
             PlayOptions.Shared = originalFirst; PlayOptions.Second = originalSecond;
             if (keyboard != null && keyboard.added) InputSystem.RemoveDevice(keyboard);
@@ -105,7 +105,8 @@ namespace OurTaiko.Tests
             // A lone 2P's own don picks the board (1P's would join 1P).
             if (lone2P) entry.Don2P(); else entry.Don();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.GhostSelectScene && !SceneSwitcher.Instance.IsInputBlocked, seconds: 10);
-            Assert.That(Seating.Side, Is.EqualTo(lone2P ? Side.P2 : Side.P1));
+            Assert.That(SceneSwitcher.Instance.Seated, Is.EquivalentTo(new[] { lone2P ? Side.P2 : Side.P1 }));
+            Assert.That(InputManager.Lead, Is.EqualTo(lone2P ? Side.P2 : Side.P1));
         }
 
         static IEnumerator Race(GhostSelectScene list)

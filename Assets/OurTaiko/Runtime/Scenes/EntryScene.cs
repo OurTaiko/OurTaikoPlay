@@ -16,7 +16,7 @@ namespace OurTaiko
     // time with its own don (issue #5): its nameplate fades in on the right and the invite goes away;
     // the play mode then plays both seats. A 2P don on the credit screen joins 2P alone: its plate
     // fades in on the right, the 2P drum works the boards, every board stays open, and the player
-    // sits on the 2P side (Seating) in the screens that follow; 1P may still join with its don,
+    // sits on the 2P side (SceneSwitcher.Seated) in the screens that follow; 1P may still join with its don,
     // which makes two players. Not ported: the 3D Don and its join cloud, the other
     // boards (特訓モード / きせかえ), the costume menu and the ALL.Net indicator. The screen is saved
     // in the scene (EntryView); Awake only binds it.
@@ -73,8 +73,7 @@ namespace OurTaiko
         {
             switcher = SceneSwitcher.EnsureInstance();
             // A new credit: whoever plays joins again.
-            switcher.TwoPlayers = false;
-            Seating.SitTogether();
+            switcher.SetSeats(Side.P1);
             double now = Now;
             Bind();
             Flow = new EntryFlow(now, Modes.Length);
@@ -200,8 +199,8 @@ namespace OurTaiko
             {
                 HasLeft = true;
                 switcher.PracticeMode = view.boards[Flow.SelectedMode].practice;
-                switcher.TwoPlayers = TwoJoined;
-                if (!TwoJoined) Seating.SitAlone(Lone2P ? Side.P2 : Side.P1);
+                if (TwoJoined) switcher.SetSeats(Side.P1, Side.P2);
+                else switcher.SetSeats(Lone2P ? Side.P2 : Side.P1);
                 string scene = Modes[Flow.SelectedMode].Scene;
                 // On the way to song select every folder closes and the songs folder is read again,
                 // so songs added since the last visit appear. The online songs are already listed:

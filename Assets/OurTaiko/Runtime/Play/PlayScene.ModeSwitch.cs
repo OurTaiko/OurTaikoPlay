@@ -29,7 +29,7 @@ namespace OurTaiko
         // Where it is not offered the button stays greyed and has no action.
         void AddModeSwitch()
         {
-            if (IsReplay || IsTwoPlayer || switcher.TwoPlayers || IsPractice && !Session.Chart.Branches.All(b => b.HasAllRoutes)) return;
+            if (IsReplay || IsTwoPlayer || switcher.Seated.Count == 2 || IsPractice && !Session.Chart.Branches.All(b => b.HasAllRoutes)) return;
             pauseMenu.modeSwitch.onClick.AddListener(SwitchMode);
             pauseMenu.OfferModeSwitch(IsPractice);
         }

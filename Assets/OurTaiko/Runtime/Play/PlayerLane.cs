@@ -15,7 +15,7 @@ namespace OurTaiko
     {
         public int Seat { get; }
         public LaneViews Views { get; }
-        // The drum this lane reads: its seat's, or a lone player's side (Seating) for the first lane.
+        // The drum this lane reads: its seat's, or the leading side (SceneSwitcher.Lead) for the first lane.
         public int DrumSeat { get; set; }
         public PlayerInput Input => InputManager.Players[DrumSeat];
         public PlaySession Session { get; internal set; }

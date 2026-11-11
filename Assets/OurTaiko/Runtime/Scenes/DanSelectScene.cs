@@ -81,7 +81,7 @@ namespace OurTaiko
         {
             switcher = SceneSwitcher.EnsureInstance();
             // 段位道場 is single-player: Entry keeps 2P off its board, and the course plays one seat.
-            switcher.TwoPlayers = false;
+            switcher.SeatLeadAlone();
             language = SettingManager.EnsureInstance().Settings.general.Language;
             Load();
             var all = pages.SelectMany(p => p.Courses).Where(c => !c.IsGaiden).ToList();
@@ -289,7 +289,7 @@ namespace OurTaiko
             {
                 case DanSelectFlow.Choice.Option:
                     Play(sfx, don, true);
-                    Options = new OptionMenu(PlayOptions.ForSeat(Seating.Side.Index()), optionArt.hitSounds != null ? optionArt.hitSounds.Count : 0);
+                    Options = new OptionMenu(PlayOptions.ForSeat(switcher.Lead.Index()), optionArt.hitSounds != null ? optionArt.hitSounds.Count : 0);
                     optionPanel.Open(Options, now);
                     Play(voice, optionsVoice);
                     break;
@@ -377,7 +377,7 @@ namespace OurTaiko
         void Begin(DanCourseEntry entry)
         {
             switcher.SelectedDan = entry;
-            PlayOptions.ForSeat(Seating.Side.Index()).Save();
+            PlayOptions.ForSeat(switcher.Lead.Index()).Save();
             if (!Application.CanStreamedLevelBeLoaded(SceneSwitcher.DanPlayScene))
             {
                 Log.Warn("Dan", "DanPlayScene is not in the build.");
@@ -470,7 +470,7 @@ namespace OurTaiko
         void Show(double now)
         {
             PollLookup();
-            if (optionPanel.Draw(now)) { Options = null; PlayOptions.ForSeat(Seating.Side.Index()).Save(); Flow.OptionsClosed(); }
+            if (optionPanel.Draw(now)) { Options = null; PlayOptions.ForSeat(switcher.Lead.Index()).Save(); Flow.OptionsClosed(); }
             view.empty.gameObject.SetActive(courses.Count == 0);
             view.board.gameObject.SetActive(courses.Count > 0);
             ShowRibbon(now);

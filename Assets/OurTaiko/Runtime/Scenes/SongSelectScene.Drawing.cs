@@ -218,7 +218,7 @@ namespace OurTaiko
             float cardX = cards[0].Board.rectTransform.anchoredPosition.x;
             frame.rectTransform.anchoredPosition = framePosition + Vector2.right * (x - cardX);
             glow.rectTransform.anchoredPosition = glowPosition + Vector2.right * (x - back.rectTransform.anchoredPosition.x);
-            var second = Manager.TwoPlayers ? Manager.CursorOf(1) : null;
+            var second = switcher.Seated.Count == 2 ? Manager.CursorOf(1) : null;
             // selector.lua: while both bubbles sit on the same slot they part by 40 px each way.
             float part = second != null && CourseSlot(second.Selected) == CourseSlot(selected) ? 40 : 0;
             balloon.rectTransform.anchoredPosition = balloonPosition + Vector2.right * (x - cardX - part);

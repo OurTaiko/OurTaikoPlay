@@ -117,7 +117,7 @@ namespace OurTaiko
         {
             var plates = new[] { view.nameplate, view.secondBoard.nameplate };
             var controller = PlayerInfoController.EnsureInstance();
-            int own = Seating.Side.Index();
+            int own = switcher.Lead.Index();
             plates[ghost.PlayerLane]?.Pin(own == 0 ? controller.Info : controller.SecondInfo, ghost.PlayerLane);
             plates[ghost.GhostLane]?.Pin(new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? "Ghost" : ghost.Nickname }, ghost.GhostLane);
         }
@@ -127,17 +127,17 @@ namespace OurTaiko
         void SaveScores()
         {
             if (!switcher.TakeCompletedPlay(out var song, out var record, out var record2P)) return;
-            // A ghost battle keeps the player's play only, as the player's own (Seating); the
+            // A ghost battle keeps the player's play only, as the player's own (SceneSwitcher.Lead); the
             // recording's result is shown and never saved.
             if (switcher.PlaysGhost)
             {
                 bool below = switcher.Ghost.PlayerLane == 1;
                 var played = below ? switcher.LastResult2P : Result;
-                if (played != null) SaveScore(song, played, below ? record2P : record, Seating.Side.Index());
+                if (played != null) SaveScore(song, played, below ? record2P : record, switcher.Lead.Index());
                 return;
             }
-            // A lone player's score is their side's account's (Seating; 1P's with two players).
-            SaveScore(song, Result, record, Seating.Side.Index());
+            // A lone player's score is their side's account's (SceneSwitcher.Lead; 1P's with two players).
+            SaveScore(song, Result, record, switcher.Lead.Index());
             if (switcher.LastResult2P != null) SaveScore(song, switcher.LastResult2P, record2P, 1);
         }
 
@@ -243,14 +243,14 @@ namespace OurTaiko
 
         // Each board's player's first drum press of the frame: its ka turns its own board's pages, a
         // don from either skips or leaves. A single board is the lone player's, on their own side's
-        // drum (Seating: 1P, or a lone 2P's 2P).
+        // drum (SceneSwitcher.Lead: 1P, or a lone 2P's 2P).
         void HandleInput()
         {
             // A ghost battle has one player: only their own drum works the result, and their ka turns
             // both boards' pages together.
             if (boards.Count > 1 && switcher.PlaysGhost)
             {
-                foreach (var press in InputManager.Players[Seating.Side.Index()].PressesThisFrame)
+                foreach (var press in InputManager.Players[switcher.Lead.Index()].PressesThisFrame)
                 {
                     if (press.Key.IsKa()) for (int board = 0; board < boards.Count; board++) ChangePage(board, press.Key.IsRight() ? 1 : -1);
                     else Don(switcher.Ghost.PlayerLane);
@@ -259,7 +259,7 @@ namespace OurTaiko
                 return;
             }
             for (int board = 0; board < boards.Count; board++)
-                foreach (var press in InputManager.Players[boards.Count > 1 ? board : Seating.Side.Index()].PressesThisFrame)
+                foreach (var press in InputManager.Players[boards.Count > 1 ? board : switcher.Lead.Index()].PressesThisFrame)
                 {
                     if (press.Key.IsKa()) ChangePage(board, press.Key.IsRight() ? 1 : -1);
                     else Don(board);

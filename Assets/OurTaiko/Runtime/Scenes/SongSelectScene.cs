@@ -392,7 +392,7 @@ namespace OurTaiko
         void DrawSecondPlayer(double now)
         {
             if (view.nameplateGroup2P == null) return;
-            view.nameplateGroup2P.alpha = !Manager.TwoPlayers ? 0
+            view.nameplateGroup2P.alpha = switcher.Seated.Count < 2 ? 0
                 : (float)Clamp01((now - secondJoinedAt) / EntryFlow.NameplateFadeMs);
         }
 

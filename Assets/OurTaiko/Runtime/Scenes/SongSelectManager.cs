@@ -86,8 +86,7 @@ namespace OurTaiko
         public bool IsReady(int seat) => ready[seat];
         public bool AutoPlay => PlayOptions.Shared.auto;
         // 2P has joined (on Entry or here) for a play; practice is single-player.
-        public bool TwoPlayers => Switcher.PlaysTwo;
-        int Seats => TwoPlayers ? 2 : 1;
+        int Seats => Switcher.Seated.Count;
         // The view: whether the course panel has faded in (it ignores input until then).
         public Func<bool> CourseReady { get; set; }
         // The view: whether the wheel is still sliding from the last move (a ka now skips).
@@ -264,20 +263,20 @@ namespace OurTaiko
             else if (donHit) Confirm();
             // 2P's drum: a don joins; once in, it browses like 1P and works its own course cursor.
             var p2 = InputManager.P2;
-            if (!TwoPlayers) { if (p2.DonDown) JoinSecond(); }
+            if (Switcher.Seated.Count < 2) { if (p2.DonDown) JoinSecond(); }
             else if (p2.GetKeyDown(InputKey.LeftKa)) Ka(-1, 1);
             else if (p2.GetKeyDown(InputKey.RightKa)) Ka(+1, 1);
             else if (p2.DonDown) Confirm(1);
         }
 
         // SongSelect2PScreen: 2P joins with its don while 1P is choosing (not in practice). A lone
-        // 2P (Seating) already holds the 2P side; 1P joins it on Entry.
-        public bool CanJoinSecond => !TwoPlayers && Seating.Side == Side.P1 && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
+        // 2P already holds the 2P side; 1P joins it on Entry.
+        public bool CanJoinSecond => !Switcher.IsSeated(Side.P2) && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
 
         public void JoinSecond()
         {
             if (!CanJoinSecond) return;
-            Switcher.TwoPlayers = true;
+            Switcher.Seat(Side.P2);
             if (Phase == State.CourseSelect) cursors[1] = NewCursor(1);
             VoiceRequested?.Invoke(Voice.SecondJoined);
             SecondJoined?.Invoke();
@@ -295,7 +294,7 @@ namespace OurTaiko
             if (SearchDialogOpen) return;
             if (Phase == State.Browsing && SearchActive && open.Count == 0) { ClearSearch(); return; }
             if (IsOptionPanelOpen) CloseOptions();
-            else if (Phase == State.CourseSelect && TwoPlayers && IsOptionPanelOpenFor(1)) CloseOptions(1);
+            else if (Phase == State.CourseSelect && Switcher.Seated.Count == 2 && IsOptionPanelOpenFor(1)) CloseOptions(1);
             else if (Phase == State.Browsing && open.Count > 0) { if (AcceptsInput()) { Play(Sound.Don); CloseFolder(); } }
             else Switcher.SwitchScene(SceneSwitcher.EntryScene);
         }
@@ -372,7 +371,7 @@ namespace OurTaiko
         {
             if (Phase != State.Decided) return;
             var info = items[Focused].Info;
-            string course2P = TwoPlayers ? info.Course(cursors[1].Selected).Course : null;
+            string course2P = Switcher.Seated.Count == 2 ? info.Course(cursors[1].Selected).Course : null;
             Switcher.Play(FocusedSong, info.Course(cursors[0].Selected).Course, AutoPlay, course2P, PlayOptions.Second.auto);
         }
 
@@ -610,7 +609,7 @@ namespace OurTaiko
         {
             Array.Clear(ready, 0, ready.Length);
             cursors[0] = NewCursor(0);
-            cursors[1] = TwoPlayers ? NewCursor(1) : null;
+            cursors[1] = Switcher.Seated.Count == 2 ? NewCursor(1) : null;
             SetPhase(State.CourseSelect);
         }
 
@@ -641,8 +640,8 @@ namespace OurTaiko
 
         // SongSelectPlayer::handle_input_selecting: don on the option button opens ModifierSelector.
         // 2P's menu edits 2P's own options in the same panel on the right.
-        // A cursor's side: the second cursor is 2P's; the first is 1P's, or a lone 2P's (Seating).
-        static int SideOf(int seat) => seat == 1 ? 1 : Seating.Side.Index();
+        // A cursor's side: the second cursor is 2P's; the first is the leading side's (1P, or a lone 2P's).
+        int SideOf(int seat) => seat == 1 ? 1 : Switcher.Lead.Index();
 
         void OpenOptions(int seat)
         {

@@ -26,9 +26,9 @@ namespace OurTaiko
         [Tooltip("0 = 1P, 1 = 2P.")]
         public int seat;
         // The side whose player the plate shows: a single-player screen's plate (seat 0) shows the
-        // lone player, 1P or a lone 2P (Seating). A pinned plate shows a given player on a given side
+        // lone player, 1P or a lone 2P (InputManager.Lead). A pinned plate shows a given player on a given side
         // (a ghost battle) instead.
-        int Shown => pinned != null ? pinnedSide : seat == 0 ? Seating.Side.Index() : seat;
+        int Shown => pinned != null ? pinnedSide : seat == 0 ? InputManager.Lead.Index() : seat;
         PlayerInfo pinned;
         int pinnedSide;
         int applied = -1;
@@ -90,7 +90,7 @@ namespace OurTaiko
         // The rainbow band runs on real time, like the original's current_ms (it keeps cycling in pause).
         void Update()
         {
-            // The players sat down (Seating) after this plate was shown.
+            // The players sat down (SceneSwitcher.Seated) after this plate was shown.
             if (applied != Shown) ApplyShown();
             ShowRainbow(GameTimeline.FrameTime - rainbowStart);
         }

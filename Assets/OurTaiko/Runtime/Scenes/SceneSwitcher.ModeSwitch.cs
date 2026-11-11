@@ -25,7 +25,7 @@ namespace OurTaiko
         // and course. Refused with two players, whom a single-player scene would drop.
         bool SwitchPlayMode(bool practice, double? entryPosition, BranchRoute entryBranch)
         {
-            if (IsInputBlocked || SelectedSong == null || PracticeMode == practice || TwoPlayers
+            if (IsInputBlocked || SelectedSong == null || PracticeMode == practice || Seated.Count == 2
                 || (CurrentScene != GameScene && CurrentScene != PracticeScene)
                 || !Application.CanStreamedLevelBeLoaded(practice ? PracticeScene : GameScene)) return false;
             PracticeMode = practice;

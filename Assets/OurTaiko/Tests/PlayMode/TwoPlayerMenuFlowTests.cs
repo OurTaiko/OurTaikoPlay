@@ -23,7 +23,7 @@ namespace OurTaiko.Tests
         public void TearDown()
         {
             PlayOptions.Shared = originalFirst; PlayOptions.Second = originalSecond;
-            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.TwoPlayers = false;
+            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.SetSeats(Side.P1);
         }
 
         [UnityTest]
@@ -34,7 +34,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
-            Assert.That(SceneSwitcher.Instance.TwoPlayers, Is.False);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(1));
             Assert.That(entry.view.nameplateGroup2P.alpha, Is.Zero);
 
             // The credit screen takes no join in its first 120 ms. 2P's don joins 2P alone; 1P's
@@ -59,7 +59,7 @@ namespace OurTaiko.Tests
             float deadline = Time.realtimeSinceStartup + 20;
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
             while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene);
-            Assert.That(SceneSwitcher.Instance.TwoPlayers, Is.True);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(2));
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.view.nameplateGroup2P.alpha, Is.EqualTo(1), "2P's plate is up when it joined on Entry.");
         }
@@ -110,11 +110,11 @@ namespace OurTaiko.Tests
             while (switcher.IsInputBlocked || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene);
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             var manager = select.Manager;
-            Assert.That(manager.TwoPlayers, Is.False);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(1));
             Assert.That(select.view.nameplateGroup2P.alpha, Is.Zero);
 
             manager.JoinSecond();
-            Assert.That(manager.TwoPlayers, Is.True);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(2));
             Assert.That(select.voice.clip, Is.SameAs(select.secondJoined));
             yield return new WaitForSecondsRealtime(0.25f);
             Assert.That(select.view.nameplateGroup2P.alpha, Is.EqualTo(1));
