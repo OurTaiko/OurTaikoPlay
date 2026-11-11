@@ -79,6 +79,9 @@ jobs:
           - name: Windows
             platform: StandaloneWindows64
             method: OurTaiko.Editor.PlayerBuilds.BuildWindows
+          - name: Linux x64
+            platform: StandaloneLinux64
+            method: OurTaiko.Editor.PlayerBuilds.BuildLinux
           - name: Android
             platform: Android
             method: OurTaiko.Editor.PlayerBuilds.BuildAndroid
@@ -157,10 +160,15 @@ jobs:
           elif [[ "${{ matrix.platform }}" == StandaloneOSX ]]; then
             # Keep the app bundle's executable permissions and symbolic links in the archive.
             (cd "$DIR" && zip -qry "$GITHUB_WORKSPACE/out/$BUILD_NAME-$DISPLAY_VERSION-macOS-universal.zip" "$BUILD_NAME.app")
-          else
+          elif [[ "${{ matrix.platform }}" == StandaloneLinux64 ]]; then
+            bash .github/scripts/package-linux.sh "$DIR" "$BUILD_NAME" "$DISPLAY_VERSION" "$GITHUB_WORKSPACE/out"
+          elif [[ "${{ matrix.platform }}" == StandaloneWindows64 ]]; then
             # Ship the whole folder: the exe needs its _Data directory and the BASS DLLs.
             (cd "$DIR" && zip -qry "$GITHUB_WORKSPACE/out/$BUILD_NAME-$DISPLAY_VERSION-Windows-x64.zip" . \
               -x '*_BurstDebugInformation_DoNotShip/*' '*_BackUpThisFolder_ButDontShipItWithYourGame/*')
+          else
+            echo "::error::Unsupported package platform: ${{ matrix.platform }}"
+            exit 1
           fi
           ls -la out
 

@@ -111,3 +111,43 @@ switching back, normal exit and killing **only that test process**. Also exercis
 an unavailable device, denied/missing reservation manager and a deliberately
 busy PCM held by another owned test process. Assertions and compilation alone
 do not establish these recovery guarantees or latency performance.
+
+## CI build and release archive
+
+The Build workflow includes `StandaloneLinux64` through game-ci/unity-builder and
+`PlayerBuilds.BuildLinux`, with identical first-attempt/retry inputs. game-ci supplies
+`-customBuildPath build/StandaloneLinux64/OurTaikoPlay`; this is a bare executable
+name, not the local default `Builds/Linux/OurTaikoPlay.x86_64`.
+
+`.github/scripts/package-linux.sh` is the production packaging entry. It archives
+the complete clean Player output as `OurTaikoPlay-<display-version>-Linux-x64.tar.gz`,
+preserving modes and symlinks and excluding Unity's `*_BurstDebugInformation_DoNotShip`
+and `*_BackUpThisFolder_ButDontShipItWithYourGame` directories at any depth. It rejects
+unexpected root entries instead of bundling settings, scores, songs, logs or caches;
+never package an installed/running game directory. Root payload is the executable,
+Data directory, shared libraries and optional UnityCrashHandler64.
+
+`out-StandaloneLinux64` joins the existing `out-*` artifact collection for main
+nightly and `v*` tagged GitHub releases. Linux does not enter RhythmHub or TestFlight.
+Changing this wiring is not authorization to push, run CI or publish a release.
+
+Offline packaging regression (Python 3 + PyYAML, GNU tar, zip and bash):
+
+```sh
+python3 .github/scripts/tests/check-build-packages.py \
+  --linux-player /path/to/isolated/ordinary-linux-player \
+  --work-dir /path/to/new-empty-validation-directory
+```
+
+This **test-only** script takes only build payload into clean staging, runs the
+workflow's actual Package block, and checks extracted hashes, modes, symlinks,
+native dependencies and exclusions. Other-platform files are routing fixtures,
+not native build validation. All git/gh release commands and sudo ownership changes
+are strict local recorders: no tag, network, upload or release operation occurs.
+Outputs/fixtures are retained in the chosen scratch directory, never the checkout.
+Validation archives deliberately contain preservation fixtures; they are not release packages.
+The unchanged jobs/steps are compared with `--baseline-ref` (default `HEAD^`, the
+reviewed parent when validating this standalone CI change).
+Use actionlint separately for workflow schema/expressions; the script also checks
+all inline shell syntax with `bash -n`. Local checks do not establish hosted-image,
+Unity activation or actual GitHub publication success.
