@@ -70,7 +70,7 @@ namespace OurTaiko
         public int BaseScore => scoring.BaseScore;
         public int Combo { get; private set; }
         public int MaxCombo { get; private set; }
-        double expressionEighthStart = double.PositiveInfinity, expressionSixteenthStart = double.PositiveInfinity;
+        double expressionOpenStart = double.PositiveInfinity, expressionFastStart = double.PositiveInfinity, expressionAngryStart = double.PositiveInfinity;
         public int Good { get; private set; }
         public int Ok { get; private set; }
         public int Bad { get; private set; }
@@ -279,7 +279,7 @@ namespace OurTaiko
         }
 
         public int NoteExpressionFrame(double time, bool preview = false) => NoteExpression.Frame(
-            BeatAt(time, preview), Combo, expressionEighthStart, expressionSixteenthStart);
+            BeatAt(time, preview), Combo, expressionOpenStart, expressionFastStart, expressionAngryStart);
 
         bool IsActive(int branchId, BranchRoute route) => branchId < 0 || selectedRoutes[branchId] == (int)route;
         // The route whose soul gauge increments a note uses (OpenTaiko UpdateGauge): its own inside
@@ -550,7 +550,7 @@ namespace OurTaiko
         {
             resolved[i] = exploded[i] = true; Version++;
             MinesHit++; Combo = 0;
-            expressionEighthStart = expressionSixteenthStart = double.PositiveInfinity;
+            expressionOpenStart = expressionFastStart = expressionAngryStart = double.PositiveInfinity;
             gauge.ApplyMine();
             Judged?.Invoke(i, Judgment.Bad);
         }
@@ -561,15 +561,16 @@ namespace OurTaiko
             if (result == Judgment.Bad)
             {
                 Bad++; Combo = 0;
-                expressionEighthStart = expressionSixteenthStart = double.PositiveInfinity;
+                expressionOpenStart = expressionFastStart = expressionAngryStart = double.PositiveInfinity;
             }
             else
             {
                 if (Chart.Notes[i].IsAdLib) { if (result == Judgment.Good) AdLibGood++; else AdLibOk++; }
                 else if (result == Judgment.Good) Good++; else Ok++;
                 Combo++; MaxCombo = Math.Max(MaxCombo, Combo);
-                if (Combo == 50) expressionEighthStart = NoteExpression.StartBeat(Chart.Notes[i].Beat);
-                if (Combo == 150) expressionSixteenthStart = NoteExpression.StartBeat(Chart.Notes[i].Beat);
+                if (Combo == NoteExpression.OpenCombo) expressionOpenStart = NoteExpression.StartBeat(Chart.Notes[i].Beat);
+                if (Combo == NoteExpression.FastCombo) expressionFastStart = NoteExpression.StartBeat(Chart.Notes[i].Beat);
+                if (Combo == NoteExpression.AngryCombo) expressionAngryStart = NoteExpression.StartBeat(Chart.Notes[i].Beat);
             }
             int points = scoring.ApplyJudgment(result);
             gauge.ApplyJudgment(result, GaugeRoute(i));

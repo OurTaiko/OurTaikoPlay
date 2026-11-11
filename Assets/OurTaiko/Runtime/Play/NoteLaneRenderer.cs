@@ -13,12 +13,12 @@ namespace OurTaiko
         public sealed class Assets
         {
             public RectTransform NoteLayer, BarLayer, MojiLayer;
-            public Sprite[] NoteSprites, AlternateNoteSprites, RollBodySprites, RollTailSprites, MojiSprites;
+            public Sprite[] NoteSprites, AlternateNoteSprites, AngryNoteSprites, RollBodySprites, RollTailSprites, MojiSprites;
             public Sprite BalloonTailSprite, MojiRollSprite;
         }
 
         readonly RectTransform noteLayer, barLayer, mojiLayer;
-        readonly Sprite[] noteSprites, alternateNoteSprites, rollBodySprites, rollTailSprites, mojiSprites;
+        readonly Sprite[] noteSprites, alternateNoteSprites, angryNoteSprites, rollBodySprites, rollTailSprites, mojiSprites;
         readonly Sprite balloonTailSprite, mojiRollSprite;
         // A balloon whose counter is up hides itself and its text.
         readonly BalloonCounterView balloonCounter;
@@ -63,10 +63,28 @@ namespace OurTaiko
             public float MidAspect;
         }
 
+        // Big notes (and the Kadon) rest open-mouthed: their first crop is the angry open face and
+        // their second the angry closed one, the other way round from the small notes.
+        static bool RestsOpen(NoteKind kind) => kind is NoteKind.BigDon or NoteKind.BigKa or NoteKind.BigRoll or NoteKind.Kadon;
+
+        // The face for a NoteExpression frame. Every note opens its mouth on the same steps; a note
+        // without an angry face (the big notes, the kusudama, the mine) opens its mouth instead.
+        Sprite HeadSprite(NoteKind kind, int expression)
+        {
+            int k = (int)kind;
+            if (expression == NoteExpression.Rest) return noteSprites[k];
+            bool open = expression != NoteExpression.Closed;
+            if (RestsOpen(kind)) return open ? noteSprites[k] : alternateNoteSprites[k];
+            if (!open) return noteSprites[k];
+            if (expression == NoteExpression.Angry && angryNoteSprites != null && k < angryNoteSprites.Length && angryNoteSprites[k] != null)
+                return angryNoteSprites[k];
+            return alternateNoteSprites[k];
+        }
+
         public NoteLaneRenderer(Assets assets, BalloonCounterView balloonCounter)
         {
             noteLayer = assets.NoteLayer; barLayer = assets.BarLayer; mojiLayer = assets.MojiLayer;
-            noteSprites = assets.NoteSprites; alternateNoteSprites = assets.AlternateNoteSprites;
+            noteSprites = assets.NoteSprites; alternateNoteSprites = assets.AlternateNoteSprites; angryNoteSprites = assets.AngryNoteSprites;
             rollBodySprites = assets.RollBodySprites; rollTailSprites = assets.RollTailSprites; mojiSprites = assets.MojiSprites;
             balloonTailSprite = assets.BalloonTailSprite; mojiRollSprite = assets.MojiRollSprite;
             this.balloonCounter = balloonCounter;
@@ -360,7 +378,7 @@ namespace OurTaiko
                 }
                 if (view == null) { view = AcquireNote(i, note); notesEntered = true; }
                 else if (!view.Root.gameObject.activeSelf) view.Root.gameObject.SetActive(true);
-                view.Head.sprite = expression == 0 ? noteSprites[(int)note.Kind] : alternateNoteSprites[(int)note.Kind];
+                view.Head.sprite = HeadSprite(note.Kind, expression);
                 view.Root.anchoredPosition = pos;
                 for (int o = 0; o < overlays.Count; o++) overlays[o].ShowNote(i, note, view.Root);
                 if (view.BalloonTail != null) view.BalloonTail.enabled = balloonCounter.NoteIndex != i;
