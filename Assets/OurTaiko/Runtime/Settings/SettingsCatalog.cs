@@ -211,7 +211,7 @@ namespace OurTaiko
                         s => s.play.singlePlayerDrumPad, (s, on) => s.play.singlePlayerDrumPad = on)),
                 new SettingGroup("Hit Feedback",
                     SettingRow.Choice("timing-display", "Timing Offset",
-                        "Which hits show how many ms early (blue) or late (red) they were, beside the lane. A hit judged BAD shows it unless this is Off.",
+                        "Which hits show how many ms early (blue) or late (red) they were, beside the lane. BAD never shows it.",
                         TimingDisplays.Names, s => (int)s.play.TimingDisplay, (s, i) => s.play.timingDisplay = (TimingDisplay)i)),
                 new SettingGroup("Practice",
                     SettingRow.Toggle("practice-timing-review", "Practice Timing Review",

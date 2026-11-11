@@ -72,8 +72,7 @@ namespace OurTaiko
         public string p2Username = "", p2Password = "";
     }
 
-    // When the early/late offset shows during play. A pressed 不可 is further off than any 可, so it
-    // shows whenever the offset is shown at all.
+    // When the early/late offset shows during play. 不可 never shows one, pressed or missed.
     public enum TimingDisplay { GoodAndOk, Ok, Off }
 
     public static class TimingDisplays
@@ -81,8 +80,8 @@ namespace OurTaiko
         public static readonly string[] Names = { "GOOD + OK", "OK", "Off" };
         public static bool Shows(this TimingDisplay display, Judgment judgment) => display switch
         {
-            TimingDisplay.GoodAndOk => judgment == Judgment.Good || judgment == Judgment.Ok || judgment == Judgment.Bad,
-            TimingDisplay.Ok => judgment == Judgment.Ok || judgment == Judgment.Bad,
+            TimingDisplay.GoodAndOk => judgment == Judgment.Good || judgment == Judgment.Ok,
+            TimingDisplay.Ok => judgment == Judgment.Ok,
             _ => false,
         };
     }

@@ -137,9 +137,9 @@ namespace OurTaiko.Tests
         public void TimingDisplayChoosesWhichJudgmentsShowTheirOffset()
         {
             Assert.That(new[] { Judgment.Good, Judgment.Ok, Judgment.Bad, Judgment.Roll }.Select(j => TimingDisplay.GoodAndOk.Shows(j)),
-                Is.EqualTo(new[] { true, true, true, false }));
+                Is.EqualTo(new[] { true, true, false, false }));
             Assert.That(new[] { Judgment.Good, Judgment.Ok, Judgment.Bad, Judgment.Roll }.Select(j => TimingDisplay.Ok.Shows(j)),
-                Is.EqualTo(new[] { false, true, true, false }));
+                Is.EqualTo(new[] { false, true, false, false }));
             Assert.That(new[] { Judgment.Good, Judgment.Ok, Judgment.Bad, Judgment.Roll }.Select(j => TimingDisplay.Off.Shows(j)),
                 Is.EqualTo(new[] { false, false, false, false }));
         }

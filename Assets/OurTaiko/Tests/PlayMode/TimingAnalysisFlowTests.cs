@@ -126,19 +126,24 @@ namespace OurTaiko.Tests
                 Assert.That(feedback.label.alpha, Is.EqualTo(1)); Assert.That(feedback.label.text, Is.EqualTo("+50ms"));
                 Hit(1, -5);
                 Assert.That(feedback.label.alpha, Is.Zero, "A 良 says nothing and clears the last 可's offset.");
-                Hit(2, 90);
-                Assert.That(feedback.label.alpha, Is.EqualTo(1)); Assert.That(feedback.label.text, Is.EqualTo("+90ms"), "A pressed 不可 still shows.");
+                Hit(2, 50);
+                Assert.That(feedback.label.alpha, Is.EqualTo(1));
+                Hit(3, 90);
+                Assert.That(play.Session.Bad, Is.EqualTo(1));
+                Assert.That(feedback.label.alpha, Is.Zero, "A pressed 不可 shows no offset and clears the last one.");
 
                 Use(TimingDisplay.GoodAndOk);
-                Hit(3, -5);
+                Hit(4, -5);
                 Assert.That(feedback.label.alpha, Is.EqualTo(1)); Assert.That(feedback.label.text, Is.EqualTo("-5ms"));
+                Hit(5, -90);
+                Assert.That(feedback.label.alpha, Is.Zero, "Nor in GOOD + OK.");
 
                 Use(TimingDisplay.Off);
-                Hit(4, 50);
+                Hit(6, 50);
                 Assert.That(feedback.label.alpha, Is.Zero);
-                Hit(5, 90);
+                Hit(7, -5);
                 Assert.That(feedback.label.alpha, Is.Zero);
-                Assert.That(play.Session.HitTimings.Count, Is.EqualTo(6), "The setting only hides the text; every offset is still recorded.");
+                Assert.That(play.Session.HitTimings.Count, Is.EqualTo(8), "The setting only hides the text; every offset is still recorded.");
             }
             finally
             {
@@ -239,7 +244,7 @@ namespace OurTaiko.Tests
                 Assert.That(feedback.label.text, Is.EqualTo("+50ms"), "A miss must not display an invented offset.");
                 play.Session.Hit(false, notes[3].Time + play.Session.JudgeOffset + .09);
                 Assert.That(judgment.sprite, Is.SameAs(play.judgmentSprites[(int)Judgment.Bad - 1]), "A press judged 不可 is drawn.");
-                Assert.That(feedback.label.text, Is.EqualTo("+90ms"), "Hit Bad still has a measured offset.");
+                Assert.That(feedback.label.alpha, Is.Zero, "A press judged 不可 shows no offset.");
                 if (practice)
                 {
                     // Browsing measures only moves the preview; the attempt starts over when practice starts.
