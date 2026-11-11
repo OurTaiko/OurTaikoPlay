@@ -100,6 +100,55 @@ namespace OurTaiko.Tests
         [UnityTest, Category("DrawOrder")] public IEnumerator SinglePlayShowsSignedTiming() => CheckFeedback(false);
         [UnityTest, Category("DrawOrder")] public IEnumerator PracticeShowsTimingAndClearsOnSeek() => CheckFeedback(true);
         [UnityTest]
+        public IEnumerator TimingDisplaySettingChoosesWhichHitsShowTheirOffset()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Timing Display\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n0000,\n#END");
+            var manager = SettingManager.EnsureInstance();
+            var saved = manager.Settings.Clone();
+            try
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                yield return null;
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
+                SceneSwitcher.Instance.Play(song, "Oni", false);
+                yield return WaitForScene(SceneSwitcher.GameScene);
+                var play = Object.FindAnyObjectByType<PlayScene>();
+                if (!play.IsPaused) play.TogglePause();
+                play.pausePanel.SetActive(false);
+                var feedback = play.firstLane.timingFeedback;
+                var notes = play.Session.Chart.Notes;
+                void Hit(int note, double ms) => play.Session.Hit(false, notes[note].Time + play.Session.JudgeOffset + ms / 1000);
+                void Use(TimingDisplay display) { var s = manager.Settings.Clone(); s.play.timingDisplay = display; manager.Set(s); }
+
+                Use(TimingDisplay.Ok);
+                Hit(0, 50);
+                Assert.That(feedback.label.alpha, Is.EqualTo(1)); Assert.That(feedback.label.text, Is.EqualTo("+50ms"));
+                Hit(1, -5);
+                Assert.That(feedback.label.alpha, Is.Zero, "A 良 says nothing and clears the last 可's offset.");
+                Hit(2, 90);
+                Assert.That(feedback.label.alpha, Is.EqualTo(1)); Assert.That(feedback.label.text, Is.EqualTo("+90ms"), "A pressed 不可 still shows.");
+
+                Use(TimingDisplay.GoodAndOk);
+                Hit(3, -5);
+                Assert.That(feedback.label.alpha, Is.EqualTo(1)); Assert.That(feedback.label.text, Is.EqualTo("-5ms"));
+
+                Use(TimingDisplay.Off);
+                Hit(4, 50);
+                Assert.That(feedback.label.alpha, Is.Zero);
+                Hit(5, 90);
+                Assert.That(feedback.label.alpha, Is.Zero);
+                Assert.That(play.Session.HitTimings.Count, Is.EqualTo(6), "The setting only hides the text; every offset is still recorded.");
+            }
+            finally
+            {
+                manager.Set(saved);
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator EarlyPageSwitchSettlesRevealAndEmptyStatesRemainReadable()
         {
             try

@@ -299,6 +299,8 @@ namespace OurTaiko
             Record.Inputs.Add(((time - scene.JudgeOffset) * 1000, Online.PlayRecord.TypeOf(isKa, right)));
             Session.Hit(isKa, time);
         }
+        static bool ShowsTiming(Judgment result) => SettingManager.EnsureInstance().Settings.play.TimingDisplay.Shows(result);
+
         void Feedback(bool isKa, bool right)
         {
             int flash = (isKa ? 2 : 0) + (right ? 1 : 0);
@@ -353,7 +355,7 @@ namespace OurTaiko
                     double? offset = Session.TimingOffsetMs(index);
                     if (v.timingFeedback != null)
                     {
-                        if (!AutoPlay && offset.HasValue) v.timingFeedback.Show(offset.Value);
+                        if (!AutoPlay && offset.HasValue && ShowsTiming(result)) v.timingFeedback.Show(offset.Value);
                         else v.timingFeedback.Clear();
                     }
                     // Long-note hits must not restart the previous normal judgment's text animation.
