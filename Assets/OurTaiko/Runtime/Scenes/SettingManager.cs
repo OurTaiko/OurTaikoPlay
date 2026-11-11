@@ -89,6 +89,11 @@ namespace OurTaiko
                 Log.MinimumLevel = settings.general.LogLevel;
                 Log.Info("Log", "Log level: " + Log.MinimumLevel);
             }
+            if (InputLog.Enabled != settings.general.inputLog)
+            {
+                InputLog.Enabled = settings.general.inputLog;
+                Log.Info(InputLog.Tag, "Input log " + (InputLog.Enabled ? "on" : "off"));
+            }
             Settings.general.keyboard.Apply();
             Changed?.Invoke(Settings);
         }

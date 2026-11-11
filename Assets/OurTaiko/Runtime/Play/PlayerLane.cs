@@ -208,14 +208,18 @@ namespace OurTaiko
         // dropped, except one of the other colour when the first left a Kadon waiting for it.
         void HitFirstDrumPress()
         {
-            bool first = true;
+            bool first = true, kadonDone = false;
             foreach (var press in Input.PressesThisFrame)
             {
                 bool ka = press.Key.IsKa();
                 if (first) { Hit(ka, press.Key.IsRight()); first = false; continue; }
-                if (Session == null || !Session.AwaitsKadon(ka, ChartTime)) continue;
+                if (kadonDone || Session == null || !Session.AwaitsKadon(ka, ChartTime))
+                {
+                    InputLog.Drop(Seat, press, "an earlier press this frame was judged");
+                    continue;
+                }
                 Hit(ka, press.Key.IsRight());
-                return;
+                kadonDone = true;
             }
         }
 
@@ -291,13 +295,19 @@ namespace OurTaiko
         // The drum sounds in the frame that judges the press, so it waits out the input delay with the judgment.
         public void Hit(bool isKa, bool right)
         {
-            if (Session == null || !scene.AcceptsHits || AutoPlay) return;
+            if (Session == null || !scene.AcceptsHits || AutoPlay)
+            {
+                if (InputLog.Enabled)
+                    InputLog.Judge(Seat, isKa, right, ChartTime, Session == null ? "no chart" : AutoPlay ? "autoplay" : "not accepting hits");
+                return;
+            }
             PlayDrum(isKa);
             Feedback(isKa, right);
             hitKa = isKa;
             double time = ChartTime;
             Record.Inputs.Add(((time - scene.JudgeOffset) * 1000, Online.PlayRecord.TypeOf(isKa, right)));
-            Session.Hit(isKa, time);
+            var result = Session.Hit(isKa, time);
+            if (InputLog.Enabled) InputLog.Judge(Seat, isKa, right, time, result.ToString());
         }
         static bool ShowsTiming(Judgment result) => SettingManager.EnsureInstance().Settings.play.TimingDisplay.Shows(result);
 

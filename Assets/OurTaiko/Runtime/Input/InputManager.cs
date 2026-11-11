@@ -122,6 +122,8 @@ namespace OurTaiko
             bindings[(int)key] = (Key[])keys.Clone();
         }
         public static IReadOnlyList<Key> GetBinding(InputKey key) => bindings[(int)key];
+        // The logical key a physical key drives, if any.
+        public static bool TryGetAction(Key physical, out InputKey key) => reverse.TryGetValue(physical, out key);
 
         // On-screen drum zones, hit-tested against touches and the mouse in OnPreUpdate.
         internal static void RegisterPad(DrumPad pad) { if (!pads.Contains(pad)) pads.Add(pad); }
@@ -141,12 +143,14 @@ namespace OurTaiko
         internal static void Initialize()
         {
             if (!installed) { InputSystem.onEvent += OnInputEvent; installed = true; }
+            InputLog.Install();
         }
 
         // Runs while the Input System processes events, before the key state is written,
         // so `isPressed` still holds the previous state and the call order is the press order.
         static void OnInputEvent(InputEventPtr eventPtr, InputDevice device)
         {
+            InputLog.OnEvent(eventPtr, device);
             if (!(device is Keyboard keyboard)) return;
             if (InputState.currentUpdateType == InputUpdateType.Editor) return;
             if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>()) return;
@@ -202,6 +206,7 @@ namespace OurTaiko
                 if (press.Key.IsDrum() && now - press.Time < DrumDelay) { pending[kept++] = press; continue; }
                 pressedThisFrame[(int)press.Key] = true;
                 frame.Add(press);
+                InputLog.Publish(press, now);
             }
             pending.RemoveRange(kept, pending.Count - kept);
         }
@@ -220,7 +225,11 @@ namespace OurTaiko
                     pressed |= control.wasPressedThisFrame;
                 }
                 // Fallback if an event was missed: keep the press, ordered after the recorded ones.
-                if (pressed && !recorded[i]) pending.Add(new InputPress((InputKey)i, InputState.currentTime));
+                if (pressed && !recorded[i])
+                {
+                    pending.Add(new InputPress((InputKey)i, InputState.currentTime));
+                    InputLog.Poll((InputKey)i);
+                }
             }
         }
 
@@ -230,12 +239,12 @@ namespace OurTaiko
             var touchscreen = Touchscreen.current;
             if (touchscreen != null)
                 foreach (var touch in touchscreen.touches)
-                    PollPointer(touch.press, touch.position.ReadValue(), touch.startTime.ReadValue());
+                    PollPointer(touch.press, touch.position.ReadValue(), touch.startTime.ReadValue(), touchscreen);
             var mouse = Mouse.current;
-            if (mouse != null) PollPointer(mouse.leftButton, mouse.position.ReadValue(), mouse.lastUpdateTime);
+            if (mouse != null) PollPointer(mouse.leftButton, mouse.position.ReadValue(), mouse.lastUpdateTime, mouse);
         }
 
-        static void PollPointer(ButtonControl button, Vector2 position, double time)
+        static void PollPointer(ButtonControl button, Vector2 position, double time, InputDevice device)
         {
             bool pressed = button.wasPressedThisFrame;
             if (!pressed && !button.isPressed) return;
@@ -244,7 +253,7 @@ namespace OurTaiko
                 if (!pad.TryHit(position, out var key)) continue;
                 key = key.OfSeat(Lead.Index());
                 held[(int)key] = true;
-                if (pressed) { pending.Add(new InputPress(key, time)); pad.Press(); }
+                if (pressed) { pending.Add(new InputPress(key, time)); pad.Press(); InputLog.Pad(key, device, time); }
                 return;
             }
         }

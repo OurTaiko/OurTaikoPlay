@@ -52,6 +52,8 @@ namespace OurTaiko
         public static readonly LogLevel[] LogLevels = { OurTaiko.LogLevel.Debug, OurTaiko.LogLevel.Info, OurTaiko.LogLevel.Warning, OurTaiko.LogLevel.Error };
         // The least severe messages the log keeps; empty (or unknown) is Log.DefaultLevel.
         public string logLevel = "";
+        // Logs every key event, drum press and judgment (InputLog), to find lost hits. Off by default.
+        public bool inputLog;
         public LogLevel LogLevel
         {
             get

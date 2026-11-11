@@ -191,7 +191,10 @@ namespace OurTaiko
                         GeneralSettings.LogLevels.Select(l => l.ToString()).ToArray(),
                         s => Array.IndexOf(GeneralSettings.LogLevels, s.general.LogLevel),
                         (s, i) => s.general.logLevel = GeneralSettings.LogLevels[i].ToString(), list: true,
-                        notes: new[] { "Everything", "Normal activity and problems", "Problems only", "Failures only" })),
+                        notes: new[] { "Everything", "Normal activity and problems", "Problems only", "Failures only" }),
+                    SettingRow.Toggle("input-log", "Input Log",
+                        "Write every key event, drum press and judgment to the log, to find lost hits. Needs Log Level Info or Debug; leave it off otherwise.",
+                        s => s.general.inputLog, (s, on) => s.general.inputLog = on)),
             }),
             new SettingPage("controls", "Controls", "Keyboard keys for both drums and the menus", _ => new[]
             {
