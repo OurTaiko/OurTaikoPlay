@@ -50,7 +50,7 @@ namespace OurTaiko.Tests
             entry.Don();
             yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 3);
             yield return new WaitForSecondsRealtime(0.8f);
-            for (int i = 0; i < 3; i++) { entry.Ka(1); yield return new WaitForSecondsRealtime(0.6f); }
+            for (int i = 0; i < 4; i++) { entry.Ka(1); yield return new WaitForSecondsRealtime(0.6f); }
             Assert.That(entry.Modes[entry.Flow.SelectedMode].Title, Is.EqualTo("ゲーム設定"));
             use(entry);
         }
