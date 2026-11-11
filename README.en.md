@@ -39,7 +39,7 @@ git submodule update --init --recursive
 3. Hit Don or tap the screen to join, then choose 「演奏ゲーム」.
 4. Choose a song and difficulty, then play.
 
-The repository includes TRIPLE HELIX, Input Calibration, and Branch Training examples. The latter two are silent calibration / practice charts. Choose 「ゲーム設定」 on Entry to open system settings.
+The repository includes Input Calibration and Branch Training examples, both silent calibration / practice charts. Choose 「ゲーム設定」 on Entry to open system settings.
 
 ## Controls
 

@@ -120,7 +120,7 @@ namespace OurTaiko.Tests
             Assert.That(select.view.nameplateGroup2P.alpha, Is.EqualTo(1));
 
             manager.OpenFolderAt(0); manager.Navigate(2);
-            Assert.That(manager.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
+            Assert.That(manager.FocusedSong.name, Is.EqualTo(TestSongs.TestPulse));
             yield return new WaitForSecondsRealtime(0.6f);
             manager.Confirm(1);
             Assert.That(manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect), "2P's don picks the song too.");

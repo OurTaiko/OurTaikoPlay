@@ -181,7 +181,7 @@ namespace OurTaiko
         // Opening the Result scene on its own shows a sample failed run instead of an empty board.
         static PlayResult Placeholder() => new PlayResult
         {
-            Title = "TRIPLE HELIX", Subtitle = "Yonokid", Course = "Oni", Difficulty = Difficulty.Oni, Level = 9,
+            Title = "TEST PULSE", Subtitle = "OurTaiko", Course = "Oni", Difficulty = Difficulty.Oni, Level = 9,
             Score = 754320, Good = 612, Ok = 98, Bad = 47, MaxCombo = 233, Rolls = 41, GaugePoints = 6420, AutoPlay = true,
         };
 

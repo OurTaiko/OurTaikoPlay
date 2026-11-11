@@ -1496,7 +1496,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Yonokid
+  m_text: Subtitle
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1448bfd5868014375beb7a2ddaf9faf2, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 2e6ac97cc3c254e2eac35188230f0b00, type: 2}
@@ -8247,7 +8247,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: TRIPLE HELIX
+  m_text: Song Title
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1448bfd5868014375beb7a2ddaf9faf2, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 2e6ac97cc3c254e2eac35188230f0b00, type: 2}
@@ -10288,7 +10288,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 77717f382d7b14cfc8d669a085a29aeb, type: 3}
     - target: {fileID: 2526266561641074021, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: m_text
-      value: Yonokid
+      value: Subtitle
       objectReference: {fileID: 0}
     - target: {fileID: 2526266561641074021, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -10308,7 +10308,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5374074755989670767, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: m_text
-      value: TRIPLE HELIX
+      value: Song Title
       objectReference: {fileID: 0}
     - target: {fileID: 5374074755989670767, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -10400,7 +10400,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7706167487700597851, guid: 6ce1908f544e74a348dd640194421405, type: 3}
       propertyPath: m_Name
-      value: TripleHelix
+      value: SongBoard
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

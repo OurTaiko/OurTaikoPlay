@@ -19,9 +19,9 @@ namespace OurTaiko.Tests
             var curtain = switcher.Curtain;
             Assert.That(curtain, Is.Not.Null, "The SceneSwitcher prefab carries the song loading curtain.");
             Assert.That(curtain.IsVisible, Is.False);
-            var song = Object.FindAnyObjectByType<SongSelectScene>().Manager.Songs.Single(s => s.name == TestSongs.TripleHelix);
+            var song = Object.FindAnyObjectByType<SongSelectScene>().Manager.Songs.Single(s => s.name == TestSongs.TestPulse);
             // A local song plays its WAVE file; drop any decode left by an earlier test.
-            Assert.That(song.audioPath, Does.EndWith("TRIPLE HELIX.ogg"));
+            Assert.That(song.audioPath, Does.EndWith("TEST PULSE.ogg"));
             song.SetPreparedAudio(null);
 
             // SongLoadingScene counts its minimum stay from its Start; the scene becomes active just
@@ -34,7 +34,7 @@ namespace OurTaiko.Tests
             SceneManager.activeSceneChanged += OnActiveScene;
             switcher.Play(song);
             Assert.That(switcher.IsSwitching && curtain.IsVisible && !curtain.IsClosed, Is.True);
-            Assert.That(curtain.title.text, Is.EqualTo("TRIPLE HELIX"));
+            Assert.That(curtain.title.text, Is.EqualTo("TEST PULSE"));
             foreach (var text in new[] { curtain.title, curtain.subtitle })
             {
                 Assert.That(text.font, Is.SameAs(SkinUi.Font), "All text uses the one UI font.");
@@ -72,7 +72,7 @@ namespace OurTaiko.Tests
             var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(switcher.TakePreparedChart(song, null), Is.Null, "The play scene took the prepared chart.");
             Assert.That(play.Session, Is.Not.Null);
-            Assert.That(play.Session.Chart.Title, Is.EqualTo("TRIPLE HELIX"));
+            Assert.That(play.Session.Chart.Title, Is.EqualTo("TEST PULSE"));
             yield return WaitUntil(() => curtain.Frame >= 75);
             Assert.That(curtain.IsVisible && !curtain.IsClosed && switcher.IsInputBlocked, Is.True, "The open runs over the play scene.");
             Assert.That(curtain.InfoAlpha, Is.EqualTo(0));
@@ -87,7 +87,7 @@ namespace OurTaiko.Tests
             Assert.That(switcher.IsSwitching && !curtain.IsVisible, Is.True);
             yield return WaitUntil(() => !switcher.IsSwitching);
             Assert.That(SceneSwitcher.CurrentScene, Is.EqualTo(SceneSwitcher.GameScene));
-            Assert.That(Object.FindAnyObjectByType<PlayScene>().Session.Chart.Title, Is.EqualTo("TRIPLE HELIX"));
+            Assert.That(Object.FindAnyObjectByType<PlayScene>().Session.Chart.Title, Is.EqualTo("TEST PULSE"));
         }
 
         [UnityTest]

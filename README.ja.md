@@ -39,7 +39,7 @@ git submodule update --init --recursive
 3. ドンを叩くか画面をタップして参加し、「演奏ゲーム」を選びます。
 4. 楽曲と難易度を選んで演奏を始めます。
 
-サンプルとして TRIPLE HELIX、Input Calibration、Branch Training を同梱しています。後者 2 つは音源のない調整用・練習用譜面です。Entry の「ゲーム設定」からシステム設定を開けます。
+サンプルとして Input Calibration と Branch Training を同梱しています。どちらも音源のない調整用・練習用譜面です。Entry の「ゲーム設定」からシステム設定を開けます。
 
 ## 操作方法
 

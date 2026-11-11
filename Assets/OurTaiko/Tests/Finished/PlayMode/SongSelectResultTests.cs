@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.Songs.Length, Is.EqualTo(3));
             // The local songs are in the Local folder: open it on the first one.
             select.Manager.OpenFolderAt(0); select.Manager.Navigate(2);
-            Assert.That(select.Manager.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
+            Assert.That(select.Manager.FocusedSong.name, Is.EqualTo(TestSongs.TestPulse));
             Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.Browsing));
             yield return new WaitForSecondsRealtime(1f);
             Assert.That(select.IsPreviewPlaying, Is.True, "The focused song previews from DEMOSTART once its board is open.");
@@ -39,7 +39,7 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.6f);
             select.Manager.Left();
             yield return new WaitForSecondsRealtime(0.9f);
-            Assert.That(select.Manager.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
+            Assert.That(select.Manager.FocusedSong.name, Is.EqualTo(TestSongs.TestPulse));
 
             select.Manager.Confirm();
             Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
@@ -84,7 +84,7 @@ namespace OurTaiko.Tests
             Assert.That(select.Manager.Cursor.Selected, Is.EqualTo(Difficulty.Back));
             for (int i = 0; i < 5; i++) select.Manager.Right();
             Assert.That(select.Manager.Cursor.Selected, Is.EqualTo(Difficulty.Ura));
-            // TRIPLE HELIX's Edit chart uses letter-extension notes the parser rejects; flip back to Oni.
+            // Play the Oni course, not Edit: flip back to Oni.
             for (int i = 0; i < 10; i++) select.Manager.Right();
             Assert.That((select.Manager.Cursor.Selected, select.Manager.Cursor.IsUra), Is.EqualTo((Difficulty.Oni, false)));
             yield return new WaitForSecondsRealtime(1.6f);
@@ -105,7 +105,7 @@ namespace OurTaiko.Tests
             var result = Object.FindAnyObjectByType<ResultScene>();
             Assert.That(result.Result.Bad == 0 && result.Result.Ok == 0, Is.True);
             Assert.That(result.Result.GaugeState, Is.EqualTo(GaugeState.Full));
-            Assert.That(ScoreStore.Shared.Get(TestSongs.Load(TestSongs.TripleHelix).ScoreKey, Difficulty.Oni), Is.Null, "Auto play is never saved.");
+            Assert.That(ScoreStore.Shared.Get(TestSongs.Load(TestSongs.TestPulse).ScoreKey, Difficulty.Oni), Is.Null, "Auto play is never saved.");
             yield return WaitUntil(() => result.Sequence.GaugeShown >= 30);
             Capture("ResultGaugeFilling.png");
             yield return WaitUntil(() => result.Sequence.RowsLanded >= 3);
@@ -118,7 +118,7 @@ namespace OurTaiko.Tests
             Assert.That(result.Sequence.CanAdvance, Is.True, "A settled result has no extra exit delay.");
             result.Don();
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
-            Assert.That(Object.FindAnyObjectByType<SongSelectScene>().Manager.FocusedSong.name, Is.EqualTo(TestSongs.TripleHelix));
+            Assert.That(Object.FindAnyObjectByType<SongSelectScene>().Manager.FocusedSong.name, Is.EqualTo(TestSongs.TestPulse));
             Object.Destroy(switcher.gameObject);
         }
 

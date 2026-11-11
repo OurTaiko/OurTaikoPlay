@@ -4,14 +4,14 @@ using UnityEngine;
 
 namespace OurTaiko.Tests
 {
-    // The test charts (TRIPLE HELIX with its music, the silent Input Calibration and Branch Training)
+    // The test charts (TEST PULSE, an original chart over a generated 160 BPM click track, the silent Input Calibration and Branch Training)
     // live in Songs~, which Unity does not import. TestData.Use copies them to a temporary songs
     // folder that LocalSongLibrary reads like the player's own; the number prefixes keep the file
-    // name order TRIPLE HELIX, Calibration, Branch Training. Tests that load a play scene directly
+    // name order TEST PULSE, Calibration, Branch Training. Tests that load a play scene directly
     // Select a song first.
     public static class TestSongs
     {
-        public const string TripleHelix = "1 TripleHelix", Calibration = "2 Calibration", BranchTraining = "3 BranchTraining";
+        public const string TestPulse = "1 TestPulse", Calibration = "2 Calibration", BranchTraining = "3 BranchTraining";
 
         public static string Source => Path.Combine(Application.dataPath, "OurTaiko", "Tests", "Shared", "Songs~");
         public static string Root => Path.Combine(Application.temporaryCachePath, "playmode-songs");
@@ -37,8 +37,8 @@ namespace OurTaiko.Tests
             LocalSongLibrary.EnsureInstance().Songs.FirstOrDefault(song => song.name == key)
             ?? throw new FileNotFoundException("Missing test song " + key, ChartPath(key));
 
-        // What a direct run of Play.Single used to play: TRIPLE HELIX on its own course, not auto.
-        public static SongDefinition Select(string key = TripleHelix, string course = null, bool autoPlay = false)
+        // What a direct run of Play.Single used to play: TEST PULSE on its own course, not auto.
+        public static SongDefinition Select(string key = TestPulse, string course = null, bool autoPlay = false)
         {
             var song = Load(key);
             SceneSwitcher.EnsureInstance().Select(song, course, autoPlay);

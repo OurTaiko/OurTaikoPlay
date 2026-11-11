@@ -17,12 +17,12 @@ namespace OurTaiko.Tests
         public void WriteCourses()
         {
             Directory.CreateDirectory(DanFolder);
-            string helix;
+            string pulse;
             using (var sha = SHA256.Create())
-                helix = System.BitConverter.ToString(sha.ComputeHash(File.ReadAllBytes(TestSongs.ChartPath(TestSongs.TripleHelix)))).Replace("-", "").ToLowerInvariant();
+                pulse = System.BitConverter.ToString(sha.ComputeHash(File.ReadAllBytes(TestSongs.ChartPath(TestSongs.TestPulse)))).Replace("-", "").ToLowerInvariant();
             File.WriteAllText(Path.Combine(DanFolder, "1 first.otdan.json"),
                 "{\"format\":1,\"id\":\"local:test-1\",\"title\":\"十段\",\"color\":3,\"songs\":["
-                + "{\"chart\":{\"sha256\":\"" + helix + "\",\"course\":\"Oni\"}},"
+                + "{\"chart\":{\"sha256\":\"" + pulse + "\",\"course\":\"Oni\"}},"
                 + "{\"chart\":{\"course\":\"Hard\"},\"title\":\"Input Calibration\",\"hidden\":true},"
                 + "{\"chart\":{\"course\":\"Oni\"},\"title\":\"Branch Training\"}],"
                 + "\"exams\":[{\"type\":\"gauge\",\"range\":\"more\",\"value\":[100]},"
@@ -92,7 +92,7 @@ namespace OurTaiko.Tests
             Assert.That(view.contents.alpha, Is.EqualTo(1));
             Assert.That(view.horiName.text, Is.EqualTo("十\n段"), "the plate reads top to bottom");
             Assert.That(view.chips.First(c => c.root.gameObject.activeSelf && Mathf.Abs(c.root.anchoredPosition.x - DanSelectScene.RibbonCenter) < 0.5f).name.text, Is.EqualTo("十\n段"), "a local course's chip carries its name");
-            Assert.That(view.songs[0].title.text, Is.EqualTo("TRIPLE HELIX"));
+            Assert.That(view.songs[0].title.text, Is.EqualTo("TEST PULSE"));
             Assert.That(view.songs[1].title.text, Is.EqualTo("？？？"), "Hidden songs keep their title back.");
             Assert.That(view.songs[2].title.text, Is.EqualTo("Branch Training"));
             Assert.That(view.gauge.gameObject.activeSelf, Is.True);
@@ -230,7 +230,7 @@ namespace OurTaiko.Tests
             for (int i = 4; i <= 7; i++)
                 File.WriteAllText(Path.Combine(DanFolder, i + " extra.otdan.json"),
                     "{\"format\":1,\"id\":\"local:extra-" + i + "\",\"title\":\"" + i + "段\",\"color\":" + (i % 7) + ","
-                    + "\"songs\":[{\"chart\":{\"course\":\"Oni\"},\"title\":\"TRIPLE HELIX\"}],\"exams\":[{\"type\":\"gauge\",\"range\":\"more\",\"value\":[100]}]}");
+                    + "\"songs\":[{\"chart\":{\"course\":\"Oni\"},\"title\":\"TEST PULSE\"}],\"exams\":[{\"type\":\"gauge\",\"range\":\"more\",\"value\":[100]}]}");
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.DanSelectScene);

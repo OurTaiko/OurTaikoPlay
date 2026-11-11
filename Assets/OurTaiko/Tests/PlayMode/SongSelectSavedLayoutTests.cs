@@ -69,15 +69,15 @@ namespace OurTaiko.Tests
                 // return to their correct content layout.
                 var library = LocalSongLibrary.Instance;
                 var calibration = TestSongs.Load(TestSongs.Calibration);
-                System.IO.File.Copy(TestSongs.ChartPath(TestSongs.TripleHelix), TestSongs.ChartPath(TestSongs.Calibration), true);
+                System.IO.File.Copy(TestSongs.ChartPath(TestSongs.TestPulse), TestSongs.ChartPath(TestSongs.Calibration), true);
                 library.Refresh();
                 Assert.That(TestSongs.Load(TestSongs.Calibration), Is.SameAs(calibration));
                 Assert.That(calibration.ReadInfo().Has(Difficulty.Easy), Is.True);
 
-                // The local songs are in the Local folder: the copy reopens it on Triple Helix, as when
+                // The local songs are in the Local folder: the copy reopens it on Test Pulse, as when
                 // coming back from that song.
                 SongSelectManager.Instance.OpenFolderAt(0);
-                SceneSwitcher.Instance.Select(TestSongs.Load(TestSongs.TripleHelix));
+                SceneSwitcher.Instance.Select(TestSongs.Load(TestSongs.TestPulse));
                 copy.SetActive(true);
                 yield return new WaitForSecondsRealtime(0.4f);
                 Assert.That(select.view, Is.SameAs(view));

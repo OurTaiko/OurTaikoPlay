@@ -162,7 +162,7 @@ namespace OurTaiko.Tests
             session.Hit(false, 0.2); session.Hit(false, 0.2); session.Hit(false, 0.2);
             Assert.That(session.Rolls, Is.EqualTo(2)); Assert.That(session.Score, Is.EqualTo(200)); Assert.That(session.Resolved[0], Is.True);
         }
-        [TestCase("1 TripleHelix", "Oni")]
+        [TestCase("1 TestPulse", "Oni")]
         [TestCase("2 Calibration", "Hard")]
         public void ImportedChartParsesAndAutoPlayCompletesWithoutMisses(string name, string course)
         {
