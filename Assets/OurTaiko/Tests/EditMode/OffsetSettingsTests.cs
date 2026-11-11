@@ -111,6 +111,40 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void TimingDisplayDefaultsToGoodAndOkAndCyclesThroughItsOptions()
+        {
+            Assert.That(new GameSettings().play.TimingDisplay, Is.EqualTo(TimingDisplay.GoodAndOk));
+            Assert.That(GameSettings.FromJson("{\"play\":{\"audioOffsetMs\":3}}").play.TimingDisplay, Is.EqualTo(TimingDisplay.GoodAndOk),
+                "Settings files without this field keep showing the offset as before.");
+            Assert.That(GameSettings.FromJson("{\"play\":{\"timingDisplay\":9}}").play.timingDisplay, Is.EqualTo(TimingDisplay.GoodAndOk),
+                "An unknown value falls back to the default.");
+            var nav = OnPage("play");
+            var group = nav.Page.Groups.Single(g => g.Title == "Hit Feedback");
+            Assert.That(group.Rows.Single().Id, Is.EqualTo("timing-display"));
+            Assert.That(nav.Page.Rows.ToList().FindIndex(r => r.Id == "drum-pad"), Is.EqualTo(4), "The rows before it keep their places.");
+            nav.Move(nav.Page.Rows.ToList().FindIndex(r => r.Id == "timing-display"));
+            Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.Choice));
+            Assert.That(nav.Row.Options, Is.EqualTo(new[] { "GOOD + OK", "OK", "Off" }));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("GOOD + OK"));
+            nav.Side(1);
+            Assert.That(nav.Settings.play.TimingDisplay, Is.EqualTo(TimingDisplay.Ok));
+            nav.Side(1);
+            Assert.That(nav.Settings.play.TimingDisplay, Is.EqualTo(TimingDisplay.Off));
+            Assert.That(GameSettings.FromJson(nav.Settings.ToJson()).play.TimingDisplay, Is.EqualTo(TimingDisplay.Off));
+        }
+
+        [Test]
+        public void TimingDisplayChoosesWhichJudgmentsShowTheirOffset()
+        {
+            Assert.That(new[] { Judgment.Good, Judgment.Ok, Judgment.Bad, Judgment.Roll }.Select(j => TimingDisplay.GoodAndOk.Shows(j)),
+                Is.EqualTo(new[] { true, true, false, false }));
+            Assert.That(new[] { Judgment.Good, Judgment.Ok, Judgment.Bad, Judgment.Roll }.Select(j => TimingDisplay.Ok.Shows(j)),
+                Is.EqualTo(new[] { false, true, false, false }));
+            Assert.That(new[] { Judgment.Good, Judgment.Ok, Judgment.Bad, Judgment.Roll }.Select(j => TimingDisplay.Off.Shows(j)),
+                Is.EqualTo(new[] { false, false, false, false }));
+        }
+
+        [Test]
         public void InputDelayDefaultsToZeroAndStaysInRange()
         {
             Assert.That(new GameSettings().play.inputDelayMs, Is.Zero);

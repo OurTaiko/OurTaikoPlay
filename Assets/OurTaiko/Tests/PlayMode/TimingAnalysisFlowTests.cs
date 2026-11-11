@@ -100,6 +100,60 @@ namespace OurTaiko.Tests
         [UnityTest, Category("DrawOrder")] public IEnumerator SinglePlayShowsSignedTiming() => CheckFeedback(false);
         [UnityTest, Category("DrawOrder")] public IEnumerator PracticeShowsTimingAndClearsOnSeek() => CheckFeedback(true);
         [UnityTest]
+        public IEnumerator TimingDisplaySettingChoosesWhichHitsShowTheirOffset()
+        {
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Timing Display\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n1111,\n0000,\n#END");
+            var manager = SettingManager.EnsureInstance();
+            var saved = manager.Settings.Clone();
+            try
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                yield return null;
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
+                SceneSwitcher.Instance.Play(song, "Oni", false);
+                yield return WaitForScene(SceneSwitcher.GameScene);
+                var play = Object.FindAnyObjectByType<PlayScene>();
+                if (!play.IsPaused) play.TogglePause();
+                play.pausePanel.SetActive(false);
+                var feedback = play.firstLane.timingFeedback;
+                var notes = play.Session.Chart.Notes;
+                void Hit(int note, double ms) => play.Session.Hit(false, notes[note].Time + play.Session.JudgeOffset + ms / 1000);
+                void Use(TimingDisplay display) { var s = manager.Settings.Clone(); s.play.timingDisplay = display; manager.Set(s); }
+
+                Use(TimingDisplay.Ok);
+                Hit(0, 50);
+                Assert.That(feedback.label.alpha, Is.EqualTo(1)); Assert.That(feedback.label.text, Is.EqualTo("+50ms"));
+                Hit(1, -5);
+                Assert.That(feedback.label.alpha, Is.Zero, "A 良 says nothing and clears the last 可's offset.");
+                Hit(2, 50);
+                Assert.That(feedback.label.alpha, Is.EqualTo(1));
+                Hit(3, 90);
+                Assert.That(play.Session.Bad, Is.EqualTo(1));
+                Assert.That(feedback.label.alpha, Is.Zero, "A pressed 不可 shows no offset and clears the last one.");
+
+                Use(TimingDisplay.GoodAndOk);
+                Hit(4, -5);
+                Assert.That(feedback.label.alpha, Is.EqualTo(1)); Assert.That(feedback.label.text, Is.EqualTo("-5ms"));
+                Hit(5, -90);
+                Assert.That(feedback.label.alpha, Is.Zero, "Nor in GOOD + OK.");
+
+                Use(TimingDisplay.Off);
+                Hit(6, 50);
+                Assert.That(feedback.label.alpha, Is.Zero);
+                Hit(7, -5);
+                Assert.That(feedback.label.alpha, Is.Zero);
+                Assert.That(play.Session.HitTimings.Count, Is.EqualTo(8), "The setting only hides the text; every offset is still recorded.");
+            }
+            finally
+            {
+                manager.Set(saved);
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator EarlyPageSwitchSettlesRevealAndEmptyStatesRemainReadable()
         {
             try
@@ -190,7 +244,7 @@ namespace OurTaiko.Tests
                 Assert.That(feedback.label.text, Is.EqualTo("+50ms"), "A miss must not display an invented offset.");
                 play.Session.Hit(false, notes[3].Time + play.Session.JudgeOffset + .09);
                 Assert.That(judgment.sprite, Is.SameAs(play.judgmentSprites[(int)Judgment.Bad - 1]), "A press judged 不可 is drawn.");
-                Assert.That(feedback.label.text, Is.EqualTo("+90ms"), "Hit Bad still has a measured offset.");
+                Assert.That(feedback.label.alpha, Is.Zero, "A press judged 不可 shows no offset.");
                 if (practice)
                 {
                     // Browsing measures only moves the preview; the attempt starts over when practice starts.

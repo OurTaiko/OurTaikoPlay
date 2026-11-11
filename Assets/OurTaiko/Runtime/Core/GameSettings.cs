@@ -26,6 +26,7 @@ namespace OurTaiko
             settings.general.keyboard ??= new KeyboardBindings();
             settings.general.keyboard.Normalize();
             settings.play ??= new PlaySettings();
+            settings.play.timingDisplay = settings.play.TimingDisplay;
             settings.display ??= new DisplaySettings();
             settings.audio ??= new AudioOptions();
             settings.audio.volume ??= new SoundVolumes();
@@ -71,6 +72,20 @@ namespace OurTaiko
         public string p2Username = "", p2Password = "";
     }
 
+    // When the early/late offset shows during play. 不可 never shows one, pressed or missed.
+    public enum TimingDisplay { GoodAndOk, Ok, Off }
+
+    public static class TimingDisplays
+    {
+        public static readonly string[] Names = { "GOOD + OK", "OK", "Off" };
+        public static bool Shows(this TimingDisplay display, Judgment judgment) => display switch
+        {
+            TimingDisplay.GoodAndOk => judgment == Judgment.Good || judgment == Judgment.Ok,
+            TimingDisplay.Ok => judgment == Judgment.Ok,
+            _ => false,
+        };
+    }
+
     [Serializable]
     public sealed class PlaySettings
     {
@@ -84,6 +99,9 @@ namespace OurTaiko
 #endif
         // Note offsets and misses when browsing a paused or finished practice attempt.
         public bool practiceTimingReview = true;
+        // Which pressed judgments show their early/late offset (ms) beside the lane while playing.
+        public TimingDisplay timingDisplay = TimingDisplay.GoodAndOk;
+        public TimingDisplay TimingDisplay => Enum.IsDefined(typeof(TimingDisplay), timingDisplay) ? timingDisplay : TimingDisplay.GoodAndOk;
         public const int OffsetDefaultMs = 0, OffsetStepMs = 1;
         // A shifts the chart relative to music; B shifts judgment only. Positive means later.
         public int audioOffsetMs = OffsetDefaultMs;
