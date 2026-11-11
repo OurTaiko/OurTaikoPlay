@@ -62,6 +62,9 @@ namespace OurTaiko.Online
         // 1P's seat.
         public bool IsAuthenticated => Seats[0].IsAuthenticated;
         public int ChartCount { get; internal set; } = -1;
+        // The bar_genre frame (0-12) the catalog names for this server's own song-select folder
+        // ("genreFrame"); 0, the default yellow, when it names none.
+        public int GenreFrame { get; internal set; }
         public readonly FanmadeSeat[] Seats = { new FanmadeSeat(), new FanmadeSeat() };
         // The account center the catalog names ("sso"), and this service's name there; empty when
         // the catalog names none, and nobody can sign in.

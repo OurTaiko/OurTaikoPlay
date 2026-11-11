@@ -622,6 +622,15 @@ namespace OurTaiko.Online
             return offlineServerNames.TryGetValue(server ?? "", out string name) ? name : server;
         }
 
+        // The bar_genre frame of a server's own folder by endpoint id, as its catalog names it: the
+        // connected server's, else the newest its offline cache remembers.
+        public int ServerGenre(string server)
+        {
+            var endpoint = Client?.Endpoint(server);
+            if (endpoint != null && endpoint.IsConnected) return endpoint.GenreFrame;
+            return cached.Where(x => x.Server == server).OrderByDescending(x => x.Cached).FirstOrDefault()?.ServerGenre ?? 0;
+        }
+
         // What the folders of an unreachable server's cache say they are, in the player's language.
         public static string OfflineLabel => Words("offline cache", "オフラインキャッシュ", "本地缓存");
         static string OtherLabel => Words("Other", "その他", "其他");

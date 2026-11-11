@@ -101,7 +101,7 @@ namespace OurTaiko.Online
                 }
                 Offline.Save(new OfflineChartStore.Entry
                 {
-                    Server = e.Id, ServerUrl = e.Config.baseUrl, ServerName = e.Config.DisplayName, ChartId = c.Id,
+                    Server = e.Id, ServerUrl = e.Config.baseUrl, ServerName = e.Config.DisplayName, ServerGenre = e.GenreFrame, ChartId = c.Id,
                     ChartJson = described, Categories = categories.ToString(Newtonsoft.Json.Formatting.None),
                     TjaHash = manifest.Tja.Hash, TjaSize = manifest.Tja.Size,
                     AudioHash = manifest.Audio.Hash, AudioSize = manifest.Audio.Size, AudioType = manifest.Audio.ContentType,

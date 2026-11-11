@@ -353,6 +353,7 @@ namespace OurTaiko.Online
                 lock (sync)
                 {
                     e.SsoIssuer = issuer; e.SsoService = service;
+                    e.GenreFrame = ReadGenreFrame(snapshot["genreFrame"]);
                     charts[e.Id] = list;
                     categoryLists[e.Id] = folders;
                     playlistLists[e.Id] = playlists;
@@ -442,6 +443,10 @@ namespace OurTaiko.Online
         }
 
         // Blocks as slots of course × side with their ids (Fanmade 042), signed resource links and replay uploads.
+        // The catalog's "genreFrame": a bar_genre frame 0-12; anything else, or none, is 0.
+        public static int ReadGenreFrame(JToken value) =>
+            value?.Type == JTokenType.Integer && (long)value >= 0 && (long)value <= 12 ? (int)(long)value : 0;
+
         static bool SupportsProtocol(JObject snapshot) =>
             snapshot["chartSlotVersion"]?.Type == JTokenType.Integer && (long)snapshot["chartSlotVersion"] == 1
             && snapshot["resourceDownloadVersion"]?.Type == JTokenType.Integer && (long)snapshot["resourceDownloadVersion"] == 1

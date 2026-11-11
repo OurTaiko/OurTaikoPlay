@@ -651,5 +651,20 @@ namespace OurTaiko.Tests
             Assert.That(OnlineManager.GenreFrame("ボーカロイド"), Is.EqualTo(8));
             Assert.That(OnlineManager.GenreFrame("Unknown"), Is.EqualTo(0));
         }
+
+        [Test]
+        public void AServersFolderWearsTheBoardItsCatalogNames()
+        {
+            Assert.That(FanmadeClient.ReadGenreFrame(new JValue(10)), Is.EqualTo(10));
+            Assert.That(FanmadeClient.ReadGenreFrame(new JValue(4)), Is.EqualTo(4));
+            Assert.That(FanmadeClient.ReadGenreFrame(null), Is.EqualTo(0), "A server that names none keeps the default yellow.");
+            Assert.That(FanmadeClient.ReadGenreFrame(new JValue(13)), Is.EqualTo(0), "Past the last board.");
+            Assert.That(FanmadeClient.ReadGenreFrame(new JValue(-1)), Is.EqualTo(0));
+            Assert.That(FanmadeClient.ReadGenreFrame(new JValue("10")), Is.EqualTo(0), "Only a whole number.");
+            // The song-select strips stop at 9: Fanmade's 10 takes the blue strip, Database's 4 its own.
+            Assert.That(SongSelectScene.BackgroundFrame(10, 10), Is.EqualTo(1));
+            Assert.That(SongSelectScene.BackgroundFrame(4, 10), Is.EqualTo(4));
+            Assert.That(SongSelectScene.BackgroundFrame(12, 10), Is.EqualTo(9));
+        }
     }
 }

@@ -24,6 +24,9 @@ namespace OurTaiko.Online
             [Indexed] public string Server { get; set; }
             public string ServerUrl { get; set; }
             public string ServerName { get; set; }
+            // The server's own folder board then (FanmadeEndpoint.GenreFrame); 0 in entries cached
+            // before servers named one.
+            public int ServerGenre { get; set; }
             public string ChartId { get; set; }
             // GET /api/v1/charts/{id} as received; FanmadeChart.From reads it back.
             public string ChartJson { get; set; }

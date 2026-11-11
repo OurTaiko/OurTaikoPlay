@@ -201,13 +201,14 @@ namespace OurTaiko
                 yield return new SongFolder
                 {
                     Key = ServerKey(server.Key), Title = server.First().ServerName, Server = server.Key, Folders = server.ToArray(),
+                    Genre = online.ServerGenre(server.Key),
                 };
             // An unreachable server's cache wears the server's name and says it is the cache (issue #4).
             foreach (var server in offline.GroupBy(f => f.Server))
                 yield return new SongFolder
                 {
                     Key = ServerKey(server.Key), Title = online.ServerDisplayName(server.Key), Server = server.Key,
-                    ServerName = Online.OnlineManager.OfflineLabel, Folders = server.ToArray(),
+                    ServerName = Online.OnlineManager.OfflineLabel, Folders = server.ToArray(), Genre = online.ServerGenre(server.Key),
                 };
         }
 

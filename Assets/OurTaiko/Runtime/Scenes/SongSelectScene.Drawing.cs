@@ -16,6 +16,11 @@ namespace OurTaiko
     {
         // ---------------------------------------------------------------- drawing
 
+        // The genre strips stop at 9 while the boards go to 12: the deep blue board 10 (Fanmade's
+        // folder) wears the blue strip 1, any other past the end the last strip.
+        public static int BackgroundFrame(int genre, int strips) =>
+            genre < strips ? Math.Max(0, genre) : genre == 10 && strips > 1 ? 1 : strips - 1;
+
         void DrawBackground(double now)
         {
             // navigator background: 2880-px genre strip, 1920 px per 15 s; the new genre fades in over 200 ms.
@@ -23,8 +28,8 @@ namespace OurTaiko
             float change = (float)Clamp01((now - genreChangedAt) / GenreFadeMs);
             for (int i = 0; i < 2; i++)
             {
-                backgroundTiles[i].sprite = genreBackgrounds[previousGenre];
-                backgroundTiles[i + 2].sprite = genreBackgrounds[currentGenre];
+                backgroundTiles[i].sprite = genreBackgrounds[BackgroundFrame(previousGenre, genreBackgrounds.Length)];
+                backgroundTiles[i + 2].sprite = genreBackgrounds[BackgroundFrame(currentGenre, genreBackgrounds.Length)];
                 backgroundTiles[i + 2].Alpha(change);
                 backgroundTiles[i].rectTransform.anchoredPosition = backgroundPositions[i] + Vector2.left * move;
                 backgroundTiles[i + 2].rectTransform.anchoredPosition = backgroundPositions[i + 2] + Vector2.left * move;
