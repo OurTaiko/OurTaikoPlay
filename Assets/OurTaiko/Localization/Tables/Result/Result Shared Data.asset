@@ -1,0 +1,180 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Result Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Result
+  m_TableCollectionNameGuidString: e18cb1a4ef02e467a8b9fcd43fc55a48
+  m_Entries:
+  - m_Id: 128966656
+    m_Key: result.songNumber
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966657
+    m_Key: result.message.miss
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966658
+    m_Key: result.message.near
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966659
+    m_Key: result.message.success
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966660
+    m_Key: result.message.perfect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966661
+    m_Key: result.newBest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966662
+    m_Key: result.freePlay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966663
+    m_Key: page.score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966664
+    m_Key: page.details
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966665
+    m_Key: page.backToSelect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966666
+    m_Key: page.skip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966667
+    m_Key: analysis.counts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966668
+    m_Key: analysis.customJudge
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966669
+    m_Key: analysis.sides
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966670
+    m_Key: analysis.exact
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966671
+    m_Key: analysis.autoPlay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966672
+    m_Key: analysis.noHits
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966673
+    m_Key: analysis.meanLegend
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966674
+    m_Key: analysis.leanEarly
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966675
+    m_Key: analysis.leanLate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966676
+    m_Key: analysis.centered
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966677
+    m_Key: analysis.axisX
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966678
+    m_Key: analysis.axisY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966679
+    m_Key: analysis.mean
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966680
+    m_Key: analysis.deviation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966681
+    m_Key: analysis.meanAbsolute
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966682
+    m_Key: analysis.windows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966683
+    m_Key: calibration.adjustAudio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966684
+    m_Key: calibration.adjustJudge
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966685
+    m_Key: calibration.adjusted
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966686
+    m_Key: calibration.saveFailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966687
+    m_Key: calibration.autoPlay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966688
+    m_Key: calibration.noHits
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966689
+    m_Key: calibration.notRecorded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966690
+    m_Key: calibration.changed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966691
+    m_Key: calibration.saved
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966692
+    m_Key: calibration.belowOne
+    m_Metadata:
+      m_Items: []
+  - m_Id: 128966693
+    m_Key: calibration.hint
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 8757538902004465781
+  references:
+    version: 2
+    RefIds:
+    - rid: 8757538902004465781
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1794378579161

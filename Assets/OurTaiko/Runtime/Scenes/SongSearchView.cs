@@ -29,8 +29,9 @@ namespace OurTaiko
         public bool EditingKeyword => editingKeyword;
         public int FocusedRow => row;
         public bool BlocksInput => IsOpen || Time.frameCount == closedFrame;
-        string Language => SettingManager.Instance?.Settings.general.Language ?? "en";
-        string Words(string en, string ja, string zh) => Language == "ja" ? ja : Language.StartsWith("zh") ? zh : en;
+        static string Words(string key) => L10n.Get("Menu", key);
+        // The difficulty filter's values, from Easy.
+        static readonly string[] DifficultyKeys = { "difficulty.easy", "difficulty.normal", "difficulty.hard", "difficulty.oni", "difficulty.ura" };
 
         public void Bind(SongSelectManager model)
         {
@@ -136,10 +137,10 @@ namespace OurTaiko
             if (!IsOpen || busy || editingKeyword || Time.frameCount == fieldSubmitFrame || Time.frameCount == openedFrame) return;
             SongSearchQuery query;
             try { query = new SongSearchQuery(keyword.text, difficulty == 0 ? (Difficulty?)null : (Difficulty)(difficulty - 1), level, (SongSearchOrder)order, seat); }
-            catch (ArgumentException) { status.text = Words("Keyword is too long (200 bytes).", "Keyword が長すぎます（200バイト）。", "Keyword 过长（最多 200 字节）。"); return; }
+            catch (ArgumentException) { status.text = Words("search.keywordTooLong"); return; }
             manager.PlaySearchSound(SongSelectManager.Sound.Don);
             Cancel(); request = new CancellationTokenSource(); var current = request;
-            busy = true; Draw(); status.text = Words("Searching…", "検索中…", "搜索中…");
+            busy = true; Draw(); status.text = Words("search.searching");
             try
             {
                 await manager.SearchAsync(query, current.Token);
@@ -147,7 +148,7 @@ namespace OurTaiko
                 CloseDialog(false);
             }
             catch (OperationCanceledException) { }
-            catch (Exception error) { if (request == current) status.text = Words("Search failed: ", "検索失敗: ", "搜索失败：") + error.Message; }
+            catch (Exception error) { if (request == current) status.text = L10n.Format("Menu", "search.failed", error.Message); }
             finally { if (request == current) { busy = false; request.Dispose(); request = null; Draw(); } }
         }
         void MoveRow(int delta, SongSelectManager.Sound sound)
@@ -205,27 +206,27 @@ namespace OurTaiko
         }
         void Draw()
         {
-            title.text = Words("Song search", "曲をさがす", "歌曲搜索");
-            string all = Words("All", "すべて", "全部");
-            labels[0].text = Words("Difficulty", "むずかしさ", "难度"); labels[1].text = Words("Stars", "★の数", "星级");
-            labels[2].text = Words("Sort by", "表示順", "排序"); labels[3].text = Words("Keyword", "キーワード", "关键词");
-            ((TMP_Text)keyword.placeholder).text = Words("Title / Subtitle / Maker", "曲名 / サブタイトル / 譜面作者", "曲名 / 副标题 / 谱师");
-            values[0].text = difficulty == 0 ? all : new[] { "Easy", "Normal", "Hard", "Oni", "Ura" }[difficulty - 1];
+            title.text = Words("search.title");
+            string all = Words("search.all");
+            labels[0].text = Words("search.difficulty"); labels[1].text = Words("search.stars");
+            labels[2].text = Words("search.sortBy"); labels[3].text = Words("search.keyword");
+            ((TMP_Text)keyword.placeholder).text = Words("search.keywordPlaceholder");
+            values[0].text = difficulty == 0 ? all : L10n.Get("Common", DifficultyKeys[difficulty - 1]);
             values[1].text = level == 0 ? all : "★ " + level;
-            values[2].text = order == 0 ? Words("Default", "いつもどおり", "通常") : order == 1 ? Words("Not FC first", "未フルコンボ優先", "未 FC 优先") : Words("Not AP first", "未ドンダフル優先", "未 AP 优先");
-            apply.GetComponentInChildren<TMP_Text>().text = busy ? Words("Searching…", "検索中…", "搜索中…") : Words("Search", "検索", "搜索");
-            close.GetComponentInChildren<TMP_Text>().text = Words("Back", "もどる", "返回");
+            values[2].text = order == 0 ? Words("search.order.default") : order == 1 ? Words("search.order.notFc") : Words("search.order.notAp");
+            apply.GetComponentInChildren<TMP_Text>().text = busy ? Words("search.searching") : Words("search.search");
+            close.GetComponentInChildren<TMP_Text>().text = Words("search.back");
             hint.text = Application.isMobilePlatform
                 ? editingKeyword
-                    ? Words("Close the keyboard to finish typing", "キーボードを閉じて入力を終了", "收起键盘，结束输入")
+                    ? Words("search.hint.touchTyping")
                     : row == 0
-                        ? Words("Tap Keyword again to type", "キーワードをもう一度タップして入力", "再次点按关键词，开始输入")
-                        : Words("Tap Keyword to select · Tap arrows to change filters", "キーワードをタップして選択・矢印で条件を変更", "点按选中关键词 · 点按箭头调整筛选")
+                        ? Words("search.hint.touchKeyword")
+                        : Words("search.hint.touchRows")
                 : editingKeyword
-                    ? Words("Enter: finish typing", "Enter：入力を終了", "回车：结束输入")
+                    ? Words("search.hint.keysTyping")
                     : row == 0
-                        ? Words("Enter / click Keyword again: start typing", "Enter／キーワードをもう一度クリック：入力を開始", "回车／再次点击关键词：开始输入")
-                        : Words("Don / Tab / ↑↓ Select · Ka Change · Enter Confirm", "ドン / Tab / ↑↓ 選択 · カッ 変更 · Enter 決定", "咚 / Tab / ↑↓ 选择 · 咔 调整 · 回车 确认");
+                        ? Words("search.hint.keysKeyword")
+                        : Words("search.hint.keysRows");
             cursor.gameObject.SetActive(row < 4);
             if (row < 4) cursor.anchoredPosition = new Vector2(cursor.anchoredPosition.x, labels[row == 0 ? 3 : row - 1].rectTransform.anchoredPosition.y);
             apply.interactable = !busy && !editingKeyword;
@@ -238,7 +239,7 @@ namespace OurTaiko
         public void RefreshSummary()
         {
             summary.text = manager.SearchActive
-                ? Words("Results: ", "検索結果: ", "搜索结果：") + manager.SearchCount + (manager.SearchQuery.Keyword.Length > 0 ? "  ·  " + manager.SearchQuery.Keyword : "")
+                ? L10n.Format("Menu", "search.results", manager.SearchCount) + (manager.SearchQuery.Keyword.Length > 0 ? "  ·  " + manager.SearchQuery.Keyword : "")
                   + (manager.SearchStatus.Length > 0 ? "\n" + manager.SearchStatus : "")
                 : "";
         }

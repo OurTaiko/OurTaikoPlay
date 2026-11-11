@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
                 Assert.That(view.swipeArea.Clicked, Is.Null);
                 Assert.That(result.view.crown.transform.IsChildOf(view.scorePage.transform), Is.True);
                 Assert.That(result.view.scoreRank.transform.IsChildOf(view.scorePage.transform), Is.True);
-                Assert.That(view.actionLabel.text, Is.EqualTo("跳过演出"));
+                Assert.That(view.actionLabel.text, Is.EqualTo(L10n.Get("Result", "page.skip")));
                 int revision = ScoreStore.Shared.Revision;
                 InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
                 InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
@@ -52,7 +52,7 @@ namespace OurTaiko.Tests
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F)); yield return null; yield return null;
                 Assert.That(result.Sequence.Skipped, Is.True);
                 Assert.That(result.IsLeaving, Is.False, "The skip press never exits.");
-                Assert.That(view.actionLabel.text, Is.EqualTo("返回选曲"));
+                Assert.That(view.actionLabel.text, Is.EqualTo(L10n.Get("Result", "page.backToSelect")));
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
                 yield return new WaitForSecondsRealtime(.25f);
                 TestCapture.Capture("TimingResultScore.png");
@@ -63,7 +63,7 @@ namespace OurTaiko.Tests
                 yield return new WaitForSecondsRealtime(.25f);
                 Assert.That(view.scorePage.gameObject.activeSelf, Is.False);
                 Assert.That(view.detailPage.gameObject.activeSelf, Is.True);
-                Assert.That(view.counts.text, Is.EqualTo("有效击打 820    漏打 6"));
+                Assert.That(view.counts.text, Is.EqualTo(L10n.Format("Result", "analysis.counts", 820, 6)));
                 Assert.That(view.histogram.AxisMaximum, Is.GreaterThanOrEqualTo(stats.Bins.Max()));
                 TestCapture.Capture("TimingResultDetails.png");
                 TestCapture.Capture("TimingResultDetails720.png", 1280, 720);
@@ -174,10 +174,10 @@ namespace OurTaiko.Tests
                 yield return new WaitForSecondsRealtime(.2f);
                 Assert.That(result.Sequence.CanAdvance, Is.True);
                 Assert.That(view.Details, Is.True);
-                Assert.That(view.empty.text, Is.EqualTo("暂无有效击打"));
+                Assert.That(view.empty.text, Is.EqualTo(L10n.Get("Result", "analysis.noHits")));
                 Assert.That(view.mean.text, Is.EqualTo("—"));
                 Assert.That(view.deviation.text, Is.EqualTo("—"));
-                Assert.That(view.counts.text, Is.EqualTo("有效击打 0    漏打 4"));
+                Assert.That(view.counts.text, Is.EqualTo(L10n.Format("Result", "analysis.counts", 0, 4)));
                 AssertTopRaycast(view.action);
                 AssertTopRaycast(view.swipeArea);
                 AssertTopRaycast(view.scoreDot);
@@ -186,7 +186,7 @@ namespace OurTaiko.Tests
                 view.Bind(new PlayResult { AutoPlay = true });
                 view.SetPage(true, 1);
                 yield return new WaitForSecondsRealtime(.2f);
-                Assert.That(view.empty.text, Is.EqualTo("自动演奏不统计手动偏差"));
+                Assert.That(view.empty.text, Is.EqualTo(L10n.Get("Result", "analysis.autoPlay")));
                 Assert.That(view.mean.text, Is.EqualTo("—"));
                 Assert.That(view.histogram.AxisMaximum, Is.EqualTo(4));
                 TestCapture.Capture("TimingAuto720.png", 1280, 720);

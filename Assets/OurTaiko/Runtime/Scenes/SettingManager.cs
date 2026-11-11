@@ -95,6 +95,7 @@ namespace OurTaiko
                 Log.Info(InputLog.Tag, "Input log " + (InputLog.Enabled ? "on" : "off"));
             }
             Settings.general.keyboard.Apply();
+            L10n.SetLanguage(settings.general.Language);
             Changed?.Invoke(Settings);
         }
 

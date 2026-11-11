@@ -43,9 +43,9 @@ namespace OurTaiko.Tests
                 yield return null;
                 var nav = overlay.Navigator;
                 overlay.Move(4); overlay.Confirm();
-                Assert.That(nav.Page.Title, Is.EqualTo("Sound"));
+                Assert.That(nav.Page.Title, Is.EqualTo(L10n.Get("Settings", "sound.title")));
                 Assert.That(nav.Page.Rows.Count, Is.EqualTo(SettingsCatalog.Sound(SoundSettings.Platform, settings.Settings.audio.Backend).Sum(g => g.Rows.Count)));
-                Assert.That(nav.Row.Label, Is.EqualTo("Master"));
+                Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "sound.master")));
                 Assert.That(overlay.previewVoice, Is.Not.Null);
                 overlay.Confirm(); overlay.Move(3); // 35% -> 50%
                 overlay.Confirm();
@@ -53,10 +53,10 @@ namespace OurTaiko.Tests
                 Assert.That(entry.bgm.GetComponent<AudioBus>().MainOutputVolume, Is.EqualTo(entry.bgm.volume * .5f).Within(.001));
                 Assert.That(engine.HasPendingDeviceChanges, Is.False);
                 overlay.Move(5);
-                Assert.That(nav.Row.Label, Is.EqualTo("Voice"));
+                Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "sound.voice")));
                 overlay.Side(-1); // previews voice using the Voice group
                 overlay.Move(1);
-                Assert.That(nav.Row.Label, Is.EqualTo("Output Backend"));
+                Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "sound.backend")));
                 overlay.Confirm();
                 overlay.Move(nav.SheetOptions.Count - 1); // BassSimple, the last choice everywhere
                 yield return new WaitForSecondsRealtime(0.3f);
@@ -72,7 +72,7 @@ namespace OurTaiko.Tests
                 Assert.That(saved.audio.volume.master, Is.EqualTo(.5f));
                 Assert.That(entry.bgm.IsAudioPlaying(), Is.True);
                 overlay.Move(1);
-                Assert.That(nav.Row.Label, Is.EqualTo("Output Period"));
+                Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "sound.devicePeriod")));
                 overlay.Confirm(); overlay.Move(4); overlay.Confirm();
                 Assert.That(settings.Settings.audio.devicePeriodMs, Is.EqualTo(4));
                 Assert.That(engine.Generation, Is.EqualTo(before), "Period changes also wait until the overlay closes");

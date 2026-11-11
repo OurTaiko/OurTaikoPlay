@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Online Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Online
+  m_TableCollectionNameGuidString: 80772634b9970422a847bab357f6afed
+  m_Entries:
+  - m_Id: 133160960
+    m_Key: activity.checkingAccount
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160961
+    m_Key: activity.signingIn
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160962
+    m_Key: activity.loadingSongList
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160963
+    m_Key: summary.item
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160964
+    m_Key: summary.guest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160965
+    m_Key: summary.cancelled
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160966
+    m_Key: summary.signInExpired
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160967
+    m_Key: summary.offline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160968
+    m_Key: summary.noAccountSignIn
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160969
+    m_Key: summary.songListNotLoaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160970
+    m_Key: summary.signedInAs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160971
+    m_Key: summary.songs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160972
+    m_Key: error.wrongPassword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160973
+    m_Key: error.tooManyAttempts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160974
+    m_Key: error.failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160975
+    m_Key: label.offlineCache
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160976
+    m_Key: label.other
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160977
+    m_Key: replays.noList
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 8757538902004465779
+  references:
+    version: 2
+    RefIds:
+    - rid: 8757538902004465779
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1794378578882

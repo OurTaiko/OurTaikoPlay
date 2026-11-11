@@ -33,8 +33,8 @@ namespace OurTaiko.Tests
                 yield return null;
                 var entry = Object.FindAnyObjectByType<EntryScene>();
                 Assert.That(entry.Modes.Length, Is.EqualTo(5));
-                Assert.That(entry.Modes[3].Title, Is.EqualTo("ゴーストバトル"));
-                Assert.That(entry.Modes[4].Title, Is.EqualTo("ゲーム設定"));
+                Assert.That(entry.Modes[3].Title, Is.EqualTo(L10n.Get("Menu", "entry.ghost.title")));
+                Assert.That(entry.Modes[4].Title, Is.EqualTo(L10n.Get("Menu", "entry.settings.title")));
                 yield return new WaitForSecondsRealtime(0.2f);
                 entry.Don();
                 yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 3);
@@ -71,14 +71,14 @@ namespace OurTaiko.Tests
                 var overlay = SettingsOverlay.Instance;
                 var nav = overlay.Navigator;
                 var view = overlay.View;
-                Assert.That(nav.Pages.Select(p => p.Title), Is.EqualTo(new[] { "General", "Controls", "Play", "Display", "Sound", "Accounts" }));
+                Assert.That(nav.Pages.Select(p => p.Title), Is.EqualTo(new[] { "general", "controls", "play", "display", "sound", "accounts" }.Select(p => L10n.Get("Settings", p + ".title"))));
                 yield return null;
 
                 // Touch: tapping a category selects it, tapping it again opens it; tapping a row
                 // focuses it and tapping it again confirms it. A row's own switch flips it at once.
                 view.TapPage(2);
                 Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
-                Assert.That(nav.Page.Title, Is.EqualTo("Play"));
+                Assert.That(nav.Page.Title, Is.EqualTo(L10n.Get("Settings", "play.title")));
                 view.TapPage(2);
                 Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
                 view.TapRow(4);
@@ -96,7 +96,7 @@ namespace OurTaiko.Tests
                 Assert.That(Application.targetFrameRate, Is.EqualTo(120));
                 view.TapPage(3);
                 view.TapPage(3);
-                Assert.That(nav.Row.Label, Is.EqualTo("Frame Rate"));
+                Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "display.frameRate")));
                 overlay.Side(1);
                 Assert.That(Settings.Settings.display.targetFrameRate, Is.EqualTo(60));
                 Assert.That(Application.targetFrameRate, Is.EqualTo(60));
@@ -108,7 +108,7 @@ namespace OurTaiko.Tests
 
                 // Display › VSync: off by default, applied at once.
                 overlay.Move(1);
-                Assert.That(nav.Row.Label, Is.EqualTo("VSync"));
+                Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "display.vsync")));
                 overlay.Confirm();
                 Assert.That(Settings.Settings.display.vSync, Is.True);
                 Assert.That(QualitySettings.vSyncCount, Is.EqualTo(1));

@@ -75,7 +75,7 @@ namespace OurTaiko.Tests
             float cloud = band.layers[0].image.uvRect.x;
             Assert.That(scene.view.rows.Count(r => r.root.gameObject.activeSelf), Is.EqualTo(2), "The gauge exam has its plate, not a row.");
             Assert.That(scene.view.gaugePlate.gameObject.activeSelf, Is.True);
-            Assert.That(scene.view.gaugeValue.text, Is.EqualTo("10 ％以上"));
+            Assert.That(scene.view.gaugeValue.text, Is.EqualTo(L10n.Format("Dan", "exam.gaugeMore", 10)));
             // The doors close before the first song too, with its title.
             yield return WaitUntil(() => scene.BetweenElapsedMs > 1500, 5);
             Assert.That(scene.view.between.gameObject.activeSelf, Is.True);

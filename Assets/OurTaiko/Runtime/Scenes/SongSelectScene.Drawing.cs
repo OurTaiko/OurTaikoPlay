@@ -318,7 +318,7 @@ namespace OurTaiko
             card.Board.color = new Color(1, 1, 1, has ? 1 : 0.4f);
             bool details = has && !changing;
             card.Name.enabled = has;
-            card.Name.text = ChipNames[(int)difficulty];
+            card.Name.text = ChipName(difficulty);
             foreach (var image in new[] { card.Crown, card.Star, card.Level, card.Bar }) image.enabled = details;
             card.Branch.enabled = details && info.IsBranching;
             for (int k = 0; k < card.Dots.Length; k++) card.Dots[k].enabled = details && k < Math.Min(10, info.Level);

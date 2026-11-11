@@ -17,12 +17,12 @@ namespace OurTaiko.Tests
         public void AccountTextIsTypedAndSavedWithTheOtherSettings()
         {
             var nav = OnPage("accounts");
-            Assert.That(nav.Page.Groups.Select(g => g.Title), Is.EqualTo(new[] { "1P", "2P", "Servers" }));
+            Assert.That(nav.Page.Groups.Select(g => g.Title), Is.EqualTo(new[] { "1P", "2P", L10n.Get("Settings", "accounts.group.servers") }));
             Assert.That(nav.Page.Rows.Select(r => r.Label), Is.EqualTo(new[]
             {
-                "Username", "Password", "Sign Out", "Username", "Password", "Sign Out", "Refresh Song List", "Refresh Login",
-            }));
-            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("Not set"));
+                "username", "password", "signOut", "username", "password", "signOut", "refreshSongList", "refreshLogin",
+            }.Select(key => L10n.Get("Settings", "accounts." + key))));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.notSet")));
             Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Entered));
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Typing));
             // The field owns the keys while typing; only its submit or a step back ends it.
@@ -97,11 +97,11 @@ namespace OurTaiko.Tests
             Assert.That(GameSettings.FromJson("{\"play\":{\"audioOffsetMs\":3}}").play.practiceTimingReview, Is.True,
                 "Existing settings files without this field keep the feature enabled.");
             var nav = OnPage("play");
-            var group = nav.Page.Groups.Single(g => g.Title == "Practice");
+            var group = nav.Page.Groups.Single(g => g.Title == L10n.Get("Settings", "play.group.practice"));
             Assert.That(group.Rows.Single().Id, Is.EqualTo("practice-timing-review"));
             nav.Move(nav.Page.Rows.ToList().FindIndex(r => r.Id == "practice-timing-review"));
             Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.Toggle));
-            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("On"));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.on")));
             nav.Confirm();
             Assert.That(nav.Settings.play.practiceTimingReview, Is.False);
             Assert.That(GameSettings.FromJson(nav.Settings.ToJson()).play.practiceTimingReview, Is.False);
@@ -119,13 +119,15 @@ namespace OurTaiko.Tests
             Assert.That(GameSettings.FromJson("{\"play\":{\"timingDisplay\":9}}").play.timingDisplay, Is.EqualTo(TimingDisplay.GoodAndOk),
                 "An unknown value falls back to the default.");
             var nav = OnPage("play");
-            var group = nav.Page.Groups.Single(g => g.Title == "Hit Feedback");
+            var group = nav.Page.Groups.Single(g => g.Title == L10n.Get("Settings", "play.group.hitFeedback"));
             Assert.That(group.Rows.Single().Id, Is.EqualTo("timing-display"));
             Assert.That(nav.Page.Rows.ToList().FindIndex(r => r.Id == "drum-pad"), Is.EqualTo(4), "The rows before it keep their places.");
             nav.Move(nav.Page.Rows.ToList().FindIndex(r => r.Id == "timing-display"));
             Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.Choice));
-            Assert.That(nav.Row.Options, Is.EqualTo(new[] { "GOOD + OK", "OK", "Off" }));
-            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("GOOD + OK"));
+            var names = new[] { L10n.Get("Settings", "play.timingDisplay.goodAndOk"), L10n.Get("Common", "judge.ok"), L10n.Get("Settings", "value.off") };
+            Assert.That(nav.Row.Options, Is.EqualTo(names));
+            Assert.That(SettingsCatalog.TimingDisplayNames(), Is.EqualTo(names));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(names[0]));
             nav.Side(1);
             Assert.That(nav.Settings.play.TimingDisplay, Is.EqualTo(TimingDisplay.Ok));
             nav.Side(1);
@@ -151,7 +153,7 @@ namespace OurTaiko.Tests
             Assert.That(GameSettings.FromJson("{\"play\":{\"judgeOffsetMs\":3}}").play.inputDelayMs, Is.Zero, "Older files get the default.");
             var nav = OnPage("play");
             nav.Move(3); nav.Confirm();
-            Assert.That(nav.Row.Label, Is.EqualTo("Input Delay"));
+            Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "play.inputDelay")));
             Assert.That(nav.AdjustValue, Is.Zero);
             for (int i = 0; i < 5; i++) nav.Move(1);
             Assert.That(nav.AdjustValue, Is.EqualTo(5));

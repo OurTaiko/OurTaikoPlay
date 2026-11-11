@@ -20,17 +20,12 @@ namespace OurTaiko
         public int SearchCount => searchSongs.Count;
         public event Action WheelRebuilt;
         public event Action SearchRequested;
-        public string SearchFolderTitle => Words("Search / Sort", "検索・並べ替え", "搜索／排序");
-        public string SearchFolderDescription => Words("Keyword · Difficulty · Stars · FC / AP", "Keyword・むずかしさ・★・FC / AP", "Keyword · 难度 · 星级 · FC / AP");
+        public string SearchFolderTitle => L10n.Get("Menu", "select.searchTitle");
+        public string SearchFolderDescription => L10n.Get("Menu", "select.searchDescription");
         // The source folder (its key) the search covers, null for every source; set by the search
         // board that opened the dialog and kept while the results show.
         public string SearchScope { get; private set; }
         string searchScopeTitle, searchHomeKey;
-        static string Words(string en, string ja, string zh)
-        {
-            string language = SettingManager.Instance?.Settings.general.Language ?? "en";
-            return language == "ja" ? ja : language.StartsWith("zh") ? zh : en;
-        }
         static WheelItem NewSearchItem() => new WheelItem { Kind = ItemKind.Search };
 
         // A search board names the source it searches, if it is not every source.
@@ -86,7 +81,7 @@ namespace OurTaiko
                 string url = (config.baseUrl ?? "").TrimEnd('/');
                 if (scope == LocalKey || server != null && url != scopeUrl) continue;
                 if (!online.Client.Endpoints.Any(e => e.IsConnected && e.Config.baseUrl.TrimEnd('/') == url))
-                    errors.Add(config.DisplayName + ": offline");
+                    errors.Add(L10n.Format("Menu", "select.serverOffline", config.DisplayName));
             }
             SearchStatus = string.Join(" · ", errors);
             SearchQuery = query; SearchActive = true;

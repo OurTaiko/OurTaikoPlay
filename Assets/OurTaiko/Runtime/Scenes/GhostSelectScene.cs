@@ -29,7 +29,7 @@ namespace OurTaiko
         // How long the list waits for a server to connect before saying there is none.
         public float connectSeconds = 10;
         public const int BackEvery = 10;
-        public const string BackLabel = "もどる";
+        public static string BackLabel => L10n.Get("Common", "back");
 
         public enum Kind { Back, Server, Category, Replay }
 
@@ -128,7 +128,7 @@ namespace OurTaiko
 
         void Start()
         {
-            Status = "Connecting…";
+            Status = L10n.Get("Play", "ghostSelect.connecting");
             deadline = Time.realtimeSinceStartup + connectSeconds;
             AddServers();
         }
@@ -238,12 +238,12 @@ namespace OurTaiko
             if (row == null || HasLeft || IsStarting || switcher.IsInputBlocked) return;
             Play(don);
             IsStarting = true;
-            Status = "Loading " + row.Nickname + "'s play…";
+            Status = L10n.Format("Play", "ghostSelect.loadingPlay", row.Nickname);
             try
             {
                 var match = await PrepareAsync(row, cancel.Token);
                 if (cancel.IsCancellationRequested) return;
-                if (!switcher.PlayGhost(match.Song, match.Ghost)) { IsStarting = false; failed = true; Status = "Could not start the battle."; return; }
+                if (!switcher.PlayGhost(match.Song, match.Ghost)) { IsStarting = false; failed = true; Status = L10n.Get("Play", "ghostSelect.startFailed"); return; }
                 HasLeft = true;
             }
             catch (OperationCanceledException) { }
@@ -274,11 +274,11 @@ namespace OurTaiko
 
         static string Describe(Exception error) => error.Message switch
         {
-            "REPLAY_OUTDATED" => "This song was changed after that play; pick another.",
-            "REPLAY_NOT_FOUND" or "CHART_NOT_FOUND" => "That play is no longer available.",
-            "REPLAY_UNREADABLE" => "That recording cannot be read by this version.",
-            "SERVER_NOT_CONNECTED" => "Its server is offline.",
-            _ => "Could not load that play (" + error.Message + ").",
+            "REPLAY_OUTDATED" => L10n.Get("Play", "ghostSelect.outdated"),
+            "REPLAY_NOT_FOUND" or "CHART_NOT_FOUND" => L10n.Get("Play", "ghostSelect.unavailable"),
+            "REPLAY_UNREADABLE" => L10n.Get("Play", "ghostSelect.unreadable"),
+            "SERVER_NOT_CONNECTED" => L10n.Get("Play", "ghostSelect.serverOffline"),
+            _ => L10n.Format("Play", "ghostSelect.loadFailed", error.Message),
         };
 
         // Each connected server joins the shelf with すべて and its catalog categories, in catalog
@@ -293,7 +293,7 @@ namespace OurTaiko
                 {
                     if (!endpoint.IsConnected || servers.Any(s => s.Id == endpoint.Id)) continue;
                     var server = new Server { Id = endpoint.Id, Name = endpoint.Config.DisplayName };
-                    server.Categories.Add(new Category { Title = "すべて", Server = endpoint.Id });
+                    server.Categories.Add(new Category { Title = L10n.Get("Play", "ghostSelect.all"), Server = endpoint.Id });
                     foreach (var category in client.Categories.Where(c => c.Server == endpoint.Id))
                         server.Categories.Add(new Category { Id = category.Id, Title = category.Title, Server = endpoint.Id });
                     servers.Add(server);
@@ -301,7 +301,7 @@ namespace OurTaiko
             if (connected) return;
             if (servers.Count == 0)
             {
-                if (Time.realtimeSinceStartup > deadline) Status = "No server is online, so there are no ghosts to battle.";
+                if (Time.realtimeSinceStartup > deadline) Status = L10n.Get("Play", "ghostSelect.noServer");
                 return;
             }
             connected = true;
@@ -346,9 +346,10 @@ namespace OurTaiko
         string CategoryStatus(Category category)
         {
             if (category == null) return "";
-            if (category.IsLoading && category.Rows.Count == 0) return "Loading…";
-            if (category.Error != null) return category.Error;
-            if (category.Rows.Count == 0) return category.Id == null ? "No one has recorded a play on this server yet." : "No recorded plays in this category yet.";
+            if (category.IsLoading && category.Rows.Count == 0) return L10n.Get("Common", "loading");
+            // "offline" is this list's own; other errors are the server's or the connection's.
+            if (category.Error != null) return category.Error == "offline" ? L10n.Get("Play", "ghostSelect.offline") : category.Error;
+            if (category.Rows.Count == 0) return L10n.Get("Play", category.Id == null ? "ghostSelect.noPlaysServer" : "ghostSelect.noPlaysCategory");
             return "";
         }
 
@@ -359,14 +360,16 @@ namespace OurTaiko
 
         static string CourseName(string course) => course switch
         {
-            "Easy" => "かんたん", "Normal" => "ふつう", "Hard" => "むずかしい", "Oni" => "おに", "Edit" => "おに（裏）", _ => course,
+            "Easy" => L10n.Get("Common", "difficulty.easy"), "Normal" => L10n.Get("Common", "difficulty.normal"),
+            "Hard" => L10n.Get("Common", "difficulty.hard"), "Oni" => L10n.Get("Common", "difficulty.oni"),
+            "Edit" => L10n.Get("Common", "difficulty.ura"), _ => course,
         };
 
         public static string Detail(FanmadeReplay row)
             => CourseName(row.Course) + " ★" + row.Level + (row.Side != "single" ? " " + row.Side.ToUpperInvariant() : "")
                + "   " + (string.IsNullOrEmpty(row.Nickname) ? "?" : row.Nickname);
 
-        static string Count(Category category) => category.Started && !category.IsLoading && category.Error == null ? category.Total + " 件" : "";
+        static string Count(Category category) => category.Started && !category.IsLoading && category.Error == null ? L10n.Format("Play", "ghostSelect.count", category.Total) : "";
 
         void Show()
         {

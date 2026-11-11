@@ -22,7 +22,7 @@ namespace OurTaiko.Tests
                 new[] { Entry("f-official", Fanmade + "/"), Entry("f-community", Fanmade, false), Entry("d-official", Database), Entry("f-broken", Fanmade, true, "bad"), Entry("x-official", "https://other.example") },
                 new[] { Entry("stand-in", "https://other.example", false) }, Fanmade, Database);
             Assert.That(pages.Count, Is.EqualTo(3));
-            Assert.That(pages[0].Title, Is.EqualTo("ローカル"));
+            Assert.That(pages[0].Title, Is.EqualTo(L10n.Get("Dan", "select.pageLocal")));
             Assert.That(pages[0].IsLocal, Is.True);
             CollectionAssert.AreEqual(new[] { "local-a", "local-b" }, Ids(pages[0]));
             // Community courses, broken ones and the stand-in are not listed; the 外伝 entry closes the page.
@@ -33,7 +33,7 @@ namespace OurTaiko.Tests
             Assert.That(gaiden.IsPlayable, Is.True, "the 外伝 chip is not greyed");
             Assert.That(gaiden.Course.Color, Is.EqualTo(6));
             Assert.That(gaiden.Course.Server, Is.EqualTo(Database));
-            Assert.That(gaiden.Course.Title("ja"), Is.EqualTo("外伝"));
+            Assert.That(gaiden.Course.Title("ja"), Is.EqualTo(L10n.Get("Dan", "select.gaiden")));
             Assert.That(pages[2].GaidenIndex, Is.EqualTo(1));
         }
 

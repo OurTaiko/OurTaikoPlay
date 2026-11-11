@@ -135,7 +135,7 @@ namespace OurTaiko.Tests
             var menu = play.pausePanel.transform;
             Assert.That(menu.GetSiblingIndex(), Is.EqualTo(menu.parent.childCount - 1), "The pause menu must draw over all gameplay UI.");
             var buttons = new[] { play.resumeButton, play.restartButton, play.pauseMenu.modeSwitch, play.backButton };
-            var labels = new[] { "Resume", "Restart", "Switch to Practice", "Back to Song Select" };
+            var labels = new[] { "pause.resume", "pause.restart", "pause.switchToPractice", "pause.backToSelect" }.Select(key => L10n.Get("Play", key)).ToArray();
             Assert.That(play.pauseMenu.buttons, Is.EqualTo(buttons), "Keyboard navigation follows the drawn order.");
             float previousY = float.PositiveInfinity;
             for (int i = 0; i < buttons.Length; i++)

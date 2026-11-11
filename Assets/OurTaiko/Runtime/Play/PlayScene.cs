@@ -156,7 +156,7 @@ namespace OurTaiko
             {
                 Log.Exception("Play", error);
                 IsFinished = true; resultPanel.SetActive(true);
-                resultText.text = "CHART COULD NOT LOAD\n<size=22>" + error.Message + "</size>";
+                resultText.text = L10n.Get("Play", "play.chartLoadFailed") + "\n<size=22>" + error.Message + "</size>";
             }
             if (IsFinished) yield break;
             AddModeSwitch();

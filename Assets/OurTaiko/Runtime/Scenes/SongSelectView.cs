@@ -49,7 +49,7 @@ namespace OurTaiko
         public void ShowPlayMode(bool practice)
         {
             if (!practice) return;
-            ModeLabel = CoinOverlayView.Text(overlays.transform, "PracticeMode", "練習モード");
+            ModeLabel = CoinOverlayView.Text(overlays.transform, "PracticeMode", L10n.Get("Menu", "select.practiceMode"));
             ModeLabel.rectTransform.Center(960, 48);
         }
     }

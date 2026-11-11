@@ -56,7 +56,7 @@ namespace OurTaiko
             card.alpha = fadeSeconds <= 0 ? 1 : Mathf.Clamp01((float)(elapsed / fadeSeconds));
             if (!work.IsCompleted)
             {
-                progress.text = Skipped ? "Cancelling…" : online.Activity;
+                progress.text = Skipped ? L10n.Get("Menu", "presented.cancelling") : online.Activity;
                 return;
             }
             progress.text = "";

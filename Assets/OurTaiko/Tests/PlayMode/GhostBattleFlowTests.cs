@@ -96,7 +96,7 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => entry.Flow.IsModeReady(entry.Now), seconds: 3);
             yield return new WaitForSecondsRealtime(1);
             Assert.That(entry.Modes[3].Scene, Is.EqualTo(SceneSwitcher.GhostSelectScene));
-            Assert.That(entry.Modes[3].Title, Is.EqualTo("ゴーストバトル"));
+            Assert.That(entry.Modes[3].Title, Is.EqualTo(L10n.Get("Menu", "entry.ghost.title")));
             // Alone, 1P or 2P, every board is open (段位道場 is not greyed).
             Assert.That(entry.view.boards[1].closed.color.r, Is.EqualTo(1));
             entry.Ka(3);
@@ -136,11 +136,11 @@ namespace OurTaiko.Tests
             Assert.That(list.Column, Is.Zero);
             Assert.That(list.Entries(0).Select(e => e.Kind), Is.EqualTo(new[] { GhostSelectScene.Kind.Back, GhostSelectScene.Kind.Server }));
             Assert.That(shelf[0].rows[0].title.text, Is.EqualTo(GhostSelectScene.BackLabel));
-            Assert.That(shelf[0].rows[1].detail.text, Is.EqualTo("1 件"));
-            Assert.That(list.Servers.Single().Categories.Select(c => c.Title), Is.EqualTo(new[] { "すべて", "Game", "Pop" }));
-            Assert.That(shelf[1].rows[1].title.text, Is.EqualTo("すべて"));
+            Assert.That(shelf[0].rows[1].detail.text, Is.EqualTo(L10n.Format("Play", "ghostSelect.count", 1)));
+            Assert.That(list.Servers.Single().Categories.Select(c => c.Title), Is.EqualTo(new[] { L10n.Get("Play", "ghostSelect.all"), "Game", "Pop" }));
+            Assert.That(shelf[1].rows[1].title.text, Is.EqualTo(L10n.Get("Play", "ghostSelect.all")));
             Assert.That(shelf[2].rows[1].title.text, Is.EqualTo("Ghost Song"));
-            Assert.That(shelf[2].rows[1].detail.text, Does.Contain("Rival").And.Contain("おに ★8"));
+            Assert.That(shelf[2].rows[1].detail.text, Does.Contain("Rival").And.Contain(L10n.Get("Common", "difficulty.oni") + " ★8"));
             Assert.That(shelf[2].rows[1].score.text, Is.EqualTo("978,000"));
             Assert.That(shelf[2].rows[2].root.gameObject.activeSelf, Is.False);
             TestCapture.Capture("GhostSelect.png");
@@ -159,7 +159,7 @@ namespace OurTaiko.Tests
             yield return null;
             Assert.That(list.CurrentCategory.Id, Is.EqualTo("pop"));
             Assert.That(list.Rows, Is.Empty);
-            Assert.That(list.view.status.text, Does.Contain("category"));
+            Assert.That(list.view.status.text, Is.EqualTo(L10n.Get("Play", "ghostSelect.noPlaysCategory")));
             Assert.That(shelf[2].rows[0].title.text, Is.EqualTo(GhostSelectScene.BackLabel), "An empty column keeps its もどる.");
             TestCapture.Capture("GhostSelectEmptyCategory.png");
             // もどる returns a column; a tap on a category selects it, a second tap enters it.
@@ -330,7 +330,7 @@ namespace OurTaiko.Tests
             row["isLatest"] = false;
             list.Pick();
             yield return Waits.Until(() => !list.IsStarting, seconds: 10);
-            Assert.That(list.Status, Does.Contain("changed"));
+            Assert.That(list.Status, Is.EqualTo(L10n.Get("Play", "ghostSelect.outdated")));
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.GhostSelectScene));
             list.Leave();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.EntryScene, seconds: 10);

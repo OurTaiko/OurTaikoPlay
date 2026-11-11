@@ -47,7 +47,8 @@ namespace OurTaiko
 
         // The sheet's entries: a list row's options, or a key row's binding actions.
         public IReadOnlyList<string> SheetOptions => Row?.Kind == SettingKind.Keys
-            ? new[] { "Add a Key" }.Concat(Settings.general.keyboard.Get(Row.Key).Select(k => "Remove " + k)).Concat(new[] { "Reset to Default", "Clear All" }).ToArray()
+            ? new[] { SettingsCatalog.T("keys.add") }.Concat(Settings.general.keyboard.Get(Row.Key).Select(k => SettingsCatalog.T("keys.remove", k)))
+                .Concat(new[] { SettingsCatalog.T("keys.reset"), SettingsCatalog.T("keys.clear") }).ToArray()
             : Row?.Options ?? Array.Empty<string>();
         public IReadOnlyList<string> SheetNotes => Row?.Kind == SettingKind.Keys ? Array.Empty<string>() : Row?.OptionNotes ?? Array.Empty<string>();
 

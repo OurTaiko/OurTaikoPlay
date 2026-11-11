@@ -35,12 +35,14 @@ namespace OurTaiko
             mean.text = data?.MeanMs is double m ? m.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture) + " ms" : "—";
             deviation.text = Number(data?.StandardDeviationMs);
             absolute.text = Number(data?.MeanAbsoluteMs);
-            counts.text = $"有效击打 {data?.Count ?? 0}    漏打 {data?.Misses ?? 0}"
-                + (result.CustomJudge ? "    自定义判定 不计成绩" : "");
-            sides.text = $"早 {data?.Early ?? 0}    晚 {data?.Late ?? 0}" + (data?.Exact > 0 ? $"    零偏差 {data.Exact}" : "");
-            empty.text = result.AutoPlay ? "自动演奏不统计手动偏差" : data == null || data.Count == 0 ? "暂无有效击打" : "";
+            counts.text = L10n.Format("Result", "analysis.counts", data?.Count ?? 0, data?.Misses ?? 0)
+                + (result.CustomJudge ? "    " + L10n.Get("Result", "analysis.customJudge") : "");
+            sides.text = L10n.Format("Result", "analysis.sides", data?.Early ?? 0, data?.Late ?? 0)
+                + (data?.Exact > 0 ? "    " + L10n.Format("Result", "analysis.exact", data.Exact) : "");
+            empty.text = result.AutoPlay ? L10n.Get("Result", "analysis.autoPlay") : data == null || data.Count == 0 ? L10n.Get("Result", "analysis.noHits") : "";
             meanLegend.text = data?.MeanMs is double average
-                ? "虚线：平均偏差 · " + (average < 0 ? "偏早" : average > 0 ? "偏晚" : "居中") : "虚线：平均偏差";
+                ? L10n.Get("Result", "analysis.meanLegend") + " · " + L10n.Get("Result", average < 0 ? "analysis.leanEarly" : average > 0 ? "analysis.leanLate" : "analysis.centered")
+                : L10n.Get("Result", "analysis.meanLegend");
             for (int i = 0; i < yLabels.Length; i++) yLabels[i].text = (histogram.AxisMaximum * i / 4).ToString();
             Details = false; changedAt = double.NegativeInfinity;
             DrawPages();
@@ -58,7 +60,7 @@ namespace OurTaiko
             }
             catch (Exception error)
             {
-                calibrationError = "保存失败，请重试";
+                calibrationError = L10n.Get("Result", "calibration.saveFailed");
                 Log.Warn("Result", "Could not save timing adjustment: " + error.Message);
                 DrawCalibration();
                 return false;
@@ -73,19 +75,19 @@ namespace OurTaiko
             bool canAudio = calibration?.CanApply(current, true) == true;
             bool canJudge = calibration?.CanApply(current, false) == true;
             string Recommendation(int value, int? target) => target.HasValue ? Milliseconds(value) + " → " + Milliseconds(target.Value) : "—";
-            audioRecommendation.text = calibration == null ? "—" : calibration.AudioApplied ? "已调整 · " + Milliseconds(calibration.RecommendedAudioMs.Value) : Recommendation(calibration.AudioOffsetMs, calibration.RecommendedAudioMs);
-            judgeRecommendation.text = calibration == null ? "—" : calibration.JudgeApplied ? "已调整 · " + Milliseconds(calibration.RecommendedJudgeMs.Value) : Recommendation(calibration.JudgeOffsetMs, calibration.RecommendedJudgeMs);
+            audioRecommendation.text = calibration == null ? "—" : calibration.AudioApplied ? L10n.Format("Result", "calibration.adjusted", Milliseconds(calibration.RecommendedAudioMs.Value)) : Recommendation(calibration.AudioOffsetMs, calibration.RecommendedAudioMs);
+            judgeRecommendation.text = calibration == null ? "—" : calibration.JudgeApplied ? L10n.Format("Result", "calibration.adjusted", Milliseconds(calibration.RecommendedJudgeMs.Value)) : Recommendation(calibration.JudgeOffsetMs, calibration.RecommendedJudgeMs);
             adjustAudio.GetComponent<CanvasGroup>().alpha = canAudio ? 1 : .45f;
             adjustJudge.GetComponent<CanvasGroup>().alpha = canJudge ? 1 : .45f;
             if (calibrationError != null) calibrationStatus.text = calibrationError;
-            else if (boundResult?.AutoPlay == true) calibrationStatus.text = "自动演奏不提供偏移建议";
-            else if (boundResult?.Timing == null || boundResult.Timing.Count == 0) calibrationStatus.text = "暂无有效击打，无法推荐";
-            else if (calibration == null) calibrationStatus.text = "本局未记录偏移设置，无法推荐";
-            else if (!calibration.Matches(current)) calibrationStatus.text = "偏移设置已变化，请重新游玩";
+            else if (boundResult?.AutoPlay == true) calibrationStatus.text = L10n.Get("Result", "calibration.autoPlay");
+            else if (boundResult?.Timing == null || boundResult.Timing.Count == 0) calibrationStatus.text = L10n.Get("Result", "calibration.noHits");
+            else if (calibration == null) calibrationStatus.text = L10n.Get("Result", "calibration.notRecorded");
+            else if (!calibration.Matches(current)) calibrationStatus.text = L10n.Get("Result", "calibration.changed");
             else if (calibration.AudioApplied || calibration.JudgeApplied)
-                calibrationStatus.text = "已保存 " + (calibration.AudioApplied && calibration.JudgeApplied ? "A / B" : calibration.AudioApplied ? "A" : "B") + "，下次游玩生效";
-            else if (calibration.CorrectionMs == 0) calibrationStatus.text = "平均偏差不足 1 ms，无需调整";
-            else calibrationStatus.text = "每次修正平均偏差的 ½ · 每项限本局一次";
+                calibrationStatus.text = L10n.Format("Result", "calibration.saved", calibration.AudioApplied && calibration.JudgeApplied ? "A / B" : calibration.AudioApplied ? "A" : "B");
+            else if (calibration.CorrectionMs == 0) calibrationStatus.text = L10n.Get("Result", "calibration.belowOne");
+            else calibrationStatus.text = L10n.Get("Result", "calibration.hint");
         }
         public void SetPage(bool details, int moveDirection)
         {
@@ -93,7 +95,7 @@ namespace OurTaiko
             Details = details; direction = moveDirection < 0 ? -1 : 1; changedAt = GameTimeline.FrameTime;
             DrawPages();
         }
-        public void SetReady(bool complete) => actionLabel.text = complete ? "返回选曲" : "跳过演出";
+        public void SetReady(bool complete) => actionLabel.text = L10n.Get("Result", complete ? "page.backToSelect" : "page.skip");
         void Update() => DrawPages();
         void DrawPages()
         {
@@ -115,7 +117,7 @@ namespace OurTaiko
                 ((RectTransform)offsetControls.transform).anchoredPosition = ((RectTransform)detailPage.transform).anchoredPosition;
                 DrawCalibration();
             }
-            pageName.text = Details ? "判定详情" : "成绩";
+            pageName.text = L10n.Get("Result", Details ? "page.details" : "page.score");
             for (int i = 0; i < dots.Length; i++) dots[i].color = i == (Details ? 1 : 0)
                 ? new Color32(238, 82, 39, 255) : new Color32(180, 172, 152, 255);
         }

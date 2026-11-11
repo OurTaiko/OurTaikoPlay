@@ -40,15 +40,37 @@ namespace OurTaiko
     [Serializable]
     public sealed class GeneralSettings
     {
-        public static readonly string[] Languages = { "en", "ja", "zh", "zh_tw", "ko" };
-        public static readonly string[] LanguageNames = { "English", "日本語", "简体中文", "繁體中文", "Korean" };
-        // Only song titles/subtitles use this setting until interface localization is added.
-        public string language = "en";
+        public static readonly string[] Languages = { "en", "ja", "zh" };
+        // Each language's own name, the same in every language.
+        public static readonly string[] LanguageNames = { "English", "日本語", "简体中文" };
+        // The game's language: the interface (L10n) and the song titles and subtitles. Empty follows the
+        // system (SystemLanguage). Saves from before interface localization may hold zh_tw or ko.
+        public string language = "";
         // File-only option. Additional folders alongside the always-included default Songs
         // folder. Each custom folder must be an absolute path on the current platform.
         public string[] songLibraryPaths = Array.Empty<string>();
         public KeyboardBindings keyboard = new KeyboardBindings();
-        public string Language => Array.IndexOf(Languages, language) >= 0 ? language : "en";
+        public string Language => Array.IndexOf(Languages, language) >= 0 ? language
+            : language == "zh_tw" ? "zh"
+            : language == "ko" ? "en"
+            : SystemLanguage();
+
+        // The language of a player who has not picked one: the system's (Chinese of either script is
+        // 简体中文), or English.
+        public static string SystemLanguage()
+        {
+            switch (UnityEngine.Application.systemLanguage)
+            {
+                case UnityEngine.SystemLanguage.Chinese:
+                case UnityEngine.SystemLanguage.ChineseSimplified:
+                case UnityEngine.SystemLanguage.ChineseTraditional:
+                    return "zh";
+                case UnityEngine.SystemLanguage.Japanese:
+                    return "ja";
+                default:
+                    return "en";
+            }
+        }
         public static readonly LogLevel[] LogLevels = { OurTaiko.LogLevel.Debug, OurTaiko.LogLevel.Info, OurTaiko.LogLevel.Warning, OurTaiko.LogLevel.Error };
         // The least severe messages the log keeps; empty (or unknown) is Log.DefaultLevel.
         public string logLevel = "";

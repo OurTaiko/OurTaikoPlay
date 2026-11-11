@@ -266,15 +266,16 @@ namespace OurTaiko
             return null;
         }
 
-        static readonly string[] RankNames =
+        // Dan table keys of the 段位 names: 初級, 十級 .. 一級, 初段, 二段 .. 十段, 玄人, 名人, 超人, 達人.
+        static readonly string[] RankKeys =
         {
-            "初級", "十級", "九級", "八級", "七級", "六級", "五級", "四級", "三級", "二級", "一級",
-            "初段", "二段", "三段", "四段", "五段", "六段", "七段", "八段", "九段", "十段",
-            "玄人", "名人", "超人", "達人",
+            "rank.shokyu", "rank.kyu10", "rank.kyu9", "rank.kyu8", "rank.kyu7", "rank.kyu6", "rank.kyu5", "rank.kyu4", "rank.kyu3", "rank.kyu2", "rank.kyu1",
+            "rank.shodan", "rank.dan2", "rank.dan3", "rank.dan4", "rank.dan5", "rank.dan6", "rank.dan7", "rank.dan8", "rank.dan9", "rank.dan10",
+            "rank.kuroto", "rank.meijin", "rank.chojin", "rank.tatsujin",
         };
 
         // A 段位's name (0 初級 .. 24 達人), as OurTaikoProfile and the websites number them.
-        public static string RankName(int danIndex) => danIndex >= 0 && danIndex < RankNames.Length ? RankNames[danIndex] : "";
+        public static string RankName(int danIndex) => danIndex >= 0 && danIndex < RankKeys.Length ? L10n.Get("Dan", RankKeys[danIndex]) : "";
 
         // YataiDON odai_result as the result and the course select name it.
         public static string VerdictName(int verdict) => verdict switch

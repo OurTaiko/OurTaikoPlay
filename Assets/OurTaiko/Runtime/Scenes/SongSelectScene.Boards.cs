@@ -107,7 +107,7 @@ namespace OurTaiko
             item.charaLeft.enabled = item.charaRight.enabled = false;
             item.title.text = back ? SongSelectManager.BackLabel : search ? Manager.SearchFolderTitle : folder.Title;
             item.title.Squeeze(860);
-            item.count.text = back ? "" : search ? Manager.SearchDescription(board.Item) : $"{folder.SongCount} songs　{folder.ServerName}";
+            item.count.text = back ? "" : search ? Manager.SearchDescription(board.Item) : L10n.Format("Menu", "select.folderSongs", folder.SongCount, folder.ServerName);
             if (!back)
             {
                 item.panelOpen.sprite = folderBoards[board.Genre];

@@ -50,7 +50,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
-            Assert.That(entry.Modes.Select(m => m.Title), Is.EqualTo(new[] { "演奏ゲーム", "段位道場", "練習モード", "ゴーストバトル", "ゲーム設定" }));
+            Assert.That(entry.Modes.Select(m => m.Title), Is.EqualTo(new[] { "enso", "dan", "practice", "ghost", "settings" }.Select(m => L10n.Get("Menu", "entry." + m + ".title"))));
             Assert.That(entry.Modes[1].Scene, Is.EqualTo(SceneSwitcher.DanSelectScene));
             yield return new WaitForSecondsRealtime(0.2f);
             entry.Don();
@@ -82,7 +82,7 @@ namespace OurTaiko.Tests
             Assert.That(scene.intro.gameObject.activeSelf, Is.False);
             Assert.That(scene.Courses.Count, Is.EqualTo(3));
             Assert.That(scene.Courses[0].IsPlayable, Is.True, scene.Courses[0].Error);
-            Assert.That(scene.Courses[1].Error, Is.EqualTo("Song not found: Nowhere"));
+            Assert.That(scene.Courses[1].Error, Is.EqualTo(L10n.Format("Dan", "resolve.songNotFound", "Nowhere")));
             Assert.That(scene.Courses[2].IsPlayable, Is.False);
             yield return new WaitForSecondsRealtime(0.6f);
 
@@ -96,11 +96,11 @@ namespace OurTaiko.Tests
             Assert.That(view.songs[1].title.text, Is.EqualTo("？？？"), "Hidden songs keep their title back.");
             Assert.That(view.songs[2].title.text, Is.EqualTo("Branch Training"));
             Assert.That(view.gauge.gameObject.activeSelf, Is.True);
-            Assert.That(view.gaugeCaption.text, Is.EqualTo("100 ％以上"));
+            Assert.That(view.gaugeCaption.text, Is.EqualTo(L10n.Format("Dan", "exam.gaugeMore", 100)));
             Assert.That(view.examRows.Select(r => r.root.gameObject.activeSelf), Is.EqualTo(new[] { true, true, true }));
-            Assert.That(view.examRows[0].captions.Select(c => c.text), Is.EqualTo(new[] { "30 未満", "―", "20 未満" }));
+            Assert.That(view.examRows[0].captions.Select(c => c.text), Is.EqualTo(new[] { L10n.Format("Dan", "exam.less", 30), "―", L10n.Format("Dan", "exam.less", 20) }));
             Assert.That(view.examRows[1].segments.Count(s => s.gameObject.activeSelf), Is.EqualTo(1), "A course-wide exam has one segment.");
-            Assert.That(view.examRows[1].captions[0].text, Is.EqualTo("9 未満"));
+            Assert.That(view.examRows[1].captions[0].text, Is.EqualTo(L10n.Format("Dan", "exam.less", 9)));
             Assert.That(view.error.gameObject.activeSelf, Is.False);
             TestCapture.Capture("DanSelect.png");
 
@@ -109,7 +109,7 @@ namespace OurTaiko.Tests
             Assert.That(scene.Flow.Selected, Is.EqualTo(1));
             yield return new WaitForSecondsRealtime(0.6f);
             Assert.That(view.error.gameObject.activeSelf, Is.True);
-            Assert.That(view.error.text, Is.EqualTo("Song not found: Nowhere"));
+            Assert.That(view.error.text, Is.EqualTo(L10n.Format("Dan", "resolve.songNotFound", "Nowhere")));
             Assert.That(view.exams.gameObject.activeSelf, Is.False);
             TestCapture.Capture("DanSelectMissingSong.png");
             scene.Don();
@@ -180,7 +180,7 @@ namespace OurTaiko.Tests
             var scene = Object.FindAnyObjectByType<DanSelectScene>();
             var view = scene.view;
             yield return WaitUntil(() => scene.IntroDone, 3);
-            Assert.That(scene.Pages.Select(p => p.Title), Is.EqualTo(new[] { "ローカル", "Fanmade", "Database" }));
+            Assert.That(scene.Pages.Select(p => p.Title), Is.EqualTo(new[] { L10n.Get("Dan", "select.pageLocal"), "Fanmade", "Database" }));
             Assert.That(scene.Page, Is.Zero);
             Assert.That(scene.Courses.Count, Is.EqualTo(3), "the local page lists the local courses");
 
@@ -193,9 +193,9 @@ namespace OurTaiko.Tests
             var chip = view.chips.First(c => c.root.gameObject.activeSelf);
             Assert.That(chip.folder.sprite, Is.SameAs(view.folders[6]), "the 外伝 chip is the green plaque");
             Assert.That(chip.folder.color, Is.EqualTo(Color.white));
-            Assert.That(view.horiName.text, Is.EqualTo("外\n伝"));
+            Assert.That(view.horiName.text, Is.EqualTo(string.Join("\n", L10n.Get("Dan", "select.gaiden").Where(c => !char.IsWhiteSpace(c)).Select(c => c.ToString()))), "the 外伝 plate reads top to bottom");
             Assert.That(view.exams.gameObject.activeSelf, Is.False);
-            Assert.That(view.error.text, Does.Contain("段位コード"));
+            Assert.That(view.error.text, Is.EqualTo(L10n.Get("Dan", "select.gaidenHint")));
             TestCapture.Capture("DanSelectGaiden.png");
 
             // Don opens the code entry; a code goes nowhere without a connected server; Esc closes it.
@@ -205,9 +205,9 @@ namespace OurTaiko.Tests
             yield return null;
             TestCapture.Capture("DanSelectCodeEntry.png");
             scene.SubmitCode("ab12c");
-            Assert.That(scene.CodeMessage, Does.Contain("6 文字"));
+            Assert.That(scene.CodeMessage, Is.EqualTo(L10n.Get("Dan", "code.invalid")));
             scene.SubmitCode("ab12cd");
-            Assert.That(scene.CodeMessage, Does.Contain("接続"));
+            Assert.That(scene.CodeMessage, Is.EqualTo(L10n.Get("Dan", "code.notConnected")));
             Assert.That(scene.SwitchPage(1), Is.False, "no page change while a code is typed");
             scene.Back();
             Assert.That(scene.IsEnteringCode, Is.False);

@@ -85,7 +85,7 @@ namespace OurTaiko.Online
                 if (skipped > 0) Log.Warn("Online", endpoint.Config.DisplayName + ": skipped " + skipped + " replay rows this version cannot read.");
             }
             catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw; }
-            catch (HttpStatusException error) when (error.Status == 404) { result.Error = "no replay list"; result.Items.Clear(); }
+            catch (HttpStatusException error) when (error.Status == 404) { result.Error = L10n.Get("Online", "replays.noList"); result.Items.Clear(); }
             catch (Exception error) { result.Error = error.Message; result.Items.Clear(); }
             finally { endpoint.Transport.Release(); }
             return result;

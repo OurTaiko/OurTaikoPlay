@@ -78,7 +78,8 @@ namespace OurTaiko.Tests
             Assert.That(nav.Settings.general.keyboard.Get(InputKey.Back), Is.Empty);
             Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.F, Key.Escape }));
             nav.Confirm();
-            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { "Add a Key", "Remove F", "Remove Escape", "Reset to Default", "Clear All" }));
+            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { L10n.Get("Settings", "keys.add"), L10n.Format("Settings", "keys.remove", "F"),
+                L10n.Format("Settings", "keys.remove", "Escape"), L10n.Get("Settings", "keys.reset"), L10n.Get("Settings", "keys.clear") }));
             nav.TapSheet(1);
             Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.EqualTo(new[] { Key.Escape }));
             nav.Confirm(); nav.TapSheet(3);
@@ -90,6 +91,17 @@ namespace OurTaiko.Tests
             Assert.That(nav.CaptureKey(Key.A), Is.EqualTo(SettingsNavigator.Result.None));
             nav.Back();
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rows));
+        }
+
+        [Test]
+        public void EveryActionIsNamedInTheSettingsTable()
+        {
+            foreach (InputKey action in Enum.GetValues(typeof(InputKey)))
+            {
+                Assert.That(L10n.Has("Settings", KeyboardBindings.LabelKey(action)), Is.True, action.ToString());
+                Assert.That(KeyboardBindings.Label(action), Is.EqualTo(L10n.Get("Settings", KeyboardBindings.LabelKey(action))));
+            }
+            Assert.That(KeyboardBindings.LabelKey(InputKey.P2LeftDon), Is.EqualTo("key.p2LeftDon"));
         }
     }
 }

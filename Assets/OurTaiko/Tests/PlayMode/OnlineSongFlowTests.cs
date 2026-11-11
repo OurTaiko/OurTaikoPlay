@@ -80,7 +80,7 @@ namespace OurTaiko.Tests
             yield return Focus(select, 3);
             yield return new WaitForSecondsRealtime(0.8f);
             var folderView = select.wheel.GetComponentsInChildren<FolderBoardView>(false).Single(v => v.title.text == "Game");
-            Assert.That(folderView.count.text, Does.StartWith("1 songs"));
+            Assert.That(folderView.count.text, Does.StartWith(L10n.Format("Menu", "select.folderSongs", 1, "").TrimEnd()));
             Assert.That(folderView.charaLeft.enabled, Is.True, "The open folder board shows its characters.");
             TestCapture.Capture("SongSelectFolderClosed.png");
 
@@ -347,7 +347,8 @@ namespace OurTaiko.Tests
             Assert.That(presented.Skipped, Is.True);
             yield return WaitForScene(SceneSwitcher.EntryScene, 5);
             Assert.That(online.IsBusy, Is.False);
-            Assert.That(online.SongListSummary, Is.EqualTo("Built-in: cancelled").Or.EqualTo("Built-in: 1 songs"));
+            Assert.That(online.SongListSummary, Is.EqualTo(L10n.Format("Online", "summary.item", "Built-in", L10n.Get("Online", "summary.cancelled")))
+                .Or.EqualTo(L10n.Format("Online", "summary.item", "Built-in", L10n.Format("Online", "summary.songs", 1))));
         }
 
         [UnityTest]
@@ -467,7 +468,7 @@ namespace OurTaiko.Tests
             Assert.That(drawn.x, Is.GreaterThanOrEqualTo(area.x - 0.01f));
             Assert.That(drawn.y, Is.GreaterThanOrEqualTo(area.y - 0.01f));
             Assert.That(drawn.x / drawn.y, Is.EqualTo(1.6f).Within(0.001f));
-            Assert.That(board.count.text, Does.StartWith("1 songs"));
+            Assert.That(board.count.text, Does.StartWith(L10n.Format("Menu", "select.folderSongs", 1, "").TrimEnd()));
             TestCapture.Capture("SongSelectPlaylistCover.png");
             // Other folders show no picture, and a closed one hides it.
             yield return Focus(select, 6);

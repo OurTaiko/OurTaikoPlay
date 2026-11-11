@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Online_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 80772634b9970422a847bab357f6afed, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 133160960
+    m_Localized: "Checking {0}'s OurTaiko account\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160961
+    m_Localized: "Signing {0} in to {1}\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160962
+    m_Localized: "Loading song list ({0} / {1}): {2}\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160963
+    m_Localized: '{0}: {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160964
+    m_Localized: guest (not signed in)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160965
+    m_Localized: cancelled
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160966
+    m_Localized: sign-in expired
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160967
+    m_Localized: offline ({0})
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160968
+    m_Localized: no OurTaiko account sign-in
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160969
+    m_Localized: song list not loaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160970
+    m_Localized: signed in as {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160971
+    m_Localized: '{0} songs'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160972
+    m_Localized: wrong username or password
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160973
+    m_Localized: too many sign-in attempts, try again later
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160974
+    m_Localized: failed ({0})
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160975
+    m_Localized: offline cache
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160976
+    m_Localized: Other
+    m_Metadata:
+      m_Items: []
+  - m_Id: 133160977
+    m_Localized: no replay list
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

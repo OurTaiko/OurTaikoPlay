@@ -1,0 +1,256 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Dan Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Dan
+  m_TableCollectionNameGuidString: 0c288518ac8714fae9a5aa3f18dc00a6
+  m_Entries:
+  - m_Id: 321904640
+    m_Key: select.pageLocal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098944
+    m_Key: select.gaiden
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098945
+    m_Key: select.gaidenHint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098946
+    m_Key: select.best
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098947
+    m_Key: select.empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098948
+    m_Key: code.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098949
+    m_Key: code.titleFor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098950
+    m_Key: code.hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098951
+    m_Key: code.invalid
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098952
+    m_Key: code.notConnected
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098953
+    m_Key: code.searching
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098954
+    m_Key: code.notFound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098955
+    m_Key: code.failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098956
+    m_Key: exam.gaugeMore
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098957
+    m_Key: exam.gaugeLess
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098958
+    m_Key: exam.more
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098959
+    m_Key: exam.less
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098960
+    m_Key: play.loadFailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098961
+    m_Key: play.restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098962
+    m_Key: play.soulGauge
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098963
+    m_Key: result.notRecorded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098964
+    m_Key: resolve.songNotFound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098965
+    m_Key: resolve.noChart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098966
+    m_Key: resolve.songChanged
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098967
+    m_Key: options.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098968
+    m_Key: options.speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098969
+    m_Key: options.vanish
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098970
+    m_Key: options.inverse
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098971
+    m_Key: options.random
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098972
+    m_Key: options.drumSound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098973
+    m_Key: options.auto
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098974
+    m_Key: options.skip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098975
+    m_Key: rank.shokyu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098976
+    m_Key: rank.kyu10
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098977
+    m_Key: rank.kyu9
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098978
+    m_Key: rank.kyu8
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098979
+    m_Key: rank.kyu7
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098980
+    m_Key: rank.kyu6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098981
+    m_Key: rank.kyu5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098982
+    m_Key: rank.kyu4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098983
+    m_Key: rank.kyu3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098984
+    m_Key: rank.kyu2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098985
+    m_Key: rank.kyu1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098986
+    m_Key: rank.shodan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098987
+    m_Key: rank.dan2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098988
+    m_Key: rank.dan3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098989
+    m_Key: rank.dan4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098990
+    m_Key: rank.dan5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098991
+    m_Key: rank.dan6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098992
+    m_Key: rank.dan7
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098993
+    m_Key: rank.dan8
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098994
+    m_Key: rank.dan9
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098995
+    m_Key: rank.dan10
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098996
+    m_Key: rank.kuroto
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098997
+    m_Key: rank.meijin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098998
+    m_Key: rank.chojin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 326098999
+    m_Key: rank.tatsujin
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 8757538902004465777
+  references:
+    version: 2
+    RefIds:
+    - rid: 8757538902004465777
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1794378578469

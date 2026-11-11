@@ -42,4 +42,6 @@ EditorBuildSettings:
     path: Assets/Scenes/CourseSelect/CourseSelect.Ghost.unity
     guid: 31f0e19d172244d63857618236f79014
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 4e6763afea02e437fbb8c615165bf684, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+    com.unity.localization.settings: {fileID: 11400000, guid: 86c2c7c4cb8f0424a97f3fb0dae0f748, type: 2}

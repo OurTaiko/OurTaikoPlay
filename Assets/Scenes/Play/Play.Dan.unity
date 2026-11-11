@@ -1531,6 +1531,7 @@ GameObject:
   - component: {fileID: 194373382}
   - component: {fileID: 194373384}
   - component: {fileID: 194373383}
+  - component: {fileID: 194373385}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -1657,6 +1658,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 194373381}
   m_CullTransparentMesh: 1
+--- !u!114 &194373385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 194373381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Common
+  key: back
 --- !u!1 &196154168
 GameObject:
   m_ObjectHideFlags: 0
@@ -5520,6 +5535,7 @@ GameObject:
   - component: {fileID: 724958361}
   - component: {fileID: 724958363}
   - component: {fileID: 724958362}
+  - component: {fileID: 724958364}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -5646,6 +5662,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 724958360}
   m_CullTransparentMesh: 1
+--- !u!114 &724958364
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 724958360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Dan
+  key: play.restart
 --- !u!1 &738810028
 GameObject:
   m_ObjectHideFlags: 0
@@ -8150,8 +8180,30 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4461620441871152507, guid: 472d703c8282249b7879486733fc8845, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1014146192}
   m_SourcePrefab: {fileID: 100100000, guid: 472d703c8282249b7879486733fc8845, type: 3}
+--- !u!1 &1014146191 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4461620441871152507, guid: 472d703c8282249b7879486733fc8845, type: 3}
+  m_PrefabInstance: {fileID: 1014146190}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1014146192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1014146191}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Common
+  key: back
 --- !u!1 &1025920017
 GameObject:
   m_ObjectHideFlags: 0
@@ -14650,6 +14702,7 @@ GameObject:
   - component: {fileID: 1918630097}
   - component: {fileID: 1918630096}
   - component: {fileID: 1918630095}
+  - component: {fileID: 1918630098}
   m_Layer: 0
   m_Name: Name
   m_TagString: Untagged
@@ -14776,6 +14829,20 @@ RectTransform:
   m_AnchoredPosition: {x: 150, y: -20}
   m_SizeDelta: {x: 300, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1918630098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1918630094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4004433c75554ecab307aaa26a021a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.LocalizedText
+  table: Dan
+  key: play.soulGauge
 --- !u!1 &1954806585
 GameObject:
   m_ObjectHideFlags: 0

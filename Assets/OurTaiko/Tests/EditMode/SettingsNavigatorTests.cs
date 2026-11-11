@@ -28,7 +28,7 @@ namespace OurTaiko.Tests
         public void TheRailListsTheCategoriesThenCloseAndStopsAtBothEnds()
         {
             var nav = Navigator();
-            Assert.That(nav.Pages.Select(p => p.Title), Is.EqualTo(new[] { "General", "Controls", "Play", "Display", "Sound", "Accounts" }));
+            Assert.That(nav.Pages.Select(p => p.Title), Is.EqualTo(new[] { "general", "controls", "play", "display", "sound", "accounts" }.Select(p => L10n.Get("Settings", p + ".title"))));
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
             Assert.That(nav.Move(-1), Is.EqualTo(SettingsNavigator.Result.Bumped), "No wrapping past the first category.");
             Assert.That(nav.Move(6), Is.EqualTo(SettingsNavigator.Result.Moved));
@@ -118,7 +118,7 @@ namespace OurTaiko.Tests
             Assert.That(nav.Move(-1), Is.EqualTo(SettingsNavigator.Result.Bumped), "0 (Off) is the minimum.");
             nav.Move(PlaySettings.InputDelayMaxMs + 5);
             Assert.That(nav.AdjustValue, Is.EqualTo(PlaySettings.InputDelayMaxMs));
-            Assert.That(nav.Row.Format(0), Is.EqualTo("Off"));
+            Assert.That(nav.Row.Format(0), Is.EqualTo(L10n.Get("Settings", "value.off")));
         }
 
         [Test]
@@ -159,7 +159,7 @@ namespace OurTaiko.Tests
         [Test]
         public void AListOpensTheSheetOnItsValue()
         {
-            var nav = OnPage("general");
+            var nav = OnPage("general", new GameSettings { general = new GeneralSettings { language = "en" } });
             Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.List));
             Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Entered));
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Sheet));
@@ -183,7 +183,8 @@ namespace OurTaiko.Tests
             Assert.That(nav.Row.Key, Is.EqualTo(InputKey.LeftDon));
             Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("F"));
             nav.Confirm();
-            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { "Add a Key", "Remove F", "Reset to Default", "Clear All" }));
+            Assert.That(nav.SheetOptions, Is.EqualTo(new[] { L10n.Get("Settings", "keys.add"), L10n.Format("Settings", "keys.remove", "F"),
+                L10n.Get("Settings", "keys.reset"), L10n.Get("Settings", "keys.clear") }));
 
             Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Entered));
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Capture));
@@ -199,7 +200,7 @@ namespace OurTaiko.Tests
             nav.Move(3);
             nav.Confirm();
             Assert.That(nav.Settings.general.keyboard.Get(InputKey.LeftDon), Is.Empty, "Clear All.");
-            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo("Unbound"));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.unbound")));
 
             nav.Confirm();
             nav.Move(1);
@@ -238,7 +239,7 @@ namespace OurTaiko.Tests
             Assert.That(nav.Settings.audio.volume.master, Is.EqualTo(0.95f).Within(1e-5));
             Assert.That(nav.SetRow(0, 0), Is.EqualTo(SettingsNavigator.Result.Changed));
             Assert.That(nav.Settings.audio.volume.master, Is.Zero);
-            Assert.That(nav.Row.Hint, Is.EqualTo("Default 100%  ·  Step 5%"));
+            Assert.That(nav.Row.Hint, Is.EqualTo(L10n.Format("Settings", "hint.number", "100%", "5%")));
         }
 
         [Test]

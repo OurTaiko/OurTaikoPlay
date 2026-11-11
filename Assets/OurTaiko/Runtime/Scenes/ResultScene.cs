@@ -54,7 +54,9 @@ namespace OurTaiko
         public AudioClip[] messageVoices2P;
 
         public const float GaugeScale = 0.7f, GaugeUnit = 21 * GaugeScale;
-        public static readonly string[] MessageTexts = { "もう少し\nがんばるドン!", "おしかったドン", "ノリノリだドン", "よくできたドン！" };
+        // The speech line under each message picture (miss, near, success, perfect).
+        public static string MessageText(ResultMessage message) => L10n.Get("Result", MessageKeys[(int)message]);
+        static readonly string[] MessageKeys = { "result.message.miss", "result.message.near", "result.message.success", "result.message.perfect" };
         // per gauge art (easy, normal, hard): the first clear cell and the クリア caption's x
         public static readonly int[] ClearCell = { 30, 35, 40 };
         public static readonly float[] ClearCaptionX = { 518, 585, 663 };
@@ -119,7 +121,7 @@ namespace OurTaiko
             var controller = PlayerInfoController.EnsureInstance();
             int own = switcher.Lead.Index();
             plates[ghost.PlayerLane]?.Pin(own == 0 ? controller.Info : controller.SecondInfo, ghost.PlayerLane);
-            plates[ghost.GhostLane]?.Pin(new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? "Ghost" : ghost.Nickname }, ghost.GhostLane);
+            plates[ghost.GhostLane]?.Pin(new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? L10n.Get("Play", "ghost.defaultName") : ghost.Nickname }, ghost.GhostLane);
         }
 
         // Only entering ResultScene commits a completed play. Practice never enters this scene.
@@ -376,7 +378,7 @@ namespace OurTaiko
             fadeIn = new ResultBackground(view.fadeIn, bgClip, Clip(fujiTimeline));
             view.songTitle.text = Result.Title;
             view.songTitle.Squeeze(view.songTitle.rectTransform.sizeDelta.x);
-            view.songNumber.text = Math.Max(1, switcher.SongsPlayed) + "曲目";
+            view.songNumber.text = L10n.Format("Result", "result.songNumber", Math.Max(1, switcher.SongsPlayed));
 
             // ResultScreen::draw_overlay: coin_overlay's credit line (result shows no chip or invite), over the wipe.
             if (overlay != null) Coins = new CoinOverlayView(overlay, view.freePlay, null, null, null, null);

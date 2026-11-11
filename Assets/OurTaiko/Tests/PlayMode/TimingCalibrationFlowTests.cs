@@ -77,7 +77,7 @@ namespace OurTaiko.Tests
                 var saved = GameSettings.FromJson(File.ReadAllText(manager.FilePath));
                 Assert.That(saved.play.audioOffsetMs, Is.EqualTo(audio ? -3 : 12));
                 Assert.That(saved.play.judgeOffsetMs, Is.EqualTo(audio ? -4 : -19));
-                Assert.That(view.calibrationStatus.text, Does.Contain("已保存 " + (audio ? "A" : "B")));
+                Assert.That(view.calibrationStatus.text, Is.EqualTo(L10n.Format("Result", "calibration.saved", audio ? "A" : "B")));
                 Click(audio ? view.adjustAudio : view.adjustJudge); yield return null;
                 Assert.That(manager.Settings.play.audioOffsetMs, Is.EqualTo(saved.play.audioOffsetMs));
                 Assert.That(manager.Settings.play.judgeOffsetMs, Is.EqualTo(saved.play.judgeOffsetMs));
@@ -89,7 +89,7 @@ namespace OurTaiko.Tests
                 Assert.That(saved.play.judgeOffsetMs, Is.EqualTo(-19));
                 view.Bind(run); yield return null;
                 scene.ShowPage(true); yield return new WaitForSecondsRealtime(.25f);
-                Assert.That(view.calibrationStatus.text, Does.Contain("已保存"), "Rebinding the same result cannot apply twice.");
+                Assert.That(view.calibrationStatus.text, Is.EqualTo(L10n.Format("Result", "calibration.saved", "A / B")), "Rebinding the same result cannot apply twice.");
                 Click(view.adjustAudio); yield return null; Click(view.adjustJudge); yield return null;
                 Assert.That(manager.Settings.play.audioOffsetMs, Is.EqualTo(-3));
                 Assert.That(manager.Settings.play.judgeOffsetMs, Is.EqualTo(-19));
@@ -123,7 +123,7 @@ namespace OurTaiko.Tests
                     Assert.That(view.ApplyOffset(false), Is.False);
                     Assert.That(manager.Settings.play.audioOffsetMs, Is.EqualTo(13));
                     Assert.That(manager.Settings.play.judgeOffsetMs, Is.EqualTo(-4));
-                    Assert.That(view.calibrationStatus.text, Does.Contain(run.AutoPlay ? "自动演奏" : run.Timing.Count == 0 ? "暂无有效击打" : "已变化"));
+                    Assert.That(view.calibrationStatus.text, Is.EqualTo(L10n.Get("Result", run.AutoPlay ? "calibration.autoPlay" : run.Timing.Count == 0 ? "calibration.noHits" : "calibration.changed")));
                 }
             }
             finally

@@ -298,7 +298,7 @@ namespace OurTaiko
             var messages = Seat == 1 && scene.messages2P != null && scene.messages2P.Length > 0 ? scene.messages2P : scene.messages;
             messageImage.sprite = messages[(int)Result.Message];
             messageText = view.messageText;
-            messageText.text = ResultScene.MessageTexts[(int)Result.Message];
+            messageText.text = ResultScene.MessageText(Result.Message);
 
             unfilledImage = view.unfilled;
             var unfilled = Seat == 1 && scene.unfilled2P != null && scene.unfilled2P.Length > 0 ? scene.unfilled2P : scene.unfilled;

@@ -50,7 +50,7 @@ namespace OurTaiko
                 yield return Download(switcher, online, song);
                 if (Error != null)
                 {
-                    switcher.SetCoverStatus(Error, new Color(1, 0.35f, 0.35f));
+                    switcher.SetCoverStatus(Shown(Error), new Color(1, 0.35f, 0.35f));
                     double failedAt = GameTimeline.FrameTime;
                     while (GameTimeline.FrameTime - failedAt < errorSeconds || switcher.IsSwitching) yield return null;
                     switcher.SwitchScene(switcher.ReturnScene);
@@ -76,7 +76,7 @@ namespace OurTaiko
             yield return DecodeAudio(song);
             if (Error != null)
             {
-                switcher.SetCoverStatus(Error, new Color(1, 0.35f, 0.35f));
+                switcher.SetCoverStatus(Shown(Error), new Color(1, 0.35f, 0.35f));
                 yield return new WaitForSecondsRealtime(errorSeconds);
                 while (switcher.IsSwitching) yield return null;
                 switcher.SwitchScene(switcher.ReturnScene);
@@ -132,7 +132,7 @@ namespace OurTaiko
             if (Error != null)
             {
                 dan.Release();
-                switcher.SetCoverStatus(Error, new Color(1, 0.35f, 0.35f));
+                switcher.SetCoverStatus(Shown(Error), new Color(1, 0.35f, 0.35f));
                 double failedAt = GameTimeline.FrameTime;
                 while (GameTimeline.FrameTime - failedAt < errorSeconds || switcher.IsSwitching) yield return null;
                 switcher.SwitchScene(SceneSwitcher.DanSelectScene);
@@ -176,7 +176,7 @@ namespace OurTaiko
                 yield break;
             }
             var (text, audio, chart) = task.Result;
-            switcher.SetCoverStatus("音源を読み込み中…", Color.white);
+            switcher.SetCoverStatus(L10n.Get("Menu", "loading.audio"), Color.white);
             online.SetPrepared(song, chart, text, null);
             song.audioPath = audio;
             song.moviePath = chart.MoviePath;
@@ -187,24 +187,38 @@ namespace OurTaiko
         // The download card's lines (chart / audio, and the movie when one is fetched) as one status text.
         public static string Describe(DownloadProgress progress)
         {
-            if (progress.Step == DownloadProgress.Stage.Checking) return "サーバーを確認中…";
-            if (progress.Step == DownloadProgress.Stage.Preparing || progress.Step == DownloadProgress.Stage.Ready) return "譜面を準備中…";
-            string text = "譜面 " + Describe(progress.Chart) + "　音源 " + Describe(progress.Audio);
-            return progress.Movie == null ? text : text + "　映像 " + Describe(progress.Movie);
+            if (progress.Step == DownloadProgress.Stage.Checking) return L10n.Get("Menu", "loading.checking");
+            if (progress.Step == DownloadProgress.Stage.Preparing || progress.Step == DownloadProgress.Stage.Ready) return L10n.Get("Menu", "loading.preparing");
+            string text = L10n.Format("Menu", "loading.chartFile", Describe(progress.Chart)) + "　" + L10n.Format("Menu", "loading.audioFile", Describe(progress.Audio));
+            return progress.Movie == null ? text : text + "　" + L10n.Format("Menu", "loading.movieFile", Describe(progress.Movie));
         }
 
         static string Describe(FileProgress file)
         {
             switch (file.Status)
             {
-                case FileProgress.State.Waiting: return "待機中";
-                case FileProgress.State.Verifying: return "確認中";
-                case FileProgress.State.Cached: return "キャッシュ済み";
-                case FileProgress.State.Complete: return "完了";
+                case FileProgress.State.Waiting: return L10n.Get("Menu", "loading.waiting");
+                case FileProgress.State.Verifying: return L10n.Get("Menu", "loading.verifying");
+                case FileProgress.State.Cached: return L10n.Get("Menu", "loading.cached");
+                case FileProgress.State.Complete: return L10n.Get("Menu", "loading.complete");
                 default:
                     return file.Total > 0
                         ? $"{file.Received * 100 / file.Total}% ({Size(file.Received)}/{Size(file.Total)})"
                         : Size(file.Received);
+            }
+        }
+
+        // The curtain's text for Error: this scene's own codes in the selected language; a server's
+        // error passes through as it came.
+        static string Shown(string error)
+        {
+            switch (error)
+            {
+                case "DOWNLOAD_FAILED": return L10n.Get("Menu", "loading.downloadFailed");
+                case "AUDIO_LOAD_FAILED": return L10n.Get("Menu", "loading.audioLoadFailed");
+                case "AUDIO_DECODE_FAILED": return L10n.Get("Menu", "loading.audioDecodeFailed");
+                case "CHART_LOAD_FAILED": return L10n.Get("Menu", "loading.chartLoadFailed");
+                default: return error;
             }
         }
 

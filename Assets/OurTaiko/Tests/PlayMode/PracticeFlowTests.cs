@@ -169,7 +169,7 @@ namespace OurTaiko.Tests
         {
             yield return StartPractice(backend, true);
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure), "A chart without branches has no branch page.");
-            Assert.That(play.practiceView.heading.text, Is.EqualTo("小节进度"));
+            Assert.That(play.practiceView.heading.text, Is.EqualTo(L10n.Get("Play", "practice.measure.heading")));
             Assert.That(play.BarRoot(0).anchoredPosition.x, Is.EqualTo(120).Within(0.1));
             double before = play.RenderedTime;
             yield return Press(Key.K);
@@ -345,7 +345,7 @@ namespace OurTaiko.Tests
             Assert.That(play.pauseMenu.buttons[2], Is.SameAs(play.pauseMenu.modeSwitch));
             Assert.That(play.pauseMenu.modeSwitch.interactable, Is.True);
             Assert.That(play.pauseMenu.modeSwitch.GetComponentInChildren<TMP_Text>().text,
-                Is.EqualTo("Switch to Normal Play"));
+                Is.EqualTo(L10n.Get("Play", "pause.switchToNormal")));
             TestCapture.Capture("PracticeModeSwitchMenu.png");
             var old = play;
             play.pauseMenu.modeSwitch.onClick.Invoke();
@@ -368,7 +368,7 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => play.SongTime >= 2.2);
             play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
             Assert.That(play.pauseMenu.modeSwitch.GetComponentInChildren<TMP_Text>().text,
-                Is.EqualTo("Switch to Practice"));
+                Is.EqualTo(L10n.Get("Play", "pause.switchToPractice")));
             play.pauseMenu.modeSwitch.onClick.Invoke();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked
                 && Object.FindAnyObjectByType<PlayScene>()?.IsPaused == true);
@@ -384,7 +384,7 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !switcher.IsInputBlocked);
             Assert.That(switcher.PracticeMode, Is.True);
             var select = Object.FindAnyObjectByType<SongSelectScene>();
-            Assert.That(select.view.ModeLabel.text, Is.EqualTo("練習モード"));
+            Assert.That(select.view.ModeLabel.text, Is.EqualTo(L10n.Get("Menu", "select.practiceMode")));
             TestCapture.Capture("PracticeModeSongSelect.png");
             switcher.Play(song, "Oni", false);
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked
@@ -554,14 +554,14 @@ namespace OurTaiko.Tests
         {
             yield return StartPractice(AudioBackend.BassSimple, false, Branched);
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
-            Assert.That(play.practiceView.heading.text, Is.EqualTo("谱面分支"));
-            Assert.That(play.practiceView.value.text, Is.EqualTo("普通譜面"));
+            Assert.That(play.practiceView.heading.text, Is.EqualTo(L10n.Get("Play", "practice.branch.heading")));
+            Assert.That(play.practiceView.value.text, Is.EqualTo(L10n.Get("Play", "practice.branch.normal")));
             int bars = play.Practice.Count;
             yield return Press(Key.D);
             Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Normal), "The route list stops at 普通.");
             yield return Press(Key.K); yield return Press(Key.K); yield return Press(Key.K);
             Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Master), "The route list stops at 達人.");
-            Assert.That(play.practiceView.value.text, Is.EqualTo("達人譜面"));
+            Assert.That(play.practiceView.value.text, Is.EqualTo(L10n.Get("Play", "practice.branch.master")));
             Assert.That(play.Practice.Count, Is.EqualTo(bars + 1), "達人's two half measures replace one bar line list entry.");
             yield return Click(play.practiceView.previous);
             Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
@@ -570,7 +570,7 @@ namespace OurTaiko.Tests
             Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Session.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True);
             yield return Press(Key.F);
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure));
-            Assert.That(play.practiceView.heading.text, Is.EqualTo("小节进度"));
+            Assert.That(play.practiceView.heading.text, Is.EqualTo(L10n.Get("Play", "practice.measure.heading")));
             yield return Press(Key.K);
             Assert.That(play.Practice.Target, Is.EqualTo(1));
             yield return new WaitForSecondsRealtime(0.25f);

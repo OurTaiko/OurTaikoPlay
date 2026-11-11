@@ -71,7 +71,13 @@ namespace OurTaiko
         const double CourseFadeDelayMs = 400, CourseFadeMs = 483, GenreFadeMs = 200, BackgroundLoopMs = 15000;
         const double UraChangeMs = 1500, UraSwapMs = 450;
         const int UraCells = 90;
-        static readonly string[] ChipNames = { "かんたん", "ふつう", "むずかしい", "おに", "おに(裏)" };
+        // Course card names, in Difficulty order from Easy.
+        static readonly string[] ChipNames = { "difficulty.easy", "difficulty.normal", "difficulty.hard", "difficulty.oni", "select.courseUra" };
+        static string ChipName(Difficulty difficulty)
+        {
+            string key = ChipNames[(int)difficulty];
+            return L10n.Get(difficulty == Difficulty.Ura ? "Menu" : "Common", key);
+        }
 
         public SongSelectManager Manager { get; private set; }
         public CoinOverlayView Coins { get; private set; }

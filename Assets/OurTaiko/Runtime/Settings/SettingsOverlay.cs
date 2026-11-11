@@ -80,6 +80,7 @@ namespace OurTaiko
             Instance = this;
             DontDestroyOnLoad(gameObject);
             SceneManager.activeSceneChanged += OnSceneChanged;
+            L10n.LanguageChanged += OnLanguageChanged;
             sfx = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
             sfx.playOnAwake = false;
             var canvas = new GameObject("Canvas", typeof(RectTransform));
@@ -104,16 +105,32 @@ namespace OurTaiko
             if (Navigator != null) Dismiss();
         }
 
+        // A new language (the System Language row) redraws the open overlay in it at once: the pages
+        // read their text again on refresh, and the view rebuilds rows whose text changed.
+        void OnLanguageChanged()
+        {
+            if (Navigator == null) return;
+            Navigator.Refresh();
+            View.Relabel();
+            ShowAccounts();
+            Refresh();
+        }
+
         void OnDestroy()
         {
             SceneManager.activeSceneChanged -= OnSceneChanged;
+            L10n.LanguageChanged -= OnLanguageChanged;
             if (Instance == this) Instance = null;
             actionCancel?.Cancel();
         }
 
+        // The language when the overlay opened; closing it in another language reloads the scene.
+        string openedLanguage;
+
         void Show()
         {
             Navigator = new SettingsNavigator(SettingsCatalog.Pages(SoundSettings.Platform), SettingManager.EnsureInstance().Settings);
+            openedLanguage = L10n.Language;
             status = "";
             openFrame = Time.frameCount;
             held = null;
@@ -128,11 +145,11 @@ namespace OurTaiko
             if (Navigator == null) return;
             var engine = AudioEngine.Instance;
             string sound = engine == null ? null
-                : !engine.Available ? "No audio output: " + engine.Failure
-                : engine.Silent ? "No output device (silent): " + engine.Failure
-                : "Current output: " + engine.Backend;
+                : !engine.Available ? T("audio.none", engine.Failure)
+                : engine.Silent ? T("audio.silent", engine.Failure)
+                : T("audio.current", engine.Backend);
             bool pending = engine != null && engine.HasPendingDeviceChanges;
-            if (pending) sound += "   ·   Output changes apply when you close Settings";
+            if (pending) sound += "   ·   " + T("audio.pending");
             View.Show(Navigator, status, sound, pending);
         }
 
@@ -147,7 +164,7 @@ namespace OurTaiko
                 if (row.ActionId != null && row.ActionId.StartsWith(SettingsCatalog.SignOut) && row.Id != runningId)
                 {
                     string name = Name(row.ActionId[SettingsCatalog.SignOut.Length] - '0');
-                    row.Status = name != null ? "Signed in: " + name : "Not signed in";
+                    row.Status = name != null ? T("status.signedIn", name) : T("status.notSignedIn");
                 }
         }
 
@@ -281,7 +298,19 @@ namespace OurTaiko
             View.Close();
             var engine = AudioEngine.Instance;
             if (engine != null && engine.HasPendingDeviceChanges) ApplyAudio(engine);
+            else if (L10n.Language != openedLanguage) ReloadForLanguage();
             Closed?.Invoke();
+        }
+
+        // Screens built in code read their text once, so a new language reloads the scene underneath, as
+        // a new audio device does. A switch that is already under way (it closed the overlay) loads the
+        // next scene in the new language anyway.
+        async void ReloadForLanguage()
+        {
+            var switcher = SceneSwitcher.EnsureInstance();
+            if (switcher == null || switcher.IsSwitching) return;
+            try { await switcher.SwitchSceneAsync(SceneSwitcher.CurrentScene); }
+            catch (Exception error) { Log.Warn("Scene", error.Message); }
         }
 
         async void ApplyAudio(AudioEngine engine)
@@ -319,19 +348,19 @@ namespace OurTaiko
         async void RunAction(SettingRow row, string action, string text)
         {
             var online = OnlineManager.EnsureInstance();
-            if (runningId != null || online.IsBusy) { status = "Still busy with the previous request."; Refresh(); return; }
+            if (runningId != null || online.IsBusy) { status = T("status.busy"); Refresh(); return; }
             bool account = action.StartsWith(SettingsCatalog.SignIn) || action.StartsWith(SettingsCatalog.SignOut);
             int seat = account ? action[action.Length - 1] - '0' : 0;
             var settings = Navigator.Settings;
             string username = seat == 0 ? settings.accounts.p1Username : settings.accounts.p2Username;
             if (action.StartsWith(SettingsCatalog.SignIn) && (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(text)))
             {
-                status = string.IsNullOrEmpty(username) ? $"Enter {seat + 1}P's username first." : "";
+                status = string.IsNullOrEmpty(username) ? T("status.enterUsername", seat + 1) : "";
                 Refresh();
                 return;
             }
             runningId = row.Id;
-            row.Status = "Working…";
+            row.Status = T("status.working");
             Refresh();
             actionCancel = new CancellationTokenSource();
             var cancel = actionCancel;
@@ -347,7 +376,7 @@ namespace OurTaiko
                     try
                     {
                         await online.SignInAsync(seat, username, text, cancel.Token);
-                        status = $"{seat + 1}P signed in as {online.Accounts.Seats[seat].Nickname}.   ·   {online.LoginSummary}";
+                        status = T("status.signedInAs", seat + 1, online.Accounts.Seats[seat].Nickname, online.LoginSummary);
                     }
                     catch (Exception error) when (!cancel.IsCancellationRequested)
                     {
@@ -358,7 +387,7 @@ namespace OurTaiko
                 {
                     bool was = online.Accounts.Seats[seat].IsSignedIn;
                     await online.SignOutAsync(seat, cancel.Token);
-                    status = was ? $"{seat + 1}P signed out." : $"{seat + 1}P is not signed in.";
+                    status = T(was ? "status.signedOut" : "status.seatNotSignedIn", seat + 1);
                 }
                 else
                 {
@@ -374,11 +403,14 @@ namespace OurTaiko
             // Cancelled means the overlay was dismissed meanwhile, which already cleared the action.
             if (this == null || cancelled) return;
             runningId = null;
-            (RowById(row.Id) ?? row).Status = account ? "" : "Done";
+            (RowById(row.Id) ?? row).Status = account ? "" : T("status.done");
             if (Navigator == null) return;
             ShowAccounts();
             Refresh();
         }
+
+        static string T(string key) => SettingsCatalog.T(key);
+        static string T(string key, params object[] args) => SettingsCatalog.T(key, args);
 
         SettingRow RowById(string id) => Navigator?.Pages.SelectMany(p => p.Rows).FirstOrDefault(r => r.Id == id);
 

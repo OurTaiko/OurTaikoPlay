@@ -1,0 +1,105 @@
+key,en,ja,zh-Hans,comment
+entry.enso.title,Taiko Mode,演奏ゲーム,演奏游戏,Entry mode board: normal play
+entry.enso.info0,Pick any song you like,すきな曲や、むずかしさを,自由选择喜欢的歌曲,"Entry board description, line 1 of 2"
+entry.enso.info1,"and difficulty, and play!",えらんであそべるよ！,和难度来游玩！,"Entry board description, line 2 of 2"
+entry.dan.title,Dan-i Dojo,段位道場,段位道场,Entry mode board: dan courses
+entry.dan.info0,Play three songs in a row,３曲連続して演奏しながら、,连续演奏三首歌曲，,"Entry board description, line 1 of 3"
+entry.dan.info1,and aim to pass every exam!,お題の合格を目指そう！,努力达成所有课题！,"Entry board description, line 2 of 3"
+entry.dan.info2,Pass to have your skill ranked!,合格すると腕前が認定されるよ！,合格即可获得段位认定！,"Entry board description, line 3 of 3"
+entry.practice.title,Practice Mode,練習モード,练习模式,Entry mode board: practice
+entry.practice.info0,Pick the measures and speed,小節とスピードをえらんで,选择小节和速度，,"Entry board description, line 1 of 2"
+entry.practice.info1,and practice again and again!,くりかえし練習できるよ！,可以反复练习！,"Entry board description, line 2 of 2"
+entry.ghost.title,Ghost Battle,ゴーストバトル,幽灵对战,Entry mode board: play against a recording
+entry.ghost.info0,Take on another player's,ほかの人の演奏の記録と,和其他玩家的演奏记录,"Entry board description, line 1 of 2"
+entry.ghost.info1,recording on the same chart!,同じ譜面で対決しよう！,在同一谱面上对决吧！,"Entry board description, line 2 of 2"
+entry.settings.title,Settings,ゲーム設定,游戏设置,Entry mode board: opens the settings overlay
+entry.settings.info0,Here you can change,ゲームのせっていを,在这里可以更改,"Entry board description, line 1 of 2"
+entry.settings.info1,the game's settings!,かえられるよ！,游戏的设置！,"Entry board description, line 2 of 2"
+entry.credit.onePlayer,1 Player,１人プレイ,单人游玩,Entry credit row label
+entry.credit.twoPlayers,2 Players,２人プレイ,双人游玩,Entry credit row label
+entry.credit.start,Hit the drum to start!,太鼓をたたいてスタート！,敲击太鼓开始！,Entry credit row message
+entry.accountExpired,{0}'s OurTaiko sign-in has expired. Sign in again in the game settings.,{0}のOurTaikoのログインが切れました。ゲーム設定でもう一度ログインしてください。,{0} 的 OurTaiko 登录已过期，请在游戏设置中重新登录。,"Entry top bar; {0} = seat(s), e.g. 1P"
+entry.seatsAnd,{0} and {1},{0}と{1},{0} 和 {1},"Joins two seats in entry.accountExpired, e.g. 1P and 2P"
+overlay.freePlay,Free Play,フリープレイ,自由游玩,Credit line at the bottom of Entry and results
+overlay.invitePlayer,2 Players,2人プレイ,双人游玩,"2P invite bubble, first line"
+overlay.inviteMessage,Hit the drum to start!,太鼓をたたいてスタート!,敲击太鼓开始！,"2P invite bubble, second line"
+presented.skipHint,Click / Tap: Skip,クリック / タップ：スキップ,点击 / 轻触：跳过,Startup title card hint
+presented.cancelling,Cancelling…,キャンセル中…,正在取消…,Startup title card status after a skip
+select.local,Local,ローカル,本地谱面,Song select folder of the local songs
+select.searchTitle,Search / Sort,検索・並べ替え,搜索／排序,Song select search board title
+select.searchDescription,Keyword · Difficulty · Stars · FC / AP,Keyword・むずかしさ・★・FC / AP,Keyword · 难度 · 星级 · FC / AP,Song select search board subline
+select.folderSongs,{0} songs　{1},{0}曲　{1},{0} 首　{1},"Folder board subline; {0} = song count, {1} = server note (may be empty)"
+select.serverOffline,{0}: offline,{0}: オフライン,{0}：离线,Search status for a built-in server that is not connected; {0} = server name
+select.courseUra,Extreme (Ura),おに(裏),里魔王,Course card / song board plate of the Ura Oni chart
+select.practiceMode,Practice Mode,練習モード,练习模式,Song select top label in practice
+select.bestScore,Personal Best,自己ベスト,个人最佳,Song select best score window caption
+search.title,Song search,曲をさがす,歌曲搜索,Search dialog title
+search.all,All,すべて,全部,Search filter value: no filter
+search.difficulty,Difficulty,むずかしさ,难度,Search filter row
+search.stars,Stars,★の数,星级,Search filter row
+search.sortBy,Sort by,表示順,排序,Search filter row
+search.keyword,Keyword,キーワード,关键词,Search filter row
+search.keywordPlaceholder,Title / Subtitle / Maker,曲名 / サブタイトル / 譜面作者,曲名 / 副标题 / 谱师,Search keyword field placeholder
+search.order.default,Default,いつもどおり,通常,Search sort order
+search.order.notFc,Not FC first,未フルコンボ優先,未 FC 优先,Search sort order: songs without a Full Combo first
+search.order.notAp,Not AP first,未ドンダフル優先,未 AP 优先,Search sort order: songs without all GOOD first
+search.search,Search,検索,搜索,Search dialog button
+search.searching,Searching…,検索中…,搜索中…,Search dialog button / status while searching
+search.back,Back,もどる,返回,Search dialog close button
+search.keywordTooLong,Keyword is too long (200 bytes).,Keyword が長すぎます（200バイト）。,Keyword 过长（最多 200 字节）。,Search dialog error
+search.failed,Search failed: {0},検索失敗: {0},搜索失败：{0},Search dialog error; {0} = reason
+search.results,Results: {0},検索結果: {0},搜索结果：{0},Song select search summary; {0} = count
+search.hint.touchTyping,Close the keyboard to finish typing,キーボードを閉じて入力を終了,收起键盘，结束输入,Search dialog hint on phones while typing
+search.hint.touchKeyword,Tap Keyword again to type,キーワードをもう一度タップして入力,再次点按关键词，开始输入,"Search dialog hint on phones, keyword row"
+search.hint.touchRows,Tap Keyword to select · Tap arrows to change filters,キーワードをタップして選択・矢印で条件を変更,点按选中关键词 · 点按箭头调整筛选,Search dialog hint on phones
+search.hint.keysTyping,Enter: finish typing,Enter：入力を終了,回车：结束输入,Search dialog hint while typing
+search.hint.keysKeyword,Enter / click Keyword again: start typing,Enter／キーワードをもう一度クリック：入力を開始,回车／再次点击关键词：开始输入,"Search dialog hint, keyword row"
+search.hint.keysRows,Don / Tab / ↑↓ Select · Ka Change · Enter Confirm,ドン / Tab / ↑↓ 選択 · カッ 変更 · Enter 決定,咚 / Tab / ↑↓ 选择 · 咔 调整 · 回车 确认,Search dialog hint for drum and keyboard
+options.title,Song Options,演奏オプション,演奏选项,Song Options panel title
+options.speed,Speed,はやさ,速度,Song Options row
+options.vanish,Vanish,ドロン,隐身,Song Options row
+options.inverse,Inverse,あべこべ,反转,Song Options row
+options.random,Random,ランダム,随机,Song Options row
+options.drumSound,Drum Sound,音色,音色,Song Options row
+options.auto,Auto,オート,自动,Song Options row
+options.skip,Skip Performance,演奏スキップ,跳过演奏,Song Options row
+options.on,On,する,开,Song Options value: option applied
+options.off,Off,しない,关,Song Options value: option not applied
+options.random.whimsical,Whimsical,きまぐれ,随性,Random value: some notes swapped
+options.random.messy,Messy,でたらめ,乱来,Random value: most notes swapped
+options.mute,Mute,無音,静音,Drum Sound value: no hit sounds
+options.neiro.0,Taiko,太鼓,太鼓,Drum Sound set 0
+options.neiro.1,Festival,お祭り,祭典,Drum Sound set 1
+options.neiro.2,Dogs & Cats,いぬねこ,猫狗,Drum Sound set 2
+options.neiro.3,Deluxe Taiko,豪華な太鼓,豪华太鼓,Drum Sound set 3
+options.neiro.4,Drum Kit,ドラム,架子鼓,Drum Sound set 4
+options.neiro.5,Tambourine,タンバリン,铃鼓,Drum Sound set 5
+options.neiro.6,Wada Don,和田どん,和田咚,Drum Sound set 6
+options.neiro.7,Hand Clap,手拍子,拍手,Drum Sound set 7
+options.neiro.8,Conga,コンガ,康加鼓,Drum Sound set 8
+options.neiro.9,8-bit Taiko,8ビット太鼓,8 比特太鼓,Drum Sound set 9
+options.neiro.10,Soiya,ソイヤ,嘿哟,Drum Sound set 10 (a festival shout)
+options.neiro.11,Mecha Don,メカドン,机械咚,Drum Sound set 11
+options.neiro.12,Funassyi,ふなっしー,船梨精,Drum Sound set 12 (a mascot)
+options.neiro.13,Rap,ラップ,说唱,Drum Sound set 13
+options.neiro.14,Mr. Hosogai,細貝さん,细贝先生,Drum Sound set 14 (a person)
+options.neiro.15,Akemi-chan,朱美ちゃん,朱美酱,Drum Sound set 15 (a person)
+options.neiro.16,Synth Drum,シンセドラム,合成鼓,Drum Sound set 16
+options.neiro.17,Shuriken,手裏剣,手里剑,Drum Sound set 17
+options.neiro.18,Bubble Wrap,ぷちぷち,气泡膜,Drum Sound set 18
+options.neiro.19,Electric Guitar,エレキギター,电吉他,Drum Sound set 19
+options.neiro.20,Fish,魚,鱼,Drum Sound set 20
+loading.audio,Loading audio…,音源を読み込み中…,正在加载音频…,Loading curtain status after the download
+loading.checking,Checking the server…,サーバーを確認中…,正在检查服务器…,Loading curtain download status
+loading.preparing,Preparing the chart…,譜面を準備中…,正在准备谱面…,Loading curtain download status
+loading.chartFile,Chart {0},譜面 {0},谱面 {0},Download status of the chart file; {0} = state or progress
+loading.audioFile,Audio {0},音源 {0},音频 {0},Download status of the audio file; {0} = state or progress
+loading.movieFile,Video {0},映像 {0},视频 {0},Download status of the movie file; {0} = state or progress
+loading.waiting,waiting,待機中,等待中,Download file state
+loading.verifying,verifying,確認中,校验中,Download file state
+loading.cached,cached,キャッシュ済み,已缓存,Download file state
+loading.complete,done,完了,完成,Download file state
+loading.downloadFailed,Download failed,ダウンロードに失敗しました,下载失败,Loading curtain error (code DOWNLOAD_FAILED)
+loading.audioLoadFailed,Could not load the audio,音源を読み込めませんでした,无法加载音频,Loading curtain error (code AUDIO_LOAD_FAILED)
+loading.audioDecodeFailed,Could not decode the audio,音源をデコードできませんでした,无法解码音频,Loading curtain error (code AUDIO_DECODE_FAILED)
+loading.chartLoadFailed,Could not load the chart,譜面を読み込めませんでした,无法加载谱面,Loading curtain error (code CHART_LOAD_FAILED)

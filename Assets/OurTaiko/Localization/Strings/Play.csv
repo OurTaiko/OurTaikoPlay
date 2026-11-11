@@ -1,0 +1,37 @@
+key,en,ja,zh-Hans,comment
+pause.title,PAUSED,ポーズ,暂停,Pause menu title
+pause.resume,Resume,つづける,继续,Pause menu: go back to the song
+pause.restart,Restart,はじめから,重新开始,Pause menu: play the song again from the start
+pause.switchToPractice,Switch to Practice,練習モードにする,切换到练习模式,Pause menu: restart this song in Practice Mode
+pause.switchToNormal,Switch to Normal Play,通常プレイにする,切换到普通演奏,Pause menu (in Practice Mode): restart this song as a normal play
+pause.backToSelect,Back to Song Select,曲えらびにもどる,返回选曲,Pause menu: leave the song
+pause.hint,↑ / ↓ · Enter   Space / Esc · Resume,↑ / ↓ · Enter   Space / Esc · つづける,↑ / ↓ · Enter   Space / Esc · 继续,Pause menu key hint (keyboard key names stay)
+practice.branch.heading,Chart Branch,譜面分岐,谱面分支,Practice Mode setup: choosing the branch
+practice.branch.hint,Ka: change branch    Don: choose measure,カッ：分岐を切りかえ    ドン：小節をえらぶ,咔：切换分支    咚：选择小节,Practice Mode setup hint on the branch step
+practice.speed.heading,Playback Speed,再生速度,播放速度,Practice Mode setup: choosing the speed
+practice.speed.hint,Ka: change speed    Don: start practice,カッ：速度を変える    ドン：練習スタート,咔：调整速度    咚：开始练习,Practice Mode setup hint on the speed step
+practice.measure.heading,Measure,小節,小节进度,Practice Mode setup: choosing the starting measure
+practice.measure.hint,Ka: previous / next measure    Don: set speed,カッ：前後の小節    ドン：再生速度を決める,咔：前后小节    咚：调整播放速度,Practice Mode setup hint on the measure step
+practice.branch.normal,Normal Branch,普通譜面,普通谱面,Branch name (normal path)
+practice.branch.expert,Expert Branch,玄人譜面,玄人谱面,Branch name (expert path)
+practice.branch.master,Master Branch,達人譜面,达人谱面,Branch name (master path)
+practice.confirm,Confirm,決定,决定,Practice Mode setup: confirm button
+play.chartLoadFailed,CHART COULD NOT LOAD,譜面を読み込めませんでした,谱面加载失败,Play screen panel when the chart fails to load (the error follows below)
+play.restart,RESTART,もういちど,重新开始,Button on the play screen panel shown when the chart fails to load
+ghost.defaultName,Ghost,ゴースト,幽灵,Nameplate of a recorded rival without a nickname
+ghostSelect.heading,Ghost Battle,ゴーストバトル,幽灵对战,Ghost Battle list screen title
+ghostSelect.hint,Ka: Select　　Don: Confirm　　Esc: Back,カッ：えらぶ　　ドン：決定　　Esc：もどる,咔：选择　　咚：确定　　Esc：返回,Ghost Battle list key hint
+ghostSelect.all,All,すべて,全部,Ghost Battle list: category holding every recorded play of a server
+ghostSelect.count,{0} plays,{0} 件,{0} 条,Ghost Battle list: number of recorded plays in a server or category
+ghostSelect.connecting,Connecting…,接続中…,连接中…,Ghost Battle list status while servers connect
+ghostSelect.noServer,"No server is online, so there are no ghosts to battle.",オンラインのサーバーがないため、ゴーストバトルはできません。,没有在线的服务器，无法进行幽灵对战。,Ghost Battle list status when no server connects
+ghostSelect.loadingPlay,Loading {0}'s play…,{0} のプレイを読み込み中…,正在加载 {0} 的游玩记录…,Ghost Battle list status after picking a play; {0} = player nickname
+ghostSelect.startFailed,Could not start the battle.,バトルを開始できませんでした。,无法开始对战。,Ghost Battle list error
+ghostSelect.outdated,This song was changed after that play; pick another.,このプレイのあとで曲が変更されました。ほかのプレイをえらんでください。,该记录之后歌曲已更新，请选择其他记录。,Ghost Battle list error: the song changed since the play was recorded
+ghostSelect.unavailable,That play is no longer available.,このプレイはもう利用できません。,该记录已不可用。,Ghost Battle list error
+ghostSelect.unreadable,That recording cannot be read by this version.,このバージョンでは読み込めない記録です。,当前版本无法读取该记录。,Ghost Battle list error
+ghostSelect.serverOffline,Its server is offline.,サーバーがオフラインです。,其服务器已离线。,Ghost Battle list error
+ghostSelect.loadFailed,Could not load that play ({0}).,プレイを読み込めませんでした（{0}）。,无法加载该记录（{0}）。,Ghost Battle list error; {0} = error code from the server
+ghostSelect.offline,Offline,オフライン,离线,Ghost Battle list status: the category could not be loaded because its server is offline
+ghostSelect.noPlaysServer,No one has recorded a play on this server yet.,このサーバーにはまだプレイの記録がありません。,该服务器还没有任何游玩记录。,Ghost Battle list status for an empty All category
+ghostSelect.noPlaysCategory,No recorded plays in this category yet.,このカテゴリにはまだプレイの記録がありません。,该分类还没有游玩记录。,Ghost Battle list status for an empty category
