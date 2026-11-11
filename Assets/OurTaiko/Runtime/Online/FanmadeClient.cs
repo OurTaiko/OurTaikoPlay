@@ -388,21 +388,21 @@ namespace OurTaiko.Online
             }
         }
 
-        // The endpoint 1P is signed in to at `server`, or null.
-        FanmadeEndpoint DanEndpoint(string server)
+        // The endpoint the seat (1P, or a lone 2P's 2P) is signed in to at `server`, or null.
+        FanmadeEndpoint DanEndpoint(string server, int seat = 0)
         {
             FanmadeEndpoint e;
             lock (sync) e = endpoints.Find(x => string.Equals(x.Config.baseUrl, server.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) && x.IsConnected);
-            return e != null && HasAccount(e, 0) ? e : null;
+            return e != null && HasAccount(e, seat) ? e : null;
         }
 
         // A song's score for its 段位 attempt on `server` (SubmitDanAttempt's scores): the score as it
         // is uploaded alone, with the hashes of the block and audio that were played, which the
         // server checks as the game does for a score of its own. null when 1P is not signed in there
         // or the chart is another server's: the score then goes up alone.
-        public JObject DanAttemptScore(string server, FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay, string side)
+        public JObject DanAttemptScore(string server, FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay, string side, int seat = 0)
         {
-            var e = DanEndpoint(server);
+            var e = DanEndpoint(server, seat);
             if (e == null || Endpoint(chart.Server) != e) return null;
             var block = SideBlock(chart, difficulty, side);
             if (block == null) return null;
@@ -416,9 +416,9 @@ namespace OurTaiko.Online
         // or null when 1P is not signed in there. scores: the played songs' scores in song order
         // (DanAttemptScore; null for a song without one). They go with the attempt to
         // /game/dan-results, where the server saves them first and the attempt with their ids.
-        public string SubmitDanAttempt(string server, string courseId, int verdict, int songsPlayed, IReadOnlyList<JObject> scores = null)
+        public string SubmitDanAttempt(string server, string courseId, int verdict, int songsPlayed, IReadOnlyList<JObject> scores = null, int seat = 0)
         {
-            var e = DanEndpoint(server);
+            var e = DanEndpoint(server, seat);
             if (e == null) return null;
             // One entry a song played: a song whose score is not given has none.
             var sent = new JArray();
@@ -428,7 +428,7 @@ namespace OurTaiko.Online
             string key = RandomKey();
             try
             {
-                DanQueue.Enqueue(e.AccountIdOf(0), key, body.ToString(Newtonsoft.Json.Formatting.None));
+                DanQueue.Enqueue(e.AccountIdOf(seat), key, body.ToString(Newtonsoft.Json.Formatting.None));
                 RetryNow();
                 return key;
             }
@@ -628,11 +628,22 @@ namespace OurTaiko.Online
 
         public int PendingCount(FanmadeEndpoint e) => UploadQueue.Pending(e.AccountId).Length;
 
-        // 1P's queued 段位 attempts on a connected server, after its scores.
+        // Each signed-in seat's queued 段位 attempts on a connected server, after its scores (2P's
+        // come from a lone 2P; a seat signed in to the same account as 1P shares 1P's queue).
         async Task DrainDansAsync(FanmadeEndpoint e)
         {
-            if (!e.IsConnected || !e.IsAuthenticated) return;
-            foreach (var queued in DanQueue.Pending(e.AccountIdOf(0)))
+            if (!e.IsConnected) return;
+            for (int seat = 0; seat < FanmadeEndpoint.SeatCount; seat++)
+            {
+                if (!HasAccount(e, seat) || seat > 0 && HasAccount(e, 0) && e.AccountIdOf(seat) == e.AccountIdOf(0)) continue;
+                if (!await DrainDansAsync(e, seat)) return;
+            }
+        }
+
+        // False when the server should be tried again later.
+        async Task<bool> DrainDansAsync(FanmadeEndpoint e, int account)
+        {
+            foreach (var queued in DanQueue.Pending(e.AccountIdOf(account)))
             {
                 try
                 {
@@ -641,9 +652,9 @@ namespace OurTaiko.Online
                     // Attempts go to dan-results. One still waiting from a version before it was queued as
                     // a count of songs, which only the deprecated dan-attempts takes.
                     string path = Json.Parse(queued.Body)["scores"] is JArray ? "/api/v1/game/dan-results" : "/api/v1/game/dan-attempts";
-                    try { reply = Json.Parse(await e.AuthorizedAsync(path, queued.Body, queued.Key)); }
+                    try { reply = Json.Parse(await e.AuthorizedAsync(path, queued.Body, queued.Key, seat: account)); }
                     finally { e.Transport.Release(); }
-                    // The scores the server saved with the attempt: 1P's, as if each had gone up alone.
+                    // The scores the server saved with the attempt: the seat's, as if each had gone up alone.
                     if (reply["scores"] is JArray saved)
                         lock (sync)
                         {
@@ -653,7 +664,7 @@ namespace OurTaiko.Online
                                 var score = FanmadeScore.From(item);
                                 foreach (var seat in e.Seats)
                                 {
-                                    if (!seat.IsAuthenticated || e.AccountIdOf(Array.IndexOf(e.Seats, seat)) != e.AccountIdOf(0)) continue;
+                                    if (!seat.IsAuthenticated || e.AccountIdOf(Array.IndexOf(e.Seats, seat)) != e.AccountIdOf(account)) continue;
                                     if (!seat.Scores.Any(x => x.Id == score.Id)) seat.Scores.Add(score);
                                     seat.IndexScore(score);
                                 }
@@ -680,10 +691,11 @@ namespace OurTaiko.Online
                         DanQueue.Reject(queued.Key);
                         lock (sync) danAwards[queued.Key] = new DanAward { Error = error.Message };
                     }
-                    else break;
+                    else return false;
                 }
-                catch (Exception error) { SetStatus(e.Config.DisplayName + ": 段位 result pending (" + error.Message + ")"); break; }
+                catch (Exception error) { SetStatus(e.Config.DisplayName + ": 段位 result pending (" + error.Message + ")"); return false; }
             }
+            return true;
         }
 
         static string RandomKey()

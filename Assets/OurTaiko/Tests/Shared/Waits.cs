@@ -20,5 +20,16 @@ namespace OurTaiko.Tests
                 yield return null;
             }
         }
+
+        // The message is read when the wait times out.
+        public static IEnumerator Until(Func<bool> condition, Func<string> message, float seconds = DefaultSeconds)
+        {
+            double deadline = Time.realtimeSinceStartupAsDouble + seconds;
+            while (!condition())
+            {
+                if (Time.realtimeSinceStartupAsDouble >= deadline) Assert.Fail(message());
+                yield return null;
+            }
+        }
     }
 }

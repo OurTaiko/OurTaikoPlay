@@ -106,7 +106,7 @@ namespace OurTaiko
         {
             if (IsClosing || !group.interactable) return;
             // One menu action per frame, preserving the order captured by InputManager.
-            foreach (var press in InputManager.PressesThisFrame)
+            foreach (var press in InputManager.PlayerPresses)
             {
                 switch (press.Key)
                 {

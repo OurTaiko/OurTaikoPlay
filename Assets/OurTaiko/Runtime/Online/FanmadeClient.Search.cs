@@ -31,7 +31,7 @@ namespace OurTaiko.Online
                 string path = "/api/v1/game/search?q=" + Uri.EscapeDataString(query.Keyword) + "&order=" + query.ApiOrder;
                 if (query.Difficulty.HasValue) path += "&course=" + SongInfo.CourseName(query.Difficulty.Value);
                 if (query.Level > 0) path += "&level=" + query.Level;
-                var reply = Json.Parse(await endpoint.AuthorizedAsync(path, cancel: cancel));
+                var reply = Json.Parse(await endpoint.AuthorizedAsync(path, cancel: cancel, seat: query.Seat));
                 if (!(reply["items"] is JArray items) || Json.Number(reply, "total") != items.Count)
                     throw new FanmadeException("API_SEARCH_INVALID");
                 var seen = new HashSet<string>();
@@ -50,19 +50,20 @@ namespace OurTaiko.Online
             return result;
         }
 
-        // Any qualifying play counts, even when a higher-scoring non-FC is the displayed best.
+        // Any qualifying play counts, even when a higher-scoring non-FC is the displayed best. The plays
+        // are those of the account of the side that searched (query.Seat).
         public bool SearchNeedsClear(FanmadeChart chart, SongSearchQuery query)
         {
             if (query.Order == SongSearchOrder.Default) return false;
             lock (sync)
             {
                 var e = endpoints.Find(x => x.Id == chart.Server);
-                if (e == null || !e.IsAuthenticated) return false;
+                if (e == null || !HasAccount(e, query.Seat)) return false;
                 return chart.ToSongInfo(null).Courses().Where(query.Matches).Any(course =>
                 {
                     // Plays of replaced files count only while the block has no play of the current ones.
                     string block = chart.Difficulties[(int)course.Difficulty].Name;
-                    var plays = e.Scores.Where(s => s.Song == chart.Id && s.Difficulty == block).ToList();
+                    var plays = e.Seats[query.Seat].Scores.Where(s => s.Song == chart.Id && s.Difficulty == block).ToList();
                     if (plays.Any(s => s.IsLatest)) plays.RemoveAll(s => !s.IsLatest);
                     return !plays.Any(s => s.Bad == 0 && s.Mines == 0 && (s.Good > 0 || s.Ok > 0) && (query.Order == SongSearchOrder.UnFullCombo || s.Ok == 0));
                 });

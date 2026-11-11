@@ -109,9 +109,9 @@ namespace OurTaiko
             string danServer = Recorded && !course.IsLocal ? course.Server : null;
             var scores = new Newtonsoft.Json.Linq.JObject[Result.Songs.Length];
             for (int i = 0; i < Result.Songs.Length; i++)
-                scores[i] = ResultScene.SaveScore(Result.Run.Song(i), Result.Songs[i], Result.Records != null && i < Result.Records.Length ? Result.Records[i] : null, 0, danServer);
+                scores[i] = ResultScene.SaveScore(Result.Run.Song(i), Result.Songs[i], Result.Records != null && i < Result.Records.Length ? Result.Records[i] : null, switcher.Lead.Index(), danServer);
             if (danServer != null)
-                DanUpload = Result.Upload = Online.OnlineManager.EnsureInstance().Client?.SubmitDanAttempt(course.Server, course.Id, Result.Verdict, Result.Songs.Length, scores);
+                DanUpload = Result.Upload = Online.OnlineManager.EnsureInstance().Client?.SubmitDanAttempt(course.Server, course.Id, Result.Verdict, Result.Songs.Length, scores, switcher.Lead.Index());
         }
 
         // Once OurTaikoProfile has answered the upload, 1P's nameplate is read again for what it
@@ -123,7 +123,7 @@ namespace OurTaiko
             var award = online.Client?.Award(DanUpload);
             if (award == null) return;
             awardAnswered = true;
-            if (award.Profile?["granted"] is JObject) _ = online.RefreshNameplateAsync(0);
+            if (award.Profile?["granted"] is JObject) _ = online.RefreshNameplateAsync(switcher.Lead.Index());
         }
 
         void Update()
@@ -140,7 +140,7 @@ namespace OurTaiko
             if (!switcher.IsInputBlocked && !HasLeft)
             {
                 if (InputManager.GetKeyDown(InputKey.Back)) Leave();
-                else if (InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Don();
+                else if (InputManager.PlayerKeyDown(InputKey.LeftDon) || InputManager.PlayerKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Don();
             }
             if (Flow.Update(now)) Leave();
             Sounds(now);

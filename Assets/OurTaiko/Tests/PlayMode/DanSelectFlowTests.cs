@@ -50,7 +50,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
             yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
-            Assert.That(entry.Modes.Select(m => m.Title), Is.EqualTo(new[] { "演奏ゲーム", "段位道場", "練習モード", "ゲーム設定" }));
+            Assert.That(entry.Modes.Select(m => m.Title), Is.EqualTo(new[] { "演奏ゲーム", "段位道場", "練習モード", "ゴーストバトル", "ゲーム設定" }));
             Assert.That(entry.Modes[1].Scene, Is.EqualTo(SceneSwitcher.DanSelectScene));
             yield return new WaitForSecondsRealtime(0.2f);
             entry.Don();
@@ -257,7 +257,7 @@ namespace OurTaiko.Tests
             Assert.That(scene.Flow.Selected, Is.EqualTo(6));
             yield return new WaitForSecondsRealtime(0.4f);
             Assert.That(view.cursor.rectTransform.anchoredPosition.x, Is.EqualTo(DanSelectScene.RibbonCenter).Within(0.01f));
-            Assert.That(SceneSwitcher.Instance.TwoPlayers, Is.False);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(1));
         }
 
         [UnityTest]
@@ -280,7 +280,7 @@ namespace OurTaiko.Tests
             entry.Join2P();
             Assert.That(entry.Joined2P, Is.False);
             yield return WaitForScene(SceneSwitcher.DanSelectScene);
-            Assert.That(SceneSwitcher.Instance.TwoPlayers, Is.False);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(1));
         }
 
         static IEnumerator WaitUntil(System.Func<bool> condition, float seconds)

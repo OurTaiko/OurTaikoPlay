@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
             InputSystem.settings.backgroundBehavior = originalBackground;
             InputSystem.settings.editorInputBehaviorInPlayMode = originalEditorBehavior;
             PlayOptions.Shared = originalFirst; PlayOptions.Second = originalSecond;
-            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.TwoPlayers = false;
+            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.SetSeats(Side.P1);
         }
 
         void Press(params Key[] order)
@@ -64,7 +64,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             while (SceneSwitcher.Instance.IsInputBlocked) yield return null;
-            SceneSwitcher.Instance.TwoPlayers = true;
+            SceneSwitcher.Instance.SetSeats(Side.P1, Side.P2);
             SceneSwitcher.Instance.Play(song, "Oni", auto1P, "Oni", false);
             float deadline = Time.realtimeSinceStartup + 20;
             while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.DoublePlayScene)
@@ -83,7 +83,7 @@ namespace OurTaiko.Tests
                 + "#START P1\n5,\n0,\n8,\n#END\n#START P2\n5,\n0,\n8,\n1,\n#END");
             yield return PlayBoth(song);
             var play = Object.FindAnyObjectByType<PlayScene>();
-            Assert.That(play.IsTwoPlayer, Is.True);
+            Assert.That(play.secondLane, Is.Not.Null);
             Assert.That(play.Lanes.Count, Is.EqualTo(2));
             var first = play.Lanes[0].Session; var second = play.Lanes[1].Session;
             Assert.That(first.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.Zero, "1P reads the P1 block.");

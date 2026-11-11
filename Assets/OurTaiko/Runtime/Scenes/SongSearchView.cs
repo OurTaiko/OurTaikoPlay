@@ -127,11 +127,15 @@ namespace OurTaiko
             if (index == 2) order = (order + delta + 3) % 3;
             status.text = ""; Draw();
         }
-        public async void Submit()
+        // The search button (a tap, Enter): the lone player's side, 1P with two players.
+        public void Submit() => Submit(InputManager.Lead.Index());
+
+        // `seat`: the side whose don confirmed; its account's plays order the result.
+        public async void Submit(int seat)
         {
             if (!IsOpen || busy || editingKeyword || Time.frameCount == fieldSubmitFrame || Time.frameCount == openedFrame) return;
             SongSearchQuery query;
-            try { query = new SongSearchQuery(keyword.text, difficulty == 0 ? (Difficulty?)null : (Difficulty)(difficulty - 1), level, (SongSearchOrder)order); }
+            try { query = new SongSearchQuery(keyword.text, difficulty == 0 ? (Difficulty?)null : (Difficulty)(difficulty - 1), level, (SongSearchOrder)order, seat); }
             catch (ArgumentException) { status.text = Words("Keyword is too long (200 bytes).", "Keyword が長すぎます（200バイト）。", "Keyword 过长（最多 200 字节）。"); return; }
             manager.PlaySearchSound(SongSelectManager.Sound.Don);
             Cancel(); request = new CancellationTokenSource(); var current = request;
@@ -151,6 +155,18 @@ namespace OurTaiko
             row = (row + delta + 6) % 6;
             manager.PlaySearchSound(sound);
         }
+        // The side whose drum pressed either face this frame, or -1: the lone player's own drum, or
+        // either player's with two.
+        int DrumSeat(InputKey a, InputKey b)
+        {
+            for (int seat = 0; seat < InputManager.Players.Count; seat++)
+            {
+                if (SceneSwitcher.EnsureInstance().Seated.Count < 2 && seat != InputManager.Lead.Index()) continue;
+                if (InputManager.Players[seat].GetKeyDown(a) || InputManager.Players[seat].GetKeyDown(b)) return seat;
+            }
+            return -1;
+        }
+
         public void Tick()
         {
             summary.gameObject.SetActive(manager.Phase == SongSelectManager.State.Browsing && !IsOpen);
@@ -171,17 +187,19 @@ namespace OurTaiko
                 keyword.DeactivateInputField(); EventSystem.current?.SetSelectedGameObject(null);
                 MoveRow(Keyboard.current.shiftKey.isPressed ? -1 : 1, SongSelectManager.Sound.Ka); Draw(); return;
             }
+            int donSeat = DrumSeat(InputKey.LeftDon, InputKey.RightDon);
             if (InputManager.GetKeyDown(InputKey.MenuUp)) MoveRow(-1, SongSelectManager.Sound.Ka);
             else if (InputManager.GetKeyDown(InputKey.MenuDown)) MoveRow(1, SongSelectManager.Sound.Ka);
             else if (row == 0 && InputManager.GetKeyDown(InputKey.Confirm)) BeginKeyword();
-            else if (InputManager.GetKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft))
+            else if (DrumSeat(InputKey.LeftKa, InputKey.LeftKa) >= 0 || InputManager.GetKeyDown(InputKey.MenuLeft))
             { if (row > 0 && row < 4) Change(row - 1, -1); else MoveRow(-1, SongSelectManager.Sound.Ka); }
-            else if (InputManager.GetKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight))
+            else if (DrumSeat(InputKey.RightKa, InputKey.RightKa) >= 0 || InputManager.GetKeyDown(InputKey.MenuRight))
             { if (row > 0 && row < 4) Change(row - 1, 1); else MoveRow(1, SongSelectManager.Sound.Ka); }
-            else if (InputManager.GetKeyDown(InputKey.Confirm) || InputManager.GetKeyDown(InputKey.LeftDon) || InputManager.GetKeyDown(InputKey.RightDon))
+            else if (donSeat >= 0 || InputManager.GetKeyDown(InputKey.Confirm))
             {
                 if (row < 4) MoveRow(1, SongSelectManager.Sound.Don);
-                else if (row == 4) Submit(); else Close();
+                // The search is made by the side whose don confirmed it.
+                else if (row == 4) Submit(donSeat >= 0 ? donSeat : InputManager.Lead.Index()); else Close();
             }
             Draw();
         }

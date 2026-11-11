@@ -98,9 +98,9 @@ namespace OurTaiko
         {
             if (practiceRewinding) { UpdatePracticeRewind(); return; }
             ShowPracticePause();
-            foreach (var press in InputManager.PressesThisFrame)
+            foreach (var press in InputManager.PlayerPresses)
             {
-                // Practice is single-player: the 2P drum does not reach its menu.
+                // Practice is single-player: only the player's own drum reaches its menu.
                 if (press.Key == InputKey.LeftKa) { MovePractice(-1); return; }
                 if (press.Key == InputKey.RightKa) { MovePractice(1); return; }
                 if (press.Key == InputKey.LeftDon || press.Key == InputKey.RightDon || press.Key == InputKey.Confirm)

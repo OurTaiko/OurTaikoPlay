@@ -100,6 +100,7 @@ namespace OurTaiko
             boards.Add(new ResultBoard(this, 0, view, Result, result2P != null));
             if (view.secondBoard != null) view.secondBoard.gameObject.SetActive(result2P != null);
             if (result2P != null) boards.Add(new ResultBoard(this, 1, view.secondBoard, result2P, true));
+            if (result2P != null && switcher.PlaysGhost) ShowGhostPlates(switcher.Ghost);
             if (view.secondAnalysis != null)
             {
                 view.secondAnalysis.gameObject.SetActive(result2P != null);
@@ -111,12 +112,32 @@ namespace OurTaiko
             switcher.SceneChanging += OnSceneChanging;
         }
 
+        // The player's plate on their side and the recording's player on the other.
+        void ShowGhostPlates(GhostMatch ghost)
+        {
+            var plates = new[] { view.nameplate, view.secondBoard.nameplate };
+            var controller = PlayerInfoController.EnsureInstance();
+            int own = switcher.Lead.Index();
+            plates[ghost.PlayerLane]?.Pin(own == 0 ? controller.Info : controller.SecondInfo, ghost.PlayerLane);
+            plates[ghost.GhostLane]?.Pin(new PlayerInfo { name = string.IsNullOrEmpty(ghost.Nickname) ? "Ghost" : ghost.Nickname }, ghost.GhostLane);
+        }
+
         // Only entering ResultScene commits a completed play. Practice never enters this scene.
         // Consume before saving so scene reloads and Editor previews cannot submit a run twice.
         void SaveScores()
         {
             if (!switcher.TakeCompletedPlay(out var song, out var record, out var record2P)) return;
-            SaveScore(song, Result, record, 0);
+            // A ghost battle keeps the player's play only, as the player's own (SceneSwitcher.Lead); the
+            // recording's result is shown and never saved.
+            if (switcher.PlaysGhost)
+            {
+                bool below = switcher.Ghost.PlayerLane == 1;
+                var played = below ? switcher.LastResult2P : Result;
+                if (played != null) SaveScore(song, played, below ? record2P : record, switcher.Lead.Index());
+                return;
+            }
+            // A lone player's score is their side's account's (SceneSwitcher.Lead; 1P's with two players).
+            SaveScore(song, Result, record, switcher.Lead.Index());
             if (switcher.LastResult2P != null) SaveScore(song, switcher.LastResult2P, record2P, 1);
         }
 
@@ -147,7 +168,7 @@ namespace OurTaiko
                 Drumroll = result.Rolls, MaxCombo = result.MaxCombo, ClearStatus = (int)result.StoredCrown,
                 AdLibGood = result.AdLibGood, AdLibOk = result.AdLibOk, Mines = result.Mines,
             };
-            var withAttempt = danServer != null ? online.Client.DanAttemptScore(danServer, chart, difficulty, score, record, result.Side) : null;
+            var withAttempt = danServer != null ? online.Client.DanAttemptScore(danServer, chart, difficulty, score, record, result.Side, seat) : null;
             if (withAttempt == null) online.Submit(chart, difficulty, score, record, seat, result.Side);
             return withAttempt;
         }
@@ -220,15 +241,28 @@ namespace OurTaiko
         bool RevealEnded => boards.All(board => board.Sequence.RevealEndMs > 0);
         bool CanAdvance => boards.All(board => board.Sequence.CanAdvance);
 
-        // Each seat's first drum press of the frame: its ka turns its own board's pages, a don from
-        // either seat skips or leaves.
+        // Each board's player's first drum press of the frame: its ka turns its own board's pages, a
+        // don from either skips or leaves. A single board is the lone player's, on their own side's
+        // drum (SceneSwitcher.Lead: 1P, or a lone 2P's 2P).
         void HandleInput()
         {
-            for (int seat = 0; seat < InputManager.Players.Count; seat++)
-                foreach (var press in InputManager.Players[seat].PressesThisFrame)
+            // A ghost battle has one player: only their own drum works the result, and their ka turns
+            // both boards' pages together.
+            if (boards.Count > 1 && switcher.PlaysGhost)
+            {
+                foreach (var press in InputManager.Players[switcher.Lead.Index()].PressesThisFrame)
                 {
-                    if (press.Key.IsKa()) ChangePage(seat, press.Key.IsRight() ? 1 : -1);
-                    else Don(seat);
+                    if (press.Key.IsKa()) for (int board = 0; board < boards.Count; board++) ChangePage(board, press.Key.IsRight() ? 1 : -1);
+                    else Don(switcher.Ghost.PlayerLane);
+                    break;
+                }
+                return;
+            }
+            for (int board = 0; board < boards.Count; board++)
+                foreach (var press in InputManager.Players[boards.Count > 1 ? board : switcher.Lead.Index()].PressesThisFrame)
+                {
+                    if (press.Key.IsKa()) ChangePage(board, press.Key.IsRight() ? 1 : -1);
+                    else Don(board);
                     break;
                 }
         }

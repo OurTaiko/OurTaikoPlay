@@ -38,6 +38,7 @@ namespace OurTaiko
             get => second ??= Load(System.IO.Path.Combine(GamePaths.Root, "options_2p.json"));
             set => second = value;
         }
+        // The options of a seat (0 1P, 1 2P); a lone player's are their side's (SceneSwitcher.Lead).
         public static PlayOptions ForSeat(int seat) => seat == 1 ? Second : Shared;
 
         public static PlayOptions Load(string path)

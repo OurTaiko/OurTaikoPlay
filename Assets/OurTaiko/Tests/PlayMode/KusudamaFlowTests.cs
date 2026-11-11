@@ -23,7 +23,7 @@ namespace OurTaiko.Tests
         public void TearDown()
         {
             PlayOptions.Shared = originalFirst; PlayOptions.Second = originalSecond;
-            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.TwoPlayers = false;
+            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.SetSeats(Side.P1);
         }
 
         static IEnumerator Play(SongDefinition song, bool twoPlayers)
@@ -31,7 +31,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             while (SceneSwitcher.Instance.IsInputBlocked) yield return null;
-            SceneSwitcher.Instance.TwoPlayers = twoPlayers;
+            if (twoPlayers) SceneSwitcher.Instance.SetSeats(Side.P1, Side.P2); else SceneSwitcher.Instance.SetSeats(Side.P1);
             if (twoPlayers) SceneSwitcher.Instance.Play(song, "Oni", false, "Oni", false);
             else SceneSwitcher.Instance.Play(song);
             string target = twoPlayers ? SceneSwitcher.DoublePlayScene : SceneSwitcher.GameScene;

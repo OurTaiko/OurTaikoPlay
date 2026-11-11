@@ -68,7 +68,7 @@ namespace OurTaiko.Tests
             yield return Play(Fixture("testsrc.mp4"), false, true, (p, m) => { play = p; movie = m; });
             try
             {
-                Assert.That(play.IsTwoPlayer, Is.True);
+                Assert.That(play.secondLane, Is.Not.Null);
                 Assert.That(movie.laneBackgrounds.Length, Is.EqualTo(6));
                 yield return Wait(() => play.SongTime >= 2);
                 Assert.That(movie.IsShowing, Is.True);
@@ -156,7 +156,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
             var switcher = SceneSwitcher.Instance;
             switcher.PracticeMode = practice;
-            switcher.TwoPlayers = twoPlayers;
+            if (twoPlayers) switcher.SetSeats(Side.P1, Side.P2); else switcher.SetSeats(Side.P1);
             switcher.Play(song, "Oni", true, twoPlayers ? "Oni" : null, true);
             yield return Wait(() => !switcher.IsInputBlocked && SceneManager.GetActiveScene().name == switcher.SelectedPlayScene);
             var play = Object.FindAnyObjectByType<PlayScene>();
@@ -170,7 +170,7 @@ namespace OurTaiko.Tests
             if (play != null) Object.Destroy(play.gameObject);
             if (SceneSwitcher.Instance != null)
             {
-                SceneSwitcher.Instance.TwoPlayers = false; SceneSwitcher.Instance.PracticeMode = false;
+                SceneSwitcher.Instance.SetSeats(Side.P1); SceneSwitcher.Instance.PracticeMode = false;
                 Object.Destroy(SceneSwitcher.Instance.gameObject);
             }
             if (song != null) { Object.Destroy(song.chart); Object.Destroy(song); song = null; }

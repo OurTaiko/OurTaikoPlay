@@ -184,7 +184,7 @@ namespace OurTaiko.Tests
             LocalSongLibrary.EnsureInstance().UseRoot(root);
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
             var switcher = SceneSwitcher.Instance;
-            switcher.PracticeMode = false; switcher.TwoPlayers = false;
+            switcher.PracticeMode = false; switcher.SetSeats(Side.P1);
             yield return Waits.Until(() => !switcher.IsInputBlocked);
             var scene = Object.FindAnyObjectByType<SongSelectScene>();
             var manager = scene.Manager;

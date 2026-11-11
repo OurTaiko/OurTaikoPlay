@@ -30,7 +30,6 @@ namespace OurTaiko
         public IReadOnlyList<PlayerLane> Lanes => lanes;
         readonly List<PlayerLane> lanes = new List<PlayerLane>();
         public PlayerLane Lane1 => lanes.Count > 0 ? lanes[0] : null;
-        public bool IsTwoPlayer => secondLane != null;
         public PlaySession Session
         {
             get => Lane1?.Session;
@@ -116,6 +115,7 @@ namespace OurTaiko
             judgeOffset = autoPlay ? 0 : playSettings.judgeOffsetMs / 1000.0;
             judgeWindows = playSettings.CustomJudgeWindows;
             TakeReplay();
+            TakeGhost();
             InputManager.DrumDelay = Math.Min(Math.Max(0, playSettings.inputDelayMs), PlaySettings.InputDelayMaxMs) / 1000.0;
             pauseButton.onClick.AddListener(TogglePause);
             resumeButton.onClick.AddListener(Resume);
@@ -126,19 +126,21 @@ namespace OurTaiko
             pausePanel.SetActive(false); resultPanel.SetActive(false);
             // Disabled and hidden together: an inactive pad neither draws nor registers with InputManager,
             // and pause/resume only re-enables the pads it disabled itself.
-            // The touch drum is a single-player setting; two players use the keyboard.
-            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad && !IsTwoPlayer && !IsReplay);
+            // The touch drum is a single-player setting; two players use the keyboard. A ghost battle
+            // has one player, whose side the touch drum strikes (InputManager.Lead).
+            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad && switcher.Seated.Count < 2 && !IsReplay);
             try
             {
                 // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.
                 practiceBranch = BranchRoute.Normal;
                 TakeModeSwitchEntry();
                 if (kusudama != null) kusudama.ResetDisplay();
-                var sessions = new List<PlaySession> { AddLane(0, firstLane) };
-                if (secondLane != null) sessions.Add(AddLane(1, secondLane));
+                var sessions = new List<PlaySession> { AddLane(0, IsGhost ? GhostViews(0) : firstLane) };
+                if (secondLane != null) sessions.Add(AddLane(1, IsGhost ? GhostViews(1) : secondLane));
                 // Both seats' kusudama at the same time are one ball; a lone one is a balloon.
                 if (sessions.Count > 1) Kusudama.Share(sessions[0], sessions[1]);
                 if (IsPractice) AddPracticeAddOns();
+                if (IsGhost) ShowGhostPlates();
                 for (int i = 0; i < lanes.Count; i++) lanes[i].Prepare(sessions[i]);
                 // The single-player scenes' don/ka are 1P's neiro (tests read them).
                 don = Lane1.Don; ka = Lane1.Ka;
@@ -172,12 +174,17 @@ namespace OurTaiko
         PlaySession AddLane(int seat, LaneViews views)
         {
             string course = switcher.CourseOf(seat);
-            var options = IsReplay ? ReplayOptions() : PlayOptions.ForSeat(seat);
-            // The loading scene prepared the chart with the seat's own options; a replay has its record's.
+            // The first lane is played on the leading side (SceneSwitcher.Lead) unless two play.
+            int side = seat == 0 ? switcher.Lead.Index() : seat;
+            var options = IsReplay ? ReplayOptions() : IsGhost ? GhostOptions(seat) : PlayOptions.ForSeat(side);
+            // The loading scene prepared the chart with the seat's own options; a replay or a ghost
+            // battle has its record's.
             var chart = switcher.TakePreparedChart(song, course, seat);
             if (IsReplay) chart = PrepareReplayChart(course, switcher.SideOf(seat));
-            chart ??= PrepareChart(song, course, switcher.SideOf(seat), seat);
-            var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : switcher.AutoPlayOf(seat), new Online.PlayRecord
+            if (IsGhost) chart ??= PrepareGhostChart(song, ghost);
+            chart ??= PrepareChart(song, course, switcher.SideOf(seat), side);
+            bool recorded = IsGhost && seat == 1;
+            var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : !recorded && switcher.AutoPlayOf(seat), new Online.PlayRecord
             {
                 // Replay v1 stores already corrected judgment time. Keep its two-offset convention:
                 // visual time = recorded judgment time - VisualOffsetMs (B cancels here).
@@ -185,9 +192,11 @@ namespace OurTaiko
                 VisualOffsetMs = (int)Math.Round((visualOffset - judgeOffset) * 1000),
             });
             lane.Record.SetOptions(options, chart);
-            lane.Replay = replay;
+            lane.Replay = recorded ? new ReplayFeed(ghost.Record) : replay;
+            lane.DrumSeat = side;
             lanes.Add(lane);
-            var session = new PlaySession(chart, judgeOffset, IsPractice ? ForcedBranch : null, 1, judgeWindows);
+            // The recording's times are judged as played, without the player's offset.
+            var session = new PlaySession(chart, recorded ? 0 : judgeOffset, IsPractice ? ForcedBranch : null, 1, judgeWindows);
             foreach (string warning in session.Chart.Warnings) Log.Warn("Play", "Ignored TJA command: " + warning);
             return session;
         }
@@ -222,7 +231,7 @@ namespace OurTaiko
         public static TaikoChart PrepareChart(DanResolvedSong song)
         {
             var chart = song.Song.ParseBlock(song.Course, song.Side);
-            ChartModifiers.Apply(chart, PlayOptions.ForSeat(0), new System.Random());
+            ChartModifiers.Apply(chart, PlayOptions.ForSeat(InputManager.Lead.Index()), new System.Random());
             return chart;
         }
 
@@ -390,6 +399,13 @@ namespace OurTaiko
             music.SetAudioFade(SongEnd.Fade(elapsed, endingDuration));
             if (elapsed < endingDuration) return;
             resultShown = true;
+            if (IsGhost)
+            {
+                // Each result in its lane's place; only the player's play is kept (ResultScene).
+                var (above, below) = GhostResultLanes();
+                switcher.ShowResult(above.Result, song, above == Lane1 ? Record : null, below.Result, below == Lane1 ? Record : null);
+                return;
+            }
             var second = lanes.Count > 1 ? lanes[1] : null;
             switcher.ShowResult(Result, song, Record, second?.Result, second?.Record);
         }
@@ -406,6 +422,8 @@ namespace OurTaiko
         public void Back()
         {
             if (IsPractice && !pausePanel.activeSelf && !IsFinished) return;
+            // A ghost battle goes back to its list.
+            if (IsGhost) { LeavePlay(() => SceneSwitcher.EnsureInstance().ReturnToMenu()); return; }
             LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene));
         }
 

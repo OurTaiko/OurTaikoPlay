@@ -25,6 +25,14 @@ namespace OurTaiko
         public Sprite[] danTexts, goldDanTexts;
         [Tooltip("0 = 1P, 1 = 2P.")]
         public int seat;
+        // The side whose player the plate shows: a single-player screen's plate (seat 0) shows the
+        // lone player, 1P or a lone 2P (InputManager.Lead). A pinned plate shows a given player on a given side
+        // (a ghost battle) instead.
+        int Shown => pinned != null ? pinnedSide : seat == 0 ? InputManager.Lead.Index() : seat;
+        PlayerInfo pinned;
+        int pinnedSide;
+        int applied = -1;
+        Sprite firstBadge;
         [Tooltip("global/nameplate/2p: the badge of a 2P plate.")]
         public Sprite secondBadge;
 
@@ -39,19 +47,31 @@ namespace OurTaiko
         void OnEnable()
         {
             controller = PlayerInfoController.EnsureInstance();
-            if (seat == 0) controller.Changed += Show;
-            else controller.SecondChanged += Show;
+            controller.Changed += ShowFirst;
+            controller.SecondChanged += ShowSecond;
             rainbowStart = GameTimeline.FrameTime;
             renderedCanvasScale = float.NaN;
             Canvas.willRenderCanvases += RefreshCanvasScale;
             // No rainbow sample yet: the Animator may not have woken, and evaluating its graph
             // asserts m_DidAwake. Update draws the band before the first render.
-            Apply(seat == 0 ? controller.Info : controller.SecondInfo);
+            ApplyShown();
+        }
+
+        void ShowFirst(PlayerInfo info) { if (pinned == null && Shown == 0) Show(info); }
+        void ShowSecond(PlayerInfo info) { if (pinned == null && Shown == 1) Show(info); }
+        void ApplyShown() { applied = Shown; Apply(pinned ?? (applied == 0 ? controller.Info : controller.SecondInfo)); }
+
+        // Shows `info` with the badge of `side` (0 1P, 1 2P) from now on, whoever sits at the seat.
+        public void Pin(PlayerInfo info, int side)
+        {
+            pinned = info ?? new PlayerInfo();
+            pinnedSide = side == 1 ? 1 : 0;
+            ApplyShown();
         }
 
         void OnDisable()
         {
-            if (controller != null) { controller.Changed -= Show; controller.SecondChanged -= Show; }
+            if (controller != null) { controller.Changed -= ShowFirst; controller.SecondChanged -= ShowSecond; }
             Canvas.willRenderCanvases -= RefreshCanvasScale;
         }
 
@@ -68,7 +88,12 @@ namespace OurTaiko
         }
 
         // The rainbow band runs on real time, like the original's current_ms (it keeps cycling in pause).
-        void Update() => ShowRainbow(GameTimeline.FrameTime - rainbowStart);
+        void Update()
+        {
+            // The players sat down (SceneSwitcher.Seated) after this plate was shown.
+            if (applied != Shown) ApplyShown();
+            ShowRainbow(GameTimeline.FrameTime - rainbowStart);
+        }
 
         // Top-left of the plate canvas, in its stage-anchored parent's skin pixels.
         public void Place(float x, float y)
@@ -103,7 +128,8 @@ namespace OurTaiko
                 dan.sprite = (info.gold ? goldDanTexts : danTexts)[info.dan];
             }
             badge.enabled = true;
-            if (seat == 1 && secondBadge != null) badge.sprite = secondBadge;
+            firstBadge ??= badge.sprite;
+            badge.sprite = Shown == 1 && secondBadge != null ? secondBadge : firstBadge;
 
             // Np_coin clears the title outright.
             title.gameObject.SetActive(hasBand && info.HasTitle);

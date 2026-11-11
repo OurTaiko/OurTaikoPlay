@@ -15,7 +15,9 @@ namespace OurTaiko
     {
         public int Seat { get; }
         public LaneViews Views { get; }
-        public PlayerInput Input => InputManager.Players[Seat];
+        // The drum this lane reads: its seat's, or the leading side (SceneSwitcher.Lead) for the first lane.
+        public int DrumSeat { get; set; }
+        public PlayerInput Input => InputManager.Players[DrumSeat];
         public PlaySession Session { get; internal set; }
         public bool AutoPlay { get; }
         public PlayOptions Options { get; }
@@ -52,7 +54,7 @@ namespace OurTaiko
 
         public PlayerLane(PlaySceneBase scene, int seat, LaneViews views, PlayOptions options, bool autoPlay, Online.PlayRecord record)
         {
-            this.scene = scene; Seat = seat; Views = views; Options = options; AutoPlay = autoPlay; Record = record;
+            this.scene = scene; Seat = seat; DrumSeat = seat; Views = views; Options = options; AutoPlay = autoPlay; Record = record;
         }
 
         public RectTransform NoteRoot(int index) => renderer.NoteRoot(index);

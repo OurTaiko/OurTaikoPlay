@@ -23,7 +23,7 @@ namespace OurTaiko.Tests
         public void TearDown()
         {
             PlayOptions.Shared = originalFirst; PlayOptions.Second = originalSecond;
-            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.TwoPlayers = false;
+            if (SceneSwitcher.Instance != null) SceneSwitcher.Instance.SetSeats(Side.P1);
         }
 
         [UnityTest]
@@ -34,10 +34,14 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
-            Assert.That(SceneSwitcher.Instance.TwoPlayers, Is.False);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(1));
             Assert.That(entry.view.nameplateGroup2P.alpha, Is.Zero);
 
+            // The credit screen takes no join in its first 120 ms. 2P's don joins 2P alone; 1P's
+            // don then joins 1P beside it.
+            yield return WaitUntil(() => entry.Flow.CanJoin(entry.Now), 2);
             entry.Join2P();
+            Assert.That(entry.Lone2P, Is.True);
             Assert.That(entry.Joined2P, Is.True);
             Assert.That(entry.voice.clip, Is.SameAs(entry.entryStart2P));
             yield return new WaitForSecondsRealtime(0.25f);
@@ -46,6 +50,7 @@ namespace OurTaiko.Tests
             Assert.That(entry.view.nameplate2P.badge.sprite, Is.SameAs(entry.view.nameplate2P.secondBadge));
 
             entry.Don();
+            Assert.That(entry.TwoJoined, Is.True);
             yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 4);
             yield return new WaitForSecondsRealtime(0.5f);
             Assert.That(entry.Coins.BubbleAlpha, Is.Zero, "No 2P invite once 2P is in.");
@@ -54,7 +59,7 @@ namespace OurTaiko.Tests
             float deadline = Time.realtimeSinceStartup + 20;
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
             while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene);
-            Assert.That(SceneSwitcher.Instance.TwoPlayers, Is.True);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(2));
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.view.nameplateGroup2P.alpha, Is.EqualTo(1), "2P's plate is up when it joined on Entry.");
         }
@@ -67,16 +72,20 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             var entry = Object.FindAnyObjectByType<EntryScene>();
-            entry.Join2P();
             // The side screen takes no don in its first 120 ms.
             yield return WaitUntil(() => entry.Flow.CanJoin(entry.Now), 2);
+            entry.Join2P();
             entry.Don();
+            Assert.That(entry.TwoJoined, Is.True);
             yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 4);
             yield return null;
             int practice = System.Array.FindIndex(entry.view.boards, b => b.practice);
             Assert.That(entry.IsSinglePlayerOnly(practice), Is.True);
             Assert.That(entry.view.boards[practice].title.color.r, Is.LessThan(0.5f), "練習モード is greyed once 2P is in, like 段位道場.");
             Assert.That(entry.view.boards[0].title.color.r, Is.EqualTo(1), "演奏ゲーム stays open to two players.");
+            int ghost = System.Array.FindIndex(entry.Modes, m => m.Scene == SceneSwitcher.GhostSelectScene);
+            Assert.That(entry.IsSinglePlayerOnly(ghost), Is.True);
+            Assert.That(entry.view.boards[ghost].title.color.r, Is.LessThan(0.5f), "ゴーストバトル is one player against a recording.");
             for (int i = 0; i < entry.view.boards.Length && entry.Flow.SelectedMode != practice; i++) entry.Ka(1);
             Assert.That(entry.Flow.SelectedMode, Is.EqualTo(practice));
             entry.Don();
@@ -101,11 +110,11 @@ namespace OurTaiko.Tests
             while (switcher.IsInputBlocked || SceneManager.GetActiveScene().name != SceneSwitcher.SongSelectScene);
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             var manager = select.Manager;
-            Assert.That(manager.TwoPlayers, Is.False);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(1));
             Assert.That(select.view.nameplateGroup2P.alpha, Is.Zero);
 
             manager.JoinSecond();
-            Assert.That(manager.TwoPlayers, Is.True);
+            Assert.That(SceneSwitcher.Instance.Seated.Count, Is.EqualTo(2));
             Assert.That(select.voice.clip, Is.SameAs(select.secondJoined));
             yield return new WaitForSecondsRealtime(0.25f);
             Assert.That(select.view.nameplateGroup2P.alpha, Is.EqualTo(1));
