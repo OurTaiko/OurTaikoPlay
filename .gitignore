@@ -18,3 +18,18 @@ TestResults/
 /Assets/OurTaikoNativeAudioBuild/
 /Assets/OurTaikoNativeAudioBuild.meta
 .vscode
+
+# Addressables (brought by Unity Localization) writes these while building; the settings and groups
+# in Assets/AddressableAssetsData are committed.
+/ServerData
+/[Aa]ssets/StreamingAssets/aa*
+/[Aa]ssets/AddressableAssetsData/link.xml*
+/[Aa]ssets/Addressables_Temp*
+# Content builds write addressables_content_state.bin into a folder per platform, e.g.
+# Assets/AddressableAssetsData/OSX/addressables_content_state.bin
+/[Aa]ssets/AddressableAssetsData/*/*.bin*
+# and the .meta of each such platform folder (OurTaikoPlay builds these four)
+/[Aa]ssets/AddressableAssetsData/OSX.meta
+/[Aa]ssets/AddressableAssetsData/Windows.meta
+/[Aa]ssets/AddressableAssetsData/Android.meta
+/[Aa]ssets/AddressableAssetsData/iOS.meta
