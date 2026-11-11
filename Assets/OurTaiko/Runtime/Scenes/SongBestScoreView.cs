@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace OurTaiko
 {
     // Prefer Oni/Ura and cycle between them; otherwise show the hardest recorded lower course.
-    // All objects and sprites are authored in SongSelect; this only fills the saved window.
+    // All objects and sprites are authored in CourseSelect.Enso; this only fills the saved window.
     public sealed class SongBestScoreView : MonoBehaviour
     {
         public CanvasGroup group;

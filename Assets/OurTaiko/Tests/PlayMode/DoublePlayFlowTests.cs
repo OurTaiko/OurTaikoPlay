@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
-    // Two-player play (issue #5): DoublePlayScene drives one lane per seat, each reading its own
+    // Two-player play (issue #5): Play.Double drives one lane per seat, each reading its own
     // block of the course and its own drum with its own once-per-frame input lock.
     public sealed class DoublePlayFlowTests
     {

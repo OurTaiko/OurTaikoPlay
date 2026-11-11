@@ -4,7 +4,7 @@ namespace OurTaiko
 {
     // What a PlayerLane needs from the scene that drives it: the note and judgment art, the drum
     // and pop sounds, the shared kusudama, and the play clock. PlayScene (single, double, practice)
-    // and DanPlayScene (段位道場) derive from it; each keeps its own clock, music and flow.
+    // and Play.Dan (段位道場) derive from it; each keeps its own clock, music and flow.
     public abstract class PlaySceneBase : MonoBehaviour
     {
         [Tooltip("1P's lane: the LaneViews on NoteLane. DoublePlayScene's 2P is PlayScene.secondLane.")]

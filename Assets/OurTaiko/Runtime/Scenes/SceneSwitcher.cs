@@ -16,10 +16,10 @@ namespace OurTaiko
     // Global UI control, created before the first scene and retained across every load.
     public sealed partial class SceneSwitcher : MonoBehaviour
     {
-        public const string GameScene = "SinglePlayScene";
-        public const string PracticeScene = "PracticeScene";
+        public const string GameScene = "Play.Single";
+        public const string PracticeScene = "Play.Practice";
         // Both seats play here once 2P has joined (issue #5).
-        public const string DoublePlayScene = "DoublePlayScene";
+        public const string DoublePlayScene = "Play.Double";
         public bool PracticeMode { get; set; }
         // The sides with a player this credit: 1P, 2P (a player who joined alone with the 2P drum on
         // Entry) or both. Entry seats them as it is left, and 2P may join a lone 1P in song select. A
@@ -52,7 +52,7 @@ namespace OurTaiko
         public void SeatLeadAlone() => SetSeats(Lead);
         public string SelectedPlayScene => PracticeMode ? PracticeScene : seated.Count == 2 || PlaysGhost ? DoublePlayScene : GameScene;
         public static bool IsPlayScene(string scene) => scene == GameScene || scene == PracticeScene || scene == DoublePlayScene;
-        public const string SongSelectScene = "SongSelect", ResultScene = "Result", EntryScene = "Entry";
+        public const string SongSelectScene = "CourseSelect.Enso", ResultScene = "Result.Enso", EntryScene = "Entry";
         // The first scene and where Back falls back to.
         public const string MenuScene = EntryScene;
         public const string SongLoadingScene = "SongLoadingScene";
@@ -60,14 +60,14 @@ namespace OurTaiko
         public const string SettingScene = "GlobalSettingScene";
         // The first scene: the title card shown while the built-in servers connect.
         public const string PresentedScene = "Presented";
-        // 段位道場: Entry's board opens the course select; a course is played in DanPlayScene.
-        public const string DanSelectScene = "DanSelect", DanPlayScene = "DanPlayScene";
-        // The course chosen on DanSelect, for DanPlayScene and the dan result; the ribbon returns to it.
+        // 段位道場: Entry's board opens the course select; a course is played in Play.Dan.
+        public const string DanSelectScene = "CourseSelect.Dan", DanPlayScene = "Play.Dan";
+        // The course chosen on CourseSelect.Dan, for Play.Dan and the dan result; the ribbon returns to it.
         public DanCourseEntry SelectedDan { get; set; }
         // The highest rank among the listed courses (DanCourse.DanIndex): passing that one first
         // shows the result's 祝 popup.
         public int DanIndexMax { get; set; } = -1;
-        // The course being played: SongLoadingScene fills its charts, DanPlayScene plays it.
+        // The course being played: SongLoadingScene fills its charts, Play.Dan plays it.
         public DanRun CurrentDan { get; private set; }
         bool danLoadPending;
         public static SceneSwitcher Instance { get; private set; }
@@ -75,7 +75,7 @@ namespace OurTaiko
         public static string CurrentScene { get; private set; } = "";
         public static string LastScene { get; private set; } = "";
         public static event EventHandler<(string NewScene, string OldScene)> OnSceneChanged;
-        // The scene the last switch left (DanSelect plays its whole door intro only after Entry).
+        // The scene the last switch left (CourseSelect.Dan plays its whole door intro only after Entry).
         public string FromScene { get; private set; } = "";
 
         [SerializeField] CanvasGroup transition;
@@ -89,7 +89,7 @@ namespace OurTaiko
         // TJA COURSE value chosen on the song list; null plays the SongDefinition's own course.
         public string SelectedCourse { get; private set; }
         public bool AutoPlay { get; private set; }
-        // 2P's own course and オート on the same song (DoublePlayScene).
+        // 2P's own course and オート on the same song (Play.Double).
         public string SelectedCourse2P { get; private set; }
         public bool AutoPlay2P { get; private set; }
         public string CourseOf(int seat) => seat == 1 ? SelectedCourse2P : SelectedCourse;
@@ -221,7 +221,7 @@ namespace OurTaiko
         }
 
         // 段位道場: the loading cover closes over the course select (with the course's plaque) and
-        // SongLoadingScene prepares every song (downloading a server's first) before DanPlayScene opens it.
+        // SongLoadingScene prepares every song (downloading a server's first) before Play.Dan opens it.
         public bool PlayDan(DanCourseEntry entry)
         {
             if (IsInputBlocked || entry == null || !entry.IsPlayable) return false;
@@ -241,8 +241,8 @@ namespace OurTaiko
             return true;
         }
 
-        // The last course played, for DanResult (P4); without that scene the course select follows.
-        public const string DanResultScene = "DanResult";
+        // The last course played, for Result.Dan (P4); without that scene the course select follows.
+        public const string DanResultScene = "Result.Dan";
         public DanPlayResult LastDan { get; private set; }
 
         public void ShowDanResult(DanPlayResult result)

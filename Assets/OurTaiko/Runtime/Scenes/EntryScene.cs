@@ -11,7 +11,7 @@ namespace OurTaiko
     // the credit screen waits for a drum face hit, 1P joins (nameplate and control guide fade in),
     // and once the join animation would have finished the mode list opens with 演奏ゲーム selected and
     // ゲーム設定 below it; ka moves between the boards and a face hit picks one: 演奏ゲーム goes to
-    // SongSelect, ゲーム設定 opens the settings overlay. The arcade's 60 s timer is not shown (user
+    // CourseSelect.Enso, ゲーム設定 opens the settings overlay. The arcade's 60 s timer is not shown (user
     // decision: the simulator does not limit the player's time). 2P joins at any
     // time with its own don (issue #5): its nameplate fades in on the right and the invite goes away;
     // the play mode then plays both seats. A 2P don on the credit screen joins 2P alone: its plate
@@ -139,7 +139,7 @@ namespace OurTaiko
             if (nameplateGroup2P != null) nameplateGroup2P.alpha = 0;
             Coins = new CoinOverlayView(overlay, view.freePlay, view.qrChip, view.inviteBubble, view.invitePlayer, view.inviteMessage);
             // Touch: on the credit screen a tap anywhere joins (the drum's face). On the mode list taps
-            // work like SongSelect's boards: tap another board to move to it, tap the open board to
+            // work like CourseSelect.Enso's boards: tap another board to move to it, tap the open board to
             // pick it; elsewhere a tap does nothing. Vertical swipes move through the boards. The
             // full-stage area sits under the boards so their own tap areas win.
             TouchArea = view.touchArea;

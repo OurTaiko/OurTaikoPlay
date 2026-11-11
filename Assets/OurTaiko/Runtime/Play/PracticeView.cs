@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // Saved only in PracticeScene, which is copied from SinglePlayScene by the Editor migration.
+    // Saved only in Play.Practice, which is copied from Play.Single by the Editor migration.
     public sealed class PracticeView : MonoBehaviour
     {
         public GameObject panel;

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // ゴーストバトル (SceneSwitcher.Ghost) in DoublePlayScene: the player in the lane of their side and
+    // ゴーストバトル (SceneSwitcher.Ghost) in Play.Double: the player in the lane of their side and
     // the recorded play striking the other one, as the practice replay does (ReplayFeed). Both lanes
     // read the recording's block, rebuilt with its options (speed, あべこべ, ドロン, the notes ランダム
     // flipped), so they play the same notes; the player keeps only their own offsets and hit sound.

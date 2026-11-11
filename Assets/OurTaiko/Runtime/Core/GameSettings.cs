@@ -91,7 +91,7 @@ namespace OurTaiko
     [Serializable]
     public sealed class PlaySettings
     {
-        // The touch drum in SinglePlayScene: enabled and visible, or disabled and hidden. Only mobile
+        // The touch drum in Play.Single: enabled and visible, or disabled and hidden. Only mobile
         // players show it by default; an explicit saved choice wins on every platform. The Editor
         // compiles with the active build target's defines, so it is excluded and always starts off.
 #if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR

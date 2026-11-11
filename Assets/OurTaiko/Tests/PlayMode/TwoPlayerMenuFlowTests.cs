@@ -6,7 +6,7 @@ using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
-    // Issue #5: 2P joins with its own don on Entry or SongSelect, shows its nameplate, and picks its
+    // Issue #5: 2P joins with its own don on Entry or CourseSelect.Enso, shows its nameplate, and picks its
     // own course and options before both seats play.
     public sealed class TwoPlayerMenuFlowTests
     {

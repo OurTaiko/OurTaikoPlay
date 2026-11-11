@@ -37,7 +37,7 @@ namespace OurTaiko.Tests
             LocalSongLibrary.EnsureInstance().Songs.FirstOrDefault(song => song.name == key)
             ?? throw new FileNotFoundException("Missing test song " + key, ChartPath(key));
 
-        // What a direct run of SinglePlayScene used to play: TRIPLE HELIX on its own course, not auto.
+        // What a direct run of Play.Single used to play: TRIPLE HELIX on its own course, not auto.
         public static SongDefinition Select(string key = TripleHelix, string course = null, bool autoPlay = false)
         {
             var song = Load(key);

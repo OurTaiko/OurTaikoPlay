@@ -47,7 +47,7 @@ namespace OurTaiko.Tests
                 }
             }
             finally { Object.DestroyImmediate(root); }
-            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/SinglePlayScene.unity");
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Play/Play.Single.unity");
             try
             {
                 var play = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<PlayScene>(true)).Single();

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace OurTaiko
 {
-    // GhostSelect's screen, saved in the scene: a heading, three shelf columns (servers, categories,
+    // CourseSelect.Ghost's screen, saved in the scene: a heading, three shelf columns (servers, categories,
     // plays) of entry rows, a status line and the controls hint. GhostSelectScene fills it.
     public sealed class GhostSelectView : MonoBehaviour
     {

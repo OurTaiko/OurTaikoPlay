@@ -195,7 +195,7 @@ namespace OurTaiko.Tests
         [Test]
         public void BothPlayScenesStandFiveDancersBehindTheFooter()
         {
-            foreach (string path in new[] { "Assets/Scenes/SinglePlayScene.unity", "Assets/Scenes/PracticeScene.unity" })
+            foreach (string path in new[] { "Assets/Scenes/Play/Play.Single.unity", "Assets/Scenes/Play/Play.Practice.unity" })
             {
                 var scene = EditorSceneManager.OpenPreviewScene(path);
                 try

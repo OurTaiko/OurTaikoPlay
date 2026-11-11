@@ -54,7 +54,7 @@ namespace OurTaiko.Tests
             TestCapture.Capture("EntryModeSelect.png");
 
             // A left ka at the top of the list changes nothing; a face hit plays `choose`, fades the
-            // board and opens SongSelect.
+            // board and opens CourseSelect.Enso.
             entry.Ka(-1);
             Assert.That(entry.Flow.SelectedMode, Is.Zero);
             Assert.That(entry.Flow.IsSelected, Is.False);

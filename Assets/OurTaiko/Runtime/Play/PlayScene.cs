@@ -8,7 +8,7 @@ using UnityEngine;
 namespace OurTaiko
 {
     // The play scenes' driver: the song clock, music, pause, title and ending around one PlayerLane per
-    // seat. The 1P lane's views are firstLane (on NoteLane); DoublePlayScene adds secondLane.
+    // seat. The 1P lane's views are firstLane (on NoteLane); Play.Double adds secondLane.
     // The art and sounds the lanes draw with are PlaySceneBase's.
     public sealed partial class PlayScene : PlaySceneBase
     {
@@ -26,7 +26,7 @@ namespace OurTaiko
         public BackgroundMovieView movie;
         double movieOffset;
 
-        // One lane per seat: 1P, then 2P in DoublePlayScene.
+        // One lane per seat: 1P, then 2P in Play.Double.
         public IReadOnlyList<PlayerLane> Lanes => lanes;
         readonly List<PlayerLane> lanes = new List<PlayerLane>();
         public PlayerLane Lane1 => lanes.Count > 0 ? lanes[0] : null;

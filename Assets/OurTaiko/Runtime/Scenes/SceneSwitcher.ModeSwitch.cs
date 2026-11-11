@@ -22,7 +22,7 @@ namespace OurTaiko
         public bool SwitchToNormalPlay() => SwitchPlayMode(false, null, BranchRoute.Normal);
 
         // Loaded like Play() (SongLoadingScene parses and decodes under the curtain), for the same song
-        // and course. Only from GameScene or PracticeScene: DoublePlayScene (two players, or a ghost
+        // and course. Only from Play.Single or Play.Practice: Play.Double (two players, or a ghost
         // battle) never switches, as a single-player scene would drop its second lane.
         bool SwitchPlayMode(bool practice, double? entryPosition, BranchRoute entryBranch)
         {

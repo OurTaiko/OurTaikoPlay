@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace OurTaiko
 {
-    // The SongSelect scene owns the global chrome: the QR chip and the 2P invite. The arcade's
+    // The CourseSelect.Enso scene owns the global chrome: the QR chip and the 2P invite. The arcade's
     // timer is not shown (user decision: the simulator does not limit the player's time).
     public sealed class SongSelectOverlayView : MonoBehaviour
     {

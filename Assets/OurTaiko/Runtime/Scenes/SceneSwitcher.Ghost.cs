@@ -1,7 +1,7 @@
 namespace OurTaiko
 {
     // ゴーストバトル (issue #53): the player against someone's recorded play of the same block. It
-    // plays in DoublePlayScene: the player in the lane of their side (SceneSwitcher.Lead: 1P above, a lone 2P
+    // plays in Play.Double: the player in the lane of their side (SceneSwitcher.Lead: 1P above, a lone 2P
     // below) and the recording striking the other lane (PlayScene.Ghost.cs).
     public sealed class GhostMatch
     {
@@ -17,7 +17,7 @@ namespace OurTaiko
 
     public sealed partial class SceneSwitcher
     {
-        public const string GhostSelectScene = "GhostSelect";
+        public const string GhostSelectScene = "CourseSelect.Ghost";
 
         // The match being played; Select clears it, so it is set after Select and stays for restarts.
         public GhostMatch Ghost { get; private set; }

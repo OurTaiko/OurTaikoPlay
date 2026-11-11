@@ -8,7 +8,7 @@ namespace OurTaiko
 {
     // Shown behind the parked rainbow curtain (arcade loading_song frame 55): parses the TJA with
     // the play options applied and loads the song audio into memory, then hands both to
-    // SinglePlayScene, whose load opens the curtain. An online song is first downloaded and
+    // Play.Single, whose load opens the curtain. An online song is first downloaded and
     // verified (fanmade.cpp prepare) with its progress on the curtain; Back cancels the download.
     public sealed class SongLoadingScene : MonoBehaviour
     {

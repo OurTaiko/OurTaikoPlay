@@ -11,13 +11,13 @@ namespace OurTaiko.Tests
 {
     public sealed class PlayDrawOrderTests
     {
-        [TestCase("SinglePlayScene")]
-        [TestCase("PracticeScene")]
-        [TestCase("DoublePlayScene")]
-        [TestCase("DanPlayScene")]
+        [TestCase("Play.Single")]
+        [TestCase("Play.Practice")]
+        [TestCase("Play.Double")]
+        [TestCase("Play.Dan")]
         public void AllSavedGraphicsKeepOriginalDrawOrder(string name)
         {
-            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/" + name + ".unity");
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Play/" + name + ".unity");
             try
             {
                 var play = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<PlaySceneBase>(true)).Single();

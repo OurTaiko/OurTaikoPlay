@@ -7,9 +7,9 @@ namespace OurTaiko
 {
     // One seat's play (YataiDON's Player): its session, drum, judgment effects and HUD on its own
     // LaneViews. PlayScene owns the shared song clock, music, pause and title, and drives one lane
-    // (single play, practice) or two (DoublePlayScene). Each lane reads only its seat's drum, so the
+    // (single play, practice) or two (Play.Double). Each lane reads only its seat's drum, so the
     // input lock (one judged press per frame) holds per player and the players never block each other.
-    // DanPlayScene prepares one lane again for each song of a course: the course's own gauge and
+    // Play.Dan prepares one lane again for each song of a course: the course's own gauge and
     // the counts of the songs before (Carry) stay on its HUD, as YataiDON's Player keeps them.
     public sealed class PlayerLane
     {

@@ -5,10 +5,10 @@ using UnityEngine.UI;
 
 namespace OurTaiko
 {
-    // DanPlayScene's own HUD (Nijiiro game/dan_info, gauge_dan and lane/dan_between art, YataiDON's
+    // Play.Dan's own HUD (Nijiiro game/dan_info, gauge_dan and lane/dan_between art, YataiDON's
     // draw_exam_row / draw_dan_info layout in 1920×1080 pixels): up to three exam rows under the
     // lane, the course plate on the right, the soul gauge's border plate, and the doors between
-    // songs. Saved in DanPlayScene; DanPlayScene drives it.
+    // songs. Saved in Play.Dan; Play.Dan drives it.
     public sealed class DanPlayView : MonoBehaviour
     {
         // One small row under a per-song exam: a finished song's own bar and count.

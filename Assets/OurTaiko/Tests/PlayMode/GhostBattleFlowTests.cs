@@ -14,7 +14,7 @@ using UnityEngine.TestTools;
 namespace OurTaiko.Tests
 {
     // ゴーストバトル (issue #53): Entry's board opens the list of recorded plays the server keeps; a
-    // picked one is raced in DoublePlayScene, the player in the lane of their side and the recording
+    // picked one is raced in Play.Double, the player in the lane of their side and the recording
     // striking the other, both on the recording's block with its options; only the player's play
     // goes up. A player who joined alone with the 2P drum sits below, on 2P's drum and account.
     public sealed class GhostBattleFlowTests

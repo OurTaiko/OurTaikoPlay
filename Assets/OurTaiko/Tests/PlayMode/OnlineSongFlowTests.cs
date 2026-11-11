@@ -11,7 +11,7 @@ using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
-    // The servers' songs in SongSelect → download on the loading curtain → play → score upload, and
+    // The servers' songs in CourseSelect.Enso → download on the loading curtain → play → score upload, and
     // the startup on the Presented card, against the local fixture API standing in for a built-in
     // server.
     public sealed class OnlineSongFlowTests

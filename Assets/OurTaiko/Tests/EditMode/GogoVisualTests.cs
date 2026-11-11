@@ -11,11 +11,11 @@ namespace OurTaiko.Tests
         static PlaySession Session(string body) => new PlaySession(TjaParser.Parse(
             "BPM:240\nCOURSE:Oni\n#START\n0,\n" + body + "\n0,\n#END"));
 
-        [TestCase("SinglePlayScene")]
-        [TestCase("PracticeScene")]
+        [TestCase("Play.Single")]
+        [TestCase("Play.Practice")]
         public void OriginalArtLayoutAndAnimationSurviveForwardAndBackwardSeeking(string name)
         {
-            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/" + name + ".unity");
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Play/" + name + ".unity");
             try
             {
                 var play = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<PlayScene>(true)).Single();

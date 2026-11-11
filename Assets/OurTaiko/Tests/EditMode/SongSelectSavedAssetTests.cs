@@ -8,7 +8,7 @@ namespace OurTaiko.Tests
 {
     public sealed class SongSelectSavedAssetTests
     {
-        const string ScenePath = "Assets/Scenes/SongSelect.unity";
+        const string ScenePath = "Assets/Scenes/CourseSelect/CourseSelect.Enso.unity";
         const string BoardPath = "Assets/OurTaiko/Generated/SongBoard.prefab";
         const string OptionsPath = "Assets/OurTaiko/Generated/PlayOptions.prefab";
 

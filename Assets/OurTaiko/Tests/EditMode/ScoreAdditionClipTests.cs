@@ -8,11 +8,11 @@ namespace OurTaiko.Tests
 {
     public sealed class ScoreAdditionClipTests
     {
-        [TestCase("SinglePlayScene")]
-        [TestCase("PracticeScene")]
+        [TestCase("Play.Single")]
+        [TestCase("Play.Practice")]
         public void SavedAnimationMatchesNijiiroTimesAndScorePosition(string name)
         {
-            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/" + name + ".unity");
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Play/" + name + ".unity");
             try
             {
                 var counter = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<PlayScene>(true)).Single().firstLane.scoreCounter;

@@ -5113,7 +5113,7 @@ MonoBehaviour:
   boardSwipe: {fileID: 2108083078}
   boards:
   - root: {fileID: 100445685}
-    scene: SongSelect
+    scene: CourseSelect.Enso
     practice: 0
     cursor: {fileID: 1927201390}
     closed: {fileID: 392580329}
@@ -5130,7 +5130,7 @@ MonoBehaviour:
     closedHitSize: {x: 964, y: 157}
     openHitSize: {x: 1050, y: 436}
   - root: {fileID: 1139120403}
-    scene: DanSelect
+    scene: CourseSelect.Dan
     practice: 0
     cursor: {fileID: 593866567}
     closed: {fileID: 1328513659}
@@ -5148,7 +5148,7 @@ MonoBehaviour:
     closedHitSize: {x: 964, y: 157}
     openHitSize: {x: 1050, y: 436}
   - root: {fileID: 287713803}
-    scene: SongSelect
+    scene: CourseSelect.Enso
     practice: 1
     cursor: {fileID: 876534902}
     closed: {fileID: 1188918822}
@@ -5165,7 +5165,7 @@ MonoBehaviour:
     closedHitSize: {x: 964, y: 157}
     openHitSize: {x: 1050, y: 436}
   - root: {fileID: 1158694454}
-    scene: GhostSelect
+    scene: CourseSelect.Ghost
     practice: 0
     cursor: {fileID: 270423968}
     closed: {fileID: 1399928115}

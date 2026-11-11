@@ -1,7 +1,7 @@
 namespace OurTaiko
 {
     // One go at a 段位 course: the course, and its charts as SongLoadingScene parsed them (with the
-    // play options applied) for DanPlayScene to take. A chart left null is parsed by the play scene.
+    // play options applied) for Play.Dan to take. A chart left null is parsed by the play scene.
     public sealed class DanRun
     {
         public DanCourseEntry Entry { get; }
@@ -54,7 +54,7 @@ namespace OurTaiko
         // Played with the player's own judge windows (PlaySettings.customJudgeWindow): not recorded.
         public bool CustomJudge;
         public bool IsRecordable => !AutoPlay && !CustomJudge;
-        // Set once DanResult has recorded it, so showing it again saves nothing twice; the best
+        // Set once Result.Dan has recorded it, so showing it again saves nothing twice; the best
         // before this attempt is kept for the celebration and the best-score pill.
         public bool Saved;
         public DanRecordStore.Best? PreviousBest;

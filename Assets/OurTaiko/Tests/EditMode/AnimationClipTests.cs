@@ -13,7 +13,7 @@ namespace OurTaiko.Tests
     public sealed class AnimationClipTests
     {
         const string Clips = "Assets/OurTaiko/Generated/Clips/";
-        const string PlayScenePath = "Assets/Scenes/SinglePlayScene.unity";
+        const string PlayScenePath = "Assets/Scenes/Play/Play.Single.unity";
 
         static AnimationClip Clip(string name)
         {
@@ -75,7 +75,7 @@ namespace OurTaiko.Tests
         }
 
         [TestCase(PlayScenePath)]
-        [TestCase("Assets/Scenes/PracticeScene.unity")]
+        [TestCase("Assets/Scenes/Play/Play.Practice.unity")]
         public void JudgmentTextStretchesUpwardsLikeComboWithoutMovingItsBaseline(string path)
         {
             var scene = EditorSceneManager.OpenPreviewScene(path);

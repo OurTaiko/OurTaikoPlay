@@ -37,7 +37,7 @@ namespace OurTaiko.Tests
         [Test]
         public void SinglePlaySceneUsesAPrefabInstanceAtTheJudgePoint()
         {
-            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/SinglePlayScene.unity");
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Play/Play.Single.unity");
             try
             {
                 var play = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<PlayScene>(true)).Single();
