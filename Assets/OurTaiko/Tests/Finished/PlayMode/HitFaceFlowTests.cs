@@ -17,7 +17,7 @@ namespace OurTaiko.Tests
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 float deadline = Time.realtimeSinceStartup + 20;
                 do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
                 while (SceneSwitcher.Instance.IsInputBlocked || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene);

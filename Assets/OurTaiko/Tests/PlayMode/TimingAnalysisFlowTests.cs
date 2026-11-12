@@ -111,7 +111,7 @@ namespace OurTaiko.Tests
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
-                SceneSwitcher.Instance.Play(song, "Oni", false);
+                yield return TestPlay.Open(song, "Oni", false);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
@@ -213,7 +213,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
                 SceneSwitcher.Instance.PracticeMode = practice;
-                SceneSwitcher.Instance.Play(song, "Oni", false);
+                yield return TestPlay.Open(song, "Oni", false);
                 yield return WaitForScene(practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();

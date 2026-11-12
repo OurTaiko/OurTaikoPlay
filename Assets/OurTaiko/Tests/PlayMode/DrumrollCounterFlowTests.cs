@@ -30,7 +30,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             SceneSwitcher.Instance.PracticeMode = practice;
-            SceneSwitcher.Instance.Play(song, "Oni", auto);
+            yield return TestPlay.Open(song, "Oni", auto);
             yield return WaitForPlay(practice);
             play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.firstLane.drumrollCounter, Is.Not.Null);

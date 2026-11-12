@@ -157,7 +157,7 @@ namespace OurTaiko.Tests
             var switcher = SceneSwitcher.Instance;
             switcher.PracticeMode = practice;
             if (twoPlayers) switcher.SetSeats(Side.P1, Side.P2); else switcher.SetSeats(Side.P1);
-            switcher.Play(song, "Oni", true, twoPlayers ? "Oni" : null, true);
+            yield return TestPlay.Open(song, "Oni", true, twoPlayers ? "Oni" : null, true);
             yield return Wait(() => !switcher.IsInputBlocked && SceneManager.GetActiveScene().name == switcher.SelectedPlayScene);
             var play = Object.FindAnyObjectByType<PlayScene>();
             yield return Wait(() => play.Session != null);

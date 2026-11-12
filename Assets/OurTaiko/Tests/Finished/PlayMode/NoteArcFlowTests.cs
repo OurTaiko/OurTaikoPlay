@@ -22,7 +22,7 @@ namespace OurTaiko.Tests
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 float deadline = Time.realtimeSinceStartup + 20;
                 do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene);

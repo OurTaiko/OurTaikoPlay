@@ -167,7 +167,7 @@ namespace OurTaiko.Tests
 
         IEnumerator ExercisePlayback(AudioBackend backend)
         {
-            yield return StartPractice(backend, true);
+            yield return StartPractice(backend, true, throughEntry: true);
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure), "A chart without branches has no branch page.");
             Assert.That(play.practiceView.heading.text, Is.EqualTo(L10n.Get("Play", "practice.measure.heading")));
             Assert.That(play.BarRoot(0).anchoredPosition.x, Is.EqualTo(120).Within(0.1));
@@ -256,7 +256,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator FinishReturnsToFirstMeasureWithoutResultAndEntryHasIndependentRoute()
         {
-            yield return StartPractice(AudioBackend.BassSimple, false);
+            yield return StartPractice(AudioBackend.BassSimple, false, throughEntry: true);
             // Jump near the end, then run the complete end-of-chart path.
             play.MovePractice(1); yield return null; play.MovePractice(1);
             yield return new WaitForSecondsRealtime(0.25f);
@@ -331,7 +331,7 @@ namespace OurTaiko.Tests
         [UnityTest, Category("SpriteRendering")]
         public IEnumerator SwitchingModesStartsFreshAttemptsAndPersistsTheSelectedMode()
         {
-            yield return StartPractice(AudioBackend.BassSimple, false);
+            yield return StartPractice(AudioBackend.BassSimple, false, throughEntry: true);
             var switcher = SceneSwitcher.Instance;
             int songsPlayed = switcher.SongsPlayed;
             play.ConfirmPractice(); yield return null;
@@ -603,7 +603,9 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => play.Session.BranchHistory.Count == 1);
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
         }
-        IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain, bool timingReview = true)
+        // throughEntry walks Entry's 練習モード board, the song select and the curtain, for the tests
+        // about that route or about going back to the song select; the others open the scene directly.
+        IEnumerator StartPractice(AudioBackend backend, bool withAudio, string chart = Plain, bool timingReview = true, bool throughEntry = false)
         {
             var settings = new GameSettings(); settings.audio.backend = backend; settings.play.inputDelayMs = 0;
             settings.play.singlePlayerDrumPad = true;
@@ -616,6 +618,17 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
+            song = ScriptableObject.CreateInstance<SongDefinition>(); song.name = "Practice Test";
+            song.chart = new TextAsset(chart);
+            if (withAudio) song.music = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/OurTaiko/Audio/entry/bgm.ogg");
+            if (throughEntry) yield return EnterThroughEntry();
+            else { SceneSwitcher.Instance.PracticeMode = true; yield return TestPlay.Open(song, "Oni", false); }
+            play = Object.FindAnyObjectByType<PlayScene>();
+            yield return Waits.Until(() => play.Practice != null && play.IsPaused);
+            yield return null;
+        }
+        IEnumerator EnterThroughEntry()
+        {
             var entry = Object.FindAnyObjectByType<EntryScene>();
             Assert.That(entry.view.boards.Count(b => b.practice), Is.EqualTo(1));
             Assert.That(entry.view.boards[2].practice, Is.True, "練習モード follows 演奏ゲーム and 段位道場.");
@@ -625,14 +638,8 @@ namespace OurTaiko.Tests
             entry.Ka(2); yield return new WaitForSecondsRealtime(0.3f); entry.Don();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
-            song = ScriptableObject.CreateInstance<SongDefinition>(); song.name = "Practice Test";
-            song.chart = new TextAsset(chart);
-            if (withAudio) song.music = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/OurTaiko/Audio/entry/bgm.ogg");
             SceneSwitcher.Instance.Play(song, "Oni", false);
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !SceneSwitcher.Instance.IsInputBlocked);
-            play = Object.FindAnyObjectByType<PlayScene>();
-            yield return Waits.Until(() => play.Practice != null && play.IsPaused);
-            yield return null;
         }
         IEnumerator Click(UnityEngine.UI.Button button)
         {

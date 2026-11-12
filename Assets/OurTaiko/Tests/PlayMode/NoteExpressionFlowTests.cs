@@ -33,7 +33,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             SceneSwitcher.Instance.PracticeMode = practice;
-            SceneSwitcher.Instance.Play(song);
+            yield return TestPlay.Open(song);
             string scene = practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene;
             float deadline = Time.realtimeSinceStartup + 25;
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }

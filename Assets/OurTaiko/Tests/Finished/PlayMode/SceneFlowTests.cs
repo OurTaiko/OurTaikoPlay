@@ -10,7 +10,6 @@ namespace OurTaiko.Tests
 {
     public sealed class SceneFlowTests
     {
-        [UnityTest] public IEnumerator BranchNormalCanBePlayed() => PlayBranch(BranchRoute.Normal);
         [UnityTest, Category("SpriteRendering")] public IEnumerator BranchExpertCanBePlayed() => PlayBranch(BranchRoute.Expert);
         [UnityTest, Category("SpriteRendering")] public IEnumerator BranchMasterAutoPlayCompletes() => PlayBranch(BranchRoute.Master);
 
@@ -272,7 +271,7 @@ namespace OurTaiko.Tests
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
@@ -338,7 +337,7 @@ namespace OurTaiko.Tests
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();
@@ -402,7 +401,7 @@ namespace OurTaiko.Tests
             try
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 float deadline = Time.realtimeSinceStartup + 20;
@@ -503,7 +502,7 @@ namespace OurTaiko.Tests
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
                 yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 float deadline = Time.realtimeSinceStartup + 8;

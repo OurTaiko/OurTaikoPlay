@@ -22,7 +22,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
                 yield return null;
                 SceneSwitcher.Instance.PracticeMode = practice;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 float deadline = Time.realtimeSinceStartup + 25;
                 string scene = practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene;
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != scene)

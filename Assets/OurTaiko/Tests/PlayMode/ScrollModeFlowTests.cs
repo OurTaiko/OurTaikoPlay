@@ -33,7 +33,7 @@ namespace OurTaiko.Tests
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
                 yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 float deadline = Time.realtimeSinceStartup + 40;
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene)
                 {
@@ -77,7 +77,7 @@ namespace OurTaiko.Tests
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
                 yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 float deadline = Time.realtimeSinceStartup + 40;
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene)
                 {
@@ -122,7 +122,7 @@ namespace OurTaiko.Tests
             {
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
                 yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 float deadline = Time.realtimeSinceStartup + 40;
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.GameScene)
                 {
@@ -181,7 +181,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
                 yield return null;
                 SceneSwitcher.Instance.PracticeMode = practice;
-                SceneSwitcher.Instance.Play(song, !practice);
+                yield return TestPlay.Open(song, !practice);
                 float deadline = Time.realtimeSinceStartup + 40;
                 string scene = practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene;
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != scene)

@@ -26,7 +26,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
                 yield return null;
                 SceneSwitcher.Instance.PracticeMode = practice;
-                SceneSwitcher.Instance.Play(song, "Oni", false);
+                yield return TestPlay.Open(song, "Oni", false);
                 float deadline = Time.realtimeSinceStartup + 25;
                 string target = practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene;
                 while (SceneSwitcher.Instance.IsInputBlocked || SceneManager.GetActiveScene().name != target)

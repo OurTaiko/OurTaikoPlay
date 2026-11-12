@@ -91,7 +91,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene); yield return null;
                 var switcher = SceneSwitcher.Instance; switcher.PracticeMode = practice;
-                switcher.Play(song, "Oni", false);
+                yield return TestPlay.Open(song, "Oni", false);
                 yield return Wait(() => !switcher.IsInputBlocked && SceneManager.GetActiveScene().name == switcher.SelectedPlayScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 yield return Wait(() => play.Session != null && (!practice || play.Practice != null));

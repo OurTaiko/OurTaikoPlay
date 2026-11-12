@@ -23,7 +23,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
                 yield return null;
-                SceneSwitcher.Instance.Play(song);
+                yield return TestPlay.Open(song);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 var notes = play.Session.Chart.Notes;

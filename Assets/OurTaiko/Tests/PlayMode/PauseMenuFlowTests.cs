@@ -357,7 +357,7 @@ namespace OurTaiko.Tests
             yield return null;
             var switcher = SceneSwitcher.EnsureInstance();
             switcher.PracticeMode = practice;
-            switcher.Play(song);
+            yield return TestPlay.Open(song);
             yield return WaitForScene(practice ? SceneSwitcher.PracticeScene : SceneSwitcher.GameScene);
             play = Object.FindAnyObjectByType<PlayScene>();
             pad = Object.FindAnyObjectByType<DrumPad>();

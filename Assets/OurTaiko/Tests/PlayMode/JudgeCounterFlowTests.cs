@@ -20,7 +20,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
                 yield return null;
-                SceneSwitcher.Instance.Play(song, autoPlay: true);
+                yield return TestPlay.Open(song, autoPlay: true);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();

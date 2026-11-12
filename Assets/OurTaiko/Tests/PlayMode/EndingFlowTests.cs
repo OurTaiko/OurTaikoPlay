@@ -28,7 +28,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
                 var switcher = SceneSwitcher.Instance;
-                switcher.Play(song, "Easy", true);
+                yield return TestPlay.Open(song, "Easy", true);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 float deadline = Time.realtimeSinceStartup + 15;
@@ -84,7 +84,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene); yield return null;
                 var switcher = SceneSwitcher.Instance;
-                switcher.Play(song, "Easy", false);
+                yield return TestPlay.Open(song, "Easy", false);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 if (!play.IsPaused) play.TogglePause();

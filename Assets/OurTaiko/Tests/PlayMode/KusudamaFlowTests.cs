@@ -32,8 +32,8 @@ namespace OurTaiko.Tests
             yield return null;
             while (SceneSwitcher.Instance.IsInputBlocked) yield return null;
             if (twoPlayers) SceneSwitcher.Instance.SetSeats(Side.P1, Side.P2); else SceneSwitcher.Instance.SetSeats(Side.P1);
-            if (twoPlayers) SceneSwitcher.Instance.Play(song, "Oni", false, "Oni", false);
-            else SceneSwitcher.Instance.Play(song);
+            if (twoPlayers) yield return TestPlay.Open(song, "Oni", false, "Oni", false);
+            else yield return TestPlay.Open(song);
             string target = twoPlayers ? SceneSwitcher.DoublePlayScene : SceneSwitcher.GameScene;
             float deadline = Time.realtimeSinceStartup + 20;
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
