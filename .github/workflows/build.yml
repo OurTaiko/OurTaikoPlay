@@ -29,6 +29,7 @@ jobs:
   version:
     name: Version
     runs-on: ubuntu-latest
+    if: "github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') || !contains(github.event.head_commit.message, '[skip ci]')"
     outputs:
       version: ${{ steps.v.outputs.version }}
       display: ${{ steps.v.outputs.display }}
@@ -306,7 +307,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3'
+          ruby-version: "3.3"
 
       - name: Install fastlane
         run: bundle install

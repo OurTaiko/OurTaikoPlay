@@ -1,125 +1,98 @@
 # OurTaikoPlay
 
-**用 Unity 与 C# 制作的太鼓节奏游戏，采用 Nijiiro 风格界面。**
+**使用 Unity 与 C# 开发的跨平台太鼓模拟器。**
+
+[![Project Status: Active Development](https://img.shields.io/badge/Project%20Status-Active%20Development-brightgreen.svg)](https://github.com/OurTaiko/OurTaikoPlay)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
+[![Unity: 6000.3](https://img.shields.io/badge/Unity-6000.3-black.svg?logo=unity)](https://unity.com/)
 
 **简体中文** · [English](README.en.md) · [日本語](README.ja.md)
 
-OurTaikoPlay 是使用 Unity 与 C# 从零编写的太鼓节奏游戏，开发过程中借鉴了 [YataiDON](https://github.com/Yonokid/YataiDON)、[MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)、[OpenTaiko](https://github.com/0auBSQ/OpenTaiko) 等项目的设计思路与玩法表现。项目持续开发中，提供单人与双人演奏、段位道场，键盘与触控操作、本地与在线曲目，以及可在 Unity Editor 中编辑的场景和 UI。
+OurTaikoPlay 是一个使用 Unity (C#) 开发的开源太鼓节奏游戏，提供还原街机体验的 Nijiiro 风格界面、低延迟原生音频、多模式演奏与在线曲库支持。
 
-## 目前可以做什么
+## 主要特性
 
-- **完整单人流程**：Entry → 选曲 → 加载 → 演奏 → 结算，支持暂停、重开和返回选曲。
-- **双人演奏**：2P 可在 Entry 或选曲时加入，进入 DoublePlayScene 同屏演奏（含双方共享的くす玉），结算右侧显示 2P 成绩板；1P／2P 可分别登录 OurTaiko 账号并显示各自的 OurTaikoProfile 名牌。
-- **段位道场**：Entry 的「段位道場」进入三页课程选择，另有输入课程码的「外伝」入口；移植 Nijiiro 的段位开场、加载、背景与结算演出，以合格／不合格结束，保存记录；可游玩服务器提供的段位课程并上传挑战以领取奖励，名牌显示双层段位徽章（五級～達人）。
-- **选曲**：嵌套 box.def 文件夹、带惯性的滑动选曲、长按方向键连续移动、滚动中按咔跳过 7 项，以及按来源分组的歌曲列表与搜索结果。
-- **Nijiiro 界面**：曲目板、难度卡、名牌、魂槽、舞者、皇冠，以及包含「粋／雅／極」的七种 ScoreRank 图标和结算演出。
-- **TJA 演奏**：支持常用音符、连打、气球、BPM／滚动速度变化和普通／玄人／达人分支。
-- **在线曲库与成绩**：只连接内置的 OurTaiko Fanmade 与 OurTaiko Database 两个服务器，支持 OurTaiko 账号登录、游客浏览、分类文件夹、谱面与音频下载、最高分拉取，以及带重试队列的成绩上传。
-- **成绩展示**：本地成绩存入 SQLite；在线历史成绩来自服务器。选曲显示最佳成绩、皇冠和 ScoreRank，在线皇冠读取 `ClearStatus`。
-- **演奏与系统设置**：自动演奏、速度、ドロン、あべこべ、随机、鼓音，以及音量分组、音频后端、帧率和触控鼓开关。
-- **原生音频**：采用 BASS 解码与混音，设计参考 MajdataPlay；输出后端为跨平台的 BassSimple，Windows 另有 BassWASAPI／BassASIO。不提供 Unity 音频后端（延迟过高），没有输出设备时静音运行。
+- **完整演奏流程**：Entry → 选曲 → 演奏 → 结算。支持常规音符、连打、气球、くす玉、BPM/滚动变化及普通/玄人/达人谱面分支。
+- **多种模式**：单人演奏、同屏双人演奏（共享くす玉）、ゴーストバトル（幽灵对战）与段位道场（含外传课程）。
+- **Nijiiro 视觉表现**：还原曲目板、难度卡、名牌、魂槽、舞者、皇冠、七阶 ScoreRank 图标与结算演出。
+- **原生低延迟音频**：基于 BASS 混音与解码（参考 MajdataPlay），支持 BassSimple、BassWASAPI 与 BassASIO。
+- **曲库与选曲**：支持读取本地 `.tja` 谱面与 `box.def` 分类文件夹；内置 OurTaiko 在线曲库，支持曲目下载、自动离线缓存与成绩同步。
+- **多端操作与多语言**：支持键盘、鼠标与屏幕触控鼓；提供简中、英语、日语完整界面语言。
+
+## 操作说明
+
+| 场景 | 操作 | 默认按键 |
+| --- | --- | --- |
+| 演奏 | 左／右 咚（面） | `F` / `J` |
+| 演奏 | 左／右 咔（渊） | `D` / `K` |
+| 选曲与菜单 | 左右移动 | `D` / `K` 或 `←` / `→` |
+| 选曲与菜单 | 确认选择 | `F` / `J` 或 `Enter` |
+| 菜单 | 返回上一级 | `Esc` |
+| 演奏 | 暂停／继续 | `Space` 或 `Esc` |
+| 演奏 | 重新开始 | `F1` |
+
+- 支持触控屏鼓面与鼠标点击。
+- 大音符单侧敲击即可判定。
+- 同时包含「おに」与「裏おに」的曲目，在おに难度上连续向右按 10 次即可切换。
 
 ## 从源码运行
 
-需要 **Unity 6000.3.25f1**、Unity Hub 和 Git。项目使用 **URP 17.3.0 / Universal 2D、uGUI、TextMeshPro、Input System**。
+### 环境要求
+
+- **Unity 6000.3.25f1** 或更高 6000.3 系列
+- Unity Hub 与 Git
+
+### 获取代码
 
 ```sh
 git clone --recurse-submodules https://github.com/OurTaiko/OurTaikoPlay.git
 cd OurTaikoPlay
 ```
 
-如果已经克隆过仓库，请补齐或更新 ManagedBass 子模块：
+*如果已克隆仓库，请补齐子模块：`git submodule update --init --recursive`*
 
-```sh
-git submodule update --init --recursive
-```
+### 启动项目
 
-1. 用 Unity Hub 打开项目，等待包解析与资源导入完成。
-2. 打开 `Assets/Scenes/Entry.unity`，点击 Play。
-3. 敲咚或点击画面加入，选择「演奏ゲーム」。
-4. 选择歌曲和难度，开始演奏。
+1. 在 Unity Hub 中添加并打开项目，等待资源导入与包解析完成。
+2. 打开 `Assets/Scenes/Entry.unity`，点击 **Play**。
+3. 敲咚或点击画面加入，选择「演奏ゲーム」即可开始游玩。
 
-游戏不自带歌曲。本地歌曲放在数据目录的 `Songs` 文件夹（首次启动自动创建，位置见「曲目与存档」），每次经过服务器页面都会重新扫描：
+## 曲目与数据存储
 
-- 读取 `.tja`（BOM 决定编码，无 BOM 时为 UTF-8，解码失败按 Shift-JIS），音频为同目录下 `WAVE:` 指定的文件；至少有一个 Easy～Edit 课程才列出。
-- 与 OpenTaiko 相同：含 `box.def` 的目录成为文件夹，标题与类别取 `#TITLE`／`#TITLE<语言>`、`#GENRE`；文件夹内可再有含 `box.def` 的子文件夹，层数不限。不含 `box.def` 的目录不单独成为文件夹，其中的谱面和文件夹直接列在上一层。每层先列子文件夹、再列谱面，各按路径排序；没有任何谱面的文件夹不显示。本地文件夹排在服务器分类之前。
-- 打开文件夹时，其内容就地展开：开头是「もどる」，之后每 7 项再插一个；子文件夹在其中继续展开。「もどる」或返回键关闭当前所在的文件夹，再次打开时回到上次离开的位置。
+- **本地曲目**：将 `.tja` 谱面与对应音频放入数据目录下的 `Songs/` 文件夹（首次启动自动创建），支持使用 `box.def` 构建分类层级。
+- **在线缓存**：游玩过的在线曲目与音频会自动缓存到 `cache/`，服务器离线时仍可游玩。
 
-Entry 的「ゲーム設定」可进入系统设置。
+### 数据目录位置
 
-## 操作
-
-| 场景 | 操作 | 默认按键 |
-| --- | --- | --- |
-| 演奏 | 左／右咚 | F / J |
-| 演奏 | 左／右咔 | D / K |
-| 选曲与菜单 | 移动 | D / K 或 ← / → |
-| 选曲与菜单 | 确认 | F / J 或 Enter |
-| 菜单 | 返回上一级 | Esc |
-| 演奏 | 暂停／继续 | Space 或 Esc |
-| 演奏 | 重开 | F1 |
-
-支持鼠标与触控；演奏时可使用屏幕鼓面。暂停菜单依次为 **Resume / Restart / Back to Song Select**。同时含おに与裏おに的曲目，在おに难度上连续向右操作 10 次可切换。
-
-大音符单侧击打即可完整判定。每帧只处理最早的一次鼓面输入，这是当前玩法的有意设计。自动演奏成绩不保存、不上传；菜单没有计时器，不催促选择。
-
-## 曲目与存档
-
-游戏只连接两个内置服务器：`https://fanmade.ourtaiko.org` 和 `https://database.ourtaiko.org`，不能添加其他服务器。在「ゲーム設定」的账号页用 OurTaiko 账号登录后成绩才会上传；不登录时以游客身份浏览和游玩。旧版本留在数据目录的 `servers.json` 不再读取，也不会被改动。
-
-在线游玩过的曲目会连同谱面、音源一起缓存在数据目录的 `cache/` 下。某个服务器连不上时，选曲页面会显示一个以该服务器命名、标注「本地缓存」的文件夹，里面按原分类列出已缓存的曲目，可以离线游玩；服务器一旦连上，就恢复显示其完整曲库。离线游玩的成绩会按该服务器上的账号排队，重新连上服务器后补传。
-
-本地曲目目前通过 Unity 资源配置：将 TJA 内容导入为 `.txt`，通过 **Assets → Create → OurTaiko → Song** 创建 `SongDefinition`，设置谱面、音乐和偏移，再加入 SongSelect 控制器的 `songs` 列表。
-
-歌曲、设置、成绩和缓存都在同一个数据目录：
-
-| 平台 | 数据目录 |
+| 平台 | 路径 |
 | --- | --- |
-| Windows／Linux | 游戏可执行文件所在目录 |
-| macOS | `OurTaikoPlay.app` 内（右键「显示包内容」） |
-| iOS／iPadOS | 「文件」App →「我的 iPad／iPhone」→ OurTaikoPlay |
-| Android、Unity Editor | `Application.persistentDataPath` |
+| Windows / Linux | 游戏执行文件同级目录（不可写时转至 `persistentDataPath`） |
+| macOS | `OurTaikoPlay.app` 包内（右键「显示包内容」） |
+| iOS / iPadOS | 「文件」App →「我的 iPad／iPhone」→ OurTaikoPlay |
+| Android / Unity Editor | `Application.persistentDataPath` |
 
-桌面版的游戏目录不可写时（例如 macOS 尚未移出下载位置、Windows 装在 Program Files），改用 `Application.persistentDataPath`。
+主要数据文件包括：`settings.json`（系统设置）、`options.json`（演奏选项）、`player.json`（玩家档案）、`scores.sqlite3`（本地成绩与缓存索引）。
 
+## 构建发布
 
-| 文件 | 内容 |
-| --- | --- |
-| `settings.json` | 系统设置，包括音量、显示和高级音频参数 |
-| `options.json` | 演奏选项 |
-| `player.json` | 玩家名牌 |
-| `scores.sqlite3` | 本地最佳成绩、按服务器／账号隔离的待上传队列，以及已缓存谱面的索引 |
+在 Unity 菜单中选择 **OurTaiko → Build** 进行打包。
 
-General → Language 当前只影响歌名和副标题，缺失翻译时显示谱面原文（TITLE／SUBTITLE）；尚不提供整套菜单翻译。README 的语言版本与游戏内语言设置相互独立。
-
-## 构建
-
-在 Unity 中使用 **OurTaiko → Build**。先通过 Unity Hub 安装目标平台对应的构建模块。
-
-| 目标 | 构建产物 | 架构 |
+| 平台 | 输出产物 | 架构 |
 | --- | --- | --- |
-| macOS | `Builds/macOS/OurTaikoPlay.app` | Intel + Apple Silicon |
-| Windows | `Builds/Windows/OurTaikoPlay.exe` 及同目录依赖 | x64 |
+| Windows | `Builds/Windows/OurTaikoPlay.exe` | x64 |
+| macOS | `Builds/macOS/OurTaikoPlay.app` | Universal (Intel + Apple Silicon) |
 | Android | `Builds/Android/OurTaikoPlay.apk` | ARM64 |
-| iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 真机 |
+| iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 |
 
-iOS 构建需要 macOS 和 Xcode；项目默认开启 Hoshino Network LLC 团队的自动签名，Xcode 需登录有该团队权限的开发者账号；使用其他团队时请在 Unity Player Settings 中修改。移动端包名为 `org.ourtaiko.play`，仅使用横屏。
-
-## 开发状态与文档
-
-目前使用 Nijiiro 皮肤。排序和完整回放播放尚未实现，也不保证兼容所有 TJA 扩展。运行逻辑与 Editor 工具使用 C#；原生音频库作为平台依赖提供，导入的动画表只作为数据读取，不执行 Lua。
-
-- [素材清单](Documentation/ImportedAssets.json)：美术与音频的导入来源。
-- 测试位于 `Assets/OurTaiko/Tests/`，可在 Unity Test Runner 中运行 EditMode 与 PlayMode 测试；`Finished/` 保留已完成功能的回归测试。
-
-欢迎通过 [Issues](https://github.com/OurTaiko/OurTaikoPlay/issues) 报告问题，或提交 Pull Request。反馈演奏、音频或触控问题时，请附上平台、设备、复现步骤和相关日志。
+*注：iOS 构建需在 macOS 上使用 Xcode。*
 
 ## 致谢
 
-1. **[Sigaer](https://github.com/Sigaer)** — 感谢提供项目使用的 [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/main/Assets/OurTaiko/Art/DDFont.ttf) 字体！也特别感谢你帮我清 Project Sekai 的体力，让我能够专心写游戏。
-2. **[TeamMajdata / MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)** — 感谢场景切换与音频设计方面的启发，以及维护 [ManagedBass 分支](https://github.com/TeamMajdata/ManagedBass)。
-3. **第三方库与素材的作者** — 感谢 BASS、[unity-sqlite-net](https://github.com/gilzoide/unity-sqlite-net)、[Material Symbols](Documentation/ThirdParty/MaterialSymbols/README.md)，以及皮肤、美术、音乐、音效与谱面的作者。相关归属见 [NOTICE](NOTICE) 与[素材清单](Documentation/ImportedAssets.json)。
+- **[Sigaer](https://github.com/Sigaer)** — 提供 [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/main/Assets/OurTaiko/Art/DDFont.ttf) 字体支持。
+- **[TeamMajdata / MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)** — 音频架构启发与 [ManagedBass 分支](https://github.com/TeamMajdata/ManagedBass) 维护。
+- **[YataiDON](https://github.com/Yonokid/YataiDON)** & **[OpenTaiko](https://github.com/0auBSQ/OpenTaiko)** — 玩法表现与谱面解析参考。
+- 以及 BASS、[unity-sqlite-net](https://github.com/gilzoide/unity-sqlite-net)、[Material Symbols](Documentation/ThirdParty/MaterialSymbols/README.md) 与社区美术、音频资源的作者（详见 [NOTICE](NOTICE) 与 [素材清单](Documentation/ImportedAssets.json)）。
 
-## 许可与资源归属
+## 许可证
 
-项目代码遵循 [GNU GPL v3](LICENSE)，来源与第三方声明见 [NOTICE](NOTICE)。第三方库、字体、皮肤、美术、音乐、音效和谱面保留各自的权利归属与许可；代码许可证不替代这些资源的许可。
+本项目代码基于 [GNU GPL v3](LICENSE) 协议开源。第三方库、字体、美术与音频资源保留其各自权利归属与许可（详见 [NOTICE](NOTICE)）。

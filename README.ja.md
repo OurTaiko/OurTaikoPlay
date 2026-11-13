@@ -1,119 +1,98 @@
 # OurTaikoPlay
 
-**Unity と C# で開発している、ニジイロ風の画面を備えた太鼓リズムゲームです。**
+**UnityとC#で開発された、クロスプラットフォーム対応の太鼓シミュレーター。**
+
+[![Project Status: Active Development](https://img.shields.io/badge/Project%20Status-Active%20Development-brightgreen.svg)](https://github.com/OurTaiko/OurTaikoPlay)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
+[![Unity: 6000.3](https://img.shields.io/badge/Unity-6000.3-black.svg?logo=unity)](https://unity.com/)
 
 [简体中文](README.md) · [English](README.en.md) · **日本語**
 
-OurTaikoPlay は、Unity と C# でゼロから開発している太鼓リズムゲームです。[YataiDON](https://github.com/Yonokid/YataiDON)、[MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)、[OpenTaiko](https://github.com/0auBSQ/OpenTaiko) などの設計思想やゲームプレイを参考にしています。現在も開発を進めており、1 人・2 人プレイ、段位道場、キーボード・タッチ操作、ローカル・オンライン楽曲に対応しています。シーンや UI は Unity Editor 上で編集できます。
+OurTaikoPlay は、Unity（C#）でゼロから開発されているオープンソースの太鼓リズムゲームです。アーケードさながらのニジイロ風 UI、低遅延のネイティブ音声、多彩なゲームモード、オンライン曲庫に対応しています。
 
 ## 主な機能
 
-- **1 人プレイの一連の流れ**：Entry → 選曲 → ロード → 演奏 → リザルト。一時停止、やり直し、選曲への復帰に対応しています。
-- **ニジイロ風の演出**：楽曲ボード、難易度カード、ネームプレート、魂ゲージ、踊り子、王冠、「粋／雅／極」を含む 7 種類の ScoreRank アイコンとリザルト演出。
-- **TJA 譜面の演奏**：基本的な音符、連打、風船、BPM・スクロール速度の変更、普通／玄人／達人譜面への分岐。
-- **2 人プレイ**：Entry や選曲画面で 2P が参加でき、DoublePlayScene で同時に演奏します（くす玉は 2 人共通）。リザルトでは右側に 2P の成績が表示されます。1P・2P はそれぞれ OurTaiko アカウントでログインし、各自の OurTaikoProfile ネームプレートを表示できます。
-- **段位道場**：Entry の「段位道場」から 3 ページのコース選択と、コースコードを入力する「外伝」に入れます。ニジイロの段位演出（イントロ・ロード・背景・リザルト）を移植し、合格／不合格で終了して記録を保存します。サーバーの段位コースを遊んで挑戦結果を送信し報酬を受け取れ、ネームプレートには二層の段位エンブレム（五級～達人）が表示されます。
-- **選曲**：box.def フォルダーの入れ子、慣性付きスワイプ、方向キー長押しの連続移動、スクロール中のカッで 7 曲スキップ、出典ごとにまとめた曲一覧と検索結果に対応しています。
-- **オンライン楽曲と成績**：接続先は内蔵の 2 サーバー（OurTaiko Fanmade・OurTaiko Database）のみ。OurTaiko アカウントでのログイン、ゲスト閲覧、カテゴリフォルダー、譜面・音源のダウンロード、自己ベストの取得、再試行キュー付きの成績送信に対応しています。
-- **成績表示**：ローカル成績は SQLite に保存し、オンラインの成績履歴はサーバーから取得します。選曲では自己ベスト、王冠、ScoreRank を表示し、オンラインの王冠には `ClearStatus` を使用します。
-- **演奏・システム設定**：オート、はやさ、ドロン、あべこべ、ランダム、音色のほか、音量グループ、音声バックエンド、フレームレート、画面上の太鼓の表示を設定できます。
-- **ネイティブ音声処理**：MajdataPlay の設計を参考に BASS でデコード・ミキシングします。出力はクロスプラットフォームの BassSimple、Windows では BassWASAPI／BassASIO も使えます。遅延が大きいため Unity 音声バックエンドはなく、出力デバイスがない場合は無音で動作します。
+- **充実した演奏体験**：Entry → 選曲 → 演奏 → リザルト。基本音符、連打、風船、くす玉、BPM／スクロール変化、譜面分岐（普通／玄人／達人）に対応。
+- **多彩なプレイモード**：1人プレイ、2人プレイ（くす玉共有の Double Play）、ゴーストバトル、段位道場（外伝コース対応）。
+- **ニジイロ風の演出**：楽曲ボード、難易度カード、ネームプレート、魂ゲージ、踊り子、王冠、7種類の ScoreRank アイコン、リザルト演出。
+- **低遅延ネイティブ音声**：ManagedBass による音声処理（MajdataPlay を参考）、BassSimple／BassWASAPI／BassASIO に対応。
+- **楽曲管理・選曲**：ローカルの `.tja` 譜面と `box.def` フォルダー読み込みに対応。内蔵 OurTaiko サーバーからの曲ダウンロード、オフラインキャッシュ、成績同期をサポート。
+- **マルチプラットフォーム・多言語**：キーボード、マウス、画面タッチ太鼓に対応。日本語・英語・簡体字中国語の UI 表示に対応。
+
+## 操作方法
+
+| 場面 | 操作 | 初期キー |
+| --- | --- | --- |
+| 演奏 | 左／右 ドン（面） | `F` / `J` |
+| 演奏 | 左／右 カッ（フチ） | `D` / `K` |
+| 選曲・メニュー | 左右移動 | `D` / `K` または `←` / `→` |
+| 選曲・メニュー | 決定 | `F` / `J` または `Enter` |
+| メニュー | 1つ前に戻る | `Esc` |
+| 演奏 | 一時停止／再開 | `Space` または `Esc` |
+| 演奏 | やり直し | `F1` |
+
+- マウス操作および画面上のタッチ太鼓に対応しています。
+- 大音符は片側を叩くだけで通常判定されます。
+- おにと裏おにの両方がある楽曲は、おにの難易度カードで右方向を10回連続入力すると切り替わります。
 
 ## ソースから起動する
 
-**Unity 6000.3.25f1**、Unity Hub、Git が必要です。**URP 17.3.0 / Universal 2D、uGUI、TextMeshPro、Input System** を使用しています。
+### 必要環境
+
+- **Unity 6000.3.25f1** または互換性のある 6000.3 系
+- Unity Hub および Git
+
+### リポジトリのクローン
 
 ```sh
 git clone --recurse-submodules https://github.com/OurTaiko/OurTaikoPlay.git
 cd OurTaikoPlay
 ```
 
-すでにクローン済みの場合は、ManagedBass サブモジュールを初期化・更新してください。
+*すでにクローン済みの場合はサブモジュールを初期化してください：`git submodule update --init --recursive`*
 
-```sh
-git submodule update --init --recursive
-```
+### 実行手順
 
-1. Unity Hub でプロジェクトを開き、パッケージの解決とアセットのインポートが完了するまで待ちます。
-2. `Assets/Scenes/Entry.unity` を開いて Play を押します。
-3. ドンを叩くか画面をタップして参加し、「演奏ゲーム」を選びます。
-4. 楽曲と難易度を選んで演奏を始めます。
+1. Unity Hub でプロジェクトを開き、パッケージ解決とアセットインポートを完了させます。
+2. `Assets/Scenes/Entry.unity` を開き、**Play** ボタンを押します。
+3. ドンを叩くか画面をタップしてエントリーし、「演奏ゲーム」を選んで開始します。
 
-サンプルとして Input Calibration と Branch Training を同梱しています。どちらも音源のない調整用・練習用譜面です。Entry の「ゲーム設定」からシステム設定を開けます。
+## 楽曲とデータ保存
 
-## 操作方法
+- **ローカル楽曲**：データフォルダー内の `Songs/` に `.tja` 譜面と音源を配置します（初回起動時に自動作成）。`box.def` によるフォルダー分類に対応しています。
+- **オンラインキャッシュ**：サーバーからプレイした曲は `cache/` に自動保存され、オフライン時でも演奏できます。
 
-| 場面 | 操作 | 初期キー |
-| --- | --- | --- |
-| 演奏 | 左／右のドン | F / J |
-| 演奏 | 左／右のカッ | D / K |
-| 選曲・メニュー | 移動 | D / K または ← / → |
-| 選曲・メニュー | 決定 | F / J または Enter |
-| メニュー | 1 つ前に戻る | Esc |
-| 演奏 | 一時停止／再開 | Space または Esc |
-| 演奏 | やり直し | F1 |
+### データフォルダーの場所
 
-マウス・タッチ操作に対応し、演奏中は画面上の太鼓を使用できます。一時停止メニューは **Resume / Restart / Back to Song Select** の順です。おにと裏おにの両方を持つ楽曲では、おにで右方向へ 10 回連続入力すると切り替わります。
-
-大音符は片側を叩くだけで通常どおり判定されます。1 フレーム内では最初の打撃入力のみを処理する仕様です。オート演奏の成績は保存・送信しません。メニューにタイマーはなく、選択を急かしません。
-
-## 楽曲と保存データ
-
-接続先は内蔵の 2 サーバー `https://fanmade.ourtaiko.org` と `https://database.ourtaiko.org` のみで、ほかのサーバーは追加できません。「ゲーム設定」のアカウントページで OurTaiko アカウントにログインすると成績が送信されます。ログインしない場合はゲストとして閲覧・演奏できます。旧バージョンがデータフォルダーに残した `servers.json` は読み込まれず、変更もされません。
-
-オンラインで遊んだ曲は譜面と音源ごとデータフォルダーの `cache/` に保存されます。サーバーにつながらないときは、選曲画面にそのサーバー名の「オフラインキャッシュ」フォルダーが現れ、元のカテゴリ別にキャッシュ済みの曲が並び、サーバーなしで遊べます。サーバーにつながればまた通常の曲リストに戻ります。オフラインで遊んだ成績はそのサーバーのアカウント宛てに保留され、再接続後に送信されます。
-
-ローカル楽曲は現在 Unity アセットとして設定します。TJA の内容を `.txt` としてインポートし、**Assets → Create → OurTaiko → Song** から `SongDefinition` を作成してください。譜面、音源、オフセットを設定し、SongSelect コントローラーの `songs` リストに追加します。
-
-楽曲（`Songs/`）、設定、スコア、キャッシュは同じデータフォルダーに保存されます。
-
-| プラットフォーム | データフォルダー |
+| プラットフォーム | パス |
 | --- | --- |
-| Windows／Linux | ゲームの実行ファイルがあるフォルダー |
+| Windows / Linux | ゲームの実行ファイルと同じフォルダー（書込不可時は `persistentDataPath`） |
 | macOS | `OurTaikoPlay.app` の中（右クリック →「パッケージの内容を表示」） |
-| iOS／iPadOS | 「ファイル」App →「この iPad／iPhone 内」→ OurTaikoPlay |
-| Android、Unity Editor | `Application.persistentDataPath` |
+| iOS / iPadOS | 「ファイル」App →「この iPad／iPhone 内」→ OurTaikoPlay |
+| Android / Unity Editor | `Application.persistentDataPath` |
 
-デスクトップ版でゲームのフォルダーに書き込めない場合（ダウンロードした場所のままの macOS App や、Program Files にインストールした Windows 版など）は `Application.persistentDataPath` を使用します。
-
-
-| ファイル | 内容 |
-| --- | --- |
-| `settings.json` | 音量、表示、詳細な音声パラメーターなどのシステム設定 |
-| `options.json` | 演奏オプション |
-| `player.json` | プレイヤーのネームプレート |
-| `scores.sqlite3` | ローカル自己ベスト、サーバー・アカウント別の送信待ちキュー、キャッシュ済み譜面の索引 |
-
-General → Language は現在、曲名とサブタイトルにのみ適用されます。翻訳がない場合は譜面の TITLE／SUBTITLE をそのまま表示します。メニュー全体の翻訳にはまだ対応していません。README の言語別ページはゲーム内の言語設定とは別です。
+主なデータファイル：`settings.json`（システム・音声設定）、`options.json`（演奏オプション）、`player.json`（ネームプレート情報）、`scores.sqlite3`（ローカル成績・キャッシュ索引）。
 
 ## ビルド
 
-Unity の **OurTaiko → Build** を使用します。先に Unity Hub で対象プラットフォームのビルドモジュールをインストールしてください。
+Unity 内の **OurTaiko → Build** から各プラットフォーム向けにビルドできます。
 
 | 対象 | 出力先 | アーキテクチャ |
 | --- | --- | --- |
-| macOS | `Builds/macOS/OurTaikoPlay.app` | Intel + Apple Silicon |
-| Windows | `Builds/Windows/OurTaikoPlay.exe` と同じフォルダーの依存ファイル | x64 |
+| Windows | `Builds/Windows/OurTaikoPlay.exe` | x64 |
+| macOS | `Builds/macOS/OurTaikoPlay.app` | Universal (Intel + Apple Silicon) |
 | Android | `Builds/Android/OurTaikoPlay.apk` | ARM64 |
-| iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 実機 |
+| iOS / iPadOS | `Builds/iOS/OurTaikoPlay.xcodeproj` | ARM64 |
 
-iOS のビルドには macOS と Xcode が必要です。自動署名は Hoshino Network LLC チームに設定済みです。Xcode には同チームの権限を持つ開発者アカウントでログインしてください。別のチームを使う場合は Unity Player Settings で変更します。モバイル版のパッケージ名は `org.ourtaiko.play` で、横画面専用です。
-
-## 開発状況とドキュメント
-
-現在はニジイロスキンを使用しています。並べ替えと完全なリプレイ再生は未実装で、すべての TJA 拡張への対応も保証していません。実行時のロジックと Editor ツールは C# で実装し、ネイティブ音声ライブラリをプラットフォーム依存のライブラリとして使用します。インポートしたアニメーション表はデータとして読み込み、Lua は実行しません。
-
-- [素材一覧](Documentation/ImportedAssets.json)：インポートした画像・音声の出典。
-- テストは `Assets/OurTaiko/Tests/` にあります。Unity Test Runner で EditMode・PlayMode テストを実行できます。`Finished/` には完成済み機能の回帰テストを保存しています。
-
-[Issues](https://github.com/OurTaiko/OurTaikoPlay/issues) での不具合報告や Pull Request を歓迎します。演奏・音声・タッチ操作に関する報告には、プラットフォーム、端末、再現手順、関連ログを添えてください。
+*※ iOS ビルドには macOS と Xcode が必要です。*
 
 ## 謝辞
 
-1. **[Sigaer](https://github.com/Sigaer)** — 本プロジェクトで使用する [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/main/Assets/OurTaiko/Art/DDFont.ttf) フォントを提供してくれてありがとうございます！そして、私がゲーム開発に集中できるよう、代わりに Project Sekai のライブボーナスを消化してくれていることにも、特別な感謝を。
-2. **[TeamMajdata / MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)** — シーン遷移・音声処理の設計から得た着想と、[ManagedBass フォーク](https://github.com/TeamMajdata/ManagedBass)のメンテナンスに感謝します。
-3. **サードパーティーのライブラリ・素材の作者の皆さん** — BASS、[unity-sqlite-net](https://github.com/gilzoide/unity-sqlite-net)、[Material Symbols](Documentation/ThirdParty/MaterialSymbols/README.md)、およびスキン、画像、楽曲、効果音、譜面の制作に感謝します。帰属情報は [NOTICE](NOTICE) と[素材一覧](Documentation/ImportedAssets.json)に記載しています。
+- **[Sigaer](https://github.com/Sigaer)** — [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/main/Assets/OurTaiko/Art/DDFont.ttf) フォントの提供。
+- **[TeamMajdata / MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)** — 音声設計の着想および [ManagedBass フォーク](https://github.com/TeamMajdata/ManagedBass) のメンテナンス。
+- **[YataiDON](https://github.com/Yonokid/YataiDON)** & **[OpenTaiko](https://github.com/0auBSQ/OpenTaiko)** — ゲームプレイや譜面処理の設計参考。
+- BASS、[unity-sqlite-net](https://github.com/gilzoide/unity-sqlite-net)、[Material Symbols](Documentation/ThirdParty/MaterialSymbols/README.md)、ならびにコミュニティのアセット制作者の皆様（詳細は [NOTICE](NOTICE) および [素材一覧](Documentation/ImportedAssets.json) を参照）。
 
-## ライセンスと素材の帰属
+## ライセンス
 
-プロジェクトのコードには [GNU GPL v3](LICENSE) を適用しています。出典とサードパーティーに関する声明は [NOTICE](NOTICE) を参照してください。外部ライブラリ、フォント、スキン、画像、楽曲、効果音、譜面の権利とライセンスは、それぞれの権利者に帰属します。コードのライセンスが、これらの素材のライセンスに代わるものではありません。
+本プロジェクトのコードは [GNU GPL v3](LICENSE) に基づいて公開されています。外部ライブラリ、フォント、スキン、画像、楽曲、効果音の権利は各著作者に帰属します（詳細は [NOTICE](NOTICE) を参照）。
