@@ -91,11 +91,11 @@ namespace OurTaiko.Online
             Instance = null;
         }
 
-        (string Name, string Url, string Api)[] builtIn = ServerConfig.BuiltIn;
+        (string Name, string Url, string Api, string Site)[] builtIn = ServerConfig.BuiltIn;
 
         // The servers the game connects to: the built-in ones (tests name their own). Players sign
         // in to them through their OurTaiko accounts.
-        public IReadOnlyList<ServerConfig> BuiltInServers => builtIn.Select(b => new ServerConfig { name = b.Name, baseUrl = b.Url, api = b.Api }).ToArray();
+        public IReadOnlyList<ServerConfig> BuiltInServers => builtIn.Select(b => new ServerConfig { name = b.Name, baseUrl = b.Url, api = b.Api, site = b.Site }).ToArray();
 
         // 1P's and 2P's OurTaiko accounts on this device, and the account center they sign in at.
         public AccountStore Accounts { get; private set; }
@@ -240,7 +240,38 @@ namespace OurTaiko.Online
                         results.Add(Item(who, cancel.IsCancellationRequested ? L10n.Get("Online", "summary.cancelled") : L10n.Format("Online", "summary.offline", error.Message)));
                         continue;
                     }
-                    foreach (var e in endpoints)
+                    // The sources of one site take one session: one trade, one request for the scores.
+                    var together = Together(endpoints).Where(e => e.SsoService.Length > 0 && e.SsoIssuer == Center.Issuer).ToArray();
+                    if (together.Length > 1 && together.Select(e => e.SsoService).Distinct().Count() == 1 && !cancel.IsCancellationRequested)
+                    {
+                        string name = SiteName(together[0]);
+                        Activity = L10n.Format("Online", "activity.signingIn", who, name);
+                        try
+                        {
+                            string service = together[0].SsoService, accountToken = account.Token;
+                            var center = Center;
+                            string session = await center.TradeAsync(accountToken, service, cancel);
+                            await Client.UseAccountAsync(together, seat, session, account.UserId, account.Nickname,
+                                c => center.TradeAsync(accountToken, service, c), cancel);
+                            any = true;
+                            results.Add(Item(who + " " + name, L10n.Format("Online", "summary.signedInAs", account.Nickname)));
+                        }
+                        catch (HttpStatusException error) when (error.Status == 401)
+                        {
+                            Expire(seat, endpoints);
+                            results.Add(Item(who, L10n.Get("Online", "summary.signInExpired")));
+                            continue;
+                        }
+                        // A site that does not answer for all its sources at once is asked source by source.
+                        catch (HttpStatusException error) when (error.Status == 404) { apart.Add(together[0].Config.site); together = Array.Empty<FanmadeEndpoint>(); }
+                        catch (Exception error)
+                        {
+                            Log.Warn("Online", $"{who}'s sign-in to {name} failed: {error.Message}");
+                            results.Add(Item(who + " " + name, cancel.IsCancellationRequested ? L10n.Get("Online", "summary.cancelled") : Describe(error)));
+                        }
+                    }
+                    else together = Array.Empty<FanmadeEndpoint>();
+                    foreach (var e in endpoints.Except(together))
                     {
                         string name = e.Config.DisplayName;
                         if (cancel.IsCancellationRequested) { results.Add(Item(who + " " + name, L10n.Get("Online", "summary.cancelled"))); continue; }
@@ -308,13 +339,48 @@ namespace OurTaiko.Online
             var results = new List<string>();
             try
             {
-                var endpoints = BuiltInEndpoints();
-                for (int i = 0; i < endpoints.Count; i++)
+                var all = BuiltInEndpoints();
+                // The sources of one site are loaded in one request.
+                var together = Together(all);
+                if (together.Length > 1 && !cancel.IsCancellationRequested)
+                {
+                    string site = SiteName(together[0]);
+                    Activity = L10n.Format("Online", "activity.loadingSongList", 1, 1 + all.Count - together.Length, site);
+                    try
+                    {
+                        var failures = await Client.LoadSiteAsync(together, cancel);
+                        for (int i = 0; i < together.Length; i++)
+                        {
+                            string name = together[i].Config.DisplayName;
+                            if (failures[i] == null)
+                            {
+                                results.Add(Item(name, L10n.Format("Online", "summary.songs", together[i].ChartCount)));
+                                Log.Info("Online", $"Song list of {name}: {together[i].ChartCount} songs");
+                            }
+                            else
+                            {
+                                Log.Warn("Online", $"Song list of {name} failed: {failures[i].Message}");
+                                results.Add(Item(name, Describe(failures[i])));
+                            }
+                        }
+                    }
+                    // A site that does not answer for all its sources at once is asked source by source.
+                    catch (HttpStatusException error) when (error.Status == 404) { apart.Add(together[0].Config.site); together = Array.Empty<FanmadeEndpoint>(); }
+                    catch (Exception error)
+                    {
+                        Log.Warn("Online", $"Song lists of {site} failed: {error.Message}");
+                        results.Add(Item(site, cancel.IsCancellationRequested ? L10n.Get("Online", "summary.cancelled") : Describe(error)));
+                    }
+                }
+                else together = Array.Empty<FanmadeEndpoint>();
+                var endpoints = all.Except(together).ToArray();
+                int done = together.Length > 0 ? 1 : 0;
+                for (int i = 0; i < endpoints.Length; i++)
                 {
                     var e = endpoints[i];
                     string name = e.Config.DisplayName;
                     if (cancel.IsCancellationRequested) { results.Add(Item(name, L10n.Get("Online", "summary.cancelled"))); continue; }
-                    Activity = L10n.Format("Online", "activity.loadingSongList", i + 1, endpoints.Count, name);
+                    Activity = L10n.Format("Online", "activity.loadingSongList", done + i + 1, done + endpoints.Length, name);
                     try
                     {
                         await Client.LoadCatalogAsync(e, cancel);
@@ -340,6 +406,23 @@ namespace OurTaiko.Online
         // One line of LoginSummary or SongListSummary: "1P Fanmade: …".
         static string Item(string who, string what) => L10n.Format("Online", "summary.item", who, what);
 
+        // Sites found not to answer for their sources together: they are asked source by source,
+        // without asking again each time.
+        readonly HashSet<string> apart = new HashSet<string>();
+
+        // The built-in servers that are sources of one site, which loads and signs in to them
+        // together; none when there are not at least two of one site.
+        FanmadeEndpoint[] Together(IReadOnlyList<FanmadeEndpoint> endpoints)
+        {
+            var sites = endpoints.Where(e => e.Config.site.Length > 0 && e.Config.SourceId.Length > 0 && !apart.Contains(e.Config.site))
+                .GroupBy(e => e.Config.site).ToArray();
+            var site = sites.FirstOrDefault(g => g.Count() > 1);
+            return site == null ? Array.Empty<FanmadeEndpoint>() : site.ToArray();
+        }
+
+        // What a site is called: the built-in one by its name, another by its address.
+        static string SiteName(FanmadeEndpoint e) => e.Config.site == ServerConfig.Site ? ServerConfig.SiteName : e.Config.site;
+
         // One connection per built-in server, created signed out; the accounts are set when signing in.
         IReadOnlyList<FanmadeEndpoint> BuiltInEndpoints()
         {
@@ -348,7 +431,7 @@ namespace OurTaiko.Online
             {
                 Client.Remove(builtInEndpoints.Contains);
                 builtInEndpoints.Clear();
-                foreach (var (name, url, api) in builtIn) builtInEndpoints.Add(Client.Add(new ServerConfig { name = name, baseUrl = url, api = api }));
+                foreach (var (name, url, api, site) in builtIn) builtInEndpoints.Add(Client.Add(new ServerConfig { name = name, baseUrl = url, api = api, site = site }));
             }
             return builtInEndpoints.ToArray();
         }
@@ -396,12 +479,22 @@ namespace OurTaiko.Online
             else if (player.Info.ToJson() != info.ToJson()) player.Set(info);
         }
 
+        // As UseUnsaved, the servers being sources of one site (a test's own): Url is the address
+        // each is known by, Source the name the site has for it.
+        public void UseUnsavedSite(string cacheRoot, string site, params (string Name, string Url, string Source)[] sources)
+        {
+            UseUnsaved(cacheRoot);
+            builtIn = sources.Select(s => (s.Name, s.Url, site.TrimEnd('/') + "/api/v1/sources/" + s.Source, site.TrimEnd('/'))).ToArray();
+            builtInEndpoints.Clear();
+            apart.Clear();
+        }
+
         // Tests use a cache folder and accounts that never touch the player's files, and no server
         // unless they name their own in place of the built-in ones.
         public void UseUnsaved(string cacheRoot = null, params (string Name, string Url)[] servers)
         {
             // A test's server has its API at its own address.
-            builtIn = (servers ?? Array.Empty<(string, string)>()).Select(s => (s.Name, s.Url, "")).ToArray();
+            builtIn = (servers ?? Array.Empty<(string, string)>()).Select(s => (s.Name, s.Url, "", "")).ToArray();
             builtInEndpoints.Clear();
             // Nothing listens there: a test that signs in names its own account center.
             UseAccounts(new AccountStore(null, "test"), new AccountCenter("http://127.0.0.1:9"));

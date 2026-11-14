@@ -86,7 +86,8 @@ namespace OurTaiko.Online
 
         public FanmadeEndpoint(ServerConfig config)
         {
-            Config = new ServerConfig { name = config.name ?? "", baseUrl = (config.baseUrl ?? "").TrimEnd('/'), api = (config.api ?? "").TrimEnd('/') };
+            Config = new ServerConfig { name = config.name ?? "", baseUrl = (config.baseUrl ?? "").TrimEnd('/'), api = (config.api ?? "").TrimEnd('/'),
+                site = (config.site ?? "").TrimEnd('/') };
             Id = Sha256Hex(Encoding.UTF8.GetBytes(Config.baseUrl + "\n"));
             var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false };
             // Per-request timeouts below; the client-wide one only bounds pathological cases.
@@ -109,7 +110,7 @@ namespace OurTaiko.Online
 
         public bool HasValidUrl()
         {
-            return Valid(Config.baseUrl) && (Config.api.Length == 0 || Valid(Config.api));
+            return Valid(Config.baseUrl) && (Config.api.Length == 0 || Valid(Config.api)) && (Config.site.Length == 0 || Valid(Config.site));
             static bool Valid(string url) => (url.StartsWith("http://", StringComparison.Ordinal) || url.StartsWith("https://", StringComparison.Ordinal))
                 && url.IndexOfAny(new[] { '?', '#', '@', ' ', '\r', '\n' }) < 0 && Uri.IsWellFormedUriString(url, UriKind.Absolute);
         }
@@ -147,15 +148,25 @@ namespace OurTaiko.Online
             return new UTF8Encoding(false).GetString(bytes);
         }
 
-        public async Task<byte[]> RequestBytesAsync(string path, string body = "", string key = "", long limit = DefaultLimit,
+        // A request to the site this server is a source of, not to the server: path is the site's
+        // own ("/api/v1/game/sources"). Anonymous unless a session is given. The answer holds what
+        // every source would answer by itself, so it is given as long as those would take together.
+        public async Task<string> SiteRequestAsync(string path, CancellationToken cancel = default, string bearer = "")
+            => new UTF8Encoding(false).GetString(await SendAsync(Config.site + path, path, "", "", DefaultLimit, cancel, null, bearer ?? "", 60));
+
+        public Task<byte[]> RequestBytesAsync(string path, string body = "", string key = "", long limit = DefaultLimit,
             CancellationToken cancel = default, Action<long, long> progress = null, string bearer = null)
+            => SendAsync(Config.Address(path), path, body, key, limit, cancel, progress, bearer);
+
+        async Task<byte[]> SendAsync(string address, string path, string body, string key, long limit,
+            CancellationToken cancel, Action<long, long> progress, string bearer, int seconds = 15)
         {
             string token = bearer ?? Seats[0].Token;
             if (cancel.IsCancellationRequested) throw new FanmadeException("DOWNLOAD_CANCELLED");
             // Files come from signed resource links (ResourceBytesAsync); API calls are small.
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(seconds));
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
-            using var request = new HttpRequestMessage(string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post, Config.Address(path));
+            using var request = new HttpRequestMessage(string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post, address);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             // API replies may come gzipped (an OurTaiko Database catalog is 4 MB, 0.8 MB packed). Only
             // here: resource downloads keep the exact bytes and sizes their manifest names.

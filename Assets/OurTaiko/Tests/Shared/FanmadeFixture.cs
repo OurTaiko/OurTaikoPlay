@@ -106,6 +106,12 @@ namespace OurTaiko.Tests
         public Func<Chart, JObject> Manifest;
         public Action<JObject> ChangeBootstrap;
         public Func<HttpListenerContext, bool> CustomRequest;
+        // The sources this fixture is a site of (GET /api/v1/game/sources answers for all of them
+        // at once); null: a server of the kind that is loaded by itself, and has no such route.
+        public string[] SiteSources;
+        // A server that is one source of this fixture as a site: known by `known`, asked under the
+        // source's name.
+        public ServerConfig Source(string id, string known) => new ServerConfig { name = id, baseUrl = known, api = BaseUrl + "/api/v1/sources/" + id, site = BaseUrl };
         // Status codes returned (and consumed) before the next score submissions succeed.
         public readonly ConcurrentQueue<int> ScoreFailures = new ConcurrentQueue<int>();
         public readonly ConcurrentQueue<JObject> AcceptedScores = new ConcurrentQueue<JObject>();
@@ -263,6 +269,7 @@ namespace OurTaiko.Tests
                 { Reply(context, 401, new JObject { ["error"] = "SESSION" }); return; }
                 var parts = path.Trim('/').Split('/');
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/catalog") { Bootstrap(context); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v1/game/sources" && SiteSources != null) { Sources(context, user); return; }
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/search")
                 {
                     var q = new SongSearchQuery(request.QueryString["q"]);
@@ -428,7 +435,9 @@ namespace OurTaiko.Tests
         public void ExpireSessions() => tokens.Clear();
 
         // GET /game/catalog: public, the same for every caller.
-        void Bootstrap(HttpListenerContext context)
+        void Bootstrap(HttpListenerContext context) => Reply(context, 200, Catalog());
+
+        JObject Catalog()
         {
             var categories = new JArray(Categories.Select(c => new JObject
             {
@@ -443,7 +452,27 @@ namespace OurTaiko.Tests
             if (AccountCenter) reply["sso"] = new JObject { ["issuer"] = BaseUrl, ["service"] = Service };
             if (Dans != null) reply["danVersion"] = 1;
             ChangeBootstrap?.Invoke(reply);
-            Reply(context, 200, reply);
+            return reply;
+        }
+
+        // GET /api/v1/game/sources: this fixture as a site whose sources (SiteSources) all hold
+        // what it holds, each part being what the source's own route answers.
+        void Sources(HttpListenerContext context, string user)
+        {
+            string named = context.Request.QueryString["parts"];
+            var parts = named != null ? named.Split(',') : user != null ? new[] { "catalog", "dans", "scores", "playlists" } : new[] { "catalog", "dans" };
+            if ((parts.Contains("scores") || parts.Contains("playlists")) && user == null) { Reply(context, 401, new JObject()); return; }
+            var sources = new JArray();
+            foreach (string id in SiteSources)
+            {
+                var source = new JObject { ["id"] = id, ["name"] = id };
+                if (parts.Contains("catalog")) source["catalog"] = Catalog();
+                if (parts.Contains("dans") && Dans != null) source["dans"] = new JObject { ["dans"] = Dans, ["danVersion"] = 1 };
+                if (parts.Contains("scores")) lock (AccountScores) source["scores"] = new JObject { ["scores"] = new JArray(AccountScores.Where(s => (string)s["user"] == user)) };
+                if (parts.Contains("playlists")) source["playlists"] = new JObject { ["playlists"] = AccountPlaylists.DeepClone(), ["playlistVersion"] = 1 };
+                sources.Add(source);
+            }
+            Reply(context, 200, new JObject { ["sources"] = sources });
         }
 
         // A score as the servers answer with it.

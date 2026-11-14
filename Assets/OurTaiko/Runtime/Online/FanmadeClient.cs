@@ -188,9 +188,7 @@ namespace OurTaiko.Online
             {
                 if (e.Seats[seat].IsAuthenticated)
                 {
-                    var reply = Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", cancel: cancel, seat: seat));
-                    if (!(reply["scores"] is JArray scoreList)) throw new FanmadeException("API_SCORES_INVALID");
-                    foreach (var v in scoreList) scores.Add(FanmadeScore.From(v));
+                    scores = ReadScores(Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", cancel: cancel, seat: seat)));
                     if (seat == 0) playlists = Json.Parse(await e.AuthorizedAsync("/api/v1/game/playlists", cancel: cancel))["playlists"];
                 }
             }
@@ -201,6 +199,126 @@ namespace OurTaiko.Online
                 throw;
             }
             SetAccountData(e, seat, scores, playlists);
+        }
+
+        // The scores of an answer of GET /game/scores.
+        static List<FanmadeScore> ReadScores(JToken reply)
+        {
+            if (!(reply?["scores"] is JArray scoreList)) throw new FanmadeException("API_SCORES_INVALID");
+            var scores = new List<FanmadeScore>();
+            foreach (var v in scoreList) scores.Add(FanmadeScore.From(v));
+            return scores;
+        }
+
+        // The servers that are sources of one site are loaded together: one request to the site
+        // answers for all of them what each would answer by itself (GET /api/v1/game/sources).
+        // The part of `answer` for an endpoint, by the name the site knows the source by.
+        static JToken SourceOf(JToken answer, FanmadeEndpoint e)
+        {
+            if (answer?["sources"] is JArray sources)
+                foreach (var source in sources)
+                    if (Json.Str(source, "id") == e.Config.SourceId) return source;
+            throw new FanmadeException("API_SOURCES_INVALID");
+        }
+
+        // Loads the song lists and 段位 courses of every endpoint of a site in one request;
+        // accounts and scores are untouched. The request failing fails them all and keeps what
+        // each had; otherwise each endpoint's own failure is reported in the result (null: loaded).
+        public async Task<Exception[]> LoadSiteAsync(IReadOnlyList<FanmadeEndpoint> site, CancellationToken cancel = default)
+        {
+            if (site.Count == 0) return Array.Empty<Exception>();
+            foreach (var e in site) if (!e.HasValidUrl()) throw new FanmadeException("SERVER_URL_INVALID");
+            var failures = new Exception[site.Count];
+            var held = new List<FanmadeEndpoint>();
+            try
+            {
+                foreach (var e in site) { await e.Transport.WaitAsync(cancel); held.Add(e); }
+                JToken answer;
+                try
+                {
+                    foreach (var e in site) SetStatus(e.Config.DisplayName + ": loading catalog");
+                    answer = Json.Parse(await site[0].SiteRequestAsync("/api/v1/game/sources?parts=catalog,dans", cancel));
+                }
+                catch (Exception error)
+                {
+                    foreach (var e in site) SetStatus(e.Config.DisplayName + ": " + error.Message);
+                    throw;
+                }
+                for (int i = 0; i < site.Count; i++)
+                {
+                    var e = site[i];
+                    try
+                    {
+                        var source = SourceOf(answer, e);
+                        bool dans = ApplyCatalog(e, source["catalog"] as JObject ?? throw new FanmadeException("API_SOURCES_INVALID"), cancel);
+                        // As when loaded alone: courses that cannot be read keep the ones loaded before.
+                        try
+                        {
+                            if (dans) ApplyDans(e, source["dans"]);
+                            else lock (sync) danLists.Remove(e.Id);
+                        }
+                        catch (FanmadeException error) { SetStatus(e.Config.DisplayName + ": 段位 courses unavailable (" + error.Message + ")"); }
+                    }
+                    catch (Exception error) when (!(error is OperationCanceledException))
+                    {
+                        SetStatus(e.Config.DisplayName + ": " + error.Message);
+                        failures[i] = error;
+                    }
+                }
+            }
+            finally { foreach (var e in held) e.Transport.Release(); }
+            Update();
+            return failures;
+        }
+
+        // Signs a seat in to every endpoint of a site with one game session, and loads its scores
+        // (and 1P's playlists) on all of them in one request. A session the site refuses is
+        // traded for once more, like any request with a seat's session.
+        public async Task UseAccountAsync(IReadOnlyList<FanmadeEndpoint> site, int seat, string token, string userId, string nickname,
+            Func<CancellationToken, Task<string>> renew, CancellationToken cancel = default)
+        {
+            if (site.Count == 0) return;
+            var held = new List<FanmadeEndpoint>();
+            try
+            {
+                foreach (var e in site) { await e.Transport.WaitAsync(cancel); held.Add(e); }
+                lock (sync)
+                    foreach (var e in site)
+                    {
+                        e.UseAccount(seat, token, userId, nickname, renew);
+                        if (seat == 0) { personalPlaylists.Remove(e.Id); personalLists.Remove(e.Id); }
+                    }
+                string path = "/api/v1/game/sources?parts=" + (seat == 0 ? "scores,playlists" : "scores");
+                JToken answer;
+                try
+                {
+                    string reply;
+                    try { reply = await site[0].SiteRequestAsync(path, cancel, token); }
+                    catch (HttpStatusException error) when (error.Status == 401 && renew != null)
+                    {
+                        string renewed = await renew(cancel);
+                        if (!Json.HexId(renewed ?? "", 64)) throw new FanmadeException("API_TOKEN_INVALID");
+                        lock (sync) foreach (var e in site) e.Seats[seat].Token = renewed;
+                        reply = await site[0].SiteRequestAsync(path, cancel, renewed);
+                    }
+                    answer = Json.Parse(reply);
+                    // Read before anything is kept: every endpoint gets its scores, or none does.
+                    var read = site.Select(e =>
+                    {
+                        var source = SourceOf(answer, e);
+                        return (Scores: ReadScores(source["scores"]), Playlists: seat == 0 ? source["playlists"]?["playlists"] : null);
+                    }).ToArray();
+                    for (int i = 0; i < site.Count; i++) SetAccountData(site[i], seat, read[i].Scores, read[i].Playlists);
+                }
+                catch (Exception error)
+                {
+                    foreach (var e in site) SetStatus(e.Config.DisplayName + ": " + error.Message);
+                    throw;
+                }
+            }
+            finally { foreach (var e in held) e.Transport.Release(); }
+            Interlocked.Increment(ref revision);
+            RetryNow();
         }
 
         // Signs a seat in with a game session traded for its OurTaiko account and loads its scores
@@ -297,6 +415,21 @@ namespace OurTaiko.Online
             {
                 SetStatus(e.Config.DisplayName + ": loading catalog");
                 var snapshot = Json.Parse(await e.RequestAsync("/api/v1/game/catalog", cancel: cancel));
+                if (ApplyCatalog(e, snapshot, cancel)) await LoadDansAsync(e, cancel);
+                else lock (sync) danLists.Remove(e.Id);
+            }
+            catch (Exception error)
+            {
+                SetStatus(e.Config.DisplayName + ": " + error.Message);
+                throw;
+            }
+        }
+
+        // Takes a catalog (the answer of GET /game/catalog) as the endpoint's song list. True when
+        // the server has 段位 courses to load as well.
+        bool ApplyCatalog(FanmadeEndpoint e, JObject snapshot, CancellationToken cancel)
+        {
+            {
                 if (!SupportsProtocol(snapshot)) throw new FanmadeException("SERVER_PROTOCOL_UNSUPPORTED");
                 if (!(snapshot["categories"] is JArray categoryList)
                     || !(snapshot["charts"] is JArray chartList) || Json.Number(snapshot, "chartCount") != chartList.Count)
@@ -363,13 +496,7 @@ namespace OurTaiko.Online
                 }
                 Interlocked.Increment(ref revision);
                 SetStatus(e.Config.DisplayName + ": " + list.Count + " songs ready" + (e.IsAuthenticated ? "" : " (guest; scores disabled)"));
-                if (snapshot["danVersion"]?.Type == JTokenType.Integer && (long)snapshot["danVersion"] == 1) await LoadDansAsync(e, cancel);
-                else lock (sync) danLists.Remove(e.Id);
-            }
-            catch (Exception error)
-            {
-                SetStatus(e.Config.DisplayName + ": " + error.Message);
-                throw;
+                return snapshot["danVersion"]?.Type == JTokenType.Integer && (long)snapshot["danVersion"] == 1;
             }
         }
 
@@ -378,15 +505,20 @@ namespace OurTaiko.Online
         {
             try
             {
-                var reply = Json.Parse(await e.RequestAsync("/api/v1/game/dans", cancel: cancel));
-                if (!(reply["dans"] is JArray dans)) throw new FanmadeException("API_DANS_INVALID");
-                lock (sync) danLists[e.Id] = dans;
-                Interlocked.Increment(ref revision);
+                ApplyDans(e, Json.Parse(await e.RequestAsync("/api/v1/game/dans", cancel: cancel)));
             }
             catch (Exception error) when (!(error is OperationCanceledException) && !cancel.IsCancellationRequested)
             {
                 SetStatus(e.Config.DisplayName + ": 段位 courses unavailable (" + error.Message + ")");
             }
+        }
+
+        // Takes the answer of GET /game/dans as the endpoint's 段位 courses.
+        void ApplyDans(FanmadeEndpoint e, JToken reply)
+        {
+            if (!(reply?["dans"] is JArray dans)) throw new FanmadeException("API_DANS_INVALID");
+            lock (sync) danLists[e.Id] = dans;
+            Interlocked.Increment(ref revision);
         }
 
         // The endpoint the seat (1P, or a lone 2P's 2P) is signed in to at `server`, or null.

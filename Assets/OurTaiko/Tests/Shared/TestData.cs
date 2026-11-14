@@ -16,8 +16,21 @@ namespace OurTaiko.Tests
         static string ScorePath => Path.Combine(Application.temporaryCachePath, "playmode-scores.sqlite3");
         public static string OnlineCache => Path.Combine(Application.temporaryCachePath, "playmode-fanmade");
 
+        // With OURTAIKO_TEST_MUTE set, a test run makes no sound: the output runs as usual, at
+        // volume zero. For a run on a machine somebody is working at. A test that measures how
+        // loud something is cannot pass under it.
+        public static void MuteIfAsked()
+        {
+            if (string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("OURTAIKO_TEST_MUTE"))) return;
+            // By name: this assembly does not refer to the audio library.
+            var bass = System.Type.GetType("ManagedBass.Bass, ManagedBass");
+            foreach (string volume in new[] { "GlobalStreamVolume", "GlobalSampleVolume", "GlobalMusicVolume" })
+                bass?.GetProperty(volume)?.SetValue(null, 0);
+        }
+
         public static void Use()
         {
+            MuteIfAsked();
             if (File.Exists(ScorePath)) File.Delete(ScorePath);
             ScoreStore.Shared = new ScoreStore(ScorePath);
             DanRecordStore.Shared = new DanRecordStore(ScorePath);

@@ -36,6 +36,75 @@ namespace OurTaiko.Tests
 
         static string[] Urls(OnlineManager online) => online.BuiltInServers.Select(server => server.baseUrl).ToArray();
 
+        static FanmadeFixture.Chart Song() => new FanmadeFixture.Chart
+        {
+            Title = "First", Tja = System.Text.Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3, 4 }, Categories = new[] { "game" },
+        };
+
+        // The built-in servers are song sources of one site. The game asks the site for both song
+        // lists at once and signs a seat in to both with one session: one sign-in on the screen,
+        // where each server alone took a sign-in and four requests of its own.
+        [UnityTest]
+        public IEnumerator TheSourcesOfOneSiteAreLoadedAndSignedInToTogether()
+        {
+            using var fixture = new FanmadeFixture { SiteSources = new[] { "fanmade", "official" } };
+            fixture.Charts.Add(Song());
+            fixture.AddAccountScore("don", fixture.Charts[0], "Oni", 700000);
+            TestData.UseServers();
+            var online = OnlineManager.Instance;
+            online.UseUnsavedSite(TestData.OnlineCache, fixture.BaseUrl,
+                ("Fanmade", "https://fanmade.example", "fanmade"), ("Database", "https://database.example", "official"));
+            online.UseAccounts(new AccountStore(null, "test"), new AccountCenter(fixture.BaseUrl));
+            online.UseProfiles(new ProfileCenter(fixture.BaseUrl));
+            Assert.That(Urls(online), Is.EqualTo(new[] { "https://fanmade.example", "https://database.example" }), "Each is still known by its own address.");
+
+            var load = online.LoadSongListAsync();
+            while (!load.IsCompleted) yield return null;
+            load.GetAwaiter().GetResult();
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/sources" }), "Both song lists in one request.");
+            Assert.That(online.Client.Endpoints.Select(e => e.IsConnected), Is.All.True);
+            Assert.That(online.Client.Endpoints.Select(e => e.ChartCount), Is.All.EqualTo(fixture.Charts.Count));
+            Assert.That(online.SongListSummary, Does.Contain("Fanmade").And.Contain("Database"), "The summary still says what each source has.");
+
+            var signIn = online.SignInAsync(0, "don", "katsu");
+            while (!signIn.IsCompleted) yield return null;
+            signIn.GetAwaiter().GetResult();
+            Assert.That(online.Client.Endpoints.Select(e => e.Seats[0].IsAuthenticated), Is.All.True);
+            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens"), Is.EqualTo(1), "One session for both sources.");
+            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/sources"), Is.EqualTo(2), "The song lists, then the seat's scores and playlists.");
+            Assert.That(fixture.Requests.Where(r => r.Contains("/api/v1/sources/")), Is.Empty, "Nothing was asked of a source by itself.");
+            Assert.That(online.LoginSummary, Does.Contain("DON"));
+            Assert.That(online.LoginSummary.Split('•'), Has.Length.EqualTo(1), "One sign-in is reported, not one a source.");
+            foreach (var e in online.Client.Endpoints)
+                Assert.That(online.Client.Best(online.Client.Charts.First(c => c.Server == e.Id && c.Id == fixture.Charts[0].Id), (int)Difficulty.Oni).Score, Is.EqualTo(700000));
+        }
+
+        // A site that cannot answer for all its sources at once is asked source by source, as before.
+        [UnityTest]
+        public IEnumerator ASiteWithoutTheSharedAnswerIsAskedSourceBySource()
+        {
+            using var fixture = new FanmadeFixture();
+            fixture.Charts.Add(Song());
+            TestData.UseServers();
+            var online = OnlineManager.Instance;
+            online.UseUnsavedSite(TestData.OnlineCache, fixture.BaseUrl,
+                ("Fanmade", "https://fanmade.example", "fanmade"), ("Database", "https://database.example", "official"));
+            online.UseAccounts(new AccountStore(null, "test"), new AccountCenter(fixture.BaseUrl));
+            online.UseProfiles(new ProfileCenter(fixture.BaseUrl));
+
+            var load = online.LoadSongListAsync();
+            while (!load.IsCompleted) yield return null;
+            load.GetAwaiter().GetResult();
+            Assert.That(online.Client.Endpoints.Select(e => e.IsConnected), Is.All.True);
+            Assert.That(fixture.Requests, Does.Contain("GET /api/v1/sources/fanmade/game/catalog").And.Contain("GET /api/v1/sources/official/game/catalog"));
+
+            var signIn = online.SignInAsync(0, "don", "katsu");
+            while (!signIn.IsCompleted) yield return null;
+            signIn.GetAwaiter().GetResult();
+            Assert.That(online.Client.Endpoints.Select(e => e.Seats[0].IsAuthenticated), Is.All.True);
+            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens"), Is.EqualTo(2), "A session a source, as before the site answered for them together.");
+        }
+
         // A manager starting in a data folder leaves no servers.json there, and one a player still
         // has from an older version is neither read nor changed.
         [UnityTest]

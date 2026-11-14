@@ -673,12 +673,82 @@ namespace OurTaiko.Tests
             Assert.That(own.ApiRoot, Is.EqualTo("https://own.example/api/v1"));
         }
 
+        // The servers that are sources of one site are loaded with one request and signed in to
+        // with one session, where each alone takes four requests and a session of its own.
+        [Test]
+        public void TheSourcesOfOneSiteAreLoadedAndSignedInToTogether()
+        {
+            fixture.SiteSources = new[] { "fanmade", "official" };
+            fixture.AddAccountScore("don", first, "Oni", 700000);
+            var fanmade = client.Add(fixture.Source("fanmade", "https://fanmade.example"));
+            var official = client.Add(fixture.Source("official", "https://database.example"));
+            var site = new[] { fanmade, official };
+            Assert.That(fanmade.Config.SourceId, Is.EqualTo("fanmade"));
+            Assert.That(official.Config.site, Is.EqualTo(fixture.BaseUrl));
+
+            var failures = Run(() => client.LoadSiteAsync(site));
+            Assert.That(failures, Is.All.Null);
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/sources" }), "Both song lists and 段位 lists in one request.");
+            foreach (var e in site)
+            {
+                Assert.That(e.IsConnected, Is.True);
+                Assert.That(e.ChartCount, Is.GreaterThan(0));
+                Assert.That(e.SsoService, Is.EqualTo(FanmadeFixture.Service));
+                Assert.That(e.IsAuthenticated, Is.False);
+            }
+            Assert.That(client.Charts.Select(c => c.Server).Distinct(), Is.EquivalentTo(new[] { fanmade.Id, official.Id }), "Each source's songs are its own.");
+            Assert.That(fanmade.Id, Is.EqualTo(FanmadeEndpoint.Sha256Hex(Encoding.UTF8.GetBytes("https://fanmade.example\n"))));
+
+            using var center = new AccountCenter(fixture.BaseUrl);
+            var account = Run(() => center.LoginAsync("don", "katsu", "Test"));
+            string service = fanmade.SsoService;
+            string session = Run(() => center.TradeAsync(account.Token, service));
+            int before = fixture.Requests.Count;
+            Run(() => client.UseAccountAsync(site, 0, session, account.UserId, account.Nickname, c => center.TradeAsync(account.Token, service, c)));
+            Assert.That(fixture.Requests.Count - before, Is.EqualTo(1), "The seat's scores and playlists on both sources in one request.");
+            foreach (var e in site)
+            {
+                Assert.That(e.IsAuthenticated, Is.True);
+                Assert.That(e.Seats[0].Nickname, Is.EqualTo("DON"));
+            }
+            foreach (var chart in client.Charts.Where(c => c.Id == client.Charts[0].Id))
+                Assert.That(client.Best(chart, (int)Difficulty.Oni).Score, Is.EqualTo(700000));
+
+            // A session the site no longer takes is traded for once, for all of them.
+            fixture.ExpireSessions();
+            before = fixture.Requests.Count(r => r == "POST /api/v1/game/tokens");
+            Run(() => client.UseAccountAsync(site, 0, session, account.UserId, account.Nickname, c => center.TradeAsync(account.Token, service, c)));
+            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens") - before, Is.EqualTo(1));
+            // The new session is every source's: asking either needs no further trade.
+            Run(() => fanmade.AuthorizedAsync("/api/v1/game/scores"));
+            Run(() => official.AuthorizedAsync("/api/v1/game/scores"));
+            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens") - before, Is.EqualTo(1), "One session for every source of the site.");
+
+            // What is asked of one source afterwards still goes to that source.
+            Run(() => client.LoadCatalogAsync(official));
+            Assert.That(fixture.Requests, Does.Contain("GET /api/v1/sources/official/game/catalog"));
+        }
+
+        // A site that has no such answer says so, and nothing the endpoints had is lost.
+        [Test]
+        public void ASiteThatDoesNotAnswerForItsSourcesTogetherFailsTheLoadWhole()
+        {
+            var fanmade = client.Add(fixture.Source("fanmade", "https://fanmade.example"));
+            var official = client.Add(fixture.Source("official", "https://database.example"));
+            var error = Assert.Throws<HttpStatusException>(() => Run(() => client.LoadSiteAsync(new[] { fanmade, official })));
+            Assert.That(error.Status, Is.EqualTo(404));
+            Assert.That(fanmade.IsConnected, Is.False);
+            Run(() => client.LoadCatalogAsync(fanmade));
+            Assert.That(fanmade.IsConnected, Is.True, "Each can still be loaded by itself.");
+        }
+
         [Test]
         public void TheBuiltInServersAreTheTwoOurTaikoOnesAndGenresMapToBoardFrames()
         {
             Assert.That(ServerConfig.BuiltIn.Select(b => b.Url), Is.EqualTo(new[] { "https://fanmade.ourtaiko.org", "https://database.ourtaiko.org" }));
             // Both are song sources of one site; the game asks them there.
             Assert.That(ServerConfig.BuiltIn.Select(b => b.Api), Is.EqualTo(new[] { "https://net.ourtaiko.org/api/v1/sources/fanmade", "https://net.ourtaiko.org/api/v1/sources/official" }));
+            Assert.That(ServerConfig.BuiltIn.Select(b => b.Site), Is.All.EqualTo("https://net.ourtaiko.org"), "Sources of one site: loaded and signed in to together.");
             Assert.That(ProfileCenter.DefaultBase, Is.EqualTo("https://net.ourtaiko.org"));
             Assert.That(OnlineManager.GenreFrame("GAME"), Is.EqualTo(3));
             Assert.That(OnlineManager.GenreFrame("ボーカロイド"), Is.EqualTo(8));
