@@ -137,7 +137,7 @@ namespace OurTaiko
             rect.sizeDelta = new Vector2(100, 32);
             rect.anchoredPosition = new Vector2(0, RowOffset);
             // The font goes on before Awake: a TextMeshPro that wakes without one takes TMP's default
-            // LiberationSans and writes _CullMode on its shared material, dirtying that asset in the Editor.
+            // font and writes _CullMode on its shared material, dirtying that asset in the Editor.
             rect.gameObject.SetActive(false);
             var text = rect.gameObject.AddComponent<TextMeshPro>();
             text.UseUiFont();
