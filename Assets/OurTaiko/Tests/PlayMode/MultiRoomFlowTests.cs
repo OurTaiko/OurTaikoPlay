@@ -265,6 +265,9 @@ namespace OurTaiko.Tests
             Assert.That(SceneSwitcher.Instance.Seated, Is.EquivalentTo(new[] { Side.P1 }));
             yield return null;
             TestCapture.Capture("MultiMenu.png");
+            // A tablet (4:3) and a phone (19.5:9): the screen stays whole, in the middle.
+            TestCapture.Capture("MultiMenuTablet.png", 2048, 1536, TestCapture.StageIsCentred(screen.stage));
+            TestCapture.Capture("MultiMenuPhone.png", 2622, 1206, TestCapture.StageIsCentred(screen.stage));
 
             // A private room: the stream signs in with the site's game session and joins.
             screen.Move(1);

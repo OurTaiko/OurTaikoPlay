@@ -159,6 +159,9 @@ namespace OurTaiko.Tests
             Assert.That(list.Focused.Key, Is.EqualTo("server:" + server));
             Assert.That(list.AllText, Does.Contain(list.Servers[0].Name).And.Contain(L10n.Format("Play", "ghostSelect.count", 1)).And.Contain(L10n.Get("Play", "ghostSelect.pickServer")));
             TestCapture.Capture("GhostSelect.png");
+            // A tablet (4:3) and a phone (19.5:9): the screen stays whole, in the middle.
+            TestCapture.Capture("GhostSelectTablet.png", 2048, 1536, TestCapture.StageIsCentred(list.stage));
+            TestCapture.Capture("GhostSelectPhone.png", 2622, 1206, TestCapture.StageIsCentred(list.stage));
 
             // Don enters the server: すべて, then its catalog's categories.
             list.Confirm();

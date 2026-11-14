@@ -14,6 +14,22 @@ namespace OurTaiko.Tests
             .Single(canvas => canvas.isRootCanvas && canvas.gameObject.scene == SceneManager.GetActiveScene()
                 && !canvas.TryGetComponent<PlayfieldMask>(out _));
 
+        // For Capture's verify, with a capture of another shape than 16:9 (a tablet's, a phone's):
+        // the scene's 1920x1080 stage is whole and in the middle of the screen, as large as fits.
+        // Throws otherwise (this assembly has no NUnit).
+        public static System.Action<Camera> StageIsCentred(RectTransform stage) => camera =>
+        {
+            var corners = new Vector3[4];
+            stage.GetWorldCorners(corners);
+            Vector2 low = camera.WorldToViewportPoint(corners[0]), high = camera.WorldToViewportPoint(corners[2]);
+            Vector2 centre = (low + high) / 2, size = high - low;
+            bool centred = Mathf.Abs(centre.x - 0.5f) < 0.002f && Mathf.Abs(centre.y - 0.5f) < 0.002f;
+            bool fits = Mathf.Abs(Mathf.Max(size.x, size.y) - 1) < 0.002f && Mathf.Min(size.x, size.y) <= 1.002f;
+            if (!centred || !fits)
+                throw new System.InvalidOperationException("The stage is not whole in the middle of a " + camera.pixelWidth + "x" + camera.pixelHeight
+                    + " screen: it covers " + low.ToString("F3") + " to " + high.ToString("F3") + " of it");
+        };
+
         public static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null, Canvas canvas = null)
         {
             canvas ??= SceneCanvas();
