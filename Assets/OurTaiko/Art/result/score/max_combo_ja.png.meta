@@ -68,7 +68,9 @@ TextureImporter:
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
+  spriteTessellationMethod: 0
   spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
@@ -247,6 +249,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: JudgeLabelMaxCombo
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 1
+        width: 204
+        height: 48
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eca892af1d65b49c89412ee4fc349517
+      internalID: -1029620408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -263,6 +287,7 @@ TextureImporter:
     nameFileIdTable:
       JudgeLabelBad: 1837415816
       JudgeLabelGood: -1506583576
+      JudgeLabelMaxCombo: -1029620408
       JudgeLabelOk: -2129074332
       JudgeLabelRoll: 1523142268
       ResultJudgeLabels: -475820453

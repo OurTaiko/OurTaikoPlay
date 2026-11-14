@@ -1,0 +1,9 @@
+<!-- gRPC and protobuf use reflection that IL2CPP's managed stripping can remove. -->
+<linker>
+	<assembly fullname="Google.Protobuf" preserve="all" />
+	<assembly fullname="Grpc.Core.Api" preserve="all" />
+	<assembly fullname="Grpc.Net.Client" preserve="all" />
+	<assembly fullname="Grpc.Net.Common" preserve="all" />
+	<assembly fullname="System.IO.Pipelines" preserve="all" />
+	<assembly fullname="Cysharp.Net.Http.YetAnotherHttpHandler" preserve="all" />
+</linker>

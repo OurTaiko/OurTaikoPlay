@@ -433,6 +433,8 @@ namespace OurTaiko.Tests
 
         // Every game session ends, as when they expire: the next request is 401.
         public void ExpireSessions() => tokens.Clear();
+        // The user a game session was traded for (null: no such session).
+        public string SessionUser(string session) => session != null && tokens.TryGetValue(session, out string user) ? user : null;
 
         // GET /game/catalog: public, the same for every caller.
         void Bootstrap(HttpListenerContext context) => Reply(context, 200, Catalog());

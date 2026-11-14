@@ -265,7 +265,7 @@ namespace OurTaiko
         public void Select(SongDefinition song, string course = null, bool autoPlay = false, string course2P = null, bool autoPlay2P = false)
         {
             ClearPracticeEntry();
-            Replay = null; Ghost = null;
+            Replay = null; Ghost = null; Multi = null;
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
             SelectedCourse2P = course2P ?? course; AutoPlay2P = autoPlay2P;
             // The first seat reads its own side's blocks (Lead: 1P, or a lone 2P's 2P).

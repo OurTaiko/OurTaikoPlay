@@ -12,6 +12,9 @@ entry.practice.info1,and practice again and again!,くりかえし練習でき�
 entry.ghost.title,Ghost Battle,ゴーストバトル,幽灵对战,Entry mode board: play against a recording
 entry.ghost.info0,Take on another player's,ほかの人の演奏の記録と,和其他玩家的演奏记录,"Entry board description, line 1 of 2"
 entry.ghost.info1,recording on the same chart!,同じ譜面で対決しよう！,在同一谱面上对决吧！,"Entry board description, line 2 of 2"
+entry.multi.title,Multiplayer,マルチ演奏,联机演奏,Entry mode board: online rooms
+entry.multi.info0,Play the same song,オンラインのルームで,在线上房间里,"Entry board description, line 1 of 2"
+entry.multi.info1,online with everyone!,みんなといっしょに演奏しよう！,和大家一起演奏吧！,"Entry board description, line 2 of 2"
 entry.settings.title,Settings,ゲーム設定,游戏设置,Entry mode board: opens the settings overlay
 entry.settings.info0,Here you can change,ゲームのせっていを,在这里可以更改,"Entry board description, line 1 of 2"
 entry.settings.info1,the game's settings!,かえられるよ！,游戏的设置！,"Entry board description, line 2 of 2"

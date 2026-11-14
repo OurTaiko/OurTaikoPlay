@@ -50,6 +50,8 @@ namespace OurTaiko
                 yield return Download(switcher, online, song);
                 if (Error != null)
                 {
+                    // A room's round goes on without this player.
+                    if (switcher.PlaysMulti) Multi.MultiSession.Loaded(false, Error);
                     switcher.SetCoverStatus(Shown(Error), new Color(1, 0.35f, 0.35f));
                     double failedAt = GameTimeline.FrameTime;
                     while (GameTimeline.FrameTime - failedAt < errorSeconds || switcher.IsSwitching) yield return null;
@@ -76,6 +78,7 @@ namespace OurTaiko
             yield return DecodeAudio(song);
             if (Error != null)
             {
+                if (switcher.PlaysMulti) Multi.MultiSession.Loaded(false, Error);
                 switcher.SetCoverStatus(Shown(Error), new Color(1, 0.35f, 0.35f));
                 yield return new WaitForSecondsRealtime(errorSeconds);
                 while (switcher.IsSwitching) yield return null;

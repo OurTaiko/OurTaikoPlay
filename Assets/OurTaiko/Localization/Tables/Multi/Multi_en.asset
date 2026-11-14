@@ -1,0 +1,455 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Multi_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: e4417905f014d4c799a728fcde6af66e, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 649060352
+    m_Localized: Multiplayer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254656
+    m_Localized: "Ka: Select\u3000\u3000Don: Confirm\u3000\u3000Esc: Back"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254657
+    m_Localized: Player
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254658
+    m_Localized: "Connecting\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254659
+    m_Localized: Open Room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254660
+    m_Localized: Join a room that is waiting,
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254661
+    m_Localized: or open one for anyone.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254662
+    m_Localized: Private Room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254663
+    m_Localized: Make a room and tell
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254664
+    m_Localized: friends its number.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254665
+    m_Localized: Enter Number
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254666
+    m_Localized: Join a friend's room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254667
+    m_Localized: with its 5-digit number.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254668
+    m_Localized: Enter the room number
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254669
+    m_Localized: Room {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254670
+    m_Localized: Open to anyone
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254671
+    m_Localized: Private
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254672
+    m_Localized: Stamps
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254673
+    m_Localized: Last Result
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254674
+    m_Localized: Leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254675
+    m_Localized: Press Back again to leave the room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254676
+    m_Localized: Open seat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254677
+    m_Localized: Open the Room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254678
+    m_Localized: Anyone can then join. Cannot be undone.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254679
+    m_Localized: Start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254680
+    m_Localized: '{0} players'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254681
+    m_Localized: '{0} more needed'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254682
+    m_Localized: "Waiting for the host to start\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254683
+    m_Localized: "Starting soon\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254684
+    m_Localized: Offline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254685
+    m_Localized: Sitting out
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254686
+    m_Localized: Waiting for players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254687
+    m_Localized: Pick a song
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254688
+    m_Localized: "The song is\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254689
+    m_Localized: Pick a difficulty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254690
+    m_Localized: "Loading the song\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254691
+    m_Localized: Playing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254692
+    m_Localized: Results
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254693
+    m_Localized: Room {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254694
+    m_Localized: '{0} s left'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254695
+    m_Localized: Choose a Song
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254696
+    m_Localized: One of everyone's picks is drawn.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254697
+    m_Localized: Surprise Me
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254698
+    m_Localized: Any song may come up.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254699
+    m_Localized: "Picked. Waiting for the others\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254700
+    m_Localized: Only songs of the online servers can be picked in a room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254701
+    m_Localized: Picked by {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254702
+    m_Localized: Surprise pick
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254703
+    m_Localized: "Waiting for the other players\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254704
+    m_Localized: '{0} combo'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254705
+    m_Localized: Press Back again to leave the room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254706
+    m_Localized: A round is being played. Please wait for it to end.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254707
+    m_Localized: Results
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254708
+    m_Localized: Team score {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254710
+    m_Localized: Left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254711
+    m_Localized: Not cleared
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254712
+    m_Localized: MVP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254713
+    m_Localized: SUPER STAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254714
+    m_Localized: "Back to the lobby in a moment\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254715
+    m_Localized: Something went wrong ({0}).
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254716
+    m_Localized: Sign in to your OurTaiko account first (Settings > Accounts).
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254717
+    m_Localized: Your sign-in has expired. Sign in again in Settings.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254718
+    m_Localized: The account center cannot be reached. Try again later.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254719
+    m_Localized: This account cannot use online rooms.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254720
+    m_Localized: 'Disconnected: too many requests.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254721
+    m_Localized: Online rooms are not available right now.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254722
+    m_Localized: The server cannot be reached.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254723
+    m_Localized: The connection to the room was lost.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254724
+    m_Localized: The server did not answer in time.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254725
+    m_Localized: Update the game to play online.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254726
+    m_Localized: You are already in a room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254727
+    m_Localized: No room has that number.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254728
+    m_Localized: A room number has 5 digits.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254729
+    m_Localized: That room is full.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254730
+    m_Localized: That room is in the middle of a round. Try again later.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254731
+    m_Localized: The room was closed.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254732
+    m_Localized: The server has no room left. Try again later.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254733
+    m_Localized: Only the host can do that.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254734
+    m_Localized: That cannot be done right now.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254735
+    m_Localized: The room did not accept that.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254736
+    m_Localized: Not enough players. Back to the lobby.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254737
+    m_Localized: That song cannot be played online.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254738
+    m_Localized: There are no songs to draw from.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254739
+    m_Localized: The song could not be loaded. Back to the lobby.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254740
+    m_Localized: The server had a problem. Try again.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254741
+    m_Localized: The host removed you from the room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254742
+    m_Localized: This account joined the room from somewhere else.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254743
+    m_Localized: You are no longer in the room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254744
+    m_Localized: Reconnected to the room.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254745
+    m_Localized: This version cannot play that song. Update the game.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254746
+    m_Localized: The song has no such difficulty.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254747
+    m_Localized: The chart could not be read.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254748
+    m_Localized: Hello!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254749
+    m_Localized: Nice!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254750
+    m_Localized: Amazing!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254751
+    m_Localized: Let's go!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254752
+    m_Localized: Thanks!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254753
+    m_Localized: Whoa!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254754
+    m_Localized: "So close\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254755
+    m_Localized: Sorry!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254756
+    m_Localized: Easy!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254757
+    m_Localized: Fired up!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254758
+    m_Localized: Which song?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254759
+    m_Localized: One moment
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254760
+    m_Localized: Good game!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254761
+    m_Localized: Too hard!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254762
+    m_Localized: Full combo!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254763
+    m_Localized: One more!
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

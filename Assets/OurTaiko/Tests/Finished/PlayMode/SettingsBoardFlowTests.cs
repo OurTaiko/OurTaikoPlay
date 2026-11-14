@@ -32,9 +32,10 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
                 yield return null;
                 var entry = Object.FindAnyObjectByType<EntryScene>();
-                Assert.That(entry.Modes.Length, Is.EqualTo(5));
+                Assert.That(entry.Modes.Length, Is.EqualTo(6));
                 Assert.That(entry.Modes[3].Title, Is.EqualTo(L10n.Get("Menu", "entry.ghost.title")));
-                Assert.That(entry.Modes[4].Title, Is.EqualTo(L10n.Get("Menu", "entry.settings.title")));
+                Assert.That(entry.Modes[4].Title, Is.EqualTo(L10n.Get("Menu", "entry.multi.title")));
+                Assert.That(entry.Modes[5].Title, Is.EqualTo(L10n.Get("Menu", "entry.settings.title")));
                 yield return new WaitForSecondsRealtime(0.2f);
                 entry.Don();
                 yield return WaitUntil(() => entry.Flow.IsModeReady(entry.Now), 3);
@@ -61,10 +62,11 @@ namespace OurTaiko.Tests
                 entry.Ka(1);
                 entry.Ka(1);
                 entry.Ka(1);
+                entry.Ka(1);
                 yield return new WaitForSecondsRealtime(0.6f);
                 TestCapture.Capture("EntrySettingsBoard.png");
                 entry.Ka(1);
-                Assert.That(entry.Flow.SelectedMode, Is.EqualTo(4), "Clamped at the bottom.");
+                Assert.That(entry.Flow.SelectedMode, Is.EqualTo(5), "Clamped at the bottom.");
 
                 entry.Don();
                 Assert.That(SettingsOverlay.IsOpen, Is.True, "ゲーム設定 opens the overlay over Entry.");
@@ -121,7 +123,7 @@ namespace OurTaiko.Tests
                 Assert.That(SettingsOverlay.IsOpen, Is.False);
                 yield return null;
                 Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.EntryScene));
-                Assert.That(entry.Flow.SelectedMode, Is.EqualTo(4));
+                Assert.That(entry.Flow.SelectedMode, Is.EqualTo(5));
                 Assert.That(SceneSwitcher.Instance.IsInputBlocked, Is.False);
             }
             finally

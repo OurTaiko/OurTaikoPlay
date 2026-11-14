@@ -1,0 +1,460 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Multi Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Multi
+  m_TableCollectionNameGuidString: e4417905f014d4c799a728fcde6af66e
+  m_Entries:
+  - m_Id: 649060352
+    m_Key: title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254656
+    m_Key: hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254657
+    m_Key: player.unnamed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254658
+    m_Key: menu.connecting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254659
+    m_Key: menu.quick.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254660
+    m_Key: menu.quick.info0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254661
+    m_Key: menu.quick.info1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254662
+    m_Key: menu.create.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254663
+    m_Key: menu.create.info0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254664
+    m_Key: menu.create.info1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254665
+    m_Key: menu.join.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254666
+    m_Key: menu.join.info0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254667
+    m_Key: menu.join.info1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254668
+    m_Key: code.heading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254669
+    m_Key: room.number
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254670
+    m_Key: room.public
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254671
+    m_Key: room.private
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254672
+    m_Key: room.stamps
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254673
+    m_Key: room.lastResult
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254674
+    m_Key: room.leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254675
+    m_Key: room.leaveConfirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254676
+    m_Key: room.empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254677
+    m_Key: room.open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254678
+    m_Key: room.openInfo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254679
+    m_Key: room.start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254680
+    m_Key: room.players
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254681
+    m_Key: room.needMore
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254682
+    m_Key: room.waitingHost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254683
+    m_Key: room.startingSoon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254684
+    m_Key: member.offline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254685
+    m_Key: member.sittingOut
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254686
+    m_Key: phase.lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254687
+    m_Key: phase.songSelect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254688
+    m_Key: phase.songDraw
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254689
+    m_Key: phase.course
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254690
+    m_Key: phase.loading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254691
+    m_Key: phase.playing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254692
+    m_Key: phase.result
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254693
+    m_Key: banner.room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254694
+    m_Key: banner.left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254695
+    m_Key: pick.choose
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254696
+    m_Key: pick.chooseInfo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254697
+    m_Key: pick.chance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254698
+    m_Key: pick.chanceInfo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254699
+    m_Key: pick.done
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254700
+    m_Key: pick.notShareable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254701
+    m_Key: draw.pickedBy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254702
+    m_Key: draw.chance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254703
+    m_Key: play.waiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254704
+    m_Key: play.combo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254705
+    m_Key: play.leaveConfirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254706
+    m_Key: play.sittingOut
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254707
+    m_Key: result.heading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254708
+    m_Key: result.team
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254710
+    m_Key: result.disconnected
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254711
+    m_Key: result.failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254712
+    m_Key: result.mvp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254713
+    m_Key: result.superStar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254714
+    m_Key: result.backSoon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254715
+    m_Key: error.unknown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254716
+    m_Key: error.SIGN_IN_REQUIRED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254717
+    m_Key: error.AUTH_REQUIRED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254718
+    m_Key: error.AUTH_UNAVAILABLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254719
+    m_Key: error.BANNED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254720
+    m_Key: error.TOO_MANY_MESSAGES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254721
+    m_Key: error.NOT_AVAILABLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254722
+    m_Key: error.SERVER_UNREACHABLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254723
+    m_Key: error.CONNECTION_LOST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254724
+    m_Key: error.TIMEOUT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254725
+    m_Key: error.UPDATE_REQUIRED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254726
+    m_Key: error.ALREADY_IN_ROOM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254727
+    m_Key: error.ROOM_NOT_FOUND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254728
+    m_Key: error.BAD_ROOM_CODE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254729
+    m_Key: error.ROOM_FULL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254730
+    m_Key: error.ROOM_BUSY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254731
+    m_Key: error.ROOM_CLOSED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254732
+    m_Key: error.SERVER_FULL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254733
+    m_Key: error.NOT_HOST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254734
+    m_Key: error.BAD_PHASE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254735
+    m_Key: error.BAD_REQUEST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254736
+    m_Key: error.NOT_ENOUGH_PLAYERS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254737
+    m_Key: error.CHART_NOT_FOUND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254738
+    m_Key: error.NO_CHARTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254739
+    m_Key: error.LOAD_FAILED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254740
+    m_Key: error.SERVER_ERROR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254741
+    m_Key: error.KICKED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254742
+    m_Key: error.REPLACED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254743
+    m_Key: error.NOT_IN_ROOM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254744
+    m_Key: error.RECONNECTED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254745
+    m_Key: error.SOURCE_UNKNOWN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254746
+    m_Key: error.COURSE_MISSING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254747
+    m_Key: error.CHART_LOAD_FAILED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254748
+    m_Key: stamp.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254749
+    m_Key: stamp.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254750
+    m_Key: stamp.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254751
+    m_Key: stamp.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254752
+    m_Key: stamp.4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254753
+    m_Key: stamp.5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254754
+    m_Key: stamp.6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254755
+    m_Key: stamp.7
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254756
+    m_Key: stamp.8
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254757
+    m_Key: stamp.9
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254758
+    m_Key: stamp.10
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254759
+    m_Key: stamp.11
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254760
+    m_Key: stamp.12
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254761
+    m_Key: stamp.13
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254762
+    m_Key: stamp.14
+    m_Metadata:
+      m_Items: []
+  - m_Id: 653254763
+    m_Key: stamp.15
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 8757538981313249280
+  references:
+    version: 2
+    RefIds:
+    - rid: 8757538981313249280
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1794680180416

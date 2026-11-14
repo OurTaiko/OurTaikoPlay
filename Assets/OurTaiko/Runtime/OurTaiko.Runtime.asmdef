@@ -16,6 +16,8 @@
     "Gilzoide.SqliteNet",
     "MajdataPlay.FFmpeg",
     "Unity.Localization",
-    "Unity.ResourceManager"
+    "Unity.ResourceManager",
+    "Cysharp.Net.Http.YetAnotherHttpHandler",
+    "unity.webp"
   ]
 }

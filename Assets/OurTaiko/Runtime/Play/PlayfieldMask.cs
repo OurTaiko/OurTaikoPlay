@@ -35,7 +35,8 @@ namespace OurTaiko
             return mask;
         }
 
-        static RectTransform FindViewport(Scene scene)
+        // The scene's 1920x1080 stage (null when it has none).
+        public static RectTransform FindViewport(Scene scene)
         {
             foreach (var root in scene.GetRootGameObjects())
             {

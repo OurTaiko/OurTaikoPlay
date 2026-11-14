@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 772cb2d7af25c45bd9c4e2f28e2eb68d, type: 3}
+  m_Name: MultiArt
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.Multi.MultiArt
+  background: {fileID: 21300000, guid: 6f8dddd4f19ac407e92a7816ccde1e0a, type: 3}
+  panel: {fileID: 21300000, guid: 389e0b4bb8b8d4ec9a757eeb58123583, type: 3}
+  plate: {fileID: 21300000, guid: 357627e587a2942ec9e3b7dc710ba022, type: 3}
+  inset: {fileID: 21300000, guid: 617db82029f914bf194b8e5589d22de7, type: 3}
+  focus: {fileID: 21300000, guid: 376bbf8a5cff945d19f933202a655052, type: 3}
+  bar: {fileID: 21300000, guid: 47fca43df55da467ebb4d3cc3f54d8de, type: 3}
+  bubble: {fileID: 21300000, guid: 8033ef7b1f0ff45dea06ef7e01ebd8d2, type: 3}
+  ribbon: {fileID: 21300000, guid: f020b1f1163364c4f87cbe6621c78059, type: 3}
+  disc: {fileID: 21300000, guid: c5aac7ca0c1c34f75b51dc2ad222c95b, type: 3}
+  crownHost: {fileID: 21300000, guid: 379c15aaaa70e4e248c3fcba492f9d21, type: 3}
+  crownClear: {fileID: 21300000, guid: 14d2286808ed044dda34cfd79ef824d8, type: 3}
+  crownFullCombo: {fileID: 21300000, guid: 6882d9b0e693e4b8397fbfea6d03ad02, type: 3}
+  crownDonderful: {fileID: 21300000, guid: eaa3255727ee547fbb441aacfeaea6d9, type: 3}
+  check: {fileID: 21300000, guid: 823d99c06159940b589e42dd54a90cf5, type: 3}
+  wait: {fileID: 21300000, guid: 3867ae35341694415804b86fcb8d86d6, type: 3}
+  offline: {fileID: 21300000, guid: b6e94b4e97f15436bb89aaffca3a532e, type: 3}
+  locked: {fileID: 21300000, guid: 4c803a9a62c3c4eacb984cd1dfba0dae, type: 3}
+  open: {fileID: 21300000, guid: 3f1939d2755b94b7f80177508316106f, type: 3}
+  clock: {fileID: 21300000, guid: dd1add9aa3479451daceee3b8f83eec0, type: 3}
+  mark: {fileID: 21300000, guid: b47f771c3bfc64f4aa78cf9dd5412269, type: 3}
+  stamps:
+  - {fileID: 21300000, guid: be5bfe68a678d409883aadf3064f3aed, type: 3}
+  - {fileID: 21300000, guid: 09900386c0779411b8d6849351a28470, type: 3}
+  - {fileID: 21300000, guid: 2887a8d037b6047abab0e8230fde17a1, type: 3}
+  - {fileID: 21300000, guid: 16217cff9102745bf90f18b2e9bc5f53, type: 3}
+  - {fileID: 21300000, guid: e1bc5556fa3fd45538a788b283fc5046, type: 3}
+  - {fileID: 21300000, guid: 017fe5222df194067861116764e088af, type: 3}
+  - {fileID: 21300000, guid: f6593ff7f0bd845c09848594ef29b8c4, type: 3}
+  - {fileID: 21300000, guid: f61d990e04ddd40cc873c78470c5471d, type: 3}
+  - {fileID: 21300000, guid: 4ba9ceb8fad2940d99f712936313d672, type: 3}
+  - {fileID: 21300000, guid: f026c8362f44942f5af1407edaa50b0f, type: 3}
+  - {fileID: 21300000, guid: 76e27da0f50d643b397f0b291f8b340f, type: 3}
+  - {fileID: 21300000, guid: b7afba06a8ea547c08e702b1015b2ab9, type: 3}
+  - {fileID: 21300000, guid: b3e1cc141fe1b4dd088d8db9033b2ab4, type: 3}
+  - {fileID: 21300000, guid: 8567d2298a4ab4a9db82004f141b48a2, type: 3}
+  - {fileID: 21300000, guid: c8eb454208d714a57be768b2a2be9004, type: 3}
+  - {fileID: 21300000, guid: 76cdb03a519c948fe8015d861a5ee51b, type: 3}
+  courseIcons:
+  - {fileID: -455977207, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: -1335733205, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: -834173487, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: 1702319767, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: 1511858840, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  judgeGood: {fileID: -1506583576, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  judgeOk: {fileID: -2129074332, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  judgeBad: {fileID: 1837415816, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  labelDrumroll: {fileID: 1523142268, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  labelMaxCombo: {fileID: -1029620408, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}
+  ka: {fileID: 8300000, guid: b5d46904052a14efdbf9361bde1e09ae, type: 3}
+  bgm: {fileID: 8300000, guid: 3df0afb9311fe447ba6bf1a5cfa55d40, type: 3}
