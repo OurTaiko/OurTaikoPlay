@@ -43,3 +43,10 @@ TeamMajdata/FFmpeg.AutoGen binding package.
 The pause_circle icon is from Google's Material Symbols Outlined, licensed
 under Apache License 2.0. The original SVG, license, source URL and local
 rasterization details are in Documentation/ThirdParty/MaterialSymbols.
+
+Online rooms (マルチ演奏) connect with gRPC: Google.Protobuf 3.36.2 (BSD-3-Clause),
+Grpc.Core.Api, Grpc.Net.Client and Grpc.Net.Common 2.85.0 (Apache License 2.0) and
+System.IO.Pipelines 10.0.14 (MIT) are included as unmodified NuGet binaries; versions and
+provenance are in Assets/Plugins/Grpc/PROVENANCE.md. HTTP/2 is Cysharp's
+YetAnotherHttpHandler 1.11.7 (MIT), a package in Packages/manifest.json. The mode's own
+art (Assets/OurTaiko/Art/multi) was drawn for this project and is part of it.

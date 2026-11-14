@@ -434,6 +434,18 @@ MonoBehaviour:
     m_Localized: Could not load the chart
     m_Metadata:
       m_Items: []
+  - m_Id: 1265007797985280
+    m_Localized: Multiplayer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1265007810568192
+    m_Localized: Play the same song
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1265007810568193
+    m_Localized: online with everyone!
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

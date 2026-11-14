@@ -13,7 +13,7 @@ OurTaikoPlay is an open-source Taiko rhythm game built from scratch in Unity (C#
 ## Features
 
 - **Full Gameplay Loop**: Entry → Song Selection → Gameplay → Results. Supports standard notes, drumrolls, balloons, Kusudama, BPM/scroll changes, and branch charts (Normal / Professional / Master).
-- **Game Modes**: Single-player, Two-player (Double Play with shared Kusudama), Ghost Battle, and Dan-i Dojo (including Gaiden courses).
+- **Game Modes**: Single-player, Two-player (Double Play with shared Kusudama), Ghost Battle, Multiplayer (online rooms: up to five players on the same song), and Dan-i Dojo (including Gaiden courses).
 - **Nijiiro Presentation**: Song boards, difficulty cards, nameplates, soul gauge, dancers, crowns, seven-tier ScoreRank icons, and result animations.
 - **Low-Latency Audio**: Native audio mixing and decoding via ManagedBass (inspired by MajdataPlay), supporting BassSimple, BassWASAPI, and BassASIO.
 - **Song Management**: Reads local `.tja` charts and nested `box.def` folders. Connects to built-in OurTaiko online servers with chart downloads, offline caching, and score synchronization.

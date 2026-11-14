@@ -1,0 +1,110 @@
+key,en,ja,zh-Hans,comment
+title,Multiplayer,マルチ演奏,联机演奏,Mode name; heading of the room screen
+hint,Ka: Select　　Don: Confirm　　Esc: Back,カッ：えらぶ　　ドン：決定　　Esc：もどる,咔：选择　　咚：确定　　Esc：返回,Room screen key hint
+player.unnamed,Player,プレイヤー,玩家,Shown for a member without a nickname
+menu.connecting,Connecting…,接続中…,连接中…,Status while joining a room
+menu.quick.title,Open Room,フリールーム,自由房间,Menu board: join any waiting public room
+menu.quick.info0,"Join a room that is waiting,",待っているルームに入るか、,加入正在等人的房间，,"Menu board description, line 1 of 2"
+menu.quick.info1,or open one for anyone.,だれでも入れるルームを作る,或者开一个谁都能进的房间,"Menu board description, line 2 of 2"
+menu.create.title,Private Room,プライベートルーム,私人房间,Menu board: make a room only its number can join
+menu.create.info0,Make a room and tell,ルームを作って番号を,创建房间，把房间号,"Menu board description, line 1 of 2"
+menu.create.info1,friends its number.,友だちに教えよう,告诉朋友,"Menu board description, line 2 of 2"
+menu.join.title,Enter Number,ルーム番号で参加,输入房间号,Menu board: join a room by its 5-digit number
+menu.join.info0,Join a friend's room,5けたの番号で,用 5 位房间号,"Menu board description, line 1 of 2"
+menu.join.info1,with its 5-digit number.,友だちのルームに入る,加入朋友的房间,"Menu board description, line 2 of 2"
+code.heading,Enter the room number,ルーム番号を入力,输入房间号,Heading of the room number entry
+room.number,Room {0},ルーム {0},房间 {0},Room header; {0} = 5-digit room number
+room.public,Open to anyone,公開,公开,Room header: a public room
+room.private,Private,プライベート,私人,Room header: a private room
+room.stamps,Stamps,スタンプ,贴图,Button that opens the stamp list
+room.lastResult,Last Result,前回の結果,上一局结果,Button that shows the last round's ranking again
+room.leave,Leave,退出する,退出房间,Button that leaves the room
+room.leaveConfirm,Press Back again to leave the room.,もう一度「もどる」で退出します。,再按一次返回键退出房间。,Asked when Back is pressed in a room
+room.empty,Open seat,あき,空位,An empty member slot
+room.open,Open the Room,ルームを公開,公开房间,Host button: make a private room public
+room.openInfo,Anyone can then join. Cannot be undone.,だれでも入れるようになります（もどせません）,之后任何人都能加入，不能改回,Under the open-room button
+room.start,Start,スタート,开始,Host button: settle the members and begin
+room.players,{0} players,{0} 人,{0} 人,Under the start button; {0} = number of members present
+room.needMore,{0} more needed,あと {0} 人必要,还差 {0} 人,Under the start button when there are too few members; {0} = how many more
+room.waitingHost,Waiting for the host to start…,ホストの開始を待っています…,等待房主开始…,Lobby text for members who are not the host
+room.startingSoon,Starting soon…,まもなく始まります…,即将开始…,Lobby text in a public room that is counting down
+member.offline,Offline,オフライン,掉线,Member card: the connection dropped
+member.sittingOut,Sitting out,お休み中,本局不参加,Member card: not in this round
+phase.lobby,Waiting for players,メンバー募集中,等待玩家,Room phase
+phase.songSelect,Pick a song,曲をえらぼう,选曲中,Room phase
+phase.songDraw,The song is…,曲がきまりました,歌曲决定,Room phase: the drawn song is shown
+phase.course,Pick a difficulty,むずかしさをえらぼう,选择难度,Room phase
+phase.loading,Loading the song…,読み込み中…,加载歌曲中…,Room phase
+phase.playing,Playing,演奏中,演奏中,Room phase
+phase.result,Results,結果発表,结果发表,Room phase
+banner.room,Room {0},ルーム {0},房间 {0},Banner over other screens; {0} = room number
+banner.left,{0} s left,のこり {0} 秒,剩余 {0} 秒,Banner: seconds left in the phase
+pick.choose,Choose a Song,曲をえらぶ,选曲,Button: open song select to pick the room's song
+pick.chooseInfo,One of everyone's picks is drawn.,みんなの選曲から 1 曲がえらばれます,会从大家选的歌里抽一首,Under the choose button
+pick.chance,Surprise Me,おまかせ,随机,Button: leave the song to chance
+pick.chanceInfo,Any song may come up.,どの曲になるかはおたのしみ,抽到哪首全看运气,Under the surprise button
+pick.done,Picked. Waiting for the others…,えらびました。ほかの人を待っています…,已选好，等待其他玩家…,Shown after the player has picked
+pick.notShareable,Only songs of the online servers can be picked in a room.,ルームではオンラインサーバーの曲だけえらべます。,房间里只能选在线服务器上的歌曲。,Toast in song select when a local song is chosen for a room
+draw.pickedBy,Picked by {0},{0} さんの選曲,{0} 选的歌,Under the drawn song; {0} = nickname
+draw.chance,Surprise pick,おまかせでえらばれた曲,随机抽中的歌,Under the drawn song when it came from chance
+play.waiting,Waiting for the other players…,ほかのプレイヤーを待っています…,等待其他玩家…,"Play scene, before the room starts the round"
+play.combo,{0} combo,{0} コンボ,{0} 连击,Scoreboard card; {0} = combo count
+play.leaveConfirm,Press Back again to leave the room.,もう一度「もどる」でルームから退出します。,再按一次返回键退出房间。,Asked when Back is pressed during a round
+play.sittingOut,A round is being played. Please wait for it to end.,演奏中です。おわるまでお待ちください。,本局正在进行，请等待结束。,Room screen for a member who is not in the round
+result.heading,Results,結果発表,结果发表,Heading of the round's ranking
+result.team,Team score {0},チームスコア {0},团队分数 {0},Ranking header; {0} = sum of scores
+result.combo,Max combo {0} · Drumroll {1},最大コンボ {0}・連打 {1},最大连击 {0}・连打 {1},"Ranking row, second line"
+result.disconnected,Left,切断,掉线,Ranking row: the player left before finishing
+result.failed,Not cleared,ノルマ未達成,未过关,Ranking row: the soul gauge did not reach the clear line
+result.mvp,MVP,MVP,MVP,Ranking ribbon: top score
+result.superStar,SUPER STAR,SUPER STAR,SUPER STAR,Ranking ribbon: top score far ahead of the second
+result.backSoon,Back to the lobby in a moment…,まもなくロビーにもどります…,即将回到大厅…,Room text during the result phase after the ranking is closed
+error.unknown,Something went wrong ({0}).,エラーが発生しました（{0}）。,出错了（{0}）。,Unknown room error; {0} = code
+error.SIGN_IN_REQUIRED,Sign in to your OurTaiko account first (Settings > Accounts).,先に OurTaiko アカウントでログインしてください（ゲーム設定 › アカウント）。,请先登录 OurTaiko 账号（游戏设置 › 账号）。,Rooms need an account
+error.AUTH_REQUIRED,Your sign-in has expired. Sign in again in Settings.,ログインの有効期限が切れました。ゲーム設定でログインし直してください。,登录已过期，请在游戏设置里重新登录。,The room server refused the session
+error.AUTH_UNAVAILABLE,The account center cannot be reached. Try again later.,アカウントセンターに接続できません。しばらくしてからお試しください。,无法连接账号中心，请稍后再试。,Room server could not check the session
+error.BANNED,This account cannot use online rooms.,このアカウントはルームを利用できません。,该账号无法使用联机房间。,Account refused
+error.TOO_MANY_MESSAGES,Disconnected: too many requests.,リクエストが多すぎるため切断されました。,请求过多，连接已断开。,Rate limited
+error.NOT_AVAILABLE,Online rooms are not available right now.,現在ルームは利用できません。,联机房间暂不可用。,The server has no room service
+error.SERVER_UNREACHABLE,The server cannot be reached.,サーバーに接続できません。,无法连接服务器。,Network error before connecting
+error.CONNECTION_LOST,The connection to the room was lost.,ルームとの接続が切れました。,与房间的连接已断开。,Connection lost for good
+error.TIMEOUT,The server did not answer in time.,サーバーからの応答がありません。,服务器没有响应。,Join timed out
+error.UPDATE_REQUIRED,Update the game to play online.,オンラインで遊ぶにはゲームを更新してください。,请更新游戏后再联机。,Protocol too old
+error.ALREADY_IN_ROOM,You are already in a room.,すでにルームに入っています。,你已经在房间里了。,Join refused
+error.ROOM_NOT_FOUND,No room has that number.,その番号のルームはありません。,没有这个房间号。,Join refused
+error.BAD_ROOM_CODE,A room number has 5 digits.,ルーム番号は 5 けたです。,房间号是 5 位数字。,Join refused
+error.ROOM_FULL,That room is full.,ルームは満員です。,房间已满。,Join refused
+error.ROOM_BUSY,That room is in the middle of a round. Try again later.,そのルームは演奏中です。あとでお試しください。,该房间正在进行中，请稍后再试。,Join refused
+error.ROOM_CLOSED,The room was closed.,ルームは解散しました。,房间已解散。,Room ended
+error.SERVER_FULL,The server has no room left. Try again later.,サーバーが混雑しています。あとでお試しください。,服务器房间已满，请稍后再试。,Join refused
+error.NOT_HOST,Only the host can do that.,ホストだけができる操作です。,只有房主可以这样做。,Notice
+error.BAD_PHASE,That cannot be done right now.,今はできません。,现在不能这样做。,Notice
+error.BAD_REQUEST,The room did not accept that.,その操作は受け付けられませんでした。,房间没有接受这个操作。,Notice
+error.NOT_ENOUGH_PLAYERS,Not enough players. Back to the lobby.,人数が足りません。ロビーにもどります。,人数不足，回到大厅。,Notice
+error.CHART_NOT_FOUND,That song cannot be played online.,その曲はルームで演奏できません。,这首歌无法在房间里演奏。,Notice
+error.NO_CHARTS,There are no songs to draw from.,えらべる曲がありません。,没有可以抽选的歌曲。,Notice
+error.LOAD_FAILED,The song could not be loaded. Back to the lobby.,曲を読み込めませんでした。ロビーにもどります。,歌曲加载失败，回到大厅。,Notice
+error.SERVER_ERROR,The server had a problem. Try again.,サーバーでエラーが発生しました。,服务器出错了，请重试。,Notice
+error.KICKED,The host removed you from the room.,ホストによってルームから退出しました。,你被房主移出了房间。,Room ended for this player
+error.REPLACED,This account joined the room from somewhere else.,このアカウントが別の場所からルームに入りました。,这个账号在别处进入了房间。,Room ended for this player
+error.NOT_IN_ROOM,You are no longer in the room.,もうルームにいません。,你已经不在房间里了。,Room ended for this player
+error.RECONNECTED,Reconnected to the room.,ルームに再接続しました。,已重新连上房间。,Notice after an automatic reconnect
+error.SOURCE_UNKNOWN,This version cannot play that song. Update the game.,このバージョンではその曲を演奏できません。,当前版本无法演奏这首歌，请更新游戏。,The room's song is from a source this game does not know
+error.COURSE_MISSING,The song has no such difficulty.,その曲にはこのむずかしさがありません。,这首歌没有这个难度。,Loading failed
+error.CHART_LOAD_FAILED,The chart could not be read.,譜面を読み込めませんでした。,谱面读取失败。,Loading failed
+stamp.0,Hello!,よろしく！,请多指教！,Stamp
+stamp.1,Nice!,いいね！,不错！,Stamp
+stamp.2,Amazing!,すごい！,太厉害了！,Stamp
+stamp.3,Let's go!,いこう！,出发！,Stamp
+stamp.4,Thanks!,ありがとう！,谢谢！,Stamp
+stamp.5,Whoa!,びっくり！,吓一跳！,Stamp
+stamp.6,So close…,おしい…,好可惜…,Stamp
+stamp.7,Sorry!,ごめんね！,抱歉！,Stamp
+stamp.8,Easy!,よゆう！,轻松！,Stamp
+stamp.9,Fired up!,もえてきた！,燃起来了！,Stamp
+stamp.10,Which song?,どの曲？,选哪首？,Stamp
+stamp.11,One moment,ちょっとまって,稍等一下,Stamp
+stamp.12,Good game!,おつかれさま！,辛苦了！,Stamp
+stamp.13,Too hard!,むずかしい！,太难了！,Stamp
+stamp.14,Full combo!,フルコンボ！,全连！,Stamp
+stamp.15,One more!,もういっかい！,再来一局！,Stamp

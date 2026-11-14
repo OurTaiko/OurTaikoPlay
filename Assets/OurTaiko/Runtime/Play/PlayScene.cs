@@ -116,6 +116,7 @@ namespace OurTaiko
             judgeWindows = playSettings.CustomJudgeWindows;
             TakeReplay();
             TakeGhost();
+            TakeMulti();
             InputManager.DrumDelay = Math.Min(Math.Max(0, playSettings.inputDelayMs), PlaySettings.InputDelayMaxMs) / 1000.0;
             pauseButton.onClick.AddListener(TogglePause);
             resumeButton.onClick.AddListener(Resume);
@@ -141,6 +142,7 @@ namespace OurTaiko
                 if (sessions.Count > 1) Kusudama.Share(sessions[0], sessions[1]);
                 if (IsPractice) AddPracticeAddOns();
                 if (IsGhost) ShowGhostPlates();
+                if (IsMulti) AddMultiHud();
                 for (int i = 0; i < lanes.Count; i++) lanes[i].Prepare(sessions[i]);
                 // The single-player scenes' don/ka are 1P's neiro (tests read them).
                 don = Lane1.Don; ka = Lane1.Ka;
@@ -158,9 +160,17 @@ namespace OurTaiko
                 IsFinished = true; resultPanel.SetActive(true);
                 resultText.text = L10n.Get("Play", "play.chartLoadFailed") + "\n<size=22>" + error.Message + "</size>";
             }
+            // A room's player whose chart cannot be read sits the round out, back in the room.
+            if (IsFinished && IsMulti) { resultPanel.SetActive(false); FailMulti("CHART_LOAD_FAILED"); }
             if (IsFinished) yield break;
             AddModeSwitch();
             while (switcher.IsInputBlocked) yield return null;
+            // A room's round starts for every player at once, on the room's signal.
+            if (IsMulti)
+            {
+                yield return WaitForMultiStart();
+                if (MultiAborted) yield break;
+            }
             // The full countdown starts only after the global cover has opened. Both seats play the same
             // file, so one OFFSET leads the song in.
             songClock.Start(GameTimeline.AudioNow, Math.Max(2, Session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset)));
@@ -249,13 +259,15 @@ namespace OurTaiko
         void Update()
         {
             RotateSubtitle();
+            if (IsMulti) UpdateMulti();
             if (switcher == null || switcher.IsInputBlocked || !songClock.Started) return;
             if (IsFinished) { UpdateEnding(); return; }
             TickSong();
             if (closingPauseMenu || Time.frameCount == resumeFrame || Time.frameCount == pauseOpenedFrame) return;
-            if (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause))
+            // A room's round runs for everyone: it has no pause and no restart (Back: UpdateMulti).
+            if (!IsMulti && (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause)))
             { TogglePause(); return; }
-            if (!IsPractice && InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
+            if (!IsPractice && !IsMulti && InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
             if (IsPaused)
             {
                 if (IsPractice && !pausePanel.activeSelf) UpdatePracticePause();
@@ -297,7 +309,7 @@ namespace OurTaiko
 
         public void TogglePause()
         {
-            if (IsFinished || Session == null || !songClock.Started || switcher.IsInputBlocked || closingPauseMenu) return;
+            if (IsFinished || Session == null || !songClock.Started || switcher.IsInputBlocked || closingPauseMenu || IsMulti) return;
             if (IsPractice) { TogglePracticePause(); return; }
             // The pause key chooses Resume like the menu's own button, so it sounds the same don.
             if (IsPaused) { resumeButton.onClick.Invoke(); return; }
@@ -376,6 +388,7 @@ namespace OurTaiko
             }
             DisableDrumPads();
             pauseButton.interactable = false;
+            if (IsMulti) FinishMulti();
             endings = lanes.Where(lane => lane.Views.ending != null).ToList();
             foreach (var lane in endings) lane.Views.ending.Begin(lane.Result);
             endingDuration = endings.Count > 0 ? endings.Max(lane => lane.Views.ending.Duration) : 0;
@@ -417,6 +430,7 @@ namespace OurTaiko
                     StartCoroutine(ClosePauseMenu(() => { RestorePracticePads(); PracticeAttemptCleared?.Invoke(); PausePractice(true); }));
                 return;
             }
+            if (IsMulti) return;
             LeavePlay(() => SceneSwitcher.EnsureInstance().Restart());
         }
         public void Back()
@@ -424,6 +438,8 @@ namespace OurTaiko
             if (IsPractice && !pausePanel.activeSelf && !IsFinished) return;
             // A ghost battle goes back to its list.
             if (IsGhost) { LeavePlay(() => SceneSwitcher.EnsureInstance().ReturnToMenu()); return; }
+            // A room's round goes back to the room.
+            if (IsMulti) { LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.MultiRoomScene)); return; }
             LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene));
         }
 
@@ -444,6 +460,7 @@ namespace OurTaiko
         {
             InputManager.DrumDelay = 0;
             if (switcher != null) switcher.SceneChanging -= PrepareToLeave;
+            ReleaseMulti();
             foreach (var lane in lanes) lane.Release();
         }
 

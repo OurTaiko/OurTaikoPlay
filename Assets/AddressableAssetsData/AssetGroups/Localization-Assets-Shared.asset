@@ -50,6 +50,11 @@ MonoBehaviour:
     m_ReadOnly: 1
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e4417905f014d4c799a728fcde6af66e
+    m_Address: Assets/OurTaiko/Localization/Tables/Multi/Multi Shared Data.asset
+    m_ReadOnly: 1
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 1
   m_Settings: {fileID: 11400000, guid: 02417ed97172e48ea93c0ac4f1f5c76f, type: 2}
   m_SchemaSet:

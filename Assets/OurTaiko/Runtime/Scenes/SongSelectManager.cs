@@ -272,7 +272,7 @@ namespace OurTaiko
 
         // SongSelect2PScreen: 2P joins with its don while 1P is choosing (not in practice). A lone
         // 2P already holds the 2P side; 1P joins it on Entry.
-        public bool CanJoinSecond => !Switcher.IsSeated(Side.P2) && !Switcher.PracticeMode && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
+        public bool CanJoinSecond => !Switcher.IsSeated(Side.P2) && !Switcher.PracticeMode && !Switcher.MultiPick && !Switcher.IsInputBlocked && !SearchDialogOpen && Phase != State.Decided;
 
         public void JoinSecond()
         {
@@ -297,7 +297,7 @@ namespace OurTaiko
             if (IsOptionPanelOpen) CloseOptions();
             else if (Phase == State.CourseSelect && Switcher.Seated.Count == 2 && IsOptionPanelOpenFor(1)) CloseOptions(1);
             else if (Phase == State.Browsing && open.Count > 0) { if (AcceptsInput()) { Play(Sound.Don); CloseFolder(); } }
-            else Switcher.SwitchScene(SceneSwitcher.EntryScene);
+            else Switcher.SwitchScene(Switcher.SongSelectExit);
         }
 
         // Browsing, either seat moves the wheel; choosing a course, each seat moves its own cursor or
@@ -347,8 +347,10 @@ namespace OurTaiko
                 if (focused.Kind == ItemKind.Search) RequestSearch(focused);
                 else if (focused.Kind == ItemKind.Folder) OpenFolderAt(Focused);
                 else if (focused.Kind == ItemKind.Back && focused.Folder < 0 && SearchActive) ClearSearch();
-                else if (focused.Kind == ItemKind.Back && focused.Folder < 0) Switcher.SwitchScene(SceneSwitcher.EntryScene);
+                else if (focused.Kind == ItemKind.Back && focused.Folder < 0) Switcher.SwitchScene(Switcher.SongSelectExit);
                 else if (focused.Kind == ItemKind.Back) CloseFolder();
+                // A room's song is one every player can download: a song of the site's sources.
+                else if (Switcher.MultiPick && !Multi.MultiDirector.CanShare(FocusedSong)) Multi.MultiDirector.Ensure().Toast(Multi.MultiText.Get("pick.notShareable"));
                 else EnterCourseSelect();
                 return;
             }
@@ -372,6 +374,13 @@ namespace OurTaiko
         {
             if (Phase != State.Decided) return;
             var info = items[Focused].Info;
+            // Picking for a room: the song and the course go to the room, which plays the song drawn.
+            if (Switcher.MultiPick)
+            {
+                if (!Multi.MultiDirector.Pick(FocusedSong, info.Course(cursors[0].Selected).Course)) Multi.MultiDirector.Ensure().Toast(Multi.MultiText.Get("pick.notShareable"));
+                Switcher.SwitchScene(Switcher.SongSelectExit);
+                return;
+            }
             string course2P = Switcher.Seated.Count == 2 ? info.Course(cursors[1].Selected).Course : null;
             Switcher.Play(FocusedSong, info.Course(cursors[0].Selected).Course, AutoPlay, course2P, PlayOptions.Second.auto);
         }

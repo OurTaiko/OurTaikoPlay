@@ -431,6 +431,18 @@ MonoBehaviour:
     m_Key: loading.chartLoadFailed
     m_Metadata:
       m_Items: []
+  - m_Id: 1265007797985280
+    m_Key: entry.multi.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1265007810568192
+    m_Key: entry.multi.info0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1265007810568193
+    m_Key: entry.multi.info1
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

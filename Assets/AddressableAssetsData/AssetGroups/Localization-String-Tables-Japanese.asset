@@ -57,6 +57,13 @@ MonoBehaviour:
     - Locale-ja
     - Preload
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0b70e04c5db94facb68e9c618603c65
+    m_Address: Multi_ja
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-ja
+    - Preload
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f14825ae3768d4368bc0b405b6e0df8c
     m_Address: Common_ja
     m_ReadOnly: 1
