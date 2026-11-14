@@ -729,7 +729,7 @@ namespace OurTaiko.Tests
             Assert.That(fixture.Requests, Does.Contain("GET /api/v1/sources/official/game/catalog"));
         }
 
-        // A site that has no such answer says so, and nothing the endpoints had is lost.
+        // A site that has no such answer fails the load for all its sources, and none is connected.
         [Test]
         public void ASiteThatDoesNotAnswerForItsSourcesTogetherFailsTheLoadWhole()
         {
@@ -738,8 +738,8 @@ namespace OurTaiko.Tests
             var error = Assert.Throws<HttpStatusException>(() => Run(() => client.LoadSiteAsync(new[] { fanmade, official })));
             Assert.That(error.Status, Is.EqualTo(404));
             Assert.That(fanmade.IsConnected, Is.False);
-            Run(() => client.LoadCatalogAsync(fanmade));
-            Assert.That(fanmade.IsConnected, Is.True, "Each can still be loaded by itself.");
+            Assert.That(official.IsConnected, Is.False);
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/sources" }));
         }
 
         [Test]

@@ -262,8 +262,6 @@ namespace OurTaiko.Online
                             results.Add(Item(who, L10n.Get("Online", "summary.signInExpired")));
                             continue;
                         }
-                        // A site that does not answer for all its sources at once is asked source by source.
-                        catch (HttpStatusException error) when (error.Status == 404) { apart.Add(together[0].Config.site); together = Array.Empty<FanmadeEndpoint>(); }
                         catch (Exception error)
                         {
                             Log.Warn("Online", $"{who}'s sign-in to {name} failed: {error.Message}");
@@ -364,8 +362,6 @@ namespace OurTaiko.Online
                             }
                         }
                     }
-                    // A site that does not answer for all its sources at once is asked source by source.
-                    catch (HttpStatusException error) when (error.Status == 404) { apart.Add(together[0].Config.site); together = Array.Empty<FanmadeEndpoint>(); }
                     catch (Exception error)
                     {
                         Log.Warn("Online", $"Song lists of {site} failed: {error.Message}");
@@ -406,16 +402,12 @@ namespace OurTaiko.Online
         // One line of LoginSummary or SongListSummary: "1P Fanmade: …".
         static string Item(string who, string what) => L10n.Format("Online", "summary.item", who, what);
 
-        // Sites found not to answer for their sources together: they are asked source by source,
-        // without asking again each time.
-        readonly HashSet<string> apart = new HashSet<string>();
-
         // The built-in servers that are sources of one site, which loads and signs in to them
-        // together; none when there are not at least two of one site.
-        FanmadeEndpoint[] Together(IReadOnlyList<FanmadeEndpoint> endpoints)
+        // together; none when there are not at least two of one site. They are never asked one
+        // by one instead: a site that cannot answer for them fails as a whole.
+        static FanmadeEndpoint[] Together(IReadOnlyList<FanmadeEndpoint> endpoints)
         {
-            var sites = endpoints.Where(e => e.Config.site.Length > 0 && e.Config.SourceId.Length > 0 && !apart.Contains(e.Config.site))
-                .GroupBy(e => e.Config.site).ToArray();
+            var sites = endpoints.Where(e => e.Config.site.Length > 0 && e.Config.SourceId.Length > 0).GroupBy(e => e.Config.site).ToArray();
             var site = sites.FirstOrDefault(g => g.Count() > 1);
             return site == null ? Array.Empty<FanmadeEndpoint>() : site.ToArray();
         }
@@ -486,7 +478,6 @@ namespace OurTaiko.Online
             UseUnsaved(cacheRoot);
             builtIn = sources.Select(s => (s.Name, s.Url, site.TrimEnd('/') + "/api/v1/sources/" + s.Source, site.TrimEnd('/'))).ToArray();
             builtInEndpoints.Clear();
-            apart.Clear();
         }
 
         // Tests use a cache folder and accounts that never touch the player's files, and no server

@@ -79,9 +79,10 @@ namespace OurTaiko.Tests
                 Assert.That(online.Client.Best(online.Client.Charts.First(c => c.Server == e.Id && c.Id == fixture.Charts[0].Id), (int)Difficulty.Oni).Score, Is.EqualTo(700000));
         }
 
-        // A site that cannot answer for all its sources at once is asked source by source, as before.
+        // A site that cannot answer for its sources fails as a whole: they are not asked one by one
+        // instead, and nobody is signed in to one of them alone.
         [UnityTest]
-        public IEnumerator ASiteWithoutTheSharedAnswerIsAskedSourceBySource()
+        public IEnumerator ASiteThatCannotAnswerForItsSourcesFailsAsAWhole()
         {
             using var fixture = new FanmadeFixture();
             fixture.Charts.Add(Song());
@@ -95,14 +96,10 @@ namespace OurTaiko.Tests
             var load = online.LoadSongListAsync();
             while (!load.IsCompleted) yield return null;
             load.GetAwaiter().GetResult();
-            Assert.That(online.Client.Endpoints.Select(e => e.IsConnected), Is.All.True);
-            Assert.That(fixture.Requests, Does.Contain("GET /api/v1/sources/fanmade/game/catalog").And.Contain("GET /api/v1/sources/official/game/catalog"));
-
-            var signIn = online.SignInAsync(0, "don", "katsu");
-            while (!signIn.IsCompleted) yield return null;
-            signIn.GetAwaiter().GetResult();
-            Assert.That(online.Client.Endpoints.Select(e => e.Seats[0].IsAuthenticated), Is.All.True);
-            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens"), Is.EqualTo(2), "A session a source, as before the site answered for them together.");
+            Assert.That(online.Client.Endpoints.Select(e => e.IsConnected), Is.All.False);
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/sources" }), "No source is asked by itself.");
+            Assert.That(online.SongListSummary.Split('•'), Has.Length.EqualTo(1), "One failure, the site's.");
+            Assert.That(online.SongListSummary, Does.Contain(fixture.BaseUrl));
         }
 
         // A manager starting in a data folder leaves no servers.json there, and one a player still
