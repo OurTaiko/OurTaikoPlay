@@ -311,8 +311,8 @@ namespace OurTaiko
                     break;
                 case Phase.SongDraw:
                 case Phase.Course:
-                    CoursePill(root, member.Course, LevelOf(room, member.Course), Math.Min(width - 90, 220), 50, member.Ready ? x - 28 : x, y);
-                    if (member.Ready) Picture(root, art.check, 46, 46, x + Math.Min(width - 90, 220) / 2 + 4, y);
+                    CourseIcon(root, member.Course, LevelOf(room, member.Course), 58, member.Ready ? x - 22 : x, y - 2);
+                    if (member.Ready) Picture(root, art.check, 46, 46, x + 84, y);
                     break;
                 case Phase.Loading:
                     if (!member.Playing) Label(root, MultiText.Get("member.sittingOut"), 26, x, y - 2, width - 40, true);
@@ -382,10 +382,10 @@ namespace OurTaiko
                         string name = course.Course_;
                         float x = 960 + (i - (count - 1) / 2f) * 290;
                         bool taken = me.Course == name;
-                        var plate = Button("course:" + name, content, 270, 110, x, 830, MultiArt.CourseColor(name), () => TakeCourse(name), !me.Ready);
+                        var plate = Button("course:" + name, content, 270, 116, x, 830, Paper, () => TakeCourse(name), !me.Ready);
                         // The course the player has now is lit; once ready, it is ticked.
-                        if (taken) Picture(plate, art.inset, 238, 78, 135, 52, new Color(1, 1, 1, 0.3f));
-                        Label(plate, MultiText.Course(name) + " ★" + course.Level, 34, 135, 50, 226);
+                        if (taken) Picture(plate, art.inset, 240, 84, 135, 55, new Color(1f, 0.9f, 0.45f, 0.9f));
+                        CourseIcon(plate, name, course.Level, 84, 135, 53);
                         if (taken && me.Ready) Picture(plate, art.check, 48, 48, 248, 14);
                     }
                     return "course:" + me.Course;

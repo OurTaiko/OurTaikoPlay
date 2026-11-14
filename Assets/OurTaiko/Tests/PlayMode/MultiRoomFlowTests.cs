@@ -362,6 +362,14 @@ namespace OurTaiko.Tests
             server.Snapshot(15);
             yield return Waits.Until(() => screen.Controls.Any(c => c.Key == "course:Normal"), seconds: 5);
             Assert.That(screen.Focused.Key, Is.EqualTo("course:Oni"), "The focus starts on the course the player asked for.");
+            // Courses are the skin's icons here too: on the plates to choose from and on the members' cards.
+            // (A frame on, the last drawing of the screen is gone.)
+            yield return null;
+            var courseIcons = MultiArt.Load().courseIcons;
+            var onScreen = Object.FindObjectsByType<UnityEngine.UI.Image>().Select(i => i.sprite).ToList();
+            Assert.That(onScreen.Count(sprite => sprite == courseIcons[3]), Is.EqualTo(3), "Oni: its plate and both members' cards.");
+            Assert.That(onScreen.Count(sprite => sprite == courseIcons[1]), Is.EqualTo(1), "Normal: its plate.");
+            Assert.That(screen.AllText, Does.Not.Contain(MultiText.Course("Oni")).And.Not.Contain(MultiText.Course("Normal")).And.Contain("★8").And.Contain("★4"));
             yield return null;
             TestCapture.Capture("MultiCourse.png");
             screen.Move(-1);
