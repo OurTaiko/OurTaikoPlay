@@ -9,13 +9,16 @@ using UnityEngine;
 namespace OurTaiko.Multi
 {
     // Players' account pictures for マルチ演奏: fetched once by address, decoded (the account center
-    // serves WebP; unity.webp reads it) and kept as round sprites. Get answers at once, with the
-    // picture when it is here and null while it is on its way or when there is none; Loaded says
-    // when one arrived, for whoever drew a placeholder meanwhile.
+    // serves WebP; unity.webp reads it) and kept in two shapes: a disc for the room's cards and
+    // ranking, and the whole square for the play scene's scoreboard, which lays it behind a card.
+    // Get and GetSquare answer at once, with the picture when it is here and null while it is on
+    // its way or when there is none; Loaded says when one arrived, for whoever drew a placeholder
+    // meanwhile.
     public static class MultiAvatars
     {
-        // The side of a kept picture, the most bytes a picture may have, and how many are kept.
-        public const int Size = 128;
+        // The sides of a kept picture's disc and square, the most bytes a picture may have, and
+        // how many pictures are kept.
+        public const int Size = 128, SquareSize = 256;
         public const long ByteLimit = 2 * 1024 * 1024;
         public const int Kept = 96;
         const int SourceLimit = 2048;
@@ -24,7 +27,7 @@ namespace OurTaiko.Multi
         // Fetches a picture's bytes. Tests may put their own here.
         public static Func<string, CancellationToken, Task<byte[]>> Fetch { get; set; } = FetchAsync;
 
-        static readonly Dictionary<string, Sprite> ready = new Dictionary<string, Sprite>();
+        static readonly Dictionary<string, (Sprite Disc, Sprite Square)> ready = new Dictionary<string, (Sprite, Sprite)>();
         static readonly List<string> order = new List<string>();
         // Asked for, and either still coming or not to be had.
         static readonly HashSet<string> asked = new HashSet<string>();
@@ -37,13 +40,17 @@ namespace OurTaiko.Multi
             Loaded = null; Fetch = FetchAsync;
         }
 
-        // The picture at an address, or null: not here yet, none to be had, or no address.
-        public static Sprite Get(string url)
+        // The picture at an address as a disc, or null: not here yet, none to be had, or no address.
+        public static Sprite Get(string url) => Find(url).Disc;
+        // The same picture uncut: its middle square.
+        public static Sprite GetSquare(string url) => Find(url).Square;
+
+        static (Sprite Disc, Sprite Square) Find(string url)
         {
-            if (string.IsNullOrEmpty(url)) return null;
-            if (ready.TryGetValue(url, out var sprite) && sprite != null) return sprite;
+            if (string.IsNullOrEmpty(url)) return default;
+            if (ready.TryGetValue(url, out var kept) && kept.Disc != null) return kept;
             if (asked.Add(url)) _ = LoadAsync(url);
-            return null;
+            return default;
         }
 
         // Only what a browser would call secure, or this machine (a development server).
@@ -59,18 +66,19 @@ namespace OurTaiko.Multi
             {
                 if (!IsAllowed(url)) return;
                 byte[] bytes = await Fetch(url, CancellationToken.None);
-                var sprite = Round(Decode(bytes));
-                if (sprite == null) return;
-                ready[url] = sprite;
+                var source = Decode(bytes);
+                if (source == null) return;
+                var pixels = source.GetPixels32();
+                int width = source.width, height = source.height;
+                UnityEngine.Object.Destroy(source);
+                ready[url] = (Shape(pixels, width, height, Size, true), Shape(pixels, width, height, SquareSize, false));
                 order.Add(url);
                 // The oldest make room; a screen still showing one draws its placeholder next time.
                 while (order.Count > Kept)
                 {
-                    if (ready.TryGetValue(order[0], out var old) && old != null)
-                    {
-                        UnityEngine.Object.Destroy(old.texture);
-                        UnityEngine.Object.Destroy(old);
-                    }
+                    if (ready.TryGetValue(order[0], out var old))
+                        foreach (var sprite in new[] { old.Disc, old.Square })
+                            if (sprite != null) { UnityEngine.Object.Destroy(sprite.texture); UnityEngine.Object.Destroy(sprite); }
                     ready.Remove(order[0]); asked.Remove(order[0]);
                     order.RemoveAt(0);
                 }
@@ -124,24 +132,20 @@ namespace OurTaiko.Multi
             return null;
         }
 
-        // The middle square of a picture, scaled to Size and cut to a disc with a soft edge. The
-        // source is destroyed.
-        static Sprite Round(Texture2D source)
+        // The middle square of a picture, scaled to `size`; `disc` cuts it to a disc with a soft edge.
+        static Sprite Shape(Color32[] from, int width, int height, int size, bool disc)
         {
-            if (source == null) return null;
-            var from = source.GetPixels32();
-            int width = source.width, height = source.height, side = Math.Min(width, height);
+            int side = Math.Min(width, height);
             int left = (width - side) / 2, bottom = (height - side) / 2;
-            UnityEngine.Object.Destroy(source);
-            var to = new Color32[Size * Size];
-            float step = (float)side / Size, radius = Size / 2f;
+            var to = new Color32[size * size];
+            float step = (float)side / size, radius = size / 2f;
             // Shrinking averages the source pixels under each new one; enlarging takes the nearest.
             int span = Math.Max(1, Mathf.CeilToInt(step));
-            for (int y = 0; y < Size; y++)
-                for (int x = 0; x < Size; x++)
+            for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
                 {
                     float dx = x + 0.5f - radius, dy = y + 0.5f - radius;
-                    float cover = Mathf.Clamp01(radius - Mathf.Sqrt(dx * dx + dy * dy));
+                    float cover = disc ? Mathf.Clamp01(radius - Mathf.Sqrt(dx * dx + dy * dy)) : 1;
                     if (cover <= 0) continue;
                     int sx = Math.Min(side - 1, (int)(x * step)), sy = Math.Min(side - 1, (int)(y * step));
                     int r = 0, g = 0, b = 0, a = 0, n = 0;
@@ -151,12 +155,12 @@ namespace OurTaiko.Multi
                             var c = from[(bottom + v) * width + left + u];
                             r += c.r; g += c.g; b += c.b; a += c.a; n++;
                         }
-                    to[y * Size + x] = new Color32((byte)(r / n), (byte)(g / n), (byte)(b / n), (byte)(a / n * cover));
+                    to[y * size + x] = new Color32((byte)(r / n), (byte)(g / n), (byte)(b / n), (byte)(a / n * cover));
                 }
-            var texture = new Texture2D(Size, Size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
             texture.SetPixels32(to);
             texture.Apply(false, true);
-            var sprite = Sprite.Create(texture, new Rect(0, 0, Size, Size), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect);
+            var sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect);
             sprite.hideFlags = HideFlags.DontSave;
             return sprite;
         }

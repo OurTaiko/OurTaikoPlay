@@ -127,7 +127,7 @@ namespace OurTaiko
         }
 
         // A member's disc: their colour and the first letter of their name.
-        void Avatar(Transform parent, Member member, float size, float x, float y) => Avatar(parent, member.Slot, member.Nickname, size, x, y);
+        void Avatar(Transform parent, Member member, float size, float x, float y) => Avatar(parent, member.Slot, member.Nickname, size, x, y, member.AvatarUrl);
 
         // With an address, the player's account picture once it has come (MultiAvatars); until
         // then, and without one, the letter.

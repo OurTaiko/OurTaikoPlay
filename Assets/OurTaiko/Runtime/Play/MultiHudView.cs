@@ -11,16 +11,21 @@ namespace OurTaiko
 {
     // マルチ演奏's scoreboard in the play scene: one card per player of the round along the top of
     // the stage, between the nameplate and the song title, each with the player's place by score,
-    // name, score, combo and soul gauge. The cards keep their order (the room's places) while the
-    // rank numbers change. Built in code under the scene's 1920x1080 viewport when a round is played.
+    // name, score, combo and soul gauge, over the player's account picture when they have one
+    // (MultiAvatars; darkened, so the numbers stay readable). The cards keep their order (the room's
+    // places) while the rank numbers change. Built in code under the scene's 1920x1080 viewport when
+    // a round is played.
     public sealed class MultiHudView
     {
         public const float CardWidth = 172, CardHeight = 204, Gap = 10, CentreX = 980, Top = 12;
 
         sealed class Card
         {
-            public string UserId;
+            public string UserId, AvatarUrl;
             public RectTransform Root;
+            // The account picture behind the card, hidden until it has come.
+            public GameObject Backdrop;
+            public Image Photo;
             public Image Frame, Gauge, Mark;
             public TextMeshProUGUI Rank, Name, Score, Combo;
             public Image RankDisc;
@@ -40,6 +45,13 @@ namespace OurTaiko
         {
             var card = cards.FirstOrDefault(c => c.UserId == userId);
             return card == null ? default : (card.Rank.text, card.Name.text, card.Score.text);
+        }
+
+        // The picture behind a player's card (null: none, or not here yet), for tests.
+        public Sprite PhotoOf(string userId)
+        {
+            var card = cards.FirstOrDefault(c => c.UserId == userId);
+            return card != null && card.Backdrop.activeSelf ? card.Photo.sprite : null;
         }
 
         public MultiHudView(RectTransform viewport)
@@ -70,11 +82,23 @@ namespace OurTaiko
             for (int i = 0; i < list.Count; i++)
             {
                 var member = list[i];
-                var card = new Card { UserId = member.UserId };
+                var card = new Card { UserId = member.UserId, AvatarUrl = member.AvatarUrl };
                 card.Root = SkinUi.Rect("Card" + i, root, CardWidth, CardHeight);
                 card.Root.TopLeft(CentreX - total / 2 + i * (CardWidth + Gap), Top);
                 var plate = SkinUi.Image("Plate", card.Root, art.panel, CardWidth, CardHeight);
                 plate.rectTransform.Center(CardWidth / 2, CardHeight / 2);
+                // The picture fills the card inside the plate's outline: cut to the plate's rounded
+                // shape, covering the card's height, under a shade.
+                var window = SkinUi.Image("Backdrop", card.Root, art.inset, CardWidth - 12, CardHeight - 12);
+                window.rectTransform.Center(CardWidth / 2, CardHeight / 2);
+                window.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+                card.Backdrop = window.gameObject;
+                card.Photo = SkinUi.Image("Photo", window.transform, null, CardHeight, CardHeight);
+                card.Photo.rectTransform.Center((CardWidth - 12) / 2, (CardHeight - 12) / 2);
+                var shade = SkinUi.Image("Shade", window.transform, null, CardWidth, CardHeight);
+                shade.rectTransform.Center((CardWidth - 12) / 2, (CardHeight - 12) / 2);
+                shade.color = new Color(0.05f, 0.03f, 0.12f, 0.5f);
+                card.Backdrop.SetActive(false);
                 var stripe = SkinUi.Image("Stripe", card.Root, art.bar, CardWidth - 28, 34);
                 stripe.color = MultiArt.SlotColor(member.Slot);
                 stripe.rectTransform.Center(CardWidth / 2 + 14, 34);
@@ -123,6 +147,11 @@ namespace OurTaiko
             }
             foreach (var (card, status, connected, finished) in scores)
             {
+                if (!card.Backdrop.activeSelf && MultiAvatars.GetSquare(card.AvatarUrl) is Sprite photo)
+                {
+                    card.Photo.sprite = photo;
+                    card.Backdrop.SetActive(true);
+                }
                 int score = status?.Score ?? 0, combo = status?.Combo ?? 0, gauge = status?.Gauge ?? 0;
                 // Equal scores share a place.
                 int rank = 1 + scores.Count(other => (other.Status?.Score ?? 0) > score);

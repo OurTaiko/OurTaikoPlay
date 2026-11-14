@@ -103,6 +103,7 @@ namespace OurTaiko.Tests
         FanmadeFixture fixture;
         FanmadeFixture.Chart chart;
         FakeRoomServer server;
+        string avatar;
         GameSettings saved;
         PlayOptions originalFirst;
         Keyboard keyboard;
@@ -120,6 +121,17 @@ namespace OurTaiko.Tests
                 Difficulties = new List<(string, int, string)> { ("Normal", 4, ""), ("Oni", 8, "") },
             };
             fixture.Charts.Add(chart);
+            // The other player's account picture (WebP, as the account center serves them).
+            byte[] picture = File.ReadAllBytes("Assets/OurTaiko/Tests/Fixtures/avatar.webp");
+            fixture.CustomRequest = context =>
+            {
+                if (context.Request.Url.AbsolutePath != "/avatars/katsu.webp") return false;
+                context.Response.ContentLength64 = picture.Length;
+                context.Response.OutputStream.Write(picture, 0, picture.Length);
+                context.Response.Close();
+                return true;
+            };
+            avatar = fixture.BaseUrl + "/avatars/katsu.webp";
             server = new FakeRoomServer();
             MultiSession.Forget();
             saved = SettingManager.EnsureInstance().Settings.Clone();
@@ -269,10 +281,15 @@ namespace OurTaiko.Tests
             Assert.That(screen.Controls.Select(c => c.Key), Does.Contain("open"));
 
             // Someone joins: they can be removed, and the round can start.
-            server.Room.Members.Add(new Member { UserId = FakeRoomServer.Rival, Nickname = "Katsu", Slot = 1, Connected = true });
+            server.Room.Members.Add(new Member { UserId = FakeRoomServer.Rival, Nickname = "Katsu", AvatarUrl = avatar, Slot = 1, Connected = true });
             server.Snapshot();
             yield return Waits.Until(() => screen.Controls.Any(c => c.Key == "start"), seconds: 5);
             Assert.That(screen.AllText, Does.Contain("Katsu").And.Contain(MultiText.Format("room.players", 2)));
+            // Their card wears their account picture once it has come; a player without one keeps the letter.
+            yield return Waits.Until(() => MultiAvatars.Get(avatar) != null, "The account picture did not load.", 10);
+            yield return null; yield return null;
+            Assert.That(Object.FindObjectsByType<UnityEngine.UI.Image>().Select(i => i.sprite), Has.Member(MultiAvatars.Get(avatar)));
+            Assert.That(screen.AllText.Split('\n'), Does.Contain("D").And.Not.Contain("K"));
             Assert.That(screen.Controls.Select(c => c.Key), Does.Contain("kick:" + FakeRoomServer.Rival));
             Assert.That(screen.Focused.Key, Is.EqualTo("start"), "The host's focus starts on the start plate.");
 
@@ -391,6 +408,10 @@ namespace OurTaiko.Tests
             Assert.That(play.MultiHud.CardOf(FakeRoomServer.Rival), Is.EqualTo(("1", "Katsu", "123,450")));
             Assert.That(play.MultiHud.CardOf(FakeRoomServer.Me).Rank, Is.EqualTo("2"));
             Assert.That(play.MultiHud.CardOf(FakeRoomServer.Me).Name, Is.EqualTo("Don"));
+            // A player's account picture lies behind their card, whole; a card without one stays plain.
+            Assert.That(play.MultiHud.PhotoOf(FakeRoomServer.Rival), Is.SameAs(MultiAvatars.GetSquare(avatar)).And.Not.Null);
+            Assert.That(MultiAvatars.GetSquare(avatar).rect.size, Is.EqualTo(new Vector2(MultiAvatars.SquareSize, MultiAvatars.SquareSize)));
+            Assert.That(play.MultiHud.PhotoOf(FakeRoomServer.Me), Is.Null);
             // No pause, no restart.
             play.TogglePause();
             Assert.That(play.IsPaused, Is.False);
@@ -404,17 +425,6 @@ namespace OurTaiko.Tests
             Assert.That(finish.Cleared, Is.False);
             yield return WaitForScene(SceneSwitcher.ResultScene, 30);
             Assert.That(SceneSwitcher.Instance.ReturnScene, Is.EqualTo(SceneSwitcher.MultiRoomScene));
-            // The other player has an account picture (WebP, as the account center serves them).
-            byte[] picture = File.ReadAllBytes("Assets/OurTaiko/Tests/Fixtures/avatar.webp");
-            fixture.CustomRequest = context =>
-            {
-                if (context.Request.Url.AbsolutePath != "/avatars/katsu.webp") return false;
-                context.Response.ContentLength64 = picture.Length;
-                context.Response.OutputStream.Write(picture, 0, picture.Length);
-                context.Response.Close();
-                return true;
-            };
-            string avatar = fixture.BaseUrl + "/avatars/katsu.webp";
             var result = new Multi.Proto.PlayResult { Round = 1, TeamScore = 987650, Source = source, ChartId = chart.Id, Title = "Room Song" };
             result.Players.Add(new PlayerResult
             {
