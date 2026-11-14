@@ -13,10 +13,12 @@ using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
-    // ゴーストバトル (issue #53): Entry's board opens the list of recorded plays the server keeps; a
-    // picked one is raced in Play.Double, the player in the lane of their side and the recording
-    // striking the other, both on the recording's block with its options; only the player's play
-    // goes up. A player who joined alone with the 2P drum sits below, on 2P's drum and account.
+    // ゴーストバトル (issue #53): Entry's board opens the screen of recorded plays the servers keep
+    // (a server, one of its categories, a page of its plays); a picked one is raced in Play.Double,
+    // the player in the lane of their side and the recording striking the other, both on the
+    // recording's block with its options; only the player's play goes up, and the screen then shows
+    // the two results side by side. A player who joined alone with the 2P drum sits below, on 2P's
+    // drum and account.
     public sealed class GhostBattleFlowTests
     {
         FanmadeFixture fixture;
@@ -109,12 +111,33 @@ namespace OurTaiko.Tests
             Assert.That(InputManager.Lead, Is.EqualTo(lone2P ? Side.P2 : Side.P1));
         }
 
+        // The first play listed is picked: don on its plate.
         static IEnumerator Race(GhostSelectScene list)
         {
-            list.Pick();
+            list.Press("play:" + list.Rows[0].ScoreId);
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.DoublePlayScene && !SceneSwitcher.Instance.IsInputBlocked,
                 () => "Still in " + SceneManager.GetActiveScene().name + ": " + list.Status, 40);
         }
+
+        // The screen has its servers and how many plays each lists.
+        static IEnumerator Listed(GhostSelectScene list)
+        {
+            yield return Waits.Until(() => list.Servers.Count > 0 && !list.IsLoading, () => "Servers: " + list.Status, 10);
+            yield return null; yield return null;
+        }
+
+        // Into the only server and its すべて, with its plays on the page.
+        static IEnumerator OpenAll(GhostSelectScene list, int plays)
+        {
+            yield return Listed(list);
+            list.Press("server:" + list.Servers[0].Id);
+            yield return null; yield return null;
+            list.Press("category:");
+            yield return Waits.Until(() => list.Rows.Count == plays && !list.IsLoading, () => "Rows: " + list.Rows.Count + " " + list.Status, 10);
+            yield return null; yield return null;
+        }
+
+        static string[] Keys(GhostSelectScene list) => list.Controls.Select(c => c.Key).ToArray();
 
         [UnityTest]
         public IEnumerator APickedPlayIsRacedToTheEndAndOnlyThePlayerUploads()
@@ -128,53 +151,54 @@ namespace OurTaiko.Tests
             yield return OpenList(false);
 
             var list = Object.FindAnyObjectByType<GhostSelectScene>();
-            yield return Waits.Until(() => list.Rows.Count == 1, () => "Rows: " + list.Status, 10);
-            yield return null;
-            var shelf = list.view.columns;
-            // The shelf: the server (one here) with もどる first, its categories, the plays of the
-            // highlighted one (すべて), each column opening with もどる.
-            Assert.That(list.Column, Is.Zero);
-            Assert.That(list.Entries(0).Select(e => e.Kind), Is.EqualTo(new[] { GhostSelectScene.Kind.Back, GhostSelectScene.Kind.Server }));
-            Assert.That(shelf[0].rows[0].title.text, Is.EqualTo(GhostSelectScene.BackLabel));
-            Assert.That(shelf[0].rows[1].detail.text, Is.EqualTo(L10n.Format("Play", "ghostSelect.count", 1)));
-            Assert.That(list.Servers.Single().Categories.Select(c => c.Title), Is.EqualTo(new[] { L10n.Get("Play", "ghostSelect.all"), "Game", "Pop" }));
-            Assert.That(shelf[1].rows[1].title.text, Is.EqualTo(L10n.Get("Play", "ghostSelect.all")));
-            Assert.That(shelf[2].rows[1].title.text, Is.EqualTo("Ghost Song"));
-            Assert.That(shelf[2].rows[1].detail.text, Does.Contain("Rival").And.Contain(L10n.Get("Common", "difficulty.oni") + " ★8"));
-            Assert.That(shelf[2].rows[1].score.text, Is.EqualTo("978,000"));
-            Assert.That(shelf[2].rows[2].root.gameObject.activeSelf, Is.False);
+            yield return Listed(list);
+            string server = list.Servers.Single().Id, play1 = "play:" + (string)row["id"];
+            // The servers (one here), each a board saying how many plays it lists.
+            Assert.That(list.Shown, Is.EqualTo(GhostSelectScene.View.Servers));
+            Assert.That(Keys(list), Is.EqualTo(new[] { "server:" + server, "back" }));
+            Assert.That(list.Focused.Key, Is.EqualTo("server:" + server));
+            Assert.That(list.AllText, Does.Contain(list.Servers[0].Name).And.Contain(L10n.Format("Play", "ghostSelect.count", 1)).And.Contain(L10n.Get("Play", "ghostSelect.pickServer")));
             TestCapture.Capture("GhostSelect.png");
 
-            // Into the categories: Game holds the song, Pop nothing; each loads when highlighted.
+            // Don enters the server: すべて, then its catalog's categories.
             list.Confirm();
-            Assert.That(list.Column, Is.EqualTo(1));
-            Assert.That(list.Focused.Category.Id, Is.Null);
+            yield return null; yield return null;
+            Assert.That(list.Shown, Is.EqualTo(GhostSelectScene.View.Categories));
+            Assert.That(list.CurrentServer.Categories.Select(c => c.Title), Is.EqualTo(new[] { L10n.Get("Play", "ghostSelect.all"), "Game", "Pop" }));
+            Assert.That(Keys(list), Is.EqualTo(new[] { "category:", "category:game", "category:pop", "back" }));
+            Assert.That(list.AllText, Does.Contain("Game").And.Contain("Pop").And.Contain(L10n.Get("Play", "ghostSelect.all")));
+            TestCapture.Capture("GhostSelectCategories.png");
+
+            // Game holds the song, Pop nothing; each loads when it is opened.
+            list.Press("category:pop");
+            yield return Waits.Until(() => list.Shown == GhostSelectScene.View.Plays && !list.IsLoading, seconds: 10);
+            yield return null; yield return null;
+            Assert.That(list.Rows, Is.Empty);
+            Assert.That(list.Status, Is.EqualTo(L10n.Get("Play", "ghostSelect.noPlaysCategory")));
+            Assert.That(list.AllText, Does.Contain(list.Status));
+            Assert.That(Keys(list), Is.EqualTo(new[] { "back" }), "An empty category has only the way back.");
+            TestCapture.Capture("GhostSelectEmptyCategory.png");
+            list.Back();
+            yield return null; yield return null;
+            Assert.That(list.Shown, Is.EqualTo(GhostSelectScene.View.Categories));
             list.Move(1);
-            yield return Waits.Until(() => !list.IsLoading, seconds: 10);
-            yield return null;
+            Assert.That(list.Focused.Key, Is.EqualTo("category:game"), "Ka moves through the plates.");
+            list.Confirm();
+            yield return Waits.Until(() => list.Rows.Count == 1 && !list.IsLoading, seconds: 10);
             Assert.That(list.CurrentCategory.Id, Is.EqualTo("game"));
             Assert.That(list.Rows.Single().ScoreId, Is.EqualTo((string)row["id"]));
-            list.Move(1);
-            yield return Waits.Until(() => !list.IsLoading, seconds: 10);
-            yield return null;
-            Assert.That(list.CurrentCategory.Id, Is.EqualTo("pop"));
-            Assert.That(list.Rows, Is.Empty);
-            Assert.That(list.view.status.text, Is.EqualTo(L10n.Get("Play", "ghostSelect.noPlaysCategory")));
-            Assert.That(shelf[2].rows[0].title.text, Is.EqualTo(GhostSelectScene.BackLabel), "An empty column keeps its もどる.");
-            TestCapture.Capture("GhostSelectEmptyCategory.png");
-            // もどる returns a column; a tap on a category selects it, a second tap enters it.
-            list.Move(-3);
-            Assert.That(list.Focused.Kind, Is.EqualTo(GhostSelectScene.Kind.Back));
-            list.Confirm();
-            Assert.That(list.Column, Is.Zero);
-            list.Back(leave: false);
-            Assert.That(list.Column, Is.Zero, "← on the servers stays.");
-            list.Tap(1, 1);
-            Assert.That((list.Column, list.CurrentCategory.Id), Is.EqualTo((1, (string)null)));
-            list.Tap(1, 1);
-            Assert.That(list.Column, Is.EqualTo(2));
-            Assert.That(list.SelectedRow.ScoreId, Is.EqualTo((string)row["id"]));
-            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/replays"), Is.EqualTo(3), "Each category loads once.");
+            // One view up at a time; from the servers, Back leaves.
+            list.Back();
+            yield return null; yield return null;
+            list.Press("category:");
+            yield return Waits.Until(() => list.Rows.Count == 1, seconds: 10);
+            yield return null; yield return null;
+            Assert.That(list.Shown, Is.EqualTo(GhostSelectScene.View.Plays));
+            Assert.That(Keys(list), Is.EqualTo(new[] { play1, "back" }), "One page: no page plates.");
+            Assert.That(list.Focused.Key, Is.EqualTo(play1));
+            Assert.That(list.AllText, Does.Contain("Ghost Song").And.Contain("Rival").And.Contain("978,000").And.Contain("★8"));
+            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/replays"), Is.EqualTo(3), "Each category loads once: すべて with its server, the others when opened.");
+            TestCapture.Capture("GhostSelectPlays.png");
 
             yield return Race(list);
             var play = Object.FindAnyObjectByType<PlayScene>();
@@ -220,9 +244,29 @@ namespace OurTaiko.Tests
             Assert.That((int)sent["replay_data"]["options"]["speed"], Is.EqualTo(15));
             Assert.That(fixture.AcceptedUsers.Single(), Is.EqualTo("don"));
 
-            // Leaving the result returns to the list.
+            // Leaving the result returns to the screen, which shows the two results: the recording won.
             switcher.ReturnToMenu();
-            yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.GhostSelectScene, seconds: 10);
+            yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.GhostSelectScene && !SceneSwitcher.Instance.IsInputBlocked, seconds: 10);
+            list = Object.FindAnyObjectByType<GhostSelectScene>();
+            yield return null; yield return null;
+            Assert.That(list.Shown, Is.EqualTo(GhostSelectScene.View.Result));
+            Assert.That((list.LastOutcome.PlayerWon, list.LastOutcome.IsDraw), Is.EqualTo((false, false)));
+            Assert.That((list.LastOutcome.Player.Bad, list.LastOutcome.Ghost.Good), Is.EqualTo((8, 7)));
+            Assert.That(list.LastOutcome.GhostName, Is.EqualTo("Rival"));
+            Assert.That(list.AllText, Does.Contain("Rival").And.Contain(L10n.Get("Play", "ghostResult.heading")).And.Contain(L10n.Get("Play", "ghostResult.win")).And.Contain("Ghost Song"));
+            Assert.That(Keys(list), Is.EqualTo(new[] { "ok" }));
+            TestCapture.Capture("GhostBattleResult.png");
+            // Closing it returns to the page the play was picked on, on that play.
+            list.Confirm();
+            yield return Waits.Until(() => list.Shown == GhostSelectScene.View.Plays && list.Rows.Count == 1, () => list.Shown + " " + list.Status, 10);
+            yield return null; yield return null;
+            Assert.That(list.CurrentCategory.Id, Is.Null);
+            Assert.That(list.Focused.Key, Is.EqualTo(play1));
+            list.Back(); list.Back();
+            yield return null; yield return null;
+            Assert.That(list.Shown, Is.EqualTo(GhostSelectScene.View.Servers));
+            list.Back();
+            yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.EntryScene, seconds: 10);
         }
 
         [UnityTest]
@@ -241,8 +285,7 @@ namespace OurTaiko.Tests
             Assert.That(InputManager.Player, Is.SameAs(InputManager.P2));
 
             var list = Object.FindAnyObjectByType<GhostSelectScene>();
-            yield return Waits.Until(() => list.Rows.Count == 1, () => "Rows: " + list.Status, 10);
-            list.Confirm(); list.Confirm();
+            yield return OpenAll(list, 1);
             yield return Race(list);
             var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Lane1.Views, Is.SameAs(play.secondLane), "A lone 2P races in the lower lane.");
@@ -291,14 +334,17 @@ namespace OurTaiko.Tests
             yield return TestData.Connect();
             yield return OpenList(false);
             var list = Object.FindAnyObjectByType<GhostSelectScene>();
-            yield return Waits.Until(() => !list.IsLoading && fixture.Requests.Count(r => r == "GET /api/v1/replays") == 1, seconds: 10);
-            yield return null;
-            Assert.That(list.Rows, Is.Empty);
+            yield return Waits.Until(() => list.Servers.Count == 1 && !list.IsLoading && fixture.Requests.Count(r => r == "GET /api/v1/replays") == 1, seconds: 10);
+            yield return new WaitForSecondsRealtime(1);
             Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/replays"), Is.EqualTo(1), "A failed page is not asked for again by itself.");
-            // Entering the server shows its category again, which asks once more.
+            Assert.That(list.AllText, Does.Contain(L10n.Get("Play", "ghostSelect.offline")), "The server's board says its plays could not be had.");
+            // Opening the category asks once more.
             list.Confirm();
+            yield return null; yield return null;
+            list.Press("category:");
             yield return Waits.Until(() => list.Rows.Count == 1, () => "Rows: " + list.Status, 10);
             Assert.That(list.Rows.Single().ScoreId, Is.EqualTo((string)row["id"]));
+            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/replays"), Is.EqualTo(2));
         }
 
         [UnityTest]
@@ -314,23 +360,31 @@ namespace OurTaiko.Tests
             yield return TestData.Connect();
             yield return OpenList(false);
             var list = Object.FindAnyObjectByType<GhostSelectScene>();
-            yield return Waits.Until(() => list.Rows.Count == 12, () => "Rows: " + list.Status, 10);
-            // もどる opens the column and comes again after every ten plays.
-            var kinds = list.Entries(2).Select(e => e.Kind).ToList();
-            Assert.That(kinds.Count, Is.EqualTo(14));
-            Assert.That(Enumerable.Range(0, kinds.Count).Where(i => kinds[i] == GhostSelectScene.Kind.Back), Is.EqualTo(new[] { 0, 11 }));
-            list.Confirm(); list.Confirm();
-            Assert.That(list.SelectedRow.ScoreId, Is.EqualTo((string)row["id"]));
-            for (int i = 0; i < 10; i++) list.Move(1);
-            yield return null;
-            Assert.That(list.Focused.Kind, Is.EqualTo(GhostSelectScene.Kind.Back));
-            TestCapture.Capture("GhostSelectBackEveryTen.png");
-            for (int i = 0; i < 10; i++) list.Move(-1);
+            yield return OpenAll(list, 12);
+            // Twelve plays are three pages of five; the plates to turn them are there when there is a page to turn to.
+            var category = list.CurrentCategory;
+            Assert.That((category.Page, category.Pages), Is.EqualTo((0, 3)));
+            Assert.That(list.Rows[0].ScoreId, Is.EqualTo((string)row["id"]));
+            Assert.That(Keys(list), Is.EqualTo(list.Rows.Take(5).Select(r => "play:" + r.ScoreId).Concat(new[] { "back", "next" })));
+            Assert.That(list.AllText, Does.Contain("1 / 3").And.Not.Contain("Odd"));
+            list.Press("next");
+            yield return null; yield return null;
+            Assert.That(Keys(list), Is.EqualTo(list.Rows.Skip(5).Take(5).Select(r => "play:" + r.ScoreId).Concat(new[] { "back", "prev", "next" })));
+            list.Press("next");
+            yield return null; yield return null;
+            Assert.That(Keys(list), Is.EqualTo(list.Rows.Skip(10).Select(r => "play:" + r.ScoreId).Concat(new[] { "back", "prev" })));
+            Assert.That(list.AllText, Does.Contain("3 / 3"));
+            TestCapture.Capture("GhostSelectLastPage.png");
+            list.Press("prev"); list.Press("prev");
+            yield return null; yield return null;
+            Assert.That(category.Page, Is.Zero);
             // The song's files were replaced after the list came.
             row["isLatest"] = false;
-            list.Pick();
+            list.Press("play:" + (string)row["id"]);
             yield return Waits.Until(() => !list.IsStarting, seconds: 10);
+            yield return null; yield return null;
             Assert.That(list.Status, Is.EqualTo(L10n.Get("Play", "ghostSelect.outdated")));
+            Assert.That(list.AllText, Does.Contain(list.Status));
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.GhostSelectScene));
             list.Leave();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.EntryScene, seconds: 10);

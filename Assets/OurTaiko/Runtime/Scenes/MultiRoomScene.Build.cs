@@ -6,27 +6,20 @@ using OurTaiko.Multi.Proto;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static OurTaiko.PlateUi;
 
 namespace OurTaiko
 {
-    // Multi.Room's drawing: every view is laid out here on the 1920x1080 stage, in skin pixels from
-    // the top left, from the MultiArt sprites and the one UI font. Rebuild draws the view the state
-    // asks for and lists its controls; the focus stays on the control it was on when that control
-    // is still there.
+    // Multi.Room's drawing: every view is laid out here on the 1920x1080 stage with PlateUi's
+    // pieces. Rebuild draws the view the state asks for and lists its controls.
     public sealed partial class MultiRoomScene
     {
-        static readonly Color Ink = new Color(0.1f, 0.08f, 0.16f);
-        static readonly Color Orange = new Color(1f, 0.62f, 0.2f), Teal = new Color(0.3f, 0.82f, 0.74f), Violet = new Color(0.74f, 0.6f, 0.96f),
-            Slate = new Color(0.72f, 0.78f, 0.88f), Rose = new Color(1f, 0.52f, 0.5f), Paper = new Color(1f, 0.98f, 0.93f), Dim = new Color(0.55f, 0.55f, 0.6f);
-
-        RectTransform content;
-        string focusContext = "";
-        bool focusMoved;
+        RectTransform content => ui.Content;
         TextMeshProUGUI clockText;
         Image clockIcon;
 
         // The texts on screen, for tests.
-        public string AllText => content == null ? "" : string.Join("\n", content.GetComponentsInChildren<TextMeshProUGUI>().Select(t => t.text));
+        public string AllText => ui.AllText;
 
         void BuildBackdrop()
         {
@@ -42,10 +35,7 @@ namespace OurTaiko
         {
             dirty = false;
             Shown = Wanted;
-            if (content != null) Destroy(content.gameObject);
-            content = SkinUi.Rect("Content", stage, 1920, 1080);
-            content.TopLeft(0, 0);
-            controls.Clear();
+            ui.Begin();
             clockText = null; clockIcon = null;
             string preferred = "";
             switch (Shown)
@@ -57,19 +47,8 @@ namespace OurTaiko
             }
             // The focus stays where the player put it; until they move it in this view and phase, it
             // is on the control that matters most there (the host's start plate once it appears).
-            string context = Shown + "/" + (MultiSession.Room?.Phase.ToString() ?? "") + "/" + StampsOpen;
-            if (context != focusContext) { focusContext = context; focusMoved = false; }
-            int kept = controls.FindIndex(c => c.Key == focusKey), wanted = controls.FindIndex(c => c.Key == preferred);
-            focus = Math.Max(0, focusMoved && kept >= 0 ? kept : wanted >= 0 ? wanted : kept);
-            focusKey = Focused?.Key ?? "";
-            ShowFocus();
+            ui.Settle(Shown + "/" + (MultiSession.Room?.Phase.ToString() ?? "") + "/" + StampsOpen, preferred);
             ShowClock();
-        }
-
-        void ShowFocus()
-        {
-            for (int i = 0; i < controls.Count; i++)
-                if (controls[i].Ring != null) controls[i].Ring.enabled = i == focus;
         }
 
         void ShowClock()
@@ -81,102 +60,22 @@ namespace OurTaiko
             if (shown) clockText.text = ((left + 999) / 1000).ToString(CultureInfo.InvariantCulture);
         }
 
-        // ---------------------------------------------------------------- pieces
+        // ---------------------------------------------------------------- pieces (PlateUi's)
 
-        // align: -1 left of x, 0 centred on x, 1 right of x.
         TextMeshProUGUI Label(Transform parent, string text, float size, float x, float y, float maxWidth = 0, bool dark = false, int align = 0)
-        {
-            var label = SkinUi.Text("Label", parent, size);
-            if (dark) { label.color = Ink; label.UseUiFont(); }
-            label.alignment = align < 0 ? TextAlignmentOptions.Left : align > 0 ? TextAlignmentOptions.Right : TextAlignmentOptions.Center;
-            label.rectTransform.pivot = new Vector2(align < 0 ? 0 : align > 0 ? 1 : 0.5f, 0.5f);
-            label.rectTransform.anchoredPosition = new Vector2(x, -y);
-            label.text = text ?? "";
-            if (maxWidth > 0) label.Squeeze(maxWidth);
-            return label;
-        }
-
+            => ui.Label(parent, text, size, x, y, maxWidth, dark, align);
         Image Picture(Transform parent, Sprite sprite, float width, float height, float x, float y, Color? color = null)
-        {
-            var image = SkinUi.Image(sprite != null ? sprite.name : "Image", parent, sprite, width, height);
-            image.rectTransform.Center(x, y);
-            if (color.HasValue) image.color = color.Value;
-            return image;
-        }
-
-        // A plate the player can press. Its children are placed from its top left corner.
+            => ui.Picture(parent, sprite, width, height, x, y, color);
         RectTransform Button(string key, Transform parent, float width, float height, float x, float y, Color color, Action press, bool enabled = true)
-        {
-            var root = SkinUi.Rect(key, parent, width, height);
-            root.Center(x, y);
-            var plate = Picture(root, art.plate, width, height, width / 2, height / 2, enabled ? color : Dim);
-            var ring = Picture(root, art.focus, width + 34, height + 34, width / 2, height / 2 - 2);
-            ring.enabled = false;
-            if (!enabled) return root;
-            plate.raycastTarget = true;
-            plate.gameObject.AddComponent<PointerRelay>().Clicked = () => Tap(key);
-            controls.Add(new Control { Key = key, Root = root, Ring = ring, Press = press });
-            return root;
-        }
-
+            => ui.Button(key, parent, width, height, x, y, color, press, enabled);
         RectTransform TextButton(string key, Transform parent, float width, float height, float x, float y, Color color, string text, float size, Action press, bool enabled = true)
-        {
-            var root = Button(key, parent, width, height, x, y, color, press, enabled);
-            Label(root, text, size, width / 2, height / 2 - 3, width - 36, true);
-            return root;
-        }
-
-        // A member's disc: their colour and the first letter of their name.
-        void Avatar(Transform parent, Member member, float size, float x, float y) => Avatar(parent, member.Slot, member.Nickname, size, x, y, member.AvatarUrl);
-
-        // With an address, the player's account picture once it has come (MultiAvatars); until
-        // then, and without one, the letter.
+            => ui.TextButton(key, parent, width, height, x, y, color, text, size, press, enabled);
+        void Avatar(Transform parent, Member member, float size, float x, float y) => ui.Avatar(parent, member.Slot, member.Nickname, size, x, y, member.AvatarUrl);
         void Avatar(Transform parent, int slot, string nickname, float size, float x, float y, string pictureUrl = null)
-        {
-            var picture = MultiAvatars.Get(pictureUrl);
-            Picture(parent, art.disc, size, size, x, y, picture != null ? Color.white : MultiArt.SlotColor(slot));
-            if (picture != null) { Picture(parent, picture, size * 0.84f, size * 0.84f, x, y); return; }
-            string name = MultiText.Name(nickname);
-            Label(parent, StringInfo.GetNextTextElement(name).ToUpperInvariant(), size * 0.5f, x, y - size * 0.03f);
-        }
-
-        // A course as the skin's own icon with its stars beside it; a course the skin has no icon
-        // for keeps its name.
-        void CourseIcon(Transform parent, string course, int level, float height, float x, float y)
-        {
-            var icon = art.CourseIcon(course);
-            if (icon == null) { CoursePill(parent, course, level, 210, Math.Min(54, height), x, y); return; }
-            float width = height * icon.rect.width / icon.rect.height;
-            Picture(parent, icon, width, height, x - 34, y);
-            if (level > 0) Label(parent, "★" + level, height * 0.44f, x + width / 2 - 26, y - 2, 0, false, -1);
-        }
-
-        // The result screen's own labels, each with its count, one after another from x: 良, 可 and
-        // 不可 on the first line, 最大コンボ数 and 連打数 on the second.
-        void Counts(Transform parent, float x, float y, float height, float gap, params (Sprite Label, int Count)[] counts)
-        {
-            foreach (var (label, count) in counts)
-            {
-                if (label != null)
-                {
-                    float width = height * label.rect.width / label.rect.height;
-                    Picture(parent, label, width, height, x + width / 2, y);
-                    x += width + 6;
-                }
-                var number = Label(parent, count.ToString(CultureInfo.InvariantCulture), height * 0.84f, x, y - 2, 0, false, -1);
-                x += number.preferredWidth + gap;
-            }
-        }
-
-        // A course's name and stars on its colour.
-        void CoursePill(Transform parent, string course, int level, float width, float height, float x, float y)
-        {
-            Picture(parent, art.plate, width, height, x, y, MultiArt.CourseColor(course));
-            string text = MultiText.Course(course) + (level > 0 ? " ★" + level : "");
-            Label(parent, text, height * 0.46f, x, y - 3, width - 30);
-        }
-
-        static string Number(long value) => value.ToString("N0", CultureInfo.InvariantCulture);
+            => ui.Avatar(parent, slot, nickname, size, x, y, pictureUrl);
+        void CourseIcon(Transform parent, string course, int level, float height, float x, float y) => ui.CourseIcon(parent, course, level, height, x, y);
+        void Counts(Transform parent, float x, float y, float height, float gap, params (Sprite Label, int Count)[] counts) => ui.Counts(parent, x, y, height, gap, counts);
+        static string Number(long value) => PlateUi.Number(value);
 
         // ---------------------------------------------------------------- menu
 

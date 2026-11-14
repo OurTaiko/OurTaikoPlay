@@ -35,3 +35,10 @@ ghostSelect.loadFailed,Could not load that play ({0}).,プレイを読み込め�
 ghostSelect.offline,Offline,オフライン,离线,Ghost Battle list status: the category could not be loaded because its server is offline
 ghostSelect.noPlaysServer,No one has recorded a play on this server yet.,このサーバーにはまだプレイの記録がありません。,该服务器还没有任何游玩记录。,Ghost Battle list status for an empty All category
 ghostSelect.noPlaysCategory,No recorded plays in this category yet.,このカテゴリにはまだプレイの記録がありません。,该分类还没有游玩记录。,Ghost Battle list status for an empty category
+ghostSelect.pickServer,Choose a server,サーバーをえらぶ,选择服务器,Ghost Battle: heading of the server boards
+ghostSelect.pickCategory,Choose a category,カテゴリをえらぶ,选择分类,Ghost Battle: heading of the category plates (after the server name)
+ghostSelect.prev,Previous,まえへ,上一页,Ghost Battle: previous page of plays
+ghostSelect.next,Next,つぎへ,下一页,Ghost Battle: next page of plays
+ghostResult.heading,Battle Result,対戦結果,对战结果,Ghost Battle: heading of the result of a battle
+ghostResult.win,WIN,WIN,WIN,Ghost Battle result ribbon: the higher score
+ghostResult.draw,DRAW,DRAW,DRAW,Ghost Battle result ribbon: equal scores
