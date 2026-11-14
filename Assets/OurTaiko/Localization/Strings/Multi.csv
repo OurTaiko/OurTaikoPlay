@@ -53,7 +53,6 @@ play.leaveConfirm,Press Back again to leave the room.,もう一度「もどる�
 play.sittingOut,A round is being played. Please wait for it to end.,演奏中です。おわるまでお待ちください。,本局正在进行，请等待结束。,Room screen for a member who is not in the round
 result.heading,Results,結果発表,结果发表,Heading of the round's ranking
 result.team,Team score {0},チームスコア {0},团队分数 {0},Ranking header; {0} = sum of scores
-result.combo,Max combo {0} · Drumroll {1},最大コンボ {0}・連打 {1},最大连击 {0}・连打 {1},"Ranking row, second line"
 result.disconnected,Left,切断,掉线,Ranking row: the player left before finishing
 result.failed,Not cleared,ノルマ未達成,未过关,Ranking row: the soul gauge did not reach the clear line
 result.mvp,MVP,MVP,MVP,Ranking ribbon: top score

@@ -78,6 +78,7 @@ namespace OurTaiko
             MultiSession.RoomChanged += OnRoomChanged;
             MultiSession.Closed += OnClosed;
             MultiSession.StampReceived += OnStamp;
+            MultiAvatars.Loaded += OnAvatarLoaded;
             switcher.SceneChanging += OnSceneChanging;
             if (MultiSession.ClosedCode != null) { Message = MultiText.Describe(MultiSession.ClosedCode); MultiSession.ClosedCode = null; }
             BuildBackdrop();
@@ -100,12 +101,15 @@ namespace OurTaiko
             MultiSession.RoomChanged -= OnRoomChanged;
             MultiSession.Closed -= OnClosed;
             MultiSession.StampReceived -= OnStamp;
+            MultiAvatars.Loaded -= OnAvatarLoaded;
             if (switcher != null) switcher.SceneChanging -= OnSceneChanging;
             cancel.Cancel(); cancel.Dispose();
         }
 
         void OnSceneChanging(string scene) { if (bgm != null) bgm.StopAudio(); }
         void OnRoomChanged(Room room) => dirty = true;
+        // A picture a placeholder stood in for has come.
+        void OnAvatarLoaded() => dirty = true;
 
         void OnClosed(string code)
         {

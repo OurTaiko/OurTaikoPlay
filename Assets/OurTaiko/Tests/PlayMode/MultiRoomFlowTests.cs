@@ -404,10 +404,21 @@ namespace OurTaiko.Tests
             Assert.That(finish.Cleared, Is.False);
             yield return WaitForScene(SceneSwitcher.ResultScene, 30);
             Assert.That(SceneSwitcher.Instance.ReturnScene, Is.EqualTo(SceneSwitcher.MultiRoomScene));
+            // The other player has an account picture (WebP, as the account center serves them).
+            byte[] picture = File.ReadAllBytes("Assets/OurTaiko/Tests/Fixtures/avatar.webp");
+            fixture.CustomRequest = context =>
+            {
+                if (context.Request.Url.AbsolutePath != "/avatars/katsu.webp") return false;
+                context.Response.ContentLength64 = picture.Length;
+                context.Response.OutputStream.Write(picture, 0, picture.Length);
+                context.Response.Close();
+                return true;
+            };
+            string avatar = fixture.BaseUrl + "/avatars/katsu.webp";
             var result = new Multi.Proto.PlayResult { Round = 1, TeamScore = 987650, Source = source, ChartId = chart.Id, Title = "Room Song" };
             result.Players.Add(new PlayerResult
             {
-                UserId = FakeRoomServer.Rival, Nickname = "Katsu", Course = "Oni", Level = 8, Rank = 1, Award = Award.SuperStar, Slot = 1,
+                UserId = FakeRoomServer.Rival, Nickname = "Katsu", AvatarUrl = avatar, Course = "Oni", Level = 8, Rank = 1, Award = Award.SuperStar, Slot = 1,
                 Cleared = true, FullCombo = true, Status = new PlayerStatus { Score = 987650, Good = 7, Ok = 1, MaxCombo = 8, Gauge = 10000 },
             });
             result.Players.Add(new PlayerResult
@@ -430,6 +441,19 @@ namespace OurTaiko.Tests
             Assert.That(screen.Shown, Is.EqualTo(MultiRoomScene.View.Result));
             Assert.That(screen.AllText, Does.Contain("Katsu").And.Contain("987,650").And.Contain(MultiText.Get("result.superStar"))
                 .And.Contain(MultiText.Format("result.team", "987,650")).And.Contain(MultiText.Get("result.failed")));
+            // Courses and judgments are the skin's icons, not words; the picture comes in when fetched.
+            var art = MultiArt.Load();
+            Sprite[] Shown() => Object.FindObjectsByType<UnityEngine.UI.Image>().Where(i => i.gameObject.scene == screen.gameObject.scene).Select(i => i.sprite).ToArray();
+            foreach (var icon in new[] { art.courseIcons[3], art.courseIcons[1], art.judgeGood, art.judgeOk, art.judgeBad, art.labelMaxCombo, art.labelDrumroll })
+                Assert.That(Shown(), Has.Member(icon), icon.name);
+            Assert.That(art.labelMaxCombo.name, Is.EqualTo("JudgeLabelMaxCombo"));
+            Assert.That(screen.AllText, Does.Not.Contain(MultiText.Course("Oni")).And.Not.Contain(L10n.Get("Common", "judge.bad")).And.Not.Contain("ombo"));
+            Assert.That(screen.AllText, Does.Contain("★8").And.Contain("★4"));
+            yield return Waits.Until(() => MultiAvatars.Get(avatar) != null, "The account picture did not load.", 10);
+            yield return null; yield return null;
+            Assert.That(MultiAvatars.Get(avatar).rect.size, Is.EqualTo(new Vector2(MultiAvatars.Size, MultiAvatars.Size)));
+            Assert.That(Shown(), Has.Member(MultiAvatars.Get(avatar)), "Katsu's picture is on the row.");
+            Assert.That(screen.AllText.Split('\n'), Does.Contain("D").And.Not.Contain("K"), "A player without a picture keeps the letter.");
             TestCapture.Capture("MultiResult.png");
             server.Room.Phase = Phase.Lobby;
             server.Snapshot();

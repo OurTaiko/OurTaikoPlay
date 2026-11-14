@@ -129,11 +129,43 @@ namespace OurTaiko
         // A member's disc: their colour and the first letter of their name.
         void Avatar(Transform parent, Member member, float size, float x, float y) => Avatar(parent, member.Slot, member.Nickname, size, x, y);
 
-        void Avatar(Transform parent, int slot, string nickname, float size, float x, float y)
+        // With an address, the player's account picture once it has come (MultiAvatars); until
+        // then, and without one, the letter.
+        void Avatar(Transform parent, int slot, string nickname, float size, float x, float y, string pictureUrl = null)
         {
-            Picture(parent, art.disc, size, size, x, y, MultiArt.SlotColor(slot));
+            var picture = MultiAvatars.Get(pictureUrl);
+            Picture(parent, art.disc, size, size, x, y, picture != null ? Color.white : MultiArt.SlotColor(slot));
+            if (picture != null) { Picture(parent, picture, size * 0.84f, size * 0.84f, x, y); return; }
             string name = MultiText.Name(nickname);
             Label(parent, StringInfo.GetNextTextElement(name).ToUpperInvariant(), size * 0.5f, x, y - size * 0.03f);
+        }
+
+        // A course as the skin's own icon with its stars beside it; a course the skin has no icon
+        // for keeps its name.
+        void CourseIcon(Transform parent, string course, int level, float height, float x, float y)
+        {
+            var icon = art.CourseIcon(course);
+            if (icon == null) { CoursePill(parent, course, level, 210, Math.Min(54, height), x, y); return; }
+            float width = height * icon.rect.width / icon.rect.height;
+            Picture(parent, icon, width, height, x - 34, y);
+            if (level > 0) Label(parent, "★" + level, height * 0.44f, x + width / 2 - 26, y - 2, 0, false, -1);
+        }
+
+        // The result screen's own labels, each with its count, one after another from x: 良, 可 and
+        // 不可 on the first line, 最大コンボ数 and 連打数 on the second.
+        void Counts(Transform parent, float x, float y, float height, float gap, params (Sprite Label, int Count)[] counts)
+        {
+            foreach (var (label, count) in counts)
+            {
+                if (label != null)
+                {
+                    float width = height * label.rect.width / label.rect.height;
+                    Picture(parent, label, width, height, x + width / 2, y);
+                    x += width + 6;
+                }
+                var number = Label(parent, count.ToString(CultureInfo.InvariantCulture), height * 0.84f, x, y - 2, 0, false, -1);
+                x += number.preferredWidth + gap;
+            }
         }
 
         // A course's name and stars on its colour.
@@ -423,15 +455,14 @@ namespace OurTaiko
             float disc = Math.Min(74, bar - 6);
             Picture(content, art.disc, disc, disc, 200, y, MultiHudView.RankColor(player.Rank));
             Label(content, player.Rank.ToString(CultureInfo.InvariantCulture), disc * 0.52f, 200, y - 2, 0, true);
-            Avatar(content, player.Slot, player.Nickname, disc, 290, y);
+            Avatar(content, player.Slot, player.Nickname, disc, 290, y, player.AvatarUrl);
             Label(content, MultiText.Name(player.Nickname), 34, 344, y - 2, 300, false, -1);
-            CoursePill(content, player.Course, player.Level, 210, Math.Min(54, bar - 10), 770, y);
+            CourseIcon(content, player.Course, player.Level, Math.Min(72, bar - 8), 770, y);
             var status = player.Status ?? new PlayerStatus();
             Label(content, Number(status.Score), 46, 1120, y - 2, 230, false, 1);
             bool twoLines = bar >= 84;
-            string counts = L10n.Get("Common", "judge.good") + " " + status.Good + "　" + L10n.Get("Common", "judge.ok") + " " + status.Ok + "　" + L10n.Get("Common", "judge.bad") + " " + status.Bad;
-            Label(content, counts, 26, 1296, twoLines ? y - 20 : y - 2, 310);
-            if (twoLines) Label(content, MultiText.Format("result.combo", status.MaxCombo, status.Drumroll), 24, 1296, y + 18, 310).alpha = 0.85f;
+            Counts(content, 1146, twoLines ? y - 20 : y, 36, 16, (art.judgeGood, status.Good), (art.judgeOk, status.Ok), (art.judgeBad, status.Bad));
+            if (twoLines) Counts(content, 1146, y + 22, 30, 18, (art.labelMaxCombo, status.MaxCombo), (art.labelDrumroll, status.Drumroll));
             if (player.Disconnected) Label(content, MultiText.Get("result.disconnected"), 28, 1530, y - 2, 124).color = Rose;
             else
             {

@@ -234,10 +234,6 @@ MonoBehaviour:
     m_Localized: Team score {0}
     m_Metadata:
       m_Items: []
-  - m_Id: 653254709
-    m_Localized: "Max combo {0} \xB7 Drumroll {1}"
-    m_Metadata:
-      m_Items: []
   - m_Id: 653254710
     m_Localized: Left
     m_Metadata:

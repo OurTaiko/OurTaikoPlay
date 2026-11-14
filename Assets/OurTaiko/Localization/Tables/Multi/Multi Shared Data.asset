@@ -231,10 +231,6 @@ MonoBehaviour:
     m_Key: result.team
     m_Metadata:
       m_Items: []
-  - m_Id: 653254709
-    m_Key: result.combo
-    m_Metadata:
-      m_Items: []
   - m_Id: 653254710
     m_Key: result.disconnected
     m_Metadata:

@@ -22,6 +22,13 @@ namespace OurTaiko.Multi
         [Tooltip("The sixteen stamps, by id.")]
         public Sprite[] stamps;
 
+        [Header("The skin's own")]
+        [Tooltip("The five courses' icons, Easy to Ura (the lane's lane_difficulty frames).")]
+        public Sprite[] courseIcons;
+        [Tooltip("The result screen's labels (result/score/max_combo_ja): 良, 可, 不可, 連打数, 最大コンボ数.")]
+        public Sprite judgeGood;
+        public Sprite judgeOk, judgeBad, labelDrumroll, labelMaxCombo;
+
         [Header("Sounds")]
         public AudioClip don;
         public AudioClip ka, bgm;
@@ -38,6 +45,13 @@ namespace OurTaiko.Multi
             new Color(0.55f, 0.6f, 0.7f), new Color(0.95f, 0.6f, 0.3f),
         };
         public static Color SlotColor(int slot) => SlotColors[((slot % SlotColors.Length) + SlotColors.Length) % SlotColors.Length];
+
+        // A course's icon; null for a course the skin has none for.
+        public Sprite CourseIcon(string course)
+        {
+            int index = course switch { "Easy" => 0, "Normal" => 1, "Hard" => 2, "Oni" => 3, "Edit" => 4, _ => -1 };
+            return courseIcons != null && index >= 0 && index < courseIcons.Length ? courseIcons[index] : null;
+        }
 
         // The five courses' colours, as the song list shows them.
         public static Color CourseColor(string course) => course switch

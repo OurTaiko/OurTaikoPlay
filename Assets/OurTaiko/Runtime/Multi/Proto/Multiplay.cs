@@ -90,30 +90,30 @@ namespace OurTaiko.Multi.Proto {
             "ZXJfaWQYASABKAkSMwoGc3RhdHVzGAIgASgLMiMub3VydGFpa28ubXVsdGlw",
             "bGF5LnYxLlBsYXllclN0YXR1cxIRCgljb25uZWN0ZWQYAyABKAgSEAoIZmlu",
             "aXNoZWQYBCABKAgiRAoMUGxheVN0YXR1c2VzEjQKB21lbWJlcnMYASADKAsy",
-            "Iy5vdXJ0YWlrby5tdWx0aXBsYXkudjEuTWVtYmVyU3RhdHVzIpsCCgxQbGF5",
+            "Iy5vdXJ0YWlrby5tdWx0aXBsYXkudjEuTWVtYmVyU3RhdHVzIq8CCgxQbGF5",
             "ZXJSZXN1bHQSDwoHdXNlcl9pZBgBIAEoCRIQCghuaWNrbmFtZRgCIAEoCRIO",
             "CgZjb3Vyc2UYAyABKAkSDQoFbGV2ZWwYBCABKAUSMwoGc3RhdHVzGAUgASgL",
             "MiMub3VydGFpa28ubXVsdGlwbGF5LnYxLlBsYXllclN0YXR1cxIMCgRyYW5r",
             "GAYgASgFEisKBWF3YXJkGAcgASgOMhwub3VydGFpa28ubXVsdGlwbGF5LnYx",
             "LkF3YXJkEg8KB2NsZWFyZWQYCCABKAgSFAoMZGlzY29ubmVjdGVkGAkgASgI",
             "EhIKCmZ1bGxfY29tYm8YCiABKAgSEAoIYWxsX2dvb2QYCyABKAgSDAoEc2xv",
-            "dBgMIAEoBSKWAQoKUGxheVJlc3VsdBINCgVyb3VuZBgBIAEoBRISCgp0ZWFt",
-            "X3Njb3JlGAIgASgDEjQKB3BsYXllcnMYAyADKAsyIy5vdXJ0YWlrby5tdWx0",
-            "aXBsYXkudjEuUGxheWVyUmVzdWx0Eg4KBnNvdXJjZRgEIAEoCRIQCghjaGFy",
-            "dF9pZBgFIAEoCRINCgV0aXRsZRgGIAEoCSIuCglTdGFtcFNlbnQSDwoHdXNl",
-            "cl9pZBgBIAEoCRIQCghzdGFtcF9pZBgCIAEoBSI2CgRQb25nEhYKDmNsaWVu",
-            "dF90aW1lX21zGAEgASgDEhYKDnNlcnZlcl90aW1lX21zGAIgASgDIicKBk5v",
-            "dGljZRIMCgRjb2RlGAEgASgJEg8KB21lc3NhZ2UYAiABKAkiJwoGQ2xvc2Vk",
-            "EgwKBGNvZGUYASABKAkSDwoHbWVzc2FnZRgCIAEoCSp7CgVQaGFzZRIVChFQ",
-            "SEFTRV9VTlNQRUNJRklFRBAAEgkKBUxPQkJZEAESDwoLU09OR19TRUxFQ1QQ",
-            "AhINCglTT05HX0RSQVcQAxIKCgZDT1VSU0UQBBILCgdMT0FESU5HEAUSCwoH",
-            "UExBWUlORxAGEgoKBlJFU1VMVBAHKkUKBUF3YXJkEhUKEUFXQVJEX1VOU1BF",
-            "Q0lGSUVEEAASDAoITk9fQVdBUkQQARIHCgNNVlAQAhIOCgpTVVBFUl9TVEFS",
-            "EAMyZgoJTXVsdGlFbnNvElkKB0Nvbm5lY3QSJC5vdXJ0YWlrby5tdWx0aXBs",
-            "YXkudjEuQ2xpZW50TWVzc2FnZRokLm91cnRhaWtvLm11bHRpcGxheS52MS5T",
-            "ZXJ2ZXJNZXNzYWdlKAEwAUJIWi9vdXJ0YWlrby5kZXYvbmV0L2ludGVybmFs",
-            "L211bHRpcGxheS9tdWx0aXBsYXlwYqoCFE91clRhaWtvLk11bHRpLlByb3Rv",
-            "YgZwcm90bzM="));
+            "dBgMIAEoBRISCgphdmF0YXJfdXJsGA0gASgJIpYBCgpQbGF5UmVzdWx0Eg0K",
+            "BXJvdW5kGAEgASgFEhIKCnRlYW1fc2NvcmUYAiABKAMSNAoHcGxheWVycxgD",
+            "IAMoCzIjLm91cnRhaWtvLm11bHRpcGxheS52MS5QbGF5ZXJSZXN1bHQSDgoG",
+            "c291cmNlGAQgASgJEhAKCGNoYXJ0X2lkGAUgASgJEg0KBXRpdGxlGAYgASgJ",
+            "Ii4KCVN0YW1wU2VudBIPCgd1c2VyX2lkGAEgASgJEhAKCHN0YW1wX2lkGAIg",
+            "ASgFIjYKBFBvbmcSFgoOY2xpZW50X3RpbWVfbXMYASABKAMSFgoOc2VydmVy",
+            "X3RpbWVfbXMYAiABKAMiJwoGTm90aWNlEgwKBGNvZGUYASABKAkSDwoHbWVz",
+            "c2FnZRgCIAEoCSInCgZDbG9zZWQSDAoEY29kZRgBIAEoCRIPCgdtZXNzYWdl",
+            "GAIgASgJKnsKBVBoYXNlEhUKEVBIQVNFX1VOU1BFQ0lGSUVEEAASCQoFTE9C",
+            "QlkQARIPCgtTT05HX1NFTEVDVBACEg0KCVNPTkdfRFJBVxADEgoKBkNPVVJT",
+            "RRAEEgsKB0xPQURJTkcQBRILCgdQTEFZSU5HEAYSCgoGUkVTVUxUEAcqRQoF",
+            "QXdhcmQSFQoRQVdBUkRfVU5TUEVDSUZJRUQQABIMCghOT19BV0FSRBABEgcK",
+            "A01WUBACEg4KClNVUEVSX1NUQVIQAzJmCglNdWx0aUVuc28SWQoHQ29ubmVj",
+            "dBIkLm91cnRhaWtvLm11bHRpcGxheS52MS5DbGllbnRNZXNzYWdlGiQub3Vy",
+            "dGFpa28ubXVsdGlwbGF5LnYxLlNlcnZlck1lc3NhZ2UoATABQkhaL291cnRh",
+            "aWtvLmRldi9uZXQvaW50ZXJuYWwvbXVsdGlwbGF5L211bHRpcGxheXBiqgIU",
+            "T3VyVGFpa28uTXVsdGkuUHJvdG9iBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::OurTaiko.Multi.Proto.Phase), typeof(global::OurTaiko.Multi.Proto.Award), }, null, new pbr::GeneratedClrTypeInfo[] {
@@ -142,7 +142,7 @@ namespace OurTaiko.Multi.Proto {
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.StartPlay), global::OurTaiko.Multi.Proto.StartPlay.Parser, new[]{ "Round" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.MemberStatus), global::OurTaiko.Multi.Proto.MemberStatus.Parser, new[]{ "UserId", "Status", "Connected", "Finished" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.PlayStatuses), global::OurTaiko.Multi.Proto.PlayStatuses.Parser, new[]{ "Members" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.PlayerResult), global::OurTaiko.Multi.Proto.PlayerResult.Parser, new[]{ "UserId", "Nickname", "Course", "Level", "Status", "Rank", "Award", "Cleared", "Disconnected", "FullCombo", "AllGood", "Slot" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.PlayerResult), global::OurTaiko.Multi.Proto.PlayerResult.Parser, new[]{ "UserId", "Nickname", "Course", "Level", "Status", "Rank", "Award", "Cleared", "Disconnected", "FullCombo", "AllGood", "Slot", "AvatarUrl" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.PlayResult), global::OurTaiko.Multi.Proto.PlayResult.Parser, new[]{ "Round", "TeamScore", "Players", "Source", "ChartId", "Title" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.StampSent), global::OurTaiko.Multi.Proto.StampSent.Parser, new[]{ "UserId", "StampId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Pong), global::OurTaiko.Multi.Proto.Pong.Parser, new[]{ "ClientTimeMs", "ServerTimeMs" }, null, null, null, null),
@@ -8111,6 +8111,7 @@ namespace OurTaiko.Multi.Proto {
       fullCombo_ = other.fullCombo_;
       allGood_ = other.allGood_;
       slot_ = other.slot_;
+      avatarUrl_ = other.avatarUrl_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -8276,6 +8277,22 @@ namespace OurTaiko.Multi.Proto {
       }
     }
 
+    /// <summary>Field number for the "avatar_url" field.</summary>
+    public const int AvatarUrlFieldNumber = 13;
+    private string avatarUrl_ = "";
+    /// <summary>
+    /// The player's avatar as the room last knew it (empty: none), so a result still shows it once
+    /// the player has left.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string AvatarUrl {
+      get { return avatarUrl_; }
+      set {
+        avatarUrl_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -8303,6 +8320,7 @@ namespace OurTaiko.Multi.Proto {
       if (FullCombo != other.FullCombo) return false;
       if (AllGood != other.AllGood) return false;
       if (Slot != other.Slot) return false;
+      if (AvatarUrl != other.AvatarUrl) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -8322,6 +8340,7 @@ namespace OurTaiko.Multi.Proto {
       if (FullCombo != false) hash ^= FullCombo.GetHashCode();
       if (AllGood != false) hash ^= AllGood.GetHashCode();
       if (Slot != 0) hash ^= Slot.GetHashCode();
+      if (AvatarUrl.Length != 0) hash ^= AvatarUrl.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -8388,6 +8407,10 @@ namespace OurTaiko.Multi.Proto {
         output.WriteRawTag(96);
         output.WriteInt32(Slot);
       }
+      if (AvatarUrl.Length != 0) {
+        output.WriteRawTag(106);
+        output.WriteString(AvatarUrl);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -8446,6 +8469,10 @@ namespace OurTaiko.Multi.Proto {
         output.WriteRawTag(96);
         output.WriteInt32(Slot);
       }
+      if (AvatarUrl.Length != 0) {
+        output.WriteRawTag(106);
+        output.WriteString(AvatarUrl);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -8491,6 +8518,9 @@ namespace OurTaiko.Multi.Proto {
       }
       if (Slot != 0) {
         size += 1 + pb::CodedOutputStream.ComputeInt32Size(Slot);
+      }
+      if (AvatarUrl.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(AvatarUrl);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -8542,6 +8572,9 @@ namespace OurTaiko.Multi.Proto {
       }
       if (other.Slot != 0) {
         Slot = other.Slot;
+      }
+      if (other.AvatarUrl.Length != 0) {
+        AvatarUrl = other.AvatarUrl;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -8613,6 +8646,10 @@ namespace OurTaiko.Multi.Proto {
             Slot = input.ReadInt32();
             break;
           }
+          case 106: {
+            AvatarUrl = input.ReadString();
+            break;
+          }
         }
       }
     #endif
@@ -8681,6 +8718,10 @@ namespace OurTaiko.Multi.Proto {
           }
           case 96: {
             Slot = input.ReadInt32();
+            break;
+          }
+          case 106: {
+            AvatarUrl = input.ReadString();
             break;
           }
         }

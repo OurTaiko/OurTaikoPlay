@@ -50,3 +50,5 @@ System.IO.Pipelines 10.0.14 (MIT) are included as unmodified NuGet binaries; ver
 provenance are in Assets/Plugins/Grpc/PROVENANCE.md. HTTP/2 is Cysharp's
 YetAnotherHttpHandler 1.11.7 (MIT), a package in Packages/manifest.json. The mode's own
 art (Assets/OurTaiko/Art/multi) was drawn for this project and is part of it.
+Players' account pictures are WebP, read with Eunpyoung Kim's unity.webp 0.3.22 (MIT; it
+bundles Google's libwebp under its BSD-style license), a package in Packages/manifest.json.

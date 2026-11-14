@@ -49,6 +49,17 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 8567d2298a4ab4a9db82004f141b48a2, type: 3}
   - {fileID: 21300000, guid: c8eb454208d714a57be768b2a2be9004, type: 3}
   - {fileID: 21300000, guid: 76cdb03a519c948fe8015d861a5ee51b, type: 3}
+  courseIcons:
+  - {fileID: -455977207, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: -1335733205, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: -834173487, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: 1702319767, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  - {fileID: 1511858840, guid: afc21b14a938040be93225af4c3983cf, type: 3}
+  judgeGood: {fileID: -1506583576, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  judgeOk: {fileID: -2129074332, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  judgeBad: {fileID: 1837415816, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  labelDrumroll: {fileID: 1523142268, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
+  labelMaxCombo: {fileID: -1029620408, guid: d3503a4c0138246468018e18f6dc4f83, type: 3}
   don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}
   ka: {fileID: 8300000, guid: b5d46904052a14efdbf9361bde1e09ae, type: 3}
   bgm: {fileID: 8300000, guid: 3df0afb9311fe447ba6bf1a5cfa55d40, type: 3}

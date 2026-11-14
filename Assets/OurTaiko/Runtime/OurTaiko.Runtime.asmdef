@@ -17,6 +17,7 @@
     "MajdataPlay.FFmpeg",
     "Unity.Localization",
     "Unity.ResourceManager",
-    "Cysharp.Net.Http.YetAnotherHttpHandler"
+    "Cysharp.Net.Http.YetAnotherHttpHandler",
+    "unity.webp"
   ]
 }

@@ -14,6 +14,13 @@
       "dependencies": {},
       "hash": "08248bd5884d8eb932a837aa56d4ff456daf913f"
     },
+    "com.netpyoung.webp": {
+      "version": "https://github.com/netpyoung/unity.webp.git?path=unity_project/Assets/unity.webp#0.3.22",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "9818db6327e09d399bf4fb84da4ed19f03b565b4"
+    },
     "com.unity.2d.animation": {
       "version": "16.0.1",
       "depth": 0,
