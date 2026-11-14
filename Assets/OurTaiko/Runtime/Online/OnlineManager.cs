@@ -91,11 +91,11 @@ namespace OurTaiko.Online
             Instance = null;
         }
 
-        (string Name, string Url)[] builtIn = ServerConfig.BuiltIn;
+        (string Name, string Url, string Api)[] builtIn = ServerConfig.BuiltIn;
 
         // The servers the game connects to: the built-in ones (tests name their own). Players sign
         // in to them through their OurTaiko accounts.
-        public IReadOnlyList<ServerConfig> BuiltInServers => builtIn.Select(b => new ServerConfig { name = b.Name, baseUrl = b.Url }).ToArray();
+        public IReadOnlyList<ServerConfig> BuiltInServers => builtIn.Select(b => new ServerConfig { name = b.Name, baseUrl = b.Url, api = b.Api }).ToArray();
 
         // 1P's and 2P's OurTaiko accounts on this device, and the account center they sign in at.
         public AccountStore Accounts { get; private set; }
@@ -348,7 +348,7 @@ namespace OurTaiko.Online
             {
                 Client.Remove(builtInEndpoints.Contains);
                 builtInEndpoints.Clear();
-                foreach (var (name, url) in builtIn) builtInEndpoints.Add(Client.Add(new ServerConfig { name = name, baseUrl = url }));
+                foreach (var (name, url, api) in builtIn) builtInEndpoints.Add(Client.Add(new ServerConfig { name = name, baseUrl = url, api = api }));
             }
             return builtInEndpoints.ToArray();
         }
@@ -400,7 +400,8 @@ namespace OurTaiko.Online
         // unless they name their own in place of the built-in ones.
         public void UseUnsaved(string cacheRoot = null, params (string Name, string Url)[] servers)
         {
-            builtIn = servers ?? Array.Empty<(string, string)>();
+            // A test's server has its API at its own address.
+            builtIn = (servers ?? Array.Empty<(string, string)>()).Select(s => (s.Name, s.Url, "")).ToArray();
             builtInEndpoints.Clear();
             // Nothing listens there: a test that signs in names its own account center.
             UseAccounts(new AccountStore(null, "test"), new AccountCenter("http://127.0.0.1:9"));

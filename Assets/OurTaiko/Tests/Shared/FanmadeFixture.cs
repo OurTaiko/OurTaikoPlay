@@ -235,6 +235,14 @@ namespace OurTaiko.Tests
             var request = context.Request;
             string path = request.Url.AbsolutePath;
             Requests.Add(request.HttpMethod + " " + path);
+            // A server that is one song source of a site has its API under the source's name
+            // (ServerConfig.api); what it answers is the same.
+            const string sources = "/api/v1/sources/";
+            if (path.StartsWith(sources, StringComparison.Ordinal))
+            {
+                int end = path.IndexOf('/', sources.Length);
+                if (end > 0) path = "/api/v1" + path.Substring(end);
+            }
             try
             {
                 if (CustomRequest?.Invoke(context) == true) return;

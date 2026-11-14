@@ -643,10 +643,43 @@ namespace OurTaiko.Tests
             Assert.That(PlayRecord.TypeOf(isKa: true, right: true), Is.EqualTo(3));
         }
 
+        // What a player has of a server (charts, offline cache, queued scores) is kept under the
+        // address the server is known by. Moving its API leaves that address, and so all of it,
+        // where it was.
+        [Test]
+        public void AServerWhoseApiIsElsewhereIsAskedThereAndKeptUnderItsOwnAddress()
+        {
+            var moved = new ServerConfig { name = "Moved", baseUrl = "https://old.example/", api = fixture.BaseUrl + "/api/v1/sources/fanmade/" };
+            var endpoint = client.Add(moved);
+            Assert.That(endpoint.HasValidUrl(), Is.True);
+            Assert.That(endpoint.Config.Address("/api/v1/game/search?q=a"), Is.EqualTo(fixture.BaseUrl + "/api/v1/sources/fanmade/game/search?q=a"));
+            Assert.That(endpoint.Config.ApiRoot, Is.EqualTo(fixture.BaseUrl + "/api/v1/sources/fanmade"));
+            string old = FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes("https://old.example\n"));
+            Assert.That(endpoint.Id, Is.EqualTo(old));
+            Assert.That(endpoint.AccountId, Is.EqualTo(old), "Signed out, a seat is the server itself.");
+
+            Run(() => fixture.ConnectAsync(client, endpoint, "don"));
+            Assert.That(endpoint.IsConnected, Is.True);
+            Assert.That(endpoint.IsAuthenticated, Is.True);
+            Assert.That(endpoint.AccountId, Is.EqualTo(FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes("https://old.example\nsso:" + endpoint.Seats[0].UserId))));
+            var asked = fixture.Requests.Where(r => !r.Contains("/game/account/") && !r.EndsWith(" /api/v1/game/tokens")).ToArray();
+            Assert.That(asked, Is.Not.Empty);
+            Assert.That(asked, Has.All.Contains(" /api/v1/sources/fanmade/"), "Every request to the server goes under its API address.");
+            Assert.That(asked, Does.Contain("GET /api/v1/sources/fanmade/game/catalog"));
+
+            // A server with no API address of its own is asked at its own, as before.
+            var own = new ServerConfig { baseUrl = "https://own.example" };
+            Assert.That(own.Address("/api/v1/game/catalog"), Is.EqualTo("https://own.example/api/v1/game/catalog"));
+            Assert.That(own.ApiRoot, Is.EqualTo("https://own.example/api/v1"));
+        }
+
         [Test]
         public void TheBuiltInServersAreTheTwoOurTaikoOnesAndGenresMapToBoardFrames()
         {
             Assert.That(ServerConfig.BuiltIn.Select(b => b.Url), Is.EqualTo(new[] { "https://fanmade.ourtaiko.org", "https://database.ourtaiko.org" }));
+            // Both are song sources of one site; the game asks them there.
+            Assert.That(ServerConfig.BuiltIn.Select(b => b.Api), Is.EqualTo(new[] { "https://net.ourtaiko.org/api/v1/sources/fanmade", "https://net.ourtaiko.org/api/v1/sources/official" }));
+            Assert.That(ProfileCenter.DefaultBase, Is.EqualTo("https://net.ourtaiko.org"));
             Assert.That(OnlineManager.GenreFrame("GAME"), Is.EqualTo(3));
             Assert.That(OnlineManager.GenreFrame("ボーカロイド"), Is.EqualTo(8));
             Assert.That(OnlineManager.GenreFrame("Unknown"), Is.EqualTo(0));

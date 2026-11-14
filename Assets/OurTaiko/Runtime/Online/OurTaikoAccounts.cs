@@ -198,7 +198,7 @@ namespace OurTaiko.Online
         }
     }
 
-    // A player's nameplate as OurTaikoProfile (profile.ourtaiko.org) keeps it: the title worn
+    // A player's nameplate as the site keeps it (net.ourtaiko.org, /api/v1/users/...): the title worn
     // (its text and band) and the highest 段位 shown.
     public sealed class ProfileNameplate
     {
@@ -240,10 +240,10 @@ namespace OurTaiko.Online
         }
     }
 
-    // OurTaikoProfile's public reads the game needs.
+    // The public reads of players the game needs. They are the site's own, of no song source.
     public sealed class ProfileCenter : IDisposable
     {
-        public const string DefaultBase = "https://profile.ourtaiko.org";
+        public const string DefaultBase = ServerConfig.Site;
         public readonly string Base;
         readonly HttpClient http;
 

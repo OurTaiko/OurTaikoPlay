@@ -54,7 +54,8 @@ namespace OurTaiko.Online
         public const long DefaultLimit = 64L * 1024 * 1024;
         public const int SeatCount = 2;
         public readonly ServerConfig Config;
-        // sha256(base_url + "\n"): what the server's charts and offline cache are kept under.
+        // sha256(base_url + "\n"): what the server's charts and offline cache are kept under. Of the
+        // address the server is known by, not of where its API is (ServerConfig.BuiltIn).
         public readonly string Id;
         // What 1P's pending scores are queued under (AccountIdOf(0)).
         public string AccountId => AccountIdOf(0);
@@ -85,7 +86,7 @@ namespace OurTaiko.Online
 
         public FanmadeEndpoint(ServerConfig config)
         {
-            Config = new ServerConfig { name = config.name ?? "", baseUrl = (config.baseUrl ?? "").TrimEnd('/') };
+            Config = new ServerConfig { name = config.name ?? "", baseUrl = (config.baseUrl ?? "").TrimEnd('/'), api = (config.api ?? "").TrimEnd('/') };
             Id = Sha256Hex(Encoding.UTF8.GetBytes(Config.baseUrl + "\n"));
             var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false };
             // Per-request timeouts below; the client-wide one only bounds pathological cases.
@@ -108,8 +109,8 @@ namespace OurTaiko.Online
 
         public bool HasValidUrl()
         {
-            string url = Config.baseUrl;
-            return (url.StartsWith("http://", StringComparison.Ordinal) || url.StartsWith("https://", StringComparison.Ordinal))
+            return Valid(Config.baseUrl) && (Config.api.Length == 0 || Valid(Config.api));
+            static bool Valid(string url) => (url.StartsWith("http://", StringComparison.Ordinal) || url.StartsWith("https://", StringComparison.Ordinal))
                 && url.IndexOfAny(new[] { '?', '#', '@', ' ', '\r', '\n' }) < 0 && Uri.IsWellFormedUriString(url, UriKind.Absolute);
         }
 
@@ -154,7 +155,7 @@ namespace OurTaiko.Online
             // Files come from signed resource links (ResourceBytesAsync); API calls are small.
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
-            using var request = new HttpRequestMessage(string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post, Config.baseUrl + path);
+            using var request = new HttpRequestMessage(string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post, Config.Address(path));
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             // API replies may come gzipped (an OurTaiko Database catalog is 4 MB, 0.8 MB packed). Only
             // here: resource downloads keep the exact bytes and sizes their manifest names.
