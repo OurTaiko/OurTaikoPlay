@@ -37,3 +37,7 @@ calibration.changed,Offsets have changed since; play again,オフセット設定
 calibration.saved,Saved {0}; applies from your next play,{0} を保存しました。次のプレイから反映されます,已保存 {0}，下次游玩生效,"Timing page status; {0} = A, B or A / B"
 calibration.belowOne,Average offset under 1 ms; no change needed,平均のずれが 1 ms 未満のため調整不要,平均偏差不足 1 ms，无需调整,Timing page status
 calibration.hint,Each fix corrects ½ of the average · Once each per play,1回で平均のずれの½を補正・各項目この演奏で1回まで,每次修正平均偏差的 ½ · 每项限本局一次,Timing page status explaining the adjust buttons
+rating.title,How was this chart?,この譜面はどうだった？,这张谱怎么样？,Result screen prompt asked when leaving: heading
+rating.good,Good,いいね,好评,Result screen prompt: upvote the chart
+rating.skip,Cancel,キャンセル,取消,Result screen prompt: leave without voting
+rating.bad,Not good,いまいち,差评,Result screen prompt: downvote the chart

@@ -119,6 +119,10 @@ namespace OurTaiko.Tests
         public readonly ConcurrentQueue<string> AcceptedUsers = new ConcurrentQueue<string>();
         public readonly ConcurrentDictionary<string, JObject> Idempotent = new ConcurrentDictionary<string, JObject>();
         public readonly ConcurrentBag<string> Requests = new ConcurrentBag<string>();
+        // The players' votes on charts (GET and PUT /api/v1/game/charts/{id}/vote), by "user/chart".
+        // Off, the fixture is a server without the call: it answers 404.
+        public bool Votes;
+        public readonly ConcurrentDictionary<string, int> ChartVotes = new ConcurrentDictionary<string, int>();
         public readonly List<JObject> AccountScores = new List<JObject>();
         // GET /api/v1/replays (newest first, one page) and GET /api/v1/scores/{id}/replay: the listed
         // plays and their recordings by score id.
@@ -307,6 +311,20 @@ namespace OurTaiko.Tests
                     if (chart == null) { Reply(context, 404, new JObject()); return; }
                     Interlocked.Increment(ref Downloads);
                     Bytes(context, parts[2] == "tja" ? chart.Tja : chart.Audio);
+                    return;
+                }
+                if (Votes && parts.Length == 6 && parts[2] == "game" && parts[3] == "charts" && parts[5] == "vote"
+                    && (request.HttpMethod == "GET" || request.HttpMethod == "PUT"))
+                {
+                    if (user == null) { Reply(context, 401, new JObject()); return; }
+                    if (Charts.Find(c => c.Id == parts[4]) == null) { Reply(context, 404, new JObject()); return; }
+                    string vote = user + "/" + parts[4];
+                    if (request.HttpMethod == "PUT")
+                    {
+                        int value = (int)JObject.Parse(body)["value"];
+                        if (value == 0) ChartVotes.TryRemove(vote, out _); else ChartVotes[vote] = value;
+                    }
+                    Reply(context, 200, new JObject { ["myVote"] = ChartVotes.TryGetValue(vote, out int mine) ? mine : 0 });
                     return;
                 }
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/scores")

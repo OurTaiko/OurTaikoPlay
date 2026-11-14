@@ -34,7 +34,7 @@ namespace OurTaiko.Tests
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture();
+            fixture = new FanmadeFixture { Votes = true };
             fixture.Users["ka"] = "katsu";
             chart = new FanmadeFixture.Chart
             {
@@ -247,8 +247,17 @@ namespace OurTaiko.Tests
             Assert.That((int)sent["replay_data"]["options"]["speed"], Is.EqualTo(15));
             Assert.That(fixture.AcceptedUsers.Single(), Is.EqualTo("don"));
 
+            // Leaving asks the player about the chart; the answer is their vote on it.
+            yield return ChartRatingFlowTests.Leave(result);
+            Assert.That(result.Rating.Focused, Is.EqualTo(ChartRatingPrompt.Good));
+            yield return null;
+            TestCapture.Capture("GhostResultRating.png");
+            result.Rating.Move(-1);
+            Assert.That(result.Rating.Focused, Is.EqualTo(ChartRatingPrompt.Bad), "Round the end.");
+            result.Rating.Press();
+            yield return Waits.Until(() => fixture.ChartVotes.TryGetValue("don/" + chart.Id, out int vote) && vote == -1, "The vote did not arrive.");
+
             // Leaving the result returns to the screen, which shows the two results: the recording won.
-            switcher.ReturnToMenu();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.GhostSelectScene && !SceneSwitcher.Instance.IsInputBlocked, seconds: 10);
             list = Object.FindAnyObjectByType<GhostSelectScene>();
             yield return null; yield return null;

@@ -126,25 +126,26 @@ namespace OurTaiko.Online
         }
 
         // A request with a seat's token. An expired token is traded for once more and the request
-        // repeated.
-        public async Task<string> AuthorizedAsync(string path, string body = "", string key = "", CancellationToken cancel = default, int seat = 0)
+        // repeated. method: null is GET, or POST with a body.
+        public async Task<string> AuthorizedAsync(string path, string body = "", string key = "", CancellationToken cancel = default, int seat = 0,
+            HttpMethod method = null)
         {
             var s = Seats[seat];
-            try { return await RequestAsync(path, body, key, cancel: cancel, bearer: s.Token); }
+            try { return await RequestAsync(path, body, key, cancel: cancel, bearer: s.Token, method: method); }
             catch (HttpStatusException error) when (error.Status == 401 && s.IsAuthenticated && s.Renew != null)
             {
                 string renewed = await s.Renew(cancel);
                 if (!Json.HexId(renewed ?? "", 64)) throw new FanmadeException("API_TOKEN_INVALID");
                 s.Token = renewed;
-                return await RequestAsync(path, body, key, cancel: cancel, bearer: s.Token);
+                return await RequestAsync(path, body, key, cancel: cancel, bearer: s.Token, method: method);
             }
         }
 
         // bearer null: 1P's token (anonymous requests are unaffected by it).
         public async Task<string> RequestAsync(string path, string body = "", string key = "", long limit = DefaultLimit,
-            CancellationToken cancel = default, Action<long, long> progress = null, string bearer = null)
+            CancellationToken cancel = default, Action<long, long> progress = null, string bearer = null, HttpMethod method = null)
         {
-            var bytes = await RequestBytesAsync(path, body, key, limit, cancel, progress, bearer);
+            var bytes = await RequestBytesAsync(path, body, key, limit, cancel, progress, bearer, method);
             return new UTF8Encoding(false).GetString(bytes);
         }
 
@@ -155,18 +156,18 @@ namespace OurTaiko.Online
             => new UTF8Encoding(false).GetString(await SendAsync(Config.site + path, path, "", "", DefaultLimit, cancel, null, bearer ?? "", 60));
 
         public Task<byte[]> RequestBytesAsync(string path, string body = "", string key = "", long limit = DefaultLimit,
-            CancellationToken cancel = default, Action<long, long> progress = null, string bearer = null)
-            => SendAsync(Config.Address(path), path, body, key, limit, cancel, progress, bearer);
+            CancellationToken cancel = default, Action<long, long> progress = null, string bearer = null, HttpMethod method = null)
+            => SendAsync(Config.Address(path), path, body, key, limit, cancel, progress, bearer, method: method);
 
         async Task<byte[]> SendAsync(string address, string path, string body, string key, long limit,
-            CancellationToken cancel, Action<long, long> progress, string bearer, int seconds = 15)
+            CancellationToken cancel, Action<long, long> progress, string bearer, int seconds = 15, HttpMethod method = null)
         {
             string token = bearer ?? Seats[0].Token;
             if (cancel.IsCancellationRequested) throw new FanmadeException("DOWNLOAD_CANCELLED");
             // Files come from signed resource links (ResourceBytesAsync); API calls are small.
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(seconds));
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
-            using var request = new HttpRequestMessage(string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post, address);
+            using var request = new HttpRequestMessage(method ?? (string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post), address);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             // API replies may come gzipped (an OurTaiko Database catalog is 4 MB, 0.8 MB packed). Only
             // here: resource downloads keep the exact bytes and sizes their manifest names.

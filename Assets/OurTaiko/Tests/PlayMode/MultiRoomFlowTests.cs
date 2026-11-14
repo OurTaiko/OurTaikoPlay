@@ -113,7 +113,7 @@ namespace OurTaiko.Tests
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture { SiteSources = new[] { "fanmade", "official" } };
+            fixture = new FanmadeFixture { SiteSources = new[] { "fanmade", "official" }, Votes = true };
             chart = new FanmadeFixture.Chart
             {
                 Title = "Room Song", Subtitle = "Together", AudioName = "song.ogg",
@@ -454,8 +454,16 @@ namespace OurTaiko.Tests
             yield return null;
             Assert.That(MultiDirector.Instance.BannerText, Does.Contain(MultiText.Get("phase.result")), "The result screen says what the room is doing.");
 
+            // Leaving asks the player about the chart; "not now" goes on without a vote.
+            var own = Object.FindAnyObjectByType<ResultScene>();
+            yield return ChartRatingFlowTests.Leave(own);
+            Assert.That(own.Rating.Focused, Is.EqualTo(ChartRatingPrompt.Good));
+            own.Rating.Move(1);
+            own.Rating.Press();
+            Assert.That(own.IsLeaving, Is.True);
+            Assert.That(fixture.ChartVotes, Is.Empty);
+
             // Back in the room: the ranking, then the lobby again.
-            SceneSwitcher.Instance.ReturnToMenu();
             yield return WaitForScene(SceneSwitcher.MultiRoomScene);
             screen = RoomScreen;
             yield return null;

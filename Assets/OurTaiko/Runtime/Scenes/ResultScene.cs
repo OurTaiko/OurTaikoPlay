@@ -11,7 +11,7 @@ namespace OurTaiko
     // 1P's board on the left, 2P's on the right after a two-player play (result_2p.cpp). The 3D Don,
     // score-rank clip and option icons are not ported. The screen is saved in the scene
     // (ResultView); Awake binds it and fills in the run, and the sprites below are the per-run art.
-    public sealed class ResultScene : MonoBehaviour
+    public sealed partial class ResultScene : MonoBehaviour
     {
         public RectTransform stage;
         public ResultView view;
@@ -72,6 +72,8 @@ namespace OurTaiko
         public IReadOnlyList<ResultBoard> Boards => boards;
         public bool IsLeaving { get; private set; }
         public CoinOverlayView Coins { get; private set; }
+        // "How was this chart?", asked when the player leaves (ResultScene.Rating.cs).
+        public ChartRatingPrompt Rating { get; private set; }
 
         SceneSwitcher switcher;
         internal LumenClip SuccessClip, CrownClip, CrownLoop, MessageClip, JudgePop, ScorePop, FireClip, RainbowClip, HighScoreClip;
@@ -92,7 +94,8 @@ namespace OurTaiko
             Result = switcher.LastResult ?? Placeholder();
             // A two-player result needs 2P's board in the scene; without it only 1P's is shown.
             var result2P = view.secondBoard != null ? switcher.LastResult2P : null;
-            SaveScores();
+            var played = SaveScores();
+            PrepareRating(played, result2P);
             bgClip = Clip(backgroundTimeline); SuccessClip = Clip(successTimeline); CrownClip = Clip(crownTimeline);
             CrownLoop = Clip(crownLoopTimeline); MessageClip = Clip(messageTimeline); JudgePop = Clip(judgeDigitTimeline);
             ScorePop = Clip(scoreDigitTimeline); FireClip = Clip(fireTimeline); RainbowClip = Clip(rainbowTimeline);
@@ -126,9 +129,10 @@ namespace OurTaiko
 
         // Only entering ResultScene commits a completed play. Practice never enters this scene.
         // Consume before saving so scene reloads and Editor previews cannot submit a run twice.
-        void SaveScores()
+        // The song of the play this entry committed; null when there was none to commit.
+        SongDefinition SaveScores()
         {
-            if (!switcher.TakeCompletedPlay(out var song, out var record, out var record2P)) return;
+            if (!switcher.TakeCompletedPlay(out var song, out var record, out var record2P)) return null;
             // A ghost battle keeps the player's play only, as the player's own (SceneSwitcher.Lead); the
             // recording's result is shown and never saved.
             if (switcher.PlaysGhost)
@@ -136,11 +140,12 @@ namespace OurTaiko
                 bool below = switcher.Ghost.PlayerLane == 1;
                 var played = below ? switcher.LastResult2P : Result;
                 if (played != null) SaveScore(song, played, below ? record2P : record, switcher.Lead.Index());
-                return;
+                return song;
             }
             // A lone player's score is their side's account's (SceneSwitcher.Lead; 1P's with two players).
             SaveScore(song, Result, record, switcher.Lead.Index());
             if (switcher.LastResult2P != null) SaveScore(song, switcher.LastResult2P, record2P, 1);
+            return song;
         }
 
         // Local charts keep every seat's best in the one score database. Online, each seat uploads
@@ -248,6 +253,7 @@ namespace OurTaiko
         // drum (SceneSwitcher.Lead: 1P, or a lone 2P's 2P).
         void HandleInput()
         {
+            if (Rating != null && Rating.IsOpen) { HandleRatingInput(); return; }
             // A ghost battle has one player: only their own drum works the result, and their ka turns
             // both boards' pages together.
             if (boards.Count > 1 && switcher.PlaysGhost)
@@ -290,7 +296,7 @@ namespace OurTaiko
             Leave();
         }
 
-        bool CanAct(int seat) => !IsLeaving && !switcher.IsInputBlocked && revealStart >= 0
+        bool CanAct(int seat) => !IsLeaving && !switcher.IsInputBlocked && revealStart >= 0 && !(Rating?.IsOpen ?? false)
             && Sequence.FadeInFinished && lastActionFrame[seat] != Time.frameCount;
 
         // Lands every board's reveal at once; false when none could skip.
@@ -327,7 +333,7 @@ namespace OurTaiko
 
         void Leave()
         {
-            if (IsLeaving) return;
+            if (IsLeaving || AskRating()) return;
             IsLeaving = true;
             switcher.ReturnToMenu();
         }
