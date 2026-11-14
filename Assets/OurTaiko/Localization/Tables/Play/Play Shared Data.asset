@@ -159,6 +159,34 @@ MonoBehaviour:
     m_Key: ghostSelect.noPlaysCategory
     m_Metadata:
       m_Items: []
+  - m_Id: 1290220912762880
+    m_Key: ghostSelect.pickServer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345792
+    m_Key: ghostSelect.pickCategory
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345793
+    m_Key: ghostSelect.prev
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345794
+    m_Key: ghostSelect.next
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345795
+    m_Key: ghostResult.heading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345796
+    m_Key: ghostResult.win
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345797
+    m_Key: ghostResult.draw
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

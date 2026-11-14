@@ -162,6 +162,34 @@ MonoBehaviour:
     m_Localized: No recorded plays in this category yet.
     m_Metadata:
       m_Items: []
+  - m_Id: 1290220912762880
+    m_Localized: Choose a server
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345792
+    m_Localized: Choose a category
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345793
+    m_Localized: Previous
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345794
+    m_Localized: Next
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345795
+    m_Localized: Battle Result
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345796
+    m_Localized: WIN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1290220925345797
+    m_Localized: DRAW
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -29,18 +29,9 @@ namespace OurTaiko
 
         public enum View { Menu, Code, Room, Result }
 
-        // One thing the player can press.
-        public sealed class Control
-        {
-            public string Key = "";
-            public RectTransform Root;
-            public Image Ring;
-            public Action Press;
-        }
-
         public View Shown { get; private set; }
-        public IReadOnlyList<Control> Controls => controls;
-        public Control Focused => focus >= 0 && focus < controls.Count ? controls[focus] : null;
+        public IReadOnlyList<PlateUi.Control> Controls => ui.Controls;
+        public PlateUi.Control Focused => ui.Focused;
         // Connecting to a room.
         public bool IsBusy { get; private set; }
         // The line under the menu: progress, or why the last room ended or could not be joined.
@@ -55,9 +46,7 @@ namespace OurTaiko
         SceneSwitcher switcher;
         MultiArt art;
         MultiDirector director;
-        readonly List<Control> controls = new List<Control>();
-        int focus;
-        string focusKey = "";
+        PlateUi ui;
         bool dirty = true, enteringCode, reviewing;
         double leaveAskedAt = double.NegativeInfinity;
         CancellationTokenSource cancel;
@@ -81,6 +70,7 @@ namespace OurTaiko
             MultiAvatars.Loaded += OnAvatarLoaded;
             switcher.SceneChanging += OnSceneChanging;
             if (MultiSession.ClosedCode != null) { Message = MultiText.Describe(MultiSession.ClosedCode); MultiSession.ClosedCode = null; }
+            ui = new PlateUi(stage, art, Tap);
             BuildBackdrop();
             Rebuild();
         }
@@ -162,12 +152,8 @@ namespace OurTaiko
 
         public void Move(int delta)
         {
-            if (controls.Count == 0 || HasLeft) return;
-            focus = ((focus + delta) % controls.Count + controls.Count) % controls.Count;
-            focusKey = controls[focus].Key;
-            focusMoved = true;
+            if (HasLeft || !ui.Move(delta)) return;
             Play(art.ka);
-            ShowFocus();
         }
 
         public void Confirm()
@@ -182,11 +168,7 @@ namespace OurTaiko
         // A tap or click: the control is focused and pressed.
         public void Tap(string key)
         {
-            int index = controls.FindIndex(c => c.Key == key);
-            if (index < 0 || HasLeft || switcher.IsInputBlocked) return;
-            focus = index; focusKey = key;
-            focusMoved = true;
-            ShowFocus();
+            if (HasLeft || switcher.IsInputBlocked || !ui.Focus(key)) return;
             Confirm();
         }
 
