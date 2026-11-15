@@ -472,6 +472,22 @@ namespace OurTaiko.Chara
         static Texture2D faceSheet;
         static readonly Dictionary<int, Texture2D> puchi = new Dictionary<int, Texture2D>();
 
+        // The Editor here enters Play mode without reloading the domain (EditorSettings: Enter Play
+        // Mode Options), so these statics outlive a Play session, while every texture made in it is
+        // destroyed when it stops: a cached part would come back with its images gone and its Don
+        // drawn white. Each Play session starts from nothing (as a player does).
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            parts.Clear();
+            puchi.Clear();
+            files.Clear();
+            faceSheet = null;
+        }
+
+        // A texture Unity destroyed (== null) that was there (not a reference that was null from the start).
+        static bool Destroyed(UnityEngine.Object o) => !ReferenceEquals(o, null) && o == null;
+
         // "cos", "head" or "body"; null when that model is not in the build. Peeks: Acquire it to keep it.
         public static DonPart Part(string kind, int index, bool normalizeFace = false) => Find(kind, index, normalizeFace)?.Part;
 
@@ -501,6 +517,8 @@ namespace OurTaiko.Chara
             files.TryGetValue(kind + "/" + index, out string file);
             string path = file ?? Root + kind + "/" + index;
             string key = path + (normalizeFace ? "#face" : "");
+            // A part whose images were destroyed under it (a Play session ended) is read again.
+            if (parts.TryGetValue(key, out var cached) && System.Array.Exists(cached.Part.Images, Destroyed)) parts.Remove(key);
             if (!parts.TryGetValue(key, out var entry))
             {
                 byte[] bytes = null;

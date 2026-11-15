@@ -117,6 +117,27 @@ namespace OurTaiko.Tests
             finally { worn.Dispose(); }
         }
 
+        // The Editor keeps statics between Play sessions and destroys the textures a session made
+        // when it stops: a Don made after that must not wear a cached part's destroyed images (it
+        // came out white, its colour textures missing).
+        [Test]
+        public void ADonAfterItsCachedTexturesWereDestroyedStillHasItsColours()
+        {
+            var first = new Chara3D(DonLook.Default());
+            first.Dispose();
+            foreach (var image in DonLibrary.Part("cos", 0).Images)
+                if (image != null) UnityEngine.Object.DestroyImmediate(image);
+            var again = new Chara3D(DonLook.Default());
+            try
+            {
+                var parts = (System.Collections.IList)typeof(Chara3D)
+                    .GetField("parts", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(again);
+                var materials = (Material[])parts[0].GetType().GetField("Materials").GetValue(parts[0]);
+                Assert.That(materials.All(m => m.mainTexture != null), Is.True, "every material has its texture");
+            }
+            finally { again.Dispose(); }
+        }
+
         [Test]
         public void PuchiLoads()
         {

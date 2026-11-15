@@ -28,6 +28,18 @@ namespace OurTaiko.Chara
         }
 
         static readonly Seat[] seats = { new Seat(), new Seat() };
+
+        // Each Play session starts with no looks, as a player does (the Editor here keeps statics
+        // between Play sessions, and DonLibrary forgets the downloaded files then too); the sign-in
+        // fetches them again.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            seats[0] = new Seat();
+            seats[1] = new Seat();
+            Received = 0;
+            Expected = 0;
+        }
         static readonly object gate = new object();
         static HttpClient http;
 

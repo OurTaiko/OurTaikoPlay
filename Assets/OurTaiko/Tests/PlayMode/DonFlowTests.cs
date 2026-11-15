@@ -179,6 +179,8 @@ namespace OurTaiko.Tests
                     Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), "Entry never came");
                 }
                 Assert.That(DonLooks.For(0).cos, Is.EqualTo(88), "worn on arriving at Entry");
+                for (int i = 0; i < 90; i++) yield return null;
+                TestCapture.Capture("EntryDownloadedDon.png");
                 Assert.That(DonLibrary.Part("cos", 88), Is.Not.Null);
             }
             finally
