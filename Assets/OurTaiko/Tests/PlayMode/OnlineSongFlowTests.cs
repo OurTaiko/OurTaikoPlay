@@ -412,17 +412,15 @@ namespace OurTaiko.Tests
         }
 
         // A playlist is one more folder after the categories, in its own genre's colours; its cover
-        // is downloaded once, verified, and fills the open board inside its frame.
+        // (WebP, as the server stores it) is downloaded once, verified, and fills the open board
+        // inside its frame.
         [UnityTest]
         public IEnumerator PlaylistsFollowTheCategoriesWithTheirCover()
         {
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
-            var picture = new Texture2D(320, 200, TextureFormat.RGB24, false);
-            for (int y = 0; y < 200; y++)
-                for (int x = 0; x < 320; x++) picture.SetPixel(x, y, (x / 40 + y / 40) % 2 == 0 ? new Color(0.9f, 0.2f, 0.3f) : new Color(1f, 0.85f, 0.2f));
-            byte[] cover = picture.EncodeToPNG();
-            Object.Destroy(picture);
+            // A 1600 x 1000 WebP checkerboard, the largest cover the server keeps.
+            byte[] cover = System.IO.File.ReadAllBytes("Assets/OurTaiko/Tests/Fixtures/playlist-cover.webp");
             int coverRequests = 0;
             fixture.CustomRequest = context =>
             {
@@ -438,7 +436,7 @@ namespace OurTaiko.Tests
             {
                 new JObject { ["id"] = "mine", ["title"] = "Festival Set", ["genre"] = "VOCALOID", ["kind"] = "owned", ["owner"] = "DON",
                     ["chartIds"] = new JArray(chart.Id),
-                    ["cover"] = new JObject { ["url"] = link, ["headUrl"] = link, ["sha256"] = FanmadeFixture.Sha(cover), ["size"] = cover.Length, ["contentType"] = "image/png" } },
+                    ["cover"] = new JObject { ["url"] = link, ["headUrl"] = link, ["sha256"] = FanmadeFixture.Sha(cover), ["size"] = cover.Length, ["contentType"] = "image/webp" } },
                 new JObject { ["id"] = "daily", ["title"] = "Daily Challenge", ["genre"] = "VARIETY", ["kind"] = "system", ["owner"] = "", ["chartIds"] = new JArray(chart.Id) },
             };
             TestData.UseServers(fixture);
@@ -455,7 +453,9 @@ namespace OurTaiko.Tests
             select.Manager.Confirm();
             Assert.That(select.Manager.BoardCount, Is.EqualTo(7), "Local, the server's もどる and search, 2 categories and 2 playlists.");
             yield return WaitUntil(() => online.Folders[2].Cover != null, 10);
-            Assert.That(online.Folders[2].Cover.rect.size, Is.EqualTo(new Vector2(320, 200)));
+            // Decoded from WebP and scaled down to the kept size, proportions kept.
+            Assert.That(online.Folders[2].Cover.rect.size, Is.EqualTo(new Vector2(OnlineManager.CoverSide, 320)));
+            Assert.That(online.Folders[2].Cover.texture.isReadable, Is.False);
             Assert.That(online.Folders[3].Cover, Is.Null);
             yield return Focus(select, 5);
             yield return new WaitForSecondsRealtime(0.8f);

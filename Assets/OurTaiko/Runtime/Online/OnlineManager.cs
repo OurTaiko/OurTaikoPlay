@@ -599,7 +599,10 @@ namespace OurTaiko.Online
             }
         }
 
-        // Fills folder.Cover once the picture is cached and decoded; the folder shows without it
+        // The longest side a playlist cover is kept at.
+        public const int CoverSide = 512;
+
+        // Fills folder.Cover once the picture (WebP) is cached and decoded; the folder shows without it
         // until then, and for good when the download or the image is bad.
         async void LoadCover(SongFolder folder, FanmadePlaylist playlist)
         {
@@ -613,9 +616,11 @@ namespace OurTaiko.Online
                 if (this == null || client != Client) return;
                 if (!covers.TryGetValue(hash, out var sprite))
                 {
-                    var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false) { name = "PlaylistCover " + hash, hideFlags = HideFlags.DontSave, wrapMode = TextureWrapMode.Clamp };
+                    // The server keeps covers up to 1600 px on a side; the open board needs far
+                    // fewer, so a bigger one is scaled down to CoverSide as it is decoded.
+                    var texture = Pictures.Decode(bytes, 2048, CoverSide, readable: false) ?? throw new FanmadeException("PLAYLIST_COVER_INVALID");
+                    texture.name = "PlaylistCover " + hash; texture.hideFlags = HideFlags.DontSave; texture.wrapMode = TextureWrapMode.Clamp;
                     owned.Add(texture);
-                    if (!texture.LoadImage(bytes, true) || texture.width > 2048 || texture.height > 2048) throw new FanmadeException("PLAYLIST_COVER_INVALID");
                     sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect);
                     sprite.name = texture.name; sprite.hideFlags = HideFlags.DontSave;
                     owned.Add(sprite);

@@ -66,7 +66,7 @@ namespace OurTaiko.Multi
             {
                 if (!IsAllowed(url)) return;
                 byte[] bytes = await Fetch(url, CancellationToken.None);
-                var source = Decode(bytes);
+                var source = Online.Pictures.Decode(bytes, SourceLimit);
                 if (source == null) return;
                 var pixels = source.GetPixels32();
                 int width = source.width, height = source.height;
@@ -108,28 +108,6 @@ namespace OurTaiko.Multi
                 output.Write(buffer, 0, read);
             }
             return output.ToArray();
-        }
-
-        // The picture's pixels: WebP by its header, anything else as Unity reads images (PNG, JPEG).
-        static Texture2D Decode(byte[] bytes)
-        {
-            if (bytes == null || bytes.Length < 16) return null;
-            bool webp = bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F' && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P';
-            if (webp)
-            {
-                WebP.Texture2DExt.GetWebPDimensions(bytes, out int width, out int height);
-                if (width <= 0 || height <= 0 || width > SourceLimit || height > SourceLimit) return null;
-                byte[] pixels = WebP.Texture2DExt.LoadRGBAFromWebP(bytes, ref width, ref height, false, out WebP.Error error);
-                if (error != WebP.Error.Success || pixels == null) return null;
-                var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-                texture.LoadRawTextureData(pixels);
-                texture.Apply(false, false);
-                return texture;
-            }
-            var other = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            if (other.LoadImage(bytes, false) && other.width <= SourceLimit && other.height <= SourceLimit) return other;
-            UnityEngine.Object.Destroy(other);
-            return null;
         }
 
         // The middle square of a picture, scaled to `size`; `disc` cuts it to a disc with a soft edge.

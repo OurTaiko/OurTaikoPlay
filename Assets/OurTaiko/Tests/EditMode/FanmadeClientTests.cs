@@ -152,7 +152,7 @@ namespace OurTaiko.Tests
                 context.Response.Close();
                 return true;
             };
-            JObject Cover(string hash, long size, string type = "image/jpeg", string url = null) => new JObject
+            JObject Cover(string hash, long size, string type = "image/webp", string url = null) => new JObject
             {
                 ["url"] = url ?? fixture.BaseUrl + "/files/cover", ["headUrl"] = fixture.BaseUrl + "/files/cover", ["sha256"] = hash, ["size"] = size, ["contentType"] = type,
             };
@@ -171,8 +171,10 @@ namespace OurTaiko.Tests
             {
                 (Cover("xyz", 5), "RESOURCE_METADATA_INVALID"), (Cover(FanmadeFixture.Sha(picture), 0), "RESOURCE_METADATA_INVALID"),
                 (Cover(FanmadeFixture.Sha(picture), FanmadePlaylist.MaxCoverBytes + 1), "RESOURCE_METADATA_INVALID"),
-                (Cover(FanmadeFixture.Sha(picture), 5, "image/webp"), "API_PLAYLIST_INVALID"),
-                (Cover(FanmadeFixture.Sha(picture), 5, url: "http://example.com/cover.jpg"), "RESOURCE_URL_INVALID"),
+                // The server sends covers as WebP only.
+                (Cover(FanmadeFixture.Sha(picture), 5, "image/jpeg"), "API_PLAYLIST_INVALID"),
+                (Cover(FanmadeFixture.Sha(picture), 5, "image/png"), "API_PLAYLIST_INVALID"),
+                (Cover(FanmadeFixture.Sha(picture), 5, url: "http://example.com/cover.webp"), "RESOURCE_URL_INVALID"),
             })
             {
                 fixture.ChangeBootstrap = reply => reply["playlists"] = With(bad);

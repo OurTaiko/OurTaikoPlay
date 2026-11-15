@@ -189,10 +189,11 @@ namespace OurTaiko.Online
 
     // A playlist folder from the catalog or GET /game/playlists: the account's own ("owned") and favorite playlists and the
     // server's "system" ones, with its playable catalog charts in playlist order. Genre selects the
-    // folder artwork like a category's; Cover is the optional JPEG or PNG shown on the open folder.
+    // folder artwork like a category's; Cover is the optional WebP shown on the open folder.
     public sealed class FanmadePlaylist
     {
-        public const long MaxCoverBytes = 2L * 1024 * 1024;
+        // The most a cover may have: what the server lets a cover upload become (8 MiB).
+        public const long MaxCoverBytes = 8L * 1024 * 1024;
         public string Server = "", ServerName = "", Id = "", Title = "", Genre = "", Kind = "", Owner = "";
         public FanmadeResource Cover;
         public readonly List<string> ChartIds = new List<string>();
@@ -208,7 +209,7 @@ namespace OurTaiko.Online
             if (v["cover"] is JObject cover)
             {
                 playlist.Cover = FanmadeResource.From(cover, MaxCoverBytes, validateUrl);
-                if (playlist.Cover.ContentType != "image/jpeg" && playlist.Cover.ContentType != "image/png") throw new FanmadeException("API_PLAYLIST_INVALID");
+                if (playlist.Cover.ContentType != "image/webp") throw new FanmadeException("API_PLAYLIST_INVALID");
             }
             foreach (var member in members)
             {
