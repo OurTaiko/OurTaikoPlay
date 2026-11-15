@@ -148,6 +148,8 @@ namespace OurTaiko
         Image mark, backboard, back, option, auto, frame, glow, balloon, uraChange;
         TextMeshProUGUI header, headerSub;
         OptionPanel optionPanel, optionPanel2P;
+        // Each seat's 3D Don beside its nameplate (YataiDON SongSelectPlayer's chara).
+        Chara.DonView don1P, don2P;
         // When 2P joined on this screen (its plate fades in); -inf when it came in already joined.
         double secondJoinedAt = double.NegativeInfinity;
         Vector2 frame2PPosition, balloon2PPosition, glow2PPosition;
@@ -205,7 +207,21 @@ namespace OurTaiko
             coursePanel.gameObject.SetActive(false);
             DrawOverlays(0);
             if (view.search != null) view.search.Bind(Manager);
+            PlaceDons();
         }
+
+        void PlaceDons()
+        {
+            if (view.nameplate != null)
+                don1P = Chara.DonStage.Place(view.nameplate, "Don1P", Chara.DonStage.SongSelect1P, 0, false, Chara.DonAnim.SelectLoop);
+            if (view.nameplate2P != null)
+            {
+                don2P = Chara.DonStage.Place(view.nameplate2P, "Don2P", Chara.DonStage.SongSelect2P, 1, true, Chara.DonAnim.SelectLoop);
+                if (don2P != null) don2P.Alpha = 0;
+            }
+        }
+
+        Chara.DonView DonOf(int seat) => seat == 1 ? don2P : don1P;
 
         void Start()
         {
@@ -378,7 +394,11 @@ namespace OurTaiko
 
         OptionPanel PanelOf(int seat) => seat == 1 ? optionPanel2P : optionPanel;
 
-        void OnOptionsOpened(int seat, OptionMenu menu) => PanelOf(seat)?.Open(menu, Now);
+        void OnOptionsOpened(int seat, OptionMenu menu)
+        {
+            PanelOf(seat)?.Open(menu, Now);
+            DonOf(seat)?.Chara?.SetAnim(Chara.DonAnim.SelectPanelUp);
+        }
 
         void OnOptionChanged(int seat, int direction)
         {
@@ -390,7 +410,11 @@ namespace OurTaiko
                 sfx.PlayAudioOneShot(neiro, AudioGroup.Drum);
         }
 
-        void OnOptionsClosing(int seat) => PanelOf(seat)?.Close(Now);
+        void OnOptionsClosing(int seat)
+        {
+            PanelOf(seat)?.Close(Now);
+            DonOf(seat)?.Chara?.SetAnim(Chara.DonAnim.SelectPanelDown);
+        }
 
         void OnSecondJoined() => secondJoinedAt = Now;
 
@@ -400,6 +424,7 @@ namespace OurTaiko
             if (view.nameplateGroup2P == null) return;
             view.nameplateGroup2P.alpha = switcher.Seated.Count < 2 ? 0
                 : (float)Clamp01((now - secondJoinedAt) / EntryFlow.NameplateFadeMs);
+            if (don2P != null) don2P.Alpha = view.nameplateGroup2P.alpha;
         }
 
         // ---------------------------------------------------------------- wheel animation

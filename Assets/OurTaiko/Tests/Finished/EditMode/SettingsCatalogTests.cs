@@ -71,7 +71,7 @@ namespace OurTaiko.Tests
             nav.Move(1);
             Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "display.vsync")));
             Assert.That(nav.Row.Kind, Is.EqualTo(SettingKind.Toggle));
-            Assert.That(nav.Page.Rows.Select(r => r.Label), Is.EqualTo(new[] { "frameRate", "vsync", "movie", "laneOpacity" }.Select(key => L10n.Get("Settings", "display." + key))));
+            Assert.That(nav.Page.Rows.Select(r => r.Label), Is.EqualTo(new[] { "frameRate", "vsync", "chara3D", "movie", "laneOpacity" }.Select(key => L10n.Get("Settings", "display." + key))));
             Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.off")), "Off is the default.");
             nav.Confirm();
             Assert.That(nav.Settings.display.vSync, Is.True);
@@ -83,6 +83,9 @@ namespace OurTaiko.Tests
         {
             var nav = OnPage("display");
             nav.Move(2);
+            Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "display.chara3D")));
+            Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.on")), "The 3D Don is on by default.");
+            nav.Move(1);
             Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "display.movie")));
             Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.on")), "On is the default.");
             nav.Confirm();

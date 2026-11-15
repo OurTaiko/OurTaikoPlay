@@ -17,7 +17,8 @@ namespace OurTaiko
     // the play mode then plays both seats. A 2P don on the credit screen joins 2P alone: its plate
     // fades in on the right, the 2P drum works the boards, every board stays open, and the player
     // sits on the 2P side (SceneSwitcher.Seated) in the screens that follow; 1P may still join with its don,
-    // which makes two players. Not ported: the 3D Don and its join cloud, the other
+    // which makes two players. Each player's 3D Don jumps up beside its plate when it
+    // joins (EntryDons). Not ported: the join cloud, the other
     // boards (特訓モード / きせかえ), the costume menu and the ALL.Net indicator. The screen is saved
     // in the scene (EntryView); Awake only binds it.
     public sealed class EntryScene : MonoBehaviour
@@ -64,6 +65,7 @@ namespace OurTaiko
         double modeShownAt = double.NaN;
         CanvasGroup accountNotice;
         double accountNoticeAt;
+        EntryDons dons;
 
         public double Now => GameTimeline.FrameTime * 1000;
 
@@ -77,6 +79,7 @@ namespace OurTaiko
             double now = Now;
             Bind();
             Flow = new EntryFlow(now, Modes.Length);
+            dons = new EntryDons(view);
             switcher.SceneChanging += OnSceneChanging;
             ShowExpiredAccounts(now);
             Show(now);
@@ -338,6 +341,7 @@ namespace OurTaiko
             else Guide.Show(now - Flow.StartedAt, 1);
             if (nameplateGroup != null) nameplateGroup.alpha = PlateAlpha(joined1PAt, now);
             if (nameplateGroup2P != null) nameplateGroup2P.alpha = PlateAlpha(joined2PAt, now);
+            dons.Show(joined1PAt, joined2PAt, now);
             // coin_overlay: the 2P invite appears once the credit rows are gone and only 1P is in.
             Coins.ShowInvite(Joined1P && creditGone && !Joined2P, now - Flow.StartedAt);
             // The expiry notice holds, then fades out over its last half second.

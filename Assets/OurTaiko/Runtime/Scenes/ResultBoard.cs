@@ -29,6 +29,10 @@ namespace OurTaiko
         Vector2 highScoreBase, crownBase;
         Image crownImage, crownGhost, burstA, burstB, stars, shine, messageImage;
         TextMeshProUGUI messageText;
+        // The seat's 3D Don by its plate (YataiDON ResultPlayer's chara): DON_NORMAL, DON_MISS_NORMAL
+        // for a failed gauge, which drops to the DON_MISS6 loop once the rows have landed.
+        Chara.DonView don;
+        bool donMissLoop;
 
         public ResultBoard(ResultScene scene, int seat, ResultBoardView view, PlayResult result, bool twoPlayers = false)
         {
@@ -39,6 +43,26 @@ namespace OurTaiko
             art = difficulty == 0 ? 0 : difficulty == 3 ? 2 : 1;
             Bind();
             if (view.scoreRank != null) view.scoreRank.Show(0);
+            PlaceDon();
+        }
+
+        void PlaceDon()
+        {
+            if (View.nameplate == null) return;
+            bool right = twoPlayers && Seat == 1;
+            don = Chara.DonStage.Place(View.nameplate, "Don", right ? Chara.DonStage.Result2P : Chara.DonStage.Result, Seat,
+                right, Chara.DonAnim.Normal, Chara.DonStage.ResultScale, beside: true);
+            if (don != null && !Result.IsClear) don.Chara.SetAnim(Chara.DonAnim.MissNormal);
+        }
+
+        void DrawDon()
+        {
+            if (don == null || donMissLoop) return;
+            if (Result.GaugeState == GaugeState.Failed && Sequence.FadeInFinished && Sequence.RowsLanded >= 5)
+            {
+                donMissLoop = true;
+                don.Chara?.SetAnim(Chara.DonAnim.Miss6);
+            }
         }
 
         // How far the clear backdrop has faded in (anim crear_1P_l), 0 for a failed gauge.
@@ -76,6 +100,7 @@ namespace OurTaiko
                     Sequence.Skipped ? -1 : (now - Sequence.RankAtMs.GetValueOrDefault()) / 1000);
             DrawCrown(now);
             DrawMessage(now);
+            DrawDon();
         }
 
         void Play(ResultCue cue, int row, double clock)

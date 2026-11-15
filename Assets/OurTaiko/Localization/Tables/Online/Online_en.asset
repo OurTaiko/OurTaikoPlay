@@ -90,6 +90,14 @@ MonoBehaviour:
     m_Localized: no replay list
     m_Metadata:
       m_Items: []
+  - m_Id: 1678948629995520
+    m_Localized: "Getting {0}'s 3D Don\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1678948638384128
+    m_Localized: "Downloading {0}'s 3D Don\u2026 {1} / {2} MB"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

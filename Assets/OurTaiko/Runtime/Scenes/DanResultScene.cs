@@ -35,6 +35,11 @@ namespace OurTaiko
         public bool Recorded { get; private set; }
         public bool HasLeft { get; private set; }
         public bool Celebrates { get; private set; }
+        // The player's 3D Don (YataiDON DanResultScreen's chara); for the celebration and the popup it
+        // stands on the drum in the middle, over the art (dan_result_draw.lua chara_pos 927, 923).
+        Chara.DonView donView;
+        bool donCentred;
+        static readonly Vector2 CelebrationDon = new Vector2(927, 923);
         public bool Congratulates { get; private set; }
         // The upload of a server course's attempt (FanmadeClient queue key), null for none.
         public string DanUpload { get; private set; }
@@ -68,6 +73,8 @@ namespace OurTaiko
             try { Save(); }
             catch (Exception error) { Log.Exception("Dan", error, this); }
             Bind();
+            if (view.nameplate != null)
+                donView = Chara.DonStage.Place(view.nameplate, "Don", Chara.DonStage.DanResult, switcher.Lead.Index(), false, Chara.DonAnim.Normal);
             Show(Now);
         }
 
@@ -666,6 +673,13 @@ namespace OurTaiko
             bool congrats = Flow.State == DanResultFlow.Phase.Congrats || Flow.State == DanResultFlow.Phase.Left && !double.IsNaN(Flow.CongratsAt);
             view.celebration.gameObject.SetActive(celebrating || congrats);
             if (!celebrating && !congrats) return;
+            if (donView != null && !donCentred)
+            {
+                donCentred = true;
+                donView.MoveTo(CelebrationDon.x, CelebrationDon.y);
+                donView.transform.SetAsLastSibling();
+                if (celebrating) donView.Chara?.SetAnim(Chara.DonAnim.FullCombo);
+            }
             var plate = view.nameplate.GetComponent<RectTransform>();
             plate.anchoredPosition = CelebrationPlate;
             view.congratsBackground.gameObject.SetActive(congrats);

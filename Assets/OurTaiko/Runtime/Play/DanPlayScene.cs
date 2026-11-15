@@ -299,6 +299,7 @@ namespace OurTaiko
                 CustomJudge = judgeWindows.HasValue,
             };
             if (firstLane.ending != null) firstLane.ending.BeginDan(courseResult.Verdict > 0);
+            Lane?.DonChara?.OnEnding(courseResult.Verdict > 0, total.Bad);
             endingDuration = firstLane.ending != null ? firstLane.ending.Duration : 0;
             endingStartedAt = GameTimeline.FrameTime;
             endedAt = ChartTime;

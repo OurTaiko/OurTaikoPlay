@@ -90,6 +90,9 @@ namespace OurTaiko
             int startPage = switcher.SelectedDan != null ? pages.FindIndex(p => p.Courses.Any(c => Same(c, switcher.SelectedDan))) : -1;
             OpenPage(Math.Max(0, startPage), startPage < 0 ? 0 : pages[startPage].Courses.FindIndex(c => Same(c, switcher.SelectedDan)));
             Bind();
+            // YataiDON DanSelectScreen draws the player's Don at song select's 1P spot.
+            if (view.nameplate != null)
+                Chara.DonStage.Place(view.nameplate, "Don", Chara.DonStage.SongSelect1P, switcher.Lead.Index(), false, Chara.DonAnim.Normal);
             switcher.SceneChanging += OnSceneChanging;
             FullIntro = switcher.FromScene == SceneSwitcher.EntryScene;
             if (intro != null) intro.Show(DanIntroView.Frame(FullIntro, 0));

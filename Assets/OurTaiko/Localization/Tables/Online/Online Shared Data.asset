@@ -87,6 +87,14 @@ MonoBehaviour:
     m_Key: replays.noList
     m_Metadata:
       m_Items: []
+  - m_Id: 1678948629995520
+    m_Key: activity.donLook
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1678948638384128
+    m_Key: activity.donDownload
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

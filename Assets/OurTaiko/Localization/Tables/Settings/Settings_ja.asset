@@ -846,6 +846,14 @@ MonoBehaviour:
     m_Localized: "{0}P \u306F\u30ED\u30B0\u30A4\u30F3\u3057\u3066\u3044\u307E\u305B\u3093\u3002"
     m_Metadata:
       m_Items: []
+  - m_Id: 1659643486003200
+    m_Localized: "3D\u3069\u3093\u3061\u3083\u3093"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1659643498586112
+    m_Localized: "\u30EC\u30FC\u30F3\u306E\u6A2A\u30FB\u9078\u66F2\u30FB\u30A8\u30F3\u30C8\u30EA\u30FC\u30FB\u30EA\u30B6\u30EB\u30C8\u306B3D\u306E\u3069\u3093\u3061\u3083\u3093\u3092\u8868\u793A\u3057\u307E\u3059\u3002\u304D\u305B\u304B\u3048\u306F net.ourtaiko.org \u3067\u3002"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -44,6 +44,9 @@ namespace OurTaiko
 
         readonly PlaySceneBase scene;
         NoteLaneRenderer renderer;
+        // The seat's 3D Don above (or, for a 2P lane, below) the lane; null where a scene has none.
+        public DonLaneDriver DonChara { get; private set; }
+        internal double JudgeOffset => scene.JudgeOffset;
         readonly List<INoteLaneOverlay> overlays = new List<INoteLaneOverlay>();
         bool hitKa, nextAutoRight = true;
         double feedbackTime = -10;
@@ -97,9 +100,23 @@ namespace OurTaiko
                 foreach (var overlay in overlays) renderer.AddOverlay(overlay);
             }
             renderer.Prepare(Session);
+            PrepareDon();
             scene.hitAudio.PrepareAudioEffects(Don, Ka);
             scene.hitAudio.PrepareAudioEffects(v.comboAnnounce.voices);
             UpdateHud();
+        }
+
+        // The Don stands on lanes that show a nameplate (play, practice, 段位); a 2P lane is the
+        // lower one. Settings → 3D Don off (or a scene without the slot) leaves it out.
+        void PrepareDon()
+        {
+            if (DonChara == null)
+            {
+                if (!SettingManager.EnsureInstance().Settings.display.chara3D) return;
+                bool lower = Views.transform is RectTransform rt && rt.anchoredPosition.y < -400;
+                DonChara = new DonLaneDriver(this, Views.transform, lower);
+            }
+            DonChara.Reset();
         }
 
         public void Release()
@@ -168,6 +185,7 @@ namespace OurTaiko
             v.hitFace.ShowTime(time);
             v.hitRing.ShowTime(time);
             for (int i = 0; i < v.drumFlashes.Length; i++) ShowFlash(i);
+            DonChara?.Update(time);
         }
 
         // A paused practice previews its routes; while it plays (or rewinds) it hides what the
@@ -329,6 +347,7 @@ namespace OurTaiko
         {
             var v = Views;
             if (result == Judgment.Bad) comboCarried = false;
+            DonChara?.OnJudged(index, result);
             var judged = Session.Chart.Notes[index];
             if (result != Judgment.Roll)
             {
@@ -455,6 +474,7 @@ namespace OurTaiko
             lastCombo = DisplayCombo;
             v.comboAnnounce.Hide();
             ResetEffects();
+            DonChara?.Reset();
             v.soulGauge.Initialize(GaugeThreshold);
             if (GaugePoints > 0) v.soulGauge.SetPoints(GaugePoints, -1e6);
             UpdateHud();

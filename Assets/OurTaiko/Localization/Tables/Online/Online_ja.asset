@@ -90,6 +90,14 @@ MonoBehaviour:
     m_Localized: "\u30EA\u30D7\u30EC\u30A4\u4E00\u89A7\u304C\u3042\u308A\u307E\u305B\u3093"
     m_Metadata:
       m_Items: []
+  - m_Id: 1678948629995520
+    m_Localized: "{0} \u306E 3D \u3069\u3093\u3061\u3083\u3093\u3092\u6E96\u5099\u4E2D\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1678948638384128
+    m_Localized: "{0} \u306E 3D \u3069\u3093\u3061\u3083\u3093\u3092\u30C0\u30A6\u30F3\u30ED\u30FC\u30C9\u4E2D\u2026 {1} / {2} MB"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

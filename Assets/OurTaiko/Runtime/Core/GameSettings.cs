@@ -164,6 +164,8 @@ namespace OurTaiko
         // Wait for every display refresh (vSyncCount 1). On desktop the refresh rate then replaces
         // targetFrameRate; mobile platforms ignore vSyncCount and always use targetFrameRate.
         public bool vSync;
+        // The 3D Don (YataiDON's Chara3D) above the lane, in song select, Entry and the results.
+        public bool chara3D = true;
         // Play the chart's background movie (BGMOVIE) behind the lanes, and download it for online
         // charts. While it plays the stage art is hidden and the lanes' backgrounds are drawn at
         // movieLaneOpacity percent (OpenTaiko's BGAlpha, 100 of 255).

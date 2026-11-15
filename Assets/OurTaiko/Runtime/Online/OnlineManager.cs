@@ -191,6 +191,7 @@ namespace OurTaiko.Online
             SaveAccounts();
             foreach (var e in builtInEndpoints) Client.SignOut(e, seat);
             ShowAccount(seat);
+            Chara.DonDownloads.Forget(seat);
             if (this != null) RefreshSongs();
             if (token.Length == 0) return;
             try { await Center.LogoutAsync(token, cancel); }
@@ -305,6 +306,7 @@ namespace OurTaiko.Online
                 }
                 // The account's own playlists are folders too.
                 if (this != null && refresh) RefreshSongs();
+                await FetchDonsAsync(cancel);
             }
             finally { Activity = ""; LoginSummary = string.Join("   •   ", results); IsBusy = false; }
             return any;
@@ -317,7 +319,30 @@ namespace OurTaiko.Online
             expired[seat] = true;
             foreach (var e in endpoints) Client.SignOut(e, seat);
             ShowAccount(seat);
+            Chara.DonDownloads.Forget(seat);
         }
+
+        // Each signed-in seat's 3D Don as its player chose it on the website, its files downloaded
+        // (the progress is Activity); a seat without an account wears the plain Don. Part of every
+        // sign-in, so Presented waits for it and a play never starts with a look still on its way.
+        async Task FetchDonsAsync(CancellationToken cancel)
+        {
+            for (int seat = 0; seat < Accounts.Seats.Length; seat++)
+            {
+                var account = Accounts.Seats[seat];
+                if (!account.IsSignedIn || account.UserId.Length == 0) { Chara.DonDownloads.Forget(seat); continue; }
+                if (cancel.IsCancellationRequested) return;
+                string who = (seat + 1) + "P";
+                Activity = L10n.Format("Online", "activity.donLook", who);
+                DonActivitySeat = who;
+                try { await Chara.DonDownloads.FetchAsync(seat, account.UserId, Profiles?.Base ?? ProfileCenter.DefaultBase, Client.CacheRoot, cancel); }
+                catch (OperationCanceledException) { return; }
+                finally { DonActivitySeat = ""; }
+            }
+        }
+
+        // The seat whose Don is being fetched ("1P"), "" when none: Activity then follows the bytes.
+        public string DonActivitySeat { get; private set; } = "";
 
         void SaveAccounts()
         {

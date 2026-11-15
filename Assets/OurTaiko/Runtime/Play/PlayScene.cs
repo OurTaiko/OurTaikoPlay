@@ -391,6 +391,7 @@ namespace OurTaiko
             if (IsMulti) FinishMulti();
             endings = lanes.Where(lane => lane.Views.ending != null).ToList();
             foreach (var lane in endings) lane.Views.ending.Begin(lane.Result);
+            foreach (var lane in lanes) lane.DonChara?.OnEnding(lane.Result.IsClear, lane.Result.Bad);
             endingDuration = endings.Count > 0 ? endings.Max(lane => lane.Views.ending.Duration) : 0;
             endingStartedAt = GameTimeline.FrameTime;
             endedAt = ChartTime;

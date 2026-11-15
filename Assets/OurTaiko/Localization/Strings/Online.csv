@@ -1,4 +1,6 @@
 key,en,ja,zh-Hans,comment
+activity.donLook,Getting {0}'s 3D Don…,{0} の 3D どんちゃんを準備中…,正在准备 {0} 的 3D 咚酱…,Startup / settings progress line; {0} = seat (1P/2P)
+activity.donDownload,"Downloading {0}'s 3D Don… {1} / {2} MB",{0} の 3D どんちゃんをダウンロード中… {1} / {2} MB,正在下载 {0} 的 3D 咚酱… {1} / {2} MB,"Startup progress line; {0} = seat, {1}/{2} = megabytes"
 activity.checkingAccount,Checking {0}'s OurTaiko account…,{0} の OurTaiko アカウントを確認中…,正在检查 {0} 的 OurTaiko 账号…,Startup / settings progress line; {0} = seat (1P/2P)
 activity.signingIn,Signing {0} in to {1}…,{0} を {1} にログイン中…,正在将 {0} 登录到 {1}…,"Startup / settings progress line; {0} = seat, {1} = server name"
 activity.loadingSongList,Loading song list ({0} / {1}): {2}…,曲リストを読み込み中 ({0} / {1}): {2}…,正在加载歌曲列表 ({0} / {1})：{2}…,"Startup / settings progress line; {0}/{1} = server number/count, {2} = server name"

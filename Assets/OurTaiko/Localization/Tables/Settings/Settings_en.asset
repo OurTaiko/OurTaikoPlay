@@ -846,6 +846,14 @@ MonoBehaviour:
     m_Localized: '{0}P is not signed in.'
     m_Metadata:
       m_Items: []
+  - m_Id: 1659643486003200
+    m_Localized: 3D Don
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1659643498586112
+    m_Localized: Show the 3D Don beside the lane, in song select, Entry and the results. Dress it up on net.ourtaiko.org.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

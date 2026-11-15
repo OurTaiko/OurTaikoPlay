@@ -80,6 +80,8 @@ display.frameRateDesc,The highest frame rate the game renders at.,ゲームを�
 display.unlimited,Unlimited,無制限,无限制,Frame Rate option
 display.vsync,VSync,垂直同期,垂直同步,Row
 display.vsyncDesc,"Wait for the display refresh before each frame. While on, the refresh rate replaces Frame Rate.",毎フレーム、画面の更新を待ちます。オンの間はフレームレートの代わりにリフレッシュレートになります。,每帧等待显示器刷新。开启时以刷新率代替帧率设置。,VSync description
+display.chara3D,3D Don,3Dどんちゃん,3D 咚酱,Row
+display.chara3DDesc,"Show the 3D Don beside the lane, in song select, Entry and the results. Dress it up on net.ourtaiko.org.",レーンの横・選曲・エントリー・リザルトに3Dのどんちゃんを表示します。きせかえは net.ourtaiko.org で。,在轨道旁、选曲、入场和结算画面显示 3D 咚酱。换装请到 net.ourtaiko.org。,3D Don description
 display.group.movie,Background Movie,背景ムービー,背景视频,Display group
 display.movie,Background Movie,背景ムービー,背景视频,Row
 display.movieDesc,"Play the chart's movie behind the lanes, and download it with online charts.",譜面のムービーをレーンの後ろに再生し、オンライン譜面ではムービーもダウンロードします。,在轨道后方播放谱面的视频，下载在线谱面时也一并下载。,Background Movie description
