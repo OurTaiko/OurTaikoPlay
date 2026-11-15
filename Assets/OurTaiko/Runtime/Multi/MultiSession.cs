@@ -15,7 +15,11 @@ namespace OurTaiko.Multi
     // back to it), and so does every event.
     public static class MultiSession
     {
-        public const int Protocol = 1;
+        // The newest version of the protocol this game speaks. 2 (2026-11-14): after a play the
+        // game says when the player is back at the room's screen (`returned`), and the room
+        // shows who is not (Member.Away): they are not in the room, and are left behind when
+        // the host starts the next round (closed LEFT_BEHIND).
+        public const int Protocol = 2;
         public const int StampCount = 16;
         // Development override of the room server, e.g. http://127.0.0.1:50061 (plain h2c).
         public const string ServerEnvironmentVariable = "OURTAIKO_MULTIPLAY_URL";
@@ -46,6 +50,8 @@ namespace OurTaiko.Multi
         public static int LaunchedRound { get; internal set; }
         // The round whose result the room screen has shown.
         public static int ShownResultRound { get; set; }
+        // The version to join with: this game's, or the server's newest when that is older.
+        public static int JoinProtocol { get; set; } = Protocol;
         // Why the last session ended, for the room screen to say once (null: nothing to say).
         public static string ClosedCode { get; set; }
 
@@ -75,6 +81,7 @@ namespace OurTaiko.Multi
             StartedRound = LaunchedRound = ShownResultRound = 0;
             RoomChanged = null; PlayStarted = null; StatusesChanged = null; StampReceived = null; NoticeReceived = null; Closed = null;
             ResolveAddress = ResolveSiteAddressAsync; GameSession = SiteSessionAsync;
+            JoinProtocol = Protocol;
         }
 
         // Nothing of an earlier room is kept: its last result, what was said about its end, and
@@ -154,6 +161,7 @@ namespace OurTaiko.Multi
         // The environment override, else what the site says (GET /api/v1/game/multiplay).
         public static async Task<string> ResolveSiteAddressAsync(CancellationToken cancel)
         {
+            JoinProtocol = Protocol;
             string fromEnvironment = Environment.GetEnvironmentVariable(ServerEnvironmentVariable);
             if (!string.IsNullOrWhiteSpace(fromEnvironment)) return fromEnvironment.Trim().TrimEnd('/');
             var endpoint = SiteEndpoints().FirstOrDefault() ?? throw new MultiException("NOT_AVAILABLE");
@@ -164,20 +172,25 @@ namespace OurTaiko.Multi
             catch (FanmadeException error) { throw new MultiException("SERVER_UNREACHABLE", error); }
             string url = reply["url"]?.Type == Newtonsoft.Json.Linq.JTokenType.String ? ((string)reply["url"]).Trim().TrimEnd('/') : "";
             if (url.Length == 0) throw new MultiException("NOT_AVAILABLE");
-            if (reply["protocol"]?.Type == Newtonsoft.Json.Linq.JTokenType.Integer && (int)reply["protocol"] > Protocol) throw new MultiException("UPDATE_REQUIRED");
+            // protocol is the oldest version a game may speak, maxProtocol the newest the server
+            // does (a server from before version 2 names only the one it speaks).
+            int oldest = reply["protocol"]?.Type == Newtonsoft.Json.Linq.JTokenType.Integer ? (int)reply["protocol"] : 1;
+            if (oldest > Protocol) throw new MultiException("UPDATE_REQUIRED");
+            int newest = reply["maxProtocol"]?.Type == Newtonsoft.Json.Linq.JTokenType.Integer ? (int)reply["maxProtocol"] : oldest;
+            JoinProtocol = Math.Max(1, Math.Min(Protocol, newest));
             return url;
         }
 
         // A waiting public room, or a new one.
         public static Task QuickMatchAsync(CancellationToken cancel = default)
-            => ConnectAsync(new Join { QuickMatch = new QuickMatch(), Protocol = Protocol }, cancel);
+            => ConnectAsync(new Join { QuickMatch = new QuickMatch() }, cancel);
 
         // A new private room (5-digit number).
         public static Task CreatePrivateAsync(CancellationToken cancel = default)
-            => ConnectAsync(new Join { CreatePrivate = new CreatePrivate(), Protocol = Protocol }, cancel);
+            => ConnectAsync(new Join { CreatePrivate = new CreatePrivate() }, cancel);
 
         public static Task JoinAsync(string roomCode, CancellationToken cancel = default)
-            => ConnectAsync(new Join { RoomCode = roomCode, Protocol = Protocol }, cancel);
+            => ConnectAsync(new Join { RoomCode = roomCode }, cancel);
 
         // Opens the stream and joins; returns once the server has put the player in a room, and
         // throws a MultiException when it did not.
@@ -188,6 +201,7 @@ namespace OurTaiko.Multi
             StartedRound = LaunchedRound = ShownResultRound = 0;
             LastResult = null;
             address ??= await ResolveAddress(cancel);
+            join.Protocol = JoinProtocol;
             leaving = false;
             ClosedCode = null;
             try { await OpenAsync(join, false, cancel); }
@@ -272,7 +286,7 @@ namespace OurTaiko.Multi
                 if (mine != generation || leaving) return;
                 try
                 {
-                    await OpenAsync(new Join { RoomCode = code, Protocol = Protocol }, false, CancellationToken.None);
+                    await OpenAsync(new Join { RoomCode = code, Protocol = JoinProtocol }, false, CancellationToken.None);
                     NoticeReceived?.Invoke("RECONNECTED");
                     return;
                 }
@@ -363,6 +377,8 @@ namespace OurTaiko.Multi
         public static void SendStatus(PlayerStatus status) => Send(new ClientMessage { Status = status });
         public static void Finish(PlayerStatus final, bool cleared) => Send(new ClientMessage { Finish = new FinishPlay { Final = final, Cleared = cleared } });
         public static void SendStamp(int stampId) => Send(new ClientMessage { Stamp = new SendStamp { StampId = stampId } });
+        // The player is back at the room's screen after a play.
+        public static void Returned() => Send(new ClientMessage { Returned = new Returned() });
 
         // Leaves the room and closes the connection.
         public static async Task LeaveAsync()

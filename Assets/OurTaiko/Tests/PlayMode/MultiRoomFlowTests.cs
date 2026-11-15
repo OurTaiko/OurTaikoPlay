@@ -54,7 +54,7 @@ namespace OurTaiko.Tests
                         Room.HostId = Me;
                         Room.Members.Add(new Member { UserId = Me, Nickname = "Don", Slot = 0, Connected = true });
                     }
-                    Push(new ServerMessage { Welcome = new Welcome { UserId = Me, Nickname = "Don", Protocol = 1 } });
+                    Push(new ServerMessage { Welcome = new Welcome { UserId = Me, Nickname = "Don", Protocol = MultiSession.Protocol } });
                     Snapshot();
                 }
                 else if (message.KindCase == ClientMessage.KindOneofCase.Leave)
@@ -407,6 +407,8 @@ namespace OurTaiko.Tests
 
             // The room starts the round: the play runs, with the other player's score beside it.
             me.Loaded = true; server.Member(FakeRoomServer.Rival).Loaded = true;
+            // From here the room takes both for away from its screen, until their games say otherwise.
+            me.Away = true; server.Member(FakeRoomServer.Rival).Away = true;
             server.Room.Phase = Phase.Playing;
             server.Snapshot();
             server.Push(new ServerMessage { StartPlay = new StartPlay { Round = 1 } });
@@ -452,6 +454,7 @@ namespace OurTaiko.Tests
             foreach (var member in server.Room.Members) { member.Playing = member.Loaded = member.Ready = member.Picked = false; }
             server.Snapshot(10);
             yield return null;
+            Assert.That(server.Got(m => m.Returned), Is.Empty, "At the player's own result screen the player is not back.");
             Assert.That(MultiDirector.Instance.BannerText, Does.Contain(MultiText.Get("phase.result")), "The result screen says what the room is doing.");
 
             // Leaving asks the player about the chart; "not now" goes on without a vote.
@@ -463,10 +466,15 @@ namespace OurTaiko.Tests
             Assert.That(own.IsLeaving, Is.True);
             Assert.That(fixture.ChartVotes, Is.Empty);
 
-            // Back in the room: the ranking, then the lobby again.
+            // Back in the room: the game says so, and again until the room has taken it in.
             yield return WaitForScene(SceneSwitcher.MultiRoomScene);
             screen = RoomScreen;
-            yield return null;
+            yield return Waits.Until(() => server.Got(m => m.Returned).Count() >= 2, "The room was not told the player is back.", 10);
+            me.Away = false;
+            server.Snapshot(10);
+            yield return null; yield return null;
+            int told = server.Got(m => m.Returned).Count();
+            // The ranking, then the lobby again.
             Assert.That(screen.Shown, Is.EqualTo(MultiRoomScene.View.Result));
             Assert.That(screen.AllText, Does.Contain("Katsu").And.Contain("987,650").And.Contain(MultiText.Get("result.superStar"))
                 .And.Contain(MultiText.Format("result.team", "987,650")).And.Contain(MultiText.Get("result.failed")));
@@ -489,6 +497,28 @@ namespace OurTaiko.Tests
             screen.Press("ok");
             yield return null; yield return null;
             Assert.That(screen.Shown, Is.EqualTo(MultiRoomScene.View.Room));
+            // Katsu is still at their own result screen: the lobby says who. That is not being in
+            // the room, so with the host alone in it no round can begin.
+            Assert.That(screen.AllText, Does.Contain(MultiText.Get("member.away")).And.Contain(MultiText.Format("room.needMore", 1)));
+            Assert.That(screen.Controls.Select(c => c.Key), Does.Contain("lastResult").And.Not.Contain("start"), "One player in the room is too few.");
+            Assert.That(screen.Focused.Key, Is.EqualTo("stamps"), "Without the start plate the focus is not on Katsu's remove button.");
+            yield return new WaitForSecondsRealtime(1.5f);
+            Assert.That(server.Got(m => m.Returned).Count(), Is.EqualTo(told), "Once the room knows, it is not said again.");
+            // A third player comes in: two are in the room, so the host may start, and is told
+            // that Katsu would be left out.
+            server.Room.Members.Add(new Member { UserId = "00112233445566778899aabbccddeeff", Nickname = "Mekadon", Slot = 2, Connected = true });
+            server.Snapshot();
+            yield return null; yield return null;
+            Assert.That(screen.Controls.Select(c => c.Key), Does.Contain("start"));
+            Assert.That(screen.Focused.Key, Is.EqualTo("start"));
+            Assert.That(screen.AllText, Does.Contain(MultiText.Get("member.away")).And.Contain(MultiText.Format("room.startLeaves", 1)));
+            TestCapture.Capture("MultiLobbyWaiting.png");
+            // Katsu comes back: everyone is in the room.
+            server.Member(FakeRoomServer.Rival).Away = false;
+            server.Snapshot();
+            yield return null; yield return null;
+            Assert.That(screen.AllText, Does.Not.Contain(MultiText.Get("member.away")).And.Not.Contain(MultiText.Format("room.startLeaves", 1)));
+            Assert.That(screen.AllText, Does.Contain(MultiText.Format("room.players", 3)));
             Assert.That(screen.Controls.Select(c => c.Key), Does.Contain("lastResult").And.Contain("start"));
             screen.Press("lastResult");
             yield return null; yield return null;
@@ -547,7 +577,8 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => screen.Shown == MultiRoomScene.View.Room, () => screen.Message, 10);
             Assert.That(MultiSession.IsHost, Is.False);
             Assert.That(screen.Controls.Select(c => c.Key), Is.EqualTo(new[] { "stamps", "leave" }), "A guest waits for the host.");
-            Assert.That(screen.AllText, Does.Contain(MultiText.Get("room.public")).And.Contain(MultiText.Get("room.startingSoon")));
+            Assert.That(screen.AllText, Does.Contain(MultiText.Get("room.public")).And.Contain(MultiText.Get("room.waitingHost")), "A public room is started by its host too.");
+            Assert.That(MultiText.Describe("LEFT_BEHIND"), Is.EqualTo(MultiText.Get("error.LEFT_BEHIND")), "Being left out of the room has words of its own.");
             // A refused action is a notice; the room goes on.
             server.Push(new ServerMessage { Notice = new Notice { Code = "NOT_HOST" } });
             yield return Waits.Until(() => MultiDirector.Instance.ToastText == MultiText.Describe("NOT_HOST"), seconds: 5);

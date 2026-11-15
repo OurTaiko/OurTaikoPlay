@@ -127,10 +127,6 @@ MonoBehaviour:
     m_Key: room.waitingHost
     m_Metadata:
       m_Items: []
-  - m_Id: 653254683
-    m_Key: room.startingSoon
-    m_Metadata:
-      m_Items: []
   - m_Id: 653254684
     m_Key: member.offline
     m_Metadata:
@@ -445,6 +441,18 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 653254763
     m_Key: stamp.15
+    m_Metadata:
+      m_Items: []
+  - m_Id: 136156904677376
+    m_Key: member.away
+    m_Metadata:
+      m_Items: []
+  - m_Id: 139777067180032
+    m_Key: room.startLeaves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 139777075568640
+    m_Key: error.LEFT_BEHIND
     m_Metadata:
       m_Items: []
   m_Metadata:

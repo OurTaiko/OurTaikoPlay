@@ -25,7 +25,7 @@ namespace OurTaiko.Multi.Proto {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "CiVvdXJ0YWlrby9tdWx0aXBsYXkvdjEvbXVsdGlwbGF5LnByb3RvEhVvdXJ0",
-            "YWlrby5tdWx0aXBsYXkudjEitQUKDUNsaWVudE1lc3NhZ2USKwoEam9pbhgB",
+            "YWlrby5tdWx0aXBsYXkudjEi6gUKDUNsaWVudE1lc3NhZ2USKwoEam9pbhgB",
             "IAEoCzIbLm91cnRhaWtvLm11bHRpcGxheS52MS5Kb2luSAASLQoFbGVhdmUY",
             "AiABKAsyHC5vdXJ0YWlrby5tdWx0aXBsYXkudjEuTGVhdmVIABI6Cgxsb2Nr",
             "X21lbWJlcnMYAyABKAsyIi5vdXJ0YWlrby5tdWx0aXBsYXkudjEuTG9ja01l",
@@ -40,84 +40,86 @@ namespace OurTaiko.Multi.Proto {
             "dWx0aXBsYXkudjEuRmluaXNoUGxheUgAEjEKBXN0YW1wGAsgASgLMiAub3Vy",
             "dGFpa28ubXVsdGlwbGF5LnYxLlNlbmRTdGFtcEgAEisKBHBpbmcYDCABKAsy",
             "Gy5vdXJ0YWlrby5tdWx0aXBsYXkudjEuUGluZ0gAEisKBGtpY2sYDSABKAsy",
-            "Gy5vdXJ0YWlrby5tdWx0aXBsYXkudjEuS2lja0gAQgYKBGtpbmQisQEKBEpv",
-            "aW4SOAoLcXVpY2tfbWF0Y2gYASABKAsyIS5vdXJ0YWlrby5tdWx0aXBsYXku",
-            "djEuUXVpY2tNYXRjaEgAEj4KDmNyZWF0ZV9wcml2YXRlGAIgASgLMiQub3Vy",
-            "dGFpa28ubXVsdGlwbGF5LnYxLkNyZWF0ZVByaXZhdGVIABITCglyb29tX2Nv",
-            "ZGUYAyABKAlIABIQCghwcm90b2NvbBgEIAEoBUIICgZ0YXJnZXQiDAoKUXVp",
-            "Y2tNYXRjaCIPCg1DcmVhdGVQcml2YXRlIgcKBUxlYXZlIg0KC0xvY2tNZW1i",
-            "ZXJzIgoKCE9wZW5Sb29tIhcKBEtpY2sSDwoHdXNlcl9pZBgBIAEoCSI8CghQ",
-            "aWNrU29uZxIOCgZzb3VyY2UYASABKAkSEAoIY2hhcnRfaWQYAiABKAkSDgoG",
-            "Y291cnNlGAMgASgJIhwKClBpY2tDb3Vyc2USDgoGY291cnNlGAEgASgJIhkK",
-            "CFNldFJlYWR5Eg0KBXJlYWR5GAEgASgIIiMKBkxvYWRlZBIKCgJvaxgBIAEo",
-            "CBINCgVlcnJvchgCIAEoCSKeAQoMUGxheWVyU3RhdHVzEg0KBXNjb3JlGAEg",
-            "ASgFEg0KBWNvbWJvGAIgASgFEhEKCW1heF9jb21ibxgDIAEoBRIMCgRnb29k",
-            "GAQgASgFEgoKAm9rGAUgASgFEgsKA2JhZBgGIAEoBRIQCghkcnVtcm9sbBgH",
-            "IAEoBRINCgVnYXVnZRgIIAEoBRIVCg1tdXNpY190aW1lX21zGAkgASgFIlEK",
-            "CkZpbmlzaFBsYXkSMgoFZmluYWwYASABKAsyIy5vdXJ0YWlrby5tdWx0aXBs",
-            "YXkudjEuUGxheWVyU3RhdHVzEg8KB2NsZWFyZWQYAiABKAgiHQoJU2VuZFN0",
-            "YW1wEhAKCHN0YW1wX2lkGAEgASgFIh4KBFBpbmcSFgoOY2xpZW50X3RpbWVf",
-            "bXMYASABKAMiqgMKDVNlcnZlck1lc3NhZ2USMQoHd2VsY29tZRgBIAEoCzIe",
-            "Lm91cnRhaWtvLm11bHRpcGxheS52MS5XZWxjb21lSAASKwoEcm9vbRgCIAEo",
-            "CzIbLm91cnRhaWtvLm11bHRpcGxheS52MS5Sb29tSAASNgoKc3RhcnRfcGxh",
-            "eRgDIAEoCzIgLm91cnRhaWtvLm11bHRpcGxheS52MS5TdGFydFBsYXlIABI3",
-            "CghzdGF0dXNlcxgEIAEoCzIjLm91cnRhaWtvLm11bHRpcGxheS52MS5QbGF5",
-            "U3RhdHVzZXNIABIxCgVzdGFtcBgFIAEoCzIgLm91cnRhaWtvLm11bHRpcGxh",
-            "eS52MS5TdGFtcFNlbnRIABIrCgRwb25nGAYgASgLMhsub3VydGFpa28ubXVs",
-            "dGlwbGF5LnYxLlBvbmdIABIvCgZub3RpY2UYByABKAsyHS5vdXJ0YWlrby5t",
-            "dWx0aXBsYXkudjEuTm90aWNlSAASLwoGY2xvc2VkGAggASgLMh0ub3VydGFp",
-            "a28ubXVsdGlwbGF5LnYxLkNsb3NlZEgAQgYKBGtpbmQiPgoHV2VsY29tZRIP",
-            "Cgd1c2VyX2lkGAEgASgJEhAKCG5pY2tuYW1lGAIgASgJEhAKCHByb3RvY29s",
-            "GAMgASgFIu4CCgRSb29tEgwKBGNvZGUYASABKAkSDgoGcHVibGljGAIgASgI",
-            "EisKBXBoYXNlGAMgASgOMhwub3VydGFpa28ubXVsdGlwbGF5LnYxLlBoYXNl",
-            "EhMKC2RlYWRsaW5lX21zGAQgASgDEhYKDnNlcnZlcl90aW1lX21zGAUgASgD",
-            "Eg8KB2hvc3RfaWQYBiABKAkSLgoHbWVtYmVycxgHIAMoCzIdLm91cnRhaWtv",
-            "Lm11bHRpcGxheS52MS5NZW1iZXISEwoLbWF4X21lbWJlcnMYCCABKAUSDQoF",
-            "cm91bmQYCSABKAUSKQoEc29uZxgKIAEoCzIbLm91cnRhaWtvLm11bHRpcGxh",
-            "eS52MS5Tb25nEhYKDnNvbmdfcGlja2VkX2J5GAsgASgJEjEKBnJlc3VsdBgM",
-            "IAEoCzIhLm91cnRhaWtvLm11bHRpcGxheS52MS5QbGF5UmVzdWx0EhMKC21p",
-            "bl9wbGF5ZXJzGA0gASgFIvIBCgZNZW1iZXISDwoHdXNlcl9pZBgBIAEoCRIQ",
-            "CghuaWNrbmFtZRgCIAEoCRISCgphdmF0YXJfdXJsGAMgASgJEgwKBHNsb3QY",
-            "BCABKAUSEQoJY29ubmVjdGVkGAUgASgIEg4KBnBpY2tlZBgGIAEoCBIVCg1w",
-            "aWNrZWRfc291cmNlGAcgASgJEhcKD3BpY2tlZF9jaGFydF9pZBgIIAEoCRIO",
-            "CgZjb3Vyc2UYCSABKAkSDQoFcmVhZHkYCiABKAgSDgoGbG9hZGVkGAsgASgI",
-            "Eg8KB3BsYXlpbmcYDCABKAgSEAoIZmluaXNoZWQYDSABKAgijQEKBFNvbmcS",
-            "DgoGc291cmNlGAEgASgJEhAKCGNoYXJ0X2lkGAIgASgJEg0KBXRpdGxlGAMg",
-            "ASgJEhAKCHN1YnRpdGxlGAQgASgJEi4KB2NvdXJzZXMYBSADKAsyHS5vdXJ0",
-            "YWlrby5tdWx0aXBsYXkudjEuQ291cnNlEhIKCmNoYXJ0X2pzb24YBiABKAwi",
-            "JwoGQ291cnNlEg4KBmNvdXJzZRgBIAEoCRINCgVsZXZlbBgCIAEoBSIaCglT",
-            "dGFydFBsYXkSDQoFcm91bmQYASABKAUieQoMTWVtYmVyU3RhdHVzEg8KB3Vz",
-            "ZXJfaWQYASABKAkSMwoGc3RhdHVzGAIgASgLMiMub3VydGFpa28ubXVsdGlw",
-            "bGF5LnYxLlBsYXllclN0YXR1cxIRCgljb25uZWN0ZWQYAyABKAgSEAoIZmlu",
-            "aXNoZWQYBCABKAgiRAoMUGxheVN0YXR1c2VzEjQKB21lbWJlcnMYASADKAsy",
-            "Iy5vdXJ0YWlrby5tdWx0aXBsYXkudjEuTWVtYmVyU3RhdHVzIq8CCgxQbGF5",
-            "ZXJSZXN1bHQSDwoHdXNlcl9pZBgBIAEoCRIQCghuaWNrbmFtZRgCIAEoCRIO",
-            "CgZjb3Vyc2UYAyABKAkSDQoFbGV2ZWwYBCABKAUSMwoGc3RhdHVzGAUgASgL",
-            "MiMub3VydGFpa28ubXVsdGlwbGF5LnYxLlBsYXllclN0YXR1cxIMCgRyYW5r",
-            "GAYgASgFEisKBWF3YXJkGAcgASgOMhwub3VydGFpa28ubXVsdGlwbGF5LnYx",
-            "LkF3YXJkEg8KB2NsZWFyZWQYCCABKAgSFAoMZGlzY29ubmVjdGVkGAkgASgI",
-            "EhIKCmZ1bGxfY29tYm8YCiABKAgSEAoIYWxsX2dvb2QYCyABKAgSDAoEc2xv",
-            "dBgMIAEoBRISCgphdmF0YXJfdXJsGA0gASgJIpYBCgpQbGF5UmVzdWx0Eg0K",
-            "BXJvdW5kGAEgASgFEhIKCnRlYW1fc2NvcmUYAiABKAMSNAoHcGxheWVycxgD",
-            "IAMoCzIjLm91cnRhaWtvLm11bHRpcGxheS52MS5QbGF5ZXJSZXN1bHQSDgoG",
-            "c291cmNlGAQgASgJEhAKCGNoYXJ0X2lkGAUgASgJEg0KBXRpdGxlGAYgASgJ",
-            "Ii4KCVN0YW1wU2VudBIPCgd1c2VyX2lkGAEgASgJEhAKCHN0YW1wX2lkGAIg",
-            "ASgFIjYKBFBvbmcSFgoOY2xpZW50X3RpbWVfbXMYASABKAMSFgoOc2VydmVy",
-            "X3RpbWVfbXMYAiABKAMiJwoGTm90aWNlEgwKBGNvZGUYASABKAkSDwoHbWVz",
-            "c2FnZRgCIAEoCSInCgZDbG9zZWQSDAoEY29kZRgBIAEoCRIPCgdtZXNzYWdl",
-            "GAIgASgJKnsKBVBoYXNlEhUKEVBIQVNFX1VOU1BFQ0lGSUVEEAASCQoFTE9C",
-            "QlkQARIPCgtTT05HX1NFTEVDVBACEg0KCVNPTkdfRFJBVxADEgoKBkNPVVJT",
-            "RRAEEgsKB0xPQURJTkcQBRILCgdQTEFZSU5HEAYSCgoGUkVTVUxUEAcqRQoF",
-            "QXdhcmQSFQoRQVdBUkRfVU5TUEVDSUZJRUQQABIMCghOT19BV0FSRBABEgcK",
-            "A01WUBACEg4KClNVUEVSX1NUQVIQAzJmCglNdWx0aUVuc28SWQoHQ29ubmVj",
-            "dBIkLm91cnRhaWtvLm11bHRpcGxheS52MS5DbGllbnRNZXNzYWdlGiQub3Vy",
-            "dGFpa28ubXVsdGlwbGF5LnYxLlNlcnZlck1lc3NhZ2UoATABQkhaL291cnRh",
-            "aWtvLmRldi9uZXQvaW50ZXJuYWwvbXVsdGlwbGF5L211bHRpcGxheXBiqgIU",
-            "T3VyVGFpa28uTXVsdGkuUHJvdG9iBnByb3RvMw=="));
+            "Gy5vdXJ0YWlrby5tdWx0aXBsYXkudjEuS2lja0gAEjMKCHJldHVybmVkGA4g",
+            "ASgLMh8ub3VydGFpa28ubXVsdGlwbGF5LnYxLlJldHVybmVkSABCBgoEa2lu",
+            "ZCKxAQoESm9pbhI4CgtxdWlja19tYXRjaBgBIAEoCzIhLm91cnRhaWtvLm11",
+            "bHRpcGxheS52MS5RdWlja01hdGNoSAASPgoOY3JlYXRlX3ByaXZhdGUYAiAB",
+            "KAsyJC5vdXJ0YWlrby5tdWx0aXBsYXkudjEuQ3JlYXRlUHJpdmF0ZUgAEhMK",
+            "CXJvb21fY29kZRgDIAEoCUgAEhAKCHByb3RvY29sGAQgASgFQggKBnRhcmdl",
+            "dCIMCgpRdWlja01hdGNoIg8KDUNyZWF0ZVByaXZhdGUiBwoFTGVhdmUiDQoL",
+            "TG9ja01lbWJlcnMiCgoIT3BlblJvb20iFwoES2ljaxIPCgd1c2VyX2lkGAEg",
+            "ASgJIjwKCFBpY2tTb25nEg4KBnNvdXJjZRgBIAEoCRIQCghjaGFydF9pZBgC",
+            "IAEoCRIOCgZjb3Vyc2UYAyABKAkiHAoKUGlja0NvdXJzZRIOCgZjb3Vyc2UY",
+            "ASABKAkiGQoIU2V0UmVhZHkSDQoFcmVhZHkYASABKAgiIwoGTG9hZGVkEgoK",
+            "Am9rGAEgASgIEg0KBWVycm9yGAIgASgJIp4BCgxQbGF5ZXJTdGF0dXMSDQoF",
+            "c2NvcmUYASABKAUSDQoFY29tYm8YAiABKAUSEQoJbWF4X2NvbWJvGAMgASgF",
+            "EgwKBGdvb2QYBCABKAUSCgoCb2sYBSABKAUSCwoDYmFkGAYgASgFEhAKCGRy",
+            "dW1yb2xsGAcgASgFEg0KBWdhdWdlGAggASgFEhUKDW11c2ljX3RpbWVfbXMY",
+            "CSABKAUiUQoKRmluaXNoUGxheRIyCgVmaW5hbBgBIAEoCzIjLm91cnRhaWtv",
+            "Lm11bHRpcGxheS52MS5QbGF5ZXJTdGF0dXMSDwoHY2xlYXJlZBgCIAEoCCId",
+            "CglTZW5kU3RhbXASEAoIc3RhbXBfaWQYASABKAUiHgoEUGluZxIWCg5jbGll",
+            "bnRfdGltZV9tcxgBIAEoAyIKCghSZXR1cm5lZCKqAwoNU2VydmVyTWVzc2Fn",
+            "ZRIxCgd3ZWxjb21lGAEgASgLMh4ub3VydGFpa28ubXVsdGlwbGF5LnYxLldl",
+            "bGNvbWVIABIrCgRyb29tGAIgASgLMhsub3VydGFpa28ubXVsdGlwbGF5LnYx",
+            "LlJvb21IABI2CgpzdGFydF9wbGF5GAMgASgLMiAub3VydGFpa28ubXVsdGlw",
+            "bGF5LnYxLlN0YXJ0UGxheUgAEjcKCHN0YXR1c2VzGAQgASgLMiMub3VydGFp",
+            "a28ubXVsdGlwbGF5LnYxLlBsYXlTdGF0dXNlc0gAEjEKBXN0YW1wGAUgASgL",
+            "MiAub3VydGFpa28ubXVsdGlwbGF5LnYxLlN0YW1wU2VudEgAEisKBHBvbmcY",
+            "BiABKAsyGy5vdXJ0YWlrby5tdWx0aXBsYXkudjEuUG9uZ0gAEi8KBm5vdGlj",
+            "ZRgHIAEoCzIdLm91cnRhaWtvLm11bHRpcGxheS52MS5Ob3RpY2VIABIvCgZj",
+            "bG9zZWQYCCABKAsyHS5vdXJ0YWlrby5tdWx0aXBsYXkudjEuQ2xvc2VkSABC",
+            "BgoEa2luZCI+CgdXZWxjb21lEg8KB3VzZXJfaWQYASABKAkSEAoIbmlja25h",
+            "bWUYAiABKAkSEAoIcHJvdG9jb2wYAyABKAUi7gIKBFJvb20SDAoEY29kZRgB",
+            "IAEoCRIOCgZwdWJsaWMYAiABKAgSKwoFcGhhc2UYAyABKA4yHC5vdXJ0YWlr",
+            "by5tdWx0aXBsYXkudjEuUGhhc2USEwoLZGVhZGxpbmVfbXMYBCABKAMSFgoO",
+            "c2VydmVyX3RpbWVfbXMYBSABKAMSDwoHaG9zdF9pZBgGIAEoCRIuCgdtZW1i",
+            "ZXJzGAcgAygLMh0ub3VydGFpa28ubXVsdGlwbGF5LnYxLk1lbWJlchITCgtt",
+            "YXhfbWVtYmVycxgIIAEoBRINCgVyb3VuZBgJIAEoBRIpCgRzb25nGAogASgL",
+            "Mhsub3VydGFpa28ubXVsdGlwbGF5LnYxLlNvbmcSFgoOc29uZ19waWNrZWRf",
+            "YnkYCyABKAkSMQoGcmVzdWx0GAwgASgLMiEub3VydGFpa28ubXVsdGlwbGF5",
+            "LnYxLlBsYXlSZXN1bHQSEwoLbWluX3BsYXllcnMYDSABKAUigAIKBk1lbWJl",
+            "chIPCgd1c2VyX2lkGAEgASgJEhAKCG5pY2tuYW1lGAIgASgJEhIKCmF2YXRh",
+            "cl91cmwYAyABKAkSDAoEc2xvdBgEIAEoBRIRCgljb25uZWN0ZWQYBSABKAgS",
+            "DgoGcGlja2VkGAYgASgIEhUKDXBpY2tlZF9zb3VyY2UYByABKAkSFwoPcGlj",
+            "a2VkX2NoYXJ0X2lkGAggASgJEg4KBmNvdXJzZRgJIAEoCRINCgVyZWFkeRgK",
+            "IAEoCBIOCgZsb2FkZWQYCyABKAgSDwoHcGxheWluZxgMIAEoCBIQCghmaW5p",
+            "c2hlZBgNIAEoCBIMCgRhd2F5GA4gASgIIo0BCgRTb25nEg4KBnNvdXJjZRgB",
+            "IAEoCRIQCghjaGFydF9pZBgCIAEoCRINCgV0aXRsZRgDIAEoCRIQCghzdWJ0",
+            "aXRsZRgEIAEoCRIuCgdjb3Vyc2VzGAUgAygLMh0ub3VydGFpa28ubXVsdGlw",
+            "bGF5LnYxLkNvdXJzZRISCgpjaGFydF9qc29uGAYgASgMIicKBkNvdXJzZRIO",
+            "CgZjb3Vyc2UYASABKAkSDQoFbGV2ZWwYAiABKAUiGgoJU3RhcnRQbGF5Eg0K",
+            "BXJvdW5kGAEgASgFInkKDE1lbWJlclN0YXR1cxIPCgd1c2VyX2lkGAEgASgJ",
+            "EjMKBnN0YXR1cxgCIAEoCzIjLm91cnRhaWtvLm11bHRpcGxheS52MS5QbGF5",
+            "ZXJTdGF0dXMSEQoJY29ubmVjdGVkGAMgASgIEhAKCGZpbmlzaGVkGAQgASgI",
+            "IkQKDFBsYXlTdGF0dXNlcxI0CgdtZW1iZXJzGAEgAygLMiMub3VydGFpa28u",
+            "bXVsdGlwbGF5LnYxLk1lbWJlclN0YXR1cyKvAgoMUGxheWVyUmVzdWx0Eg8K",
+            "B3VzZXJfaWQYASABKAkSEAoIbmlja25hbWUYAiABKAkSDgoGY291cnNlGAMg",
+            "ASgJEg0KBWxldmVsGAQgASgFEjMKBnN0YXR1cxgFIAEoCzIjLm91cnRhaWtv",
+            "Lm11bHRpcGxheS52MS5QbGF5ZXJTdGF0dXMSDAoEcmFuaxgGIAEoBRIrCgVh",
+            "d2FyZBgHIAEoDjIcLm91cnRhaWtvLm11bHRpcGxheS52MS5Bd2FyZBIPCgdj",
+            "bGVhcmVkGAggASgIEhQKDGRpc2Nvbm5lY3RlZBgJIAEoCBISCgpmdWxsX2Nv",
+            "bWJvGAogASgIEhAKCGFsbF9nb29kGAsgASgIEgwKBHNsb3QYDCABKAUSEgoK",
+            "YXZhdGFyX3VybBgNIAEoCSKWAQoKUGxheVJlc3VsdBINCgVyb3VuZBgBIAEo",
+            "BRISCgp0ZWFtX3Njb3JlGAIgASgDEjQKB3BsYXllcnMYAyADKAsyIy5vdXJ0",
+            "YWlrby5tdWx0aXBsYXkudjEuUGxheWVyUmVzdWx0Eg4KBnNvdXJjZRgEIAEo",
+            "CRIQCghjaGFydF9pZBgFIAEoCRINCgV0aXRsZRgGIAEoCSIuCglTdGFtcFNl",
+            "bnQSDwoHdXNlcl9pZBgBIAEoCRIQCghzdGFtcF9pZBgCIAEoBSI2CgRQb25n",
+            "EhYKDmNsaWVudF90aW1lX21zGAEgASgDEhYKDnNlcnZlcl90aW1lX21zGAIg",
+            "ASgDIicKBk5vdGljZRIMCgRjb2RlGAEgASgJEg8KB21lc3NhZ2UYAiABKAki",
+            "JwoGQ2xvc2VkEgwKBGNvZGUYASABKAkSDwoHbWVzc2FnZRgCIAEoCSp7CgVQ",
+            "aGFzZRIVChFQSEFTRV9VTlNQRUNJRklFRBAAEgkKBUxPQkJZEAESDwoLU09O",
+            "R19TRUxFQ1QQAhINCglTT05HX0RSQVcQAxIKCgZDT1VSU0UQBBILCgdMT0FE",
+            "SU5HEAUSCwoHUExBWUlORxAGEgoKBlJFU1VMVBAHKkUKBUF3YXJkEhUKEUFX",
+            "QVJEX1VOU1BFQ0lGSUVEEAASDAoITk9fQVdBUkQQARIHCgNNVlAQAhIOCgpT",
+            "VVBFUl9TVEFSEAMyZgoJTXVsdGlFbnNvElkKB0Nvbm5lY3QSJC5vdXJ0YWlr",
+            "by5tdWx0aXBsYXkudjEuQ2xpZW50TWVzc2FnZRokLm91cnRhaWtvLm11bHRp",
+            "cGxheS52MS5TZXJ2ZXJNZXNzYWdlKAEwAUJIWi9vdXJ0YWlrby5kZXYvbmV0",
+            "L2ludGVybmFsL211bHRpcGxheS9tdWx0aXBsYXlwYqoCFE91clRhaWtvLk11",
+            "bHRpLlByb3RvYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::OurTaiko.Multi.Proto.Phase), typeof(global::OurTaiko.Multi.Proto.Award), }, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.ClientMessage), global::OurTaiko.Multi.Proto.ClientMessage.Parser, new[]{ "Join", "Leave", "LockMembers", "OpenRoom", "PickSong", "PickCourse", "SetReady", "Loaded", "Status", "Finish", "Stamp", "Ping", "Kick" }, new[]{ "Kind" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.ClientMessage), global::OurTaiko.Multi.Proto.ClientMessage.Parser, new[]{ "Join", "Leave", "LockMembers", "OpenRoom", "PickSong", "PickCourse", "SetReady", "Loaded", "Status", "Finish", "Stamp", "Ping", "Kick", "Returned" }, new[]{ "Kind" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Join), global::OurTaiko.Multi.Proto.Join.Parser, new[]{ "QuickMatch", "CreatePrivate", "RoomCode", "Protocol" }, new[]{ "Target" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.QuickMatch), global::OurTaiko.Multi.Proto.QuickMatch.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.CreatePrivate), global::OurTaiko.Multi.Proto.CreatePrivate.Parser, null, null, null, null, null),
@@ -133,10 +135,11 @@ namespace OurTaiko.Multi.Proto {
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.FinishPlay), global::OurTaiko.Multi.Proto.FinishPlay.Parser, new[]{ "Final", "Cleared" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.SendStamp), global::OurTaiko.Multi.Proto.SendStamp.Parser, new[]{ "StampId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Ping), global::OurTaiko.Multi.Proto.Ping.Parser, new[]{ "ClientTimeMs" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Returned), global::OurTaiko.Multi.Proto.Returned.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.ServerMessage), global::OurTaiko.Multi.Proto.ServerMessage.Parser, new[]{ "Welcome", "Room", "StartPlay", "Statuses", "Stamp", "Pong", "Notice", "Closed" }, new[]{ "Kind" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Welcome), global::OurTaiko.Multi.Proto.Welcome.Parser, new[]{ "UserId", "Nickname", "Protocol" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Room), global::OurTaiko.Multi.Proto.Room.Parser, new[]{ "Code", "Public", "Phase", "DeadlineMs", "ServerTimeMs", "HostId", "Members", "MaxMembers", "Round", "Song", "SongPickedBy", "Result", "MinPlayers" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Member), global::OurTaiko.Multi.Proto.Member.Parser, new[]{ "UserId", "Nickname", "AvatarUrl", "Slot", "Connected", "Picked", "PickedSource", "PickedChartId", "Course", "Ready", "Loaded", "Playing", "Finished" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Member), global::OurTaiko.Multi.Proto.Member.Parser, new[]{ "UserId", "Nickname", "AvatarUrl", "Slot", "Connected", "Picked", "PickedSource", "PickedChartId", "Course", "Ready", "Loaded", "Playing", "Finished", "Away" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Song), global::OurTaiko.Multi.Proto.Song.Parser, new[]{ "Source", "ChartId", "Title", "Subtitle", "Courses", "ChartJson" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.Course), global::OurTaiko.Multi.Proto.Course.Parser, new[]{ "Course_", "Level" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::OurTaiko.Multi.Proto.StartPlay), global::OurTaiko.Multi.Proto.StartPlay.Parser, new[]{ "Round" }, null, null, null, null),
@@ -255,6 +258,9 @@ namespace OurTaiko.Multi.Proto {
           break;
         case KindOneofCase.Kick:
           Kick = other.Kick.Clone();
+          break;
+        case KindOneofCase.Returned:
+          Returned = other.Returned.Clone();
           break;
       }
 
@@ -423,6 +429,18 @@ namespace OurTaiko.Multi.Proto {
       }
     }
 
+    /// <summary>Field number for the "returned" field.</summary>
+    public const int ReturnedFieldNumber = 14;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::OurTaiko.Multi.Proto.Returned Returned {
+      get { return kindCase_ == KindOneofCase.Returned ? (global::OurTaiko.Multi.Proto.Returned) kind_ : null; }
+      set {
+        kind_ = value;
+        kindCase_ = value == null ? KindOneofCase.None : KindOneofCase.Returned;
+      }
+    }
+
     private object kind_;
     /// <summary>Enum of possible cases for the "kind" oneof.</summary>
     public enum KindOneofCase {
@@ -440,6 +458,7 @@ namespace OurTaiko.Multi.Proto {
       Stamp = 11,
       Ping = 12,
       Kick = 13,
+      Returned = 14,
     }
     private KindOneofCase kindCase_ = KindOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -483,6 +502,7 @@ namespace OurTaiko.Multi.Proto {
       if (!object.Equals(Stamp, other.Stamp)) return false;
       if (!object.Equals(Ping, other.Ping)) return false;
       if (!object.Equals(Kick, other.Kick)) return false;
+      if (!object.Equals(Returned, other.Returned)) return false;
       if (KindCase != other.KindCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -504,6 +524,7 @@ namespace OurTaiko.Multi.Proto {
       if (kindCase_ == KindOneofCase.Stamp) hash ^= Stamp.GetHashCode();
       if (kindCase_ == KindOneofCase.Ping) hash ^= Ping.GetHashCode();
       if (kindCase_ == KindOneofCase.Kick) hash ^= Kick.GetHashCode();
+      if (kindCase_ == KindOneofCase.Returned) hash ^= Returned.GetHashCode();
       hash ^= (int) kindCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -575,6 +596,10 @@ namespace OurTaiko.Multi.Proto {
         output.WriteRawTag(106);
         output.WriteMessage(Kick);
       }
+      if (kindCase_ == KindOneofCase.Returned) {
+        output.WriteRawTag(114);
+        output.WriteMessage(Returned);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -637,6 +662,10 @@ namespace OurTaiko.Multi.Proto {
         output.WriteRawTag(106);
         output.WriteMessage(Kick);
       }
+      if (kindCase_ == KindOneofCase.Returned) {
+        output.WriteRawTag(114);
+        output.WriteMessage(Returned);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -685,6 +714,9 @@ namespace OurTaiko.Multi.Proto {
       }
       if (kindCase_ == KindOneofCase.Kick) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Kick);
+      }
+      if (kindCase_ == KindOneofCase.Returned) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Returned);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -776,6 +808,12 @@ namespace OurTaiko.Multi.Proto {
             Kick = new global::OurTaiko.Multi.Proto.Kick();
           }
           Kick.MergeFrom(other.Kick);
+          break;
+        case KindOneofCase.Returned:
+          if (Returned == null) {
+            Returned = new global::OurTaiko.Multi.Proto.Returned();
+          }
+          Returned.MergeFrom(other.Returned);
           break;
       }
 
@@ -915,6 +953,15 @@ namespace OurTaiko.Multi.Proto {
             Kick = subBuilder;
             break;
           }
+          case 114: {
+            global::OurTaiko.Multi.Proto.Returned subBuilder = new global::OurTaiko.Multi.Proto.Returned();
+            if (kindCase_ == KindOneofCase.Returned) {
+              subBuilder.MergeFrom(Returned);
+            }
+            input.ReadMessage(subBuilder);
+            Returned = subBuilder;
+            break;
+          }
         }
       }
     #endif
@@ -1051,6 +1098,15 @@ namespace OurTaiko.Multi.Proto {
             Kick = subBuilder;
             break;
           }
+          case 114: {
+            global::OurTaiko.Multi.Proto.Returned subBuilder = new global::OurTaiko.Multi.Proto.Returned();
+            if (kindCase_ == KindOneofCase.Returned) {
+              subBuilder.MergeFrom(Returned);
+            }
+            input.ReadMessage(subBuilder);
+            Returned = subBuilder;
+            break;
+          }
         }
       }
     }
@@ -1178,7 +1234,7 @@ namespace OurTaiko.Multi.Proto {
     public const int ProtocolFieldNumber = 4;
     private int protocol_;
     /// <summary>
-    /// Protocol version the client speaks (currently 1).
+    /// Protocol version the client speaks (currently 2; 1 has no `returned` and no `away`).
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -1939,7 +1995,8 @@ namespace OurTaiko.Multi.Proto {
   }
 
   /// <summary>
-  /// Host only, LOBBY only: the members are settled and the round begins.
+  /// Host only, LOBBY only: the round begins with the members who are in the room (2 or more);
+  /// those who are away are taken out of it.
   /// </summary>
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class LockMembers : pb::IMessage<LockMembers>
@@ -4538,6 +4595,171 @@ namespace OurTaiko.Multi.Proto {
 
   }
 
+  /// <summary>
+  /// Protocol 2. The player is back at the room's screen after a play. Send it while the player's
+  /// own member is `away` and that screen is up; it may be sent again, and in any phase.
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  public sealed partial class Returned : pb::IMessage<Returned>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<Returned> _parser = new pb::MessageParser<Returned>(() => new Returned());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<Returned> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[16]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public Returned() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public Returned(Returned other) : this() {
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public Returned Clone() {
+      return new Returned(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as Returned);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(Returned other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(Returned other) {
+      if (other == null) {
+        return;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+      if ((tag & 7) == 4) {
+        // Abort on any end group tag.
+        return;
+      }
+      switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+        }
+      }
+    }
+    #endif
+
+  }
+
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class ServerMessage : pb::IMessage<ServerMessage>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
@@ -4553,7 +4775,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[16]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[17]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5165,7 +5387,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[17]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[18]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5437,7 +5659,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[18]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[19]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6102,7 +6324,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[19]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[20]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6135,6 +6357,7 @@ namespace OurTaiko.Multi.Proto {
       loaded_ = other.loaded_;
       playing_ = other.playing_;
       finished_ = other.finished_;
+      away_ = other.away_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -6315,6 +6538,21 @@ namespace OurTaiko.Multi.Proto {
       }
     }
 
+    /// <summary>Field number for the "away" field.</summary>
+    public const int AwayFieldNumber = 14;
+    private bool away_;
+    /// <summary>
+    /// Has not come back to the room's screen since the last play began (protocol 2 members only).
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Away {
+      get { return away_; }
+      set {
+        away_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -6343,6 +6581,7 @@ namespace OurTaiko.Multi.Proto {
       if (Loaded != other.Loaded) return false;
       if (Playing != other.Playing) return false;
       if (Finished != other.Finished) return false;
+      if (Away != other.Away) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -6363,6 +6602,7 @@ namespace OurTaiko.Multi.Proto {
       if (Loaded != false) hash ^= Loaded.GetHashCode();
       if (Playing != false) hash ^= Playing.GetHashCode();
       if (Finished != false) hash ^= Finished.GetHashCode();
+      if (Away != false) hash ^= Away.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -6433,6 +6673,10 @@ namespace OurTaiko.Multi.Proto {
         output.WriteRawTag(104);
         output.WriteBool(Finished);
       }
+      if (Away != false) {
+        output.WriteRawTag(112);
+        output.WriteBool(Away);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -6495,6 +6739,10 @@ namespace OurTaiko.Multi.Proto {
         output.WriteRawTag(104);
         output.WriteBool(Finished);
       }
+      if (Away != false) {
+        output.WriteRawTag(112);
+        output.WriteBool(Away);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -6542,6 +6790,9 @@ namespace OurTaiko.Multi.Proto {
         size += 1 + 1;
       }
       if (Finished != false) {
+        size += 1 + 1;
+      }
+      if (Away != false) {
         size += 1 + 1;
       }
       if (_unknownFields != null) {
@@ -6594,6 +6845,9 @@ namespace OurTaiko.Multi.Proto {
       }
       if (other.Finished != false) {
         Finished = other.Finished;
+      }
+      if (other.Away != false) {
+        Away = other.Away;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -6664,6 +6918,10 @@ namespace OurTaiko.Multi.Proto {
           }
           case 104: {
             Finished = input.ReadBool();
+            break;
+          }
+          case 112: {
+            Away = input.ReadBool();
             break;
           }
         }
@@ -6737,6 +6995,10 @@ namespace OurTaiko.Multi.Proto {
             Finished = input.ReadBool();
             break;
           }
+          case 112: {
+            Away = input.ReadBool();
+            break;
+          }
         }
       }
     }
@@ -6759,7 +7021,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[20]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[21]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7138,7 +7400,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[21]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[22]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7376,7 +7638,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[22]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[23]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7574,7 +7836,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[23]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[24]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7892,7 +8154,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[24]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[25]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -8079,7 +8341,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[25]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[26]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -8746,7 +9008,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[26]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[27]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -9121,7 +9383,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[27]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[28]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -9356,7 +9618,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[28]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[29]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -9595,7 +9857,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[29]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[30]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -9833,7 +10095,7 @@ namespace OurTaiko.Multi.Proto {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[30]; }
+      get { return global::OurTaiko.Multi.Proto.MultiplayReflection.Descriptor.MessageTypes[31]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

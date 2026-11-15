@@ -41,14 +41,14 @@ namespace OurTaiko
         public bool StampsOpen { get; private set; }
         public bool HasLeft { get; private set; }
 
-        const double LeaveConfirmSeconds = 3, StampSeconds = 3;
+        const double LeaveConfirmSeconds = 3, StampSeconds = 3, ReturnedSeconds = 1;
 
         SceneSwitcher switcher;
         MultiArt art;
         MultiDirector director;
         PlateUi ui;
         bool dirty = true, enteringCode, reviewing;
-        double leaveAskedAt = double.NegativeInfinity;
+        double leaveAskedAt = double.NegativeInfinity, returnedSentAt = double.NegativeInfinity;
         CancellationTokenSource cancel;
         // The stamp each member last sent, and until when it shows.
         readonly Dictionary<string, (int Stamp, double Until)> stamps = new Dictionary<string, (int, double)>();
@@ -137,6 +137,7 @@ namespace OurTaiko
         {
             double now = Time.realtimeSinceStartupAsDouble;
             foreach (var expired in stamps.Where(s => s.Value.Until <= now).Select(s => s.Key).ToList()) { stamps.Remove(expired); dirty = true; }
+            TellReturned(now);
             if (Wanted != Shown) dirty = true;
             if (dirty) Rebuild();
             ShowClock();
@@ -146,6 +147,19 @@ namespace OurTaiko
             else if (InputManager.PlayerKeyDown(InputKey.LeftDon) || InputManager.PlayerKeyDown(InputKey.RightDon) || InputManager.GetKeyDown(InputKey.Confirm)) Confirm();
             else if (InputManager.PlayerKeyDown(InputKey.LeftKa) || InputManager.GetKeyDown(InputKey.MenuLeft) || InputManager.GetKeyDown(InputKey.MenuUp)) Move(-1);
             else if (InputManager.PlayerKeyDown(InputKey.RightKa) || InputManager.GetKeyDown(InputKey.MenuRight) || InputManager.GetKeyDown(InputKey.MenuDown)) Move(1);
+        }
+
+        // After a play the room takes the player for away until the game says they are back; a
+        // player who is away when the host starts the next round is left out of the room. This
+        // screen being up is being back. It is said for as
+        // long as the room has the player away (about once a second): a message sent while the
+        // connection was down is lost, and the room's answer is the only proof it arrived.
+        void TellReturned(double now)
+        {
+            var me = MultiSession.Me;
+            if (me == null || !me.Away || !MultiSession.IsConnected || now - returnedSentAt < ReturnedSeconds) return;
+            returnedSentAt = now;
+            MultiSession.Returned();
         }
 
         // ---------------------------------------------------------------- input

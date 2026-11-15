@@ -205,6 +205,11 @@ namespace OurTaiko
             if (!member.Connected) { Picture(root, art.offline, 44, 44, x - 70, y); Label(root, MultiText.Get("member.offline"), 26, x + 24, y - 2, width - 130, true); return; }
             switch (room.Phase)
             {
+                case Phase.Lobby:
+                case Phase.Result:
+                    // Still at their own result screen after the last round.
+                    if (member.Away) { Picture(root, art.wait, 44, 44, x - width / 2 + 44, y); Label(root, MultiText.Get("member.away"), 26, x + 24, y - 2, width - 100, true); }
+                    break;
                 case Phase.SongSelect:
                     Picture(root, member.Picked ? art.check : art.wait, 46, 46, x, y);
                     break;
@@ -234,7 +239,10 @@ namespace OurTaiko
             switch (room.Phase)
             {
                 case Phase.Lobby:
-                    int present = room.Members.Count(m => m.Connected), needed = Math.Max(1, room.MinPlayers);
+                    // In the room: connected, and back from the last round. A round needs that many;
+                    // the host's start leaves whoever is still at their result screen behind.
+                    int present = room.Members.Count(m => m.Connected && !m.Away), needed = Math.Max(1, room.MinPlayers);
+                    int away = room.Members.Count(m => m.Away);
                     if (host)
                     {
                         if (!room.Public && !StampsOpen)
@@ -247,12 +255,15 @@ namespace OurTaiko
                         {
                             var start = Button("start", content, 460, 150, 960, 716, Orange, MultiSession.LockMembers, present >= needed);
                             Label(start, MultiText.Get("room.start"), 48, 230, 54, 420, true);
-                            Label(start, present >= needed ? MultiText.Format("room.players", present) : MultiText.Format("room.needMore", needed - present), 24, 230, 106, 420, true);
+                            string under = present < needed ? MultiText.Format("room.needMore", needed - present)
+                                : away > 0 ? MultiText.Format("room.startLeaves", away) : MultiText.Format("room.players", present);
+                            Label(start, under, 24, 230, 106, 420, true);
                         }
-                        return "start";
+                        // With no start plate the focus must not fall on a member's remove button.
+                        return present >= needed ? "start" : "stamps";
                     }
                     Picture(content, art.panel, 1100, 110, 960, 716);
-                    Label(content, MultiText.Get(room.Public && present >= needed ? "room.startingSoon" : "room.waitingHost"), 38, 960, 714, 1040);
+                    Label(content, MultiText.Get("room.waitingHost"), 38, 960, 714, 1040);
                     return "stamps";
                 case Phase.SongSelect:
                     if (me != null && !me.Picked && !StampsOpen)

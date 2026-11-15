@@ -24,11 +24,12 @@ room.empty,Open seat,あき,空位,An empty member slot
 room.open,Open the Room,ルームを公開,公开房间,Host button: make a private room public
 room.openInfo,Anyone can then join. Cannot be undone.,だれでも入れるようになります（もどせません）,之后任何人都能加入，不能改回,Under the open-room button
 room.start,Start,スタート,开始,Host button: settle the members and begin
-room.players,{0} players,{0} 人,{0} 人,Under the start button; {0} = number of members present
-room.needMore,{0} more needed,あと {0} 人必要,还差 {0} 人,Under the start button when there are too few members; {0} = how many more
+room.players,{0} players,{0} 人,{0} 人,Under the start button; {0} = number of members in the room
+room.needMore,{0} more needed,あと {0} 人必要,还差 {0} 人,Under the start button when too few members are in the room; {0} = how many more
 room.waitingHost,Waiting for the host to start…,ホストの開始を待っています…,等待房主开始…,Lobby text for members who are not the host
-room.startingSoon,Starting soon…,まもなく始まります…,即将开始…,Lobby text in a public room that is counting down
+room.startLeaves,{0} not back will be left out,戻っていない {0} 人はルームから外れます,还没回来的 {0} 人会被移出房间,Under the start button while members are still at their result screens; {0} = how many
 member.offline,Offline,オフライン,掉线,Member card: the connection dropped
+member.away,Viewing results,リザルト確認中,结算中,Member card in the lobby: still at their own result screen after the last round
 member.sittingOut,Sitting out,お休み中,本局不参加,Member card: not in this round
 phase.lobby,Waiting for players,メンバー募集中,等待玩家,Room phase
 phase.songSelect,Pick a song,曲をえらぼう,选曲中,Room phase
@@ -79,6 +80,7 @@ error.SERVER_FULL,The server has no room left. Try again later.,サーバーが�
 error.NOT_HOST,Only the host can do that.,ホストだけができる操作です。,只有房主可以这样做。,Notice
 error.BAD_PHASE,That cannot be done right now.,今はできません。,现在不能这样做。,Notice
 error.BAD_REQUEST,The room did not accept that.,その操作は受け付けられませんでした。,房间没有接受这个操作。,Notice
+error.LEFT_BEHIND,The next song started before you were back. You are out of the room.,ルームに戻る前に次の曲が始まり、ルームから外れました。,你还没回到房间，下一局就开始了，已被移出房间。,Room ended for this player
 error.NOT_ENOUGH_PLAYERS,Not enough players. Back to the lobby.,人数が足りません。ロビーにもどります。,人数不足，回到大厅。,Notice
 error.CHART_NOT_FOUND,That song cannot be played online.,その曲はルームで演奏できません。,这首歌无法在房间里演奏。,Notice
 error.NO_CHARTS,There are no songs to draw from.,えらべる曲がありません。,没有可以抽选的歌曲。,Notice

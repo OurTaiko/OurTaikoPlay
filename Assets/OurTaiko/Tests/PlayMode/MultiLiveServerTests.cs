@@ -86,6 +86,16 @@ namespace OurTaiko.Tests
                 Assert.That(result.Players[0].Cleared, Is.True);
                 Assert.That(result.Title, Is.EqualTo(song.Title));
 
+                // After the play the room takes the player for away until the game says they are back.
+                Assert.That(MultiSession.JoinProtocol, Is.EqualTo(MultiSession.Protocol));
+                yield return Until(() => MultiSession.Room.Phase == Phase.Lobby, "The room did not go back to the lobby", 20);
+                Assert.That(MultiSession.Me.Away, Is.True);
+                MultiSession.Returned();
+                yield return Until(() => !MultiSession.Me.Away, "The room did not take the player for back");
+                Assert.That(MultiSession.Room.Phase, Is.EqualTo(Phase.Lobby), "Nothing begins by itself.");
+                MultiSession.LockMembers();
+                yield return Until(() => MultiSession.Room.Phase == Phase.SongSelect && MultiSession.Room.Round == 2, "The next round did not begin");
+
                 var leave = MultiSession.LeaveAsync();
                 yield return Waits.Until(() => leave.IsCompleted, seconds: 10);
                 Assert.That(MultiSession.InRoom, Is.False);
