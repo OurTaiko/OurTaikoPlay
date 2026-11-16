@@ -11491,10 +11491,6 @@ PrefabInstance:
       propertyPath: seat
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2523230160004936926, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
-      propertyPath: secondBadge
-      value: 
-      objectReference: {fileID: -3256003480736652767, guid: dc0611d61ad6845d0a88e6cbb4b4f561, type: 3}
     - target: {fileID: 3217039868506801135, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
       propertyPath: m_Pivot.x
       value: 0

@@ -95,6 +95,10 @@ MonoBehaviour:
     m_Key: activity.donDownload
     m_Metadata:
       m_Items: []
+  - m_Id: 1735497163464704
+    m_Key: activity.nameplateArt
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

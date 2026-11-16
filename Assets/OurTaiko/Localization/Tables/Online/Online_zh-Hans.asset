@@ -98,6 +98,10 @@ MonoBehaviour:
     m_Localized: "\u6B63\u5728\u4E0B\u8F7D {0} \u7684 3D \u549A\u9171\u2026 {1} / {2} MB"
     m_Metadata:
       m_Items: []
+  - m_Id: 1735497163464704
+    m_Localized: "\u6B63\u5728\u51C6\u5907\u540D\u724C\u2026"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

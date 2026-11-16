@@ -9,20 +9,15 @@ namespace OurTaiko
     // badge, title, name. The 1P
     // plate follows PlayerInfoController, so an info change updates every plate on screen; the 2P
     // plate follows its SecondInfo (2P's account, else the "2P" guest plate) with the 2p badge.
-    [RequireComponent(typeof(RectTransform), typeof(ClipSampler))]
+    // The art is not in the game: NameplateArt fetches it at sign-in. Without it a plate is its text.
+    [RequireComponent(typeof(RectTransform))]
     public sealed class NameplateView : MonoBehaviour
     {
         public Image shadow, bandUnder, band, outline, danBackground, danRing, dan, badge;
         public TMP_Text title, playerName;
-        [Tooltip("frame_top: the 5 title backgrounds.")]
-        public Sprite[] titleBackgrounds;
         // The 段位 emblem is two layers, like a song's crown: dan_ring_{silver,gold,rainbow} under the
         // rank, by the pass's combo (銀粋 / 金粋 full combo / 虹粋 all 良), then dan_text[_gold]'s rank
         // (初級 .. 達人, 0..5 blank), white for a red pass and gold for a gold pass.
-        [Tooltip("dan_ring_silver, dan_ring_gold, dan_ring_rainbow: PlayerInfo.danCombo 0..2.")]
-        public Sprite[] danRings;
-        [Tooltip("dan_text / dan_text_gold: 初級 .. 達人.")]
-        public Sprite[] danTexts, goldDanTexts;
         [Tooltip("0 = 1P, 1 = 2P.")]
         public int seat;
         // The side whose player the plate shows: a single-player screen's plate (seat 0) shows the
@@ -32,9 +27,6 @@ namespace OurTaiko
         PlayerInfo pinned;
         int pinnedSide;
         int applied = -1;
-        Sprite firstBadge;
-        [Tooltip("global/nameplate/2p: the badge of a 2P plate.")]
-        public Sprite secondBadge;
 
         public PlayerInfo Info { get; private set; }
         public int RainbowFrame { get; private set; }
@@ -49,17 +41,21 @@ namespace OurTaiko
             controller = PlayerInfoController.EnsureInstance();
             controller.Changed += ShowFirst;
             controller.SecondChanged += ShowSecond;
+            NameplateArt.Changed += ApplyShown;
             rainbowStart = GameTimeline.FrameTime;
             renderedCanvasScale = float.NaN;
             Canvas.willRenderCanvases += RefreshCanvasScale;
-            // No rainbow sample yet: the Animator may not have woken, and evaluating its graph
-            // asserts m_DidAwake. Update draws the band before the first render.
             ApplyShown();
         }
 
         void ShowFirst(PlayerInfo info) { if (pinned == null && Shown == 0) Show(info); }
         void ShowSecond(PlayerInfo info) { if (pinned == null && Shown == 1) Show(info); }
-        void ApplyShown() { applied = Shown; Apply(pinned ?? (applied == 0 ? controller.Info : controller.SecondInfo)); }
+        void ApplyShown()
+        {
+            applied = Shown;
+            Apply(pinned ?? (applied == 0 ? controller.Info : controller.SecondInfo));
+            ShowRainbow(GameTimeline.FrameTime - rainbowStart);
+        }
 
         // Shows `info` with the badge of `side` (0 1P, 1 2P) from now on, whoever sits at the seat.
         public void Pin(PlayerInfo info, int side)
@@ -72,6 +68,7 @@ namespace OurTaiko
         void OnDisable()
         {
             if (controller != null) { controller.Changed -= ShowFirst; controller.SecondChanged -= ShowSecond; }
+            NameplateArt.Changed -= ApplyShown;
             Canvas.willRenderCanvases -= RefreshCanvasScale;
         }
 
@@ -113,23 +110,28 @@ namespace OurTaiko
         void Apply(PlayerInfo info)
         {
             Info = info = info ?? new PlayerInfo();
+            bool art = NameplateArt.Ready;
             bool hasBand = !info.IsCoin;
-            band.enabled = outline.enabled = hasBand;
+            shadow.enabled = badge.enabled = art;
+            band.enabled = outline.enabled = hasBand && art;
             bandUnder.enabled = false;
-            if (hasBand && !info.rainbow) band.sprite = titleBackgrounds[info.TitleFrame];
             RainbowFrame = 0;
-
             // *_dani labels only exist in the band family.
             bool hasDan = info.HasDan && hasBand;
-            danBackground.enabled = danRing.enabled = dan.enabled = hasDan;
-            if (hasDan)
+            danBackground.enabled = danRing.enabled = dan.enabled = hasDan && art;
+            if (art)
             {
-                danRing.sprite = danRings[info.DanComboTier];
-                dan.sprite = (info.gold ? goldDanTexts : danTexts)[info.dan];
+                shadow.sprite = NameplateArt.Shadow;
+                outline.sprite = NameplateArt.Outline;
+                band.sprite = info.rainbow ? NameplateArt.Rainbow[0] : NameplateArt.Bands[info.TitleFrame];
+                danBackground.sprite = NameplateArt.DanBackground;
+                if (hasDan)
+                {
+                    danRing.sprite = NameplateArt.DanRings[info.DanComboTier];
+                    dan.sprite = (info.gold ? NameplateArt.GoldDanTexts : NameplateArt.DanTexts)[info.dan];
+                }
+                badge.sprite = Shown == 1 ? NameplateArt.Badge2P : NameplateArt.Badge1P;
             }
-            badge.enabled = true;
-            firstBadge ??= badge.sprite;
-            badge.sprite = Shown == 1 && secondBadge != null ? secondBadge : firstBadge;
 
             // Np_coin clears the title outright.
             title.gameObject.SetActive(hasBand && info.HasTitle);
@@ -144,16 +146,20 @@ namespace OurTaiko
             SetText(playerName, info.name, box.FontSize, box.X, box.Y, NameplateLayout.NameBoxWidth);
         }
 
-        // NameplateRainbow.anim: global animation 12 (texture_change), frame_top_rainbow 0-5 for 50 ms
-        // each, looping every 300 ms; frames after the first are drawn over the previous one.
+        // Global animation 12 (texture_change): frame_top_rainbow 0-5 for 50 ms each, looping every
+        // 300 ms; frames after the first are drawn over the previous one (BandUnder).
         // nameplate.lua never starts it, so the original stays on frame 0; the plate is meant to cycle.
+        public const double RainbowFrameSeconds = 0.05;
+
         void ShowRainbow(double elapsed)
         {
-            if (Info == null || !Info.rainbow || Info.IsCoin) return;
-            var sampler = GetComponent<ClipSampler>();
-            double t = System.Math.Max(0, elapsed) % sampler.clip.length;
-            RainbowFrame = System.Math.Min(5, (int)(t / 0.05));
-            sampler.Sample(t);
+            if (Info == null || !Info.rainbow || Info.IsCoin || !NameplateArt.Ready) return;
+            var frames = NameplateArt.Rainbow;
+            double t = System.Math.Max(0, elapsed) % (frames.Length * RainbowFrameSeconds);
+            RainbowFrame = System.Math.Min(frames.Length - 1, (int)(t / RainbowFrameSeconds));
+            band.sprite = frames[RainbowFrame];
+            bandUnder.enabled = RainbowFrame > 0;
+            if (RainbowFrame > 0) bandUnder.sprite = frames[RainbowFrame - 1];
         }
 
         // draw_in_box: centred in the EditText box and squeezed horizontally, never shrunk, to its width.

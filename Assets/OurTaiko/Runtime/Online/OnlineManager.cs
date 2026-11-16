@@ -306,6 +306,7 @@ namespace OurTaiko.Online
                 }
                 // The account's own playlists are folders too.
                 if (this != null && refresh) RefreshSongs();
+                await FetchNameplateArtAsync(cancel);
                 await FetchDonsAsync(cancel);
             }
             finally { Activity = ""; LoginSummary = string.Join("   •   ", results); IsBusy = false; }
@@ -320,6 +321,16 @@ namespace OurTaiko.Online
             foreach (var e in endpoints) Client.SignOut(e, seat);
             ShowAccount(seat);
             Chara.DonDownloads.Forget(seat);
+        }
+
+        // The nameplate's art, which the game does not carry (NameplateArt): read in every sign-in
+        // check, guest or not, so Presented waits for it like the Dons.
+        async Task FetchNameplateArtAsync(CancellationToken cancel)
+        {
+            if (cancel.IsCancellationRequested) return;
+            Activity = L10n.Get("Online", "activity.nameplateArt");
+            try { await NameplateArt.FetchAsync(Client.CacheRoot, cancel); }
+            catch (OperationCanceledException) { }
         }
 
         // Each signed-in seat's 3D Don as its player chose it on the website, its files downloaded
