@@ -149,6 +149,8 @@ namespace OurTaiko.Tests
             var l = DonDownloads.LookFrom(JObject.Parse("{\"costume\":false,\"cos\":3,\"head\":4,\"body\":5,\"puchi\":6,\"colors\":null}"), 1);
             Assert.That((l.costume, l.cos, l.head, l.body, l.puchi), Is.EqualTo((false, 3, 4, 5, 6)));
             Assert.That(l.color1, Is.EqualTo(DonLook.Default(1).color1));
+            Assert.That(l.paint, Is.EqualTo(0), "a look from before makeup has none");
+            Assert.That(DonDownloads.LookFrom(JObject.Parse("{\"costume\":true,\"cos\":3,\"paint\":7}"), 0).paint, Is.EqualTo(7));
         }
     }
 }

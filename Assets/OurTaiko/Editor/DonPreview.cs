@@ -10,7 +10,7 @@ namespace OurTaiko.Editor
     // Renders 3D Dons to PNG files without a scene, through the same model and outline passes the
     // game uses (DonView). Menu OurTaiko/Render Don Previews, or batch:
     // -executeMethod OurTaiko.Editor.DonPreview.RenderBatch with DON_PREVIEW_DIR set. The costumes,
-    // heads, bodies and puchichara are not in the game: DON_ASSETS_DIR names a local copy of the
+    // heads, bodies, puchichara and makeup are not in the game: DON_ASSETS_DIR names a local copy of the
     // bucket's 3dchara/ folder to read them from (without it only the plain Don is drawn).
     public static class DonPreview
     {
@@ -34,6 +34,8 @@ namespace OurTaiko.Editor
             var mochi = DonLook.Default(); mochi.cos = 30;
             var mixed = DonLook.Default(); mixed.costume = false; mixed.head = 3; mixed.body = 4;
             var puchi = DonLook.Default(); puchi.puchi = 1;
+            var paint = DonLook.Default(); paint.paint = 1;
+            var mochiPaint = mochi; mochiPaint.paint = 2;
             return new[]
             {
                 new Shot("normal", basic, DonAnim.Normal),
@@ -45,6 +47,8 @@ namespace OurTaiko.Editor
                 new Shot("cos30", mochi, DonAnim.Normal),
                 new Shot("head3_body4", mixed, DonAnim.Normal),
                 new Shot("puchi1", puchi, DonAnim.Normal),
+                new Shot("paint1", paint, DonAnim.Normal),
+                new Shot("cos30_paint2", mochiPaint, DonAnim.Normal),
             };
         }
 
@@ -65,12 +69,12 @@ namespace OurTaiko.Editor
             RenderAll(dir);
         }
 
-        // Names every model and puchichara of a local 3dchara folder to DonLibrary.
+        // Names every model, puchichara and makeup of a local 3dchara folder to DonLibrary.
         public static int UseAssets(string folder)
         {
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder)) return 0;
             int count = 0;
-            foreach (var (kind, ext) in new[] { ("cos", ".glb"), ("head", ".glb"), ("body", ".glb"), ("puchi", ".png") })
+            foreach (var (kind, ext) in new[] { ("cos", ".glb"), ("head", ".glb"), ("body", ".glb"), ("puchi", ".png"), ("paint", ".png") })
             {
                 string sub = Path.Combine(folder, kind);
                 if (!Directory.Exists(sub)) continue;

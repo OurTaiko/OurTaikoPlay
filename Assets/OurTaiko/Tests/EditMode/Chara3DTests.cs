@@ -153,6 +153,69 @@ namespace OurTaiko.Tests
             Assert.That(DonLibrary.FaceCount, Is.EqualTo(12));
         }
 
+        // The face plate as drawn (posed): the largest side of its box.
+        static float FacePlateSize(Chara3D chara)
+        {
+            var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+            var parts = (System.Collections.IList)typeof(Chara3D).GetField("parts", flags).GetValue(chara);
+            var part = parts[0];
+            var data = (DonPart)part.GetType().GetField("Data").GetValue(part);
+            var meshes = (Mesh[])part.GetType().GetField("Meshes").GetValue(part);
+            int p = data.Primitives.FindIndex(prim => prim.Material == data.FaceMaterial);
+            var bounds = meshes[p].vertices;
+            Vector3 min = bounds[0], max = bounds[0];
+            foreach (var v in bounds) { min = Vector3.Min(min, v); max = Vector3.Max(max, v); }
+            return Math.Max(max.x - min.x, Math.Max(max.y - min.y, max.z - min.z));
+        }
+
+        // YataiDON set_paint: makeup swaps the face sheet and draws it on a plate a third larger;
+        // 0 brings back the plain face and plate; makeup not downloaded changes nothing.
+        [Test]
+        public void MakeupSwapsTheFaceSheetOnALargerPlate()
+        {
+            var sheet = new Texture2D(16, 16 * 12);
+            string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "OurTaikoDonTests", "paint9001.png");
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
+            System.IO.File.WriteAllBytes(path, sheet.EncodeToPNG());
+            UnityEngine.Object.DestroyImmediate(sheet);
+            Assert.That(DonLibrary.Paint(0), Is.Null);
+            Assert.That(DonLibrary.Paint(9001), Is.Null, "not downloaded");
+            DonLibrary.UseFile("paint", 9001, path);
+
+            var chara = new Chara3D(DonLook.Default());
+            try
+            {
+                chara.SetAnim(DonAnim.Sabi);
+                chara.SetAnimProgress(0.3f);
+                float plain = FacePlateSize(chara);
+                int face = chara.Face;
+                chara.SetPaint(9002);
+                Assert.That(chara.PaintIndex, Is.EqualTo(0), "not downloaded: unchanged");
+                chara.SetPaint(9001);
+                Assert.That(chara.PaintIndex, Is.EqualTo(9001));
+                Assert.That(chara.FaceSheet, Is.SameAs(DonLibrary.Paint(9001)));
+                Assert.That(chara.Face, Is.EqualTo(face), "the face of the sheet stays");
+                Assert.That(FacePlateSize(chara), Is.EqualTo(plain * Chara3D.PaintPlaneScale).Within(plain * 0.01f));
+                var other = new Chara3D(DonLook.Default());
+                try
+                {
+                    other.SetAnim(DonAnim.Sabi);
+                    other.SetAnimProgress(0.3f);
+                    Assert.That(FacePlateSize(other), Is.EqualTo(plain).Within(plain * 0.01f), "the shared part is untouched");
+                }
+                finally { other.Dispose(); }
+                chara.SetPaint(0);
+                Assert.That(chara.FaceSheet, Is.SameAs(DonLibrary.FaceSheet));
+                Assert.That(FacePlateSize(chara), Is.EqualTo(plain).Within(plain * 0.01f));
+            }
+            finally { chara.Dispose(); }
+
+            var look = DonLook.Default(); look.paint = 9001;
+            var dressed = new Chara3D(look);
+            try { Assert.That(dressed.PaintIndex, Is.EqualTo(9001), "a look's makeup is worn from the start"); }
+            finally { dressed.Dispose(); }
+        }
+
         [Test]
         public void DrawsAnOutlinedDon()
         {
