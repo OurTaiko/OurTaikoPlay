@@ -24,7 +24,7 @@ namespace OurTaiko
     // every command; this component draws it from the saved layout, animates its events (board
     // slides, select_on/off, genre fades, the course panel, the Ura flip, the option panel) and plays
     // the sounds, voices, BGM and preview.
-    public sealed partial class SongSelectScene : MonoBehaviour
+    public sealed partial class SongSelectScene : MonoBehaviour, ISettledScreen
     {
         [Header("Stage")]
         public RectTransform wheel, coursePanel;
@@ -158,6 +158,12 @@ namespace OurTaiko
         Func<bool> courseReady, wheelScrolling;
         // When the last ka, arrow or tap started the wheel sliding.
         double scrolledAt = double.NegativeInfinity;
+        // The last time the wheel, a folder or the course panel moved (Now); the screen is settled
+        // once the longest of those animations is over (a folder opening and its boards fading in).
+        double movedAt;
+        const double SettleMs = OpenHoldMs + OpenGrowMs + BoardFadeMs;
+        public bool IsSettled => Manager != null && Manager.Phase == State.Browsing && (view.search == null || !view.search.BlocksInput)
+            && Now - movedAt >= SettleMs;
 
         double Now => GameTimeline.FrameTime * 1000 - startedAt;
         static double Clamp01(double v) => v < 0 ? 0 : v > 1 ? 1 : v;
@@ -326,6 +332,7 @@ namespace OurTaiko
         // fading in as they slide to their rows (もどる and the folder board appear at once).
         void OnFolderChanged(SongSelectManager.FolderChange change)
         {
+            movedAt = Now;
             CancelSwipe();
             var anchor = BoardOf(change.Anchor);
             foreach (var item in change.Removed)
@@ -368,6 +375,7 @@ namespace OurTaiko
                 return;
             }
             CancelSwipe();
+            movedAt = Now;
             if (reason == SongSelectManager.FocusReason.Navigate) scrolledAt = Now;
             if (reason == SongSelectManager.FocusReason.Navigate && visuals.TryGetValue(previous, out var left) && left.OpenStart >= 0)
             {
@@ -382,6 +390,7 @@ namespace OurTaiko
 
         void OnPhaseChanged(State previous)
         {
+            movedAt = Now;
             CancelSwipe();
             if (Manager.Phase == State.CourseSelect) EnterCourseSelect();
             else if (Manager.Phase == State.Browsing && previous != State.Browsing) ExitCourseSelect();

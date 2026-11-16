@@ -22,7 +22,7 @@ namespace OurTaiko
     // Three pages (DanSelectPages): ローカル, Fanmade and Database, the online ones listing only the
     // official courses and ending with the 外伝 entry, where a course's code is typed to challenge
     // it (GET /api/v1/game/dans/{code}); the course then joins the page.
-    public sealed class DanSelectScene : MonoBehaviour
+    public sealed class DanSelectScene : MonoBehaviour, ISettledScreen
     {
         // The ribbon: chips every RibbonSpacing px around the centre (Nijiiro dan_ribbon x 960).
         public const float RibbonCenter = 960, RibbonSpacing = 96, ChipTop = 16;
@@ -54,6 +54,8 @@ namespace OurTaiko
         // The doors play once the cover has opened; the screen takes input after them.
         public bool FullIntro { get; private set; }
         public bool IntroDone => intro == null || !intro.IsPlaying && !double.IsNaN(introStartedAt);
+        // The doors have opened and no code is being typed.
+        public bool IsSettled => IntroDone && !HasLeft && !IsEnteringCode;
         // The music and the welcome voice wait for the board to show (issue #39).
         public bool MusicStarted { get; private set; }
         bool introSoundPlayed;

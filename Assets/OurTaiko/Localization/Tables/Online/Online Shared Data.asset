@@ -99,6 +99,34 @@ MonoBehaviour:
     m_Key: activity.nameplateArt
     m_Metadata:
       m_Items: []
+  - m_Id: 2007282983362560
+    m_Key: rewards.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751168
+    m_Key: rewards.dan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751169
+    m_Key: rewards.fromCourse
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751170
+    m_Key: rewards.fromRule
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751171
+    m_Key: rewards.fromAdmin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751172
+    m_Key: rewards.next
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751173
+    m_Key: rewards.close
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

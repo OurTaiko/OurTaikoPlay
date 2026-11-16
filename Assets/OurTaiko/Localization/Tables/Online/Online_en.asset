@@ -102,6 +102,34 @@ MonoBehaviour:
     m_Localized: "Getting the nameplates\u2026"
     m_Metadata:
       m_Items: []
+  - m_Id: 2007282983362560
+    m_Localized: New title!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751168
+    m_Localized: New dan!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751169
+    m_Localized: From the {0} dan course
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751170
+    m_Localized: For meeting its condition
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751171
+    m_Localized: Given by an administrator
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751172
+    m_Localized: 'Don: next'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2007282991751173
+    m_Localized: 'Don: close'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

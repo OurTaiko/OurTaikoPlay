@@ -271,6 +271,7 @@ namespace OurTaiko.Tests
                 string user = null;
                 if (auth.StartsWith("Bearer ", StringComparison.Ordinal) && !tokens.TryGetValue(auth.Substring(7), out user))
                 { Reply(context, 401, new JObject { ["error"] = "SESSION" }); return; }
+                if (Rewards(context, path, user, body)) return;
                 var parts = path.Trim('/').Split('/');
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/catalog") { Bootstrap(context); return; }
                 if (request.HttpMethod == "GET" && path == "/api/v1/game/sources" && SiteSources != null) { Sources(context, user); return; }
@@ -542,6 +543,58 @@ namespace OurTaiko.Tests
                 });
         }
 
+        // OurTaikoNet's rewards (internal/rewards), when on: what each user (by username) was given
+        // and has not seen. Every reply to a signed-in request then says how many
+        // (X-Pending-Rewards); GET /api/v1/game/rewards gives them, POST /api/v1/game/rewards/seen
+        // {"ids"} marks them. SeenRewards is every id marked, in order.
+        public bool RewardsOn;
+        public readonly ConcurrentQueue<long> SeenRewards = new ConcurrentQueue<long>();
+        readonly Dictionary<string, List<JObject>> rewards = new Dictionary<string, List<JObject>>();
+        long nextReward;
+
+        public long GiveReward(string user, string kind, JObject data)
+        {
+            lock (rewards)
+            {
+                if (!rewards.TryGetValue(user, out var list)) rewards[user] = list = new List<JObject>();
+                long id = ++nextReward;
+                list.Add(new JObject { ["id"] = id, ["kind"] = kind, ["data"] = data, ["createdAt"] = DateTime.UtcNow.ToString("o") });
+                return id;
+            }
+        }
+
+        public int PendingRewards(string user)
+        {
+            lock (rewards) return rewards.TryGetValue(user, out var list) ? list.Count : 0;
+        }
+
+        // The rewards' routes; false for any other request.
+        bool Rewards(HttpListenerContext context, string path, string user, string body)
+        {
+            if (!RewardsOn || !path.StartsWith("/api/v1/game/rewards", StringComparison.Ordinal)) return false;
+            if (user == null) { Reply(context, 401, new JObject()); return true; }
+            if (context.Request.HttpMethod == "GET" && path == "/api/v1/game/rewards")
+            {
+                JArray list;
+                lock (rewards) list = new JArray(rewards.TryGetValue(user, out var mine) ? mine.Select(r => r.DeepClone()) : Enumerable.Empty<JToken>());
+                Reply(context, 200, new JObject { ["rewards"] = list });
+                return true;
+            }
+            if (context.Request.HttpMethod == "POST" && path == "/api/v1/game/rewards/seen")
+            {
+                var ids = (JObject.Parse(body)["ids"] as JArray ?? new JArray()).Select(id => (long)id).ToList();
+                int marked = 0;
+                lock (rewards)
+                    if (rewards.TryGetValue(user, out var mine))
+                        marked = mine.RemoveAll(r => ids.Contains((long)r["id"]));
+                foreach (long id in ids) SeenRewards.Enqueue(id);
+                Reply(context, 200, new JObject { ["marked"] = marked });
+                return true;
+            }
+            Reply(context, 404, new JObject());
+            return true;
+        }
+
         // Gzip packs JSON replies for a client that asks for it, as OurTaiko Database does.
         public bool Gzip;
         public int GzippedReplies;
@@ -550,6 +603,10 @@ namespace OurTaiko.Tests
         {
             context.Response.StatusCode = status;
             context.Response.ContentType = "application/json";
+            // As the site does on every answer to a signed-in request.
+            string auth = context.Request.Headers["Authorization"] ?? "";
+            if (RewardsOn && auth.StartsWith("Bearer ", StringComparison.Ordinal) && tokens.TryGetValue(auth.Substring(7), out string asker))
+                context.Response.AddHeader("X-Pending-Rewards", PendingRewards(asker).ToString(System.Globalization.CultureInfo.InvariantCulture));
             byte[] bytes = Encoding.UTF8.GetBytes(body.ToString(Newtonsoft.Json.Formatting.None));
             if (Gzip && (context.Request.Headers["Accept-Encoding"] ?? "").Contains("gzip"))
             {
