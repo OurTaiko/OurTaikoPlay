@@ -40,8 +40,11 @@ namespace OurTaiko
         readonly TextMeshProUGUI[] seatNames = new TextMeshProUGUI[2];
         readonly Image[] seatDots = new Image[2];
         RectTransform hints, sheetViewport, sheetList, card;
+        RectTransform textActions;
+        TextMeshProUGUI textCancel, textConfirm;
         float sheetBaseY, sheetScroll, sheetScrollTarget;
         TMP_InputField field;
+        static bool UsesTouchTextActions => Application.platform == RuntimePlatform.Android;
         readonly List<(RectTransform root, Image box, TextMeshProUGUI label)> railItems = new();
         readonly List<RowView> rows = new();
         readonly List<(RectTransform root, Image box, Image radio, Image dot)> sheetItems = new();
@@ -263,6 +266,19 @@ namespace OurTaiko
             modalText.lineSpacing = WrappedSpacing;
             Top(modalText.rectTransform, 54, 300, -54, 90);
             BuildField();
+            if (UsesTouchTextActions)
+            {
+                textActions = Node("Text Actions", card);
+                Top(textActions, 54, 292, -54, 84);
+                var cancel = ButtonBox(textActions, "Cancel", Button, 210, 84, () => CancelText?.Invoke());
+                Pin(cancel.rectTransform, 0, 42, left: true, width: 210);
+                textCancel = Label("Label", cancel.transform, "", 32, Ink, TextAlignmentOptions.Center);
+                Stretch(textCancel.rectTransform, 0, 0, 0, 0);
+                var confirm = ButtonBox(textActions, "Confirm", Ink, 210, 84, () => SubmitText?.Invoke(field.text));
+                Pin(confirm.rectTransform, 0, 42, left: false);
+                textConfirm = Label("Label", confirm.transform, "", 32, Hex(0x0D1424), TextAlignmentOptions.Center);
+                Stretch(textConfirm.rectTransform, 0, 0, 0, 0);
+            }
             modal.gameObject.SetActive(false);
         }
 
@@ -293,7 +309,14 @@ namespace OurTaiko
             field.caretWidth = 3;
             field.selectionColor = Alpha(Cyan, 0.35f);
             field.onSubmit.AddListener(value => SubmitText?.Invoke(value));
-            field.onEndEdit.AddListener(_ => { if (modal.gameObject.activeSelf && field.gameObject.activeSelf) CancelText?.Invoke(); });
+            if (UsesTouchTextActions)
+            {
+                // The IME can close or lose focus before the player taps a dialog button.
+                field.shouldHideSoftKeyboard = false;
+                field.shouldHideMobileInput = false;
+            }
+            else
+                field.onEndEdit.AddListener(_ => { if (modal.gameObject.activeSelf && field.gameObject.activeSelf) CancelText?.Invoke(); });
         }
 
         // -- Showing --------------------------------------------------------------------------
@@ -392,7 +415,7 @@ namespace OurTaiko
         static string FooterHint(SettingsNavigator nav)
         {
             if (nav.Zone == SettingsZone.Rail) return nav.Page?.Subtitle ?? T("overlay.closeSettings");
-            if (nav.Zone == SettingsZone.Adjust) return T("footer.adjusting", nav.Row.Label);
+            if (nav.Zone == SettingsZone.Adjust && !UsesTouchTextActions) return T("footer.adjusting", nav.Row.Label);
             var row = nav.Row;
             if (row == null) return "";
             return row.Hint.Length > 0 ? row.Label + "  ·  " + row.Hint : row.Label;
@@ -682,9 +705,20 @@ namespace OurTaiko
         void ShowModal(SettingsNavigator nav)
         {
             bool typing = nav.Zone == SettingsZone.Typing, capture = nav.Zone == SettingsZone.Capture;
-            bool was = modal.gameObject.activeSelf;
+            bool wasTyping = field.gameObject.activeSelf;
             modal.gameObject.SetActive(typing || capture);
             field.gameObject.SetActive(typing);
+            if (wasTyping && !typing) field.SetTextWithoutNotify("");
+            if (textActions != null)
+            {
+                textActions.gameObject.SetActive(typing);
+                modalText.gameObject.SetActive(capture);
+                if (typing)
+                {
+                    textCancel.text = L10n.Get("Common", "cancel");
+                    textConfirm.text = L10n.Get("Common", "ok");
+                }
+            }
             if (!typing && !capture) return;
             string group = nav.Page.Groups[nav.Page.GroupOf(nav.RowIndex)].Title;
             modalTitle.text = capture ? T("modal.pressKey", nav.Row.Label) : (group.Length <= 2 ? group + "  ·  " : "") + nav.Row.Label;
@@ -692,7 +726,7 @@ namespace OurTaiko
                 ? T("modal.captureHint")
                 : T(nav.Row.Kind == SettingKind.Password ? "modal.passwordHint" : "modal.textHint");
             Top(modalText.rectTransform, 54, capture ? 138 : 300, -54, 90);
-            if (typing && !was)
+            if (typing && !wasTyping)
             {
                 field.contentType = nav.Row.Kind == SettingKind.Password ? TMP_InputField.ContentType.Password : TMP_InputField.ContentType.Standard;
                 ((TextMeshProUGUI)field.placeholder).text = T(nav.Row.Kind == SettingKind.Password ? "accounts.password" : "accounts.username");
@@ -913,7 +947,12 @@ namespace OurTaiko
                 Index = index;
                 box = SettingsShapes.Box(row.Id, list, RowColor, 24);
                 box.raycastTarget = true;
-                box.gameObject.AddComponent<PointerRelay>().Clicked = () => view.TapRow?.Invoke(index);
+                bool opensText = UsesTouchTextActions && row.Kind is (SettingKind.Text or SettingKind.Password);
+                box.gameObject.AddComponent<PointerRelay>().Clicked = () =>
+                {
+                    if (opensText) view.OpenRow?.Invoke(index);
+                    else view.TapRow?.Invoke(index);
+                };
                 Root = box.rectTransform;
                 label = Label("Label", Root, row.Label, 36, Ink, TextAlignmentOptions.MidlineLeft);
                 label.rectTransform.anchorMin = label.rectTransform.anchorMax = label.rectTransform.pivot = new Vector2(0, 1);

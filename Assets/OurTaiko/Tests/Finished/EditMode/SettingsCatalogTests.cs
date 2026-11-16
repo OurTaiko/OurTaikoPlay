@@ -65,6 +65,17 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void AndroidHidesKeyboardMappingsAndFixedFrameRateControls()
+        {
+            var pages = SettingsCatalog.Pages(SoundPlatform.Android);
+            Assert.That(pages.Select(page => page.Id), Does.Not.Contain("controls"));
+
+            var display = pages.Single(page => page.Id == "display");
+            display.Refresh(new GameSettings());
+            Assert.That(display.Rows.Select(row => row.Id), Is.EqualTo(new[] { "chara-3d", "movie", "lane-opacity" }));
+        }
+
+        [Test]
         public void VSyncIsADisplayToggleOffByDefault()
         {
             var nav = OnPage("display");
