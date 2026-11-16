@@ -180,6 +180,8 @@ namespace OurTaiko
             QualitySettings.vSyncCount = vSync ? 1 : 0;
             UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
             Application.targetFrameRate = TargetFrameRate;
+            // Android gives a game 60 Hz until it asks for more; see DisplayRefreshRate.
+            DisplayRefreshRate.Request(targetFrameRate == Unlimited ? 0 : TargetFrameRate);
         }
 
         // An unknown value in settings.json falls back to the 120 FPS default. On mobile -1 means
