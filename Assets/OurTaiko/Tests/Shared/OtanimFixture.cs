@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace OurTaiko.Tests
 {
-    // Writes small .otanim files for tests, from the format document (OurTaikoLogs/OurTaikoPlay/
-    // Documentation/Otanim.md) rather than from the game's reader: a 4×4 texture (left half red,
+    // Writes small .otanim files for tests, from the format document (SPEC.md in the otanim folder
+    // beside this repository) rather than from the game's reader: a 4×4 texture (left half red,
     // right half blue) and one square part covering it, 100 units wide, in clips that move it.
     public static class OtanimFixture
     {

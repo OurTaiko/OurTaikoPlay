@@ -7,10 +7,11 @@ using UnityEngine;
 
 namespace OurTaiko.Chara
 {
-    // An .otanim file: baked 2D cut-out animation (Tools/spine2otanim makes them from Spine). One
+    // An .otanim file: baked 2D cut-out animation (spine2otanim, in the otanim folder beside this
+    // repository, makes them from Spine). One
     // texture, parts (triangles with fixed texture coordinates) and clips whose frames give every
-    // drawn part's vertex positions. Format: OurTaikoLogs/OurTaikoPlay/Documentation/Otanim.md;
-    // the Go package Tools/spine2otanim/otanim is its reference.
+    // drawn part's vertex positions. Format: SPEC.md in that otanim folder, whose Go package
+    // (ourtaiko.org/otanim) is its reference.
     public sealed class Otanim
     {
         public const int Version = 1;

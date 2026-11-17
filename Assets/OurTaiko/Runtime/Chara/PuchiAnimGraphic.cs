@@ -26,7 +26,7 @@ namespace OurTaiko.Chara
         public override Texture mainTexture => texture != null ? texture : s_WhiteTexture;
 
         // Which clips a Don's motion asks for, best first; a puchichara without any of them plays
-        // "idle", or its first clip. The names are part of the format's contract (Otanim.md).
+        // "idle", or its first clip. The names are part of the format's contract (the otanim folder's SPEC.md).
         public static string[] ClipsFor(DonAnim anim)
         {
             switch ((DonAnim)((int)anim % (int)DonAnim.MirrorOffset))
