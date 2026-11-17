@@ -74,7 +74,7 @@ namespace OurTaiko.Editor
         {
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder)) return 0;
             int count = 0;
-            foreach (var (kind, ext) in new[] { ("cos", ".glb"), ("head", ".glb"), ("body", ".glb"), ("puchi", ".png"), ("paint", ".png") })
+            foreach (var (kind, ext) in new[] { ("cos", ".glb"), ("head", ".glb"), ("body", ".glb"), ("puchi", ".png"), ("puchi", ".otanim"), ("paint", ".png") })
             {
                 string sub = Path.Combine(folder, kind);
                 if (!Directory.Exists(sub)) continue;
