@@ -15,6 +15,32 @@ namespace OurTaiko.Tests
     {
         static SettingManager Settings => SettingManager.EnsureInstance();
 
+        [UnityTest]
+        public IEnumerator DeviceChangesResizeTheRailAndPreserveTypedText()
+        {
+            var overlay = SettingsOverlay.Open();
+            var nav = overlay.Navigator;
+            nav.TapPage(nav.Pages.ToList().FindIndex(p => p.Id == "accounts"));
+            nav.Confirm();
+            nav.OpenRow(nav.Page.Rows.ToList().FindIndex(r => r.Kind == SettingKind.Text));
+            overlay.View.Show(nav, "", null, false);
+            var field = overlay.View.GetComponentInChildren<TMPro.TMP_InputField>(true);
+            field.SetTextWithoutNotify("unfinished username");
+            foreach (bool connected in new[] { false, true, false, true })
+            {
+                nav.SetControlsAvailable(connected);
+                overlay.View.Show(nav, "", null, false);
+                var categories = overlay.View.GetComponentsInChildren<PointerRelay>(true)
+                    .Where(r => r.name.StartsWith("Category") && r.gameObject.activeSelf).ToArray();
+                Assert.That(categories.Length, Is.EqualTo(nav.Pages.Count + 1));
+                Assert.That(nav.Page.Id, Is.EqualTo("accounts"));
+                Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Typing));
+                Assert.That(field.text, Is.EqualTo("unfinished username"));
+            }
+            overlay.Close();
+            yield return null;
+        }
+
         [TearDown]
         public void RestoreDefaults()
         {

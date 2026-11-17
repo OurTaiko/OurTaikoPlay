@@ -50,7 +50,8 @@ namespace OurTaiko
         readonly List<(RectTransform root, Image box, Image radio, Image dot)> sheetItems = new();
         TextMeshProUGUI pageTitle, pageSubtitle, banner;
         Image bannerBox;
-        int shownPage = -1, shownSheetRow = -1;
+        SettingPage shownPage;
+        int shownSheetRow = -1;
         string rowsSignature;
         float scroll, scrollTarget, listHeight, focusTop, focusBottom, sheetOffset = 1, openAt, bumpAt = -10, bumpDirection;
         bool following = true, ringPlaced, closing;
@@ -329,7 +330,7 @@ namespace OurTaiko
             group.blocksRaycasts = true;
             ringPlaced = false;
             following = true;
-            shownPage = -1;
+            shownPage = null;
         }
 
         public void Close()
@@ -377,7 +378,7 @@ namespace OurTaiko
         public void Show(SettingsNavigator nav, string status, string sound, bool soundPending)
         {
             ShowRail(nav);
-            if (nav.PageIndex != shownPage || Signature(nav) != rowsSignature) BuildRows(nav);
+            if (nav.Page != shownPage || Signature(nav) != rowsSignature) BuildRows(nav);
             breadcrumb.text = nav.Page != null ? "›  " + nav.Page.Title : "";
             if (banner != null)
             {
@@ -415,7 +416,7 @@ namespace OurTaiko
         static string FooterHint(SettingsNavigator nav)
         {
             if (nav.Zone == SettingsZone.Rail) return nav.Page?.Subtitle ?? T("overlay.closeSettings");
-            if (nav.Zone == SettingsZone.Adjust && !UsesTouchTextActions) return T("footer.adjusting", nav.Row.Label);
+            if (nav.Zone == SettingsZone.Adjust && (!UsesTouchTextActions || nav.ControlsAvailable)) return T("footer.adjusting", nav.Row.Label);
             var row = nav.Row;
             if (row == null) return "";
             return row.Hint.Length > 0 ? row.Label + "  ·  " + row.Hint : row.Label;
@@ -437,6 +438,8 @@ namespace OurTaiko
             for (int i = 0; i < railItems.Count; i++)
             {
                 var (root, box, label) = railItems[i];
+                root.gameObject.SetActive(i < count);
+                if (i >= count) continue;
                 bool close = i == nav.Pages.Count;
                 root.anchorMin = new Vector2(0, close ? 0 : 1); root.anchorMax = new Vector2(1, close ? 0 : 1);
                 root.pivot = new Vector2(0.5f, close ? 0 : 1);
@@ -467,8 +470,8 @@ namespace OurTaiko
 
         void BuildRows(SettingsNavigator nav)
         {
-            bool samePage = nav.PageIndex == shownPage;
-            shownPage = nav.PageIndex;
+            bool samePage = nav.Page == shownPage;
+            shownPage = nav.Page;
             rowsSignature = Signature(nav);
             foreach (Transform child in list) Destroy(child.gameObject);
             rows.Clear();
