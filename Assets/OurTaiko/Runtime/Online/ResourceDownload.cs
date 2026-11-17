@@ -11,11 +11,18 @@ namespace OurTaiko.Online
     // bounded and verified before either the object cache or a decoder can use them.
     internal static class ResourceDownload
     {
+        internal static TimeSpan StallTimeout = TimeSpan.FromSeconds(30);
+
         public static void ValidateUrl(string value)
         {
             if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.UserInfo.Length != 0 ||
-                uri.Fragment.Length != 0 || (uri.Scheme != "https" && !(uri.Scheme == "http" && uri.IsLoopback)))
+                uri.Fragment.Length != 0)
                 throw new FanmadeException("RESOURCE_URL_INVALID");
+            if (uri.Scheme == "https") return;
+#if UNITY_INCLUDE_TESTS
+            if (uri.Scheme == "http" && uri.IsLoopback) return;
+#endif
+            throw new FanmadeException("RESOURCE_URL_INVALID");
         }
 
         public static async Task<byte[]> FetchAsync(HttpClient http, FanmadeResource resource, CancellationToken cancel,
@@ -26,13 +33,11 @@ namespace OurTaiko.Online
             ValidateUrl(resource.Url); validate?.Invoke(resource.Url);
             bool fallback = !string.IsNullOrEmpty(resource.FallbackUrl) && resource.FallbackUrl != resource.Url;
             if (fallback) { ValidateUrl(resource.FallbackUrl); validate?.Invoke(resource.FallbackUrl); }
-            using var overall = CancellationTokenSource.CreateLinkedTokenSource(cancel);
-            overall.CancelAfter(TimeSpan.FromSeconds(120));
             for (int attempt = 0; ; attempt++)
             {
                 string url = attempt == 0 ? resource.Url : resource.FallbackUrl;
-                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(overall.Token);
-                if (attempt == 0 && fallback) timeout.CancelAfter(TimeSpan.FromSeconds(30));
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
+                timeout.CancelAfter(StallTimeout);
                 try
                 {
                     using var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -47,17 +52,20 @@ namespace OurTaiko.Online
                     {
                         int count = await stream.ReadAsync(bytes, received, Math.Min(81920, bytes.Length - received), timeout.Token);
                         if (count == 0) throw new FanmadeException("DOWNLOAD_SIZE_MISMATCH");
+                        // Only a full interval without another byte gives up this address.
+                        timeout.CancelAfter(StallTimeout);
                         received += count; progress?.Invoke(received, resource.Size);
                     }
                     if (await stream.ReadAsync(new byte[1], 0, 1, timeout.Token) != 0) throw new FanmadeException("DOWNLOAD_SIZE_MISMATCH");
                     string hash = await Task.Run(() => {
                         using var sha = SHA256.Create();
                         return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
-                    }, timeout.Token);
+                    }, cancel);
+                    cancel.ThrowIfCancellationRequested();
                     if (hash != resource.Hash) throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
                     return bytes;
                 }
-                catch (Exception error) when (attempt == 0 && fallback && !overall.IsCancellationRequested &&
+                catch (Exception error) when (attempt == 0 && fallback && !cancel.IsCancellationRequested &&
                     (error is HttpRequestException || error is IOException || error is FanmadeException || error is OperationCanceledException)) { }
             }
         }
