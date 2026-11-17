@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using OurTaiko.Online;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,7 +19,7 @@ namespace OurTaiko
     // server, which the attempt is uploaded to (not under オート) and which asks OurTaikoProfile.
     // The result does not say what was granted; once Profile answers, 1P's nameplate is read
     // again. Local courses grant nothing.
-    public sealed class DanResultScene : MonoBehaviour
+    public sealed class DanResultScene : MonoBehaviour, ISettledScreen
     {
         public DanResultView view;
         public AudioSource bgm, sfx, voice;
@@ -58,6 +59,12 @@ namespace OurTaiko
         CanvasGroup plateGroup;
 
         double Now => GameTimeline.FrameTime * 1000;
+
+        // Page 2 has come in, its stamp has landed and been called. A 昇段 is the end of this
+        // screen's show and a hit after it leaves, so a screen that celebrates never settles: what
+        // waits for it comes on the next screen.
+        public bool IsSettled => Flow != null && !HasLeft && !Celebrates && Flow.State == DanResultFlow.Phase.Totals
+            && Flow.PageTime(Now) >= Flow.VoiceAt;
 
         void Awake()
         {
@@ -334,6 +341,8 @@ namespace OurTaiko
             Congratulates = Celebrates && rank >= 0 && highest >= 0 && rank == highest && previous <= 1;
             view.celebration.gameObject.SetActive(false);
             if (!Celebrates) return;
+            // This screen celebrates the badge itself: the site's reward for it is not shown again.
+            if (rank >= 0) RewardInbox.Shared.Claim(r => r.Kind == Reward.DanKind && r.DanIndex == rank);
             int verdict = Result.Verdict;
             view.shoudanBackground.sprite = verdict == 2 || verdict == 5 ? view.shoudanGold : verdict == 3 || verdict == 6 ? view.shoudanRainbow : view.shoudanWhite;
             var text = verdict > 3 ? view.textGold : view.textWhite;

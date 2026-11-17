@@ -20,3 +20,16 @@ error.failed,failed ({0}),失敗しました ({0}),失败（{0}）,Sign-in / son
 label.offlineCache,offline cache,オフラインキャッシュ,本地缓存,Song select: server name of an unreachable server's cached folders
 label.other,Other,その他,其他,Song select: folder of cached songs with no known genre
 replays.noList,no replay list,リプレイ一覧がありません,没有回放列表,Ghost Battle select: the server has no replay list
+rewards.title,New title!,称号ゲット！,获得称号！,Reward overlay banner over a new title
+rewards.dan,New dan!,段位認定！,获得段位！,Reward overlay banner over a new or better 段位 badge
+rewards.fromCourse,From the {0} dan course,段位「{0}」で獲得,通过段位「{0}」获得,Under a reward title; {0} = the 段位 course's name
+rewards.fromRule,For meeting its condition,条件達成で獲得,达成条件获得,Under a reward title given by a rule
+rewards.fromAdmin,Given by an administrator,管理者から付与,管理员授予,Under a reward title an administrator gave
+rewards.next,Don: next,ドンで次へ,咚：下一个,Reward overlay prompt when more rewards follow
+rewards.close,Don: close,ドンで閉じる,咚：关闭,Reward overlay prompt on the last reward
+rewards.donItem,New Don part!,新しい着せ替え！,获得新装扮！,Reward overlay banner over a part of the 3D Don
+rewards.donPart.cos,Costume,きぐるみ,着装,Reward overlay: the part of the 3D Don
+rewards.donPart.head,Head,あたま,头,Reward overlay: the part of the 3D Don
+rewards.donPart.body,Body,からだ,身体,Reward overlay: the part of the 3D Don
+rewards.donPart.puchi,Puchichara,ぷちキャラ,小伙伴,Reward overlay: the part of the 3D Don
+rewards.donPart.paint,Makeup,メイク,妆容,Reward overlay: the part of the 3D Don
