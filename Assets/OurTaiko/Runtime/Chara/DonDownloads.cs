@@ -11,8 +11,8 @@ using UnityEngine;
 namespace OurTaiko.Chara
 {
     // Each signed-in seat's Don as the player chose it on the website (net.ourtaiko.org,
-    // GET /api/v1/users/{id}/don): the look, and its files (costume, or head and body, and the
-    // puchichara) downloaded from the public bucket into the shared object cache (objects/<sha256>,
+    // GET /api/v1/users/{id}/don): the look, and its files (costume, or head and body, the
+    // puchichara and the makeup) downloaded from the public bucket into the shared object cache (objects/<sha256>,
     // checked by size and hash). The game itself carries only the plain Don (costume 0); a guest,
     // or a seat whose look cannot be had, wears it. The last look of each account is remembered
     // with its files' hashes (don-looks.json in the cache), so a player offline keeps theirs.
@@ -124,6 +124,7 @@ namespace OurTaiko.Chara
             result.head = (int?)look["head"] ?? 0;
             result.body = (int?)look["body"] ?? 0;
             result.puchi = (int?)look["puchi"] ?? 0;
+            result.paint = (int?)look["paint"] ?? 0;
             if (look["colors"] is JArray colors && colors.Count == 3)
             {
                 Color32[] parsed = new Color32[3];

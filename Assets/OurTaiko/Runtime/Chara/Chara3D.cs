@@ -19,12 +19,13 @@ namespace OurTaiko.Chara
     }
 
     // How a Don looks: a whole costume, or a head and a body; the three body colours, the face of
-    // the sheet it starts with, and the puchichara beside it (0: none). YataiDON's PlayerData chara_* fields.
+    // the sheet it starts with, the puchichara beside it (0: none) and its makeup (0: none).
+    // YataiDON's PlayerData chara_* fields.
     [Serializable]
     public struct DonLook
     {
         public bool costume;
-        public int cos, head, body, face, puchi;
+        public int cos, head, body, face, puchi, paint;
         public Color32 color1, color2, color3;
 
         public static readonly Color32 Rim = new Color32(249, 240, 225, 255);
@@ -57,6 +58,8 @@ namespace OurTaiko.Chara
             13, 14, 15, 16, 64, 17, 22, 21, 36, 35, 23, 24, 25, 26, 40, 40, 42, 43, 44, 45, 46, 58, 59, 62, 61, 20,
         };
         const int FukkatuFace = 8;
+        // YataiDON PAINT_PLANE_SCALE: makeup is drawn on a face plate a third larger.
+        public const float PaintPlaneScale = 4f / 3f;
         const int Mirror = (int)DonAnim.MirrorOffset;
 
         sealed class Part
@@ -64,6 +67,9 @@ namespace OurTaiko.Chara
             public DonPart Data;
             public Mesh[] Meshes;
             public Vector3[][] Positions, Normals;
+            // The bind positions skinning starts from: the part's own, but the face plates' are
+            // this Don's own copy while it wears makeup (the part data is shared).
+            public Vector3[][] Bind;
             public Material[] Materials;
             public Texture2D[] Recolored;
             public int[] JointMap;
@@ -83,6 +89,8 @@ namespace OurTaiko.Chara
         double lastFrameMs;
         FacePlayer facePlayer;
         int currentFace = -1;
+        Texture2D faceSheet;
+        int faceCount;
 
         public float Bpm { get; set; } = 100;
         public bool Mirrored { get; private set; }
@@ -93,7 +101,12 @@ namespace OurTaiko.Chara
         public float TintAmount { get; private set; }
         public int PuchiIndex { get; private set; }
         public Texture2D PuchiTexture { get; private set; }
+        // The puchichara's animation when it is an .otanim (PuchiTexture is then its texture).
+        public Otanim PuchiAnim { get; private set; }
         public double PuchiMs { get; private set; }
+        public int PaintIndex { get; private set; }
+        // The sheet the face plates show: the plain one, or the makeup's.
+        public Texture2D FaceSheet => faceSheet;
         // Something the drawn picture shows changed since the last Render.
         public bool Dirty { get; set; } = true;
         public DonAnim Anim => (DonAnim)animIndex;
@@ -109,6 +122,8 @@ namespace OurTaiko.Chara
             if (modelShader == null) modelShader = Resources.Load<Shader>(DonLibrary.Root + "DonModel");
             Mirrored = mirror;
             if (useSkinPose) RotationY = SkinRotY;
+            faceSheet = DonLibrary.FaceSheet;
+            faceCount = SheetFaces(faceSheet);
             if (look.costume)
             {
                 AddPart(DonLibrary.Acquire("cos", look.cos) ?? DonLibrary.Acquire("cos", 0));
@@ -125,6 +140,7 @@ namespace OurTaiko.Chara
             SetDonColors(look.color1, look.color2, look.color3);
             ApplyFace(look.face);
             SetPuchi(look.puchi);
+            SetPaint(look.paint);
         }
 
         void AddPart(DonPart data)
@@ -136,6 +152,7 @@ namespace OurTaiko.Chara
                 Meshes = new Mesh[data.Primitives.Count],
                 Positions = new Vector3[data.Primitives.Count][],
                 Normals = new Vector3[data.Primitives.Count][],
+                Bind = new Vector3[data.Primitives.Count][],
                 Materials = new Material[data.Materials.Count],
                 Recolored = new Texture2D[data.Materials.Count],
                 JointMap = new int[data.JointNames.Length],
@@ -150,7 +167,7 @@ namespace OurTaiko.Chara
             {
                 var info = data.Materials[m];
                 var material = new Material(modelShader) { name = info.Name, hideFlags = HideFlags.DontSave };
-                if (info.Face) material.mainTexture = DonLibrary.FaceSheet;
+                if (info.Face) material.mainTexture = faceSheet;
                 else if (info.Image >= 0 && info.Image < data.Images.Length) material.mainTexture = data.Images[info.Image];
                 material.SetColor("_Color", info.Color);
                 // glTF space (right-handed, as raylib draws it) through Unity's matrices turns the
@@ -168,6 +185,7 @@ namespace OurTaiko.Chara
                 var mesh = new Mesh { name = "Don part", hideFlags = HideFlags.DontSave };
                 if (prim.Positions.Length > 65535) mesh.indexFormat = IndexFormat.UInt32;
                 mesh.MarkDynamic();
+                part.Bind[p] = prim.Positions;
                 part.Positions[p] = (Vector3[])prim.Positions.Clone();
                 part.Normals[p] = (Vector3[])prim.Normals.Clone();
                 mesh.vertices = part.Positions[p];
@@ -203,9 +221,11 @@ namespace OurTaiko.Chara
 
         // ---- look ----
 
+        static int SheetFaces(Texture2D sheet) => sheet != null && sheet.width > 0 ? sheet.height / sheet.width : 0;
+
         public void ApplyFace(int face)
         {
-            int count = DonLibrary.FaceCount;
+            int count = faceCount;
             if (face < 0 || face >= count) return;
             var rect = new Vector4(1, 1f / count, 0, 1f - (face + 1f) / count);
             foreach (var part in parts)
@@ -258,6 +278,63 @@ namespace OurTaiko.Chara
             if (index == PuchiIndex && (index <= 0 || PuchiTexture != null)) return;
             PuchiIndex = index;
             PuchiTexture = DonLibrary.Puchi(index);
+            PuchiAnim = DonLibrary.PuchiAnim(index);
+        }
+
+        // YataiDON Chara3D::set_paint: the makeup's face sheet (3dchara/paint/<index>.png, downloaded)
+        // in place of the plain one, the face plates a third larger while it is worn; 0 is the
+        // plain face again. A makeup that is not here changes nothing.
+        public void SetPaint(int index)
+        {
+            if (index < 0) index = 0;
+            if (index == PaintIndex) return;
+            var sheet = index > 0 ? DonLibrary.Paint(index) : DonLibrary.FaceSheet;
+            if (sheet == null) return;
+            if ((index > 0) != (PaintIndex > 0)) ScaleFacePlates(index > 0 ? PaintPlaneScale : 1f);
+            PaintIndex = index;
+            faceSheet = sheet;
+            faceCount = SheetFaces(sheet);
+            foreach (var part in parts)
+                if (part.Data.FaceMaterial >= 0) part.Materials[part.Data.FaceMaterial].mainTexture = sheet;
+            int face = Math.Max(currentFace, 0);
+            currentFace = -1;
+            ApplyFace(face);
+            Dirty = true;
+        }
+
+        // YataiDON scale_face_planes: each face plate `factor` times its own size about the centre of
+        // its box (1: as the part has it); the next pose skins from there.
+        void ScaleFacePlates(float factor)
+        {
+            foreach (var part in parts)
+            {
+                var data = part.Data;
+                for (int p = 0; p < data.Primitives.Count; p++)
+                {
+                    var prim = data.Primitives[p];
+                    if (prim.Material != data.FaceMaterial || prim.Positions.Length == 0) continue;
+                    var bind = prim.Positions;
+                    if (factor != 1f)
+                    {
+                        Vector3 min = bind[0], max = bind[0];
+                        foreach (var v in bind) { min = Vector3.Min(min, v); max = Vector3.Max(max, v); }
+                        var centre = (min + max) * 0.5f;
+                        bind = new Vector3[prim.Positions.Length];
+                        for (int i = 0; i < bind.Length; i++) bind[i] = centre + (prim.Positions[i] - centre) * factor;
+                    }
+                    part.Bind[p] = bind;
+                    if (prim.Joints == null || part.Skin.Length == 0)
+                    {
+                        // not skinned: the plate stays where it is drawn
+                        part.Positions[p] = (Vector3[])bind.Clone();
+                        part.Meshes[p].vertices = part.Positions[p];
+                    }
+                }
+            }
+            appliedAnim = -1;
+            appliedFrame = -1;
+            ApplyPose();
+            Dirty = true;
         }
 
         public void SetTint(Color color, float amount)
@@ -448,8 +525,8 @@ namespace OurTaiko.Chara
                         Add(ref m, part.Skin[j], weight);
                         total += weight;
                     }
-                    if (total <= 0) { pos[v] = prim.Positions[v]; nrm[v] = prim.Normals[v]; continue; }
-                    pos[v] = m.MultiplyPoint3x4(prim.Positions[v]);
+                    if (total <= 0) { pos[v] = part.Bind[p][v]; nrm[v] = prim.Normals[v]; continue; }
+                    pos[v] = m.MultiplyPoint3x4(part.Bind[p][v]);
                     nrm[v] = m.MultiplyVector(prim.Normals[v]);
                 }
                 part.Meshes[p].vertices = pos;

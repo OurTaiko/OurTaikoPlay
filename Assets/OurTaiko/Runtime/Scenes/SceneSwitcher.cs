@@ -185,6 +185,7 @@ namespace OurTaiko
             LastScene = CurrentScene;
             CurrentScene = next.name;
             MainCamera = Camera.main;
+            DisplayRefreshRate.Report();
             EventSystem.current?.SetSelectedGameObject(null);
             OnSceneChanged?.Invoke(this, (CurrentScene, LastScene));
         }

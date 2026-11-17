@@ -181,6 +181,8 @@ namespace OurTaiko
             QualitySettings.vSyncCount = Application.platform != RuntimePlatform.Android && vSync ? 1 : 0;
             UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
             Application.targetFrameRate = TargetFrameRate;
+            // Android gives a game 60 Hz until it asks for more; see DisplayRefreshRate.
+            DisplayRefreshRate.Request(targetFrameRate == Unlimited ? 0 : TargetFrameRate);
         }
 
         // Android can divide the active refresh rate down when a fixed cap does not align with it.

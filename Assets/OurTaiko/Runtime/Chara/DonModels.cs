@@ -450,7 +450,7 @@ namespace OurTaiko.Chara
     // Loads and keeps what every Don shares: parts by path, the motions, the face sheet and
     // timelines, and puchichara pictures. The game carries the plain Don under Resources/Chara
     // (costume 0, the motions, the face sheet and timelines, from YataiDON's PyTaikoGreen skin);
-    // every other costume, head, body and puchichara is a file DonDownloads fetched from the
+    // every other costume, head, body, puchichara and makeup is a file DonDownloads fetched from the
     // public bucket (3dchara/) and named here with UseFile.
     public static class DonLibrary
     {
@@ -462,7 +462,7 @@ namespace OurTaiko.Chara
         public const int IdlePartsKept = 8;
         static long clock;
         static DonMotions motions;
-        // Downloaded files by "kind/id" (cos, head, body, puchi): what Part and Puchi read first.
+        // Downloaded files by "kind/id" (cos, head, body, puchi, paint): what Part, Puchi and Paint read.
         static readonly Dictionary<string, string> files = new Dictionary<string, string>();
 
         public static void UseFile(string kind, int index, string path) => files[kind + "/" + index] = path;
@@ -471,6 +471,8 @@ namespace OurTaiko.Chara
         static Dictionary<int, FaceTimeline> faces;
         static Texture2D faceSheet;
         static readonly Dictionary<int, Texture2D> puchi = new Dictionary<int, Texture2D>();
+        static readonly Dictionary<int, Otanim> puchiAnims = new Dictionary<int, Otanim>();
+        static readonly Dictionary<int, Texture2D> paints = new Dictionary<int, Texture2D>();
 
         // The Editor here enters Play mode without reloading the domain (EditorSettings: Enter Play
         // Mode Options), so these statics outlive a Play session, while every texture made in it is
@@ -481,6 +483,8 @@ namespace OurTaiko.Chara
         {
             parts.Clear();
             puchi.Clear();
+            puchiAnims.Clear();
+            paints.Clear();
             files.Clear();
             faceSheet = null;
         }
@@ -597,17 +601,28 @@ namespace OurTaiko.Chara
             }
         }
 
-        // A puchichara's two-frame picture (frames stacked top to bottom); null for 0 or one that
-        // has not been downloaded.
+        // A puchichara's picture: a two-frame one (frames stacked top to bottom), or the texture
+        // of an animated one (.otanim, then PuchiAnim answers it too); null for 0 or one that has
+        // not been downloaded. Downloaded files have no extension, so the bytes tell which.
         public static Texture2D Puchi(int index)
         {
             if (index <= 0 || !files.TryGetValue("puchi/" + index, out string file)) return null;
             if (puchi.TryGetValue(index, out var texture) && texture != null && texture.name == file) return texture;
+            puchiAnims.Remove(index);
             try
             {
-                texture = new Texture2D(2, 2, TextureFormat.RGBA32, false)
-                    { name = file, filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
-                texture.LoadImage(System.IO.File.ReadAllBytes(file), true);
+                byte[] bytes = System.IO.File.ReadAllBytes(file);
+                Otanim anim = null;
+                if (Otanim.IsOtanim(bytes))
+                {
+                    anim = Otanim.Parse(bytes);
+                    bytes = anim.Texture;
+                }
+                // An animation is drawn small and moving: mipmapped, trilinear.
+                texture = new Texture2D(2, 2, TextureFormat.RGBA32, anim != null)
+                    { name = file, filterMode = anim != null ? FilterMode.Trilinear : FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+                if (!texture.LoadImage(bytes, true)) throw new System.IO.InvalidDataException("not an image");
+                if (anim != null) puchiAnims[index] = anim;
             }
             catch (System.Exception error)
             {
@@ -615,6 +630,36 @@ namespace OurTaiko.Chara
                 texture = null;
             }
             puchi[index] = texture;
+            return texture;
+        }
+
+        // An animated puchichara (.otanim; its texture is Puchi(index)); null for a two-frame one,
+        // 0, or one that has not been downloaded.
+        public static Otanim PuchiAnim(int index)
+        {
+            if (Puchi(index) == null) return null;
+            return puchiAnims.TryGetValue(index, out var anim) ? anim : null;
+        }
+
+        // A makeup's face sheet (faces stacked top to bottom like FaceSheet, drawn on a face plate a
+        // third larger); null for 0 or one that has not been downloaded. Sampled like the face
+        // sheet: no mipmaps, bilinear, clamped.
+        public static Texture2D Paint(int index)
+        {
+            if (index <= 0 || !files.TryGetValue("paint/" + index, out string file)) return null;
+            if (paints.TryGetValue(index, out var texture) && texture != null && texture.name == file) return texture;
+            try
+            {
+                texture = new Texture2D(2, 2, TextureFormat.RGBA32, false)
+                    { name = file, filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+                if (!texture.LoadImage(System.IO.File.ReadAllBytes(file), true)) throw new System.IO.InvalidDataException("not an image");
+            }
+            catch (System.Exception error)
+            {
+                Log.Warn("Don", "Could not read " + file + ": " + error.Message);
+                texture = null;
+            }
+            paints[index] = texture;
             return texture;
         }
     }

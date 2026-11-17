@@ -36,6 +36,7 @@ namespace OurTaiko.Chara
 
         RawImage image;
         RawImage puchi;
+        PuchiAnimGraphic puchiAnim;
         Material composite, puchiMaterial;
         RenderTexture target;
         CommandBuffer cmd;
@@ -82,6 +83,7 @@ namespace OurTaiko.Chara
                 alpha = Mathf.Clamp01(value);
                 if (image != null) image.color = new Color(1, 1, 1, alpha);
                 if (puchi != null) puchi.color = new Color(1, 1, 1, alpha);
+                if (puchiAnim != null) puchiAnim.color = new Color(1, 1, 1, alpha);
             }
         }
         float alpha = 1;
@@ -151,6 +153,7 @@ namespace OurTaiko.Chara
             Chara = null;
             if (image != null) image.enabled = false;
             if (puchi != null) puchi.enabled = false;
+            if (puchiAnim != null) puchiAnim.enabled = false;
         }
 
         void OnDestroy()
@@ -236,11 +239,13 @@ namespace OurTaiko.Chara
         void DrawPuchi()
         {
             var texture = Chara.PuchiTexture;
-            if (texture == null)
+            if (texture == null || Chara.PuchiAnim != null)
             {
                 if (puchi != null) puchi.enabled = false;
+                DrawPuchiAnim(texture);
                 return;
             }
+            if (puchiAnim != null) puchiAnim.enabled = false;
             if (puchi == null)
             {
                 var go = new GameObject("Puchi", typeof(RectTransform), typeof(RawImage));
@@ -270,6 +275,40 @@ namespace OurTaiko.Chara
                 puchiMaterial.SetFloat("_TintAmount", Chara.TintAmount);
             }
             puchi.enabled = true;
+        }
+
+        // An animated puchichara (.otanim): its view fitted into the same 150 px square, without
+        // the bob (it moves by itself), mirrored with the Don, playing the clip the Don's motion
+        // asks for (PuchiAnimGraphic.ClipsFor) on the Don's clock.
+        void DrawPuchiAnim(Texture2D texture)
+        {
+            var anim = Chara.PuchiAnim;
+            if (anim == null || texture == null)
+            {
+                if (puchiAnim != null) puchiAnim.enabled = false;
+                return;
+            }
+            if (puchiAnim == null)
+            {
+                var go = new GameObject("PuchiAnim", typeof(RectTransform), typeof(CanvasRenderer), typeof(PuchiAnimGraphic));
+                go.layer = gameObject.layer;
+                go.transform.SetParent(transform, false);
+                puchiAnim = go.GetComponent<PuchiAnimGraphic>();
+                puchiAnim.raycastTarget = false;
+            }
+            float s = LayoutScale * drawScale;
+            float size = 150f * s;
+            var rt = (RectTransform)puchiAnim.transform;
+            rt.anchorMin = rt.anchorMax = Rect.pivot;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(size, size);
+            rt.anchoredPosition = new Vector2((Chara.Mirrored ? 90f : -90f) * s, 120f * s);
+            puchiAnim.Show(anim, texture);
+            puchiAnim.Mirrored = Chara.Mirrored;
+            puchiAnim.color = new Color(1, 1, 1, alpha);
+            puchiAnim.SetTint(Chara.TintColor, Chara.TintAmount);
+            puchiAnim.Advance(Chara.Anim, Chara.PuchiMs);
+            puchiAnim.enabled = true;
         }
     }
 }
