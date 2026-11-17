@@ -74,6 +74,14 @@ namespace OurTaiko
         static readonly List<DrumPad> pads = new List<DrumPad>();
         static readonly PlayerInput[] players = { new PlayerInput(0), new PlayerInput(1) };
         static bool installed;
+        static readonly List<KeyChange> changes = new List<KeyChange>();
+        static readonly HashSet<Key> sourceHeld = new HashSet<Key>();
+
+        // A keyboard read outside Unity's Keyboard: on iOS the GameController one, which sees the
+        // presses iOS debounces away (GameControllerKeyboard). While it is Active, Unity's Keyboard
+        // is not read, so no key counts twice; without one (or with no keyboard connected) it is.
+        public static IKeyboardSource KeyboardSource { get; set; }
+        static bool SourceActive => KeyboardSource != null && KeyboardSource.Active;
 
         public static IReadOnlyList<PlayerInput> Players => players;
         public static PlayerInput P1 => players[0];
@@ -142,7 +150,12 @@ namespace OurTaiko
 
         internal static void Initialize()
         {
-            if (!installed) { InputSystem.onEvent += OnInputEvent; installed = true; }
+            if (!installed)
+            {
+                InputSystem.onEvent += OnInputEvent;
+                installed = true;
+                KeyboardSource ??= GameControllerKeyboard.Create();
+            }
             InputLog.Install();
         }
 
@@ -151,7 +164,7 @@ namespace OurTaiko
         static void OnInputEvent(InputEventPtr eventPtr, InputDevice device)
         {
             InputLog.OnEvent(eventPtr, device);
-            if (!(device is Keyboard keyboard)) return;
+            if (!(device is Keyboard keyboard) || SourceActive) return;
             if (InputState.currentUpdateType == InputUpdateType.Editor) return;
             if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>()) return;
             foreach (var pair in reverse)
@@ -172,7 +185,12 @@ namespace OurTaiko
             frame.Clear();
             Array.Clear(pressedThisFrame, 0, KeyCount);
             Array.Clear(held, 0, KeyCount);
-            PollKeyboard();
+            if (SourceActive) PollSource(KeyboardSource);
+            else
+            {
+                DiscardSource();
+                PollKeyboard();
+            }
             PollPads();
             Array.Clear(recorded, 0, KeyCount);
             PublishDue(InputState.currentTime);
@@ -231,6 +249,34 @@ namespace OurTaiko
                     InputLog.Poll((InputKey)i);
                 }
             }
+        }
+
+        // Every key-down the source reports is a press, stamped on the Input System clock.
+        static void PollSource(IKeyboardSource source)
+        {
+            changes.Clear();
+            source.Drain(changes);
+            double offset = InputState.currentTime - source.Now;
+            foreach (var change in changes)
+            {
+                bool bound = reverse.TryGetValue(change.Key, out var key);
+                InputLog.Source(change, bound ? key : (InputKey?)null, change.Time + offset);
+                if (!change.Down) { sourceHeld.Remove(change.Key); continue; }
+                sourceHeld.Add(change.Key);
+                if (bound) pending.Add(new InputPress(key, change.Time + offset));
+            }
+            foreach (var physical in sourceHeld)
+                if (reverse.TryGetValue(physical, out var key)) held[(int)key] = true;
+        }
+
+        // Changes that arrived while the source was not read (no keyboard connected) are stale.
+        static void DiscardSource()
+        {
+            sourceHeld.Clear();
+            if (KeyboardSource == null) return;
+            changes.Clear();
+            KeyboardSource.Drain(changes);
+            changes.Clear();
         }
 
         static void PollPads()
