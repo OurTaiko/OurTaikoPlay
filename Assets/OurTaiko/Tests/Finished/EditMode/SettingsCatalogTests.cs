@@ -65,10 +65,10 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void AndroidHidesKeyboardMappingsAndFixedFrameRateControls()
+        public void AndroidKeepsKeyboardMappingsAndHidesFixedFrameRateControls()
         {
             var pages = SettingsCatalog.Pages(SoundPlatform.Android);
-            Assert.That(pages.Select(page => page.Id), Does.Not.Contain("controls"));
+            Assert.That(pages.Select(page => page.Id), Does.Contain("controls"));
 
             var display = pages.Single(page => page.Id == "display");
             display.Refresh(new GameSettings());

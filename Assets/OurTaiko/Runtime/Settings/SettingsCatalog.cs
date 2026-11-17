@@ -246,7 +246,7 @@ namespace OurTaiko
                     SettingRow.Action(RefreshSongList, T("accounts.refreshSongList"), T("accounts.refreshSongListDesc"), T("accounts.refresh")),
                     SettingRow.Action(RefreshLogin, T("accounts.refreshLogin"), T("accounts.refreshLoginDesc"), T("accounts.refresh"))),
             }),
-        }.Where(page => platform != SoundPlatform.Android || page.Id != "controls").ToArray();
+        };
 
         static IEnumerable<SettingRow> Rendering(SoundPlatform platform)
         {
