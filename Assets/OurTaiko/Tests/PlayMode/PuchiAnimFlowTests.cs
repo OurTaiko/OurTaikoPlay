@@ -85,6 +85,71 @@ namespace OurTaiko.Tests
             }
         }
 
+        // In a real play: the Don cheers at the tenth combo for one beat (0.25 s at BPM 240) and
+        // goes back; the puchichara's combo clip (1 s) is not cut with it but plays to its end,
+        // though GOGO TIME starts meanwhile; then GOGO's clip takes over.
+        const string Chart = "TITLE:Puchi Test\nBPM:240\nCOURSE:Oni\nLEVEL:5\n#START\n" +
+            "1111,\n1111,\n1111,\n#GOGOSTART\n1111,\n1111,\n1111,\n#GOGOEND\n0,\n#END";
+
+        [UnityTest]
+        public IEnumerator InAPlayTheComboClipIsNotCutWhenTheDonsCheerEnds()
+        {
+            var combo = OtanimFixture.Make("combo", false, 10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100); // 1 s
+            var file = OtanimFixture.Build(OtanimFixture.Make("idle", true, 10, 0, 50), combo, OtanimFixture.Make("gogo", true, 10, 0, 100));
+            DonLibrary.UseFile("puchi", 9301, OtanimFixture.WriteFile("puchi9301", file));
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset(Chart);
+            try
+            {
+                SettingManager.EnsureInstance().UseUnsaved(new GameSettings());
+                yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                yield return null;
+                yield return TestPlay.Open(song, "Oni", true);
+                float deadline = Time.realtimeSinceStartup + 20;
+                while (SceneSwitcher.Instance.IsSwitching || UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != SceneSwitcher.GameScene)
+                {
+                    yield return null;
+                    Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline));
+                }
+                var play = Object.FindAnyObjectByType<PlayScene>();
+                while (play.Session == null) { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
+                var view = play.Lanes[0].DonChara.View;
+                view.Chara.SetPuchi(9301);
+                yield return null;
+                var puchi = view.GetComponentInChildren<PuchiAnimGraphic>();
+                Assert.That(puchi, Is.Not.Null, "the lane's Don wears the animated puchichara");
+
+                bool sawCombo = false, comboOutlivedTheCheer = false, sawGogo = false, captured = false;
+                double comboSeconds = 0;
+                while (!play.IsFinished && Time.realtimeSinceStartup < deadline + 15)
+                {
+                    yield return null;
+                    var don = (DonAnim)((int)view.Chara.Anim % (int)DonAnim.MirrorOffset);
+                    if (puchi.ClipName == "combo")
+                    {
+                        sawCombo = true;
+                        comboSeconds = puchi.ClipSeconds;
+                        if (don != DonAnim.Combo) comboOutlivedTheCheer = true;
+                        if (!captured && comboOutlivedTheCheer) { captured = true; TestCapture.Capture("PuchiAnimComboInPlay.png"); }
+                    }
+                    else if (sawCombo && !sawGogo)
+                    {
+                        Assert.That(comboSeconds, Is.GreaterThanOrEqualTo(0.9), "the combo clip played to its end before " + puchi.ClipName);
+                        sawGogo = puchi.ClipName == "gogo";
+                    }
+                }
+                Assert.That(sawCombo, "the tenth combo asked for the combo clip");
+                Assert.That(comboOutlivedTheCheer, "the clip went on after the Don's one-beat cheer ended");
+                Assert.That(sawGogo, "GOGO's clip followed once the combo clip was done");
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+            }
+            yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+        }
+
         static DonLook WithPuchi(DonLook look, int puchi)
         {
             look.puchi = puchi;
