@@ -15,6 +15,7 @@ namespace OurTaiko
     //             but mice, touchscreens and pens; a keyboard event that changed no key is logged too)
     //   text      a character the keyboard typed, what a text box would get
     //   poll      a press the event hook missed and the frame's poll found
+    //   source    a key change from InputManager.KeyboardSource (iOS: the GameController keyboard)
     //   pad       a touch or click on an on-screen drum zone
     //   publish   a press handed to this frame's scripts (after the input delay)
     //   judge     a lane judging a press, with the judgment
@@ -95,6 +96,9 @@ namespace OurTaiko
                 $"{InputState.currentUpdateType}:{(changes.Length == 0 ? " no button changed" : changes.ToString())}" +
                 (held.Length > 0 ? " | held" + held : ""));
         }
+
+        internal static void Source(KeyChange change, InputKey? key, double time)
+            => Write($"source {change.Key} {(change.Down ? "down" : "up")}{(key.HasValue ? " (" + key.Value + ")" : "")} t={time:F4}");
 
         internal static void Poll(InputKey key) => Write($"poll {key} found by the frame's poll, not the event hook");
 

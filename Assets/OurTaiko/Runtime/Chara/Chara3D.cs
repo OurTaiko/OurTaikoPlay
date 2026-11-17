@@ -101,6 +101,8 @@ namespace OurTaiko.Chara
         public float TintAmount { get; private set; }
         public int PuchiIndex { get; private set; }
         public Texture2D PuchiTexture { get; private set; }
+        // The puchichara's animation when it is an .otanim (PuchiTexture is then its texture).
+        public Otanim PuchiAnim { get; private set; }
         public double PuchiMs { get; private set; }
         public int PaintIndex { get; private set; }
         // The sheet the face plates show: the plain one, or the makeup's.
@@ -276,6 +278,7 @@ namespace OurTaiko.Chara
             if (index == PuchiIndex && (index <= 0 || PuchiTexture != null)) return;
             PuchiIndex = index;
             PuchiTexture = DonLibrary.Puchi(index);
+            PuchiAnim = DonLibrary.PuchiAnim(index);
         }
 
         // YataiDON Chara3D::set_paint: the makeup's face sheet (3dchara/paint/<index>.png, downloaded)

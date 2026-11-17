@@ -471,6 +471,7 @@ namespace OurTaiko.Chara
         static Dictionary<int, FaceTimeline> faces;
         static Texture2D faceSheet;
         static readonly Dictionary<int, Texture2D> puchi = new Dictionary<int, Texture2D>();
+        static readonly Dictionary<int, Otanim> puchiAnims = new Dictionary<int, Otanim>();
         static readonly Dictionary<int, Texture2D> paints = new Dictionary<int, Texture2D>();
 
         // The Editor here enters Play mode without reloading the domain (EditorSettings: Enter Play
@@ -482,6 +483,7 @@ namespace OurTaiko.Chara
         {
             parts.Clear();
             puchi.Clear();
+            puchiAnims.Clear();
             paints.Clear();
             files.Clear();
             faceSheet = null;
@@ -599,17 +601,28 @@ namespace OurTaiko.Chara
             }
         }
 
-        // A puchichara's two-frame picture (frames stacked top to bottom); null for 0 or one that
-        // has not been downloaded.
+        // A puchichara's picture: a two-frame one (frames stacked top to bottom), or the texture
+        // of an animated one (.otanim, then PuchiAnim answers it too); null for 0 or one that has
+        // not been downloaded. Downloaded files have no extension, so the bytes tell which.
         public static Texture2D Puchi(int index)
         {
             if (index <= 0 || !files.TryGetValue("puchi/" + index, out string file)) return null;
             if (puchi.TryGetValue(index, out var texture) && texture != null && texture.name == file) return texture;
+            puchiAnims.Remove(index);
             try
             {
-                texture = new Texture2D(2, 2, TextureFormat.RGBA32, false)
-                    { name = file, filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
-                texture.LoadImage(System.IO.File.ReadAllBytes(file), true);
+                byte[] bytes = System.IO.File.ReadAllBytes(file);
+                Otanim anim = null;
+                if (Otanim.IsOtanim(bytes))
+                {
+                    anim = Otanim.Parse(bytes);
+                    bytes = anim.Texture;
+                }
+                // An animation is drawn small and moving: mipmapped, trilinear.
+                texture = new Texture2D(2, 2, TextureFormat.RGBA32, anim != null)
+                    { name = file, filterMode = anim != null ? FilterMode.Trilinear : FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+                if (!texture.LoadImage(bytes, true)) throw new System.IO.InvalidDataException("not an image");
+                if (anim != null) puchiAnims[index] = anim;
             }
             catch (System.Exception error)
             {
@@ -618,6 +631,14 @@ namespace OurTaiko.Chara
             }
             puchi[index] = texture;
             return texture;
+        }
+
+        // An animated puchichara (.otanim; its texture is Puchi(index)); null for a two-frame one,
+        // 0, or one that has not been downloaded.
+        public static Otanim PuchiAnim(int index)
+        {
+            if (Puchi(index) == null) return null;
+            return puchiAnims.TryGetValue(index, out var anim) ? anim : null;
         }
 
         // A makeup's face sheet (faces stacked top to bottom like FaceSheet, drawn on a face plate a
