@@ -226,6 +226,16 @@ namespace OurTaiko.Chara
             toward = next < 0 ? 0 : (float)(at - Math.Floor(at));
         }
 
+        // How many times the clip has come round by `seconds`: a loop's first pass (its intro and
+        // its loop) is 0, each loop after it one more; a one-shot plays whole each time.
+        public static int Pass(Clip clip, double seconds)
+        {
+            int n = clip.Frames.Length;
+            double at = Math.Max(0, seconds) * clip.Fps;
+            if (clip.Loop) return at < n ? 0 : 1 + (int)Math.Floor((at - n) / (n - clip.LoopStart));
+            return n > 1 ? (int)Math.Floor(at / (n - 1)) : (int)Math.Floor(at);
+        }
+
         // Writes the clip at t seconds as triangles into a mesh fitting `box` (layout units, y up),
         // keeping the view's aspect; frames are eased into each other where the same part is in
         // both. Additive parts get 2 added to u (the shader takes it back off).

@@ -16,6 +16,7 @@ namespace OurTaiko.Chara
         Texture2D texture;
         Otanim.Clip clip;
         double clipStartMs, nowMs;
+        int clipPass;
         readonly List<UIVertex> vertices = new List<UIVertex>();
         readonly List<int> indices = new List<int>();
 
@@ -88,21 +89,45 @@ namespace OurTaiko.Chara
             ownMaterial.SetFloat("_TintAmount", amount);
         }
 
-        // Moves the animation to `ms` (the Don's clock) playing what `donAnim` asks for: a clip that
-        // changes starts from its beginning, a one-shot then holds its last frame.
+        // Moves the animation to `ms` (the Don's clock) playing what `donAnim` asks for, over and
+        // over (a one-shot starts again when it ends; a loop plays its intro once, then its loop).
+        // Asked for another clip, it changes at once only from the resting one ("idle", or what
+        // stands in for it); any other first plays to the end of its pass, so a reaction is never
+        // cut short when the Don's one-beat motion ends. The website's OtanimPlayer does the same.
         public void Advance(DonAnim donAnim, double ms)
         {
             var wanted = PickClip(donAnim);
-            if (wanted != clip)
+            if (clip == null) Start(wanted, ms);
+            else if (wanted != clip)
             {
-                clip = wanted;
-                clipStartMs = ms;
+                int pass = Otanim.Pass(clip, (ms - clipStartMs) / 1000.0);
+                if (clip == PickClip(DonAnim.Normal) || pass > clipPass) Start(wanted, ms);
             }
             nowMs = ms;
+            clipPass = Otanim.Pass(clip, ClipSeconds);
             SetVerticesDirty();
         }
 
+        void Start(Otanim.Clip next, double ms)
+        {
+            clip = next;
+            clipStartMs = ms;
+            clipPass = 0;
+        }
+
+        // Time since the clip started.
         public double ClipSeconds => (nowMs - clipStartMs) / 1000.0;
+
+        // The time into the clip to draw: a one-shot's starts over at its end.
+        public double PlaySeconds
+        {
+            get
+            {
+                if (clip == null || clip.Loop) return ClipSeconds;
+                double length = (clip.Frames.Length - 1) / clip.Fps;
+                return length > 0 ? ClipSeconds % length : 0;
+            }
+        }
 
         protected override void OnPopulateMesh(VertexHelper vh)
         {
@@ -110,7 +135,7 @@ namespace OurTaiko.Chara
             if (anim == null || clip == null) return;
             vertices.Clear();
             indices.Clear();
-            anim.Sample(clip, ClipSeconds, rectTransform.rect, Mirrored, color, vertices, indices);
+            anim.Sample(clip, PlaySeconds, rectTransform.rect, Mirrored, color, vertices, indices);
             vh.AddUIVertexStream(vertices, indices);
         }
 

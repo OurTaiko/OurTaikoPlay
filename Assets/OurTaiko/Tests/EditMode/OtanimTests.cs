@@ -137,6 +137,44 @@ namespace OurTaiko.Tests
             finally { Object.DestroyImmediate(go); }
         }
 
+        // Every clip loops; only the resting one is cut; the rest play to the end of their pass (the
+        // Don's one-beat COMBO must not cut the puchichara's reaction). The website's OtanimPlayer
+        // test has the same steps.
+        [Test]
+        public void ClipsLoopAndOnlyTheRestingOneIsCut()
+        {
+            var happy = OtanimFixture.Make("happy", false, 10, 0, 10, 20, 30, 40);
+            var gogo = OtanimFixture.Make("gogo", true, 10, 0, 10, 20, 30, 40, 50);
+            gogo.LoopStart = 2;
+            var file = Otanim.Parse(OtanimFixture.Build(OtanimFixture.Make("idle", true, 10, 0, 10, 20, 30), happy, gogo));
+            var go = new GameObject("puchi", typeof(RectTransform), typeof(CanvasRenderer), typeof(PuchiAnimGraphic));
+            try
+            {
+                var g = go.GetComponent<PuchiAnimGraphic>();
+                g.Show(file, null);
+                g.Advance(DonAnim.Normal, 0);
+                Assert.That(g.ClipName, Is.EqualTo("idle"));
+                g.Advance(DonAnim.FullCombo, 150);
+                Assert.That((g.ClipName, g.PlaySeconds), Is.EqualTo(("happy", 0.0)), "idle gives way at once");
+                g.Advance(DonAnim.Normal, 400);
+                Assert.That(g.ClipName, Is.EqualTo("happy"), "the reaction plays on to its end");
+                g.Advance(DonAnim.FullCombo, 500);
+                Assert.That(g.PlaySeconds, Is.EqualTo(0.35).Within(1e-9), "asked again, it went round");
+                g.Advance(DonAnim.FullCombo, 600);
+                Assert.That(g.PlaySeconds, Is.EqualTo(0.05).Within(1e-9), "and starts over instead of holding");
+                g.Advance(DonAnim.Normal, 950);
+                Assert.That(g.ClipName, Is.EqualTo("idle"));
+                g.Advance(DonAnim.Sabi, 1000);
+                Assert.That(g.ClipName, Is.EqualTo("gogo"));
+                g.Advance(DonAnim.Normal, 1300);
+                g.Advance(DonAnim.Normal, 1550);
+                Assert.That(g.ClipName, Is.EqualTo("gogo"), "GOGO's intro and first loop play out");
+                g.Advance(DonAnim.Normal, 1650);
+                Assert.That(g.ClipName, Is.EqualTo("idle"));
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
         [Test]
         public void ADownloadedOtanimPuchiIsAnimated()
         {
