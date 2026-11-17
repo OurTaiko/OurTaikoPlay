@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using OurTaiko.Online;
 using UnityEngine;
 
 namespace OurTaiko
@@ -83,22 +84,30 @@ namespace OurTaiko
 
         // Reads the catalog and downloads the files it names that the cache lacks; on failure the
         // remembered catalog is used when its files are cached. Never throws but for cancellation.
-        public static async Task FetchAsync(string cacheRoot, CancellationToken cancel = default, string from = Base)
+        public static async Task FetchAsync(string cacheRoot, CancellationToken cancel = default, string from = Base, string catalogUrl = null)
         {
             try
             {
-                http ??= new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-                using var response = await http.GetAsync(from + "catalog.json", cancel);
-                if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode);
-                var catalog = JObject.Parse(await response.Content.ReadAsStringAsync());
+                http ??= new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false }) { Timeout = TimeSpan.FromSeconds(30) };
+                JObject catalog;
+                try { catalog = await ReadCatalog(catalogUrl ?? from + "catalog.json", cancel); }
+                catch (Exception) when (catalogUrl != null && !cancel.IsCancellationRequested)
+                { catalog = await ReadCatalog(from + "catalog.json", cancel); }
+                string canonical = CatalogBase(catalog, "baseUrl", from);
+                string mirror = CatalogBase(catalog, "mirrorBaseUrl", null);
+                var mirrored = new HashSet<string>();
+                if (catalog["mirrorPaths"] is JArray paths)
+                    foreach (var path in paths) if (path.Type == JTokenType.String) mirrored.Add((string)path);
                 var entries = Entries(catalog);
                 foreach (var (key, path, size, hash) in entries.Values)
                 {
                     string cached = ObjectPath(cacheRoot, hash);
                     if (await Task.Run(() => Matches(cached, size, hash), cancel)) continue;
-                    var data = await http.GetByteArrayAsync(from + path + "?v=" + hash.Substring(0, 12));
-                    cancel.ThrowIfCancellationRequested();
-                    if (data.LongLength != size || Sha256(data) != hash) throw new InvalidDataException("the download of " + path + " does not match its hash");
+                    string suffix = path + "?v=" + hash.Substring(0, 12);
+                    string original = canonical + suffix;
+                    var resource = new FanmadeResource { Url = mirror != null && mirrored.Contains(path) ? mirror + suffix : original,
+                        FallbackUrl = original, Size = size, Hash = hash };
+                    var data = await ResourceDownload.FetchAsync(http, resource, cancel);
                     await Task.Run(() => Store(cached, data), cancel);
                 }
                 Load(entries, cacheRoot);
@@ -121,16 +130,48 @@ namespace OurTaiko
             catch (Exception error) { Log.Warn("Nameplate", "The cached nameplate art is unusable: " + error.Message); }
         }
 
+        static async Task<JObject> ReadCatalog(string address, CancellationToken cancel)
+        {
+            ResourceDownload.ValidateUrl(address);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
+            timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            cancel = timeout.Token;
+            using var response = await http.GetAsync(address, HttpCompletionOption.ResponseHeadersRead, cancel);
+            if (!response.IsSuccessStatusCode) throw new HttpRequestException("Nameplate catalog HTTP " + (int)response.StatusCode);
+            if (response.Content.Headers.ContentLength > 1024 * 1024) throw new InvalidDataException("nameplate catalog too large");
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var bytes = new MemoryStream();
+            var buffer = new byte[8192];
+            int read;
+            while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, cancel)) > 0)
+            {
+                if (bytes.Length + read > 1024 * 1024) throw new InvalidDataException("nameplate catalog too large");
+                bytes.Write(buffer, 0, read);
+            }
+            return JObject.Parse(System.Text.Encoding.UTF8.GetString(bytes.ToArray()));
+        }
+
+        static string CatalogBase(JObject catalog, string key, string fallback)
+        {
+            if (catalog[key]?.Type != JTokenType.String) return fallback;
+            string value = (string)catalog[key];
+            ResourceDownload.ValidateUrl(value);
+            if (new Uri(value).Query.Length != 0) throw new InvalidDataException("invalid nameplate base URL");
+            return value.TrimEnd('/') + "/";
+        }
+
         // Every file the game needs, from {"files": {key: {path, size, sha256}}}.
         static Dictionary<string, (string key, string path, long size, string hash)> Entries(JObject catalog)
         {
+            if ((int?)catalog["version"] != 1) throw new InvalidDataException("unsupported nameplate catalog");
             var listed = catalog["files"] as JObject ?? throw new InvalidDataException("the catalog lists no files");
             var entries = new Dictionary<string, (string, string, long, string)>();
             foreach (var (key, _, _) in files)
             {
                 if (!(listed[key] is JObject f)) throw new InvalidDataException("the catalog lacks " + key);
                 string path = (string)f["path"], hash = (string)f["sha256"];
-                if (string.IsNullOrEmpty(path) || path.Contains("..") || hash == null || hash.Length != 64)
+                if (string.IsNullOrEmpty(path) || path.StartsWith("/") || path.Contains("..") || path.IndexOfAny(new[] { '\\', '?', '#', ':' }) >= 0 ||
+                    !Json.HexId(hash, 64) || ((long?)f["size"] ?? -1) <= 0 || (long?)f["size"] > 8L * 1024 * 1024)
                     throw new InvalidDataException("bad catalog entry " + key);
                 entries[key] = (key, path, (long?)f["size"] ?? -1, hash.ToLowerInvariant());
             }

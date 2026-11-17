@@ -329,7 +329,7 @@ namespace OurTaiko.Online
         {
             if (cancel.IsCancellationRequested) return;
             Activity = L10n.Get("Online", "activity.nameplateArt");
-            try { await NameplateArt.FetchAsync(Client.CacheRoot, cancel); }
+            try { await NameplateArt.FetchAsync(Client.CacheRoot, cancel, catalogUrl: (Profiles?.Base ?? ProfileCenter.DefaultBase).TrimEnd('/') + "/api/v1/nameplate-art/catalog"); }
             catch (OperationCanceledException) { }
         }
 

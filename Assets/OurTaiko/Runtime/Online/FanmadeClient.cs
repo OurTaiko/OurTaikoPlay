@@ -874,8 +874,8 @@ namespace OurTaiko.Online
             var bytes = await e.ResourceBytesAsync(resource, cancel, transfer == null ? (Action<long, long>)null
                 : (received, total) => { transfer.Received = received; transfer.Total = total; publish?.Invoke(); });
             Report(FileProgress.State.Verifying);
-            if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
-                throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
+            // ResourceDownload already verified the bounded bytes and tried the canonical
+            // source when the regional mirror failed; only verified bytes reach this cache.
             await CacheWork(() => { cancel.ThrowIfCancellationRequested(); StoreObject(file, bytes, resource); return true; }, cancel);
             Report(FileProgress.State.Complete);
             return file;

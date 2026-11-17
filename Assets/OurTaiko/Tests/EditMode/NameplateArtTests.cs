@@ -165,6 +165,28 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
+        public IEnumerator RegionalCatalogUsesMirrorAndFallsBackAfterBadBytes()
+        {
+            using var api = new FanmadeFixture();
+            using var mirror = new FanmadeFixture();
+            int mirrorGets = 0;
+            mirror.CustomRequest = context => {
+                Interlocked.Increment(ref mirrorGets);
+                Assert.That(context.Request.Headers["Authorization"], Is.Null);
+                return Reply(context, 200, new byte[] { 1, 2, 3 });
+            };
+            var routed = (JObject)catalog.DeepClone();
+            routed["baseUrl"] = From;
+            routed["mirrorBaseUrl"] = mirror.BaseUrl + "/";
+            routed["mirrorPaths"] = new JArray("shadow.png");
+            api.CustomRequest = context => Reply(context, 200, System.Text.Encoding.UTF8.GetBytes(routed.ToString()));
+            yield return Wait(NameplateArt.FetchAsync(cache, from: From, catalogUrl: api.BaseUrl + "/api/v1/nameplate-art/catalog"));
+            Assert.That(NameplateArt.Ready, Is.True);
+            Assert.That(mirrorGets, Is.EqualTo(1));
+            Assert.That(downloads, Is.EqualTo(Files.Length), "canonical bytes repaired the bad mirror");
+        }
+
+        [UnityTest]
         public IEnumerator AFileThatDoesNotMatchItsHashIsRefused()
         {
             catalog["files"]["shadow"]["sha256"] = new string('0', 64);

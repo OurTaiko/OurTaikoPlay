@@ -7,7 +7,7 @@ namespace OurTaiko.Online
 {
     public sealed class FanmadeResource
     {
-        public string Url, HeadUrl, Hash, ContentType;
+        public string Url, HeadUrl, Hash, ContentType, FallbackUrl;
         public long Size;
 
         // One entry of a resource manifest: where to download a file of at most `limit` bytes and
@@ -15,9 +15,11 @@ namespace OurTaiko.Online
         public static FanmadeResource From(JObject item, long limit, Action<string> validateUrl)
         {
             var r = new FanmadeResource { Url = Json.Str(item, "url"), HeadUrl = Json.Str(item, "headUrl"),
-                Hash = Json.Str(item, "sha256"), ContentType = Json.Str(item, "contentType"), Size = Json.Number(item, "size") };
+                Hash = Json.Str(item, "sha256"), ContentType = Json.Str(item, "contentType"), Size = Json.Number(item, "size"),
+                FallbackUrl = item["fallbackUrl"]?.Type == JTokenType.String ? (string)item["fallbackUrl"] : null };
             if (!Json.HexId(r.Hash, 64) || r.Size <= 0 || r.Size > limit) throw new FanmadeException("RESOURCE_METADATA_INVALID");
             validateUrl(r.Url); validateUrl(r.HeadUrl);
+            if (!string.IsNullOrEmpty(r.FallbackUrl)) validateUrl(r.FallbackUrl);
             return r;
         }
     }

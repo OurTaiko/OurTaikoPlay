@@ -94,6 +94,35 @@ namespace OurTaiko.Tests
             Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0])));
             Assert.That(tjaGets + audioGets, Is.Zero);
         }
+        [TestCase(0)] [TestCase(404)] [TestCase(503)]
+        public void RegionalMirrorFailureUsesVerifiedCanonicalWithoutRefreshingLogin(int status)
+        {
+            using var mirror = new FanmadeFixture();
+            int mirrorGets = 0;
+            mirror.CustomRequest = context => {
+                mirrorGets++;
+                if (context.Request.Headers["Authorization"] != null || context.Request.Headers["Cookie"] != null) forbidden++;
+                context.Response.StatusCode = status == 0 ? 200 : status;
+                // Same length, different hash: must not be published even after HTTP 200.
+                byte[] bad = new byte[chart.Tja.Length];
+                context.Response.ContentLength64 = bad.Length;
+                context.Response.OutputStream.Write(bad, 0, bad.Length);
+                context.Response.Close(); return true;
+            };
+            var original = api.Manifest;
+            api.Manifest = c => {
+                var manifest = original(c);
+                var tja = (JObject)manifest["resources"]["tja"];
+                tja["fallbackUrl"] = tja["url"].DeepClone();
+                tja["url"] = mirror.BaseUrl + "/tja";
+                tja["headUrl"] = mirror.BaseUrl + "/tja";
+                return manifest;
+            };
+            var prepared = Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That(prepared.Tja, Does.Contain("#START"));
+            Assert.That((mirrorGets, tjaGets, manifests, forbidden), Is.EqualTo((1, 1, 1, 0)));
+        }
+
         [Test] public void First403RefreshCanRecoverWithoutChangingAccount()
         {
             var original = origin.CustomRequest; bool first = true;
