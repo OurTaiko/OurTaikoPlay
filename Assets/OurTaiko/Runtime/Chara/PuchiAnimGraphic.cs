@@ -97,18 +97,18 @@ namespace OurTaiko.Chara
         public void Advance(DonAnim donAnim, double ms)
         {
             var wanted = PickClip(donAnim);
-            if (clip == null) Start(wanted, ms);
+            if (clip == null) StartClip(wanted, ms);
             else if (wanted != clip)
             {
                 int pass = Otanim.Pass(clip, (ms - clipStartMs) / 1000.0);
-                if (clip == PickClip(DonAnim.Normal) || pass > clipPass) Start(wanted, ms);
+                if (clip == PickClip(DonAnim.Normal) || pass > clipPass) StartClip(wanted, ms);
             }
             nowMs = ms;
             clipPass = Otanim.Pass(clip, ClipSeconds);
             SetVerticesDirty();
         }
 
-        void Start(Otanim.Clip next, double ms)
+        void StartClip(Otanim.Clip next, double ms)
         {
             clip = next;
             clipStartMs = ms;
