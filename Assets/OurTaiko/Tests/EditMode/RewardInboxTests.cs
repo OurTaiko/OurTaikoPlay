@@ -19,6 +19,7 @@ namespace OurTaiko.Tests
             public readonly List<long> Seen = new List<long>();
             public int Fetches;
             public bool Fail;
+            public bool Current { get; set; } = true;
 
             public JObject Give(long id, string kind, JObject data)
             {
@@ -153,6 +154,45 @@ namespace OurTaiko.Tests
             inbox.Pump();
             Assert.That(site.Fetches, Is.EqualTo(2));
             Assert.That(inbox.Queue, Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public void ASignedOutPlayersRewardsGoUnmarked()
+        {
+            var inbox = new RewardInbox();
+            Site first = new Site(), second = new Site();
+            first.Give(1, Reward.TitleKind, Title("one"));
+            second.Give(2, Reward.TitleKind, Title("two"));
+            inbox.Heard("site\na", 0, 1, first);
+            inbox.Heard("site\nb", 1, 1, second);
+            inbox.Pump();
+            Assert.That(inbox.Queue, Has.Count.EqualTo(2));
+
+            // 1P signs out (or another player takes the seat): theirs leave the queue, unmarked,
+            // and are not fetched again for whoever is there now.
+            first.Current = false;
+            inbox.Pump();
+            Assert.That(inbox.Queue.Select(r => r.Id), Is.EqualTo(new long[] { 2 }));
+            Assert.That(first.Seen, Is.Empty, "Not marked: they are still that player's to see.");
+            Assert.That(first.Fetches, Is.EqualTo(1));
+
+            // Shown while its player went away meanwhile: not marked either.
+            var shown = inbox.Queue[0];
+            second.Current = false;
+            inbox.Shown(new[] { shown });
+            Assert.That(second.Seen, Is.Empty);
+        }
+
+        [Test]
+        public void APartOfTheDonIsReadAsTheSiteDescribesIt()
+        {
+            var part = Reward.From(JObject.Parse(@"{""id"":9,""kind"":""don_item"",""data"":{""part"":""cos"",""itemId"":30,
+                ""name"":{""ja"":""鏡もち"",""en"":""Kagami Mochi""},""picture"":""https://example.test/icons/cos/30.png""}}"));
+            Assert.That((part.Kind, part.DonPart, part.DonItemId, part.DonPicture), Is.EqualTo((Reward.DonItemKind, "cos", 30, "https://example.test/icons/cos/30.png")));
+            Assert.That(part.DonName("en"), Is.EqualTo("Kagami Mochi"));
+            Assert.That(part.DonName("zh"), Is.EqualTo("鏡もち"), "No Chinese name: the Japanese one.");
+            var bare = Reward.From(JObject.Parse(@"{""id"":10,""kind"":""don_item"",""data"":{""part"":""paint"",""itemId"":2}}"));
+            Assert.That((bare.DonName("ja"), bare.DonPicture), Is.EqualTo(("#2", "")));
         }
 
         [Test]

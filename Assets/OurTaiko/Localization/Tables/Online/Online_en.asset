@@ -130,6 +130,30 @@ MonoBehaviour:
     m_Localized: 'Don: close'
     m_Metadata:
       m_Items: []
+  - m_Id: 2374684581552128
+    m_Localized: New Don part!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940736
+    m_Localized: Costume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940737
+    m_Localized: Head
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940738
+    m_Localized: Body
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940739
+    m_Localized: Puchichara
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940740
+    m_Localized: Makeup
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

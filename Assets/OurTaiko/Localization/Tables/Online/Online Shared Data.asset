@@ -127,6 +127,30 @@ MonoBehaviour:
     m_Key: rewards.close
     m_Metadata:
       m_Items: []
+  - m_Id: 2374684581552128
+    m_Key: rewards.donItem
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940736
+    m_Key: rewards.donPart.cos
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940737
+    m_Key: rewards.donPart.head
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940738
+    m_Key: rewards.donPart.body
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940739
+    m_Key: rewards.donPart.puchi
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2374684589940740
+    m_Key: rewards.donPart.paint
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

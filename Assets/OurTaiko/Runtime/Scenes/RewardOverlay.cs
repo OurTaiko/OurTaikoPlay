@@ -242,7 +242,8 @@ namespace OurTaiko
 
         // ---------------------------------------------------------------- drawing
 
-        static bool CanDraw(Reward reward) => reward.Kind == Reward.TitleKind ? reward.TitleName("en").Length > 0
+        static bool CanDraw(Reward reward) => reward.Kind == Reward.DonItemKind ? reward.DonPart.Length > 0 && reward.DonItemId > 0
+            : reward.Kind == Reward.TitleKind ? reward.TitleName("en").Length > 0
             : reward.Kind == Reward.DanKind && reward.DanIndex >= 0 && reward.DanIndex < PlayerInfo.DanCount;
 
         void Show()
@@ -258,9 +259,11 @@ namespace OurTaiko
             // The banner: the ribbon with what kind of reward it is.
             banner = Place(SkinUi.Image("Banner", content, art.ribbon, 760, 150), 960, 300);
             banner.Rect.GetComponent<Image>().color = new Color(0.86f, 0.2f, 0.16f);
-            Text(banner.Rect, L10n.Get("Online", reward.Kind == Reward.DanKind ? "rewards.dan" : "rewards.title"), 64, 380, 72);
+            Text(banner.Rect, L10n.Get("Online", reward.Kind == Reward.DanKind ? "rewards.dan"
+                : reward.Kind == Reward.DonItemKind ? "rewards.donItem" : "rewards.title"), 64, 380, 72);
 
             if (reward.Kind == Reward.TitleKind) DrawTitle(reward, language);
+            else if (reward.Kind == Reward.DonItemKind) DrawDonItem(reward, language);
             else DrawDan(reward);
 
             int verdict = reward.Data["verdict"]?.Type == Newtonsoft.Json.Linq.JTokenType.Integer ? (int)reward.Data["verdict"] : 0;
@@ -324,6 +327,45 @@ namespace OurTaiko
             shine.localRotation = Quaternion.Euler(0, 0, -20);
             var name = Text(window, reward.TitleName(language), 22 * Scale, 158 * Scale, 17 * Scale, PlateUi.Ink, dark: true);
             name.Squeeze(300 * Scale);
+        }
+
+        // A part of the 3D Don: its picture on a plate (the address the site described it with),
+        // and below it the part and its name.
+        void DrawDonItem(Reward reward, string language)
+        {
+            const float side = 300;
+            var holder = SkinUi.Rect("DonItem", content, side, side + 90);
+            item = Place(holder, 960, 560);
+            var plate = SkinUi.Image("Plate", holder, MultiArt.Load().plate, side, side);
+            plate.rectTransform.Center(side / 2, side / 2);
+            plate.color = PlateUi.Paper;
+            var picture = SkinUi.Image("Picture", holder, null, side - 40, side - 40);
+            picture.rectTransform.Center(side / 2, side / 2);
+            picture.preserveAspect = true;
+            picture.enabled = false;
+            if (reward.DonPicture.Length > 0) _ = ShowPictureAsync(reward, reward.DonPicture, picture);
+            string part = L10n.Get("Online", "rewards.donPart." + reward.DonPart);
+            Text(holder, part + "・" + reward.DonName(language), 48, side / 2, side + 50);
+        }
+
+        static System.Net.Http.HttpClient pictures;
+        const int PictureLimit = 2 * 1024 * 1024;
+
+        // The picture once it has come, if this reward is still on screen; nothing when it cannot.
+        async System.Threading.Tasks.Task ShowPictureAsync(Reward reward, string url, Image target)
+        {
+            try
+            {
+                pictures ??= new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+                var bytes = await pictures.GetByteArrayAsync(url);
+                if (target == null || Current != reward || bytes.Length > PictureLimit) return;
+                var texture = Pictures.Decode(bytes, PictureLimit, 512);
+                if (texture == null) return;
+                texture.filterMode = FilterMode.Point;
+                target.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                target.enabled = true;
+            }
+            catch (Exception error) { Log.Info("Rewards", "The picture of a Don part did not come: " + error.Message); }
         }
 
         void DrawDan(Reward reward)
@@ -393,7 +435,8 @@ namespace OurTaiko
 
             double i = Phase(t, ItemAt, ItemSeconds);
             item.Group.alpha = i > 0 ? 1 : 0;
-            if (Current.Kind == Reward.DanKind)
+            // A badge or a part spins up from small; a title's band slides in.
+            if (Current.Kind != Reward.TitleKind)
             {
                 float s = (float)(0.3 + 0.7 * BackOut(i, 2.2));
                 item.Rect.localScale = new Vector3(s, s, 1);

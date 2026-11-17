@@ -41,6 +41,21 @@ namespace OurTaiko.Online
         public bool DanGold => Data["gold"]?.Type == JTokenType.Boolean && (bool)Data["gold"];
         public int DanCombo => Data["combo"]?.Type == JTokenType.Integer ? Math.Max(0, Math.Min(2, (int)Data["combo"])) : 0;
 
+        // don_item: a part of the 3D Don, as the site describes it when fetched (its name in each
+        // language and the address of its picture, when the catalog has them).
+        public const string DonItemKind = "don_item";
+        public string DonPart => Data["part"]?.Type == JTokenType.String ? (string)Data["part"] : "";
+        public int DonItemId => Data["itemId"]?.Type == JTokenType.Integer ? (int)Data["itemId"] : 0;
+        public string DonPicture => Data["picture"]?.Type == JTokenType.String ? (string)Data["picture"] : "";
+        // The part's name in a song language (en, ja, zh), else Japanese, else its number.
+        public string DonName(string language)
+        {
+            var names = Data["name"] as JObject;
+            foreach (string key in new[] { language == "zh" ? "zh-Hans" : language ?? "", language ?? "", "ja" })
+                if (names?[key]?.Type == JTokenType.String && ((string)names[key]).Length > 0) return (string)names[key];
+            return "#" + DonItemId;
+        }
+
         public static Reward From(JToken value)
         {
             if (!(value is JObject o) || o["id"]?.Type != JTokenType.Integer || o["kind"]?.Type != JTokenType.String) return null;
@@ -54,17 +69,33 @@ namespace OurTaiko.Online
     {
         Task<string> FetchAsync(CancellationToken cancel);
         Task MarkSeenAsync(IReadOnlyList<long> ids, CancellationToken cancel);
+        // The seat still holds the player the rewards are for: not signed out, not someone else.
+        bool Current { get; }
     }
 
+    // A seat's player on a server: through the site the server is a source of, or, for a server
+    // that names no site (an old domain, another server), through the server's own address.
     sealed class EndpointRewardSite : IRewardSite
     {
         public const string Path = "/api/v1/game/rewards";
         readonly FanmadeEndpoint endpoint;
         readonly int seat;
-        public EndpointRewardSite(FanmadeEndpoint endpoint, int seat) { this.endpoint = endpoint; this.seat = seat; }
-        public Task<string> FetchAsync(CancellationToken cancel) => endpoint.SiteRequestAsync(Path, cancel, endpoint.Seats[seat].Token);
+        readonly string user;
+        public EndpointRewardSite(FanmadeEndpoint endpoint, int seat)
+        {
+            this.endpoint = endpoint; this.seat = seat; user = endpoint.Seats[seat].UserId;
+        }
+        public bool Current => endpoint.Seats[seat].IsAuthenticated && endpoint.Seats[seat].UserId == user;
+        bool Site => endpoint.Config.site.Length > 0;
+        public Task<string> FetchAsync(CancellationToken cancel) => Site
+            ? endpoint.SiteRequestAsync(Path, cancel, endpoint.Seats[seat].Token)
+            : endpoint.AuthorizedAsync(Path, cancel: cancel, seat: seat);
         public Task MarkSeenAsync(IReadOnlyList<long> ids, CancellationToken cancel)
-            => endpoint.SiteRequestAsync(Path + "/seen", cancel, endpoint.Seats[seat].Token, new JObject { ["ids"] = new JArray(ids) }.ToString(Newtonsoft.Json.Formatting.None));
+        {
+            string body = new JObject { ["ids"] = new JArray(ids) }.ToString(Newtonsoft.Json.Formatting.None);
+            return Site ? endpoint.SiteRequestAsync(Path + "/seen", cancel, endpoint.Seats[seat].Token, body)
+                : endpoint.AuthorizedAsync(Path + "/seen", body, cancel: cancel, seat: seat);
+        }
     }
 
     // What the players at this game were given and have not been shown yet. Every answer of a site
@@ -88,13 +119,14 @@ namespace OurTaiko.Online
             FanmadeEndpoint.PendingRewardsHeard += Listen;
         }
 
-        // A site's player is one owner however many of the site's servers (sources) told of them.
+        // A site's player is one owner however many of the site's servers (sources) told of them; a
+        // server without a site is a place of its own.
         static void Listen(FanmadeEndpoint endpoint, int seat, int count)
         {
-            string site = endpoint.Config.site;
+            string place = endpoint.Config.site.Length > 0 ? endpoint.Config.site : endpoint.Config.baseUrl;
             string user = endpoint.Seats[seat].UserId;
-            if (site.Length == 0 || user.Length == 0) return;
-            Shared.Heard(site + "\n" + user, seat, count, new EndpointRewardSite(endpoint, seat));
+            if (place.Length == 0 || user.Length == 0) return;
+            Shared.Heard(place + "\n" + user, seat, count, new EndpointRewardSite(endpoint, seat));
         }
 
         sealed class Owner
@@ -132,6 +164,7 @@ namespace OurTaiko.Online
         // Fetches for every owner that has rewards waiting and none queued, fetched or being marked.
         public void Pump()
         {
+            Forget(o => !o.Site.Current);
             List<(string key, Owner owner)> due;
             lock (gate)
                 due = owners.Where(p => p.Value.Waiting > 0 && !p.Value.Fetching && !p.Value.Marking && !queue.Any(r => r.Owner == p.Key))
@@ -175,7 +208,8 @@ namespace OurTaiko.Online
             {
                 Owner owner;
                 lock (gate) owners.TryGetValue(group.Key, out owner);
-                if (owner != null) _ = MarkAsync(group.Key, owner, group.Select(r => r.Id).ToList());
+                // Only for the player still there: someone else's are not theirs to mark.
+                if (owner != null && owner.Site.Current) _ = MarkAsync(group.Key, owner, group.Select(r => r.Id).ToList());
             }
             Changed?.Invoke();
         }
@@ -187,6 +221,20 @@ namespace OurTaiko.Online
             try { await site.MarkSeenAsync(ids, CancellationToken.None); }
             catch (Exception error) { Log.Info("Rewards", "Marking seen failed (they come again): " + error.Message); }
             finally { lock (gate) owner.Marking = false; }
+        }
+
+        // Forgets the owners the test says (signed out, someone else on the seat now) and what of
+        // theirs is queued, without marking anything: it is still theirs to see.
+        void Forget(Func<Owner, bool> gone)
+        {
+            bool changed = false;
+            lock (gate)
+                foreach (var key in owners.Where(p => gone(p.Value)).Select(p => p.Key).ToList())
+                {
+                    owners.Remove(key);
+                    changed |= queue.RemoveAll(r => r.Owner == key) > 0;
+                }
+            if (changed) Changed?.Invoke();
         }
 
         // Forgets everything: who has what waiting, the queue and the claims (a test's end).

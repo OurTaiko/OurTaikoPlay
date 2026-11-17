@@ -10,6 +10,7 @@ using NUnit.Framework;
 using OurTaiko.Online;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
@@ -129,6 +130,7 @@ namespace OurTaiko.Tests
                 return Task.FromResult(new JObject { ["rewards"] = list }.ToString());
             }
             public Task MarkSeenAsync(IReadOnlyList<long> ids, CancellationToken cancel) { given = true; Seen.AddRange(ids); return Task.CompletedTask; }
+            public bool Current => true;
         }
 
         [UnityTest]
@@ -169,6 +171,77 @@ namespace OurTaiko.Tests
             Overlay.Don(); Overlay.Don();
             Assert.That(Overlay.IsShowing, Is.False);
             Assert.That(site.Seen, Is.EqualTo(new long[] { 99 }));
+        }
+
+        // A part of the 3D Don: its picture (from the address the site described it with) and its name.
+        [UnityTest]
+        public IEnumerator APartOfTheDonComesWithItsPicture()
+        {
+            var png = new Texture2D(8, 8);
+            for (int x = 0; x < 8; x++) for (int y = 0; y < 8; y++) png.SetPixel(x, y, x < 4 ? Color.red : Color.white);
+            byte[] picture = png.EncodeToPNG();
+            Object.Destroy(png);
+            fixture.CustomRequest = context =>
+            {
+                if (context.Request.Url.AbsolutePath != "/pictures/cos-30.png") return false;
+                context.Response.ContentType = "image/png";
+                context.Response.OutputStream.Write(picture, 0, picture.Length);
+                context.Response.OutputStream.Close();
+                return true;
+            };
+            long part = fixture.GiveReward("don", Reward.DonItemKind, new JObject
+            {
+                ["part"] = "cos", ["itemId"] = 30, ["service"] = "admin",
+                ["name"] = new JObject { ["ja"] = "鏡もち" }, ["picture"] = fixture.BaseUrl + "/pictures/cos-30.png",
+            });
+            yield return Connect();
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
+            yield return Waits.Until(() => Overlay.IsShowing, "The part did not come up.");
+            Assert.That(Overlay.Current.Id, Is.EqualTo(part));
+            yield return Waits.Until(() => Overlay.IsReady);
+            Assert.That(Overlay.AllText, Does.Contain(L10n.Get("Online", "rewards.donItem")).And.Contain(L10n.Get("Online", "rewards.donPart.cos") + "・鏡もち")
+                .And.Contain(L10n.Get("Online", "rewards.fromAdmin")));
+            yield return Waits.Until(() => Overlay.Canvas.GetComponentsInChildren<Image>().Any(i => i.name == "Picture" && i.enabled && i.sprite != null),
+                "The picture did not come.");
+            TestCapture.Capture("RewardDonItem.png", canvas: TestCapture.SceneCanvas(), over: Overlay.Canvas);
+            Overlay.Don();
+            Assert.That(Overlay.IsShowing, Is.False);
+            yield return Waits.Until(() => fixture.SeenRewards.Contains(part), "It was not marked seen.");
+        }
+
+        // A server that names no site (an old domain, another server) tells and gives its own.
+        [UnityTest]
+        public IEnumerator AServerWithoutASiteGivesItsOwn()
+        {
+            long title = fixture.GiveReward("don", Reward.TitleKind, new JObject { ["title"] = new JObject { ["id"] = "own", ["name"] = "Own Title", ["style"] = "wood" } });
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            TestData.UseServers(fixture);
+            yield return TestData.Connect("don");
+            Assert.That(OnlineManager.Instance.Client.Endpoints.Single().Config.site, Is.Empty, "This server names no site.");
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
+            yield return Waits.Until(() => Overlay.IsShowing, "Nothing came from a server without a site.");
+            Assert.That(Overlay.Current.Id, Is.EqualTo(title));
+            Overlay.Don(); Overlay.Don();
+            yield return Waits.Until(() => fixture.SeenRewards.Contains(title), "It was not marked seen there.");
+        }
+
+        // Signed out with rewards waiting: they go, unmarked, and nobody else sees them.
+        [UnityTest]
+        public IEnumerator SigningOutTakesThePlayersRewardsAway()
+        {
+            long title = fixture.GiveReward("don", Reward.TitleKind, new JObject { ["title"] = new JObject { ["id"] = "mine", ["name"] = "Mine", ["style"] = "wood" } });
+            yield return Connect();
+            yield return Waits.Until(() => RewardInbox.Shared.Queue.Count == 1, "The reward was not fetched.");
+            var signOut = OnlineManager.Instance.SignOutAsync(0);
+            while (!signOut.IsCompleted) yield return null;
+            yield return null;
+            Assert.That(RewardInbox.Shared.Queue, Is.Empty, "A signed-out player's rewards stayed.");
+            yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
+            float until = Time.realtimeSinceStartup + (float)RewardOverlay.QuietSeconds + 1.5f;
+            while (Time.realtimeSinceStartup < until) { Assert.That(Overlay.IsShowing, Is.False); yield return null; }
+            Assert.That(fixture.SeenRewards, Is.Empty, "Marked seen though nobody saw it.");
+            Assert.That(fixture.PendingRewards("don"), Is.EqualTo(1), "Still theirs to see.");
         }
 
         [UnityTest]

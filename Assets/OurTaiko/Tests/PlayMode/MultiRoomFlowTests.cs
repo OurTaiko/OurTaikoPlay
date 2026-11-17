@@ -157,6 +157,7 @@ namespace OurTaiko.Tests
                     ["data"] = new JObject { ["title"] = new JObject { ["id"] = "round", ["name"] = "Round Title", ["style"] = "wood" } } }),
             }.ToString());
             public Task MarkSeenAsync(IReadOnlyList<long> ids, CancellationToken cancel) => Task.CompletedTask;
+            public bool Current => true;
         }
 
         [UnityTearDown]

@@ -27,3 +27,9 @@ rewards.fromRule,For meeting its condition,条件達成で獲得,达成条件获
 rewards.fromAdmin,Given by an administrator,管理者から付与,管理员授予,Under a reward title an administrator gave
 rewards.next,Don: next,ドンで次へ,咚：下一个,Reward overlay prompt when more rewards follow
 rewards.close,Don: close,ドンで閉じる,咚：关闭,Reward overlay prompt on the last reward
+rewards.donItem,New Don part!,新しい着せ替え！,获得新装扮！,Reward overlay banner over a part of the 3D Don
+rewards.donPart.cos,Costume,きぐるみ,着装,Reward overlay: the part of the 3D Don
+rewards.donPart.head,Head,あたま,头,Reward overlay: the part of the 3D Don
+rewards.donPart.body,Body,からだ,身体,Reward overlay: the part of the 3D Don
+rewards.donPart.puchi,Puchichara,ぷちキャラ,小伙伴,Reward overlay: the part of the 3D Don
+rewards.donPart.paint,Makeup,メイク,妆容,Reward overlay: the part of the 3D Don
