@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -93,21 +92,8 @@ namespace OurTaiko.Multi
 
         static async Task<byte[]> FetchAsync(string url, CancellationToken cancel)
         {
-            http ??= new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false }) { Timeout = TimeSpan.FromSeconds(15) };
-            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel);
-            if (!response.IsSuccessStatusCode) throw new IOException("HTTP " + (int)response.StatusCode);
-            if ((response.Content.Headers.ContentLength ?? 0) > ByteLimit) throw new IOException("too large");
-            using var stream = await response.Content.ReadAsStreamAsync();
-            var buffer = new byte[32768];
-            var output = new MemoryStream();
-            while (true)
-            {
-                int read = await stream.ReadAsync(buffer, 0, buffer.Length, cancel);
-                if (read == 0) break;
-                if (output.Length + read > ByteLimit) throw new IOException("too large");
-                output.Write(buffer, 0, read);
-            }
-            return output.ToArray();
+            http ??= new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false }) { Timeout = Timeout.InfiniteTimeSpan };
+            return await Online.AvatarResources.FetchAsync(http, url, Online.ProfileCenter.DefaultBase, ByteLimit, cancel);
         }
 
         // The middle square of a picture, scaled to `size`; `disc` cuts it to a disc with a soft edge.

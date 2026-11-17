@@ -12,7 +12,6 @@ using OurTaiko.Online;
 
 namespace OurTaiko.Tests
 {
-    [NonParallelizable]
     public sealed class ResourceDownloadTimeoutTests
     {
         static readonly Type Download = typeof(FanmadeEndpoint).Assembly.GetType("OurTaiko.Online.ResourceDownload");
