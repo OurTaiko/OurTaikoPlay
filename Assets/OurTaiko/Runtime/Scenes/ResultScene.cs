@@ -246,8 +246,9 @@ namespace OurTaiko
 
         // Result2PScreen::reveal_end_ms: the screen settles once every board has.
         bool RevealEnded => boards.All(board => board.Sequence.RevealEndMs > 0);
-        // Everything has come in and the screen is not asking how the chart was, nor leaving.
-        public bool IsSettled => RevealEnded && !IsLeaving && !(Rating?.IsOpen ?? false);
+        // Everything has come in and the screen is not asking how the chart was, nor leaving. The
+        // result of a room's round is never settled: the room goes on without the player meanwhile.
+        public bool IsSettled => RevealEnded && !IsLeaving && !(Rating?.IsOpen ?? false) && !switcher.PlaysMulti;
         bool CanAdvance => boards.All(board => board.Sequence.CanAdvance);
 
         // Each board's player's first drum press of the frame: its ka turns its own board's pages, a

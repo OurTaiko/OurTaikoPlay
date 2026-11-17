@@ -162,8 +162,9 @@ namespace OurTaiko
         // once the longest of those animations is over (a folder opening and its boards fading in).
         double movedAt;
         const double SettleMs = OpenHoldMs + OpenGrowMs + BoardFadeMs;
+        // Picking for a room is never settled: the room's clock runs.
         public bool IsSettled => Manager != null && Manager.Phase == State.Browsing && (view.search == null || !view.search.BlocksInput)
-            && Now - movedAt >= SettleMs;
+            && Now - movedAt >= SettleMs && !(SceneSwitcher.Instance?.MultiPick ?? false);
 
         double Now => GameTimeline.FrameTime * 1000 - startedAt;
         static double Clamp01(double v) => v < 0 ? 0 : v > 1 ? 1 : v;
