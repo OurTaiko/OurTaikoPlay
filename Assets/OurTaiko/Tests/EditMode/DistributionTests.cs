@@ -115,6 +115,25 @@ namespace OurTaiko.Tests
             Assert.That(tried, Has.Count.EqualTo(1));
         }
 
+        // HttpClient reports its own timeout as a cancellation (TaskCanceledException). A mirror
+        // that hangs times out, and that is tried again from the canonical root; only the caller's
+        // own cancellation is not.
+        [Test]
+        public void AMirrorThatTimesOutIsTriedOnceMoreFromTheCanonicalRoot()
+        {
+            var tried = new List<string>();
+            Task<string> Fetch(string url)
+            {
+                lock (tried) tried.Add(url);
+                if (url.StartsWith("https://mirror.example/", StringComparison.Ordinal)) throw new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout");
+                return Task.FromResult("bytes of " + url);
+            }
+            var root = new FileRoot("https://mirror.example/", Distribution.CanonicalBase, true);
+            using var waiting = new CancellationTokenSource();
+            Assert.That(Run(() => Distribution.FetchAsync(root.Locate("a/b"), Fetch, waiting.Token)), Is.EqualTo("bytes of https://distrib.ourtaiko.org/a/b"));
+            Assert.That(tried, Is.EqualTo(new[] { "https://mirror.example/a/b", "https://distrib.ourtaiko.org/a/b" }));
+        }
+
         // The account center gives full addresses. One on the canonical root is read from the same
         // path on the player's root, and from the canonical address when that fails; any other is
         // read as it is.

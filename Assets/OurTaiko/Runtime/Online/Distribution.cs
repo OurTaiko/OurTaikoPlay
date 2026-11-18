@@ -90,11 +90,13 @@ namespace OurTaiko.Online
 
         // Reads a file with `fetch` from its address on the player's root and, when that fails
         // (a network error, a refusal, bytes that are not what the API described: whatever
-        // `fetch` throws), once more from the canonical root. A cancellation is never retried.
+        // `fetch` throws), once more from the canonical root. A cancellation by `cancel` is never
+        // retried; a timeout is, though HttpClient reports it as a cancellation too: a mirror that
+        // hangs is the likeliest way for it to fail.
         public static async Task<T> FetchAsync<T>(FileAddress address, Func<string, Task<T>> fetch, CancellationToken cancel = default)
         {
             try { return await fetch(address.Url); }
-            catch (Exception error) when (address.Fallback != null && !cancel.IsCancellationRequested && !(error is OperationCanceledException))
+            catch (Exception error) when (address.Fallback != null && !cancel.IsCancellationRequested)
             {
                 Log.Info("Online", "A file did not come from " + Host(address.Url) + " (" + error.Message + "); trying " + Host(address.Fallback));
                 return await fetch(address.Fallback);
