@@ -36,7 +36,10 @@ namespace OurTaiko.Online
         public string Name => Course + (Side == "p1" ? "_1p" : Side == "p2" ? "_2p" : "");
     }
 
-    // A published chart as /api/v1/game/categories/{id}/charts and /api/v1/charts/{id} return it.
+    // A published chart as /api/v2/game/categories/{id}/charts and /api/v2/charts/{id} return it.
+    // Only fields both versions of the API share are read: charts kept from version 1 (the offline
+    // store keeps the JSON as received) and those in an online room's snapshot (which the room
+    // service still sends in version 1's shape: uploader, coverUrl, ...) read as version 2's do.
     public sealed class FanmadeChart
     {
         public string Server = "", Id = "", Title = "", Subtitle = "", Maker = "";
@@ -189,7 +192,8 @@ namespace OurTaiko.Online
 
     // A playlist folder from the catalog or GET /game/playlists: the account's own ("owned") and favorite playlists and the
     // server's "system" ones, with its playable catalog charts in playlist order. Genre selects the
-    // folder artwork like a category's; Cover is the optional WebP shown on the open folder.
+    // folder artwork like a category's; Cover is the optional WebP shown on the open folder
+    // (songListCoverPath, songListCoverSha256 and songListCoverSize).
     public sealed class FanmadePlaylist
     {
         // The most a cover may have: what the server lets a cover upload become (8 MiB).
@@ -200,17 +204,18 @@ namespace OurTaiko.Online
 
         // One playlist. Charts outside `catalog` (not listed or not playable here) and
         // repeated ones are skipped, so ChartIds may come out empty.
-        public static FanmadePlaylist From(JToken v, string server, string serverName, ICollection<string> catalog, Action<string> validateUrl)
+        public static FanmadePlaylist From(JToken v, string server, string serverName, ICollection<string> catalog)
         {
             if (!(v["chartIds"] is JArray members)) throw new FanmadeException("API_PLAYLIST_INVALID");
             var playlist = new FanmadePlaylist { Server = server, ServerName = serverName, Id = Json.Str(v, "id"),
                 Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre"), Kind = Json.Str(v, "kind"), Owner = Json.Str(v, "owner") };
             if (playlist.Id.Length == 0) throw new FanmadeException("API_PLAYLIST_INVALID");
-            if (v["cover"] is JObject cover)
-            {
-                playlist.Cover = FanmadeResource.From(cover, MaxCoverBytes, validateUrl);
-                if (playlist.Cover.ContentType != "image/webp") throw new FanmadeException("API_PLAYLIST_INVALID");
-            }
+            // A cover is always a WebP; a playlist without one leaves the path out or empty.
+            if (v["songListCoverPath"]?.Type == JTokenType.String && ((string)v["songListCoverPath"]).Length > 0)
+                playlist.Cover = FanmadeResource.From(new JObject
+                {
+                    ["path"] = v["songListCoverPath"], ["sha256"] = v["songListCoverSha256"], ["size"] = v["songListCoverSize"], ["contentType"] = "image/webp",
+                }, MaxCoverBytes);
             foreach (var member in members)
             {
                 // Fanmade lists chart IDs as strings, OurTaiko Database as whole numbers.

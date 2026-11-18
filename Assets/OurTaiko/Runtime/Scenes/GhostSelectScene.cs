@@ -16,7 +16,7 @@ namespace OurTaiko
     //
     //   Servers     a board for each connected built-in server, with how many plays it lists.
     //   Categories  the chosen server's categories: すべて, then its catalog's.
-    //   Plays       the chosen category's recorded plays (GET /api/v1/replays?categoryId=), newest
+    //   Plays       the chosen category's recorded plays (GET /api/v2/replays?categoryId=), newest
     //               first, a few to a page. A category loads its first page the first time it is
     //               opened and further ones as the player nears their end.
     //   Result      after a battle and the two result boards: the player and the recording side by
@@ -26,7 +26,7 @@ namespace OurTaiko
     // presses a control directly, Back goes one view up and from the servers to Entry. Plays of
     // replaced files are not listed, and one whose song has changed since the list came is refused
     // with a message.
-    public sealed partial class GhostSelectScene : MonoBehaviour
+    public sealed partial class GhostSelectScene : MonoBehaviour, ISettledScreen
     {
         public RectTransform stage;
         public AudioSource sfx, bgm;
@@ -83,6 +83,8 @@ namespace OurTaiko
         public bool IsLoading => !connected || servers.Any(s => s.Categories[0].IsLoading) || (CurrentCategory?.IsLoading ?? false);
         public bool IsStarting { get; private set; }
         public bool HasLeft { get; private set; }
+        // The lists have come in and no battle is starting.
+        public bool IsSettled => !IsLoading && !IsStarting && !HasLeft;
 
         // Where the player was when a battle began, so its result returns there.
         static (string Server, string Category, int Page, string ScoreId)? resume;

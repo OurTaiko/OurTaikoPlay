@@ -123,7 +123,7 @@ namespace OurTaiko.Tests
             var e = Catalog();
             SignIn(e, 0, "don", "katsu");
             SignIn(e, 1, "ka", "don");
-            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"), "No password goes to the game server.");
+            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v2/game/login"), "No password goes to the game server.");
             var listed = client.Chart(e.Id, chart.Id);
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(900000));
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(800000), "2P reads its own account's p2 block.");
@@ -218,7 +218,7 @@ namespace OurTaiko.Tests
             client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { score, null });
             Drain();
             var sent = fixture.DanAttempts.Single().Body;
-            Assert.That(fixture.DanAttemptPaths.Single(), Is.EqualTo("/api/v1/game/dan-results"));
+            Assert.That(fixture.DanAttemptPaths.Single(), Is.EqualTo("/api/v2/game/dan-results"));
             Assert.That(sent.ContainsKey("songsPlayed"), Is.False, "The scores say how many songs were played.");
             var scores = (Newtonsoft.Json.Linq.JArray)sent["scores"];
             Assert.That((int)scores[0]["score"], Is.EqualTo(500000));
@@ -232,13 +232,13 @@ namespace OurTaiko.Tests
             var padded = (Newtonsoft.Json.Linq.JArray)fixture.DanAttempts.Last().Body["scores"];
             Assert.That(padded.Count, Is.EqualTo(2));
             Assert.That(padded[1].Type, Is.EqualTo(Newtonsoft.Json.Linq.JTokenType.Null));
-            Assert.That(fixture.DanAttemptPaths, Is.All.EqualTo("/api/v1/game/dan-results"));
+            Assert.That(fixture.DanAttemptPaths, Is.All.EqualTo("/api/v2/game/dan-results"));
             // An attempt a version before this one left in the queue, a count of songs, still goes
             // where that form is taken.
             client.DanQueue.Enqueue(e.AccountIdOf(0), "0123456789abcdef0123456789abcdef", "{\"courseId\":\"7\",\"verdict\":1,\"songsPlayed\":1}");
             client.RetryNow();
             Drain();
-            Assert.That(fixture.DanAttemptPaths.Last(), Is.EqualTo("/api/v1/game/dan-attempts"));
+            Assert.That(fixture.DanAttemptPaths.Last(), Is.EqualTo("/api/v2/game/dan-attempts"));
             Assert.That((int)fixture.DanAttempts.Last().Body["songsPlayed"], Is.EqualTo(1));
         }
 
@@ -269,7 +269,7 @@ namespace OurTaiko.Tests
             // A song without a score of its own is still a song played.
             Assert.That(sent.Body.ContainsKey("songsPlayed"), Is.False);
             Assert.That(((Newtonsoft.Json.Linq.JArray)sent.Body["scores"]).Single().Type, Is.EqualTo(Newtonsoft.Json.Linq.JTokenType.Null));
-            Assert.That(fixture.DanAttemptPaths.Single(), Is.EqualTo("/api/v1/game/dan-results"));
+            Assert.That(fixture.DanAttemptPaths.Single(), Is.EqualTo("/api/v2/game/dan-results"));
             var award = client.Award(key);
             Assert.That((int)award.Profile["granted"]["dan"]["index"], Is.EqualTo(20));
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);
@@ -292,12 +292,12 @@ namespace OurTaiko.Tests
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)), Is.Empty);
 
             // While the server is down the attempt waits in the queue.
-            fixture.Fail["/api/v1/game/dan-results"] = 503;
+            fixture.Fail["/api/v2/game/dan-results"] = 503;
             string waiting = client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 1);
             Drain();
             Assert.That(client.Award(waiting), Is.Null);
             Assert.That(client.DanQueue.Pending(e.AccountIdOf(0)).Length, Is.EqualTo(1));
-            fixture.Fail.TryRemove("/api/v1/game/dan-results", out _);
+            fixture.Fail.TryRemove("/api/v2/game/dan-results", out _);
             Drain();
             Assert.That(client.Award(waiting), Is.Not.Null);
         }

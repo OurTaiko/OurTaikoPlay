@@ -61,7 +61,7 @@ namespace OurTaiko.Tests
             var load = online.LoadSongListAsync();
             while (!load.IsCompleted) yield return null;
             load.GetAwaiter().GetResult();
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/sources" }), "Both song lists in one request.");
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v2/game/sources" }), "Both song lists in one request.");
             Assert.That(online.Client.Endpoints.Select(e => e.IsConnected), Is.All.True);
             Assert.That(online.Client.Endpoints.Select(e => e.ChartCount), Is.All.EqualTo(fixture.Charts.Count));
             Assert.That(online.SongListSummary, Does.Contain("Fanmade").And.Contain("Database"), "The summary still says what each source has.");
@@ -71,8 +71,8 @@ namespace OurTaiko.Tests
             signIn.GetAwaiter().GetResult();
             Assert.That(online.Client.Endpoints.Select(e => e.Seats[0].IsAuthenticated), Is.All.True);
             Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens"), Is.EqualTo(1), "One session for both sources.");
-            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/sources"), Is.EqualTo(2), "The song lists, then the seat's scores and playlists.");
-            Assert.That(fixture.Requests.Where(r => r.Contains("/api/v1/sources/")), Is.Empty, "Nothing was asked of a source by itself.");
+            Assert.That(fixture.Requests.Count(r => r == "GET /api/v2/game/sources"), Is.EqualTo(2), "The song lists, then the seat's scores and playlists.");
+            Assert.That(fixture.Requests.Where(r => r.Contains("/api/v2/sources/")), Is.Empty, "Nothing was asked of a source by itself.");
             Assert.That(online.LoginSummary, Does.Contain("DON"));
             Assert.That(online.LoginSummary.Split('•'), Has.Length.EqualTo(1), "One sign-in is reported, not one a source.");
             foreach (var e in online.Client.Endpoints)
@@ -97,7 +97,7 @@ namespace OurTaiko.Tests
             while (!load.IsCompleted) yield return null;
             load.GetAwaiter().GetResult();
             Assert.That(online.Client.Endpoints.Select(e => e.IsConnected), Is.All.False);
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/sources" }), "No source is asked by itself.");
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v2/game/sources" }), "No source is asked by itself.");
             Assert.That(online.SongListSummary.Split('•'), Has.Length.EqualTo(1), "One failure, the site's.");
             Assert.That(online.SongListSummary, Does.Contain(fixture.BaseUrl));
         }

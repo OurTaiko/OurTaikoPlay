@@ -119,8 +119,9 @@ namespace OurTaiko
         public bool IsCurtainClosed => songTransition != null && songTransition.IsClosed || danCover != null && danCover.IsClosed;
         public SongTransition Curtain => songTransition;
         public DanLoadingCover DanCover => danCover;
-        // The settings overlay takes the keys while it is open over a scene.
-        public bool IsInputBlocked => IsSwitching || IsCovered || (transitionTask != null && !transitionTask.IsCompleted) || SettingsOverlay.BlocksInput;
+        // The settings overlay, and any layer over the scene (ModalLayers), take the keys while up.
+        public bool IsInputBlocked => IsSwitching || IsCovered || (transitionTask != null && !transitionTask.IsCompleted) || SettingsOverlay.BlocksInput
+            || ModalLayers.BlocksInput;
         public event Action<string> SceneChanging;
 
         Task switchTask, transitionTask;

@@ -11,7 +11,7 @@ namespace OurTaiko
     // 1P's board on the left, 2P's on the right after a two-player play (result_2p.cpp). The 3D Don,
     // score-rank clip and option icons are not ported. The screen is saved in the scene
     // (ResultView); Awake binds it and fills in the run, and the sprites below are the per-run art.
-    public sealed partial class ResultScene : MonoBehaviour
+    public sealed partial class ResultScene : MonoBehaviour, ISettledScreen
     {
         public RectTransform stage;
         public ResultView view;
@@ -246,6 +246,9 @@ namespace OurTaiko
 
         // Result2PScreen::reveal_end_ms: the screen settles once every board has.
         bool RevealEnded => boards.All(board => board.Sequence.RevealEndMs > 0);
+        // Everything has come in and the screen is not asking how the chart was, nor leaving. The
+        // result of a room's round is never settled: the room goes on without the player meanwhile.
+        public bool IsSettled => RevealEnded && !IsLeaving && !(Rating?.IsOpen ?? false) && !switcher.PlaysMulti;
         bool CanAdvance => boards.All(board => board.Sequence.CanAdvance);
 
         // Each board's player's first drum press of the frame: its ka turns its own board's pages, a

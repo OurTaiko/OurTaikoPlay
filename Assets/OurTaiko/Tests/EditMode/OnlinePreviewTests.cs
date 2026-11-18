@@ -27,18 +27,19 @@ namespace OurTaiko.Tests
             api.Charts.Add(new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[10000] });
             api.Manifest = c => {
                 manifests++;
-                JObject R(byte[] bytes, string type) => new JObject { ["url"] = origin.BaseUrl + "/preview?signature=get", ["headUrl"] = origin.BaseUrl + "/preview?signature=head", ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
+                JObject R(byte[] bytes, string type) => new JObject { ["path"] = "preview", ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
                 var resources = new JObject { ["tja"] = R(c.Tja,"application/octet-stream"), ["audio"] = R(c.Audio,"audio/ogg") };
                 if (!missing) resources["preview"] = R(preview,"audio/ogg");
                 return new JObject { ["chartId"] = c.Id, ["resources"] = resources };
             };
             origin.CustomRequest = ctx => {
                 gets++;
-                if (ctx.Request.HttpMethod != "GET" || ctx.Request.Headers["Range"] != null || ctx.Request.Headers["Authorization"] != null || ctx.Request.Headers["Cookie"] != null || ctx.Request.RawUrl != "/preview?signature=get") forbidden++;
+                if (ctx.Request.HttpMethod != "GET" || ctx.Request.Headers["Range"] != null || ctx.Request.Headers["Authorization"] != null || ctx.Request.Headers["Cookie"] != null || ctx.Request.RawUrl != "/preview") forbidden++;
                 if (failures-- > 0) { ctx.Response.StatusCode = 403; ctx.Response.Close(); return true; }
                 var bytes = (byte[])preview.Clone(); if (corrupt) bytes[0] ^= 1;
                 ctx.Response.ContentLength64 = bytes.Length; ctx.Response.OutputStream.Write(bytes,0,bytes.Length); ctx.Response.Close(); return true;
             };
+            api.FilesRoot = api.CanonicalRoot = origin.BaseUrl + "/";
             cache = Path.Combine(Path.GetTempPath(), "preview-test-" + Guid.NewGuid().ToString("N"));
             client = new FanmadeClient(cache);
             var endpoint = client.Add(api.Server());

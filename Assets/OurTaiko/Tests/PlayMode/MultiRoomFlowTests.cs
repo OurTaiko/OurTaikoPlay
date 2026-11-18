@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OurTaiko.Multi;
 using OurTaiko.Multi.Proto;
@@ -147,9 +148,23 @@ namespace OurTaiko.Tests
             keyboard.MakeCurrent();
         }
 
+        // A title that waits to be shown, for the round to keep it waiting.
+        sealed class WaitingTitle : IRewardSite
+        {
+            public Task<string> FetchAsync(CancellationToken cancel) => Task.FromResult(new JObject
+            {
+                ["rewards"] = new JArray(new JObject { ["id"] = 5, ["kind"] = Reward.TitleKind,
+                    ["data"] = new JObject { ["title"] = new JObject { ["id"] = "round", ["name"] = "Round Title", ["style"] = "wood" } } }),
+            }.ToString());
+            public Task MarkSeenAsync(IReadOnlyList<long> ids, CancellationToken cancel) => Task.CompletedTask;
+            public bool Current => true;
+        }
+
         [UnityTearDown]
         public IEnumerator TearDown()
         {
+            RewardOverlay.Instance?.Reset();
+            RewardInbox.Shared.Clear();
             var leave = MultiSession.LeaveAsync();
             while (!leave.IsCompleted) yield return null;
             if (MultiDirector.Instance != null) Object.Destroy(MultiDirector.Instance.gameObject);
@@ -323,6 +338,10 @@ namespace OurTaiko.Tests
             yield return null;
             TestCapture.Capture("MultiSongSelect.png");
 
+            // A reward waits through the whole round: picking and the round's result run on the room's clock.
+            RewardInbox.Shared.Heard("test\nround", 0, 1, new WaitingTitle());
+            yield return Waits.Until(() => RewardInbox.Shared.Queue.Count == 1, "The reward was not fetched.");
+
             // Song select picks for the room: the banner says which room and how long is left.
             screen.Press("choose");
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
@@ -331,6 +350,8 @@ namespace OurTaiko.Tests
             Assert.That(MultiDirector.Instance.BannerText, Does.Contain(MultiText.Format("banner.room", "48213")).And.Contain(MultiText.Get("phase.songSelect")));
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.Manager.CanJoinSecond, Is.False, "A room has one player of this game.");
+            yield return new WaitForSecondsRealtime((float)RewardOverlay.QuietSeconds + 1.5f);
+            Assert.That(select.IsSettled || RewardOverlay.Instance.IsShowing, Is.False, "Picking for the room is never settled.");
             yield return FocusOnlineSong(select);
             yield return new WaitForSecondsRealtime(.8f);
             var picked = select.Manager.FocusedSong;
@@ -459,6 +480,10 @@ namespace OurTaiko.Tests
 
             // Leaving asks the player about the chart; "not now" goes on without a vote.
             var own = Object.FindAnyObjectByType<ResultScene>();
+            yield return Waits.Until(() => own.Sequence.CanAdvance, "The result did not come in.", 20);
+            yield return new WaitForSecondsRealtime((float)RewardOverlay.QuietSeconds + 0.5f);
+            Assert.That(own.IsSettled || RewardOverlay.Instance.IsShowing, Is.False, "A round's result is never settled.");
+            Assert.That(RewardInbox.Shared.Queue, Has.Count.EqualTo(1), "The reward still waits.");
             yield return ChartRatingFlowTests.Leave(own);
             Assert.That(own.Rating.Focused, Is.EqualTo(ChartRatingPrompt.Good));
             own.Rating.Move(1);

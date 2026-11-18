@@ -14,11 +14,13 @@ using OurTaiko.Online;
 
 namespace OurTaiko.Tests
 {
-    // A local stand-in for the Fanmade backend's game API (Fanmade/backend internal/httpapi
-    // server.go + game.go), as tests/fanmade/fixture.py is for OurTaikoPlayer: bootstrap,
-    // category lists, chart details, signed resource manifests (served by the fixture itself
-    // unless a test replaces Manifest) and idempotent score submission. It is also the account
-    // center its catalog names (OurTaikoSSO's /api/v1/game/account/* and /api/v1/game/tokens).
+    // A local stand-in for the site's game API, version 2 (OurTaikoNet /api/v2/; first written
+    // after the Fanmade backend, as tests/fanmade/fixture.py is for OurTaikoPlayer): bootstrap,
+    // category lists, chart details, resource manifests naming files by their path under the
+    // distribution root (served by the fixture itself unless a test replaces Manifest), the root
+    // itself (GET /api/v2/distribution/source) and idempotent score submission. Version 1's routes
+    // are not served: the game must not ask them. It is also the account center its catalog names
+    // (OurTaikoSSO's /api/v1/game/account/* and /api/v1/game/tokens, which stay version 1).
     public sealed class FanmadeFixture : IDisposable
     {
         public sealed class Chart
@@ -96,7 +98,7 @@ namespace OurTaiko.Tests
         public readonly ConcurrentQueue<string> DanAttemptPaths = new ConcurrentQueue<string>();
         public readonly ConcurrentQueue<(string User, JObject Body)> DanAttempts = new ConcurrentQueue<(string, JObject)>();
         public JObject DanProfileReply = JObject.Parse("{\"granted\":{\"dan\":null,\"titles\":[]},\"nameplate\":{}}");
-        // OurTaikoProfile's public nameplates by user id (GET /api/v1/users/{id}/nameplate); a user
+        // OurTaikoProfile's public nameplates by user id (GET /api/v2/users/{id}/nameplate); a user
         // without one has the plain plate.
         public readonly ConcurrentDictionary<string, JObject> Nameplates = new ConcurrentDictionary<string, JObject>();
         // Account sign-ins issued by /api/v1/game/account/login and still valid.
@@ -106,12 +108,12 @@ namespace OurTaiko.Tests
         public Func<Chart, JObject> Manifest;
         public Action<JObject> ChangeBootstrap;
         public Func<HttpListenerContext, bool> CustomRequest;
-        // The sources this fixture is a site of (GET /api/v1/game/sources answers for all of them
+        // The sources this fixture is a site of (GET /api/v2/game/sources answers for all of them
         // at once); null: a server of the kind that is loaded by itself, and has no such route.
         public string[] SiteSources;
         // A server that is one source of this fixture as a site: known by `known`, asked under the
         // source's name.
-        public ServerConfig Source(string id, string known) => new ServerConfig { name = id, baseUrl = known, api = BaseUrl + "/api/v1/sources/" + id, site = BaseUrl };
+        public ServerConfig Source(string id, string known) => new ServerConfig { name = id, baseUrl = known, api = BaseUrl + "/api/v2/sources/" + id, site = BaseUrl };
         // Status codes returned (and consumed) before the next score submissions succeed.
         public readonly ConcurrentQueue<int> ScoreFailures = new ConcurrentQueue<int>();
         public readonly ConcurrentQueue<JObject> AcceptedScores = new ConcurrentQueue<JObject>();
@@ -119,12 +121,12 @@ namespace OurTaiko.Tests
         public readonly ConcurrentQueue<string> AcceptedUsers = new ConcurrentQueue<string>();
         public readonly ConcurrentDictionary<string, JObject> Idempotent = new ConcurrentDictionary<string, JObject>();
         public readonly ConcurrentBag<string> Requests = new ConcurrentBag<string>();
-        // The players' votes on charts (GET and PUT /api/v1/game/charts/{id}/vote), by "user/chart".
+        // The players' votes on charts (GET and PUT /api/v2/game/charts/{id}/vote), by "user/chart".
         // Off, the fixture is a server without the call: it answers 404.
         public bool Votes;
         public readonly ConcurrentDictionary<string, int> ChartVotes = new ConcurrentDictionary<string, int>();
         public readonly List<JObject> AccountScores = new List<JObject>();
-        // GET /api/v1/replays (newest first, one page) and GET /api/v1/scores/{id}/replay: the listed
+        // GET /api/v2/replays (newest first, one page) and GET /api/v2/scores/{id}/replay: the listed
         // plays and their recordings by score id.
         public readonly List<JObject> Replays = new List<JObject>();
         // How many of the next replay list requests fail with a 500.
@@ -142,7 +144,7 @@ namespace OurTaiko.Tests
                 ["drumroll"] = 0, ["max_combo"] = 0, ["ClearStatus"] = 0, ["isLatest"] = isLatest,
                 ["submittedAt"] = DateTime.UtcNow.AddMinutes(-Replays.Count).ToString("o"), ["adlib"] = new JArray(0, 0), ["mines"] = 0,
                 ["hasReplay"] = true, ["title"] = chart.Title, ["titleTranslations"] = new JObject(), ["subtitle"] = chart.Subtitle,
-                ["level"] = chart.Difficulties.Find(d => d.Course == course && d.Player == player).Level, ["nickname"] = nickname, ["avatarUrl"] = "",
+                ["level"] = chart.Difficulties.Find(d => d.Course == course && d.Player == player).Level, ["nickname"] = nickname, ["avatarPath"] = "",
             };
             lock (Replays) Replays.Add(row);
             ReplayRecords[(string)row["id"]] = record.ToJson();
@@ -169,15 +171,24 @@ namespace OurTaiko.Tests
             thread = new Thread(Serve) { IsBackground = true, Name = "FanmadeFixture" };
             thread.Start();
             Manifest = DefaultManifest;
+            FilesRoot = CanonicalRoot = BaseUrl + "/";
+            // A port may come back in a later test: what the game was told of an earlier fixture
+            // there is not this one's.
+            Distribution.Forget();
         }
 
-        // Links to the fixture's own /files/<chart>/<kind>, as the backend signs bucket URLs.
+        // GET /api/v2/distribution/source: the root the site names for this player's files and
+        // the canonical one. Both are the fixture itself unless a test names others (a mirror
+        // that fails, say). A null FilesRoot answers 404, as a site that cannot say.
+        public string FilesRoot, CanonicalRoot;
+        public bool Mirror;
+
+        // Paths of the fixture's own files/<chart>/<kind> (under FilesRoot).
         JObject DefaultManifest(Chart chart)
         {
             JObject Resource(string kind, byte[] bytes, string type) => new JObject
             {
-                ["url"] = BaseUrl + "/files/" + chart.Id + "/" + kind + "?signature=get", ["headUrl"] = BaseUrl + "/files/" + chart.Id + "/" + kind + "?signature=head",
-                ["sha256"] = Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
+                ["path"] = "files/" + chart.Id + "/" + kind, ["sha256"] = Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
             };
             string audioType = chart.AudioName.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase) ? "audio/mpeg" : "audio/ogg";
             return new JObject
@@ -247,11 +258,11 @@ namespace OurTaiko.Tests
             Requests.Add(request.HttpMethod + " " + path);
             // A server that is one song source of a site has its API under the source's name
             // (ServerConfig.api); what it answers is the same.
-            const string sources = "/api/v1/sources/";
+            const string sources = "/api/v2/sources/";
             if (path.StartsWith(sources, StringComparison.Ordinal))
             {
                 int end = path.IndexOf('/', sources.Length);
-                if (end > 0) path = "/api/v1" + path.Substring(end);
+                if (end > 0) path = "/api/v2" + path.Substring(end);
             }
             try
             {
@@ -261,9 +272,17 @@ namespace OurTaiko.Tests
                 string auth = request.Headers["Authorization"] ?? "";
                 if (path.StartsWith("/api/v1/game/account/", StringComparison.Ordinal) || path == "/api/v1/game/tokens")
                 { Account(context, path, auth, body); return; }
-                if (request.HttpMethod == "GET" && path.StartsWith("/api/v1/users/", StringComparison.Ordinal) && path.EndsWith("/nameplate", StringComparison.Ordinal))
+                // The site's own version 1 is for released games only.
+                if (path.StartsWith("/api/v1/", StringComparison.Ordinal)) { Reply(context, 404, new JObject { ["code"] = "VERSION_1" }); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v2/distribution/source")
                 {
-                    string id = path.Substring("/api/v1/users/".Length, path.Length - "/api/v1/users/".Length - "/nameplate".Length);
+                    if (FilesRoot == null) Reply(context, 404, new JObject());
+                    else Reply(context, 200, new JObject { ["mirror"] = Mirror, ["baseUrl"] = FilesRoot, ["canonicalBaseUrl"] = CanonicalRoot });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && path.StartsWith("/api/v2/users/", StringComparison.Ordinal) && path.EndsWith("/nameplate", StringComparison.Ordinal))
+                {
+                    string id = path.Substring("/api/v2/users/".Length, path.Length - "/api/v2/users/".Length - "/nameplate".Length);
                     Reply(context, 200, Nameplates.TryGetValue(id, out var plate) ? plate
                         : new JObject { ["userId"] = id, ["nickname"] = "", ["title"] = null, ["dan"] = null, ["showDan"] = true });
                     return;
@@ -271,10 +290,11 @@ namespace OurTaiko.Tests
                 string user = null;
                 if (auth.StartsWith("Bearer ", StringComparison.Ordinal) && !tokens.TryGetValue(auth.Substring(7), out user))
                 { Reply(context, 401, new JObject { ["error"] = "SESSION" }); return; }
+                if (Rewards(context, path, user, body)) return;
                 var parts = path.Trim('/').Split('/');
-                if (request.HttpMethod == "GET" && path == "/api/v1/game/catalog") { Bootstrap(context); return; }
-                if (request.HttpMethod == "GET" && path == "/api/v1/game/sources" && SiteSources != null) { Sources(context, user); return; }
-                if (request.HttpMethod == "GET" && path == "/api/v1/game/search")
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/catalog") { Bootstrap(context); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/sources" && SiteSources != null) { Sources(context, user); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/search")
                 {
                     var q = new SongSearchQuery(request.QueryString["q"]);
                     string course = request.QueryString["course"];
@@ -327,19 +347,19 @@ namespace OurTaiko.Tests
                     Reply(context, 200, new JObject { ["myVote"] = ChartVotes.TryGetValue(vote, out int mine) ? mine : 0 });
                     return;
                 }
-                if (request.HttpMethod == "GET" && path == "/api/v1/game/scores")
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/scores")
                 {
                     if (user == null) { Reply(context, 401, new JObject()); return; }
                     lock (AccountScores) Reply(context, 200, new JObject { ["scores"] = new JArray(AccountScores.Where(s => (string)s["user"] == user)) });
                     return;
                 }
-                if (request.HttpMethod == "GET" && path == "/api/v1/game/playlists")
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/playlists")
                 {
                     if (user == null) { Reply(context, 401, new JObject()); return; }
                     Reply(context, 200, new JObject { ["playlists"] = AccountPlaylists, ["playlistVersion"] = 1 });
                     return;
                 }
-                if (request.HttpMethod == "GET" && path == "/api/v1/replays")
+                if (request.HttpMethod == "GET" && path == "/api/v2/replays")
                 {
                     if (FailReplays > 0) { FailReplays--; Reply(context, 500, new JObject { ["code"] = "INTERNAL" }); return; }
                     // categoryId: the songs of one catalog category; an unknown one is 400.
@@ -362,18 +382,18 @@ namespace OurTaiko.Tests
                     lock (Replays) row = Replays.Find(r => (string)r["id"] == parts[3]);
                     if (row == null || !ReplayRecords.TryGetValue(parts[3], out var recording)) { Reply(context, 404, new JObject { ["code"] = "REPLAY_NOT_FOUND" }); return; }
                     var score = (JObject)row.DeepClone();
-                    foreach (var key in new[] { "title", "titleTranslations", "subtitle", "level", "nickname", "avatarUrl" }) score.Remove(key);
-                    Reply(context, 200, new JObject { ["score"] = score, ["nickname"] = row["nickname"], ["avatarUrl"] = "", ["replay"] = recording });
+                    foreach (var key in new[] { "title", "titleTranslations", "subtitle", "level", "nickname", "avatarPath" }) score.Remove(key);
+                    Reply(context, 200, new JObject { ["score"] = score, ["nickname"] = row["nickname"], ["avatarPath"] = "", ["replay"] = recording });
                     return;
                 }
-                if (request.HttpMethod == "POST" && path == "/api/v1/game/scores") { Score(context, user, request.Headers["Idempotency-Key"], JObject.Parse(body)); return; }
-                if (request.HttpMethod == "GET" && path == "/api/v1/game/dans")
+                if (request.HttpMethod == "POST" && path == "/api/v2/game/scores") { Score(context, user, request.Headers["Idempotency-Key"], JObject.Parse(body)); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/dans")
                 {
                     if (Dans == null) Reply(context, 404, new JObject());
                     else Reply(context, 200, new JObject { ["dans"] = Dans, ["danVersion"] = 1 });
                     return;
                 }
-                if (request.HttpMethod == "POST" && (path == "/api/v1/game/dan-attempts" || path == "/api/v1/game/dan-results"))
+                if (request.HttpMethod == "POST" && (path == "/api/v2/game/dan-attempts" || path == "/api/v2/game/dan-results"))
                 {
                     DanAttemptPaths.Enqueue(path);
                     if (user == null) { Reply(context, 401, new JObject()); return; }
@@ -475,7 +495,7 @@ namespace OurTaiko.Tests
             return reply;
         }
 
-        // GET /api/v1/game/sources: this fixture as a site whose sources (SiteSources) all hold
+        // GET /api/v2/game/sources: this fixture as a site whose sources (SiteSources) all hold
         // what it holds, each part being what the source's own route answers.
         void Sources(HttpListenerContext context, string user)
         {
@@ -542,6 +562,58 @@ namespace OurTaiko.Tests
                 });
         }
 
+        // OurTaikoNet's rewards (internal/rewards), when on: what each user (by username) was given
+        // and has not seen. Every reply to a signed-in request then says how many
+        // (X-Pending-Rewards); GET /api/v2/game/rewards gives them, POST /api/v2/game/rewards/seen
+        // {"ids"} marks them. SeenRewards is every id marked, in order.
+        public bool RewardsOn;
+        public readonly ConcurrentQueue<long> SeenRewards = new ConcurrentQueue<long>();
+        readonly Dictionary<string, List<JObject>> rewards = new Dictionary<string, List<JObject>>();
+        long nextReward;
+
+        public long GiveReward(string user, string kind, JObject data)
+        {
+            lock (rewards)
+            {
+                if (!rewards.TryGetValue(user, out var list)) rewards[user] = list = new List<JObject>();
+                long id = ++nextReward;
+                list.Add(new JObject { ["id"] = id, ["kind"] = kind, ["data"] = data, ["createdAt"] = DateTime.UtcNow.ToString("o") });
+                return id;
+            }
+        }
+
+        public int PendingRewards(string user)
+        {
+            lock (rewards) return rewards.TryGetValue(user, out var list) ? list.Count : 0;
+        }
+
+        // The rewards' routes; false for any other request.
+        bool Rewards(HttpListenerContext context, string path, string user, string body)
+        {
+            if (!RewardsOn || !path.StartsWith("/api/v2/game/rewards", StringComparison.Ordinal)) return false;
+            if (user == null) { Reply(context, 401, new JObject()); return true; }
+            if (context.Request.HttpMethod == "GET" && path == "/api/v2/game/rewards")
+            {
+                JArray list;
+                lock (rewards) list = new JArray(rewards.TryGetValue(user, out var mine) ? mine.Select(r => r.DeepClone()) : Enumerable.Empty<JToken>());
+                Reply(context, 200, new JObject { ["rewards"] = list });
+                return true;
+            }
+            if (context.Request.HttpMethod == "POST" && path == "/api/v2/game/rewards/seen")
+            {
+                var ids = (JObject.Parse(body)["ids"] as JArray ?? new JArray()).Select(id => (long)id).ToList();
+                int marked = 0;
+                lock (rewards)
+                    if (rewards.TryGetValue(user, out var mine))
+                        marked = mine.RemoveAll(r => ids.Contains((long)r["id"]));
+                foreach (long id in ids) SeenRewards.Enqueue(id);
+                Reply(context, 200, new JObject { ["marked"] = marked });
+                return true;
+            }
+            Reply(context, 404, new JObject());
+            return true;
+        }
+
         // Gzip packs JSON replies for a client that asks for it, as OurTaiko Database does.
         public bool Gzip;
         public int GzippedReplies;
@@ -550,6 +622,10 @@ namespace OurTaiko.Tests
         {
             context.Response.StatusCode = status;
             context.Response.ContentType = "application/json";
+            // As the site does on every answer to a signed-in request.
+            string auth = context.Request.Headers["Authorization"] ?? "";
+            if (RewardsOn && auth.StartsWith("Bearer ", StringComparison.Ordinal) && tokens.TryGetValue(auth.Substring(7), out string asker))
+                context.Response.AddHeader("X-Pending-Rewards", PendingRewards(asker).ToString(System.Globalization.CultureInfo.InvariantCulture));
             byte[] bytes = Encoding.UTF8.GetBytes(body.ToString(Newtonsoft.Json.Formatting.None));
             if (Gzip && (context.Request.Headers["Accept-Encoding"] ?? "").Contains("gzip"))
             {

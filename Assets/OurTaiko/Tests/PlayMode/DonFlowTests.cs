@@ -128,9 +128,9 @@ namespace OurTaiko.Tests
             {
                 string path = context.Request.Url.AbsolutePath;
                 byte[] body;
-                if (path == "/api/v1/users/" + user + "/don")
+                if (path == "/api/v2/users/" + user + "/don")
                     body = System.Text.Encoding.UTF8.GetBytes("{\"look\":{\"costume\":true,\"cos\":88,\"head\":0,\"body\":0,\"puchi\":0,\"colors\":null},"
-                        + "\"files\":[{\"kind\":\"cos\",\"id\":88,\"url\":\"" + site.BaseUrl + "/3dchara/cos/88.glb\",\"size\":" + model.Length + ",\"sha256\":\"" + hash + "\"}]}");
+                        + "\"files\":[{\"kind\":\"cos\",\"id\":88,\"3dCharaPath\":\"3dchara/cos/88.glb\",\"size\":" + model.Length + ",\"sha256\":\"" + hash + "\"}]}");
                 else if (path == "/3dchara/cos/88.glb")
                 {
                     // Slowly, so the bar is seen moving.
