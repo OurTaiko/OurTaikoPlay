@@ -69,8 +69,10 @@ namespace OurTaiko.Tests
                 Assert.That(visible.digits[0].color, Is.EqualTo((Color)new Color32(254, 102, 0, 255)));
                 if (practice)
                 {
+                    // Moving the paused lane only previews; the next attempt clears the additions.
                     play.MovePractice(1);
-                    Assert.That(counter.Additions.All(a => !a.gameObject.activeSelf), Is.True, "Practice seek clears old additions.");
+                    yield return TestPlay.StartPracticeAttempt(play);
+                    Assert.That(counter.Additions.All(a => !a.gameObject.activeSelf), Is.True, "A new practice attempt clears old additions.");
                     Assert.That(counter.Text, Is.EqualTo("0"));
                 }
                 else

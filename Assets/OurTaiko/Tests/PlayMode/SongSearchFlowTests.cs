@@ -314,7 +314,7 @@ namespace OurTaiko.Tests
                 Assert.That(sounds, Is.Empty, "Typing drum keys and confirming text must not play menu sounds.");
                 first.CustomRequest = context =>
                 {
-                    if (context.Request.Url.AbsolutePath == "/api/v1/game/search" && context.Request.QueryString["q"] == "Old")
+                    if (context.Request.Url.AbsolutePath == "/api/v2/game/search" && context.Request.QueryString["q"] == "Old")
                     { pending.Set(); release.Wait(5000); }
                     return false;
                 };

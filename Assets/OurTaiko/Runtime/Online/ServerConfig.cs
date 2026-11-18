@@ -13,16 +13,18 @@ namespace OurTaiko.Online
         // queued scores and saved lists are kept under it (FanmadeEndpoint.Id), so it stays what
         // it was and nothing a player has moves. Api is where its API is now, and Site the site it
         // is a source of: the servers of one site are loaded and signed in to together
-        // (GET <site>/api/v1/game/sources, FanmadeClient.LoadSiteAsync).
+        // (GET <site>/api/v2/game/sources, FanmadeClient.LoadSiteAsync). The game speaks version 2
+        // of the site's API, which names public files by their path (Distribution); version 1
+        // stays as it was for the games released before.
         public static readonly (string Name, string Url, string Api, string Site)[] BuiltIn =
         {
-            ("OurTaiko Fanmade", "https://fanmade.ourtaiko.org", Site + "/api/v1/sources/fanmade", Site),
-            ("OurTaiko Database", "https://database.ourtaiko.org", Site + "/api/v1/sources/official", Site),
+            ("OurTaiko Fanmade", "https://fanmade.ourtaiko.org", Site + "/api/v2/sources/fanmade", Site),
+            ("OurTaiko Database", "https://database.ourtaiko.org", Site + "/api/v2/sources/official", Site),
         };
 
-        const string OwnRoot = "/api/v1";
+        public const string OwnRoot = "/api/v2";
 
-        // api is empty for a server whose API is at its own address, under /api/v1; site, for one
+        // api is empty for a server whose API is at its own address, under /api/v2; site, for one
         // that is no source of a site and is loaded by itself.
         public string name = "", baseUrl = "", api = "", site = "";
 
@@ -34,7 +36,7 @@ namespace OurTaiko.Online
         // The address requests are sent under: api, or the server's own.
         public string ApiRoot => string.IsNullOrEmpty(api) ? baseUrl + OwnRoot : api;
 
-        // Where a request is sent. path is written as the server's own ("/api/v1/game/catalog").
+        // Where a request is sent. path is written as the server's own ("/api/v2/game/catalog").
         public string Address(string path)
         {
             path = path ?? "";

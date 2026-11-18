@@ -118,7 +118,9 @@ namespace OurTaiko.Tests
             Assert.That(view.visuals.alpha, Is.EqualTo(alpha));
             if (practice)
             {
+                // Moving the paused lane only previews; the next attempt clears the count.
                 play.MovePractice(1);
+                yield return TestPlay.StartPracticeAttempt(play);
                 Assert.That(view.IsVisible, Is.False);
                 Assert.That(view.Count, Is.Zero);
             }

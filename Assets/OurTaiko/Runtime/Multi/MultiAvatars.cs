@@ -24,8 +24,8 @@ namespace OurTaiko.Multi
         const int SourceLimit = 2048;
 
         public static event Action Loaded;
-        // Fetches a picture's bytes. Tests may put their own here.
-        public static Func<string, CancellationToken, Task<byte[]>> Fetch { get; set; } = FetchAsync;
+        // Fetches a picture's bytes (DownloadAsync). Tests may put their own here.
+        public static Func<string, CancellationToken, Task<byte[]>> Fetch { get; set; } = DownloadAsync;
 
         static readonly Dictionary<string, (Sprite Disc, Sprite Square)> ready = new Dictionary<string, (Sprite, Sprite)>();
         static readonly List<string> order = new List<string>();
@@ -37,7 +37,7 @@ namespace OurTaiko.Multi
         static void ResetStatics()
         {
             ready.Clear(); order.Clear(); asked.Clear();
-            Loaded = null; Fetch = FetchAsync;
+            Loaded = null; Fetch = DownloadAsync;
         }
 
         // The picture at an address as a disc, or null: not here yet, none to be had, or no address.
@@ -91,7 +91,19 @@ namespace OurTaiko.Multi
             }
         }
 
-        static async Task<byte[]> FetchAsync(string url, CancellationToken cancel)
+        // A picture's bytes. The account center gives full addresses; one on the canonical
+        // distribution root (https://distrib.ourtaiko.org/sso/avatars/...) is read from the same
+        // path on the player's root (the mirror in mainland China), and from the canonical address
+        // when that fails (Online.Distribution). Any other address is read as it is.
+        public static async Task<byte[]> DownloadAsync(string url, CancellationToken cancel)
+        {
+            string path = Online.Distribution.PathOf(url);
+            if (path == null) return await ReadAsync(url, cancel);
+            var address = await Online.Distribution.LocateAsync(path, cancel: cancel);
+            return await Online.Distribution.FetchAsync(address, u => ReadAsync(u, cancel), cancel);
+        }
+
+        static async Task<byte[]> ReadAsync(string url, CancellationToken cancel)
         {
             http ??= new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false }) { Timeout = TimeSpan.FromSeconds(15) };
             using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel);

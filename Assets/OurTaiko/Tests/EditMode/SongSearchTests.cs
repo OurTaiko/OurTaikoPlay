@@ -54,7 +54,7 @@ namespace OurTaiko.Tests
                     var results = await client.SearchAsync(new SongSearchQuery("夜 & ?", Difficulty.Oni, 8));
                     Assert.That(results.Length, Is.EqualTo(2)); Assert.That(results.All(r => r.Error == null && r.Charts.Count == 1), Is.True);
                     Assert.That(results[0].Charts[0].Server, Is.Not.EqualTo(results[1].Charts[0].Server));
-                    b.Fail["/api/v1/game/search"] = 500;
+                    b.Fail["/api/v2/game/search"] = 500;
                     results = await client.SearchAsync(new SongSearchQuery("夜"));
                     Assert.That(results[0].Charts.Count, Is.EqualTo(1)); Assert.That(results[1].Error, Is.EqualTo("HTTP_500"));
                     using var cancel = new CancellationTokenSource(); cancel.Cancel();

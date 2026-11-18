@@ -158,7 +158,7 @@ namespace OurTaiko.Multi
             return seat.Token;
         }
 
-        // The environment override, else what the site says (GET /api/v1/game/multiplay).
+        // The environment override, else what the site says (GET /api/v2/game/multiplay).
         public static async Task<string> ResolveSiteAddressAsync(CancellationToken cancel)
         {
             JoinProtocol = Protocol;
@@ -166,7 +166,7 @@ namespace OurTaiko.Multi
             if (!string.IsNullOrWhiteSpace(fromEnvironment)) return fromEnvironment.Trim().TrimEnd('/');
             var endpoint = SiteEndpoints().FirstOrDefault() ?? throw new MultiException("NOT_AVAILABLE");
             Newtonsoft.Json.Linq.JObject reply;
-            try { reply = Json.Parse(await endpoint.SiteRequestAsync("/api/v1/game/multiplay", cancel)); }
+            try { reply = Json.Parse(await endpoint.SiteRequestAsync("/api/v2/game/multiplay", cancel)); }
             catch (HttpStatusException error) when (error.Status == 404) { throw new MultiException("NOT_AVAILABLE", error); }
             catch (OperationCanceledException) { throw; }
             catch (FanmadeException error) { throw new MultiException("SERVER_UNREACHABLE", error); }

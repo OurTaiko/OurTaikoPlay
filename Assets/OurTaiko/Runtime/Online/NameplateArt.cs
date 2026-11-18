@@ -11,14 +11,18 @@ using UnityEngine;
 namespace OurTaiko
 {
     // The nameplate's art (Nijiiro global/nameplate and the game's own 段位 rings and texts), which the
-    // game does not carry: it is read from the public bucket (https://distrib.ourtaiko.org/nameplate/,
-    // uploaded by OurTaikoNet tools/nameplate) in every sign-in check, as the 3D Don's files are
+    // game does not carry: it is read from the public bucket's nameplate/ folder (uploaded by
+    // OurTaikoNet tools/nameplate) in every sign-in check, as the 3D Don's files are
     // (DonDownloads), into the shared object cache (objects/<sha256>, checked by size and hash).
+    // Both the catalog and the files come from the player's distribution root, or the canonical
+    // one when that fails (Online.Distribution). A file is never replaced in place (a new one has
+    // a new path), so its address carries nothing to defeat a cache.
     // The catalog last read is remembered (nameplate-art.json in the cache), so the art is there
     // offline once it was fetched. Until then a nameplate is its text alone.
     public static class NameplateArt
     {
-        public const string Base = "https://distrib.ourtaiko.org/nameplate/";
+        // The folder under the distribution root.
+        public const string Folder = "nameplate/";
         public const string StateFile = "nameplate-art.json";
 
         // The catalog's keys (OurTaikoNet tools/nameplate/catalog.py) and each file's size in pixels.
@@ -81,24 +85,33 @@ namespace OurTaiko
             Bands = Rainbow = DanRings = DanTexts = GoldDanTexts = Array.Empty<Sprite>();
         }
 
-        // Reads the catalog and downloads the files it names that the cache lacks; on failure the
-        // remembered catalog is used when its files are cached. Never throws but for cancellation.
-        public static async Task FetchAsync(string cacheRoot, CancellationToken cancel = default, string from = Base)
+        // Reads the catalog and downloads the files it names that the cache lacks, from the
+        // distribution root `site` names; on failure the remembered catalog is used when its files
+        // are cached. Never throws but for cancellation.
+        public static async Task FetchAsync(string cacheRoot, CancellationToken cancel = default, string site = Online.ServerConfig.Site)
         {
             try
             {
                 http ??= new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-                using var response = await http.GetAsync(from + "catalog.json", cancel);
-                if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode);
-                var catalog = JObject.Parse(await response.Content.ReadAsStringAsync());
+                var root = await Online.Distribution.RootAsync(site, cancel);
+                var catalog = await Online.Distribution.FetchAsync(root.Locate(Folder + "catalog.json"), async url =>
+                {
+                    using var response = await http.GetAsync(url, cancel);
+                    if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode);
+                    return JObject.Parse(await response.Content.ReadAsStringAsync());
+                }, cancel);
                 var entries = Entries(catalog);
                 foreach (var (key, path, size, hash) in entries.Values)
                 {
                     string cached = ObjectPath(cacheRoot, hash);
                     if (await Task.Run(() => Matches(cached, size, hash), cancel)) continue;
-                    var data = await http.GetByteArrayAsync(from + path + "?v=" + hash.Substring(0, 12));
-                    cancel.ThrowIfCancellationRequested();
-                    if (data.LongLength != size || Sha256(data) != hash) throw new InvalidDataException("the download of " + path + " does not match its hash");
+                    var data = await Online.Distribution.FetchAsync(root.Locate(Folder + path), async url =>
+                    {
+                        var bytes = await http.GetByteArrayAsync(url);
+                        cancel.ThrowIfCancellationRequested();
+                        if (bytes.LongLength != size || Sha256(bytes) != hash) throw new InvalidDataException("the download of " + path + " does not match its hash");
+                        return bytes;
+                    }, cancel);
                     await Task.Run(() => Store(cached, data), cancel);
                 }
                 Load(entries, cacheRoot);
@@ -121,7 +134,8 @@ namespace OurTaiko
             catch (Exception error) { Log.Warn("Nameplate", "The cached nameplate art is unusable: " + error.Message); }
         }
 
-        // Every file the game needs, from {"files": {key: {path, size, sha256}}}.
+        // Every file the game needs, from {"files": {key: {path, size, sha256}}}; each path is
+        // under the nameplate folder.
         static Dictionary<string, (string key, string path, long size, string hash)> Entries(JObject catalog)
         {
             var listed = catalog["files"] as JObject ?? throw new InvalidDataException("the catalog lists no files");
@@ -130,7 +144,7 @@ namespace OurTaiko
             {
                 if (!(listed[key] is JObject f)) throw new InvalidDataException("the catalog lacks " + key);
                 string path = (string)f["path"], hash = (string)f["sha256"];
-                if (string.IsNullOrEmpty(path) || path.Contains("..") || hash == null || hash.Length != 64)
+                if (!Online.Distribution.ValidPath(Folder + path) || hash == null || hash.Length != 64)
                     throw new InvalidDataException("bad catalog entry " + key);
                 entries[key] = (key, path, (long?)f["size"] ?? -1, hash.ToLowerInvariant());
             }

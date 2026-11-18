@@ -156,7 +156,7 @@ namespace OurTaiko.Tests
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null, "Online plays never enter local best scores.");
 
             // Reopening Result retains the display but does not submit the same play again.
-            int uploads = fixture.Requests.Count(r => r == "POST /api/v1/game/scores");
+            int uploads = fixture.Requests.Count(r => r == "POST /api/v2/game/scores");
             int previousBest = SceneSwitcher.Instance.LastResult.PreviousBest;
             yield return WaitUntil(() => !SceneSwitcher.Instance.IsInputBlocked, 10);
             SceneSwitcher.Instance.SwitchScene(SceneSwitcher.ResultScene);
@@ -164,7 +164,7 @@ namespace OurTaiko.Tests
             var uploadTask = online.Client.WaitForUploadsAsync();
             yield return WaitUntil(() => uploadTask.IsCompleted, 10);
             uploadTask.GetAwaiter().GetResult();
-            Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/scores"), Is.EqualTo(uploads));
+            Assert.That(fixture.Requests.Count(r => r == "POST /api/v2/game/scores"), Is.EqualTo(uploads));
             Assert.That(fixture.AcceptedScores.IsEmpty, Is.True);
             Assert.That(SceneSwitcher.Instance.LastResult.PreviousBest, Is.EqualTo(previousBest));
 
@@ -305,10 +305,10 @@ namespace OurTaiko.Tests
                 yield return null;
                 TestCapture.Capture("Presented.png");
                 yield return WaitForScene(SceneSwitcher.EntryScene);
-                Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"), "No password goes to the game server.");
+                Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v2/game/login"), "No password goes to the game server.");
                 Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/account/login"), Is.EqualTo(1));
                 Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens"), Is.EqualTo(1));
-                Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/catalog"), Is.EqualTo(1));
+                Assert.That(fixture.Requests.Count(r => r == "GET /api/v2/game/catalog"), Is.EqualTo(1));
                 Assert.That(online.Client.Endpoints.Single().IsAuthenticated, Is.True);
                 Assert.That(online.Accounts.Seats[0].IsSignedIn, Is.True);
                 Assert.That(manager.Settings.accounts.p1Password, Is.Empty, "The old saved password is erased.");
@@ -321,7 +321,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
                 yield return null;
-                Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/game/catalog"), Is.EqualTo(1), "Song select does not load the list again.");
+                Assert.That(fixture.Requests.Count(r => r == "GET /api/v2/game/catalog"), Is.EqualTo(1), "Song select does not load the list again.");
                 Assert.That(Object.FindAnyObjectByType<SongSelectScene>().Manager.Folders.Skip(2).Select(f => f.Title), Is.EqualTo(new[] { "Game", "Pop" }));
             }
             finally
@@ -359,7 +359,7 @@ namespace OurTaiko.Tests
             TestData.UseServers(fixture);
             yield return TestData.Connect();
             var online = OnlineManager.Instance;
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/catalog" }), "A guest only reads the song list.");
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v2/game/catalog" }), "A guest only reads the song list.");
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return new WaitForSecondsRealtime(.6f);
 
@@ -399,7 +399,7 @@ namespace OurTaiko.Tests
                 "Closing the folder restores exactly one Entry back board.");
 
             var song = online.Folders[0].Songs.Single();
-            fixture.Fail["/api/v1/charts/" + chart.Id] = 500;
+            fixture.Fail["/api/v2/charts/" + chart.Id] = 500;
             SceneSwitcher.Instance.Play(song, "Oni", false);
             yield return WaitForScene(SceneSwitcher.SongLoadingScene, 10);
             var loading = Object.FindAnyObjectByType<SongLoadingScene>();
@@ -431,12 +431,11 @@ namespace OurTaiko.Tests
                 context.Response.Close();
                 return true;
             };
-            string link = fixture.BaseUrl + "/files/playlist-cover";
             fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray
             {
                 new JObject { ["id"] = "mine", ["title"] = "Festival Set", ["genre"] = "VOCALOID", ["kind"] = "owned", ["owner"] = "DON",
                     ["chartIds"] = new JArray(chart.Id),
-                    ["cover"] = new JObject { ["url"] = link, ["headUrl"] = link, ["sha256"] = FanmadeFixture.Sha(cover), ["size"] = cover.Length, ["contentType"] = "image/webp" } },
+                    ["songListCoverPath"] = "files/playlist-cover", ["songListCoverSha256"] = FanmadeFixture.Sha(cover), ["songListCoverSize"] = cover.Length },
                 new JObject { ["id"] = "daily", ["title"] = "Daily Challenge", ["genre"] = "VARIETY", ["kind"] = "system", ["owner"] = "", ["chartIds"] = new JArray(chart.Id) },
             };
             TestData.UseServers(fixture);

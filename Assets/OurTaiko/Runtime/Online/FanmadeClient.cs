@@ -188,8 +188,8 @@ namespace OurTaiko.Online
             {
                 if (e.Seats[seat].IsAuthenticated)
                 {
-                    scores = ReadScores(Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", cancel: cancel, seat: seat)));
-                    if (seat == 0) playlists = Json.Parse(await e.AuthorizedAsync("/api/v1/game/playlists", cancel: cancel))["playlists"];
+                    scores = ReadScores(Json.Parse(await e.AuthorizedAsync("/api/v2/game/scores", cancel: cancel, seat: seat)));
+                    if (seat == 0) playlists = Json.Parse(await e.AuthorizedAsync("/api/v2/game/playlists", cancel: cancel))["playlists"];
                 }
             }
             catch (Exception error)
@@ -211,7 +211,7 @@ namespace OurTaiko.Online
         }
 
         // The servers that are sources of one site are loaded together: one request to the site
-        // answers for all of them what each would answer by itself (GET /api/v1/game/sources).
+        // answers for all of them what each would answer by itself (GET /api/v2/game/sources).
         // The part of `answer` for an endpoint, by the name the site knows the source by.
         static JToken SourceOf(JToken answer, FanmadeEndpoint e)
         {
@@ -237,7 +237,7 @@ namespace OurTaiko.Online
                 try
                 {
                     foreach (var e in site) SetStatus(e.Config.DisplayName + ": loading catalog");
-                    answer = Json.Parse(await site[0].SiteRequestAsync("/api/v1/game/sources?parts=catalog,dans", cancel));
+                    answer = Json.Parse(await site[0].SiteRequestAsync("/api/v2/game/sources?parts=catalog,dans", cancel));
                 }
                 catch (Exception error)
                 {
@@ -288,7 +288,7 @@ namespace OurTaiko.Online
                         e.UseAccount(seat, token, userId, nickname, renew);
                         if (seat == 0) { personalPlaylists.Remove(e.Id); personalLists.Remove(e.Id); }
                     }
-                string path = "/api/v1/game/sources?parts=" + (seat == 0 ? "scores,playlists" : "scores");
+                string path = "/api/v2/game/sources?parts=" + (seat == 0 ? "scores,playlists" : "scores");
                 JToken answer;
                 try
                 {
@@ -400,7 +400,7 @@ namespace OurTaiko.Online
             var ids = new HashSet<string>();
             foreach (var item in list)
             {
-                var playlist = FanmadePlaylist.From(item, e.Id, e.Config.DisplayName, catalog, e.ValidateResourceUrl);
+                var playlist = FanmadePlaylist.From(item, e.Id, e.Config.DisplayName, catalog);
                 if (!ids.Add(playlist.Id)) throw new FanmadeException("API_PLAYLIST_INVALID");
                 if (playlist.ChartIds.Count > 0) playlists.Add(playlist);
             }
@@ -414,7 +414,7 @@ namespace OurTaiko.Online
             try
             {
                 SetStatus(e.Config.DisplayName + ": loading catalog");
-                var snapshot = Json.Parse(await e.RequestAsync("/api/v1/game/catalog", cancel: cancel));
+                var snapshot = Json.Parse(await e.RequestAsync("/api/v2/game/catalog", cancel: cancel));
                 if (ApplyCatalog(e, snapshot, cancel)) await LoadDansAsync(e, cancel);
                 else lock (sync) danLists.Remove(e.Id);
             }
@@ -505,7 +505,7 @@ namespace OurTaiko.Online
         {
             try
             {
-                ApplyDans(e, Json.Parse(await e.RequestAsync("/api/v1/game/dans", cancel: cancel)));
+                ApplyDans(e, Json.Parse(await e.RequestAsync("/api/v2/game/dans", cancel: cancel)));
             }
             catch (Exception error) when (!(error is OperationCanceledException) && !cancel.IsCancellationRequested)
             {
@@ -722,13 +722,13 @@ namespace OurTaiko.Online
                             // changed since, keep it aside.
                             if (string.IsNullOrEmpty(queued.ChartHash) || !Json.HexId(queued.AudioHash ?? "", 64))
                             { UploadQueue.Reject(queued.Key); continue; }
-                            var current = FanmadeChart.From(Json.Parse(await e.AuthorizedAsync("/api/v1/charts/" + (queued.Song ?? Json.Str(Json.Parse(queued.Body), "songId")) + "?by=id")), e.Id);
+                            var current = FanmadeChart.From(Json.Parse(await e.AuthorizedAsync("/api/v2/charts/" + (queued.Song ?? Json.Str(Json.Parse(queued.Body), "songId")) + "?by=id")), e.Id);
                             var manifest = await e.ResourcesAsync(current.Id);
                             if (manifest.Audio.Hash != current.AudioHash)
                                 throw new FanmadeException("CHART_UPDATING");
                             if (!current.Blocks.Any(b => b.ChartHash == queued.ChartHash) || current.AudioHash != queued.AudioHash)
                             { UploadQueue.Reject(queued.Key); continue; }
-                            score = FanmadeScore.From(Json.Parse(await e.AuthorizedAsync("/api/v1/game/scores", queued.Body, queued.Key, seat: seat)));
+                            score = FanmadeScore.From(Json.Parse(await e.AuthorizedAsync("/api/v2/game/scores", queued.Body, queued.Key, seat: seat)));
                         }
                         finally { e.Transport.Release(); }
                         lock (sync)
@@ -788,7 +788,7 @@ namespace OurTaiko.Online
                     await e.Transport.WaitAsync();
                     // Attempts go to dan-results. One still waiting from a version before it was queued as
                     // a count of songs, which only the deprecated dan-attempts takes.
-                    string path = Json.Parse(queued.Body)["scores"] is JArray ? "/api/v1/game/dan-results" : "/api/v1/game/dan-attempts";
+                    string path = Json.Parse(queued.Body)["scores"] is JArray ? "/api/v2/game/dan-results" : "/api/v2/game/dan-attempts";
                     try { reply = Json.Parse(await e.AuthorizedAsync(path, queued.Body, queued.Key, seat: account)); }
                     finally { e.Transport.Release(); }
                     // The scores the server saved with the attempt: the seat's, as if each had gone up alone.
@@ -873,9 +873,9 @@ namespace OurTaiko.Online
             Report(FileProgress.State.Downloading);
             var bytes = await e.ResourceBytesAsync(resource, cancel, transfer == null ? (Action<long, long>)null
                 : (received, total) => { transfer.Received = received; transfer.Total = total; publish?.Invoke(); });
+            // ResourceBytesAsync has checked the size and SHA-256 (and tried the canonical root when
+            // the player's root sent other bytes).
             Report(FileProgress.State.Verifying);
-            if (bytes.LongLength != resource.Size || await CacheWork(() => FanmadeEndpoint.Sha256Hex(bytes), cancel) != resource.Hash)
-                throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
             await CacheWork(() => { cancel.ThrowIfCancellationRequested(); StoreObject(file, bytes, resource); return true; }, cancel);
             Report(FileProgress.State.Complete);
             return file;

@@ -56,7 +56,7 @@ namespace OurTaiko.Tests
             var endpoint = Connect(guest: true);
             Assert.That(endpoint.IsConnected, Is.True);
             Assert.That(endpoint.IsAuthenticated, Is.False);
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/catalog" }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v2/game/catalog" }));
             Assert.That(fixture.Downloads, Is.Zero);
             Assert.That(client.Add(fixture.Server()), Is.SameAs(endpoint), "A connected endpoint is reused.");
             // First is in both categories but listed once, under the first category.
@@ -87,8 +87,8 @@ namespace OurTaiko.Tests
             Assert.That(client.Best(client.Charts[0], (int)Difficulty.Hard), Is.Null);
             Assert.That(fixture.Requests, Is.EquivalentTo(new[]
             {
-                "GET /api/v1/game/catalog", "POST /api/v1/game/account/login", "POST /api/v1/game/tokens",
-                "GET /api/v1/game/scores", "GET /api/v1/game/playlists",
+                "GET /api/v2/game/catalog", "POST /api/v1/game/account/login", "POST /api/v1/game/tokens",
+                "GET /api/v2/game/scores", "GET /api/v2/game/playlists",
             }));
         }
 
@@ -140,44 +140,52 @@ namespace OurTaiko.Tests
             Assert.That(client.Categories.Select(c => c.Title), Is.EqualTo(new[] { "Game", "Pop" }));
             Assert.That(client.Playlists[0].Cover, Is.Null);
 
-            // A cover is a verified download kept in the object cache.
+            // A cover is a verified download kept in the object cache. Version 2 names it by its
+            // path under the distribution root, with its hash and size beside it (always WebP).
             byte[] picture = { 1, 2, 3, 4, 5 };
             int served = 0;
             fixture.CustomRequest = context =>
             {
-                if (context.Request.Url.AbsolutePath != "/files/cover") return false;
+                if (context.Request.Url.AbsolutePath != "/fanmade/cover.webp") return false;
                 served++;
+                if (context.Request.Url.Query.Length > 0) context.Response.StatusCode = 400;
                 context.Response.ContentLength64 = picture.Length;
                 context.Response.OutputStream.Write(picture, 0, picture.Length);
                 context.Response.Close();
                 return true;
             };
-            JObject Cover(string hash, long size, string type = "image/webp", string url = null) => new JObject
+            JObject Playlist(string hash, long size, string path = "fanmade/cover.webp") => new JObject
             {
-                ["url"] = url ?? fixture.BaseUrl + "/files/cover", ["headUrl"] = fixture.BaseUrl + "/files/cover", ["sha256"] = hash, ["size"] = size, ["contentType"] = type,
+                ["id"] = "mine", ["title"] = "Mine", ["genre"] = "GAME", ["kind"] = "owned", ["owner"] = "", ["chartIds"] = new JArray(first.Id),
+                ["songListCoverPath"] = path, ["songListCoverSha256"] = hash, ["songListCoverSize"] = size,
             };
-            JArray With(JObject cover) => new JArray(new JObject { ["id"] = "mine", ["title"] = "Mine", ["genre"] = "GAME", ["kind"] = "owned", ["owner"] = "",
-                ["chartIds"] = new JArray(first.Id), ["cover"] = cover });
-            fixture.ChangeBootstrap = reply => reply["playlists"] = With(Cover(FanmadeFixture.Sha(picture), picture.Length));
+            fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray(Playlist(FanmadeFixture.Sha(picture), picture.Length));
             Run(() => client.LoadCatalogAsync(client.Endpoints[0]));
+            Assert.That(client.Playlists[0].Cover.ContentType, Is.EqualTo("image/webp"));
             Assert.That(served, Is.Zero, "Connecting does not download pictures.");
             Assert.That(Run(() => client.PlaylistCoverAsync(client.Playlists[0])), Is.EqualTo(picture));
             Assert.That(Run(() => client.PlaylistCoverAsync(client.Playlists[0])), Is.EqualTo(picture));
             Assert.That(served, Is.EqualTo(1));
-            fixture.ChangeBootstrap = reply => reply["playlists"] = With(Cover(new string('0', 64), picture.Length));
+            fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray(Playlist(new string('0', 64), picture.Length));
             Run(() => client.LoadCatalogAsync(client.Endpoints[0]));
             Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PlaylistCoverAsync(client.Playlists[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
+            // No path (or an empty one): no cover.
+            var bare = Playlist(FanmadeFixture.Sha(picture), 5); bare.Remove("songListCoverPath");
+            fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray(bare);
+            Run(() => client.LoadCatalogAsync(client.Endpoints[0]));
+            Assert.That(client.Playlists[0].Cover, Is.Null);
             foreach (var (bad, code) in new[]
             {
-                (Cover("xyz", 5), "RESOURCE_METADATA_INVALID"), (Cover(FanmadeFixture.Sha(picture), 0), "RESOURCE_METADATA_INVALID"),
-                (Cover(FanmadeFixture.Sha(picture), FanmadePlaylist.MaxCoverBytes + 1), "RESOURCE_METADATA_INVALID"),
-                // The server sends covers as WebP only.
-                (Cover(FanmadeFixture.Sha(picture), 5, "image/jpeg"), "API_PLAYLIST_INVALID"),
-                (Cover(FanmadeFixture.Sha(picture), 5, "image/png"), "API_PLAYLIST_INVALID"),
-                (Cover(FanmadeFixture.Sha(picture), 5, url: "http://example.com/cover.webp"), "RESOURCE_URL_INVALID"),
+                (Playlist("xyz", 5), "RESOURCE_METADATA_INVALID"), (Playlist(FanmadeFixture.Sha(picture), 0), "RESOURCE_METADATA_INVALID"),
+                (Playlist(FanmadeFixture.Sha(picture), FanmadePlaylist.MaxCoverBytes + 1), "RESOURCE_METADATA_INVALID"),
+                // A path is under the root: never an address, a query or a way out of it.
+                (Playlist(FanmadeFixture.Sha(picture), 5, "http://example.com/cover.webp"), "RESOURCE_PATH_INVALID"),
+                (Playlist(FanmadeFixture.Sha(picture), 5, "/fanmade/cover.webp"), "RESOURCE_PATH_INVALID"),
+                (Playlist(FanmadeFixture.Sha(picture), 5, "fanmade/../cover.webp"), "RESOURCE_PATH_INVALID"),
+                (Playlist(FanmadeFixture.Sha(picture), 5, "fanmade/cover.webp?v=1"), "RESOURCE_PATH_INVALID"),
             })
             {
-                fixture.ChangeBootstrap = reply => reply["playlists"] = With(bad);
+                fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray(bad);
                 Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(client.Endpoints[0]))).Message, Is.EqualTo(code));
             }
 
@@ -203,7 +211,7 @@ namespace OurTaiko.Tests
             Assert.That(client.Charts.Count, Is.EqualTo(3002));
             Assert.That(client.Categories[0].ChartIds.Count, Is.EqualTo(3001));
             Assert.That(client.Categories[1].ChartIds.Count, Is.EqualTo(3002));
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/catalog" }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v2/game/catalog" }));
             Assert.That(fixture.Downloads, Is.Zero);
         }
 
@@ -236,7 +244,7 @@ namespace OurTaiko.Tests
             Assert.That(endpoint.IsConnected, Is.False);
             Assert.That(client.Charts, Is.Empty);
             Assert.That(client.Categories, Is.Empty);
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/catalog" }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v2/game/catalog" }));
         }
 
         [TestCase(0)]
@@ -651,11 +659,11 @@ namespace OurTaiko.Tests
         [Test]
         public void AServerWhoseApiIsElsewhereIsAskedThereAndKeptUnderItsOwnAddress()
         {
-            var moved = new ServerConfig { name = "Moved", baseUrl = "https://old.example/", api = fixture.BaseUrl + "/api/v1/sources/fanmade/" };
+            var moved = new ServerConfig { name = "Moved", baseUrl = "https://old.example/", api = fixture.BaseUrl + "/api/v2/sources/fanmade/" };
             var endpoint = client.Add(moved);
             Assert.That(endpoint.HasValidUrl(), Is.True);
-            Assert.That(endpoint.Config.Address("/api/v1/game/search?q=a"), Is.EqualTo(fixture.BaseUrl + "/api/v1/sources/fanmade/game/search?q=a"));
-            Assert.That(endpoint.Config.ApiRoot, Is.EqualTo(fixture.BaseUrl + "/api/v1/sources/fanmade"));
+            Assert.That(endpoint.Config.Address("/api/v2/game/search?q=a"), Is.EqualTo(fixture.BaseUrl + "/api/v2/sources/fanmade/game/search?q=a"));
+            Assert.That(endpoint.Config.ApiRoot, Is.EqualTo(fixture.BaseUrl + "/api/v2/sources/fanmade"));
             string old = FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes("https://old.example\n"));
             Assert.That(endpoint.Id, Is.EqualTo(old));
             Assert.That(endpoint.AccountId, Is.EqualTo(old), "Signed out, a seat is the server itself.");
@@ -666,13 +674,13 @@ namespace OurTaiko.Tests
             Assert.That(endpoint.AccountId, Is.EqualTo(FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes("https://old.example\nsso:" + endpoint.Seats[0].UserId))));
             var asked = fixture.Requests.Where(r => !r.Contains("/game/account/") && !r.EndsWith(" /api/v1/game/tokens")).ToArray();
             Assert.That(asked, Is.Not.Empty);
-            Assert.That(asked, Has.All.Contains(" /api/v1/sources/fanmade/"), "Every request to the server goes under its API address.");
-            Assert.That(asked, Does.Contain("GET /api/v1/sources/fanmade/game/catalog"));
+            Assert.That(asked, Has.All.Contains(" /api/v2/sources/fanmade/"), "Every request to the server goes under its API address.");
+            Assert.That(asked, Does.Contain("GET /api/v2/sources/fanmade/game/catalog"));
 
             // A server with no API address of its own is asked at its own, as before.
             var own = new ServerConfig { baseUrl = "https://own.example" };
-            Assert.That(own.Address("/api/v1/game/catalog"), Is.EqualTo("https://own.example/api/v1/game/catalog"));
-            Assert.That(own.ApiRoot, Is.EqualTo("https://own.example/api/v1"));
+            Assert.That(own.Address("/api/v2/game/catalog"), Is.EqualTo("https://own.example/api/v2/game/catalog"));
+            Assert.That(own.ApiRoot, Is.EqualTo("https://own.example/api/v2"));
         }
 
         // The servers that are sources of one site are loaded with one request and signed in to
@@ -690,7 +698,7 @@ namespace OurTaiko.Tests
 
             var failures = Run(() => client.LoadSiteAsync(site));
             Assert.That(failures, Is.All.Null);
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/sources" }), "Both song lists and 段位 lists in one request.");
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v2/game/sources" }), "Both song lists and 段位 lists in one request.");
             foreach (var e in site)
             {
                 Assert.That(e.IsConnected, Is.True);
@@ -722,13 +730,13 @@ namespace OurTaiko.Tests
             Run(() => client.UseAccountAsync(site, 0, session, account.UserId, account.Nickname, c => center.TradeAsync(account.Token, service, c)));
             Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens") - before, Is.EqualTo(1));
             // The new session is every source's: asking either needs no further trade.
-            Run(() => fanmade.AuthorizedAsync("/api/v1/game/scores"));
-            Run(() => official.AuthorizedAsync("/api/v1/game/scores"));
+            Run(() => fanmade.AuthorizedAsync("/api/v2/game/scores"));
+            Run(() => official.AuthorizedAsync("/api/v2/game/scores"));
             Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens") - before, Is.EqualTo(1), "One session for every source of the site.");
 
             // What is asked of one source afterwards still goes to that source.
             Run(() => client.LoadCatalogAsync(official));
-            Assert.That(fixture.Requests, Does.Contain("GET /api/v1/sources/official/game/catalog"));
+            Assert.That(fixture.Requests, Does.Contain("GET /api/v2/sources/official/game/catalog"));
         }
 
         // A site that has no such answer fails the load for all its sources, and none is connected.
@@ -741,7 +749,7 @@ namespace OurTaiko.Tests
             Assert.That(error.Status, Is.EqualTo(404));
             Assert.That(fanmade.IsConnected, Is.False);
             Assert.That(official.IsConnected, Is.False);
-            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v1/game/sources" }));
+            Assert.That(fixture.Requests, Is.EquivalentTo(new[] { "GET /api/v2/game/sources" }));
         }
 
         [Test]
@@ -749,12 +757,67 @@ namespace OurTaiko.Tests
         {
             Assert.That(ServerConfig.BuiltIn.Select(b => b.Url), Is.EqualTo(new[] { "https://fanmade.ourtaiko.org", "https://database.ourtaiko.org" }));
             // Both are song sources of one site; the game asks them there.
-            Assert.That(ServerConfig.BuiltIn.Select(b => b.Api), Is.EqualTo(new[] { "https://net.ourtaiko.org/api/v1/sources/fanmade", "https://net.ourtaiko.org/api/v1/sources/official" }));
+            Assert.That(ServerConfig.BuiltIn.Select(b => b.Api), Is.EqualTo(new[] { "https://net.ourtaiko.org/api/v2/sources/fanmade", "https://net.ourtaiko.org/api/v2/sources/official" }));
             Assert.That(ServerConfig.BuiltIn.Select(b => b.Site), Is.All.EqualTo("https://net.ourtaiko.org"), "Sources of one site: loaded and signed in to together.");
             Assert.That(ProfileCenter.DefaultBase, Is.EqualTo("https://net.ourtaiko.org"));
             Assert.That(OnlineManager.GenreFrame("GAME"), Is.EqualTo(3));
             Assert.That(OnlineManager.GenreFrame("ボーカロイド"), Is.EqualTo(8));
             Assert.That(OnlineManager.GenreFrame("Unknown"), Is.EqualTo(0));
+        }
+
+        // The game speaks version 2 of the site's API; the account center (another service) has
+        // only its own version 1, which the game keeps.
+        [Test]
+        public void TheSiteIsAskedInVersionTwoAndTheAccountCenterInVersionOne()
+        {
+            Assert.That(ServerConfig.OwnRoot, Is.EqualTo("/api/v2"));
+            var builtIn = new ServerConfig { baseUrl = ServerConfig.BuiltIn[0].Url, api = ServerConfig.BuiltIn[0].Api, site = ServerConfig.BuiltIn[0].Site };
+            Assert.That(builtIn.Address("/api/v2/game/catalog"), Is.EqualTo("https://net.ourtaiko.org/api/v2/sources/fanmade/game/catalog"));
+            Assert.That(builtIn.Address("/api/v2/charts/abc/resources"), Is.EqualTo("https://net.ourtaiko.org/api/v2/sources/fanmade/charts/abc/resources"));
+            Assert.That(AccountCenter.DefaultIssuer, Is.EqualTo("https://sso.ourtaiko.org"));
+
+            fixture.SiteSources = new[] { "fanmade", "official" };
+            var fanmade = client.Add(fixture.Source("fanmade", "https://fanmade.example"));
+            var official = client.Add(fixture.Source("official", "https://official.example"));
+            Run(() => client.LoadSiteAsync(new[] { fanmade, official }));
+            Run(() => fixture.ConnectAsync(client, fanmade, "don"));
+            Run(() => client.PrepareAsync(client.Charts.First(c => c.Server == fanmade.Id)));
+            var account = fixture.Requests.Where(r => r.Contains("/game/account/") || r.EndsWith("/game/tokens")).ToArray();
+            Assert.That(account, Is.Not.Empty);
+            Assert.That(account, Has.All.Contains(" /api/v1/game/"), "The account center's routes stay version 1.");
+            var site = fixture.Requests.Except(account).Where(r => r.Contains(" /api/")).ToArray();
+            Assert.That(site, Does.Contain("GET /api/v2/game/sources").And.Contain("GET /api/v2/distribution/source"));
+            Assert.That(site, Has.All.Contains(" /api/v2/"), "Everything asked of the site is version 2.");
+        }
+
+        // Charts come in version 2's shape from the API, and in version 1's from the offline store
+        // (kept as received before the update) and from an online room's snapshot: both read the same.
+        [Test]
+        public void ChartsOfEitherVersionOfTheApiReadTheSame()
+        {
+            var v2 = first.ToJson();
+            v2["author"] = "don"; v2["authorAvatarPath"] = "sso/avatars/a/b.webp"; v2["songCoverPath"] = "fanmade/" + new string('c', 64) + ".webp";
+            v2["owners"] = new JArray(new JObject { ["id"] = "x", ["nickname"] = "Don", ["avatarPath"] = "sso/avatars/a/b.webp" });
+            v2["audioPreview"] = new JObject { ["path"] = "fanmade/" + new string('d', 64) + ".ogg", ["sha256"] = new string('d', 64), ["size"] = 5 };
+            v2["previewPath"] = "fanmade/preview.webp";
+            var v1 = first.ToJson();
+            v1["uploader"] = "don"; v1["uploaderAvatarUrl"] = "https://distrib.ourtaiko.org/sso/avatars/a/b.webp";
+            v1["coverUrl"] = "https://distrib.ourtaiko.org/fanmade/" + new string('c', 64) + ".webp";
+            v1["owners"] = new JArray(new JObject { ["id"] = "x", ["nickname"] = "Don", ["avatarUrl"] = "https://distrib.ourtaiko.org/sso/avatars/a/b.webp" });
+            v1["audioPreview"] = new JObject { ["url"] = "https://distrib.ourtaiko.org/fanmade/" + new string('d', 64) + ".ogg", ["sha256"] = new string('d', 64), ["size"] = 5 };
+            v1["previewPath"] = "fanmade/preview.webp";
+            var a = FanmadeChart.From(v2, "server");
+            var b = FanmadeChart.From(v1, "server");
+            Assert.That((a.Id, a.Title, a.AudioHash, a.BlocksKey, a.Maker), Is.EqualTo((first.Id, "First", FanmadeFixture.Sha(first.Audio), b.BlocksKey, "Tester")));
+            Assert.That((b.Id, b.Title, b.AudioHash, b.Maker, b.IsPlayable), Is.EqualTo((a.Id, a.Title, a.AudioHash, a.Maker, true)));
+
+            // A chart the offline store kept in version 1's shape still reads back.
+            var endpoint = Connect(guest: true);
+            Run(() => client.PrepareAsync(client.Charts[0]));
+            var entry = client.Offline.Get(endpoint.Id, first.Id);
+            entry.ChartJson = v1.ToString(Newtonsoft.Json.Formatting.None);
+            client.Offline.Save(entry);
+            Assert.That(client.Offline.Get(endpoint.Id, first.Id).ToChart().Title, Is.EqualTo("First"));
         }
 
         [Test]

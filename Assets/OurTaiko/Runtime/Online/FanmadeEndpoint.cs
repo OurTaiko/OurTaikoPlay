@@ -152,7 +152,7 @@ namespace OurTaiko.Online
         }
 
         // A request to the site this server is a source of, not to the server: path is the site's
-        // own ("/api/v1/game/sources"). Anonymous unless a session is given. The answer holds what
+        // own ("/api/v2/game/sources"). Anonymous unless a session is given. The answer holds what
         // every source would answer by itself, so it is given as long as those would take together.
         // body: a POST with this JSON instead of a GET.
         public async Task<string> SiteRequestAsync(string path, CancellationToken cancel = default, string bearer = "", string body = "")
@@ -187,7 +187,7 @@ namespace OurTaiko.Online
         {
             string token = bearer ?? Seats[0].Token;
             if (cancel.IsCancellationRequested) throw new FanmadeException("DOWNLOAD_CANCELLED");
-            // Files come from signed resource links (ResourceBytesAsync); API calls are small.
+            // Files come from the distribution root (ResourceBytesAsync); API calls are small.
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(seconds));
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
             using var request = new HttpRequestMessage(method ?? (string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post), address);

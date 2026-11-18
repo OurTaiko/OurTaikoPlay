@@ -136,7 +136,7 @@ namespace OurTaiko.Tests
             Assert.That(plate.rainbow, Is.False);
             Assert.That(plate.dan, Is.EqualTo(20));
             Assert.That(plate.gold, Is.True);
-            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/login"), "No password goes to the game server.");
+            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v2/game/login"), "No password goes to the game server.");
             Assert.That(online.Client.Endpoints.Single().IsAuthenticated, Is.True);
             var listed = online.ChartOf(online.Songs[0]);
             Assert.That(online.Client.Best(listed, (int)Difficulty.Oni)?.Score, Is.EqualTo(1002540));

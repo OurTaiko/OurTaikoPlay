@@ -121,7 +121,8 @@ namespace OurTaiko.Online
         }
     }
 
-    // The account center's game account routes (sso.ourtaiko.org /api/v1/game/...). The password
+    // The account center's game account routes (sso.ourtaiko.org /api/v1/game/...: the account
+    // center's own API, which has no version 2; the site's is ServerConfig.OwnRoot). The password
     // only ever goes here, never to a game server; the token it returns is traded here for a game
     // session of each server that names this account center in its catalog.
     public sealed class AccountCenter : IDisposable
@@ -198,7 +199,7 @@ namespace OurTaiko.Online
         }
     }
 
-    // A player's nameplate as the site keeps it (net.ourtaiko.org, /api/v1/users/...): the title worn
+    // A player's nameplate as the site keeps it (net.ourtaiko.org, /api/v2/users/...): the title worn
     // (its text and band) and the highest 段位 shown.
     public sealed class ProfileNameplate
     {
@@ -261,7 +262,7 @@ namespace OurTaiko.Online
             if (!Json.HexId(userId ?? "", 32)) throw new FanmadeException("API_USER_INVALID");
             try
             {
-                using var response = await http.GetAsync(Base + "/api/v1/users/" + userId + "/nameplate", cancel);
+                using var response = await http.GetAsync(Base + "/api/v2/users/" + userId + "/nameplate", cancel);
                 int status = (int)response.StatusCode;
                 if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 string text = await response.Content.ReadAsStringAsync();

@@ -329,7 +329,7 @@ namespace OurTaiko
             name.Squeeze(300 * Scale);
         }
 
-        // A part of the 3D Don: its picture on a plate (the address the site described it with),
+        // A part of the 3D Don: its picture on a plate (the path the site described it with),
         // and below it the part and its name.
         void DrawDonItem(Reward reward, string language)
         {
@@ -351,14 +351,22 @@ namespace OurTaiko
         static System.Net.Http.HttpClient pictures;
         const int PictureLimit = 2 * 1024 * 1024;
 
-        // The picture once it has come, if this reward is still on screen; nothing when it cannot.
-        async System.Threading.Tasks.Task ShowPictureAsync(Reward reward, string url, Image target)
+        // The picture once it has come (from the player's root, else the canonical one), if this
+        // reward is still on screen; nothing when it cannot.
+        async System.Threading.Tasks.Task ShowPictureAsync(Reward reward, string path, Image target)
         {
             try
             {
                 pictures ??= new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-                var bytes = await pictures.GetByteArrayAsync(url);
-                if (target == null || Current != reward || bytes.Length > PictureLimit) return;
+                var address = await Distribution.LocateAsync(path, reward.Site.Length > 0 ? reward.Site : ServerConfig.Site);
+                var bytes = await Distribution.FetchAsync(address, async url =>
+                {
+                    using var response = await pictures.GetAsync(url);
+                    if (!response.IsSuccessStatusCode) throw new System.Net.Http.HttpRequestException("HTTP " + (int)response.StatusCode);
+                    var body = await response.Content.ReadAsByteArrayAsync();
+                    return body.Length <= PictureLimit ? body : throw new System.IO.InvalidDataException("too large");
+                });
+                if (target == null || Current != reward) return;
                 var texture = Pictures.Decode(bytes, PictureLimit, 512);
                 if (texture == null) return;
                 texture.filterMode = FilterMode.Point;

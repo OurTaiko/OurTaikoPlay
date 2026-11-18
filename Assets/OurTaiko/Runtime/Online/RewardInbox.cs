@@ -20,6 +20,9 @@ namespace OurTaiko.Online
         // Whose it is: the seat it was heard for, and the player behind it (RewardInbox's owner key).
         public int Seat;
         public string Owner = "";
+        // The site it was fetched from (the owner key's place): its files (DonPicture) are under
+        // that site's distribution root. Empty: net.ourtaiko.org.
+        public string Site = "";
 
         // title: the title's name in a song language (en, ja, zh), else its own name.
         public string TitleName(string language)
@@ -42,11 +45,12 @@ namespace OurTaiko.Online
         public int DanCombo => Data["combo"]?.Type == JTokenType.Integer ? Math.Max(0, Math.Min(2, (int)Data["combo"])) : 0;
 
         // don_item: a part of the 3D Don, as the site describes it when fetched (its name in each
-        // language and the address of its picture, when the catalog has them).
+        // language and its picture's path under the distribution root, "3dCharaPath", when the
+        // catalog has them).
         public const string DonItemKind = "don_item";
         public string DonPart => Data["part"]?.Type == JTokenType.String ? (string)Data["part"] : "";
         public int DonItemId => Data["itemId"]?.Type == JTokenType.Integer ? (int)Data["itemId"] : 0;
-        public string DonPicture => Data["picture"]?.Type == JTokenType.String ? (string)Data["picture"] : "";
+        public string DonPicture => Data["3dCharaPath"]?.Type == JTokenType.String && Distribution.ValidPath((string)Data["3dCharaPath"]) ? (string)Data["3dCharaPath"] : "";
         // The part's name in a song language (en, ja, zh), else Japanese, else its number.
         public string DonName(string language)
         {
@@ -77,7 +81,7 @@ namespace OurTaiko.Online
     // that names no site (an old domain, another server), through the server's own address.
     sealed class EndpointRewardSite : IRewardSite
     {
-        public const string Path = "/api/v1/game/rewards";
+        public const string Path = "/api/v2/game/rewards";
         readonly FanmadeEndpoint endpoint;
         readonly int seat;
         readonly string user;
@@ -181,7 +185,9 @@ namespace OurTaiko.Online
             {
                 string text = await site.FetchAsync(CancellationToken.None);
                 var list = (JObject.Parse(text)["rewards"] as JArray ?? new JArray()).Select(Reward.From).Where(r => r != null).ToList();
-                foreach (var r in list) { r.Seat = seat; r.Owner = key; }
+                // The owner key is the place (a site, or a server without one), then the player.
+                string place = key.IndexOf('\n') >= 0 ? key.Substring(0, key.IndexOf('\n')) : "";
+                foreach (var r in list) { r.Seat = seat; r.Owner = key; r.Site = place; }
                 var claimed = list.Where(IsClaimed).ToList();
                 lock (gate)
                 {
