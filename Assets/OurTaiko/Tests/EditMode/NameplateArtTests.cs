@@ -12,9 +12,10 @@ using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
-    // The nameplate's art is not in the game: the bucket's catalog.json names the files, which are
-    // downloaded into the object cache by hash, cut into the plate's pieces, and remembered for when
-    // the bucket cannot be reached.
+    // The nameplate's art is not in the game: the bucket's nameplate/catalog.json names the files,
+    // which are downloaded (from the player's distribution root, else the canonical one) into the
+    // object cache by hash, cut into the plate's pieces, and remembered for when the bucket cannot
+    // be reached.
     public sealed class NameplateArtTests
     {
         static readonly (string key, string file, int w, int h)[] Files =
@@ -30,10 +31,12 @@ namespace OurTaiko.Tests
         string cache;
         readonly Dictionary<string, byte[]> served = new Dictionary<string, byte[]>();
         JObject catalog;
-        int downloads;
+        int downloads, mirrored, queried;
         bool siteDown;
-
-        string From => site.BaseUrl + "/nameplate/";
+        // What the mirror root does: 0 serves as the canonical one, else answers with this status;
+        // corruptMirror sends every file with other bytes.
+        int mirrorStatus;
+        bool corruptMirror;
 
         static string Sha(byte[] b)
         {
@@ -56,8 +59,8 @@ namespace OurTaiko.Tests
         public void SetUp()
         {
             NameplateArt.Forget();
-            downloads = 0;
-            siteDown = false;
+            downloads = mirrored = queried = mirrorStatus = 0;
+            siteDown = corruptMirror = false;
             served.Clear();
             cache = Path.Combine(Path.GetTempPath(), "OurTaikoNameplateArt", Guid.NewGuid().ToString("N"));
             var files = new JObject();
@@ -73,11 +76,16 @@ namespace OurTaiko.Tests
             site.CustomRequest = context =>
             {
                 string path = context.Request.Url.AbsolutePath;
+                if (context.Request.Url.Query.Length > 0) Interlocked.Increment(ref queried);
+                bool mirror = path.StartsWith("/mirror/");
+                if (mirror) { Interlocked.Increment(ref mirrored); path = path.Substring("/mirror".Length); }
                 if (!path.StartsWith("/nameplate/")) return false;
                 if (siteDown) return Reply(context, 503, new byte[0]);
+                if (mirror && mirrorStatus != 0) return Reply(context, mirrorStatus, new byte[0]);
                 string name = path.Substring("/nameplate/".Length);
                 if (name == "catalog.json") return Reply(context, 200, System.Text.Encoding.UTF8.GetBytes(catalog.ToString()));
                 if (!served.TryGetValue(name, out var body)) return Reply(context, 404, new byte[0]);
+                if (mirror && corruptMirror) return Reply(context, 200, new byte[body.Length]);
                 Interlocked.Increment(ref downloads);
                 return Reply(context, 200, body);
             };
@@ -120,10 +128,11 @@ namespace OurTaiko.Tests
             try
             {
                 Assert.That(NameplateArt.Ready, Is.False, "the game carries no nameplate art");
-                yield return Wait(NameplateArt.FetchAsync(cache, from: From));
+                yield return Wait(NameplateArt.FetchAsync(cache, site: site.BaseUrl));
                 Assert.That(NameplateArt.Ready, Is.True);
                 Assert.That(changes, Is.EqualTo(1));
                 Assert.That(downloads, Is.EqualTo(Files.Length));
+                Assert.That(queried, Is.Zero, "A file is never replaced in place: its address has no query.");
                 foreach (var png in served.Values)
                 {
                     string hash = Sha(png);
@@ -145,55 +154,63 @@ namespace OurTaiko.Tests
                 Assert.That(NameplateArt.Badge2P.rect, Is.EqualTo(new Rect(0, 0, 88, 88)));
 
                 // Again: nothing downloaded, the plates are not redrawn.
-                yield return Wait(NameplateArt.FetchAsync(cache, from: From));
+                yield return Wait(NameplateArt.FetchAsync(cache, site: site.BaseUrl));
                 Assert.That(downloads, Is.EqualTo(Files.Length));
                 Assert.That(changes, Is.EqualTo(1));
 
                 // The bucket cannot be reached: the remembered catalog, from the cache.
                 siteDown = true;
                 NameplateArt.Forget();
-                yield return Wait(NameplateArt.FetchAsync(cache, from: From));
+                yield return Wait(NameplateArt.FetchAsync(cache, site: site.BaseUrl));
                 Assert.That(NameplateArt.Ready, Is.True, "remembered");
 
                 // Nothing cached either: the plates stay text.
                 NameplateArt.Forget();
                 Directory.Delete(cache, true);
-                yield return Wait(NameplateArt.FetchAsync(cache, from: From));
+                yield return Wait(NameplateArt.FetchAsync(cache, site: site.BaseUrl));
                 Assert.That(NameplateArt.Ready, Is.False);
             }
             finally { NameplateArt.Changed -= Count; }
         }
 
         [UnityTest]
-        public IEnumerator RegionalCatalogUsesMirrorAndFallsBackAfterBadBytes()
-        {
-            using var api = new FanmadeFixture();
-            using var mirror = new FanmadeFixture();
-            int mirrorGets = 0;
-            mirror.CustomRequest = context => {
-                Interlocked.Increment(ref mirrorGets);
-                Assert.That(context.Request.Headers["Authorization"], Is.Null);
-                return Reply(context, 200, new byte[] { 1, 2, 3 });
-            };
-            var routed = (JObject)catalog.DeepClone();
-            routed["baseUrl"] = From;
-            routed["mirrorBaseUrl"] = mirror.BaseUrl + "/";
-            routed["mirrorPaths"] = new JArray("shadow.png");
-            api.CustomRequest = context => Reply(context, 200, System.Text.Encoding.UTF8.GetBytes(routed.ToString()));
-            yield return Wait(NameplateArt.FetchAsync(cache, from: From, catalogUrl: api.BaseUrl + "/api/v1/nameplate-art/catalog"));
-            Assert.That(NameplateArt.Ready, Is.True);
-            Assert.That(mirrorGets, Is.EqualTo(1));
-            Assert.That(downloads, Is.EqualTo(Files.Length), "canonical bytes repaired the bad mirror");
-        }
-
-        [UnityTest]
         public IEnumerator AFileThatDoesNotMatchItsHashIsRefused()
         {
             catalog["files"]["shadow"]["sha256"] = new string('0', 64);
-            yield return Wait(NameplateArt.FetchAsync(cache, from: From));
+            yield return Wait(NameplateArt.FetchAsync(cache, site: site.BaseUrl));
             Assert.That(NameplateArt.Ready, Is.False);
             Assert.That(File.Exists(Path.Combine(cache, "objects", "00", new string('0', 64))), Is.False);
             Assert.That(File.Exists(Path.Combine(cache, NameplateArt.StateFile)), Is.False);
+        }
+
+        // The site names a mirror: the catalog and files come from it.
+        [UnityTest]
+        public IEnumerator TheArtComesFromTheRootTheSiteNames()
+        {
+            site.FilesRoot = site.BaseUrl + "/mirror/";
+            yield return Wait(NameplateArt.FetchAsync(cache, site: site.BaseUrl));
+            Assert.That(NameplateArt.Ready, Is.True);
+            Assert.That((mirrored, downloads), Is.EqualTo((Files.Length + 1, Files.Length)));
+        }
+
+        // A mirror that is down, or sends other bytes: each file once more from the canonical root.
+        [UnityTest] public IEnumerator WhatAMirrorThatIsDownFailsToGiveComesFromTheCanonicalRoot() => FromTheCanonicalRoot(503);
+        [UnityTest] public IEnumerator WhatAMirrorSendsWrongComesFromTheCanonicalRoot() => FromTheCanonicalRoot(0);
+
+        IEnumerator FromTheCanonicalRoot(int status)
+        {
+            site.FilesRoot = site.BaseUrl + "/mirror/";
+            mirrorStatus = status;
+            corruptMirror = status == 0;
+            yield return Wait(NameplateArt.FetchAsync(cache, site: site.BaseUrl));
+            Assert.That(NameplateArt.Ready, Is.True);
+            Assert.That(downloads, Is.EqualTo(Files.Length), "Every file from the canonical root.");
+            Assert.That(mirrored, Is.EqualTo(Files.Length + 1), "Each asked of the mirror once.");
+            foreach (var png in served.Values)
+            {
+                string hash = Sha(png);
+                Assert.That(File.ReadAllBytes(Path.Combine(cache, "objects", hash.Substring(0, 2), hash)), Is.EqualTo(png));
+            }
         }
 
         [Test]

@@ -28,7 +28,7 @@ namespace OurTaiko.Online
             try
             {
                 // A difficulty in the UI covers all its sides, as the server's course filter does.
-                string path = "/api/v1/game/search?q=" + Uri.EscapeDataString(query.Keyword) + "&order=" + query.ApiOrder;
+                string path = "/api/v2/game/search?q=" + Uri.EscapeDataString(query.Keyword) + "&order=" + query.ApiOrder;
                 if (query.Difficulty.HasValue) path += "&course=" + SongInfo.CourseName(query.Difficulty.Value);
                 if (query.Level > 0) path += "&level=" + query.Level;
                 var reply = Json.Parse(await endpoint.AuthorizedAsync(path, cancel: cancel, seat: query.Seat));

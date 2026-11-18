@@ -30,7 +30,9 @@ namespace OurTaiko.Tests
                     + " screen: it covers " + low.ToString("F3") + " to " + high.ToString("F3") + " of it");
         };
 
-        public static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null, Canvas canvas = null)
+        // over: canvases drawn on top of it, in that order (a layer over the scene, such as RewardOverlay's).
+        public static void Capture(string name, int width = 1920, int height = 1080, System.Action<Camera> verify = null, Canvas canvas = null,
+            params Canvas[] over)
         {
             canvas ??= SceneCanvas();
             var camera = Camera.main;
@@ -44,7 +46,13 @@ namespace OurTaiko.Tests
             try
             {
                 camera.targetTexture = target; canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 1;
-                scaler.SendMessage("Handle"); Canvas.ForceUpdateCanvases();
+                scaler.SendMessage("Handle");
+                for (int i = 0; i < over.Length; i++)
+                {
+                    over[i].renderMode = RenderMode.ScreenSpaceCamera; over[i].worldCamera = camera; over[i].planeDistance = 0.9f - i * 0.05f;
+                    over[i].GetComponent<UnityEngine.UI.CanvasScaler>()?.SendMessage("Handle");
+                }
+                Canvas.ForceUpdateCanvases();
                 // Manual camera renders bypass the normal late-frame SortingGroup update.
                 UnityEngine.Rendering.SortingGroup.UpdateAllSortingGroups();
                 camera.Render();
@@ -57,7 +65,13 @@ namespace OurTaiko.Tests
             {
                 RenderTexture.active = previous; camera.targetTexture = previousTarget;
                 canvas.renderMode = previousMode; canvas.worldCamera = previousCamera; canvas.planeDistance = previousDistance;
-                scaler.SendMessage("Handle"); Canvas.ForceUpdateCanvases();
+                scaler.SendMessage("Handle");
+                foreach (var layer in over)
+                {
+                    layer.renderMode = RenderMode.ScreenSpaceOverlay; layer.worldCamera = null;
+                    layer.GetComponent<UnityEngine.UI.CanvasScaler>()?.SendMessage("Handle");
+                }
+                Canvas.ForceUpdateCanvases();
                 Object.Destroy(texture); Object.Destroy(target);
                 if (borrowed != null) Object.Destroy(borrowed);
             }

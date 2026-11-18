@@ -329,7 +329,7 @@ namespace OurTaiko.Online
         {
             if (cancel.IsCancellationRequested) return;
             Activity = L10n.Get("Online", "activity.nameplateArt");
-            try { await NameplateArt.FetchAsync(Client.CacheRoot, cancel, catalogUrl: (Profiles?.Base ?? ProfileCenter.DefaultBase).TrimEnd('/') + "/api/v1/nameplate-art/catalog"); }
+            try { await NameplateArt.FetchAsync(Client.CacheRoot, cancel); }
             catch (OperationCanceledException) { }
         }
 
@@ -512,7 +512,7 @@ namespace OurTaiko.Online
         public void UseUnsavedSite(string cacheRoot, string site, params (string Name, string Url, string Source)[] sources)
         {
             UseUnsaved(cacheRoot);
-            builtIn = sources.Select(s => (s.Name, s.Url, site.TrimEnd('/') + "/api/v1/sources/" + s.Source, site.TrimEnd('/'))).ToArray();
+            builtIn = sources.Select(s => (s.Name, s.Url, site.TrimEnd('/') + "/api/v2/sources/" + s.Source, site.TrimEnd('/'))).ToArray();
             builtInEndpoints.Clear();
         }
 

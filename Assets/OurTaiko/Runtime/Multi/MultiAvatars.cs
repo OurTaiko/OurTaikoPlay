@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,8 +24,8 @@ namespace OurTaiko.Multi
         const int SourceLimit = 2048;
 
         public static event Action Loaded;
-        // Fetches a picture's bytes. Tests may put their own here.
-        public static Func<string, CancellationToken, Task<byte[]>> Fetch { get; set; } = FetchAsync;
+        // Fetches a picture's bytes (DownloadAsync). Tests may put their own here.
+        public static Func<string, CancellationToken, Task<byte[]>> Fetch { get; set; } = DownloadAsync;
 
         static readonly Dictionary<string, (Sprite Disc, Sprite Square)> ready = new Dictionary<string, (Sprite, Sprite)>();
         static readonly List<string> order = new List<string>();
@@ -36,7 +37,7 @@ namespace OurTaiko.Multi
         static void ResetStatics()
         {
             ready.Clear(); order.Clear(); asked.Clear();
-            Loaded = null; Fetch = FetchAsync;
+            Loaded = null; Fetch = DownloadAsync;
         }
 
         // The picture at an address as a disc, or null: not here yet, none to be had, or no address.
@@ -90,10 +91,35 @@ namespace OurTaiko.Multi
             }
         }
 
-        static async Task<byte[]> FetchAsync(string url, CancellationToken cancel)
+        // A picture's bytes. The account center gives full addresses; one on the canonical
+        // distribution root (https://distrib.ourtaiko.org/sso/avatars/...) is read from the same
+        // path on the player's root (the mirror in mainland China), and from the canonical address
+        // when that fails (Online.Distribution). Any other address is read as it is.
+        public static async Task<byte[]> DownloadAsync(string url, CancellationToken cancel)
         {
-            http ??= new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false }) { Timeout = Timeout.InfiniteTimeSpan };
-            return await Online.AvatarResources.FetchAsync(http, url, Online.ProfileCenter.DefaultBase, ByteLimit, cancel);
+            string path = Online.Distribution.PathOf(url);
+            if (path == null) return await ReadAsync(url, cancel);
+            var address = await Online.Distribution.LocateAsync(path, cancel: cancel);
+            return await Online.Distribution.FetchAsync(address, u => ReadAsync(u, cancel), cancel);
+        }
+
+        static async Task<byte[]> ReadAsync(string url, CancellationToken cancel)
+        {
+            http ??= new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false }) { Timeout = TimeSpan.FromSeconds(15) };
+            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel);
+            if (!response.IsSuccessStatusCode) throw new IOException("HTTP " + (int)response.StatusCode);
+            if ((response.Content.Headers.ContentLength ?? 0) > ByteLimit) throw new IOException("too large");
+            using var stream = await response.Content.ReadAsStreamAsync();
+            var buffer = new byte[32768];
+            var output = new MemoryStream();
+            while (true)
+            {
+                int read = await stream.ReadAsync(buffer, 0, buffer.Length, cancel);
+                if (read == 0) break;
+                if (output.Length + read > ByteLimit) throw new IOException("too large");
+                output.Write(buffer, 0, read);
+            }
+            return output.ToArray();
         }
 
         // The middle square of a picture, scaled to `size`; `disc` cuts it to a disc with a soft edge.

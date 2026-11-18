@@ -16,7 +16,10 @@ namespace OurTaiko.Tests
         FanmadeClient client;
         FanmadeEndpoint endpoint;
         string cache;
-        int manifests, tjaGets, audioGets, movieGets, forbidden;
+        int manifests, tjaGets, audioGets, movieGets, mirrorGets, forbidden;
+        // What the mirror root answers instead of the file (0: the file), and whether it sends other bytes.
+        int MirrorStatus;
+        bool corruptMirror;
         // The chart's background movie in the manifest (null: none), with its content type.
         byte[] movie;
         string movieType;
@@ -26,7 +29,8 @@ namespace OurTaiko.Tests
         static T Run<T>(Func<Task<T>> action) => Task.Run(action).GetAwaiter().GetResult();
         [SetUp] public void Setup()
         {
-            manifests = tjaGets = audioGets = movieGets = forbidden = ResourceStatus = 0;
+            manifests = tjaGets = audioGets = movieGets = mirrorGets = forbidden = ResourceStatus = MirrorStatus = 0;
+            corruptMirror = false;
             movie = null; movieType = "video/mp4";
             corrupt = mismatch = corruptMovie = false;
             api = new FanmadeFixture();
@@ -38,8 +42,7 @@ namespace OurTaiko.Tests
                 manifests++;
                 JObject Resource(string kind, byte[] bytes, string type) => new JObject
                 {
-                    ["url"] = origin.BaseUrl + "/" + kind + "?signature=a%2Fb&mode=get", ["headUrl"] = origin.BaseUrl + "/" + kind + "?signature=head",
-                    ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
+                    ["path"] = kind, ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
                 };
                 var resources = new JObject { ["tja"] = Resource("tja", c.Tja, "application/octet-stream"),
                     ["audio"] = Resource("audio", mismatch ? new byte[] { 9 } : c.Audio, "audio/ogg") };
@@ -49,16 +52,23 @@ namespace OurTaiko.Tests
             origin.CustomRequest = context =>
             {
                 if (context.Request.Headers["Authorization"] != null || context.Request.Headers["Cookie"] != null || context.Request.Headers["Idempotency-Key"] != null) forbidden++;
-                if (context.Request.RawUrl != context.Request.Url.AbsolutePath + "?signature=a%2Fb&mode=get") forbidden++;
-                bool audio = context.Request.Url.AbsolutePath == "/audio", video = context.Request.Url.AbsolutePath == "/movie";
+                // A file's address is the root and its path, nothing more.
+                if (context.Request.RawUrl != context.Request.Url.AbsolutePath) forbidden++;
+                string path = context.Request.Url.AbsolutePath;
+                // The player's root ("/mirror/...") when the site names one, else the canonical one ("/").
+                bool mirror = path.StartsWith("/mirror/", StringComparison.Ordinal);
+                if (mirror) { mirrorGets++; path = path.Substring("/mirror".Length); }
+                bool audio = path == "/audio", video = path == "/movie";
                 if (audio) audioGets++; else if (video) movieGets++; else tjaGets++;
-                context.Response.StatusCode = ResourceStatus == 0 ? 200 : ResourceStatus;
+                context.Response.StatusCode = mirror && MirrorStatus != 0 ? MirrorStatus : ResourceStatus == 0 ? 200 : ResourceStatus;
                 byte[] bytes = audio ? chart.Audio : video ? movie : chart.Tja;
-                if (corrupt || (video && corruptMovie)) bytes = bytes.Select(b => (byte)(b ^ 1)).ToArray();
+                if (corrupt || (video && corruptMovie) || (mirror && corruptMirror)) bytes = bytes.Select(b => (byte)(b ^ 1)).ToArray();
                 context.Response.ContentLength64 = bytes.Length;
                 context.Response.OutputStream.Write(bytes, 0, bytes.Length);
                 context.Response.Close(); return true;
             };
+            // The files are the origin fixture's; the API's site names it as the root.
+            api.FilesRoot = api.CanonicalRoot = origin.BaseUrl + "/";
             cache = Path.Combine(Path.GetTempPath(), "ourtaiko-resources-" + Guid.NewGuid().ToString("N"));
             client = new FanmadeClient(cache);
             endpoint = client.Add(api.Server());
@@ -78,7 +88,7 @@ namespace OurTaiko.Tests
             Assert.That(tjaGets, Is.EqualTo(1));
             Assert.That(forbidden, Is.Zero);
         }
-        [TestCase("chartId")] [TestCase("sha256")] [TestCase("size")] [TestCase("url")] [TestCase("missing")]
+        [TestCase("chartId")] [TestCase("sha256")] [TestCase("size")] [TestCase("path")] [TestCase("address")] [TestCase("missing")]
         public void InvalidManifestIsRejectedBeforeDownload(string field)
         {
             var original = api.Manifest;
@@ -88,41 +98,14 @@ namespace OurTaiko.Tests
                 if (field == "chartId") v["chartId"] = new string('f', 32);
                 else if (field == "missing") ((JObject)v["resources"]).Remove("tja");
                 else if (field == "size") tja["size"] = long.MaxValue;
-                else tja[field] = field == "url" ? "http://example.com/file" : "bad";
+                else if (field == "path") tja["path"] = "../tja";
+                else if (field == "address") tja["path"] = "http://example.com/file";
+                else tja[field] = "bad";
                 return v;
             };
             Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0])));
             Assert.That(tjaGets + audioGets, Is.Zero);
         }
-        [TestCase(0)] [TestCase(404)] [TestCase(503)]
-        public void RegionalMirrorFailureUsesVerifiedCanonicalWithoutRefreshingLogin(int status)
-        {
-            using var mirror = new FanmadeFixture();
-            int mirrorGets = 0;
-            mirror.CustomRequest = context => {
-                mirrorGets++;
-                if (context.Request.Headers["Authorization"] != null || context.Request.Headers["Cookie"] != null) forbidden++;
-                context.Response.StatusCode = status == 0 ? 200 : status;
-                // Same length, different hash: must not be published even after HTTP 200.
-                byte[] bad = new byte[chart.Tja.Length];
-                context.Response.ContentLength64 = bad.Length;
-                context.Response.OutputStream.Write(bad, 0, bad.Length);
-                context.Response.Close(); return true;
-            };
-            var original = api.Manifest;
-            api.Manifest = c => {
-                var manifest = original(c);
-                var tja = (JObject)manifest["resources"]["tja"];
-                tja["fallbackUrl"] = tja["url"].DeepClone();
-                tja["url"] = mirror.BaseUrl + "/tja";
-                tja["headUrl"] = mirror.BaseUrl + "/tja";
-                return manifest;
-            };
-            var prepared = Run(() => client.PrepareAsync(client.Charts[0]));
-            Assert.That(prepared.Tja, Does.Contain("#START"));
-            Assert.That((mirrorGets, tjaGets, manifests, forbidden), Is.EqualTo((1, 1, 1, 0)));
-        }
-
         [Test] public void First403RefreshCanRecoverWithoutChangingAccount()
         {
             var original = origin.CustomRequest; bool first = true;
@@ -342,6 +325,67 @@ namespace OurTaiko.Tests
             prepared = Run(() => client.PrepareAsync(client.Charts[0], movie: true));
             Assert.That(prepared.Chart.MoviePath, Is.Null);
             Assert.That(movieGets, Is.Zero);
+        }
+    
+        // The site names a mirror as this player's root: files come from it, and a file it fails
+        // to give (an error, or other bytes than the manifest's) once more from the canonical root.
+        void UseMirror() { api.FilesRoot = origin.BaseUrl + "/mirror/"; api.Mirror = true; Distribution.Forget(); }
+
+        [Test]
+        public void FilesComeFromTheMirrorTheSiteNames()
+        {
+            UseMirror();
+            var result = Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That(File.ReadAllBytes(result.AudioPath), Is.EqualTo(chart.Audio));
+            Assert.That((mirrorGets, tjaGets, audioGets, manifests, forbidden), Is.EqualTo((2, 1, 1, 1, 0)), "Nothing from the canonical root.");
+            Assert.That(api.Requests.Count(r => r == "GET /api/v2/distribution/source"), Is.EqualTo(1));
+            Run(() => client.PrepareAsync(client.Charts[0], movie: true));
+            Assert.That(api.Requests.Count(r => r == "GET /api/v2/distribution/source"), Is.EqualTo(1), "The root is asked once.");
+        }
+
+        [TestCase(503)] [TestCase(404)]
+        public void AFileTheMirrorRefusesComesFromTheCanonicalRoot(int status)
+        {
+            UseMirror();
+            MirrorStatus = status;
+            var result = Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That(File.ReadAllBytes(result.AudioPath), Is.EqualTo(chart.Audio));
+            Assert.That((mirrorGets, tjaGets, audioGets, manifests, forbidden), Is.EqualTo((2, 2, 2, 1, 0)), "Each file once from each root.");
+        }
+
+        [Test]
+        public void AFileTheMirrorSendsWrongComesFromTheCanonicalRoot()
+        {
+            UseMirror();
+            corruptMirror = true;
+            var result = Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That(File.ReadAllBytes(result.AudioPath), Is.EqualTo(chart.Audio));
+            Assert.That(TjaParser.Parse(result.Tja, "Oni").Level, Is.EqualTo(8));
+            Assert.That((mirrorGets, tjaGets, audioGets), Is.EqualTo((2, 2, 2)));
+        }
+
+        [Test]
+        public void AFileNeitherRootGivesIsNotKept()
+        {
+            UseMirror();
+            corruptMirror = true; corrupt = true;
+            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
+            Assert.That((mirrorGets, tjaGets), Is.EqualTo((1, 2)), "The canonical root is tried once, not again and again.");
+            string objects = Path.Combine(cache, "objects");
+            Assert.That(Directory.Exists(objects) ? Directory.GetFiles(objects, "*", SearchOption.AllDirectories) : new string[0], Is.Empty);
+        }
+
+        // A site that cannot say: the canonical root it would have named (here the origin's own,
+        // which the fixture serves at "/").
+        [Test]
+        public void ASiteThatCannotSayLeavesTheCanonicalRoot()
+        {
+            api.FilesRoot = null;
+            Distribution.Forget();
+            Assert.That(Run(() => endpoint.FilesAsync()), Is.SameAs(Distribution.CanonicalRoot));
+            Distribution.Use(api.BaseUrl, new FileRoot(origin.BaseUrl + "/", origin.BaseUrl + "/"));
+            Run(() => client.PrepareAsync(client.Charts[0]));
+            Assert.That((tjaGets, audioGets), Is.EqualTo((1, 1)));
         }
     }
 }

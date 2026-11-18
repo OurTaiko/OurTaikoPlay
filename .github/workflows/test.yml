@@ -59,25 +59,9 @@ jobs:
             *) echo "filter=" >> "$GITHUB_OUTPUT" ;;
           esac
 
-      # unity.webp ships libsharpyuv.so, but libwebp needs its SONAME
-      # libsharpyuv.so.0 on the Linux loader path. Use the same locked package.
-      - name: Prepare Linux WebP test dependencies
-        id: image
-        run: |
-          set -euo pipefail
-          unity_version=$(sed -n 's/^m_EditorVersion: //p' ProjectSettings/ProjectVersion.txt)
-          webp_commit=$(python3 -c 'import json; print(json.load(open("Packages/packages-lock.json"))["dependencies"]["com.netpyoung.webp"]["hash"])')
-          [[ "$unity_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+[abfp][0-9]+$ ]]
-          [[ "$webp_commit" =~ ^[0-9a-f]{40}$ ]]
-          image="ourtaiko-unity-tests:${GITHUB_SHA}"
-          docker build --build-arg UNITY_VERSION="$unity_version" --build-arg WEBP_COMMIT="$webp_commit" \
-            -t "$image" -f .github/docker/unity-test.Dockerfile .github/docker
-          echo "image=$image" >> "$GITHUB_OUTPUT"
-
       # AudioDevice tests measure real playback, which the container cannot provide; run them locally.
       - uses: game-ci/unity-test-runner@v4
         with:
-          customImage: ${{ steps.image.outputs.image }}
           testMode: ${{ matrix.mode }}
           customParameters: ${{ steps.assemblies.outputs.filter }} -testCategory !AudioDevice
           artifactsPath: test-results

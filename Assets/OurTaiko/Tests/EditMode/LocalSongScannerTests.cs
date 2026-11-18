@@ -127,12 +127,11 @@ namespace OurTaiko.Tests
             Assert.That(catalog.Songs[0].AudioPath, Is.Null);
         }
 
-        // NUL is invalid on every supported OS; '|' is a valid filename on Linux.
-        // A broken WAVE path must not fail the whole scan, leaving no local songs.
+        // Mono's Path.Combine rejects '|'; it once failed the whole scan, leaving no local songs.
         [Test]
         public void AChartWithAnUnusableWavePathIsSkippedAlone()
         {
-            Write("bad.tja", Chart("Bad", wave: "a\0b.ogg"));
+            Write("bad.tja", Chart("Bad", wave: "a|b.ogg"));
             Write("good.tja", Chart("Good"));
             LogAssert.Expect(LogType.Warning, new Regex(@"^\[Songs\] Skipping song .*bad\.tja: "));
             Assert.That(LocalSongScanner.Scan(root).Songs.Select(s => s.Key), Is.EqualTo(new[] { "good" }));

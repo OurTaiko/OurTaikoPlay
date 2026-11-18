@@ -31,7 +31,7 @@ namespace OurTaiko.Tests
                 Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()) });
             api.Manifest = c =>
             {
-                JObject R(byte[] bytes, string type) => new JObject { ["url"] = origin.BaseUrl + "/audio?get", ["headUrl"] = origin.BaseUrl + "/audio?head",
+                JObject R(byte[] bytes, string type) => new JObject { ["path"] = "audio",
                     ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
                 return new JObject { ["chartId"] = c.Id,
                     ["resources"] = new JObject { ["tja"] = R(c.Tja, "application/octet-stream"), ["audio"] = R(c.Audio, "audio/ogg"), ["preview"] = R(previewAudio, "audio/ogg") } };
@@ -46,6 +46,7 @@ namespace OurTaiko.Tests
                 r.ContentLength64 = audio.Length; r.OutputStream.Write(audio, 0, audio.Length); r.Close();
                 Interlocked.Add(ref downloaded, audio.Length); return true;
             };
+            api.FilesRoot = api.CanonicalRoot = origin.BaseUrl + "/";
             TestData.UseServers(api);
         }
         [UnityTearDown] public IEnumerator Cleanup()

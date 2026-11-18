@@ -21,7 +21,7 @@ namespace OurTaiko
     // joins (EntryDons). Not ported: the join cloud, the other
     // boards (特訓モード / きせかえ), the costume menu and the ALL.Net indicator. The screen is saved
     // in the scene (EntryView); Awake only binds it.
-    public sealed class EntryScene : MonoBehaviour
+    public sealed class EntryScene : MonoBehaviour, ISettledScreen
     {
         public RectTransform stage;
         public EntryView view;
@@ -68,6 +68,11 @@ namespace OurTaiko
         EntryDons dons;
 
         public double Now => GameTimeline.FrameTime * 1000;
+
+        // Waiting for a side, or the mode boards have opened and nothing is chosen: not while the
+        // cloud gate opens or a choice fades out.
+        public bool IsSettled => Flow != null && !HasLeft
+            && (Flow.State == EntryFlow.Phase.SelectSide ? Flow.CanJoin(Now) : Flow.IsModeReady(Now) && !Flow.IsSelected);
 
         static LumenClip Clip(TextAsset asset) => asset != null ? LumenClip.Parse(asset.text) : LumenClip.Empty;
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading;
@@ -11,11 +12,14 @@ using UnityEngine;
 namespace OurTaiko.Chara
 {
     // Each signed-in seat's Don as the player chose it on the website (net.ourtaiko.org,
-    // GET /api/v1/users/{id}/don): the look, and its files (costume, or head and body, the
-    // puchichara and the makeup) downloaded from the public bucket into the shared object cache (objects/<sha256>,
-    // checked by size and hash). The game itself carries only the plain Don (costume 0); a guest,
-    // or a seat whose look cannot be had, wears it. The last look of each account is remembered
-    // with its files' hashes (don-looks.json in the cache), so a player offline keeps theirs.
+    // GET /api/v2/users/{id}/don): the look, and its files (costume, or head and body, the
+    // puchichara and the makeup), each named by its path under the distribution root
+    // ("3dCharaPath"), downloaded from the player's root (or, when that fails, the canonical one;
+    // Online.Distribution) into the shared object cache (objects/<sha256>, checked by size and
+    // hash). The game itself carries only the plain Don (costume 0); a guest, or a seat whose look
+    // cannot be had, wears it. The last look of each account is remembered with its files' hashes
+    // (don-looks.json in the cache), so a player offline keeps theirs; a look remembered from
+    // version 1 of the API (files by "url") is read by its hashes alone, the same.
     public static class DonDownloads
     {
         public const string StateFile = "don-looks.json";
@@ -77,7 +81,7 @@ namespace OurTaiko.Chara
             try
             {
                 http ??= new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-                using var response = await http.GetAsync(siteBase.TrimEnd('/') + "/api/v1/users/" + Uri.EscapeDataString(userId) + "/don", cancel);
+                using var response = await http.GetAsync(siteBase.TrimEnd('/') + "/api/v2/users/" + Uri.EscapeDataString(userId) + "/don", cancel);
                 if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode);
                 answer = JObject.Parse(await response.Content.ReadAsStringAsync());
             }
@@ -89,10 +93,10 @@ namespace OurTaiko.Chara
                 try
                 {
                     var look = LookFrom((JObject)answer["look"], seat);
-                    var files = new List<(string kind, int id, string url, long size, string hash)>();
+                    var files = new List<(string kind, int id, string path, long size, string hash)>();
                     foreach (JObject f in (JArray)answer["files"] ?? new JArray())
-                        files.Add(((string)f["kind"], (int)f["id"], (string)f["url"], (long)f["size"], (string)f["sha256"]));
-                    await DownloadAsync(files, cacheRoot, cancel);
+                        files.Add(((string)f["kind"], (int)f["id"], (string)f["3dCharaPath"], (long)f["size"], (string)f["sha256"]));
+                    await DownloadAsync(files, siteBase, cacheRoot, cancel);
                     foreach (var f in files) DonLibrary.UseFile(f.kind, f.id, FanmadeObjectPath(cacheRoot, f.hash));
                     Remember(cacheRoot, userId, answer);
                     Wear(seat, userId, look);
@@ -148,47 +152,61 @@ namespace OurTaiko.Chara
             return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant() == hash;
         }
 
-        static async Task DownloadAsync(List<(string kind, int id, string url, long size, string hash)> files, string cacheRoot, CancellationToken cancel)
+        // The files the cache lacks, from the root the site names (asked only when one is missing).
+        static async Task DownloadAsync(List<(string kind, int id, string path, long size, string hash)> files, string siteBase, string cacheRoot, CancellationToken cancel)
         {
-            var missing = new List<(string url, long size, string hash)>();
+            var lacking = new List<(string path, long size, string hash)>();
             foreach (var f in files)
             {
                 if (f.hash == null || f.hash.Length != 64) throw new InvalidDataException("bad hash for " + f.kind + " " + f.id);
+                if (!Online.Distribution.ValidPath(f.path)) throw new InvalidDataException("bad path for " + f.kind + " " + f.id);
                 string path = FanmadeObjectPath(cacheRoot, f.hash);
-                if (!await Task.Run(() => Matches(path, f.size, f.hash), cancel)) missing.Add((f.url, f.size, f.hash));
+                if (!await Task.Run(() => Matches(path, f.size, f.hash), cancel)) lacking.Add((f.path, f.size, f.hash));
             }
-            if (missing.Count == 0) return;
+            if (lacking.Count == 0) return;
+            var root = await Online.Distribution.RootAsync(siteBase, cancel);
+            var missing = lacking.Select(f => (address: root.Locate(f.path), f.size, f.hash)).ToList();
             long total = 0;
             foreach (var m in missing) total += m.size;
             Received = 0; Expected = total;
             try
             {
-                foreach (var (url, size, hash) in missing)
+                foreach (var (address, size, hash) in missing)
                 {
                     long before = Received;
-                    using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel);
-                    if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode + " for " + url);
-                    using var stream = await response.Content.ReadAsStreamAsync();
-                    var bytes = new MemoryStream((int)Math.Min(size, int.MaxValue));
-                    var buffer = new byte[81920];
-                    int read;
-                    while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, cancel)) > 0)
-                    {
-                        bytes.Write(buffer, 0, read);
-                        Received = before + bytes.Length;
-                    }
-                    var data = bytes.ToArray();
-                    string got = await Task.Run(() =>
-                    {
-                        using var sha = SHA256.Create();
-                        return BitConverter.ToString(sha.ComputeHash(data)).Replace("-", "").ToLowerInvariant();
-                    }, cancel);
-                    if (data.LongLength != size || got != hash) throw new InvalidDataException("the download of " + url + " does not match its hash");
+                    var data = await Online.Distribution.FetchAsync(address, url => FetchFileAsync(url, size, hash, before, cancel), cancel);
                     await Task.Run(() => Store(FanmadeObjectPath(cacheRoot, hash), data), cancel);
                     Received = before + size;
                 }
             }
             finally { Received = 0; Expected = 0; }
+        }
+
+        // One file's bytes from one address, checked against its size and hash; Received counts
+        // from `before` as they come (and again from there when the canonical root is tried).
+        static async Task<byte[]> FetchFileAsync(string url, long size, string hash, long before, CancellationToken cancel)
+        {
+            Received = before;
+            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel);
+            if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode + " for " + url);
+            using var stream = await response.Content.ReadAsStreamAsync();
+            var bytes = new MemoryStream((int)Math.Min(size, int.MaxValue));
+            var buffer = new byte[81920];
+            int read;
+            while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, cancel)) > 0)
+            {
+                if (bytes.Length + read > size) throw new InvalidDataException("the download of " + url + " is larger than its size");
+                bytes.Write(buffer, 0, read);
+                Received = before + bytes.Length;
+            }
+            var data = bytes.ToArray();
+            string got = await Task.Run(() =>
+            {
+                using var sha = SHA256.Create();
+                return BitConverter.ToString(sha.ComputeHash(data)).Replace("-", "").ToLowerInvariant();
+            }, cancel);
+            if (data.LongLength != size || got != hash) throw new InvalidDataException("the download of " + url + " does not match its hash");
+            return data;
         }
 
         static void Store(string path, byte[] data)
