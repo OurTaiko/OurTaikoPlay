@@ -173,7 +173,8 @@ namespace OurTaiko.Tests
             Assert.That(site.Seen, Is.EqualTo(new long[] { 99 }));
         }
 
-        // A part of the 3D Don: its picture (from the address the site described it with) and its name.
+        // A part of the 3D Don: its picture (by the path the site described it with, under the root
+        // the site names; here a mirror that has lost it, so it comes from the canonical root) and its name.
         [UnityTest]
         public IEnumerator APartOfTheDonComesWithItsPicture()
         {
@@ -181,9 +182,12 @@ namespace OurTaiko.Tests
             for (int x = 0; x < 8; x++) for (int y = 0; y < 8; y++) png.SetPixel(x, y, x < 4 ? Color.red : Color.white);
             byte[] picture = png.EncodeToPNG();
             Object.Destroy(png);
+            int mirrored = 0;
+            fixture.FilesRoot = fixture.BaseUrl + "/mirror/";
             fixture.CustomRequest = context =>
             {
-                if (context.Request.Url.AbsolutePath != "/pictures/cos-30.png") return false;
+                if (context.Request.Url.AbsolutePath == "/mirror/3dchara/icons/cos/30.png") { mirrored++; context.Response.StatusCode = 404; context.Response.Close(); return true; }
+                if (context.Request.Url.AbsolutePath != "/3dchara/icons/cos/30.png") return false;
                 context.Response.ContentType = "image/png";
                 context.Response.OutputStream.Write(picture, 0, picture.Length);
                 context.Response.OutputStream.Close();
@@ -192,7 +196,7 @@ namespace OurTaiko.Tests
             long part = fixture.GiveReward("don", Reward.DonItemKind, new JObject
             {
                 ["part"] = "cos", ["itemId"] = 30, ["service"] = "admin",
-                ["name"] = new JObject { ["ja"] = "鏡もち" }, ["picture"] = fixture.BaseUrl + "/pictures/cos-30.png",
+                ["name"] = new JObject { ["ja"] = "鏡もち" }, ["3dCharaPath"] = "3dchara/icons/cos/30.png",
             });
             yield return Connect();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
@@ -203,6 +207,7 @@ namespace OurTaiko.Tests
                 .And.Contain(L10n.Get("Online", "rewards.fromAdmin")));
             yield return Waits.Until(() => Overlay.Canvas.GetComponentsInChildren<Image>().Any(i => i.name == "Picture" && i.enabled && i.sprite != null),
                 "The picture did not come.");
+            Assert.That(mirrored, Is.EqualTo(1), "Asked of the mirror first.");
             TestCapture.Capture("RewardDonItem.png", canvas: TestCapture.SceneCanvas(), over: Overlay.Canvas);
             Overlay.Don();
             Assert.That(Overlay.IsShowing, Is.False);

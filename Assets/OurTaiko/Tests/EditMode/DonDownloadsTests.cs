@@ -12,16 +12,16 @@ using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
-    // A seat's Don as its player chose it on the website: GET /api/v1/users/{id}/don, its files
-    // downloaded into the object cache and checked by hash, remembered for when the site cannot be
-    // reached, and the plain Don for a seat without one.
+    // A seat's Don as its player chose it on the website: GET /api/v2/users/{id}/don, its files
+    // (by their path under the distribution root) downloaded into the object cache and checked by
+    // hash, remembered for when the site cannot be reached, and the plain Don for a seat without one.
     public sealed class DonDownloadsTests
     {
         FanmadeFixture site;
         string cache;
         byte[] model;
         string hash;
-        int served;
+        int served, mirrored, queried;
         bool siteDown;
         JObject look;
 
@@ -42,23 +42,32 @@ namespace OurTaiko.Tests
             site.CustomRequest = context =>
             {
                 string path = context.Request.Url.AbsolutePath;
-                if (path == "/api/v1/users/" + Player + "/don")
+                if (path == "/api/v2/users/" + Player + "/don")
                 {
                     if (siteDown) return Reply(context, 503, Encoding("{}"));
                     var answer = new JObject
                     {
                         ["look"] = look,
-                        ["files"] = new JArray(new JObject { ["kind"] = "cos", ["id"] = 77, ["url"] = site.BaseUrl + "/3dchara/cos/77.glb?v=" + hash.Substring(0, 12), ["size"] = model.Length, ["sha256"] = hash }),
+                        ["files"] = new JArray(new JObject { ["kind"] = "cos", ["id"] = 77, ["3dCharaPath"] = "3dchara/cos/77.glb", ["size"] = model.Length, ["sha256"] = hash }),
                     };
                     return Reply(context, 200, Encoding(answer.ToString()));
                 }
+                if (context.Request.Url.Query.Length > 0) Interlocked.Increment(ref queried);
                 if (path == "/3dchara/cos/77.glb")
                 {
                     Interlocked.Increment(ref served);
                     return Reply(context, 200, model);
                 }
+                // A mirror that has lost its copy.
+                if (path.StartsWith("/mirror/", StringComparison.Ordinal))
+                {
+                    Interlocked.Increment(ref mirrored);
+                    return Reply(context, 404, Encoding("{}"));
+                }
                 return false;
             };
+            served = mirrored = queried = 0;
+            siteDown = false;
             DonDownloads.Forget(0);
         }
 
@@ -117,6 +126,7 @@ namespace OurTaiko.Tests
                 // Cached: not downloaded again.
                 yield return Wait(DonDownloads.FetchAsync(0, Player, site.BaseUrl, cache));
                 Assert.That(served, Is.EqualTo(1));
+                Assert.That(queried, Is.Zero, "A file's address is its root and path alone.");
 
                 // The site cannot be reached: the remembered look, from the cache.
                 siteDown = true;
@@ -141,6 +151,38 @@ namespace OurTaiko.Tests
             yield return Wait(DonDownloads.FetchAsync(0, Player, site.BaseUrl, cache));
             Assert.That(DonLooks.For(0).cos, Is.EqualTo(0), "the plain Don");
             Assert.That(File.Exists(Path.Combine(cache, "objects", "00", hash)), Is.False);
+        }
+
+        // The site names a mirror whose copy is missing: the file comes from the canonical root.
+        [UnityTest]
+        public IEnumerator AFileTheMirrorLacksComesFromTheCanonicalRoot()
+        {
+            site.FilesRoot = site.BaseUrl + "/mirror/";
+            site.Mirror = true;
+            yield return Wait(DonDownloads.FetchAsync(0, Player, site.BaseUrl, cache));
+            Assert.That(DonLooks.For(0).cos, Is.EqualTo(77));
+            Assert.That((mirrored, served), Is.EqualTo((1, 1)));
+        }
+
+        // A look remembered before the update (version 1 named the files by "url") is still worn
+        // offline: only the hashes are read back.
+        [UnityTest]
+        public IEnumerator ALookRememberedFromVersionOneIsStillWorn()
+        {
+            yield return Wait(DonDownloads.FetchAsync(0, Player, site.BaseUrl, cache));
+            var state = new JObject
+            {
+                [Player] = new JObject
+                {
+                    ["look"] = look,
+                    ["files"] = new JArray(new JObject { ["kind"] = "cos", ["id"] = 77, ["url"] = "https://distrib.ourtaiko.org/3dchara/cos/77.glb?v=" + hash.Substring(0, 12), ["size"] = model.Length, ["sha256"] = hash }),
+                },
+            };
+            File.WriteAllText(Path.Combine(cache, DonDownloads.StateFile), state.ToString());
+            siteDown = true;
+            DonDownloads.Forget(0);
+            yield return Wait(DonDownloads.FetchAsync(0, Player, site.BaseUrl, cache));
+            Assert.That(DonLooks.For(0).cos, Is.EqualTo(77));
         }
 
         [Test]

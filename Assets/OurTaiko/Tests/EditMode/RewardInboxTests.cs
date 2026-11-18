@@ -68,6 +68,7 @@ namespace OurTaiko.Tests
             Assert.That(site.Fetches, Is.EqualTo(1));
             Assert.That(inbox.Queue.Select(r => r.Id), Is.EqualTo(new long[] { 1, 2 }));
             var title = inbox.Queue[0];
+            Assert.That(title.Site, Is.EqualTo("site"), "Its files are under the root of the site it came from.");
             Assert.That(title.TitleName("ja"), Is.EqualTo("はじめまして"));
             Assert.That(title.TitleName("zh"), Is.EqualTo("はじめまして（中文）"), "The song language zh is the title's zh-Hans.");
             Assert.That(title.TitleStyle, Is.EqualTo("gold"));
@@ -187,12 +188,16 @@ namespace OurTaiko.Tests
         public void APartOfTheDonIsReadAsTheSiteDescribesIt()
         {
             var part = Reward.From(JObject.Parse(@"{""id"":9,""kind"":""don_item"",""data"":{""part"":""cos"",""itemId"":30,
-                ""name"":{""ja"":""鏡もち"",""en"":""Kagami Mochi""},""picture"":""https://example.test/icons/cos/30.png""}}"));
-            Assert.That((part.Kind, part.DonPart, part.DonItemId, part.DonPicture), Is.EqualTo((Reward.DonItemKind, "cos", 30, "https://example.test/icons/cos/30.png")));
+                ""name"":{""ja"":""鏡もち"",""en"":""Kagami Mochi""},""3dCharaPath"":""3dchara/icons/cos/30.png""}}"));
+            Assert.That((part.Kind, part.DonPart, part.DonItemId, part.DonPicture), Is.EqualTo((Reward.DonItemKind, "cos", 30, "3dchara/icons/cos/30.png")));
             Assert.That(part.DonName("en"), Is.EqualTo("Kagami Mochi"));
             Assert.That(part.DonName("zh"), Is.EqualTo("鏡もち"), "No Chinese name: the Japanese one.");
             var bare = Reward.From(JObject.Parse(@"{""id"":10,""kind"":""don_item"",""data"":{""part"":""paint"",""itemId"":2}}"));
             Assert.That((bare.DonName("ja"), bare.DonPicture), Is.EqualTo(("#2", "")));
+            // Version 1's full address ("picture") is not read, nor a path that leaves the root.
+            foreach (string data in new[] { @"""picture"":""https://distrib.ourtaiko.org/3dchara/icons/cos/30.png""", @"""3dCharaPath"":""../secret.png""",
+                @"""3dCharaPath"":""https://example.test/a.png""" })
+                Assert.That(Reward.From(JObject.Parse(@"{""id"":11,""kind"":""don_item"",""data"":{""part"":""cos"",""itemId"":30," + data + "}}")).DonPicture, Is.Empty, data);
         }
 
         [Test]
