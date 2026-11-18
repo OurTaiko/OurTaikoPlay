@@ -113,11 +113,11 @@ sound.backendNote.autoOther,BassSimple on this device,このデバイスでは B
 sound.backendNote.wasapi,"Windows audio, shared or exclusive",Windows のオーディオ（共有／排他）,Windows 音频，共享或独占,Note under BassWASAPI
 sound.backendNote.asio,Requires an installed ASIO driver,ASIO ドライバのインストールが必要,需要已安装的 ASIO 驱动,Note under BassASIO
 sound.backendNote.simple,Cross-platform output,クロスプラットフォームの出力,跨平台输出,Note under BassSimple
-sound.backendNote.alsa,"ALSA hardware; reserves the whole card, including its microphone",ALSA ハードウェア。マイクを含むカード全体を予約します,ALSA 硬件；预留整个声卡（包括麦克风）,Note under LinuxAlsaExclusive
-sound.alsa.unavailable,Not selected / unavailable,未選択／利用不可,未选择／不可用,Missing ALSA selection
-sound.alsa.choose,Choose a hardware output,ハードウェア出力を選んでください,请选择硬件输出,ALSA selection hint
+sound.alsa.offNote,Plays through the shared system output,システムの共有出力で再生します,通过系统共享输出播放,ALSA Exclusive Output option: off
+sound.alsa.missing,Saved card (not connected),保存したカード（未接続）,已保存的声卡（未连接）,ALSA Exclusive Output option: the saved card is absent
+sound.alsa.missingNote,Uses the shared output until this card is connected again,このカードを再接続するまで共有出力を使います,重新连接此声卡前使用共享输出,Note under the absent saved card
 sound.alsa.reserved,{0} · Card output and inputs reserved,{0} · カードの出力と入力を予約,{0} · 预留声卡输出及输入,{0} driver name
-sound.alsa.device,ALSA Hardware Output,ALSA ハードウェア出力,ALSA 硬件输出,ALSA device row
+sound.alsa.device,ALSA Exclusive Output,ALSA 排他出力,ALSA 独占输出,BassSimple row (Linux only)
 sound.alsa.deviceDesc,Reserves the entire card: other apps cannot use its output or microphone. Requires a ReserveDevice1 manager. USB port changes require reselection.,カード全体を予約します。他のアプリはその出力やマイクを使えません。ReserveDevice1 マネージャーが必要です。USB ポートを変えた場合は選び直してください。,预留整个声卡：其他应用无法使用其输出或麦克风。需要 ReserveDevice1 管理器。更换 USB 接口后需重新选择。,ALSA whole-card warning
 sound.devicePeriod,Output Period,出力周期,输出周期,Row
 sound.devicePeriodDesc.windows,Shorter periods reduce delay but may crackle. Windows controls the actual period.,短いほど遅延が減りますが、音が割れることがあります。実際の周期は Windows が決めます。,周期越短延迟越低，但可能出现爆音。实际周期由 Windows 决定。,Output Period description (Windows)
@@ -157,7 +157,7 @@ sound.clock,Song Clock,曲の時計,歌曲时钟,Row: what the notes follow whil
 sound.clockDesc,"What the notes follow while the music plays. Changing it shifts the picture and the judgment by the output latency, so set the offsets again.",曲の再生中に音符が合わせる基準です。変えると表示と判定が出力遅延の分ずれるので、オフセットを設定し直してください。,音乐播放时音符跟随的基准。更改后画面和判定会偏移一个输出延迟，请重新设置偏移。,Song Clock description
 sound.clock.heard,Heard,聴こえる音,听到,Song Clock option: the music heard now
 sound.clock.sent,Sent,送出した音,送出,Song Clock option: the music handed to the device now
-sound.clockNote.autoHeard,Heard on {0},{0} では聴こえる音,{0} 上为听到,Note under Automatic; {0} backend name
+sound.clockNote.autoHeard,Heard on BassSimple,BassSimple では聴こえる音,BassSimple 上为听到,Note under Automatic
 sound.clockNote.autoSent,Sent on {0},{0} では送出した音,{0} 上为送出,Note under Automatic; {0} backend name
 sound.clockNote.heard,The music coming out of the speakers now. Autoplay drums start early to match.,いまスピーカーから出ている音楽。オートの太鼓音はそれに合わせて早めに鳴ります。,此刻从扬声器发出的音乐。自动演奏的鼓声会提前播放以对齐。,Note under Heard
 sound.clockNote.sent,The music handed to the device now. The picture runs ahead by the output latency.,いまデバイスに渡している音楽。表示は出力遅延の分だけ先に進みます。,此刻交给设备的音乐。画面会领先一个输出延迟。,Note under Sent
@@ -204,6 +204,8 @@ diagram.standard,Standard windows of Oni and Ura. Easy and Normal are wider: 42 
 audio.none,No audio output: {0},音声出力なし：{0},无音频输出：{0},Sound page banner; {0} reason
 audio.silent,No output device (silent): {0},出力デバイスなし（無音）：{0},无输出设备（静音）：{0},Sound page banner; {0} reason
 audio.current,Current output: {0},現在の出力：{0},当前输出：{0},Sound page banner; {0} backend name
+audio.alsaExclusive,{0} · ALSA Exclusive · {1},{0} · ALSA 排他 · {1},{0} · ALSA 独占 · {1},Sound page banner; {0} backend name; {1} sound card
+audio.alsaShared,{0} · Not exclusive: {1},{0} · 排他なし：{1},{0} · 未能独占：{1},Sound page banner; {0} backend name; {1} reason
 audio.pending,Output changes apply when you close Settings,出力の変更は設定を閉じると反映されます,输出更改将在关闭设置时生效,Sound page banner suffix
 status.signedIn,Signed in: {0},ログイン中：{0},已登录：{0},Sign Out row status; {0} nickname
 status.notSignedIn,Not signed in,未ログイン,未登录,Sign Out row status and header seat chip

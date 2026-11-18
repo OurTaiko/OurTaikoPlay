@@ -21,8 +21,11 @@ namespace OurTaiko
         public static AudioEngine Instance { get; private set; }
         public AudioBackend Backend { get; private set; } = AudioBackend.BassSimple;
         public string Diagnostics { get; private set; }
-        // What the settings banner shows: the output, and the hardware for ALSA exclusive.
-        public string OutputName => linuxDevice != null ? Backend + " · " + linuxDevice.Name : Backend.ToString();
+        // The ALSA card BassSimple holds exclusively; null on the shared output.
+        public string ExclusiveDevice => linuxDevice?.Name;
+        // Why the ALSA card that was asked for is not the one playing; null otherwise.
+        public string ExclusiveFailure => linuxDevice == null && appliedOptions != null
+            && appliedOptions.UsesLinuxAlsa(SoundSettings.Platform) ? Failure : null;
         // Why the requested output could not open; null while it plays through a device.
         public string Failure { get; private set; }
         public bool Silent { get; private set; }
@@ -108,7 +111,7 @@ namespace OurTaiko
                 Log.Error("Audio", Diagnostics);
                 return;
             }
-            if (backend == AudioBackend.LinuxAlsaExclusive)
+            if (options.UsesLinuxAlsa(SoundSettings.Platform))
             {
                 try { InitLinuxAlsa(options); }
                 catch (Exception error)
@@ -119,7 +122,7 @@ namespace OurTaiko
                 }
             }
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
-            if (backend != AudioBackend.BassSimple && backend != AudioBackend.LinuxAlsaExclusive)
+            if (backend != AudioBackend.BassSimple)
             {
                 try
                 {
@@ -159,8 +162,8 @@ namespace OurTaiko
                 Log.Error("Audio", Diagnostics);
                 return;
             }
-            string device = Silent ? "" : linuxDevice != null ? linuxDevice.Name + " (" + linuxDevice.Driver + ")"
-                : Backend.UsesPositionClock() && Bass.GetDeviceInfo(Bass.CurrentDevice, out var actualDevice) ? actualDevice.Name + " (" + actualDevice.Driver + ")" : "native output";
+            string device = Silent ? "" : linuxDevice != null ? linuxDevice.Name + " (" + linuxDevice.Driver + ", ALSA exclusive)"
+                : Backend == AudioBackend.BassSimple && Bass.GetDeviceInfo(Bass.CurrentDevice, out var actualDevice) ? actualDevice.Name + " (" + actualDevice.Driver + ")" : "native output";
             Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + "; " + device + $"; {options.Rate} Hz requested; device period {options.Period(SoundSettings.Platform)} ms requested; buffer {options.Buffer(SoundSettings.Platform)} ms requested; stream buffering disabled; reported output latency {OutputLatency * 1000:0.0} ms (not end-to-end)";
             if (linuxDevice != null) Diagnostics += "; " + linuxDevice.HardwareParameters();
             if (Failure != null) Diagnostics += "; fallback: " + Failure;
@@ -183,8 +186,6 @@ namespace OurTaiko
         }
         void InitLinuxAlsa(AudioOptions options)
         {
-            if (SoundSettings.Platform != SoundPlatform.Linux)
-                throw new PlatformNotSupportedException("ALSA exclusive requires Linux");
             var devices = LinuxAudioDevices.Enumerate(out string enumerationFailure);
             var device = LinuxAudioDevices.Resolve(devices, options.linuxAlsaDevice);
             if (device == null) throw new InvalidOperationException(enumerationFailure ?? "Selected ALSA hardware device is missing or not selected; select an available output");
@@ -215,7 +216,6 @@ namespace OurTaiko
                 Thread.Sleep(10);
             }
             linuxDevice = device;
-            Backend = AudioBackend.LinuxAlsaExclusive;
         }
         void InitSharedBass(AudioOptions options)
         {

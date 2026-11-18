@@ -851,18 +851,6 @@ MonoBehaviour:
     m_Key: display.chara3DDesc
     m_Metadata:
       m_Items: []
-  - m_Id: 2299837700431872
-    m_Key: sound.backendNote.alsa
-    m_Metadata:
-      m_Items: []
-  - m_Id: 2299837717209088
-    m_Key: sound.alsa.unavailable
-    m_Metadata:
-      m_Items: []
-  - m_Id: 2299837717209089
-    m_Key: sound.alsa.choose
-    m_Metadata:
-      m_Items: []
   - m_Id: 2299837717209090
     m_Key: sound.alsa.reserved
     m_Metadata:
@@ -873,6 +861,26 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 2299837717209092
     m_Key: sound.alsa.deviceDesc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232266608640
+    m_Key: sound.alsa.offNote
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232270802944
+    m_Key: sound.alsa.missing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232270802945
+    m_Key: sound.alsa.missingNote
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997248
+    m_Key: audio.alsaExclusive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997249
+    m_Key: audio.alsaShared
     m_Metadata:
       m_Items: []
   m_Metadata:

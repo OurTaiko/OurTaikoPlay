@@ -4,20 +4,14 @@ namespace OurTaiko
 {
     // Values are persisted as integers; 4 was the removed Unity output and now reads as Automatic.
     // Every backend decodes and mixes with BASS; the name says how it outputs. BassSimple is BASS's own
-    // cross-platform default output; LinuxAlsaExclusive opens ALSA hardware with a card reservation.
+    // cross-platform output (on Linux it can reserve one ALSA card, AudioOptions.linuxAlsaDevice);
     // BassWASAPI and BassASIO are Windows-only.
-    public enum AudioBackend { Automatic = 0, BassSimple = 1, BassWASAPI = 2, BassASIO = 3, LinuxAlsaExclusive = 5 }
-
-    public static class AudioBackendClock
-    {
-        public static bool UsesPositionClock(this AudioBackend backend)
-            => backend == AudioBackend.BassSimple || backend == AudioBackend.LinuxAlsaExclusive;
-    }
+    public enum AudioBackend { Automatic, BassSimple, BassWASAPI, BassASIO }
 
     // What the song clock reads while the music plays. Heard: the music coming out of the speakers now
     // (the picture matches what is heard). Sent: the music handed to the device now, heard one output
     // latency later (a sound started on the clock is heard with the music). Automatic keeps what each
-    // backend always did: Heard on BASS position outputs, Sent on BassWASAPI and BassASIO.
+    // backend always did: Heard on BassSimple, Sent on BassWASAPI and BassASIO.
     public enum AudioClock { Automatic, Heard, Sent }
 
     // How the clock choice is carried out for one output, in real seconds.
@@ -25,7 +19,7 @@ namespace OurTaiko
     {
         // Autoplay starts its drum sounds this long before the judgment (PlayerLane.SoundAhead).
         public readonly double SoundLead;
-        // BASS position outputs: added to the stream position (the position is what is heard).
+        // BassSimple: added to the stream position the clock is pulled to (the position is what is heard).
         public readonly double PositionLead;
         // BassWASAPI, BassASIO: the clock is set back this far when the track starts (it starts as sent).
         public readonly double StartDelay;
@@ -33,7 +27,7 @@ namespace OurTaiko
         public ClockTiming(bool heard, AudioBackend backend, double latency)
         {
             latency = Math.Max(0, latency);
-            bool positional = backend.UsesPositionClock();
+            bool positional = backend == AudioBackend.BassSimple;
             SoundLead = heard ? latency : 0;
             PositionLead = !heard && positional ? latency : 0;
             StartDelay = heard && !positional ? latency : 0;
@@ -60,6 +54,8 @@ namespace OurTaiko
         public float wasapiPeriodSeconds = 0;
         public int asioDevice;
         public int asioBufferSamples;
+        // Linux only: the stable id of the ALSA card BassSimple reserves; empty is the shared output.
+        // Saved on every platform, read only on Linux.
         public string linuxAlsaDevice = "";
         // Not a device setting: read every frame, so a change needs no reopening of the output.
         public AudioClock clock = AudioClock.Automatic;
@@ -75,7 +71,9 @@ namespace OurTaiko
         public AudioBackend Backend => Enum.IsDefined(typeof(AudioBackend), backend) ? backend : AudioBackend.Automatic;
         public AudioClock Clock => Enum.IsDefined(typeof(AudioClock), clock) ? clock : AudioClock.Automatic;
         // `actual` is the output that opened (AudioEngine.Backend), never Automatic.
-        public bool HeardClock(AudioBackend actual) => Clock == AudioClock.Heard || Clock == AudioClock.Automatic && actual.UsesPositionClock();
+        public bool HeardClock(AudioBackend actual) => Clock == AudioClock.Heard || Clock == AudioClock.Automatic && actual == AudioBackend.BassSimple;
+        public bool UsesLinuxAlsa(SoundPlatform platform) => platform == SoundPlatform.Linux && !string.IsNullOrEmpty(linuxAlsaDevice)
+            && (Backend == AudioBackend.Automatic || Backend == AudioBackend.BassSimple);
         public int Rate => sampleRate >= 8000 && sampleRate <= 192000 ? sampleRate : 44100;
         static bool Mobile(SoundPlatform platform) => platform == SoundPlatform.Android || platform == SoundPlatform.IOS;
         public int Period(SoundPlatform platform) => Math.Clamp(devicePeriodMs == 0 ? (Mobile(platform) ? 8 : 16) : devicePeriodMs, 1, 100);

@@ -1,10 +1,14 @@
 # Linux audio output
 
-The default **Automatic** / **BassSimple** output is unchanged. To use hardware
-output, open **Settings → Sound**, select **LinuxAlsaExclusive**, choose an
-**ALSA Hardware Output**, and close Settings. The existing Sample Rate, Output
-Period and Device Buffer controls apply; their defaults remain conservative.
-Reopen Settings to see the current output and negotiated diagnostics.
+Linux plays through **BassSimple** (**Automatic** is the same output). ALSA exclusive
+is a BassSimple setting, not another backend: open **Settings → Sound**, choose a card
+under **ALSA Exclusive Output**, and close Settings. **Off** is the shared output and the
+default. The existing Sample Rate, Output Period and Device Buffer controls apply; their
+defaults remain conservative. Reopen Settings to see the current output; the negotiated
+ALSA parameters are in the log.
+
+The choice is saved as `audio.linuxAlsaDevice` (empty is off). Every platform keeps the
+field in its settings file; only Linux shows or reads it.
 
 ## Reservation and recovery
 
@@ -49,7 +53,8 @@ release their PCM first; the game prefers safe refusal to disrupting an unknown 
 Applying a device change uses the normal settings-close transition. If it fails,
 the previous device configuration is restored (live volume changes are retained).
 If a saved exclusive device is missing at startup, the actual shared/silent
-fallback and its reason are shown. A shared BASS `dmix` retry is never reported
+fallback and its reason are shown, and the row shows the saved card as not connected.
+The selection is kept, so exclusive output returns once the card is connected again. A shared BASS `dmix` retry is never reported
 as exclusive output.
 
 ## Devices and diagnostics
@@ -61,16 +66,15 @@ enumeration index, ALSA card number or display name. Card-number reordering is
 safe; changing a USB port or replacing hardware requires selecting it again.
 Missing/ambiguous identities never silently select another output.
 
-The banner distinguishes requested rate/period/buffer from the ALSA negotiated
+The audio log line distinguishes requested rate/period/buffer from the ALSA negotiated
 format in `/proc/asound` for a substream owned by this process. `period_size`
 and `buffer_size` are **frames**, not milliseconds. If the kernel does not expose
 this information, it is marked unavailable. BASS's **reported output latency**
 is not an end-to-end measurement. Smaller buffers may cause underruns and are
 not guaranteed to improve audible latency on every device.
 
-ALSA uses the same BASS position clock as BassSimple, including Automatic/Heard,
-Sent compensation and autoplay sound lead. It does not change judgment offsets.
-Persisted backend value 4 remains Automatic; ALSA uses value 5.
+Exclusive output is still BassSimple, so its position clock, Automatic/Heard, Sent
+compensation and autoplay sound lead are unchanged. It does not change judgment offsets.
 
 ## Focused verification
 

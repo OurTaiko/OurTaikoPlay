@@ -29,7 +29,7 @@ namespace OurTaiko.Tests
             yield return WaitFor(engine.ApplyPendingSettingsAsync());
             var previous = manager.Settings.Clone();
             var requested = previous.Clone();
-            requested.audio.backend = AudioBackend.LinuxAlsaExclusive;
+            requested.audio.backend = AudioBackend.BassSimple;
             requested.audio.linuxAlsaDevice = "nonexistent-test-device";
             manager.Set(requested);
             var apply = engine.ApplyPendingSettingsAsync();
@@ -38,6 +38,8 @@ namespace OurTaiko.Tests
             Assert.That(engine.Backend, Is.EqualTo(AudioBackend.BassSimple));
             Assert.That(engine.Available, Is.True);
             Assert.That(engine.Silent, Is.False, engine.Diagnostics);
+            Assert.That(engine.ExclusiveDevice, Is.Null);
+            Assert.That(manager.Settings.audio.linuxAlsaDevice, Is.Empty);
             Assert.That(manager.Settings.audio.SameDeviceSettings(previous.audio), Is.True);
             Assert.That(engine.HasPendingDeviceChanges, Is.False);
         }
@@ -59,9 +61,9 @@ namespace OurTaiko.Tests
             try
             {
                 var requested = manager.Settings.Clone();
-                var rows = SettingsCatalog.Sound(SoundPlatform.Linux, AudioBackend.LinuxAlsaExclusive).SelectMany(g => g.Rows).ToArray();
+                var rows = SettingsCatalog.Sound(SoundPlatform.Linux, AudioBackend.BassSimple).SelectMany(g => g.Rows).ToArray();
                 var backendRow = rows.Single(r => r.Id == "backend");
-                backendRow.Set(requested, backendRow.Options.ToList().IndexOf(nameof(AudioBackend.LinuxAlsaExclusive)));
+                backendRow.Set(requested, backendRow.Options.ToList().IndexOf(nameof(AudioBackend.BassSimple)));
                 requested.audio.linuxAlsaDevice = id;
                 var deviceRow = rows.Single(r => r.Id == "linux-alsa-device");
                 int selected = deviceRow.Get(requested);
@@ -72,7 +74,8 @@ namespace OurTaiko.Tests
                 requested.audio.sampleRate = 48000;
                 manager.Set(requested);
                 yield return WaitFor(engine.ApplyPendingSettingsAsync());
-                Assert.That(engine.Backend, Is.EqualTo(AudioBackend.LinuxAlsaExclusive));
+                Assert.That(engine.Backend, Is.EqualTo(AudioBackend.BassSimple));
+                Assert.That(engine.ExclusiveDevice, Is.EqualTo(device.Name));
                 Assert.That(engine.Silent, Is.False, engine.Diagnostics);
                 Assert.That(engine.Failure, Is.Null);
                 Assert.That(engine.Diagnostics, Does.Contain("ALSA actual:"));
@@ -104,6 +107,7 @@ namespace OurTaiko.Tests
             finally { manager.UseUnsaved(new GameSettings()); }
             yield return WaitFor(engine.ApplyPendingSettingsAsync());
             Assert.That(engine.Backend, Is.EqualTo(AudioBackend.BassSimple));
+            Assert.That(engine.ExclusiveDevice, Is.Null);
             Assert.That(engine.Silent, Is.False, engine.Diagnostics);
             Assert.That(engine.HasPendingDeviceChanges, Is.False);
             using (var shared = new NativeAudioSample(File.ReadAllBytes("Assets/OurTaiko/Audio/entry/bgm.ogg"), engine, false))

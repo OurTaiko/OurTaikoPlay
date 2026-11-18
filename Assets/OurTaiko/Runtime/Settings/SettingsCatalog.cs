@@ -245,7 +245,7 @@ namespace OurTaiko
                         DisplaySettings.MovieLaneOpacityDefault, DisplaySettings.MovieLaneOpacityStep,
                         s => s.display.movieLaneOpacity, (s, v) => s.display.movieLaneOpacity = v, v => v + "%", 0, 100, slider: true, stepText: DisplaySettings.MovieLaneOpacityStep + "%")),
             }),
-            new SettingPage("sound", () => T("sound.title"), () => T("sound.subtitle"), s => Sound(platform, s.audio.Backend), audioOutput: true),
+            new SettingPage("sound", () => T("sound.title"), () => T("sound.subtitle"), s => Sound(platform, s.audio.Backend, s.audio.linuxAlsaDevice), audioOutput: true),
             new SettingPage("accounts", () => T("accounts.title"), () => T("accounts.subtitle"), _ => new[]
             {
                 new SettingGroup("1P", Account(0)),
@@ -331,20 +331,50 @@ namespace OurTaiko
         static SettingRow DeviceToggle(string id, string label, string description, Func<AudioOptions, bool> get, Action<AudioOptions, bool> set)
             => SettingRow.Toggle(id, label, description, s => get(s.audio), (s, v) => set(s.audio, v)).OnClose();
 
-        public static IReadOnlyList<SettingGroup> Sound(SoundPlatform platform, AudioBackend backend)
+        // The banner's text for an output that is playing.
+        public static string OutputStatus(AudioBackend backend, string exclusiveDevice, string exclusiveFailure)
+            => exclusiveDevice != null ? T("audio.current", T("audio.alsaExclusive", backend, exclusiveDevice))
+                : exclusiveFailure != null ? T("audio.current", T("audio.alsaShared", backend, exclusiveFailure))
+                : T("audio.current", backend);
+
+        // BassSimple's card on Linux. A saved card that is not connected stays selected, and saved.
+        static SettingRow LinuxAlsaDevice(string saved)
+        {
+            var devices = LinuxAudioDevices.Cached(out string failure);
+            bool missing = !string.IsNullOrEmpty(saved) && LinuxAudioDevices.Resolve(devices, saved) == null;
+            int first = missing ? 2 : 1;
+            var labels = new List<string> { T("value.off") };
+            var notes = new List<string> { failure ?? T("sound.alsa.offNote") };
+            if (missing)
+            {
+                labels.Add(T("sound.alsa.missing"));
+                notes.Add(T("sound.alsa.missingNote"));
+            }
+            foreach (var device in devices)
+            {
+                labels.Add(device.Name);
+                notes.Add(T("sound.alsa.reserved", device.Driver));
+            }
+            return SettingRow.Choice("linux-alsa-device", T("sound.alsa.device"), T("sound.alsa.deviceDesc"), labels, s =>
+            {
+                if (string.IsNullOrEmpty(s.audio.linuxAlsaDevice)) return 0;
+                var device = LinuxAudioDevices.Resolve(devices, s.audio.linuxAlsaDevice);
+                for (int i = 0; i < devices.Count; i++) if (devices[i] == device) return i + first;
+                return missing ? 1 : 0;
+            }, (s, i) => s.audio.linuxAlsaDevice = i == 0 ? "" : i < first ? saved : devices[i - first].Id, list: true, notes: notes).OnClose();
+        }
+
+        public static IReadOnlyList<SettingGroup> Sound(SoundPlatform platform, AudioBackend backend, string linuxAlsaDevice = "")
         {
             var backends = platform == SoundPlatform.Windows
                 // The cross-platform BassSimple output comes last.
                 ? new[] { AudioBackend.Automatic, AudioBackend.BassWASAPI, AudioBackend.BassASIO, AudioBackend.BassSimple }
-                : platform == SoundPlatform.Linux
-                    ? new[] { AudioBackend.Automatic, AudioBackend.LinuxAlsaExclusive, AudioBackend.BassSimple }
-                    : new[] { AudioBackend.Automatic, AudioBackend.BassSimple };
+                : new[] { AudioBackend.Automatic, AudioBackend.BassSimple };
             string Note(AudioBackend b) => b switch
             {
                 AudioBackend.Automatic => T(platform == SoundPlatform.Windows ? "sound.backendNote.autoWindows" : "sound.backendNote.autoOther"),
                 AudioBackend.BassWASAPI => T("sound.backendNote.wasapi"),
                 AudioBackend.BassASIO => T("sound.backendNote.asio"),
-                AudioBackend.LinuxAlsaExclusive => T("sound.backendNote.alsa"),
                 _ => T("sound.backendNote.simple"),
             };
             var volumes = new SettingGroup(T("sound.group.volume"),
@@ -368,26 +398,8 @@ namespace OurTaiko
             if (Array.IndexOf(backends, backend) < 0) backend = AudioBackend.Automatic;
             var selected = backend == AudioBackend.Automatic
                 ? (platform == SoundPlatform.Windows ? AudioBackend.BassWASAPI : AudioBackend.BassSimple) : backend;
-            if (selected == AudioBackend.LinuxAlsaExclusive)
-            {
-                var devices = LinuxAudioDevices.Cached(out string failure);
-                var labels = new List<string> { T("sound.alsa.unavailable") };
-                var notes = new List<string> { failure ?? T("sound.alsa.choose") };
-                foreach (var device in devices)
-                {
-                    labels.Add(device.Name);
-                    notes.Add(T("sound.alsa.reserved", device.Driver));
-                }
-                output.Add(SettingRow.Choice("linux-alsa-device", T("sound.alsa.device"),
-                    T("sound.alsa.deviceDesc"),
-                    labels, s =>
-                    {
-                        var device = LinuxAudioDevices.Resolve(devices, s.audio.linuxAlsaDevice);
-                        for (int i = 0; i < devices.Count; i++) if (devices[i] == device) return i + 1;
-                        return 0;
-                    }, (s, i) => s.audio.linuxAlsaDevice = i == 0 ? "" : devices[i - 1].Id, list: true, notes: notes).OnClose());
-            }
-            if (selected.UsesPositionClock())
+            if (platform == SoundPlatform.Linux) output.Add(LinuxAlsaDevice(linuxAlsaDevice));
+            if (selected == AudioBackend.BassSimple)
             {
                 output.Add(Device("device-period", T("sound.devicePeriod"),
                     T(platform == SoundPlatform.Windows ? "sound.devicePeriodDesc.windows" : "sound.devicePeriodDesc.other"),
@@ -426,7 +438,7 @@ namespace OurTaiko
                 new[] { T("sound.automatic"), T("sound.clock.heard"), T("sound.clock.sent") }, s => (int)s.audio.Clock, (s, i) => s.audio.clock = (AudioClock)i,
                 list: true, notes: new[]
                 {
-                    selected.UsesPositionClock() ? T("sound.clockNote.autoHeard", selected) : T("sound.clockNote.autoSent", selected),
+                    selected == AudioBackend.BassSimple ? T("sound.clockNote.autoHeard") : T("sound.clockNote.autoSent", selected),
                     T("sound.clockNote.heard"),
                     T("sound.clockNote.sent"),
                 });
