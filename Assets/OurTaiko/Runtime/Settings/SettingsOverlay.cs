@@ -129,7 +129,9 @@ namespace OurTaiko
 
         void Show()
         {
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
             LinuxAudioDevices.Forget();
+#endif
             Navigator = new SettingsNavigator(SettingsCatalog.Pages(SoundSettings.Platform), SettingManager.EnsureInstance().Settings);
             openedLanguage = L10n.Language;
             status = "";

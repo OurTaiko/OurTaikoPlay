@@ -1,3 +1,4 @@
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -9,7 +10,6 @@ namespace OurTaiko
     // holding it: WirePlumber must observe a real reservation owner before it can reclaim it.
     internal sealed class LinuxAudioReservation : IDisposable
     {
-#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
         const string Library = "libdbus-1.so.3";
         const string Interface = "org.freedesktop.ReserveDevice1";
         IntPtr connection;
@@ -164,9 +164,6 @@ namespace OurTaiko
         [DllImport(Library)] static extern void dbus_message_unref(IntPtr m);
         [DllImport(Library)] static extern void dbus_connection_close(IntPtr c);
         [DllImport(Library)] static extern void dbus_connection_unref(IntPtr c);
-#else
-        public LinuxAudioReservation(int card, ref bool released) => throw new PlatformNotSupportedException("ALSA exclusive requires Linux");
-        public void Dispose() { }
-#endif
     }
 }
+#endif

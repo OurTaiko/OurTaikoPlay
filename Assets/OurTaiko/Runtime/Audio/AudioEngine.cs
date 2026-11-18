@@ -22,10 +22,15 @@ namespace OurTaiko
         public AudioBackend Backend { get; private set; } = AudioBackend.BassSimple;
         public string Diagnostics { get; private set; }
         // The ALSA card BassSimple holds exclusively; null on the shared output.
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
         public string ExclusiveDevice => linuxDevice?.Name;
         // Why the ALSA card that was asked for is not the one playing; null otherwise.
         public string ExclusiveFailure => linuxDevice == null && appliedOptions != null
             && appliedOptions.UsesLinuxAlsa(SoundSettings.Platform) ? Failure : null;
+#else
+        public string ExclusiveDevice => null;
+        public string ExclusiveFailure => null;
+#endif
         // Why the requested output could not open; null while it plays through a device.
         public string Failure { get; private set; }
         public bool Silent { get; private set; }
@@ -48,12 +53,14 @@ namespace OurTaiko
         bool applying;
         bool initialized;
         bool nativeInitialized;
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
         LinuxAudioReservation linuxReservation;
         LinuxAudioDevice linuxDevice;
         // Set once the ALSA manager has let go of a card: the shared output may need a moment to return.
         bool linuxRecoveryPending;
         // BASS's current device is per thread; an output opened off the main thread is selected here again.
         int openedDevice = -1;
+#endif
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
         static readonly WasapiProcedure WasapiCallback = ReadWasapi;
         bool wasapiInitialized, asioInitialized;
@@ -111,6 +118,7 @@ namespace OurTaiko
                 Log.Error("Audio", Diagnostics);
                 return;
             }
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
             if (options.UsesLinuxAlsa(SoundSettings.Platform))
             {
                 try { InitLinuxAlsa(options); }
@@ -121,6 +129,7 @@ namespace OurTaiko
                     Failure = error.Message;
                 }
             }
+#endif
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
             if (backend != AudioBackend.BassSimple)
             {
@@ -140,9 +149,15 @@ namespace OurTaiko
             if (!allowFallback && (backend == AudioBackend.BassWASAPI || backend == AudioBackend.BassASIO))
                 throw new PlatformNotSupportedException("This audio backend requires Windows");
 #endif
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
             if (Mixer == 0 && !Available)
             {
                 try { InitSharedBass(options); }
+#else
+            if (Mixer == 0)
+            {
+                try { InitBass(options, -1); }
+#endif
                 catch (Exception error)
                 {
                     FreeNative();
@@ -162,10 +177,14 @@ namespace OurTaiko
                 Log.Error("Audio", Diagnostics);
                 return;
             }
-            string device = Silent ? "" : linuxDevice != null ? linuxDevice.Name + " (" + linuxDevice.Driver + ", ALSA exclusive)"
-                : Backend == AudioBackend.BassSimple && Bass.GetDeviceInfo(Bass.CurrentDevice, out var actualDevice) ? actualDevice.Name + " (" + actualDevice.Driver + ")" : "native output";
+            string device = Silent ? "" : Backend == AudioBackend.BassSimple && Bass.GetDeviceInfo(Bass.CurrentDevice, out var actualDevice) ? actualDevice.Name + " (" + actualDevice.Driver + ")" : "native output";
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
+            if (linuxDevice != null) device = linuxDevice.Name + " (" + linuxDevice.Driver + ", ALSA exclusive)";
+#endif
             Diagnostics = (Silent ? "Silent (no device)" : Backend.ToString()) + "; " + device + $"; {options.Rate} Hz requested; device period {options.Period(SoundSettings.Platform)} ms requested; buffer {options.Buffer(SoundSettings.Platform)} ms requested; stream buffering disabled; reported output latency {OutputLatency * 1000:0.0} ms (not end-to-end)";
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
             if (linuxDevice != null) Diagnostics += "; " + linuxDevice.HardwareParameters();
+#endif
             if (Failure != null) Diagnostics += "; fallback: " + Failure;
             if (Silent) Log.Warn("Audio", Diagnostics);
             else Log.Info("Audio", Diagnostics);
@@ -179,11 +198,14 @@ namespace OurTaiko
             if (SimulateDeviceFailure && device != Bass.NoSoundDevice) throw new InvalidOperationException("BASS device initialization: simulated failure");
             Check(Bass.Init(device, options.Rate), "BASS device initialization");
             nativeInitialized = true;
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
             openedDevice = Bass.CurrentDevice;
+#endif
             OutputLatency = device == Bass.NoSoundDevice ? 0 : Math.Max(0, Bass.Info.Latency) / 1000.0;
             Backend = AudioBackend.BassSimple;
             Available = true;
         }
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
         void InitLinuxAlsa(AudioOptions options)
         {
             var devices = LinuxAudioDevices.Enumerate(out string enumerationFailure);
@@ -237,6 +259,7 @@ namespace OurTaiko
             }
             finally { linuxRecoveryPending = false; }
         }
+#endif
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
         void InitWasapi(AudioOptions options)
         {
@@ -332,17 +355,17 @@ namespace OurTaiko
                         InitializeOutput(previous, true);
                     }
                 }
-                if (SoundSettings.Platform == SoundPlatform.Linux)
-                {
-                    // Opening ALSA hardware waits on the reservation manager and on the card (seconds
-                    // at worst). Do it on a worker: Available is false meanwhile, so preparation that
-                    // takes the lock first is cancelled, and anything after it waits for the new output.
-                    Monitor.Exit(DeviceLock);
-                    entered = false;
-                    await Task.Run(() => { lock (DeviceLock) Reopen(); });
-                    if (nativeInitialized && openedDevice >= 0) Bass.CurrentDevice = openedDevice;
-                }
-                else Reopen();
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
+                // Opening ALSA hardware waits on the reservation manager and on the card (seconds
+                // at worst). Do it on a worker: Available is false meanwhile, so preparation that
+                // takes the lock first is cancelled, and anything after it waits for the new output.
+                Monitor.Exit(DeviceLock);
+                entered = false;
+                await Task.Run(() => { lock (DeviceLock) Reopen(); });
+                if (nativeInitialized && openedDevice >= 0) Bass.CurrentDevice = openedDevice;
+#else
+                Reopen();
+#endif
                 if (error == null) appliedOptions = requested;
                 else
                 {
@@ -386,6 +409,7 @@ namespace OurTaiko
             System.Threading.Volatile.Write(ref callbackMixer, 0);
 #endif
             if (Mixer != 0) { Bass.StreamFree(Mixer); Mixer = 0; }
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
             try
             {
                 if (nativeInitialized) { Bass.Free(); nativeInitialized = false; }
@@ -398,6 +422,9 @@ namespace OurTaiko
                 linuxReservation?.Dispose();
                 linuxReservation = null;
             }
+#else
+            if (nativeInitialized) { Bass.Free(); nativeInitialized = false; }
+#endif
         }
         void OnDestroy()
         {

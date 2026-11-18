@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using ManagedBass;
+#endif
 
 namespace OurTaiko
 {
@@ -21,6 +23,7 @@ namespace OurTaiko
             Id = id; Name = name; Driver = driver; BassIndex = bassIndex; Card = card; Pcm = pcm;
         }
 
+#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
         public string HardwareParameters()
         {
             try
@@ -46,7 +49,6 @@ namespace OurTaiko
 
         public void CheckUnmanagedUsers()
         {
-#if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
             // Do not tear down the manager's card while an uncooperative raw client holds a
             // PCM. Recreating it while still occupied can leave the shared server on a dummy
             // sink. Session audio servers can yield through ReserveDevice1; other owners cannot.
@@ -68,8 +70,8 @@ namespace OurTaiko
                     catch (UnauthorizedAccessException) { }
                     throw new InvalidOperationException(Name + ": ALSA card is busy with a native client outside the session audio server; reservation left unchanged");
                 }
-#endif
         }
+#endif
     }
 
     public static class LinuxAudioDevices
