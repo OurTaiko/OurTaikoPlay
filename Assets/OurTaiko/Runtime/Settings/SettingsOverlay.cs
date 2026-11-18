@@ -129,6 +129,7 @@ namespace OurTaiko
 
         void Show()
         {
+            LinuxAudioDevices.Forget();
             Navigator = new SettingsNavigator(SettingsCatalog.Pages(SoundSettings.Platform), SettingManager.EnsureInstance().Settings);
             openedLanguage = L10n.Language;
             status = "";
@@ -147,7 +148,7 @@ namespace OurTaiko
             string sound = engine == null ? null
                 : !engine.Available ? T("audio.none", engine.Failure)
                 : engine.Silent ? T("audio.silent", engine.Failure)
-                : T("audio.current", engine.Diagnostics);
+                : T("audio.current", engine.OutputName);
             bool pending = engine != null && engine.HasPendingDeviceChanges;
             if (pending) sound += "   ·   " + T("audio.pending");
             View.Show(Navigator, status, sound, pending);

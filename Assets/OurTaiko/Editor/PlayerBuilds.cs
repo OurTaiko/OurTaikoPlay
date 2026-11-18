@@ -206,7 +206,8 @@ namespace OurTaiko.Editor
                 // Input System's build hook temporarily adds its settings to this project list.
                 PlayerSettings.SetPreloadedAssets(preloaded);
                 PlayerSettings.iOS.buildNumber = savedBuildNumber;
-                if (target == BuildTarget.StandaloneLinux64) AudioAssetBuild.Cleanup();
+                // A failed build never reaches AudioAssetBuild's postprocess; remove its generated resources.
+                AudioAssetBuild.Cleanup();
                 AssetDatabase.SaveAssets();
             }
         }

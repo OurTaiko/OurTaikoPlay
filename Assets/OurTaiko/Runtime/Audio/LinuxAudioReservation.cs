@@ -17,7 +17,9 @@ namespace OurTaiko
         volatile bool stopping;
         readonly string name, path;
 
-        public LinuxAudioReservation(int card)
+        // `released` becomes true once the manager has let go of the card, even if acquiring then
+        // fails: the shared output must then be given time to come back.
+        public LinuxAudioReservation(int card, ref bool released)
         {
             name = Interface + ".Audio" + card;
             path = "/org/freedesktop/ReserveDevice1/Audio" + card;
@@ -45,11 +47,17 @@ namespace OurTaiko
                         {
                             if (GetInt(reply, IntPtr.Zero, 'b', out int accepted, 0) == 0 || accepted == 0)
                                 throw new InvalidOperationException("Audio device reservation refused; the card may be in use");
+                            released = true;
                         }
                         finally { dbus_message_unref(reply); }
                     }
                     finally { dbus_message_unref(request); }
-                    result = dbus_bus_request_name(connection, name, 0, IntPtr.Zero);
+                    // The manager may answer before it drops the name; we stay queued and get it
+                    // when it does. Asking again while queued is harmless and reports the change.
+                    var waiting = System.Diagnostics.Stopwatch.StartNew();
+                    while ((result = dbus_bus_request_name(connection, name, 0, IntPtr.Zero)) == 2
+                        && waiting.ElapsedMilliseconds < 2000)
+                        Thread.Sleep(10);
                 }
                 if (result != 1 && result != 4) throw new InvalidOperationException("Could not acquire the audio device reservation");
                 worker = new Thread(Serve) { IsBackground = true, Name = "ALSA reservation" };
@@ -73,16 +81,17 @@ namespace OurTaiko
 
         void Respond(IntPtr message)
         {
-            if (Marshal.PtrToStringAnsi(dbus_message_get_path(message)) != path) return;
+            // Calls on any other object path still get an error reply below, never silence.
+            bool ours = Marshal.PtrToStringAnsi(dbus_message_get_path(message)) == path;
             IntPtr reply = IntPtr.Zero;
-            if (dbus_message_is_method_call(message, Interface, "RequestRelease") != 0)
+            if (ours && dbus_message_is_method_call(message, Interface, "RequestRelease") != 0)
             {
                 // Maximal protocol priority: no other client can preempt active game playback.
                 reply = dbus_message_new_method_return(message);
                 int refused = 0;
                 dbus_message_append_args(reply, 'b', ref refused, 0);
             }
-            else if (dbus_message_is_method_call(message, "org.freedesktop.DBus.Properties", "Get") != 0
+            else if (ours && dbus_message_is_method_call(message, "org.freedesktop.DBus.Properties", "Get") != 0
                 && GetStrings(message, IntPtr.Zero, 's', out var iface, 's', out var property, 0) != 0
                 && Marshal.PtrToStringAnsi(iface) == Interface)
             {
@@ -156,7 +165,7 @@ namespace OurTaiko
         [DllImport(Library)] static extern void dbus_connection_close(IntPtr c);
         [DllImport(Library)] static extern void dbus_connection_unref(IntPtr c);
 #else
-        public LinuxAudioReservation(int card) => throw new PlatformNotSupportedException("ALSA exclusive requires Linux");
+        public LinuxAudioReservation(int card, ref bool released) => throw new PlatformNotSupportedException("ALSA exclusive requires Linux");
         public void Dispose() { }
 #endif
     }

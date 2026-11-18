@@ -21,6 +21,8 @@ namespace OurTaiko
         public static AudioEngine Instance { get; private set; }
         public AudioBackend Backend { get; private set; } = AudioBackend.BassSimple;
         public string Diagnostics { get; private set; }
+        // What the settings banner shows: the output, and the hardware for ALSA exclusive.
+        public string OutputName => linuxDevice != null ? Backend + " · " + linuxDevice.Name : Backend.ToString();
         // Why the requested output could not open; null while it plays through a device.
         public string Failure { get; private set; }
         public bool Silent { get; private set; }
@@ -45,7 +47,10 @@ namespace OurTaiko
         bool nativeInitialized;
         LinuxAudioReservation linuxReservation;
         LinuxAudioDevice linuxDevice;
+        // Set once the ALSA manager has let go of a card: the shared output may need a moment to return.
         bool linuxRecoveryPending;
+        // BASS's current device is per thread; an output opened off the main thread is selected here again.
+        int openedDevice = -1;
 #if UNITY_EDITOR_WIN || (UNITY_STANDALONE_WIN && !UNITY_EDITOR)
         static readonly WasapiProcedure WasapiCallback = ReadWasapi;
         bool wasapiInitialized, asioInitialized;
@@ -171,6 +176,7 @@ namespace OurTaiko
             if (SimulateDeviceFailure && device != Bass.NoSoundDevice) throw new InvalidOperationException("BASS device initialization: simulated failure");
             Check(Bass.Init(device, options.Rate), "BASS device initialization");
             nativeInitialized = true;
+            openedDevice = Bass.CurrentDevice;
             OutputLatency = device == Bass.NoSoundDevice ? 0 : Math.Max(0, Bass.Info.Latency) / 1000.0;
             Backend = AudioBackend.BassSimple;
             Available = true;
@@ -184,8 +190,7 @@ namespace OurTaiko
             if (device == null) throw new InvalidOperationException(enumerationFailure ?? "Selected ALSA hardware device is missing or not selected; select an available output");
             if (SimulateDeviceFailure) throw new InvalidOperationException("ALSA initialization: simulated failure");
             device.CheckUnmanagedUsers();
-            linuxRecoveryPending = true;
-            linuxReservation = new LinuxAudioReservation(device.Card);
+            linuxReservation = new LinuxAudioReservation(device.Card, ref linuxRecoveryPending);
             // ReserveDevice1's response precedes PipeWire's asynchronous PCM close. Only retry
             // transient busy/driver errors, with a bounded deadline; never steal an active client.
             var waiting = System.Diagnostics.Stopwatch.StartNew();
@@ -316,15 +321,31 @@ namespace OurTaiko
                 { bus.Stop(); bus.Release(); }
                 NativeAudioSample.ReleaseAll();
                 FreeNative();
-                try
+                Exception error = null;
+                void Reopen()
                 {
-                    InitializeOutput(requested, false);
-                    appliedOptions = requested;
+                    try { InitializeOutput(requested, false); }
+                    catch (Exception failure)
+                    {
+                        error = failure;
+                        FreeNative();
+                        InitializeOutput(previous, true);
+                    }
                 }
-                catch (Exception error)
+                if (SoundSettings.Platform == SoundPlatform.Linux)
                 {
-                    FreeNative();
-                    InitializeOutput(previous, true);
+                    // Opening ALSA hardware waits on the reservation manager and on the card (seconds
+                    // at worst). Do it on a worker: Available is false meanwhile, so preparation that
+                    // takes the lock first is cancelled, and anything after it waits for the new output.
+                    Monitor.Exit(DeviceLock);
+                    entered = false;
+                    await Task.Run(() => { lock (DeviceLock) Reopen(); });
+                    if (nativeInitialized && openedDevice >= 0) Bass.CurrentDevice = openedDevice;
+                }
+                else Reopen();
+                if (error == null) appliedOptions = requested;
+                else
+                {
                     // Keep live volume changes while restoring the last usable device configuration.
                     var restored = manager.Settings.Clone();
                     previous.volume = restored.audio.volume;
@@ -372,6 +393,7 @@ namespace OurTaiko
             finally
             {
                 linuxDevice = null;
+                openedDevice = -1;
                 if (linuxReservation != null) linuxRecoveryPending = true;
                 linuxReservation?.Dispose();
                 linuxReservation = null;

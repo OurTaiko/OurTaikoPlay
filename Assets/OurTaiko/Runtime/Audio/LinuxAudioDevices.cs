@@ -38,6 +38,12 @@ namespace OurTaiko
             catch (UnauthorizedAccessException) { return "ALSA negotiated parameters unavailable"; }
         }
 
+        static bool Owned(string substream)
+        {
+            try { return Regex.IsMatch(File.ReadAllText(Path.Combine(substream, "status")), @"owner_pid\s*:\s*\d+"); }
+            catch (IOException) { return false; }
+        }
+
         public void CheckUnmanagedUsers()
         {
 #if UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
@@ -56,7 +62,9 @@ namespace OurTaiko
                         string process = File.ReadAllText("/proc/" + (group.Success ? group.Groups[1].Value : pid) + "/comm").Trim();
                         if (LinuxAudioDevices.IsSessionAudioServer(process)) continue;
                     }
-                    catch (IOException) { if (!Directory.Exists("/proc/" + pid)) continue; }
+                    // Only a substream that no longer names an owner proves the client exited. A
+                    // missing /proc entry may just be hidden (hidepid) for another user's process.
+                    catch (IOException) { if (!Owned(sub)) continue; }
                     catch (UnauthorizedAccessException) { }
                     throw new InvalidOperationException(Name + ": ALSA card is busy with a native client outside the session audio server; reservation left unchanged");
                 }
@@ -86,6 +94,18 @@ namespace OurTaiko
                 match = device;
             }
             return match;
+        }
+
+        // The settings page is rebuilt on every change; it lists the devices once per opening of
+        // the overlay (Forget) instead of walking BASS and sysfs each time.
+        static IReadOnlyList<LinuxAudioDevice> cached;
+        static string cachedFailure;
+        public static void Forget() { cached = null; cachedFailure = null; }
+        public static IReadOnlyList<LinuxAudioDevice> Cached(out string failure)
+        {
+            if (cached == null) cached = Enumerate(out cachedFailure);
+            failure = cachedFailure;
+            return cached;
         }
 
         public static IReadOnlyList<LinuxAudioDevice> Enumerate(out string failure)

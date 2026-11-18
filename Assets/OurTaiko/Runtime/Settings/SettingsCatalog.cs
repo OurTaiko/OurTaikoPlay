@@ -370,7 +370,7 @@ namespace OurTaiko
                 ? (platform == SoundPlatform.Windows ? AudioBackend.BassWASAPI : AudioBackend.BassSimple) : backend;
             if (selected == AudioBackend.LinuxAlsaExclusive)
             {
-                var devices = LinuxAudioDevices.Enumerate(out string failure);
+                var devices = LinuxAudioDevices.Cached(out string failure);
                 var labels = new List<string> { T("sound.alsa.unavailable") };
                 var notes = new List<string> { failure ?? T("sound.alsa.choose") };
                 foreach (var device in devices)
