@@ -9,7 +9,7 @@ namespace OurTaiko
 {
     // Reads the course files: each song library root's Dan/*.otdan.json (local courses), and until
     // servers hand courses out, the stand-in for their answer in DanServerTest/*.json:
-    // { "server": "<base URL>", "dans": [ <course>, ... ] }, the body GET /api/v1/game/dans is to
+    // { "server": "<base URL>", "dans": [ <course>, ... ] }, the body GET /api/v2/game/dans is to
     // return plus the server it came from.
     public static class DanCourseLoader
     {
@@ -59,12 +59,12 @@ namespace OurTaiko
             return entries;
         }
 
-        // A connected server's courses as GET /api/v1/game/dans lists them; path names the list
+        // A connected server's courses as GET /api/v2/game/dans lists them; path names the list
         // for the entries (and their errors).
         public static List<DanCourseEntry> LoadServer(string server, JArray dans, DanCourseResolver resolver)
         {
             var entries = new List<DanCourseEntry>();
-            string path = server.TrimEnd('/') + "/api/v1/game/dans";
+            string path = server.TrimEnd('/') + "/api/v2/game/dans";
             foreach (var item in dans)
             {
                 try { entries.Add(resolver.Resolve(DanCourse.From(item as JObject ?? throw new FormatException("A course must be an object."), server.TrimEnd('/')), path)); }

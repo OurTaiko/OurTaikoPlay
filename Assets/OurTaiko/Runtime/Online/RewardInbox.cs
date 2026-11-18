@@ -77,7 +77,7 @@ namespace OurTaiko.Online
     // that names no site (an old domain, another server), through the server's own address.
     sealed class EndpointRewardSite : IRewardSite
     {
-        public const string Path = "/api/v1/game/rewards";
+        public const string Path = "/api/v2/game/rewards";
         readonly FanmadeEndpoint endpoint;
         readonly int seat;
         readonly string user;

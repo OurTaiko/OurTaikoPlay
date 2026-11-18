@@ -28,7 +28,7 @@ namespace OurTaiko.Online
             // before servers named one.
             public int ServerGenre { get; set; }
             public string ChartId { get; set; }
-            // GET /api/v1/charts/{id} as received; FanmadeChart.From reads it back.
+            // GET /api/v2/charts/{id} as received; FanmadeChart.From reads it back.
             public string ChartJson { get; set; }
             // [{"id","title","genre"}] in catalog order: the categories the chart was listed under.
             public string Categories { get; set; }

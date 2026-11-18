@@ -21,7 +21,7 @@ namespace OurTaiko
     // picture (DanIntroView.Reveal; YataiDON starts them with the screen; issue #39). No timer (user decision: the simulator does not limit the player's time).
     // Three pages (DanSelectPages): ローカル, Fanmade and Database, the online ones listing only the
     // official courses and ending with the 外伝 entry, where a course's code is typed to challenge
-    // it (GET /api/v1/game/dans/{code}); the course then joins the page.
+    // it (GET /api/v2/game/dans/{code}); the course then joins the page.
     public sealed class DanSelectScene : MonoBehaviour, ISettledScreen
     {
         // The ribbon: chips every RibbonSpacing px around the centre (Nijiiro dan_ribbon x 960).
@@ -422,7 +422,7 @@ namespace OurTaiko
             codeEntry.Say(L10n.Get("Dan", "code.searching"));
             codeEntry.field.interactable = false;
             lookupCode = code;
-            lookup = endpoint.RequestAsync("/api/v1/game/dans/" + code);
+            lookup = endpoint.RequestAsync("/api/v2/game/dans/" + code);
         }
 
         void PollLookup()
@@ -439,7 +439,7 @@ namespace OurTaiko
                 return;
             }
             DanCourseEntry entry;
-            try { entry = resolver.Resolve(DanCourse.From(Online.Json.Parse(task.Result), pages[Page].Server), pages[Page].Server + "/api/v1/game/dans/" + lookupCode); }
+            try { entry = resolver.Resolve(DanCourse.From(Online.Json.Parse(task.Result), pages[Page].Server), pages[Page].Server + "/api/v2/game/dans/" + lookupCode); }
             catch (Exception error) when (error is FormatException || error is Online.FanmadeException)
             {
                 codeEntry.Say(L10n.Format("Dan", "code.failed", error.Message));

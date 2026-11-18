@@ -16,7 +16,7 @@ namespace OurTaiko
     //
     //   Servers     a board for each connected built-in server, with how many plays it lists.
     //   Categories  the chosen server's categories: すべて, then its catalog's.
-    //   Plays       the chosen category's recorded plays (GET /api/v1/replays?categoryId=), newest
+    //   Plays       the chosen category's recorded plays (GET /api/v2/replays?categoryId=), newest
     //               first, a few to a page. A category loads its first page the first time it is
     //               opened and further ones as the player nears their end.
     //   Result      after a battle and the two result boards: the player and the recording side by
