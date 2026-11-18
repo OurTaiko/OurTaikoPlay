@@ -127,11 +127,14 @@ namespace OurTaiko.Tests
             Assert.That(catalog.Songs[0].AudioPath, Is.Null);
         }
 
-        // Mono's Path.Combine rejects '|'; it once failed the whole scan, leaving no local songs.
+        // Path.Combine rejects a character the platform does not allow in paths ('|' on Windows,
+        // only NUL on macOS and Linux); it once failed the whole scan, leaving no local songs. The
+        // character is the platform's own, so the chart is unusable wherever the test runs.
         [Test]
         public void AChartWithAnUnusableWavePathIsSkippedAlone()
         {
-            Write("bad.tja", Chart("Bad", wave: "a|b.ogg"));
+            char invalid = Path.GetInvalidPathChars().First(c => c != '\n' && c != '\r');
+            Write("bad.tja", Chart("Bad", wave: "a" + invalid + "b.ogg"));
             Write("good.tja", Chart("Good"));
             LogAssert.Expect(LogType.Warning, new Regex(@"^\[Songs\] Skipping song .*bad\.tja: "));
             Assert.That(LocalSongScanner.Scan(root).Songs.Select(s => s.Key), Is.EqualTo(new[] { "good" }));

@@ -102,7 +102,9 @@ namespace OurTaiko.Tests
                 Assert.That(play.IsFinished, Is.True);
                 Assert.That(play.firstLane.ending.gameObject.activeSelf, Is.True);
                 Assert.That(play.pauseButton.interactable, Is.False);
-                Assert.That(play.drumPad.enabled, Is.False);
+                // No drum input under the ending: the pad is turned off, or not shown at all (the
+                // touch drum is off by default in the Editor).
+                Assert.That(play.drumPad.isActiveAndEnabled, Is.False);
                 Assert.That(switcher.IsSwitching, Is.False, "The curtain must wait for the ending.");
                 AssertEndingAudio(play.firstLane.ending, kind);
                 double started = GameTimeline.FrameTime;

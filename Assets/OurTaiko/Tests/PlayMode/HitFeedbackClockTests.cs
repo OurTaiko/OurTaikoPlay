@@ -70,6 +70,7 @@ namespace OurTaiko.Tests
                 {
                     // Seeking after an odd number of strikes must start the next attempt on the right.
                     play.MovePractice(0);
+                    yield return TestPlay.StartPracticeAttempt(play);
                     strikes = 0;
                     play.Session.Judged += Observe;
                     play.Session.Advance(2, true);

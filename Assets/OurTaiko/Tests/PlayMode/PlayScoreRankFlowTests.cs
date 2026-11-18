@@ -85,7 +85,9 @@ namespace OurTaiko.Tests
                 Assert.That((int)badge.rank.DisplayedRank, Is.EqualTo(7));
                 if (practice)
                 {
+                    // Moving the paused lane only previews; the next attempt resets the score and rank.
                     play.MovePractice(1);
+                    yield return TestPlay.StartPracticeAttempt(play);
                     Assert.That(play.firstLane.scoreCounter.Text, Is.EqualTo("0"));
                     Assert.That((int)badge.rank.DisplayedRank, Is.Zero);
                     Assert.That(badge.rank.image.enabled, Is.False);
