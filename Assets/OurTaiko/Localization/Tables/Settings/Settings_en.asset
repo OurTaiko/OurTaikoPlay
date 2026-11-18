@@ -854,6 +854,38 @@ MonoBehaviour:
     m_Localized: Show the 3D Don beside the lane, in song select, Entry and the results. Dress it up on net.ourtaiko.org.
     m_Metadata:
       m_Items: []
+  - m_Id: 2299837717209090
+    m_Localized: "{0} \xB7 Card output and inputs reserved"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209091
+    m_Localized: ALSA Exclusive Output
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2299837717209092
+    m_Localized: 'Reserves the entire card: other apps cannot use its output or microphone. Requires a ReserveDevice1 manager. USB port changes require reselection.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232266608640
+    m_Localized: Plays through the shared system output
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232270802944
+    m_Localized: Saved card (not connected)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232270802945
+    m_Localized: Uses the shared output until this card is connected again
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997248
+    m_Localized: "{0} \xB7 ALSA Exclusive \xB7 {1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997249
+    m_Localized: "{0} \xB7 Not exclusive: {1}"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
