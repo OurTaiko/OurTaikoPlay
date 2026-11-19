@@ -35,6 +35,7 @@ namespace OurTaiko
 
         CanvasGroup group;
         RectTransform railViewport, railEntries;
+        (RectTransform root, Image box, TextMeshProUGUI label) railClose;
         int railCount;
         bool followRail;
         RectTransform panel, rail, viewport, list, sheet, modal, ring, glow;
@@ -155,16 +156,32 @@ namespace OurTaiko
             edge.rectTransform.sizeDelta = new Vector2(1, 0); edge.rectTransform.anchoredPosition = Vector2.zero;
 
             railViewport = Node("Rail Viewport", rail);
-            Stretch(railViewport, 0, 24, 0, 24);
+            Stretch(railViewport, 0, 24, 0, 24 + RailItem + RailGap);
             railViewport.gameObject.AddComponent<RectMask2D>();
             railEntries = Node("Entries", railViewport);
             Top(railEntries, 0, 0, 0, 0);
-            back.raycastTarget = true;
-            rail.gameObject.AddComponent<SettingsScroll>().Scrolled = delta =>
+            railViewport.gameObject.AddComponent<Image>().color = Color.clear;
+            railViewport.gameObject.AddComponent<SettingsScroll>().Scrolled = delta =>
             {
                 followRail = false;
                 PositionRail(railEntries.anchoredPosition.y + delta);
             };
+
+            railClose = BuildRailButton("Close", rail, () => TapPage?.Invoke(railCount));
+            railClose.root.anchorMin = Vector2.zero;
+            railClose.root.anchorMax = Vector2.right;
+            railClose.root.offsetMin = new Vector2(21, 24);
+            railClose.root.offsetMax = new Vector2(-21, 24 + RailItem);
+        }
+
+        (RectTransform root, Image box, TextMeshProUGUI label) BuildRailButton(string name, Transform parent, Action onTap)
+        {
+            var box = SettingsShapes.Box(name, parent, Color.clear, 24);
+            box.raycastTarget = true;
+            box.gameObject.AddComponent<PointerRelay>().Clicked = onTap;
+            var label = Label("Label", box.transform, "", 33, Muted, TextAlignmentOptions.MidlineLeft);
+            Stretch(label.rectTransform, 30, 0, 18, 0);
+            return (box.rectTransform, box, label);
         }
 
         void BuildPage()
@@ -445,39 +462,29 @@ namespace OurTaiko
 
         void ShowRail(SettingsNavigator nav)
         {
-            int count = nav.Pages.Count + 1;
+            int count = nav.Pages.Count;
             if (count != railCount || nav.Zone == SettingsZone.Rail && (lastZone != nav.Zone || lastFocus != -1 - nav.PageIndex))
                 followRail = true;
             railCount = count;
             while (railItems.Count < count)
             {
                 int index = railItems.Count;
-                var box = SettingsShapes.Box("Category" + index, railEntries, Color.clear, 24);
-                box.raycastTarget = true;
-                box.gameObject.AddComponent<PointerRelay>().Clicked = () => TapPage?.Invoke(index);
-                var label = Label("Label", box.transform, "", 33, Muted, TextAlignmentOptions.MidlineLeft);
-                Stretch(label.rectTransform, 30, 0, 18, 0);
-                railItems.Add((box.rectTransform, box, label));
+                railItems.Add(BuildRailButton("Category" + index, railEntries, () => TapPage?.Invoke(index)));
             }
             for (int i = 0; i < railItems.Count; i++)
             {
                 var (root, box, label) = railItems[i];
                 root.gameObject.SetActive(i < count);
                 if (i >= count) continue;
-                bool close = i == nav.Pages.Count;
                 Top(root, 21, i * (RailItem + RailGap), -21, RailItem);
-                if (close)
-                {
-                    root.anchorMin = Vector2.zero;
-                    root.anchorMax = Vector2.right;
-                    root.pivot = new Vector2(0.5f, 0);
-                    root.anchoredPosition = Vector2.zero;
-                }
-                label.text = close ? L10n.Get("Common", "close") : nav.Pages[i].Title;
+                label.text = nav.Pages[i].Title;
                 bool selected = i == nav.PageIndex;
                 box.color = selected ? Selected : Color.clear;
                 Recolor(label, selected ? Ink : Muted);
             }
+            railClose.label.text = L10n.Get("Common", "close");
+            railClose.box.color = nav.OnClose ? Selected : Color.clear;
+            Recolor(railClose.label, nav.OnClose ? Ink : Muted);
         }
 
         void PositionRail(float offset)
@@ -485,9 +492,9 @@ namespace OurTaiko
             float visible = railViewport.rect.height;
             float height = Mathf.Max(visible, railCount * (RailItem + RailGap) - RailGap);
             railEntries.sizeDelta = new Vector2(0, height);
-            if (followRail && shownNav != null && shownNav.Zone == SettingsZone.Rail)
+            if (followRail && shownNav != null && shownNav.Zone == SettingsZone.Rail && !shownNav.OnClose)
             {
-                float top = shownNav.OnClose ? height - RailItem : shownNav.PageIndex * (RailItem + RailGap);
+                float top = shownNav.PageIndex * (RailItem + RailGap);
                 offset = Mathf.Clamp(offset, top + RailItem - visible, top);
             }
             railEntries.anchoredPosition = new Vector2(0, Mathf.Clamp(offset, 0, height - visible));
@@ -865,6 +872,7 @@ namespace OurTaiko
             {
                 case SettingsZone.Rail:
                     int page = -1 - lastFocus;
+                    if (page == railCount) return railClose.root;
                     return followRail && page >= 0 && page < railItems.Count ? railItems[page].root : null;
                 case SettingsZone.Sheet:
                     int option = lastFocus - 1000;

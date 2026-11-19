@@ -26,7 +26,7 @@ namespace OurTaiko.Tests
                 var entries = overlay.View.GetComponentsInChildren<PointerRelay>()
                     .Where(r => r.name.StartsWith("Category")).ToArray();
                 var labels = entries.Select(e => e.GetComponentInChildren<TMPro.TMP_Text>().text);
-                Assert.That(labels, Is.EqualTo(overlay.Navigator.Pages.Select(p => p.Title).Append(L10n.Get("Common", "close"))));
+                Assert.That(labels, Is.EqualTo(overlay.Navigator.Pages.Select(p => p.Title)));
                 foreach (var entry in entries)
                 {
                     var rect = (RectTransform)entry.transform;
@@ -53,6 +53,33 @@ namespace OurTaiko.Tests
             overlay.View.SetRow(controls, 1);
             Assert.That(overlay.Navigator.Pages.Select(p => p.Id), Does.Contain("controls"));
             CheckRail();
+            overlay.Close();
+        }
+
+        [UnityTest]
+        public IEnumerator DefaultSidebarShowsEntireCloseButtonBelowCategoryViewport()
+        {
+            Settings.UseUnsaved(new GameSettings());
+            var overlay = SettingsOverlay.Open();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+
+            var close = (RectTransform)overlay.View.GetComponentsInChildren<PointerRelay>()
+                .Single(button => button.GetComponentInChildren<TMPro.TMP_Text>()?.text == L10n.Get("Common", "close")
+                    && button.name == "Close").transform;
+            var rail = (RectTransform)overlay.View.transform.Find("Panel/Rail");
+            var viewport = (RectTransform)rail.Find("Rail Viewport");
+            Assert.That(close.parent, Is.EqualTo(rail));
+            var corners = new Vector3[4];
+            close.GetWorldCorners(corners);
+            foreach (var corner in corners)
+            {
+                Assert.That(rail.rect.Contains(rail.InverseTransformPoint(corner)), Is.True);
+                Vector2 screen = RectTransformUtility.WorldToScreenPoint(null, corner);
+                Assert.That(Screen.safeArea.Contains(screen), Is.True);
+            }
+            float viewportBottom = viewport.TransformPoint(viewport.rect.min).y;
+            Assert.That(corners[1].y, Is.LessThan(viewportBottom));
             overlay.Close();
         }
 
