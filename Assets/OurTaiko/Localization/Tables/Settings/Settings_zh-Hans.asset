@@ -886,6 +886,26 @@ MonoBehaviour:
     m_Localized: "{0} \xB7 \u672A\u80FD\u72EC\u5360\uFF1A{1}"
     m_Metadata:
       m_Items: []
+  - m_Id: 2523232274997250
+    m_Localized: "浏览器登录"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997251
+    m_Localized: "在系统浏览器中授权 {0} 登录。"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997252
+    m_Localized: "请在浏览器核对验证码：{0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997253
+    m_Localized: "账号中心暂不支持网页登录，请使用密码登录。"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997254
+    m_Localized: "授权已过期，请重新发起网页登录。"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

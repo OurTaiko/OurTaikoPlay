@@ -886,6 +886,26 @@ MonoBehaviour:
     m_Localized: "{0} \xB7 Not exclusive: {1}"
     m_Metadata:
       m_Items: []
+  - m_Id: 2523232274997250
+    m_Localized: "Sign in with browser"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997251
+    m_Localized: "Authorize {0} in your system browser."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997252
+    m_Localized: "Check this code in your browser: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997253
+    m_Localized: "Browser sign-in is unavailable. Use your password instead."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997254
+    m_Localized: "Authorization expired. Start browser sign-in again."
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -215,4 +215,9 @@ status.busy,Still busy with the previous request.,前の処理がまだ終わっ
 status.enterUsername,Enter {0}P's username first.,先に {0}P のユーザー名を入力してください。,请先输入 {0}P 的用户名。,Footer message; {0} seat number
 status.signedInAs,{0}P signed in as {1}.   ·   {2},{0}P が {1} でログインしました。   ·   {2},{0}P 已以 {1} 登录。   ·   {2},"Footer message; {0} seat number, {1} nickname, {2} login summary"
 status.signedOut,{0}P signed out.,{0}P がログアウトしました。,{0}P 已退出登录。,Footer message; {0} seat number
+accounts.browser,Sign in with browser,ブラウザーでログイン,浏览器登录,Browser authorization
+accounts.browserHint,Authorize {0} in your system browser.,ブラウザーで {0} のログインを許可します。,在系统浏览器中授权 {0} 登录。,Browser authorization
+accounts.browserCode,Check this code in your browser: {0},ブラウザーでこのコードを確認：{0},请在浏览器核对验证码：{0},Browser authorization
+accounts.browserUnavailable,Browser sign-in is unavailable. Use your password instead.,ブラウザーログインは利用できません。パスワードでログインしてください。,账号中心暂不支持网页登录，请使用密码登录。,Browser authorization
+accounts.browserExpired,Authorization expired. Start browser sign-in again.,有効期限切れです。もう一度ログインしてください。,授权已过期，请重新发起网页登录。,Browser authorization
 status.seatNotSignedIn,{0}P is not signed in.,{0}P はログインしていません。,{0}P 未登录。,Footer message; {0} seat number

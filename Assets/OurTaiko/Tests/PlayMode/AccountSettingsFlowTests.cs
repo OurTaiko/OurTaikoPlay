@@ -99,12 +99,12 @@ namespace OurTaiko.Tests
             yield return OpenAccounts(o => overlay = o);
             var nav = overlay.Navigator;
             var rows = nav.Page.Rows;
-            Assert.That(rows.Take(4).Select(r => r.Label), Is.EqualTo(new[] { "username", "password", "signOut", "username" }.Select(key => L10n.Get("Settings", "accounts." + key))));
+            Assert.That(rows.Take(4).Select(r => r.Label), Is.EqualTo(new[] { "username", "password", "signOut", "browser" }.Select(key => L10n.Get("Settings", "accounts." + key))));
             Assert.That(nav.Page.Groups.Select(g => g.Title), Is.EqualTo(new[] { "1P", "2P", L10n.Get("Settings", "accounts.group.servers") }));
             Assert.That(rows[2].Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "status.notSignedIn")));
 
             // The song list first: it names the account center the server takes accounts from.
-            Select(overlay, 6);
+            Select(overlay, rows.ToList().FindIndex(row => row.ActionId == SettingsCatalog.RefreshSongList));
             Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "accounts.refreshSongList")));
             overlay.Confirm();
             yield return WaitUntil(() => nav.Row.Status == L10n.Get("Settings", "status.done"));
@@ -151,9 +151,9 @@ namespace OurTaiko.Tests
             Assert.That(online.Accounts.Seats[0].IsSignedIn, Is.True);
 
             // 2P signs in with an account of its own; its plate shows its nickname.
-            yield return Type(overlay, 3, "ka");
-            yield return Type(overlay, 4, "don");
-            yield return WaitUntil(() => online.Accounts.Seats[1].IsSignedIn && !online.IsBusy && rows[5].Status == L10n.Format("Settings", "status.signedIn", "KA"));
+            yield return Type(overlay, rows.ToList().FindIndex(row => row.Id == "username-1"), "ka");
+            yield return Type(overlay, rows.ToList().FindIndex(row => row.ActionId == SettingsCatalog.SignIn + 1), "don");
+            yield return WaitUntil(() => online.Accounts.Seats[1].IsSignedIn && !online.IsBusy && rows.Single(row => row.ActionId == SettingsCatalog.SignOut + 1).Status == L10n.Format("Settings", "status.signedIn", "KA"));
             var second = PlayerInfoController.Instance.SecondInfo;
             Assert.That(second.name, Is.EqualTo("KA"));
             Assert.That(second.title, Is.EqualTo("虹"));

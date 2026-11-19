@@ -103,6 +103,8 @@ namespace OurTaiko.Tests
         public readonly ConcurrentDictionary<string, JObject> Nameplates = new ConcurrentDictionary<string, JObject>();
         // Account sign-ins issued by /api/v1/game/account/login and still valid.
         public readonly ConcurrentDictionary<string, string> AccountTokens = new ConcurrentDictionary<string, string>();
+        string deviceCode;
+        public string ApprovedDeviceUser;
         // The account center's user id of a fixture user.
         public static string UserId(string username) => FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(username)).Substring(0, 32);
         public Func<Chart, JObject> Manifest;
@@ -438,6 +440,18 @@ namespace OurTaiko.Tests
             };
             switch (path)
             {
+                case "/api/v1/game/account/device":
+                    deviceCode = Hex(64);
+                    Reply(context, 200, new JObject { ["deviceCode"] = deviceCode, ["userCode"] = "TESTABCD", ["interval"] = 1, ["expiresIn"] = 10 });
+                    return;
+                case "/api/v1/game/account/device/token":
+                    if (deviceCode == null || (string)JObject.Parse(body)["deviceCode"] != deviceCode) { Reply(context, 410, new JObject()); return; }
+                    if (ApprovedDeviceUser == null) { Reply(context, 202, new JObject { ["pending"] = true }); return; }
+                    deviceCode = null;
+                    string grantedToken = Hex(64);
+                    AccountTokens[grantedToken] = ApprovedDeviceUser;
+                    Reply(context, 200, new JObject { ["token"] = grantedToken, ["user"] = User(ApprovedDeviceUser) });
+                    return;
                 case "/api/v1/game/account/login":
                 {
                     var request = JObject.Parse(body);

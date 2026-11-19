@@ -43,6 +43,20 @@ namespace OurTaiko.Tests
         static T Run<T>(Func<Task<T>> body) => Task.Run(body).GetAwaiter().GetResult();
         static void Run(Func<Task> body) => Task.Run(body).GetAwaiter().GetResult();
 
+        [Test]
+        public void BrowserSignInUsesOnlyThePublicCodeInTheBrowser()
+        {
+            fixture.ApprovedDeviceUser = "ka";
+            var account = Run(() => center.BrowserLoginAsync("2P", (url, code) =>
+            {
+                Assert.That(code, Is.EqualTo("TESTABCD"));
+                Assert.That(url, Is.EqualTo(center.Issuer + "/game/authorize/?code=" + code));
+            }, default));
+            Assert.That(account.Username, Is.EqualTo("ka"));
+            Assert.That(fixture.AccountTokens[account.Token], Is.EqualTo("ka"));
+            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/account/login"));
+        }
+
         // A built-in style server: the catalog first, then the seat signed in with a traded session.
         FanmadeEndpoint Catalog()
         {

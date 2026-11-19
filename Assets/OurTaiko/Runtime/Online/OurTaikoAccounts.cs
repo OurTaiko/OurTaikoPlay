@@ -146,6 +146,45 @@ namespace OurTaiko.Online
         {
             var body = new JObject { ["username"] = username ?? "", ["password"] = password ?? "", ["deviceName"] = deviceName ?? "" };
             var reply = await SendAsync(HttpMethod.Post, "/api/v1/game/account/login", null, body, cancel);
+            return ReadAccount(reply);
+        }
+
+        public async Task<OurTaikoAccount> BrowserLoginAsync(string deviceName, Action<string, string> authorize,
+            CancellationToken cancel)
+        {
+            var grant = await SendAsync(HttpMethod.Post, "/api/v1/game/account/device", null,
+                new JObject { ["deviceName"] = deviceName }, cancel);
+            string secret = Json.Str(grant, "deviceCode"), code = Json.Str(grant, "userCode");
+            if (!Json.HexId(secret, 64) || code.Length != 8 || !code.All(ch => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".Contains(ch)))
+                throw new FanmadeException("API_TOKEN_INVALID");
+            int seconds = (int?)grant["expiresIn"] ?? 0, interval = (int?)grant["interval"] ?? 0;
+            if (seconds < 1 || seconds > 600 || interval < 1 || interval > seconds) throw new FanmadeException("API_TOKEN_INVALID");
+            using var expires = CancellationTokenSource.CreateLinkedTokenSource(cancel);
+            expires.CancelAfter(TimeSpan.FromSeconds(seconds));
+            cancel.ThrowIfCancellationRequested();
+            authorize(Issuer + "/game/authorize/?code=" + code, code);
+            try
+            {
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(interval), expires.Token);
+                    try
+                    {
+                        var reply = await SendAsync(HttpMethod.Post, "/api/v1/game/account/device/token", null,
+                            new JObject { ["deviceCode"] = secret }, expires.Token);
+                        if ((bool?)reply["pending"] != true) return ReadAccount(reply);
+                    }
+                    catch (HttpStatusException error) when (error.Status == 429) { interval = Math.Min(interval + 5, 60); }
+                }
+            }
+            catch (Exception) when (!cancel.IsCancellationRequested && expires.IsCancellationRequested)
+            {
+                throw new HttpStatusException(410);
+            }
+        }
+
+        static OurTaikoAccount ReadAccount(JObject reply)
+        {
             var account = new OurTaikoAccount { Token = Json.Str(reply, "token") };
             if (!Json.HexId(account.Token, 64)) throw new FanmadeException("API_TOKEN_INVALID");
             account.SetUser(reply["user"]);

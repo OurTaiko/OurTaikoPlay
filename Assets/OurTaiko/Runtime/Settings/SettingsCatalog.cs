@@ -176,7 +176,7 @@ namespace OurTaiko
     {
         public const string RefreshSongList = "refresh-song-list", RefreshLogin = "refresh-login";
         // Followed by the seat: sign-in-0 is 1P's.
-        public const string SignIn = "sign-in-", SignOut = "sign-out-";
+        public const string SignIn = "sign-in-", SignOut = "sign-out-", BrowserLogin = "browser-login-";
 
         // The overlay's text: Assets/OurTaiko/Localization/Strings/Settings.csv.
         public const string Table = "Settings";
@@ -304,6 +304,7 @@ namespace OurTaiko
                     (s, text) => { if (seat == 0) s.accounts.p1Username = text.Trim(); else s.accounts.p2Username = text.Trim(); }),
                 SettingRow.Password(SignIn + seat, T("accounts.password"), T("accounts.passwordDesc", player)),
                 SettingRow.Action(SignOut + seat, T("accounts.signOut"), T("accounts.signOutDesc", player), T("accounts.signOut")),
+                SettingRow.Action(BrowserLogin + seat, T("accounts.browser"), T("accounts.browserHint", player), T("accounts.browser")),
             };
         }
 

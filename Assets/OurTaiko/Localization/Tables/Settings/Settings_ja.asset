@@ -886,6 +886,26 @@ MonoBehaviour:
     m_Localized: "{0} \xB7 \u6392\u4ED6\u306A\u3057\uFF1A{1}"
     m_Metadata:
       m_Items: []
+  - m_Id: 2523232274997250
+    m_Localized: "ブラウザーでログイン"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997251
+    m_Localized: "ブラウザーで {0} のログインを許可します。"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997252
+    m_Localized: "ブラウザーでこのコードを確認：{0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997253
+    m_Localized: "ブラウザーログインは利用できません。パスワードでログインしてください。"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997254
+    m_Localized: "有効期限切れです。もう一度ログインしてください。"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
