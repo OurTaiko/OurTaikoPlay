@@ -131,8 +131,9 @@ namespace OurTaiko.Tests
                 if (practice)
                 {
                     play.TogglePause(); yield return null;
-                    Assert.That(play.Session.Good, Is.Zero);
-                    Assert.That(play.Session.JudgeOffset, Is.EqualTo(judge).Within(1e-12));
+                    Assert.That(play.Session.Good, Is.EqualTo(1), "The stopped attempt keeps its judgments until the next one starts.");
+                    Assert.That(play.Lane1.Shown.Good, Is.Zero);
+                    Assert.That(play.Lane1.Shown.JudgeOffset, Is.EqualTo(judge).Within(1e-12));
                     Assert.That(play.RenderedTime, Is.EqualTo(songTime - audio).Within(.05));
                 }
             }

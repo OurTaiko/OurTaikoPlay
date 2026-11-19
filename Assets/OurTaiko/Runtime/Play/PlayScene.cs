@@ -428,7 +428,7 @@ namespace OurTaiko
             if (IsPractice && !IsFinished)
             {
                 if (pausePanel.activeSelf && !closingPauseMenu)
-                    StartCoroutine(ClosePauseMenu(() => { RestorePracticePads(); PracticeAttemptCleared?.Invoke(); PausePractice(true); }));
+                    StartCoroutine(ClosePauseMenu(() => { RestorePracticePads(); RestartPractice(); }));
                 return;
             }
             if (IsMulti) return;
@@ -478,7 +478,7 @@ namespace OurTaiko
 
         void SampleDancers(double time)
         {
-            if (dancers != null) dancers.ShowTime(time, Session.BpmAt(time), Session.GaugePoints / SoulGauge.MaximumPoints, Session.IsClear);
+            if (dancers != null) dancers.ShowTime(time, Lane1.Shown.BpmAt(time), Lane1.Shown.GaugePoints / SoulGauge.MaximumPoints, Lane1.Shown.IsClear);
         }
     }
 }

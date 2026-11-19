@@ -44,6 +44,7 @@ namespace OurTaiko.Tests
             play.pausePanel.SetActive(false);
         }
 
+        // Faces follow the session the lane draws: a paused practice draws its preview, not the attempt.
         void Draw(double time) => Render.Invoke(play, new object[] { time });
         Sprite Head(int index) => play.NoteRoot(index).Find("Head").GetComponent<LaneSprite>().sprite;
         // Big notes rest open-mouthed: their first crop is open, their second closed. Every note
@@ -54,12 +55,12 @@ namespace OurTaiko.Tests
         IEnumerator Check(bool practice)
         {
             yield return Load(practice, new string('1', 50) + ",\n1,\n2,\n3,\n4,\n5008,\n6008,\n7008,\n9008,\n#BPMCHANGE 240\n1,");
-            var notes = play.Session.Chart.Notes;
+            var notes = play.Lane1.Shown.Chart.Notes;
 
             Draw(2.0);
             Assert.That(Head(50), Is.SameAs(play.noteSprites[1]), "Before 10 combo the face stays neutral.");
-            for (int i = 0; i < 50; i++) Assert.That(play.Session.Hit(false, notes[i].Time), Is.EqualTo(Judgment.Good));
-            Assert.That(play.Session.Combo, Is.EqualTo(50));
+            for (int i = 0; i < 50; i++) Assert.That(play.Lane1.Shown.Hit(false, notes[i].Time), Is.EqualTo(Judgment.Good));
+            Assert.That(play.Lane1.Shown.Combo, Is.EqualTo(50));
             // The same render time must update after a judgment changes the combo.
             Draw(2.0);
             Assert.That(Head(50), Is.SameAs(play.alternateNoteSprites[1]));
@@ -88,8 +89,8 @@ namespace OurTaiko.Tests
             Assert.That(Head(50), Is.SameAs(pausedSprite), "Repeated sampling at a frozen chart time holds the frame.");
             Draw(0.49);
             Assert.That(Head(50), Is.SameAs(play.noteSprites[1]), "10 combo (note 10, beat 0.72) starts the faces on beat 1.");
-            play.Session.Advance(2.2, false);
-            Assert.That(play.Session.Combo, Is.Zero);
+            play.Lane1.Shown.Advance(2.2, false);
+            Assert.That(play.Lane1.Shown.Combo, Is.Zero);
             Draw(2.25);
             Assert.That(Head(50), Is.SameAs(play.noteSprites[1]), "A miss restores neutral expressions immediately.");
             Draw(notes[52].Time + 0.125);
@@ -103,12 +104,12 @@ namespace OurTaiko.Tests
         public IEnumerator AngryFacesFromOneHundredCombo()
         {
             yield return Load(false, new string('1', 100) + ",\n1,\n2,\n5008,\n7008,\n3,");
-            var notes = play.Session.Chart.Notes;
-            for (int i = 0; i < 99; i++) Assert.That(play.Session.Hit(false, notes[i].Time), Is.EqualTo(Judgment.Good));
+            var notes = play.Lane1.Shown.Chart.Notes;
+            for (int i = 0; i < 99; i++) Assert.That(play.Lane1.Shown.Hit(false, notes[i].Time), Is.EqualTo(Judgment.Good));
             Draw(notes[100].Time + 0.0625);
             Assert.That(Head(100), Is.SameAs(play.alternateNoteSprites[1]), "99 combo still opens the mouth on sixteenths.");
-            Assert.That(play.Session.Hit(false, notes[99].Time), Is.EqualTo(Judgment.Good));
-            Assert.That(play.Session.Combo, Is.EqualTo(100));
+            Assert.That(play.Lane1.Shown.Hit(false, notes[99].Time), Is.EqualTo(Judgment.Good));
+            Assert.That(play.Lane1.Shown.Combo, Is.EqualTo(100));
             for (int i = 100; i < 105; i++)
             {
                 int kind = (int)notes[i].Kind;
