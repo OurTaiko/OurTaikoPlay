@@ -189,6 +189,13 @@ namespace OurTaiko
             double now = Now;
             if (!switcher.IsInputBlocked && !HasLeft)
             {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                if (!Flow.IsSelected && UnityEngine.InputSystem.Keyboard.current?.escapeKey.wasPressedThisFrame == true)
+                {
+                    Application.Quit();
+                    return;
+                }
+#endif
                 // A lone 2P's drum works the boards; 1P's don then joins 1P.
                 var p1 = InputManager.P1;
                 var p2 = InputManager.P2;

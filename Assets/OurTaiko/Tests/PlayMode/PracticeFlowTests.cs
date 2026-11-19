@@ -280,7 +280,7 @@ namespace OurTaiko.Tests
             yield return Press(Key.F); yield return Press(Key.F);
             yield return Waits.Until(() => !play.IsPaused);
             var completed = play.Session;
-            completed.Hit(false, completed.Chart.Notes[0].Time + .012);
+            completed.Hit(false, completed.Chart.Notes[0].Time - .008);
             var settingsManager = SettingManager.EnsureInstance();
             var settings = settingsManager.Settings.Clone();
             settings.play.practiceTimingReview = false;
@@ -300,7 +300,8 @@ namespace OurTaiko.Tests
             var hit = play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>();
             var missed = play.NoteRoot(1).Find("PracticeTiming").GetComponent<TMP_Text>();
             Assert.That(hit.gameObject.activeInHierarchy, Is.True, "Song end must preserve the completed attempt's review.");
-            Assert.That(hit.text, Is.EqualTo("+12"));
+            Assert.That(hit.text, Is.EqualTo("-8"));
+            Assert.That(hit.rectTransform.anchoredPosition.y, Is.EqualTo(-72));
             Assert.That(missed.gameObject.activeInHierarchy, Is.True);
             Assert.That(missed.text, Is.EqualTo("×"));
             Assert.That(missed.color, Is.EqualTo((Color)new Color32(200, 200, 200, 255)));
@@ -437,7 +438,7 @@ namespace OurTaiko.Tests
                 Assert.That(labels[i].color, Is.EqualTo(hitIndices[i] % 2 == 0 ? TimingOffsetText.LateColor : TimingOffsetText.EarlyColor));
                 Assert.That(labels[i].rectTransform.anchoredPosition.x, Is.Zero, "Labels stay attached to their own note.");
                 Assert.That(labels[i].rectTransform.anchoredPosition.y, Is.EqualTo(hitIndices[i] % 2 == 0 ? 72 : -72),
-                    "Dense labels alternate above/below by note order, including missed notes.");
+                    "Late hits appear above their note and early hits below it.");
                 Assert.That(labels[i], Is.TypeOf<TextMeshPro>(), "Timing shares the note's world-space sorting group.");
             }
             foreach (int missed in new[] { 3, 8 })
@@ -446,7 +447,7 @@ namespace OurTaiko.Tests
                 Assert.That(label.gameObject.activeInHierarchy, Is.True);
                 Assert.That(label.text, Is.EqualTo("×"));
                 Assert.That(label.color, Is.EqualTo((Color)new Color32(200, 200, 200, 255)));
-                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(missed % 2 == 0 ? 72 : -72));
+                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(72));
             }
             Assert.That(play.NoteRoot(12).Find("PracticeTiming")?.gameObject.activeSelf ?? false, Is.False,
                 "An unhit note has no timing value.");
@@ -472,26 +473,25 @@ namespace OurTaiko.Tests
                 "Pausing a new attempt with no hits must not show the previous attempt's values.");
         }
         [UnityTest, Category("SpriteRendering")]
-        public IEnumerator TimingLabelsAlternateOnlyWhereNotesCrowdOnScreen()
+        public IEnumerator TimingLabelSideFollowsTheRawOffsetEvenWhenRoundedToZero()
         {
-            // 16ths at SCROLL 0.3 are 27 px apart across the lane, but 0.3+1i puts them 90 px apart up it:
-            // they never crowd, so every label stays above its note.
             yield return StartPractice(AudioBackend.BassSimple, false,
                 "TITLE:Timing Review\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#SCROLL 0.3+1i\n1111111111111111,\n1111,\n1111,\n#END");
             yield return Press(Key.F); yield return Press(Key.F);
             yield return Waits.Until(() => !play.IsPaused);
             var attempt = play.Session;
-            for (int i = 0; i < 6; i++) attempt.Hit(false, attempt.Chart.Notes[i].Time + .012);
+            double[] offsets = { -.008, -.0002, 0, .0002, .012, -.008 };
+            string[] expected = { "-8", "-0", "+0", "+0", "+12", "-8" };
+            for (int i = 0; i < offsets.Length; i++) attempt.Hit(false, attempt.Chart.Notes[i].Time + offsets[i]);
             yield return Press(Key.Escape);
             play.MovePractice(1);
             yield return new WaitForSecondsRealtime(.3f);
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < offsets.Length; i++)
             {
                 var label = play.NoteRoot(i).Find("PracticeTiming").GetComponent<TMP_Text>();
                 Assert.That(label.gameObject.activeInHierarchy, Is.True);
-                Assert.That(label.text, Is.EqualTo("+12"));
-                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(72),
-                    "Notes spread apart by a vertical SCROLL keep their labels above.");
+                Assert.That(label.text, Is.EqualTo(expected[i]));
+                Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(offsets[i] < 0 ? -72 : 72));
             }
         }
         [UnityTest, Category("SpriteRendering")]
