@@ -28,10 +28,10 @@ namespace OurTaiko.Tests
         public void TheRailListsTheCategoriesThenCloseAndStopsAtBothEnds()
         {
             var nav = Navigator();
-            Assert.That(nav.Pages.Select(p => p.Title), Is.EqualTo(new[] { "general", "controls", "play", "display", "sound", "accounts" }.Select(p => L10n.Get("Settings", p + ".title"))));
+            Assert.That(nav.Pages.Select(p => p.Title), Is.EqualTo(new[] { "general", "controls", "play", "display", "sound", "accounts", "sidebar" }.Select(p => L10n.Get("Settings", p + ".title"))));
             Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Rail));
             Assert.That(nav.Move(-1), Is.EqualTo(SettingsNavigator.Result.Bumped), "No wrapping past the first category.");
-            Assert.That(nav.Move(6), Is.EqualTo(SettingsNavigator.Result.Moved));
+            Assert.That(nav.Move(nav.Pages.Count), Is.EqualTo(SettingsNavigator.Result.Moved));
             Assert.That(nav.OnClose, Is.True);
             Assert.That(nav.Move(1), Is.EqualTo(SettingsNavigator.Result.Bumped));
             Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Close));

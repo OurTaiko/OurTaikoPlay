@@ -21,7 +21,8 @@ namespace OurTaiko
     {
         public enum Result { None, Moved, Bumped, Entered, Returned, Changed, Action, Close }
 
-        public IReadOnlyList<SettingPage> Pages { get; }
+        public IReadOnlyList<SettingPage> Pages { get; private set; }
+        internal IReadOnlyList<SettingPage> AllPages { get; }
         public GameSettings Settings { get; private set; }
         public SettingsZone Zone { get; private set; } = SettingsZone.Rail;
         // Pages.Count is the rail's Close entry.
@@ -41,9 +42,13 @@ namespace OurTaiko
         public SettingsNavigator(IReadOnlyList<SettingPage> pages, GameSettings settings)
         {
             Settings = settings?.Clone() ?? new GameSettings();
-            Pages = pages;
-            foreach (var page in Pages) page.Refresh(Settings);
+            AllPages = pages;
+            Pages = VisiblePages();
+            foreach (var page in AllPages) page.Refresh(Settings);
         }
+
+        List<SettingPage> VisiblePages() => AllPages.Where(p =>
+            p.Id == SettingsCatalog.Sidebar || !Settings.general.hiddenSettingsPages.Contains(p.Id)).ToList();
 
         // The sheet's entries: a list row's options, or a key row's binding actions.
         public IReadOnlyList<string> SheetOptions => Row?.Kind == SettingKind.Keys
@@ -200,7 +205,16 @@ namespace OurTaiko
         public void Refresh()
         {
             string id = Row?.Id;
-            foreach (var page in Pages) page.Refresh(Settings);
+            var selected = Page;
+            var visible = VisiblePages();
+            Pages = visible;
+            PageIndex = selected == null ? visible.Count : visible.IndexOf(selected);
+            if (PageIndex < 0)
+            {
+                PageIndex = RowIndex = 0;
+                Zone = SettingsZone.Rail;
+            }
+            foreach (var page in AllPages) page.Refresh(Settings);
             if (Page == null) return;
             int index = id == null ? -1 : Page.Rows.ToList().FindIndex(r => r.Id == id);
             RowIndex = index >= 0 ? index : Math.Min(RowIndex, Math.Max(0, Page.Rows.Count - 1));

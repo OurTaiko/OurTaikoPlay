@@ -109,7 +109,7 @@ namespace OurTaiko.Tests
                 Assert.That(select.Manager.AutoPlay, Is.True);
                 yield return new WaitForSecondsRealtime(0.3f);
                 Assert.That(Vector2.Distance(options.rows[0].rightArrow.rectTransform.anchoredPosition, arrowPosition), Is.LessThan(0.01f));
-                int descendants = copy.GetComponentsInChildren<Transform>(true).Length;
+                var menuHierarchy = options.GetComponentsInChildren<Transform>(true);
                 options.outsideClick.Clicked.Invoke();
                 yield return WaitUntil(() => !select.Manager.IsOptionPanelOpen);
 
@@ -119,7 +119,8 @@ namespace OurTaiko.Tests
                 Assert.That(view.options, Is.SameAs(options));
                 Assert.That(select.Manager.AutoPlay, Is.True, "Reopening binds the same saved option state.");
                 Assert.That(options.board.anchoredPosition, Is.EqualTo(optionsPosition));
-                Assert.That(copy.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(descendants), "Reopening must not rebuild the hierarchy.");
+                Assert.That(options.GetComponentsInChildren<Transform>(true), Is.EqualTo(menuHierarchy),
+                    "Reopening must reuse every option-panel object in the same hierarchy order.");
                 Assert.That(select.wheel.GetComponentsInChildren<SongBoardView>(true).Length, Is.EqualTo(3));
                 Assert.That(view.cards.Select(card => card.board), Is.EqualTo(cards));
                 options.outsideClick.Clicked.Invoke();

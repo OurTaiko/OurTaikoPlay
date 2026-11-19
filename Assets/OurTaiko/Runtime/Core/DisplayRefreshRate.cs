@@ -15,6 +15,15 @@ namespace OurTaiko
         static int requested = int.MinValue;
         static bool reportPending;
 
+        internal static int CurrentTarget
+        {
+            get
+            {
+                var rate = Screen.currentResolution.refreshRateRatio;
+                return rate.numerator > 0 && rate.denominator > 0 ? Mathf.Max(1, Mathf.RoundToInt((float)rate.value)) : 60;
+            }
+        }
+
         // fps: the frames per second the game will draw; 0 asks for the fastest the display has.
         public static void Request(int fps)
         {

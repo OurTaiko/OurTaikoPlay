@@ -60,8 +60,15 @@ jobs:
           esac
 
       # AudioDevice tests measure real playback, which the container cannot provide; run them locally.
+      - name: Prepare Unity with Linux media libraries and clocked audio
+        run: |
+          version=$(awk '/^m_EditorVersion:/ {print $2}' ProjectSettings/ProjectVersion.txt)
+          docker build --build-arg "editor=unityci/editor:ubuntu-${version}-linux-il2cpp-4.0.0" -t ourtaiko-unity-test:local .github/unity-test
+
       - uses: game-ci/unity-test-runner@v4
         with:
+          cliVersion: v0.1.76
+          customImage: ourtaiko-unity-test:local
           testMode: ${{ matrix.mode }}
           customParameters: ${{ steps.assemblies.outputs.filter }} -testCategory !AudioDevice
           artifactsPath: test-results
