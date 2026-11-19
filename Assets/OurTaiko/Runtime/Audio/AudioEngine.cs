@@ -210,7 +210,8 @@ namespace OurTaiko
         {
             var devices = LinuxAudioDevices.Enumerate(out string enumerationFailure);
             var device = LinuxAudioDevices.Resolve(devices, options.linuxAlsaDevice);
-            if (device == null) throw new InvalidOperationException(enumerationFailure ?? "Selected ALSA hardware device is missing or not selected; select an available output");
+            if (device == null) throw new InvalidOperationException("Selected ALSA hardware device is missing or not selected; "
+                + (enumerationFailure ?? "select an available output"));
             if (SimulateDeviceFailure) throw new InvalidOperationException("ALSA initialization: simulated failure");
             device.CheckUnmanagedUsers();
             linuxReservation = new LinuxAudioReservation(device.Card, ref linuxRecoveryPending);
