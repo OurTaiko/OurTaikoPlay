@@ -22,7 +22,7 @@ namespace OurTaiko
             RowColor = new Color(1, 1, 1, 0.035f), RowFocus = new Color(0.31f, 0.85f, 0.92f, 0.10f), Selected = Hex(0x22304D),
             TrackOff = Hex(0x3A4763), TrackOn = Hex(0x2FA9BE), Groove = Hex(0x1D2840), SliderTrack = Hex(0x2A3754);
 
-        const float Inset = 30, HeaderHeight = 108, FooterHeight = 90, RailWidth = 435, RailItem = 102, RowHeight = 120,
+        const float Inset = 30, HeaderHeight = 108, FooterHeight = 90, RailWidth = 435, RowHeight = 120,
             RowGap = 12, GroupGap = 39, WrappedSpacing = -32, SectionHeight = 48, PagePad = 48, SheetWidth = 810, SheetOption = 126, DescWidth = 760;
 
         // Taps and drags, wired by SettingsOverlay. SetRow is a tap's change; DragRow is one in the
@@ -34,6 +34,7 @@ namespace OurTaiko
         public Action CancelText;
 
         CanvasGroup group;
+        RectTransform railEntries;
         RectTransform panel, rail, viewport, list, sheet, modal, ring, glow;
         Image shade, ringImage, glowImage, sheetShade, modalShade;
         TextMeshProUGUI headerTitle, breadcrumb, footerText, backHint, donHint, moveHint, modalTitle, modalText, sheetTitle, sheetText;
@@ -150,6 +151,9 @@ namespace OurTaiko
             edge.color = new Color(1, 1, 1, 0.07f);
             edge.rectTransform.anchorMin = new Vector2(1, 0); edge.rectTransform.anchorMax = Vector2.one;
             edge.rectTransform.sizeDelta = new Vector2(1, 0); edge.rectTransform.anchoredPosition = Vector2.zero;
+
+            railEntries = Node("Entries", rail);
+            Stretch(railEntries, 0, 24, 0, 24);
         }
 
         void BuildPage()
@@ -419,7 +423,7 @@ namespace OurTaiko
         static string FooterHint(SettingsNavigator nav)
         {
             if (nav.Zone == SettingsZone.Rail) return nav.Page?.Subtitle ?? T("overlay.closeSettings");
-            if (nav.Zone == SettingsZone.Adjust && (!UsesTouchTextActions || nav.ControlsAvailable)) return T("footer.adjusting", nav.Row.Label);
+            if (nav.Zone == SettingsZone.Adjust) return T("footer.adjusting", nav.Row.Label);
             var row = nav.Row;
             if (row == null) return "";
             return row.Hint.Length > 0 ? row.Label + "  ·  " + row.Hint : row.Label;
@@ -431,7 +435,7 @@ namespace OurTaiko
             while (railItems.Count < count)
             {
                 int index = railItems.Count;
-                var box = SettingsShapes.Box("Category" + index, rail, Color.clear, 24);
+                var box = SettingsShapes.Box("Category" + index, railEntries, Color.clear, 24);
                 box.raycastTarget = true;
                 box.gameObject.AddComponent<PointerRelay>().Clicked = () => TapPage?.Invoke(index);
                 var label = Label("Label", box.transform, "", 33, Muted, TextAlignmentOptions.MidlineLeft);
@@ -444,11 +448,13 @@ namespace OurTaiko
                 root.gameObject.SetActive(i < count);
                 if (i >= count) continue;
                 bool close = i == nav.Pages.Count;
-                root.anchorMin = new Vector2(0, close ? 0 : 1); root.anchorMax = new Vector2(1, close ? 0 : 1);
-                root.pivot = new Vector2(0.5f, close ? 0 : 1);
-                root.offsetMin = new Vector2(21, 0); root.offsetMax = new Vector2(-21, 0);
-                root.sizeDelta = new Vector2(-42, RailItem);
-                root.anchoredPosition = new Vector2(0, close ? 24 : -24 - i * (RailItem + 9));
+                // Reserve one slot per category and one for Close, even when some are hidden.
+                float slot = 1f / (nav.AllPages.Count + 1);
+                float bottom = close ? 0 : 1 - (i + 1) * slot;
+                root.anchorMin = new Vector2(0, bottom);
+                root.anchorMax = new Vector2(1, bottom + slot);
+                root.offsetMin = new Vector2(21, 4);
+                root.offsetMax = new Vector2(-21, -4);
                 label.text = close ? L10n.Get("Common", "close") : nav.Pages[i].Title;
                 bool selected = i == nav.PageIndex;
                 box.color = selected ? Selected : Color.clear;

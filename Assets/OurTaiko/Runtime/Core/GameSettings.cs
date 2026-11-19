@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace OurTaiko
@@ -23,6 +24,7 @@ namespace OurTaiko
             if (!string.IsNullOrWhiteSpace(json)) JsonUtility.FromJsonOverwrite(json, settings);
             settings.general ??= new GeneralSettings();
             settings.general.songLibraryPaths ??= Array.Empty<string>();
+            settings.general.hiddenSettingsPages ??= new List<string>();
             settings.general.keyboard ??= new KeyboardBindings();
             settings.general.keyboard.Normalize();
             settings.play ??= new PlaySettings();
@@ -49,6 +51,8 @@ namespace OurTaiko
         // File-only option. Additional folders alongside the always-included default Songs
         // folder. Each custom folder must be an absolute path on the current platform.
         public string[] songLibraryPaths = Array.Empty<string>();
+        // Stable page IDs. An empty list (including older saves) shows every category.
+        public List<string> hiddenSettingsPages = new List<string>();
         public KeyboardBindings keyboard = new KeyboardBindings();
         public string Language => Array.IndexOf(Languages, language) >= 0 ? language
             : language == "zh_tw" ? "zh"

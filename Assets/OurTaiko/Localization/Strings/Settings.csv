@@ -216,3 +216,6 @@ status.enterUsername,Enter {0}P's username first.,先に {0}P のユーザー名
 status.signedInAs,{0}P signed in as {1}.   ·   {2},{0}P が {1} でログインしました。   ·   {2},{0}P 已以 {1} 登录。   ·   {2},"Footer message; {0} seat number, {1} nickname, {2} login summary"
 status.signedOut,{0}P signed out.,{0}P がログアウトしました。,{0}P 已退出登录。,Footer message; {0} seat number
 status.seatNotSignedIn,{0}P is not signed in.,{0}P はログインしていません。,{0}P 未登录。,Footer message; {0} seat number
+sidebar.title,Settings Sidebar,設定サイドバー,设置栏,Settings category title
+sidebar.subtitle,Choose which categories appear in the sidebar.,サイドバーに表示する項目を選びます。,选择要在侧栏中显示的分类。,Settings category subtitle
+sidebar.categories,Visible categories,表示する項目,显示的分类,Group of sidebar visibility switches

@@ -16,29 +16,38 @@ namespace OurTaiko.Tests
         static SettingManager Settings => SettingManager.EnsureInstance();
 
         [UnityTest]
-        public IEnumerator DeviceChangesResizeTheRailAndPreserveTypedText()
+        public IEnumerator SidebarSwitchUpdatesTheVisibleRailAndSurvivesReopening()
         {
+            Settings.UseUnsaved(new GameSettings());
             var overlay = SettingsOverlay.Open();
-            var nav = overlay.Navigator;
-            nav.TapPage(nav.Pages.ToList().FindIndex(p => p.Id == "accounts"));
-            nav.Confirm();
-            nav.OpenRow(nav.Page.Rows.ToList().FindIndex(r => r.Kind == SettingKind.Text));
-            overlay.View.Show(nav, "", null, false);
-            var field = overlay.View.GetComponentInChildren<TMPro.TMP_InputField>(true);
-            field.SetTextWithoutNotify("unfinished username");
-            foreach (bool connected in new[] { false, true, false, true })
-            {
-                nav.SetControlsAvailable(connected);
-                overlay.View.Show(nav, "", null, false);
-                var categories = overlay.View.GetComponentsInChildren<PointerRelay>(true)
-                    .Where(r => r.name.StartsWith("Category") && r.gameObject.activeSelf).ToArray();
-                Assert.That(categories.Length, Is.EqualTo(nav.Pages.Count + 1));
-                Assert.That(nav.Page.Id, Is.EqualTo("accounts"));
-                Assert.That(nav.Zone, Is.EqualTo(SettingsZone.Typing));
-                Assert.That(field.text, Is.EqualTo("unfinished username"));
-            }
-            overlay.Close();
             yield return null;
+            void CheckRail()
+            {
+                var entries = overlay.View.GetComponentsInChildren<PointerRelay>()
+                    .Where(r => r.name.StartsWith("Category")).ToArray();
+                var labels = entries.Select(e => e.GetComponentInChildren<TMPro.TMP_Text>().text);
+                Assert.That(labels, Is.EqualTo(overlay.Navigator.Pages.Select(p => p.Title).Append(L10n.Get("Common", "close"))));
+                for (int i = 1; i < entries.Length; i++)
+                {
+                    var above = (RectTransform)entries[i - 1].transform;
+                    var below = (RectTransform)entries[i].transform;
+                    Assert.That(above.TransformPoint(above.rect.min).y, Is.GreaterThan(below.TransformPoint(below.rect.max).y));
+                }
+            }
+            CheckRail();
+            overlay.View.TapPage(overlay.Navigator.Pages.Count - 1);
+            int controls = overlay.Navigator.Page.Rows.ToList().FindIndex(row => row.Id == "show-controls");
+            overlay.View.SetRow(controls, 0);
+            CheckRail();
+            overlay.Close();
+            overlay = SettingsOverlay.Open();
+            Assert.That(overlay.Navigator.Pages.Select(p => p.Id), Does.Not.Contain("controls"));
+            CheckRail();
+            overlay.View.TapPage(overlay.Navigator.Pages.Count - 1);
+            overlay.View.SetRow(controls, 1);
+            Assert.That(overlay.Navigator.Pages.Select(p => p.Id), Does.Contain("controls"));
+            CheckRail();
+            overlay.Close();
         }
 
         [TearDown]

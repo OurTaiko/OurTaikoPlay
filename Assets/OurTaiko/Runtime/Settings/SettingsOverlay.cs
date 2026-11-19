@@ -53,7 +53,6 @@ namespace OurTaiko
         // The row of the running settings action (by id: rows are rebuilt on every change); closing cancels it.
         string runningId;
         CancellationTokenSource actionCancel;
-        float nextDeviceCheck;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() { Instance = null; closedFrame = -1; }
@@ -134,8 +133,6 @@ namespace OurTaiko
             LinuxAudioDevices.Forget();
 #endif
             Navigator = new SettingsNavigator(SettingsCatalog.Pages(SoundSettings.Platform), SettingManager.EnsureInstance().Settings);
-            Navigator.SetControlsAvailable(PhysicalInputDevices.Available());
-            nextDeviceCheck = Time.unscaledTime + 0.5f;
             openedLanguage = L10n.Language;
             status = "";
             openFrame = Time.frameCount;
@@ -166,7 +163,7 @@ namespace OurTaiko
             string Name(int seat) => accounts.Seats[seat].IsSignedIn
                 ? (accounts.Seats[seat].Nickname.Length > 0 ? accounts.Seats[seat].Nickname : accounts.Seats[seat].Username) : null;
             View.ShowSeats(Name(0), Name(1));
-            foreach (var row in Navigator.Pages.SelectMany(p => p.Rows))
+            foreach (var row in Navigator.AllPages.SelectMany(p => p.Rows))
                 if (row.ActionId != null && row.ActionId.StartsWith(SettingsCatalog.SignOut) && row.Id != runningId)
                 {
                     string name = Name(row.ActionId[SettingsCatalog.SignOut.Length] - '0');
@@ -177,7 +174,6 @@ namespace OurTaiko
         void Update()
         {
             if (Navigator == null) return;
-            RefreshInputDevices();
             if (writePending && held == null && !PointerPressed) Save(continuous: false);
             if (runningId != null)
             {
@@ -205,20 +201,6 @@ namespace OurTaiko
             else if (Press(InputKey.MenuLeft)) Side(-1, repeating);
             else if (Press(InputKey.MenuRight)) Side(1, repeating);
             if (held is InputKey key0 && !InputManager.GetKey(key0)) held = null;
-        }
-
-        // Poll only while settings are open; catches USB/Bluetooth changes even when Unity's
-        // synthetic Keyboard does not change. Resuming the app requests an immediate scan.
-        void OnApplicationFocus(bool focused) { if (focused) nextDeviceCheck = 0; }
-
-        void RefreshInputDevices()
-        {
-            if (Application.platform != RuntimePlatform.Android || Time.unscaledTime < nextDeviceCheck) return;
-            nextDeviceCheck = Time.unscaledTime + 0.5f;
-            if (!Navigator.SetControlsAvailable(PhysicalInputDevices.Available())) return;
-            held = null;
-            ignoreFrame = Time.frameCount;
-            Refresh();
         }
 
         // The keys' actions, also for tests: don, ka (left -1, right +1), left/right arrows and Back.
@@ -357,7 +339,9 @@ namespace OurTaiko
                 catch (Exception reload) { Log.Warn("Scene", reload.Message); }
                 if (this == null || Navigator != null) return;
                 Show();
-                Navigator.TapPage(Navigator.Pages.ToList().FindIndex(p => p.ShowsAudioOutput));
+                var pages = Navigator.Pages.ToList();
+                int soundPage = pages.FindIndex(p => p.ShowsAudioOutput);
+                Navigator.Move(soundPage >= 0 ? soundPage : pages.FindIndex(p => p.Id == SettingsCatalog.Sidebar));
                 Navigator.Confirm();
                 status = error.Message;
                 Refresh();
@@ -433,7 +417,7 @@ namespace OurTaiko
         static string T(string key) => SettingsCatalog.T(key);
         static string T(string key, params object[] args) => SettingsCatalog.T(key, args);
 
-        SettingRow RowById(string id) => Navigator?.Pages.SelectMany(p => p.Rows).FirstOrDefault(r => r.Id == id);
+        SettingRow RowById(string id) => Navigator?.AllPages.SelectMany(p => p.Rows).FirstOrDefault(r => r.Id == id);
 
         // What a volume row plays through its group when it changes; null when there is no clip for it.
         AudioClip PreviewClip(AudioGroup group) => group switch

@@ -185,7 +185,26 @@ namespace OurTaiko
 
         static string Signed(int ms) => (ms > 0 ? "+" : "") + ms + " ms";
 
-        public static IReadOnlyList<SettingPage> Pages(SoundPlatform platform) => new[]
+        internal const string Sidebar = "sidebar";
+
+        public static IReadOnlyList<SettingPage> Pages(SoundPlatform platform)
+        {
+            var categories = Categories(platform);
+            var sidebar = new SettingPage(Sidebar, () => T("sidebar.title"), () => T("sidebar.subtitle"), _ => new[]
+            {
+                new SettingGroup(T("sidebar.categories"), categories.Select(page =>
+                    SettingRow.Toggle("show-" + page.Id, page.Title, page.Subtitle,
+                        s => !s.general.hiddenSettingsPages.Contains(page.Id),
+                        (s, show) =>
+                        {
+                            s.general.hiddenSettingsPages.RemoveAll(id => id == page.Id);
+                            if (!show) s.general.hiddenSettingsPages.Add(page.Id);
+                        })).ToArray()),
+            });
+            return categories.Append(sidebar).ToArray();
+        }
+
+        static SettingPage[] Categories(SoundPlatform platform) => new[]
         {
             new SettingPage("general", () => T("general.title"), () => T("general.subtitle"), _ => new[]
             {

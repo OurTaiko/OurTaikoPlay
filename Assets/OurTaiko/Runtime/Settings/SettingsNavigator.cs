@@ -22,8 +22,7 @@ namespace OurTaiko
         public enum Result { None, Moved, Bumped, Entered, Returned, Changed, Action, Close }
 
         public IReadOnlyList<SettingPage> Pages { get; private set; }
-        readonly IReadOnlyList<SettingPage> allPages;
-        public bool ControlsAvailable { get; private set; } = true;
+        internal IReadOnlyList<SettingPage> AllPages { get; }
         public GameSettings Settings { get; private set; }
         public SettingsZone Zone { get; private set; } = SettingsZone.Rail;
         // Pages.Count is the rail's Close entry.
@@ -43,31 +42,13 @@ namespace OurTaiko
         public SettingsNavigator(IReadOnlyList<SettingPage> pages, GameSettings settings)
         {
             Settings = settings?.Clone() ?? new GameSettings();
-            allPages = Pages = pages;
-            foreach (var page in Pages) page.Refresh(Settings);
+            AllPages = pages;
+            Pages = VisiblePages();
+            foreach (var page in AllPages) page.Refresh(Settings);
         }
 
-        // Keep the same page objects and focus when devices change. In particular a password
-        // being typed, an open choice sheet and an in-progress adjustment must survive hotplug.
-        public bool SetControlsAvailable(bool available)
-        {
-            if (ControlsAvailable == available) return false;
-            bool onClose = OnClose;
-            var page = Page;
-            ControlsAvailable = available;
-            Pages = available ? allPages : allPages.Where(p => p.Id != "controls").ToArray();
-            int index = page == null ? -1 : Pages.ToList().IndexOf(page);
-            if (onClose) PageIndex = Pages.Count;
-            else if (index >= 0) PageIndex = index;
-            else
-            {
-                // The disconnected device's capture/sheet is no longer usable. Return to the
-                // first category without clearing bindings or changing any saved settings.
-                PageIndex = RowIndex = SheetIndex = 0;
-                Zone = SettingsZone.Rail;
-            }
-            return true;
-        }
+        List<SettingPage> VisiblePages() => AllPages.Where(p =>
+            p.Id == SettingsCatalog.Sidebar || !Settings.general.hiddenSettingsPages.Contains(p.Id)).ToList();
 
         // The sheet's entries: a list row's options, or a key row's binding actions.
         public IReadOnlyList<string> SheetOptions => Row?.Kind == SettingKind.Keys
@@ -224,7 +205,16 @@ namespace OurTaiko
         public void Refresh()
         {
             string id = Row?.Id;
-            foreach (var page in allPages) page.Refresh(Settings);
+            var selected = Page;
+            var visible = VisiblePages();
+            Pages = visible;
+            PageIndex = selected == null ? visible.Count : visible.IndexOf(selected);
+            if (PageIndex < 0)
+            {
+                PageIndex = RowIndex = 0;
+                Zone = SettingsZone.Rail;
+            }
+            foreach (var page in AllPages) page.Refresh(Settings);
             if (Page == null) return;
             int index = id == null ? -1 : Page.Rows.ToList().FindIndex(r => r.Id == id);
             RowIndex = index >= 0 ? index : Math.Min(RowIndex, Math.Max(0, Page.Rows.Count - 1));
