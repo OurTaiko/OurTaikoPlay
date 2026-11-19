@@ -37,11 +37,9 @@ namespace OurTaiko.Tests
                 Assert.That(counter.additionTemplate, Is.Not.Null);
                 Assert.That(counter.Additions.Count, Is.Zero, "The initial total is not an earned score.");
                 var notes = play.Session.Chart.Notes;
+                double startedAt = GameTimeline.FrameTime;
                 play.Session.Hit(false, notes[0].Time);
                 Assert.That(counter.Additions.Single(a => a.gameObject.activeSelf).Text, Is.EqualTo(play.Session.BaseScore.ToString()));
-                yield return new WaitForSecondsRealtime(.2f);
-                TestCapture.Capture("ScoreAddition-" + scene + ".png");
-                TestCapture.Capture("ScoreAddition720-" + scene + ".png", 1280, 720);
                 int before = play.Session.Score;
                 play.Session.Hit(false, notes[1].Time + .05);
                 var active = counter.Additions.Where(a => a.gameObject.activeSelf).ToArray();
@@ -58,7 +56,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.Session.Resolved[4] && play.Session.Resolved[5], Is.True);
                 Assert.That(counter.Text, Is.EqualTo(play.Session.Score.ToString()));
                 Assert.That(counter.Additions.All(a => a.digits.All(d => !d.raycastTarget)), Is.True);
-                yield return new WaitForSecondsRealtime(.2f);
+                foreach (var row in counter.Additions) row.ShowTime(startedAt + .2);
                 var visible = counter.Additions.First(a => a.gameObject.activeSelf);
                 Assert.That(visible.GetComponent<Canvas>().overrideSorting, Is.True, "Floating digits must render above JudgeCounter.");
                 Assert.That(visible.GetComponent<Canvas>().sortingOrder,
@@ -67,6 +65,8 @@ namespace OurTaiko.Tests
                     Is.LessThan(play.firstLane.scoreCounter.scoreRank.GetComponent<Canvas>().sortingOrder));
                 Assert.That(visible.GetComponent<CanvasGroup>().alpha, Is.GreaterThan(.99f));
                 Assert.That(visible.digits[0].color, Is.EqualTo((Color)new Color32(254, 102, 0, 255)));
+                TestCapture.Capture("ScoreAddition-" + scene + ".png");
+                TestCapture.Capture("ScoreAddition720-" + scene + ".png", 1280, 720);
                 if (practice)
                 {
                     // Moving the paused lane only previews; the next attempt clears the additions.
@@ -77,7 +77,8 @@ namespace OurTaiko.Tests
                 }
                 else
                 {
-                    yield return new WaitForSecondsRealtime(.3f);
+                    yield return new WaitForSecondsRealtime(counter.additionTemplate.GetComponent<ClipSampler>().clip.length);
+                    yield return null;
                     Assert.That(counter.Additions.All(a => !a.gameObject.activeSelf), Is.True);
                 }
                 int pooled = counter.Additions.Count;

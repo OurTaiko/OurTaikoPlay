@@ -40,7 +40,7 @@ namespace OurTaiko.Tests
                 // Give the rate correction a second to pull in the start.
                 yield return Wait(() => play.SongTime >= 3);
                 Assert.That(movie.player.IsPlaying, Is.True);
-                Assert.That(movie.player.Position, Is.EqualTo(play.SongTime - 1).Within(.06));
+                AssertMovieInSync(play, movie);
                 TestCapture.Capture("BackgroundMovie.png");
                 // Pausing the song pauses the movie where it is.
                 play.TogglePause(); yield return null; yield return null;
@@ -52,7 +52,7 @@ namespace OurTaiko.Tests
                 yield return Wait(() => !play.IsPaused);
                 // The song clock settles on the restarted audio (about 0.1 s); the movie catches up.
                 yield return new WaitForSecondsRealtime(1.5f);
-                Assert.That(movie.player.Position, Is.EqualTo(play.SongTime - 1).Within(.06));
+                AssertMovieInSync(play, movie);
                 // After its 8 s: the last frame stays.
                 yield return Wait(() => play.SongTime >= 9.5 || play.IsFinished);
                 Assert.That(movie.player.IsEnded, Is.True);
@@ -175,6 +175,12 @@ namespace OurTaiko.Tests
             }
             if (song != null) { Object.Destroy(song.chart); Object.Destroy(song); song = null; }
             SettingManager.EnsureInstance().UseUnsaved(new GameSettings());
+        }
+
+        static void AssertMovieInSync(PlayScene play, BackgroundMovieView movie)
+        {
+            double liveSongTime = play.SongTime + (GameTimeline.AudioNow - GameTimeline.AudioFrameTime);
+            Assert.That(movie.player.Position, Is.EqualTo(liveSongTime - 1).Within(.06));
         }
 
         static IEnumerator Wait(Func<bool> condition)
