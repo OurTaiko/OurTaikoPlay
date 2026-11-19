@@ -50,8 +50,8 @@ namespace OurTaiko.Tests
                 Assert.That(movie.player.Position, Is.EqualTo(paused).Within(1e-6));
                 play.Resume();
                 yield return Wait(() => !play.IsPaused);
-                // The song clock settles on the restarted audio (about 0.1 s); the movie catches up.
-                yield return new WaitForSecondsRealtime(1.5f);
+                double resumedAt = play.SongTime;
+                yield return Wait(() => play.SongTime >= resumedAt + SongClock.SyncSeconds + MovieSync.CatchUpSeconds);
                 AssertMovieInSync(play, movie);
                 // After its 8 s: the last frame stays.
                 yield return Wait(() => play.SongTime >= 9.5 || play.IsFinished);
