@@ -31,6 +31,7 @@ namespace OurTaiko.Tests
             Assert.That(entry.Coins.FreePlay.text, Is.EqualTo(L10n.Get("Menu", "overlay.freePlay")));
             Assert.That(entry.Guide.Image.color.a, Is.EqualTo(1));
             TestCapture.Capture("EntryCredit.png");
+            yield return null;
 
             // 1P joins: the joined row flashes, the nameplate fades in, the rows fade out.
             entry.Don();
@@ -52,6 +53,7 @@ namespace OurTaiko.Tests
             Assert.That(entry.Board.Openness, Is.EqualTo(1).Within(1e-3));
             Assert.That(entry.Board.Fade, Is.EqualTo(1).Within(1e-3));
             TestCapture.Capture("EntryModeSelect.png");
+            yield return null;
 
             // A left ka at the top of the list changes nothing; a face hit plays `choose`, fades the
             // board and opens CourseSelect.Enso.

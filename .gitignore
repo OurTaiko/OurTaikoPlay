@@ -33,3 +33,4 @@ TestResults/
 /[Aa]ssets/AddressableAssetsData/Windows.meta
 /[Aa]ssets/AddressableAssetsData/Android.meta
 /[Aa]ssets/AddressableAssetsData/iOS.meta
+.mcp.json

@@ -163,7 +163,7 @@ namespace OurTaiko
             string Name(int seat) => accounts.Seats[seat].IsSignedIn
                 ? (accounts.Seats[seat].Nickname.Length > 0 ? accounts.Seats[seat].Nickname : accounts.Seats[seat].Username) : null;
             View.ShowSeats(Name(0), Name(1));
-            foreach (var row in Navigator.Pages.SelectMany(p => p.Rows))
+            foreach (var row in Navigator.AllPages.SelectMany(p => p.Rows))
                 if (row.ActionId != null && row.ActionId.StartsWith(SettingsCatalog.SignOut) && row.Id != runningId)
                 {
                     string name = Name(row.ActionId[SettingsCatalog.SignOut.Length] - '0');
@@ -339,7 +339,9 @@ namespace OurTaiko
                 catch (Exception reload) { Log.Warn("Scene", reload.Message); }
                 if (this == null || Navigator != null) return;
                 Show();
-                Navigator.TapPage(Navigator.Pages.ToList().FindIndex(p => p.ShowsAudioOutput));
+                var pages = Navigator.Pages.ToList();
+                int soundPage = pages.FindIndex(p => p.ShowsAudioOutput);
+                Navigator.Move(soundPage >= 0 ? soundPage : pages.FindIndex(p => p.Id == SettingsCatalog.Sidebar));
                 Navigator.Confirm();
                 status = error.Message;
                 Refresh();
@@ -415,7 +417,7 @@ namespace OurTaiko
         static string T(string key) => SettingsCatalog.T(key);
         static string T(string key, params object[] args) => SettingsCatalog.T(key, args);
 
-        SettingRow RowById(string id) => Navigator?.Pages.SelectMany(p => p.Rows).FirstOrDefault(r => r.Id == id);
+        SettingRow RowById(string id) => Navigator?.AllPages.SelectMany(p => p.Rows).FirstOrDefault(r => r.Id == id);
 
         // What a volume row plays through its group when it changes; null when there is no clip for it.
         AudioClip PreviewClip(AudioGroup group) => group switch

@@ -15,6 +15,133 @@ namespace OurTaiko.Tests
     {
         static SettingManager Settings => SettingManager.EnsureInstance();
 
+        [UnityTest]
+        public IEnumerator SidebarSwitchUpdatesTheVisibleRailAndSurvivesReopening()
+        {
+            Settings.UseUnsaved(new GameSettings());
+            var overlay = SettingsOverlay.Open();
+            yield return null;
+            void CheckRail()
+            {
+                var entries = overlay.View.GetComponentsInChildren<PointerRelay>()
+                    .Where(r => r.name.StartsWith("Category")).ToArray();
+                var labels = entries.Select(e => e.GetComponentInChildren<TMPro.TMP_Text>().text);
+                Assert.That(labels, Is.EqualTo(overlay.Navigator.Pages.Select(p => p.Title)));
+                foreach (var entry in entries)
+                {
+                    var rect = (RectTransform)entry.transform;
+                    Assert.That(rect.anchorMin.y, Is.EqualTo(rect.anchorMax.y));
+                    Assert.That(rect.rect.height, Is.EqualTo(102f).Within(0.01f));
+                }
+                for (int i = 1; i < entries.Length; i++)
+                {
+                    var above = (RectTransform)entries[i - 1].transform;
+                    var below = (RectTransform)entries[i].transform;
+                    Assert.That(above.TransformPoint(above.rect.min).y, Is.GreaterThan(below.TransformPoint(below.rect.max).y));
+                }
+            }
+            CheckRail();
+            overlay.View.TapPage(overlay.Navigator.Pages.Count - 1);
+            int controls = overlay.Navigator.Page.Rows.ToList().FindIndex(row => row.Id == "show-controls");
+            overlay.View.SetRow(controls, 0);
+            CheckRail();
+            overlay.Close();
+            overlay = SettingsOverlay.Open();
+            Assert.That(overlay.Navigator.Pages.Select(p => p.Id), Does.Not.Contain("controls"));
+            CheckRail();
+            overlay.View.TapPage(overlay.Navigator.Pages.Count - 1);
+            overlay.View.SetRow(controls, 1);
+            Assert.That(overlay.Navigator.Pages.Select(p => p.Id), Does.Contain("controls"));
+            CheckRail();
+            overlay.Close();
+        }
+
+        [UnityTest]
+        public IEnumerator DefaultSidebarShowsEntireCloseButtonBelowCategoryViewport()
+        {
+            Settings.UseUnsaved(new GameSettings());
+            var overlay = SettingsOverlay.Open();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+
+            var close = (RectTransform)overlay.View.GetComponentsInChildren<PointerRelay>()
+                .Single(button => button.GetComponentInChildren<TMPro.TMP_Text>()?.text == L10n.Get("Common", "close")
+                    && button.name == "Close").transform;
+            var rail = (RectTransform)overlay.View.transform.Find("Panel/Rail");
+            var viewport = (RectTransform)rail.Find("Rail Viewport");
+            Assert.That(close.parent, Is.EqualTo(rail));
+            var corners = new Vector3[4];
+            close.GetWorldCorners(corners);
+            foreach (var corner in corners)
+            {
+                Assert.That(rail.rect.Contains(rail.InverseTransformPoint(corner)), Is.True);
+                Vector2 screen = RectTransformUtility.WorldToScreenPoint(null, corner);
+                Assert.That(Screen.safeArea.Contains(screen), Is.True);
+            }
+            float viewportBottom = viewport.TransformPoint(viewport.rect.min).y;
+            Assert.That(corners[1].y, Is.LessThan(viewportBottom));
+            overlay.Close();
+        }
+
+        [UnityTest]
+        public IEnumerator SidebarFadesShowAvailableScrollDirections()
+        {
+            Settings.UseUnsaved(new GameSettings());
+            var overlay = SettingsOverlay.Open();
+            yield return null;
+            var viewport = (RectTransform)overlay.View.transform.Find("Panel/Rail/Rail Viewport");
+            var top = viewport.Find("Top Fade").GetComponent<RailScrollFade>();
+            var bottom = viewport.Find("Bottom Fade").GetComponent<RailScrollFade>();
+            var scroll = viewport.GetComponent<SettingsScroll>();
+            viewport.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 663);
+            scroll.Scrolled(0);
+            Assert.That(top.raycastTarget || bottom.raycastTarget, Is.False);
+            void CheckFades(bool above, bool below)
+            {
+                Assert.That(top.isActiveAndEnabled, Is.EqualTo(above));
+                Assert.That(bottom.isActiveAndEnabled, Is.EqualTo(below));
+            }
+
+            CheckFades(false, true);
+            scroll.Scrolled(48);
+            CheckFades(true, true);
+            scroll.Scrolled(1000);
+            CheckFades(true, false);
+            scroll.Scrolled(-1000);
+            CheckFades(false, true);
+
+            viewport.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 800);
+            yield return null;
+            CheckFades(false, false);
+            overlay.Close();
+        }
+
+        [UnityTest]
+        public IEnumerator RailNavigationKeepsSelectedCategoryClearOfFades()
+        {
+            Settings.UseUnsaved(new GameSettings());
+            var overlay = SettingsOverlay.Open();
+            yield return null;
+            var viewport = (RectTransform)overlay.View.transform.Find("Panel/Rail/Rail Viewport");
+            viewport.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 663);
+            void CheckSelection()
+            {
+                var row = (RectTransform)viewport.Find("Entries/Category" + overlay.Navigator.PageIndex);
+                var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(viewport, row);
+                foreach (var fade in viewport.GetComponentsInChildren<RailScrollFade>())
+                {
+                    if (!fade.enabled) continue;
+                    var strip = RectTransformUtility.CalculateRelativeRectTransformBounds(viewport, fade.transform);
+                    if (fade.AtTop) Assert.That(bounds.max.y, Is.LessThanOrEqualTo(strip.min.y + 0.01f));
+                    else Assert.That(bounds.min.y, Is.GreaterThanOrEqualTo(strip.max.y - 0.01f));
+                }
+            }
+
+            for (int i = 1; i < overlay.Navigator.Pages.Count; i++) { overlay.Move(1); CheckSelection(); }
+            for (int i = overlay.Navigator.Pages.Count - 1; i > 0; i--) { overlay.Move(-1); CheckSelection(); }
+            overlay.Close();
+        }
+
         [TearDown]
         public void RestoreDefaults()
         {

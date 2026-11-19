@@ -1,0 +1,3081 @@
+{
+  "version": 1,
+  "created_at": "2026-11-19T21:29:00Z",
+  "updated_at": "2026-11-19T22:23:26Z",
+  "files": {
+    ".gitattributes": {
+      "role": "index",
+      "sha256": "4a44811fc52cf1720390b9d407b70e5767359879fd42cad59e4e95cba2ca86d8",
+      "size": 4882,
+      "normalized_sha256": "4a44811fc52cf1720390b9d407b70e5767359879fd42cad59e4e95cba2ca86d8"
+    },
+    ".github/actions/lfs-pull/action.yml": {
+      "role": "index",
+      "sha256": "a0489df042079d57bb2eb8952927f3d66bf74e6fb90f909f446c59f5c0ae1301",
+      "size": 653,
+      "normalized_sha256": "a0489df042079d57bb2eb8952927f3d66bf74e6fb90f909f446c59f5c0ae1301"
+    },
+    ".github/pull_request_template.md": {
+      "role": "index",
+      "sha256": "df643222ee71a295ae02d8d78ef49f91595977e4c7d509c057b560544d8f1f99",
+      "size": 1200,
+      "normalized_sha256": "df643222ee71a295ae02d8d78ef49f91595977e4c7d509c057b560544d8f1f99"
+    },
+    ".github/scripts/package-linux.sh": {
+      "role": "index",
+      "sha256": "8975f2afe5c8131e226c86454c5a527235079a1b11f4b6218d0f8183602edc7c",
+      "size": 1783,
+      "normalized_sha256": "8975f2afe5c8131e226c86454c5a527235079a1b11f4b6218d0f8183602edc7c"
+    },
+    ".github/scripts/set-ci-secrets.sh": {
+      "role": "index",
+      "sha256": "fb43773a3b90800856c1b797538ca185acd52c2693b7ed2a15a10d9a0a762cd7",
+      "size": 3740,
+      "normalized_sha256": "fb43773a3b90800856c1b797538ca185acd52c2693b7ed2a15a10d9a0a762cd7"
+    },
+    ".github/scripts/tests/check-build-packages.py": {
+      "role": "index",
+      "sha256": "7ea4a36bdce9932fd6f955c62388381fcd6d85974578b33b0e384f955cf8200e",
+      "size": 14724,
+      "normalized_sha256": "7ea4a36bdce9932fd6f955c62388381fcd6d85974578b33b0e384f955cf8200e"
+    },
+    ".github/unity-test/Dockerfile": {
+      "role": "index",
+      "sha256": "00f2077b01873a2a2fe689d9e95e7560184aacead2bf175b2be8f928e417f54e",
+      "size": 302,
+      "normalized_sha256": "00f2077b01873a2a2fe689d9e95e7560184aacead2bf175b2be8f928e417f54e"
+    },
+    ".github/unity-test/asound.conf": {
+      "role": "index",
+      "sha256": "9bbda3d632c0d37c95017e50b97a71dfb167a200b3faa5c2a78aba7b71290345",
+      "size": 56,
+      "normalized_sha256": "9bbda3d632c0d37c95017e50b97a71dfb167a200b3faa5c2a78aba7b71290345"
+    },
+    ".github/unity-test/audio.sh": {
+      "role": "index",
+      "sha256": "b79db6a92ef9cf579ba38c3f780d600c09b400a14aedef789398d4947bb33bf0",
+      "size": 385,
+      "normalized_sha256": "b79db6a92ef9cf579ba38c3f780d600c09b400a14aedef789398d4947bb33bf0"
+    },
+    ".github/workflows/build.yml": {
+      "role": "index",
+      "sha256": "b946638339c33241c2e6e64a0d3a7dde8e7bc9d7b5550331af8f2f39a07d8c66",
+      "size": 17452,
+      "normalized_sha256": "b946638339c33241c2e6e64a0d3a7dde8e7bc9d7b5550331af8f2f39a07d8c66"
+    },
+    ".github/workflows/test.yml": {
+      "role": "index",
+      "sha256": "49946aeb6e5621a040553daeab57e98522202f33536242638b99353c1d8b4965",
+      "size": 2933,
+      "normalized_sha256": "49946aeb6e5621a040553daeab57e98522202f33536242638b99353c1d8b4965"
+    },
+    ".gitignore": {
+      "role": "index",
+      "sha256": "2aea9d5b8aa46b6672f5a2df1ff3487d8a1893584b68c4bc399c924be9df3967",
+      "size": 962,
+      "normalized_sha256": "2aea9d5b8aa46b6672f5a2df1ff3487d8a1893584b68c4bc399c924be9df3967"
+    },
+    ".gitmodules": {
+      "role": "index",
+      "sha256": "7ef7bbe83a5b3b1d7bfa194086096b088538d9b8287193923d9e84993d16a4e0",
+      "size": 130,
+      "normalized_sha256": "7ef7bbe83a5b3b1d7bfa194086096b088538d9b8287193923d9e84993d16a4e0"
+    },
+    "AGENTS.md": {
+      "role": "index",
+      "sha256": "2a4459d7c2ea45ea49e58231df348a700c35a5890c17b196d779aca680d67076",
+      "size": 20109,
+      "normalized_sha256": "2a4459d7c2ea45ea49e58231df348a700c35a5890c17b196d779aca680d67076"
+    },
+    "Assets/OurTaiko/Editor/AudioAssetBuild.cs": {
+      "role": "index",
+      "sha256": "5bedf7233f973efd04f13e6dc525d23310ef041dfa7f08d0679d983d920a36bd",
+      "size": 1795,
+      "normalized_sha256": "5bedf7233f973efd04f13e6dc525d23310ef041dfa7f08d0679d983d920a36bd"
+    },
+    "Assets/OurTaiko/Editor/AudioBuildSettings.cs": {
+      "role": "index",
+      "sha256": "c69fa967ce1b686ce9e533ff8569cba812c8394a33ac4fee5aba17efc46350a2",
+      "size": 5760,
+      "normalized_sha256": "c69fa967ce1b686ce9e533ff8569cba812c8394a33ac4fee5aba17efc46350a2"
+    },
+    "Assets/OurTaiko/Editor/DonPreview.cs": {
+      "role": "index",
+      "sha256": "707fb4ec5b2ef8e1014a885a17a0bc85c2d34dd51b10b4031fae567b8cf76595",
+      "size": 9003,
+      "normalized_sha256": "707fb4ec5b2ef8e1014a885a17a0bc85c2d34dd51b10b4031fae567b8cf76595"
+    },
+    "Assets/OurTaiko/Editor/GlbImporter.cs": {
+      "role": "index",
+      "sha256": "56f63b058c79b40f8ad1db13f82da6cdb853e0c83f7975d2fd74b24c1a54678a",
+      "size": 1809,
+      "normalized_sha256": "56f63b058c79b40f8ad1db13f82da6cdb853e0c83f7975d2fd74b24c1a54678a"
+    },
+    "Assets/OurTaiko/Editor/IosProjectBranding.cs": {
+      "role": "index",
+      "sha256": "03fc94457875c084246277079e1d2d9c500d61dde832d79cf97b812dbf730dd0",
+      "size": 9542,
+      "normalized_sha256": "03fc94457875c084246277079e1d2d9c500d61dde832d79cf97b812dbf730dd0"
+    },
+    "Assets/OurTaiko/Editor/LinuxAudioPlayerChecks.cs": {
+      "role": "index",
+      "sha256": "8b37a6f90e98be9d9aa3aeb9f890fa21777129700d0fa54f995230e777ac7eb2",
+      "size": 3432,
+      "normalized_sha256": "8b37a6f90e98be9d9aa3aeb9f890fa21777129700d0fa54f995230e777ac7eb2"
+    },
+    "Assets/OurTaiko/Editor/LinuxPlayerAudioOutput.cs": {
+      "role": "index",
+      "sha256": "9dd174a72d9b66947e211d7cf9b7888025fdc74c0531a0dd3d0cf2ca35037859",
+      "size": 2185,
+      "normalized_sha256": "9dd174a72d9b66947e211d7cf9b7888025fdc74c0531a0dd3d0cf2ca35037859"
+    },
+    "Assets/OurTaiko/Editor/Localization/LocalizedTextBinder.cs": {
+      "role": "index",
+      "sha256": "efc3a47ddc9987205ec8012340dcec5c01832d467d556a726e52d8d8233a7fef",
+      "size": 7510,
+      "normalized_sha256": "efc3a47ddc9987205ec8012340dcec5c01832d467d556a726e52d8d8233a7fef"
+    },
+    "Assets/OurTaiko/Editor/Localization/StringTableImporter.cs": {
+      "role": "index",
+      "sha256": "be69a3d159522e7da119de583c9406a83fa1b42ed310adf77dbb48283d4b6569",
+      "size": 13226,
+      "normalized_sha256": "be69a3d159522e7da119de583c9406a83fa1b42ed310adf77dbb48283d4b6569"
+    },
+    "Assets/OurTaiko/Editor/OurTaiko.Editor.asmdef": {
+      "role": "index",
+      "sha256": "c0114264a9f7a961db47261bda0bcc2113623bb8e4d06ead5e0ede38201eaf2c",
+      "size": 335,
+      "normalized_sha256": "c0114264a9f7a961db47261bda0bcc2113623bb8e4d06ead5e0ede38201eaf2c"
+    },
+    "Assets/OurTaiko/Editor/PlayerBranding.cs": {
+      "role": "index",
+      "sha256": "169aaa2853fafa4603c0f24416eae3ce41bbd9144b98cf157a2d82b716a6ec86",
+      "size": 5959,
+      "normalized_sha256": "169aaa2853fafa4603c0f24416eae3ce41bbd9144b98cf157a2d82b716a6ec86"
+    },
+    "Assets/OurTaiko/Editor/PlayerBuilds.cs": {
+      "role": "index",
+      "sha256": "87ab4ab2032394a09b20885b4a6162a73dff511d880b4e59addffd95dfb0e37d",
+      "size": 15080,
+      "normalized_sha256": "87ab4ab2032394a09b20885b4a6162a73dff511d880b4e59addffd95dfb0e37d"
+    },
+    "Assets/OurTaiko/Editor/SettingsOverlayAsset.cs": {
+      "role": "index",
+      "sha256": "862748282df3c4a8fef07d20a3b5d5c35671b491a32e09f65ba1b16221d1bdfe",
+      "size": 1461,
+      "normalized_sha256": "862748282df3c4a8fef07d20a3b5d5c35671b491a32e09f65ba1b16221d1bdfe"
+    },
+    "Assets/OurTaiko/Editor/UiFontAtlas.cs": {
+      "role": "index",
+      "sha256": "333017c28e93011a823eb756b7d436066dabc00d340a057b4b2b1c88fd655b8c",
+      "size": 2746,
+      "normalized_sha256": "333017c28e93011a823eb756b7d436066dabc00d340a057b4b2b1c88fd655b8c"
+    },
+    "Assets/OurTaiko/Localization/Strings/Common.csv": {
+      "role": "index",
+      "sha256": "04b26d9d6399b27dfaf0aef0e0b13b655ed37118ea882d77b3013b383389c00c",
+      "size": 1113,
+      "normalized_sha256": "04b26d9d6399b27dfaf0aef0e0b13b655ed37118ea882d77b3013b383389c00c"
+    },
+    "Assets/OurTaiko/Localization/Strings/Dan.csv": {
+      "role": "index",
+      "sha256": "314a043feae33ef3e72cd8cf8939bdbc3c79e1b7c34d8014163fe5f47b490950",
+      "size": 8335,
+      "normalized_sha256": "314a043feae33ef3e72cd8cf8939bdbc3c79e1b7c34d8014163fe5f47b490950"
+    },
+    "Assets/OurTaiko/Localization/Strings/Menu.csv": {
+      "role": "index",
+      "sha256": "4a4ca32638ac238ca4e5960ef20968db3e194429f65b4d6bf9c1ff9f7f6a307a",
+      "size": 11162,
+      "normalized_sha256": "4a4ca32638ac238ca4e5960ef20968db3e194429f65b4d6bf9c1ff9f7f6a307a"
+    },
+    "Assets/OurTaiko/Localization/Strings/Multi.csv": {
+      "role": "index",
+      "sha256": "30b2896e37ce6d204bb16fb1c37306a590bfc820a342a99fa12d299b9a8f018f",
+      "size": 13416,
+      "normalized_sha256": "30b2896e37ce6d204bb16fb1c37306a590bfc820a342a99fa12d299b9a8f018f"
+    },
+    "Assets/OurTaiko/Localization/Strings/Online.csv": {
+      "role": "index",
+      "sha256": "a16a499a35782881f3a66cbe626fa027705f254a94a317f25329c4c2c9e146a8",
+      "size": 4646,
+      "normalized_sha256": "a16a499a35782881f3a66cbe626fa027705f254a94a317f25329c4c2c9e146a8"
+    },
+    "Assets/OurTaiko/Localization/Strings/Play.csv": {
+      "role": "index",
+      "sha256": "27ef227511b109585d9d751384cd8757d968b8b0dc0d9d01c7325b3f229342a9",
+      "size": 6016,
+      "normalized_sha256": "27ef227511b109585d9d751384cd8757d968b8b0dc0d9d01c7325b3f229342a9"
+    },
+    "Assets/OurTaiko/Localization/Strings/Result.csv": {
+      "role": "index",
+      "sha256": "c13c0ff7fe5f56e8278fe6d5f6ef25b3d69df494ebcfb8447213ec4c4c7b4a13",
+      "size": 5846,
+      "normalized_sha256": "c13c0ff7fe5f56e8278fe6d5f6ef25b3d69df494ebcfb8447213ec4c4c7b4a13"
+    },
+    "Assets/OurTaiko/Localization/Strings/Settings.csv": {
+      "role": "index",
+      "sha256": "f6cc2a1ba87853cf781394c369e5ae67b30a77714e02e67556d86b028a27439c",
+      "size": 32937,
+      "normalized_sha256": "f6cc2a1ba87853cf781394c369e5ae67b30a77714e02e67556d86b028a27439c"
+    },
+    "Assets/OurTaiko/Resources/Chara/DonComposite.shader": {
+      "role": "index",
+      "sha256": "eb757381a084ce32b1da69544ce5441250f25b1ae78e6cbd359d0988b48789cc",
+      "size": 4361,
+      "normalized_sha256": "eb757381a084ce32b1da69544ce5441250f25b1ae78e6cbd359d0988b48789cc"
+    },
+    "Assets/OurTaiko/Resources/Chara/DonModel.shader": {
+      "role": "index",
+      "sha256": "450a23edae24d37116b0cd776b400cf03c3e6579ff58e702ec0a4041acc322c0",
+      "size": 4441,
+      "normalized_sha256": "450a23edae24d37116b0cd776b400cf03c3e6579ff58e702ec0a4041acc322c0"
+    },
+    "Assets/OurTaiko/Resources/Chara/DonPuchi.shader": {
+      "role": "index",
+      "sha256": "4e934455719591261f40b767fab38e7996657db5005dd54d11823e1ae31353dd",
+      "size": 2502,
+      "normalized_sha256": "4e934455719591261f40b767fab38e7996657db5005dd54d11823e1ae31353dd"
+    },
+    "Assets/OurTaiko/Resources/Chara/DonPuchiAnim.shader": {
+      "role": "index",
+      "sha256": "35758422fd0e99242ac569764af3a8b5937709e4789998c82ad06decebaf08cf",
+      "size": 3015,
+      "normalized_sha256": "35758422fd0e99242ac569764af3a8b5937709e4789998c82ad06decebaf08cf"
+    },
+    "Assets/OurTaiko/Resources/LaneSprite.shader": {
+      "role": "index",
+      "sha256": "a50946d5fa74368195c86b912cbe32c13f31c9898765ea5c0848b083e2aec92b",
+      "size": 2520,
+      "normalized_sha256": "a50946d5fa74368195c86b912cbe32c13f31c9898765ea5c0848b083e2aec92b"
+    },
+    "Assets/OurTaiko/Runtime/Audio/AudioAssetCatalog.cs": {
+      "role": "index",
+      "sha256": "7e07c81565ea229ca8a369ed6c5ae584dd74ae6c357b495bc8a4ca3d009e1688",
+      "size": 1578,
+      "normalized_sha256": "7e07c81565ea229ca8a369ed6c5ae584dd74ae6c357b495bc8a4ca3d009e1688"
+    },
+    "Assets/OurTaiko/Runtime/Audio/AudioBus.cs": {
+      "role": "index",
+      "sha256": "b617739c568c3e3665806c3fe3a6cf2c1459db2231c189d222dbcb0cee9e853e",
+      "size": 9037,
+      "normalized_sha256": "b617739c568c3e3665806c3fe3a6cf2c1459db2231c189d222dbcb0cee9e853e"
+    },
+    "Assets/OurTaiko/Runtime/Audio/AudioEngine.cs": {
+      "role": "index",
+      "sha256": "a330802fe2ac78587d99eeb32d0af8578e715bc81cdfc1964983b6837fbbbaa8",
+      "size": 22836,
+      "normalized_sha256": "a330802fe2ac78587d99eeb32d0af8578e715bc81cdfc1964983b6837fbbbaa8"
+    },
+    "Assets/OurTaiko/Runtime/Audio/AudioOptions.cs": {
+      "role": "index",
+      "sha256": "21498e8cc95cce9b26e32d4c9c35985a3774ef8a35e463a66e5b83f2d2cfd235",
+      "size": 5185,
+      "normalized_sha256": "21498e8cc95cce9b26e32d4c9c35985a3774ef8a35e463a66e5b83f2d2cfd235"
+    },
+    "Assets/OurTaiko/Runtime/Audio/BackgroundAudioDecode.cs": {
+      "role": "index",
+      "sha256": "e1baaea4e1cb1f2b41840524dff18ea029520e89cd5e98a63acc04a7e470ddfc",
+      "size": 1528,
+      "normalized_sha256": "e1baaea4e1cb1f2b41840524dff18ea029520e89cd5e98a63acc04a7e470ddfc"
+    },
+    "Assets/OurTaiko/Runtime/Audio/LinuxAudioDevices.cs": {
+      "role": "index",
+      "sha256": "adee5ef33337d608be7b92658e086a30960200d252cfe5f70215d7ad3ae9834a",
+      "size": 8220,
+      "normalized_sha256": "adee5ef33337d608be7b92658e086a30960200d252cfe5f70215d7ad3ae9834a"
+    },
+    "Assets/OurTaiko/Runtime/Audio/LinuxAudioReservation.cs": {
+      "role": "index",
+      "sha256": "bd702d278ce44351b9ba4ece94690032ddbb9623ddb7253167763b0c5fa99921",
+      "size": 10475,
+      "normalized_sha256": "bd702d278ce44351b9ba4ece94690032ddbb9623ddb7253167763b0c5fa99921"
+    },
+    "Assets/OurTaiko/Runtime/Audio/NativeAudioSample.cs": {
+      "role": "index",
+      "sha256": "080b23f6d7fffa514611d9f02979cd17d51189d82777c801ed2085be02cab7d4",
+      "size": 8590,
+      "normalized_sha256": "080b23f6d7fffa514611d9f02979cd17d51189d82777c801ed2085be02cab7d4"
+    },
+    "Assets/OurTaiko/Runtime/Audio/SoundSettings.cs": {
+      "role": "index",
+      "sha256": "ecb161155324514123b7101b063b4753b55db9f0f174388be15af9b5b405d2cb",
+      "size": 1398,
+      "normalized_sha256": "ecb161155324514123b7101b063b4753b55db9f0f174388be15af9b5b405d2cb"
+    },
+    "Assets/OurTaiko/Runtime/Chara/Chara3D.cs": {
+      "role": "index",
+      "sha256": "919088972df356402db8f5365de3311de6a312c205f9bc1367879cfdd0c2b352",
+      "size": 29179,
+      "normalized_sha256": "919088972df356402db8f5365de3311de6a312c205f9bc1367879cfdd0c2b352"
+    },
+    "Assets/OurTaiko/Runtime/Chara/DonDownloads.cs": {
+      "role": "index",
+      "sha256": "179a9b5b08777f91da2f976958b462a432900a7bf193fc1a99caa6cfebe441c8",
+      "size": 13254,
+      "normalized_sha256": "179a9b5b08777f91da2f976958b462a432900a7bf193fc1a99caa6cfebe441c8"
+    },
+    "Assets/OurTaiko/Runtime/Chara/DonLaneDriver.cs": {
+      "role": "index",
+      "sha256": "00163251427a80d4970c0e97cfa282c8f1ab80f00eeb668debce40476a66b1f5",
+      "size": 7772,
+      "normalized_sha256": "00163251427a80d4970c0e97cfa282c8f1ab80f00eeb668debce40476a66b1f5"
+    },
+    "Assets/OurTaiko/Runtime/Chara/DonLooks.cs": {
+      "role": "index",
+      "sha256": "5ad2ed011f2fa5e3270920cb5cd0115f94c644ccf8d7b161f00b3b9b051aa7e5",
+      "size": 331,
+      "normalized_sha256": "5ad2ed011f2fa5e3270920cb5cd0115f94c644ccf8d7b161f00b3b9b051aa7e5"
+    },
+    "Assets/OurTaiko/Runtime/Chara/DonModels.cs": {
+      "role": "index",
+      "sha256": "793a67e4ccda0047f9f9dfa090e43a773432ef236b6e9014f5d58ee51c5e0e73",
+      "size": 31100,
+      "normalized_sha256": "793a67e4ccda0047f9f9dfa090e43a773432ef236b6e9014f5d58ee51c5e0e73"
+    },
+    "Assets/OurTaiko/Runtime/Chara/DonStage.cs": {
+      "role": "index",
+      "sha256": "6837bfd3aafa181fad84155d74524937970713542fdeac3c77918ae428f71a8f",
+      "size": 2810,
+      "normalized_sha256": "6837bfd3aafa181fad84155d74524937970713542fdeac3c77918ae428f71a8f"
+    },
+    "Assets/OurTaiko/Runtime/Chara/DonView.cs": {
+      "role": "index",
+      "sha256": "dcc16bd027adb7269409f12d1fbd5ae719d6bcf249666b4b6e873d69a46830cd",
+      "size": 13995,
+      "normalized_sha256": "dcc16bd027adb7269409f12d1fbd5ae719d6bcf249666b4b6e873d69a46830cd"
+    },
+    "Assets/OurTaiko/Runtime/Chara/EntryDons.cs": {
+      "role": "index",
+      "sha256": "e7be3cbe012b7887efaa13181ea40fc2a696743374f13f962a9f8d0ce222558d",
+      "size": 2295,
+      "normalized_sha256": "e7be3cbe012b7887efaa13181ea40fc2a696743374f13f962a9f8d0ce222558d"
+    },
+    "Assets/OurTaiko/Runtime/Chara/Glb.cs": {
+      "role": "index",
+      "sha256": "a64012567a182c6740ef10b7f04748a2c4c25fcbd0542c386f1cdfcbca3d7d59",
+      "size": 6960,
+      "normalized_sha256": "a64012567a182c6740ef10b7f04748a2c4c25fcbd0542c386f1cdfcbca3d7d59"
+    },
+    "Assets/OurTaiko/Runtime/Chara/GlbAsset.cs": {
+      "role": "index",
+      "sha256": "a2ab86d27862dde23451404208906172457e53dc7744be4a6ef8291e0f6680cd",
+      "size": 330,
+      "normalized_sha256": "a2ab86d27862dde23451404208906172457e53dc7744be4a6ef8291e0f6680cd"
+    },
+    "Assets/OurTaiko/Runtime/Chara/Otanim.cs": {
+      "role": "index",
+      "sha256": "1da6dbeea5de40a1afcc60a14cde24fd412354599561e980464d0cc66a1c17c3",
+      "size": 13478,
+      "normalized_sha256": "1da6dbeea5de40a1afcc60a14cde24fd412354599561e980464d0cc66a1c17c3"
+    },
+    "Assets/OurTaiko/Runtime/Chara/PuchiAnimGraphic.cs": {
+      "role": "index",
+      "sha256": "b6d570b185e7eabf60e8041dcb3aa7ef996c3a784b579dc8d17dc75a4c86e8f1",
+      "size": 5803,
+      "normalized_sha256": "b6d570b185e7eabf60e8041dcb3aa7ef996c3a784b579dc8d17dc75a4c86e8f1"
+    },
+    "Assets/OurTaiko/Runtime/Core/BranchConditions.cs": {
+      "role": "index",
+      "sha256": "d90dfc77b3eb3549e39e891bb7cc1b77b4d7367c1f5ae9605aee49c05fa0dc15",
+      "size": 3984,
+      "normalized_sha256": "d90dfc77b3eb3549e39e891bb7cc1b77b4d7367c1f5ae9605aee49c05fa0dc15"
+    },
+    "Assets/OurTaiko/Runtime/Core/ChartStatistics.cs": {
+      "role": "index",
+      "sha256": "c84032a09b3bf3c7bf670e60f4b751af544e12a625bc22ac56d84c3d75172ff7",
+      "size": 2740,
+      "normalized_sha256": "c84032a09b3bf3c7bf670e60f4b751af544e12a625bc22ac56d84c3d75172ff7"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanBetween.cs": {
+      "role": "index",
+      "sha256": "5e1816dd464b934eb9d3009bf851953a3eba21d8266c750ad82d73a6433b78de",
+      "size": 1563,
+      "normalized_sha256": "5e1816dd464b934eb9d3009bf851953a3eba21d8266c750ad82d73a6433b78de"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanCourse.cs": {
+      "role": "index",
+      "sha256": "927a4eb252f02007040d356659d070a99d9d7caccac81ed6d214e4a115b9d9c7",
+      "size": 9924,
+      "normalized_sha256": "927a4eb252f02007040d356659d070a99d9d7caccac81ed6d214e4a115b9d9c7"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanCourseLoader.cs": {
+      "role": "index",
+      "sha256": "1fd058d6ff6e1b4599f77d543499cafabe220bdad8abb551a09ae6c3b8f0541f",
+      "size": 4499,
+      "normalized_sha256": "1fd058d6ff6e1b4599f77d543499cafabe220bdad8abb551a09ae6c3b8f0541f"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanCourseResolver.cs": {
+      "role": "index",
+      "sha256": "a7aba2ad2375ed6963a199a6eb05b819c695f813f8be35d263ae4b441edbc50f",
+      "size": 6591,
+      "normalized_sha256": "a7aba2ad2375ed6963a199a6eb05b819c695f813f8be35d263ae4b441edbc50f"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanExam.cs": {
+      "role": "index",
+      "sha256": "2a3b2d00d52c50e341365aaa7e9bc73c3d6f1c29ee9ac17253af0dafdaf117c2",
+      "size": 4907,
+      "normalized_sha256": "2a3b2d00d52c50e341365aaa7e9bc73c3d6f1c29ee9ac17253af0dafdaf117c2"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanProgress.cs": {
+      "role": "index",
+      "sha256": "47b080413cd40dacffec6a2215f8c6823efc3c26c195dcc456b45c07ce83f4cd",
+      "size": 9962,
+      "normalized_sha256": "47b080413cd40dacffec6a2215f8c6823efc3c26c195dcc456b45c07ce83f4cd"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanRecordStore.cs": {
+      "role": "index",
+      "sha256": "2775e91e946b7d3f68b03286157e22e7d0136de62b1fd7e6729822a4bd2636b5",
+      "size": 9070,
+      "normalized_sha256": "2775e91e946b7d3f68b03286157e22e7d0136de62b1fd7e6729822a4bd2636b5"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanResultFlow.cs": {
+      "role": "index",
+      "sha256": "880131962265d787acbf74c762422fc7f7c7780453e73cbdf48d6fd42ba8a908",
+      "size": 14467,
+      "normalized_sha256": "880131962265d787acbf74c762422fc7f7c7780453e73cbdf48d6fd42ba8a908"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanSelectFlow.cs": {
+      "role": "index",
+      "sha256": "8d31dfd5cb8d4734b8b44989b9f960002e3a1844218f4cbac9b04c22ebeb6ff1",
+      "size": 4089,
+      "normalized_sha256": "8d31dfd5cb8d4734b8b44989b9f960002e3a1844218f4cbac9b04c22ebeb6ff1"
+    },
+    "Assets/OurTaiko/Runtime/Core/DanSelectPages.cs": {
+      "role": "index",
+      "sha256": "277b2367ad91b5854fff97d66e014894a8437696014885a8c27ff98b1b1ff783",
+      "size": 4141,
+      "normalized_sha256": "277b2367ad91b5854fff97d66e014894a8437696014885a8c27ff98b1b1ff783"
+    },
+    "Assets/OurTaiko/Runtime/Core/DancerTroupe.cs": {
+      "role": "index",
+      "sha256": "c9aa6cac73d19d1604c42220dfe8540c398ec4469bc048d7dfca59e0078d49e3",
+      "size": 4738,
+      "normalized_sha256": "c9aa6cac73d19d1604c42220dfe8540c398ec4469bc048d7dfca59e0078d49e3"
+    },
+    "Assets/OurTaiko/Runtime/Core/DifficultyCursor.cs": {
+      "role": "index",
+      "sha256": "ffa785e1fb53e6ef28748acf509d886a9b60d0c833b4f36f671c911d2f9346bb",
+      "size": 4443,
+      "normalized_sha256": "ffa785e1fb53e6ef28748acf509d886a9b60d0c833b4f36f671c911d2f9346bb"
+    },
+    "Assets/OurTaiko/Runtime/Core/DisplayRefreshRate.cs": {
+      "role": "index",
+      "sha256": "753671e199f7cd11cd6a5a9387215cd1138be98fab047c2880185bd2d83ba2c5",
+      "size": 2976,
+      "normalized_sha256": "753671e199f7cd11cd6a5a9387215cd1138be98fab047c2880185bd2d83ba2c5"
+    },
+    "Assets/OurTaiko/Runtime/Core/EntryFlow.cs": {
+      "role": "index",
+      "sha256": "e68adc22ae47f626ab6a3ff097444cd8c7af94c4d46e8acc9e819129a1f8db50",
+      "size": 3356,
+      "normalized_sha256": "e68adc22ae47f626ab6a3ff097444cd8c7af94c4d46e8acc9e819129a1f8db50"
+    },
+    "Assets/OurTaiko/Runtime/Core/GameLoop.cs": {
+      "role": "index",
+      "sha256": "5e5cdaa857311d4565d3e9511e969cbe7798ea42dd4074df22f4565872c2a333",
+      "size": 1192,
+      "normalized_sha256": "5e5cdaa857311d4565d3e9511e969cbe7798ea42dd4074df22f4565872c2a333"
+    },
+    "Assets/OurTaiko/Runtime/Core/GamePaths.cs": {
+      "role": "index",
+      "sha256": "f444e4912da8f0a0b228f2536d802422bae09ef1d8b8331f6da33888c54dc8eb",
+      "size": 1843,
+      "normalized_sha256": "f444e4912da8f0a0b228f2536d802422bae09ef1d8b8331f6da33888c54dc8eb"
+    },
+    "Assets/OurTaiko/Runtime/Core/GameSettings.cs": {
+      "role": "index",
+      "sha256": "bc3b2703020b0e3287e6920be4b3d9c2b54bb4e77ba303f153a3568da68e9d73",
+      "size": 10925,
+      "normalized_sha256": "bc3b2703020b0e3287e6920be4b3d9c2b54bb4e77ba303f153a3568da68e9d73"
+    },
+    "Assets/OurTaiko/Runtime/Core/GameTimeline.cs": {
+      "role": "index",
+      "sha256": "c3ee8061b7a875358d46265d59abd571f0720b457a3d6b129abfa5786f8d8723",
+      "size": 1754,
+      "normalized_sha256": "c3ee8061b7a875358d46265d59abd571f0720b457a3d6b129abfa5786f8d8723"
+    },
+    "Assets/OurTaiko/Runtime/Core/GaugeHitEffectLayout.cs": {
+      "role": "index",
+      "sha256": "dd2fd72091437a83a34b271bdac649c95f1849571a3d40c06ca2a6766a9591cf",
+      "size": 674,
+      "normalized_sha256": "dd2fd72091437a83a34b271bdac649c95f1849571a3d40c06ca2a6766a9591cf"
+    },
+    "Assets/OurTaiko/Runtime/Core/ISettledScreen.cs": {
+      "role": "index",
+      "sha256": "7d0289bef05506b70bde6f7d61fdc3d4bb5cf584b7cbcbd2ab4770ca26a072a4",
+      "size": 460,
+      "normalized_sha256": "7d0289bef05506b70bde6f7d61fdc3d4bb5cf584b7cbcbd2ab4770ca26a072a4"
+    },
+    "Assets/OurTaiko/Runtime/Core/KeyRepeat.cs": {
+      "role": "index",
+      "sha256": "7316bc8eef5d1a7f970ccda9621c5920baaf14817061a2be7602a0e50a79ba98",
+      "size": 1090,
+      "normalized_sha256": "7316bc8eef5d1a7f970ccda9621c5920baaf14817061a2be7602a0e50a79ba98"
+    },
+    "Assets/OurTaiko/Runtime/Core/Kusudama.cs": {
+      "role": "index",
+      "sha256": "f995146b38a1404b90bbe15c577551555a8d3263de444bd5ed91e6ca4218c33a",
+      "size": 5647,
+      "normalized_sha256": "f995146b38a1404b90bbe15c577551555a8d3263de444bd5ed91e6ca4218c33a"
+    },
+    "Assets/OurTaiko/Runtime/Core/KusudamaMotion.cs": {
+      "role": "index",
+      "sha256": "f083cf0c6a1bce5c48351044207d2ba1d55125be67bcc2515a7bf66af048c8a1",
+      "size": 3621,
+      "normalized_sha256": "f083cf0c6a1bce5c48351044207d2ba1d55125be67bcc2515a7bf66af048c8a1"
+    },
+    "Assets/OurTaiko/Runtime/Core/LaneWindow.cs": {
+      "role": "index",
+      "sha256": "7ffc7bd4837cb53d66d1dc0a5e11847697a5258f86ce9864d1cd3f1f8c9eb269",
+      "size": 9244,
+      "normalized_sha256": "7ffc7bd4837cb53d66d1dc0a5e11847697a5258f86ce9864d1cd3f1f8c9eb269"
+    },
+    "Assets/OurTaiko/Runtime/Core/LocalSongScanner.cs": {
+      "role": "index",
+      "sha256": "4e3bbad8833e95133f89c613d92080db4161c3cfdab9bc2d2af3febece163a0f",
+      "size": 13764,
+      "normalized_sha256": "4e3bbad8833e95133f89c613d92080db4161c3cfdab9bc2d2af3febece163a0f"
+    },
+    "Assets/OurTaiko/Runtime/Core/Log.cs": {
+      "role": "index",
+      "sha256": "53d92454b5b18a13e78906cd273cf0ea2ef3518cc06e1c4da9094530bac19608",
+      "size": 8955,
+      "normalized_sha256": "53d92454b5b18a13e78906cd273cf0ea2ef3518cc06e1c4da9094530bac19608"
+    },
+    "Assets/OurTaiko/Runtime/Core/LumenClip.cs": {
+      "role": "index",
+      "sha256": "a4d3275028e140bd8a412e66880f39d1ef594bc671e92984b5b3273c765f9b90",
+      "size": 6213,
+      "normalized_sha256": "a4d3275028e140bd8a412e66880f39d1ef594bc671e92984b5b3273c765f9b90"
+    },
+    "Assets/OurTaiko/Runtime/Core/ModalLayers.cs": {
+      "role": "index",
+      "sha256": "2ed9356fd1c8f2db0a3e18a64632f72d66c2b9ce165ee399ebf9ecd83bdefc27",
+      "size": 1337,
+      "normalized_sha256": "2ed9356fd1c8f2db0a3e18a64632f72d66c2b9ce165ee399ebf9ecd83bdefc27"
+    },
+    "Assets/OurTaiko/Runtime/Core/MovieSync.cs": {
+      "role": "index",
+      "sha256": "43636a6971bb2e2fedbf7d503dedc0d9b155cc9cb3f29dbae0fc58c1cfcc5e3a",
+      "size": 4011,
+      "normalized_sha256": "43636a6971bb2e2fedbf7d503dedc0d9b155cc9cb3f29dbae0fc58c1cfcc5e3a"
+    },
+    "Assets/OurTaiko/Runtime/Core/NameplateLayout.cs": {
+      "role": "index",
+      "sha256": "fb28ef44373beaf12053cc343d6e6213e7aa4aa6102493144f9a85b22d96b67b",
+      "size": 2275,
+      "normalized_sha256": "fb28ef44373beaf12053cc343d6e6213e7aa4aa6102493144f9a85b22d96b67b"
+    },
+    "Assets/OurTaiko/Runtime/Core/NoteArcPath.cs": {
+      "role": "index",
+      "sha256": "471743a3ba261e781b54acdb107c10c06d5604bea6e00de7e0fbd59ac8c57034",
+      "size": 3791,
+      "normalized_sha256": "471743a3ba261e781b54acdb107c10c06d5604bea6e00de7e0fbd59ac8c57034"
+    },
+    "Assets/OurTaiko/Runtime/Core/NoteExpression.cs": {
+      "role": "index",
+      "sha256": "ec15f4b7f1575075955b554588067e31a3da35641f4a2b52b8d6f82250c79ff4",
+      "size": 1685,
+      "normalized_sha256": "ec15f4b7f1575075955b554588067e31a3da35641f4a2b52b8d6f82250c79ff4"
+    },
+    "Assets/OurTaiko/Runtime/Core/OptionMenu.cs": {
+      "role": "index",
+      "sha256": "cf85a57cfdb171754084ae8736e2856ab8fa3632f5547742464df6b4004c86bf",
+      "size": 4986,
+      "normalized_sha256": "cf85a57cfdb171754084ae8736e2856ab8fa3632f5547742464df6b4004c86bf"
+    },
+    "Assets/OurTaiko/Runtime/Core/PlayOptions.cs": {
+      "role": "index",
+      "sha256": "a0a72daca23b4b210d4fb9ab4eaba4f9a6854234d84215b5748a0fb3af0c864b",
+      "size": 7397,
+      "normalized_sha256": "a0a72daca23b4b210d4fb9ab4eaba4f9a6854234d84215b5748a0fb3af0c864b"
+    },
+    "Assets/OurTaiko/Runtime/Core/PlayResult.cs": {
+      "role": "index",
+      "sha256": "ca30c7cc498760ebd5ca84e256ca2ba4532a65fb2d8fa4deb385ea3388ec3706",
+      "size": 4497,
+      "normalized_sha256": "ca30c7cc498760ebd5ca84e256ca2ba4532a65fb2d8fa4deb385ea3388ec3706"
+    },
+    "Assets/OurTaiko/Runtime/Core/PlaySession.cs": {
+      "role": "index",
+      "sha256": "ce0e735ce016383236aa14a43abdd5f3715a0b7b7318f4ace2f0aedfbfeee812",
+      "size": 32612,
+      "normalized_sha256": "ce0e735ce016383236aa14a43abdd5f3715a0b7b7318f4ace2f0aedfbfeee812"
+    },
+    "Assets/OurTaiko/Runtime/Core/PlayerInfo.cs": {
+      "role": "index",
+      "sha256": "a69f41bd3a34c8819f7c6d095a05efd1dfa164e8c1568114f4aa44b2a5a3cc8c",
+      "size": 2514,
+      "normalized_sha256": "a69f41bd3a34c8819f7c6d095a05efd1dfa164e8c1568114f4aa44b2a5a3cc8c"
+    },
+    "Assets/OurTaiko/Runtime/Core/PracticeProgress.cs": {
+      "role": "index",
+      "sha256": "0b341e89ac7f2aca6b654cd766cea4bbbf9ee49e1e38072854d1153f5f3e2292",
+      "size": 3154,
+      "normalized_sha256": "0b341e89ac7f2aca6b654cd766cea4bbbf9ee49e1e38072854d1153f5f3e2292"
+    },
+    "Assets/OurTaiko/Runtime/Core/ReplayFeed.cs": {
+      "role": "index",
+      "sha256": "9020d84268e29499ac45e4c33d69f31524586fb940222e91053c729ae7c29c43",
+      "size": 1781,
+      "normalized_sha256": "9020d84268e29499ac45e4c33d69f31524586fb940222e91053c729ae7c29c43"
+    },
+    "Assets/OurTaiko/Runtime/Core/ResultSequence.cs": {
+      "role": "index",
+      "sha256": "92831be90c75baff48221483862dd81aa2e9784cc22fd1748336a104382116b2",
+      "size": 7851,
+      "normalized_sha256": "92831be90c75baff48221483862dd81aa2e9784cc22fd1748336a104382116b2"
+    },
+    "Assets/OurTaiko/Runtime/Core/ScoreRank.cs": {
+      "role": "index",
+      "sha256": "f41f971ae8852abeeec21328d35433d46f0c8aaa5bfd989feab70019e81fdb43",
+      "size": 193,
+      "normalized_sha256": "f41f971ae8852abeeec21328d35433d46f0c8aaa5bfd989feab70019e81fdb43"
+    },
+    "Assets/OurTaiko/Runtime/Core/ScoreRankUtil.cs": {
+      "role": "index",
+      "sha256": "7eed888300639ea116dd6eea70981fcfb1487a30ffadd048cef152da228b3e0c",
+      "size": 1176,
+      "normalized_sha256": "7eed888300639ea116dd6eea70981fcfb1487a30ffadd048cef152da228b3e0c"
+    },
+    "Assets/OurTaiko/Runtime/Core/ScoreStore.cs": {
+      "role": "index",
+      "sha256": "55fa62c178b20d1eb1eaf60481b4f20824730e8b95a27f75bb350694a022caec",
+      "size": 3553,
+      "normalized_sha256": "55fa62c178b20d1eb1eaf60481b4f20824730e8b95a27f75bb350694a022caec"
+    },
+    "Assets/OurTaiko/Runtime/Core/SeatBlocks.cs": {
+      "role": "index",
+      "sha256": "c7a0a4fd01e1360d06a11e515c887a8ae532b5eddb3dc345a97575ed6cd65c0a",
+      "size": 2886,
+      "normalized_sha256": "c7a0a4fd01e1360d06a11e515c887a8ae532b5eddb3dc345a97575ed6cd65c0a"
+    },
+    "Assets/OurTaiko/Runtime/Core/ShinuchiScore.cs": {
+      "role": "index",
+      "sha256": "038b11f81535006798c0f7987b5f5e91d7f56fc9d004c4738a43ec4c5b881825",
+      "size": 2087,
+      "normalized_sha256": "038b11f81535006798c0f7987b5f5e91d7f56fc9d004c4738a43ec4c5b881825"
+    },
+    "Assets/OurTaiko/Runtime/Core/Side.cs": {
+      "role": "index",
+      "sha256": "b8d08ce7b58bb99f0017dc55f14d9323fa05d642c6dc7e6001c37002f645f0d6",
+      "size": 394,
+      "normalized_sha256": "b8d08ce7b58bb99f0017dc55f14d9323fa05d642c6dc7e6001c37002f645f0d6"
+    },
+    "Assets/OurTaiko/Runtime/Core/SongClock.cs": {
+      "role": "index",
+      "sha256": "ccf9a5cd863096fc7c4b541803d2a3be8096a465a5929c64a8f88d219005731a",
+      "size": 3743,
+      "normalized_sha256": "ccf9a5cd863096fc7c4b541803d2a3be8096a465a5929c64a8f88d219005731a"
+    },
+    "Assets/OurTaiko/Runtime/Core/SongDefinition.cs": {
+      "role": "index",
+      "sha256": "c93c3eafd8bce4411ba5c58faa420462b8fceb21e8986f2404deb763e18bcfc7",
+      "size": 5914,
+      "normalized_sha256": "c93c3eafd8bce4411ba5c58faa420462b8fceb21e8986f2404deb763e18bcfc7"
+    },
+    "Assets/OurTaiko/Runtime/Core/SongEnd.cs": {
+      "role": "index",
+      "sha256": "2d1569874ee46b32e96aac8d68813ad0bc42fab25c634c7121ca6256ecee7a8b",
+      "size": 1239,
+      "normalized_sha256": "2d1569874ee46b32e96aac8d68813ad0bc42fab25c634c7121ca6256ecee7a8b"
+    },
+    "Assets/OurTaiko/Runtime/Core/SongFolder.cs": {
+      "role": "index",
+      "sha256": "e2187b142132a442d412bef0baa42b253086e6f2e41703108033f0cdaae0daf1",
+      "size": 1095,
+      "normalized_sha256": "e2187b142132a442d412bef0baa42b253086e6f2e41703108033f0cdaae0daf1"
+    },
+    "Assets/OurTaiko/Runtime/Core/SongLibraryPaths.cs": {
+      "role": "index",
+      "sha256": "0a6d0d209d8bc34751dac87c482525a8da11acfa1999fd76d03471a28cd27132",
+      "size": 2134,
+      "normalized_sha256": "0a6d0d209d8bc34751dac87c482525a8da11acfa1999fd76d03471a28cd27132"
+    },
+    "Assets/OurTaiko/Runtime/Core/SongScores.cs": {
+      "role": "index",
+      "sha256": "387a8629169ef06205135b697f7fe25a75532f57e64824712e11e23506ce54fe",
+      "size": 2649,
+      "normalized_sha256": "387a8629169ef06205135b697f7fe25a75532f57e64824712e11e23506ce54fe"
+    },
+    "Assets/OurTaiko/Runtime/Core/SongSearchQuery.cs": {
+      "role": "index",
+      "sha256": "157c1746f5b53cccd034cad5e63084f2fcef3c9c262072ee48f45ccd92b3d297",
+      "size": 3704,
+      "normalized_sha256": "157c1746f5b53cccd034cad5e63084f2fcef3c9c262072ee48f45ccd92b3d297"
+    },
+    "Assets/OurTaiko/Runtime/Core/SoulGauge.cs": {
+      "role": "index",
+      "sha256": "065204368c3a3c2c13a2495ac6ace9ed72f250e8b5d3351e63bc4e2cef920782",
+      "size": 5038,
+      "normalized_sha256": "065204368c3a3c2c13a2495ac6ace9ed72f250e8b5d3351e63bc4e2cef920782"
+    },
+    "Assets/OurTaiko/Runtime/Core/SoulGaugeRules.cs": {
+      "role": "index",
+      "sha256": "02dc226069062a7b2ec3b7b18ea728189790ced7fef5c77776076bb148672808",
+      "size": 2067,
+      "normalized_sha256": "02dc226069062a7b2ec3b7b18ea728189790ced7fef5c77776076bb148672808"
+    },
+    "Assets/OurTaiko/Runtime/Core/TimingCalibration.cs": {
+      "role": "index",
+      "sha256": "dc33f0e2e3222fc5dce952bb0c3a1bd9dd3815d2b012e2db6f1cd1e3f644ee00",
+      "size": 2202,
+      "normalized_sha256": "dc33f0e2e3222fc5dce952bb0c3a1bd9dd3815d2b012e2db6f1cd1e3f644ee00"
+    },
+    "Assets/OurTaiko/Runtime/Core/TimingStatistics.cs": {
+      "role": "index",
+      "sha256": "ab3efafac11efb06955bf7bbe2236cb8cd9d6faf40de176bd8ae5078ce0a7c2c",
+      "size": 2960,
+      "normalized_sha256": "ab3efafac11efb06955bf7bbe2236cb8cd9d6faf40de176bd8ae5078ce0a7c2c"
+    },
+    "Assets/OurTaiko/Runtime/Input/GameControllerKeyboard.cs": {
+      "role": "index",
+      "sha256": "c3266c243fd1bb4dafe68400cb43e3c51ced92ea0bca6c5f3685497a648d38f2",
+      "size": 5500,
+      "normalized_sha256": "c3266c243fd1bb4dafe68400cb43e3c51ced92ea0bca6c5f3685497a648d38f2"
+    },
+    "Assets/OurTaiko/Runtime/Input/InputLog.cs": {
+      "role": "index",
+      "sha256": "2c079cb9a28408ab8a6be9a26b9a0ef77903dc7daf0d2afbfcfd001e60e79852",
+      "size": 6555,
+      "normalized_sha256": "2c079cb9a28408ab8a6be9a26b9a0ef77903dc7daf0d2afbfcfd001e60e79852"
+    },
+    "Assets/OurTaiko/Runtime/Input/InputManager.cs": {
+      "role": "index",
+      "sha256": "c454b3b23edcbc74336efe2e510f504ba9fdac34329d7e07448f6e2746848067",
+      "size": 15301,
+      "normalized_sha256": "c454b3b23edcbc74336efe2e510f504ba9fdac34329d7e07448f6e2746848067"
+    },
+    "Assets/OurTaiko/Runtime/Input/KeyboardBindings.cs": {
+      "role": "index",
+      "sha256": "67612e5025f128eb77fb958243f9c036d6dbd5f31de311881cdd977451e356b7",
+      "size": 4223,
+      "normalized_sha256": "67612e5025f128eb77fb958243f9c036d6dbd5f31de311881cdd977451e356b7"
+    },
+    "Assets/OurTaiko/Runtime/Localization/L10n.cs": {
+      "role": "index",
+      "sha256": "cadfd0928cb435186eb4554e3d4404cacb8969e1eb6926b20fd2e344c82fd8a9",
+      "size": 5190,
+      "normalized_sha256": "cadfd0928cb435186eb4554e3d4404cacb8969e1eb6926b20fd2e344c82fd8a9"
+    },
+    "Assets/OurTaiko/Runtime/Localization/LocalizedText.cs": {
+      "role": "index",
+      "sha256": "a8c59b1ac24a003d37f194ddc5a62c299e383347d611797fc9f031d946080f62",
+      "size": 2100,
+      "normalized_sha256": "a8c59b1ac24a003d37f194ddc5a62c299e383347d611797fc9f031d946080f62"
+    },
+    "Assets/OurTaiko/Runtime/Localization/SavedLanguageSelector.cs": {
+      "role": "index",
+      "sha256": "9bc94fdf9b64aa25caa099791a738ecbb553d01b75ef8daeacfe1b20e4893729",
+      "size": 739,
+      "normalized_sha256": "9bc94fdf9b64aa25caa099791a738ecbb553d01b75ef8daeacfe1b20e4893729"
+    },
+    "Assets/OurTaiko/Runtime/Multi/MultiArt.cs": {
+      "role": "index",
+      "sha256": "a209057c9761addacae165fbfc753782995173b66b62324534b0a24f40e9d29e",
+      "size": 4373,
+      "normalized_sha256": "a209057c9761addacae165fbfc753782995173b66b62324534b0a24f40e9d29e"
+    },
+    "Assets/OurTaiko/Runtime/Multi/MultiAvatars.cs": {
+      "role": "index",
+      "sha256": "46ea453e65ad9984cce2c6d59e1d234386fb72bc7ead179452266b21601ac7d4",
+      "size": 8307,
+      "normalized_sha256": "46ea453e65ad9984cce2c6d59e1d234386fb72bc7ead179452266b21601ac7d4"
+    },
+    "Assets/OurTaiko/Runtime/Multi/MultiDirector.cs": {
+      "role": "index",
+      "sha256": "d3698a925047cb82aaaa422852183f76683b214da974a3761b6f33fff89c76da",
+      "size": 11196,
+      "normalized_sha256": "d3698a925047cb82aaaa422852183f76683b214da974a3761b6f33fff89c76da"
+    },
+    "Assets/OurTaiko/Runtime/Multi/MultiSession.cs": {
+      "role": "index",
+      "sha256": "e77570abb1d3068131de4d807f54145e28f80e8de679a873e55905aff4ba7a69",
+      "size": 21450,
+      "normalized_sha256": "e77570abb1d3068131de4d807f54145e28f80e8de679a873e55905aff4ba7a69"
+    },
+    "Assets/OurTaiko/Runtime/Multi/MultiTransport.cs": {
+      "role": "index",
+      "sha256": "c4c948bf0e775078481345ca93e5699ac8ef5ea3cd0ff3a322cde0d49321321c",
+      "size": 5987,
+      "normalized_sha256": "c4c948bf0e775078481345ca93e5699ac8ef5ea3cd0ff3a322cde0d49321321c"
+    },
+    "Assets/OurTaiko/Runtime/Multi/Proto/Multiplay.cs": {
+      "role": "index",
+      "sha256": "78bd727537d018f6cad94924cc3b7d2f2f85001f893722e1cb89f2c3eeb690ff",
+      "size": 359882,
+      "normalized_sha256": "78bd727537d018f6cad94924cc3b7d2f2f85001f893722e1cb89f2c3eeb690ff"
+    },
+    "Assets/OurTaiko/Runtime/Online/Distribution.cs": {
+      "role": "index",
+      "sha256": "acfdeba4a2bbd795dc5e7eb6692dc2503cfe673ef5d338b1a04d115b8de1eead",
+      "size": 10107,
+      "normalized_sha256": "acfdeba4a2bbd795dc5e7eb6692dc2503cfe673ef5d338b1a04d115b8de1eead"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeClient.Preview.cs": {
+      "role": "index",
+      "sha256": "070461b9fc1e56e3035c73dd1eaa79b95674c950c79a3fa56ad9ea9d727a0acb",
+      "size": 2019,
+      "normalized_sha256": "070461b9fc1e56e3035c73dd1eaa79b95674c950c79a3fa56ad9ea9d727a0acb"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeClient.Replays.cs": {
+      "role": "index",
+      "sha256": "b0b6e24ef1f15ceed0fff9dea448c973a9f6030f773aec051b76494bfcb1b689",
+      "size": 7830,
+      "normalized_sha256": "b0b6e24ef1f15ceed0fff9dea448c973a9f6030f773aec051b76494bfcb1b689"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeClient.Resources.cs": {
+      "role": "index",
+      "sha256": "80069286671536b81fd613ef021ab83628dcd21bd8885e5cfd57c92c24dd0d41",
+      "size": 10821,
+      "normalized_sha256": "80069286671536b81fd613ef021ab83628dcd21bd8885e5cfd57c92c24dd0d41"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeClient.ScoreRank.cs": {
+      "role": "index",
+      "sha256": "96be283ad7ca8d8f2fce081593c4a18e5f5fd2a96299f597ed3d8a76e318083a",
+      "size": 4145,
+      "normalized_sha256": "96be283ad7ca8d8f2fce081593c4a18e5f5fd2a96299f597ed3d8a76e318083a"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeClient.Search.cs": {
+      "role": "index",
+      "sha256": "884074df7b68e45d6d686bcebf66656d7134d1f04cfc6a463eff7e197033c716",
+      "size": 3895,
+      "normalized_sha256": "884074df7b68e45d6d686bcebf66656d7134d1f04cfc6a463eff7e197033c716"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeClient.Votes.cs": {
+      "role": "index",
+      "sha256": "fb4414638383bd6f64b20cb07153d4995d06a6bff0452a7ae82a23a462f3e40e",
+      "size": 2519,
+      "normalized_sha256": "fb4414638383bd6f64b20cb07153d4995d06a6bff0452a7ae82a23a462f3e40e"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeClient.cs": {
+      "role": "index",
+      "sha256": "6b10daa5203e32efc6b29fe77e8b5b74c7d1a9731294792a15372670904ce383",
+      "size": 48810,
+      "normalized_sha256": "6b10daa5203e32efc6b29fe77e8b5b74c7d1a9731294792a15372670904ce383"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeEndpoint.Resources.cs": {
+      "role": "index",
+      "sha256": "8d5117fec514060fe2a13d9a4ba0ccf7be4c550b3c1850638c918b0594ca2945",
+      "size": 3288,
+      "normalized_sha256": "8d5117fec514060fe2a13d9a4ba0ccf7be4c550b3c1850638c918b0594ca2945"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeEndpoint.cs": {
+      "role": "index",
+      "sha256": "58c7531730623f1f33a17bc70c3c0c1268dfa8018ed2e788e9e0ba076a1944ef",
+      "size": 15999,
+      "normalized_sha256": "58c7531730623f1f33a17bc70c3c0c1268dfa8018ed2e788e9e0ba076a1944ef"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeModels.cs": {
+      "role": "index",
+      "sha256": "697c0572c45b95e7508c3652100ca46bd76602456d1c268a5a4303b2e586fd0c",
+      "size": 23340,
+      "normalized_sha256": "697c0572c45b95e7508c3652100ca46bd76602456d1c268a5a4303b2e586fd0c"
+    },
+    "Assets/OurTaiko/Runtime/Online/FanmadeResources.cs": {
+      "role": "index",
+      "sha256": "cf1c5cb4f22ad76dd4e71f17001db35038b81428ee54308b8e257ea7c5cd769d",
+      "size": 3394,
+      "normalized_sha256": "cf1c5cb4f22ad76dd4e71f17001db35038b81428ee54308b8e257ea7c5cd769d"
+    },
+    "Assets/OurTaiko/Runtime/Online/NameplateArt.cs": {
+      "role": "index",
+      "sha256": "86eddef6853688c5a98cf11fa456a08a0ba866cf2fe96ac1d47e7be558ad39ff",
+      "size": 13895,
+      "normalized_sha256": "86eddef6853688c5a98cf11fa456a08a0ba866cf2fe96ac1d47e7be558ad39ff"
+    },
+    "Assets/OurTaiko/Runtime/Online/OfflineChartStore.cs": {
+      "role": "index",
+      "sha256": "bb72b0e7d20f53ec67169008dcc8d11d695145e676fa4fac11023c4c35aa490f",
+      "size": 6783,
+      "normalized_sha256": "bb72b0e7d20f53ec67169008dcc8d11d695145e676fa4fac11023c4c35aa490f"
+    },
+    "Assets/OurTaiko/Runtime/Online/OnlineManager.cs": {
+      "role": "index",
+      "sha256": "8db9f6f0662b926461db8ccf30ae2adb3713b854a0faf185f735ee78d04fb46a",
+      "size": 45594,
+      "normalized_sha256": "8db9f6f0662b926461db8ccf30ae2adb3713b854a0faf185f735ee78d04fb46a"
+    },
+    "Assets/OurTaiko/Runtime/Online/OurTaikoAccounts.cs": {
+      "role": "index",
+      "sha256": "bc860f2b64be745bd4f76a2d934303443db398842f8d029c428894a4ff0cb4ee",
+      "size": 14521,
+      "normalized_sha256": "bc860f2b64be745bd4f76a2d934303443db398842f8d029c428894a4ff0cb4ee"
+    },
+    "Assets/OurTaiko/Runtime/Online/PendingScoreQueue.cs": {
+      "role": "index",
+      "sha256": "e3b3d493ba9113d2009d3d95f5ee0145adcb8edabd4ad96451964579d0028358",
+      "size": 4412,
+      "normalized_sha256": "e3b3d493ba9113d2009d3d95f5ee0145adcb8edabd4ad96451964579d0028358"
+    },
+    "Assets/OurTaiko/Runtime/Online/Pictures.cs": {
+      "role": "index",
+      "sha256": "9b691f7f459ce502c4b42724778c10b14647eb9336a750a0154bc9e37048d862",
+      "size": 2656,
+      "normalized_sha256": "9b691f7f459ce502c4b42724778c10b14647eb9336a750a0154bc9e37048d862"
+    },
+    "Assets/OurTaiko/Runtime/Online/PlayableTja.cs": {
+      "role": "index",
+      "sha256": "51c461cbba1e4a3e4e7ae7f7907009566853ad945514981ca185ebbd59114188",
+      "size": 4384,
+      "normalized_sha256": "51c461cbba1e4a3e4e7ae7f7907009566853ad945514981ca185ebbd59114188"
+    },
+    "Assets/OurTaiko/Runtime/Online/RewardInbox.cs": {
+      "role": "index",
+      "sha256": "02b19d813066d4c2ffad520c7e55bfb5b1fdb77b10108da4ce259f690d967f00",
+      "size": 13612,
+      "normalized_sha256": "02b19d813066d4c2ffad520c7e55bfb5b1fdb77b10108da4ce259f690d967f00"
+    },
+    "Assets/OurTaiko/Runtime/Online/ServerConfig.cs": {
+      "role": "index",
+      "sha256": "b78cfe743a6ef1256c268150a8e7e7ebc4c711fdf89ebff453ba4ad1510d2a7e",
+      "size": 2560,
+      "normalized_sha256": "b78cfe743a6ef1256c268150a8e7e7ebc4c711fdf89ebff453ba4ad1510d2a7e"
+    },
+    "Assets/OurTaiko/Runtime/OurTaiko.Runtime.asmdef": {
+      "role": "index",
+      "sha256": "23573a8808abdfb8c91240f229867dd5a35f18a5261eefbcf267b19c678ddf5b",
+      "size": 536,
+      "normalized_sha256": "23573a8808abdfb8c91240f229867dd5a35f18a5261eefbcf267b19c678ddf5b"
+    },
+    "Assets/OurTaiko/Runtime/Play/BackgroundMovieView.cs": {
+      "role": "index",
+      "sha256": "7d9f9b043d0b9ededecff7484a819d85266b49b7fe1637d1f3f54b7433498c71",
+      "size": 4835,
+      "normalized_sha256": "7d9f9b043d0b9ededecff7484a819d85266b49b7fe1637d1f3f54b7433498c71"
+    },
+    "Assets/OurTaiko/Runtime/Play/BalloonCounterView.cs": {
+      "role": "index",
+      "sha256": "54e9bcd66e7514dda015e2e6350711058d1dc5d85a1e5137cc4beb9298fed44c",
+      "size": 4289,
+      "normalized_sha256": "54e9bcd66e7514dda015e2e6350711058d1dc5d85a1e5137cc4beb9298fed44c"
+    },
+    "Assets/OurTaiko/Runtime/Play/BranchLaneView.cs": {
+      "role": "index",
+      "sha256": "a2d85f132946e185af1d4e76aea99612c034e4855c92ba3fcc454f2c7f18b817",
+      "size": 3382,
+      "normalized_sha256": "a2d85f132946e185af1d4e76aea99612c034e4855c92ba3fcc454f2c7f18b817"
+    },
+    "Assets/OurTaiko/Runtime/Play/ComboAnnounceView.cs": {
+      "role": "index",
+      "sha256": "5eb44d07f282181a3d3974e420a33930beb4c36f778f63a0c34352a1d3d651da",
+      "size": 4522,
+      "normalized_sha256": "5eb44d07f282181a3d3974e420a33930beb4c36f778f63a0c34352a1d3d651da"
+    },
+    "Assets/OurTaiko/Runtime/Play/ComboView.cs": {
+      "role": "index",
+      "sha256": "e3530325752f2731074fa765af9cf810d97b6c6e672876b274dddd38dd7c3ca8",
+      "size": 4981,
+      "normalized_sha256": "e3530325752f2731074fa765af9cf810d97b6c6e672876b274dddd38dd7c3ca8"
+    },
+    "Assets/OurTaiko/Runtime/Play/DanBackgroundView.cs": {
+      "role": "index",
+      "sha256": "3b48942b8056ea429807c57b7c00b0739bd0f496492c6836d4056ce9689485d3",
+      "size": 3529,
+      "normalized_sha256": "3b48942b8056ea429807c57b7c00b0739bd0f496492c6836d4056ce9689485d3"
+    },
+    "Assets/OurTaiko/Runtime/Play/DanPlayScene.cs": {
+      "role": "index",
+      "sha256": "add0561934abbde4fcd4e7fcf462b75c448661314240024e8d2269918b50ae3d",
+      "size": 29107,
+      "normalized_sha256": "add0561934abbde4fcd4e7fcf462b75c448661314240024e8d2269918b50ae3d"
+    },
+    "Assets/OurTaiko/Runtime/Play/DanPlayView.cs": {
+      "role": "index",
+      "sha256": "5209dbac0a8489598e099047ef738bb9711edb1aaf58ee41534a1e2838b83769",
+      "size": 2582,
+      "normalized_sha256": "5209dbac0a8489598e099047ef738bb9711edb1aaf58ee41534a1e2838b83769"
+    },
+    "Assets/OurTaiko/Runtime/Play/DancerTroupeView.cs": {
+      "role": "index",
+      "sha256": "9beb45ee1618bf7063433af33b91b37d88cb1c84e226147f546affad3a281935",
+      "size": 1865,
+      "normalized_sha256": "9beb45ee1618bf7063433af33b91b37d88cb1c84e226147f546affad3a281935"
+    },
+    "Assets/OurTaiko/Runtime/Play/DancerView.cs": {
+      "role": "index",
+      "sha256": "b9cdf5330a605730ebc6ca8e0f1888a8f4b83291ec56a4c5cea1b41c7d90a432",
+      "size": 1203,
+      "normalized_sha256": "b9cdf5330a605730ebc6ca8e0f1888a8f4b83291ec56a4c5cea1b41c7d90a432"
+    },
+    "Assets/OurTaiko/Runtime/Play/DrumPad.cs": {
+      "role": "index",
+      "sha256": "56f1a3a3c003a0b5b87b66a32dec89175b15d9c9aba2b91f90000bc50e2029f3",
+      "size": 3725,
+      "normalized_sha256": "56f1a3a3c003a0b5b87b66a32dec89175b15d9c9aba2b91f90000bc50e2029f3"
+    },
+    "Assets/OurTaiko/Runtime/Play/DrumrollCounterView.cs": {
+      "role": "index",
+      "sha256": "e4e272e45c18dfede432af9e84f5087ad91c6d0c61d872dd8c8b22479f7fed0a",
+      "size": 3240,
+      "normalized_sha256": "e4e272e45c18dfede432af9e84f5087ad91c6d0c61d872dd8c8b22479f7fed0a"
+    },
+    "Assets/OurTaiko/Runtime/Play/EndingView.cs": {
+      "role": "index",
+      "sha256": "c55db48032a530a0b86002b42cfa5b6be787589ff8355843531b94d51bbcaf10",
+      "size": 7975,
+      "normalized_sha256": "c55db48032a530a0b86002b42cfa5b6be787589ff8355843531b94d51bbcaf10"
+    },
+    "Assets/OurTaiko/Runtime/Play/FFmpegMoviePlayer.cs": {
+      "role": "index",
+      "sha256": "69ebec1b028eaaeaebf8d021d8249bc6645ee76d093dc68997526194bd5fa226",
+      "size": 2157,
+      "normalized_sha256": "69ebec1b028eaaeaebf8d021d8249bc6645ee76d093dc68997526194bd5fa226"
+    },
+    "Assets/OurTaiko/Runtime/Play/FpsCounter.cs": {
+      "role": "index",
+      "sha256": "3939e4fea8d0892dc9f973745606e67ce502a3c0d189b357e3c9dc44649960bf",
+      "size": 1087,
+      "normalized_sha256": "3939e4fea8d0892dc9f973745606e67ce502a3c0d189b357e3c9dc44649960bf"
+    },
+    "Assets/OurTaiko/Runtime/Play/GaugeHitEffectView.cs": {
+      "role": "index",
+      "sha256": "5a554e3ccbff9166bbeb2a43458e1239709da43a2af889505912dbfa3332fe1e",
+      "size": 1830,
+      "normalized_sha256": "5a554e3ccbff9166bbeb2a43458e1239709da43a2af889505912dbfa3332fe1e"
+    },
+    "Assets/OurTaiko/Runtime/Play/GogoView.cs": {
+      "role": "index",
+      "sha256": "ea88b1d765410baa70c9442aa18ff3c6183c6a90bd0b4aefa020c30855fd05c8",
+      "size": 1470,
+      "normalized_sha256": "ea88b1d765410baa70c9442aa18ff3c6183c6a90bd0b4aefa020c30855fd05c8"
+    },
+    "Assets/OurTaiko/Runtime/Play/HitFaceView.cs": {
+      "role": "index",
+      "sha256": "76c5a023affc5fada8d606f43d499a9eaf124ff0c705f8200511f73938f01d27",
+      "size": 1429,
+      "normalized_sha256": "76c5a023affc5fada8d606f43d499a9eaf124ff0c705f8200511f73938f01d27"
+    },
+    "Assets/OurTaiko/Runtime/Play/HitRingView.cs": {
+      "role": "index",
+      "sha256": "ee8a72950f48f3d7ae820d7b2b061db6d5d613d8ee4759b26626c376de811a67",
+      "size": 1464,
+      "normalized_sha256": "ee8a72950f48f3d7ae820d7b2b061db6d5d613d8ee4759b26626c376de811a67"
+    },
+    "Assets/OurTaiko/Runtime/Play/HitSoundLibrary.cs": {
+      "role": "index",
+      "sha256": "eb04d934c01e511b80a441a10dc56ff2ae33ec1821ca2a978045ee2396fc7a89",
+      "size": 867,
+      "normalized_sha256": "eb04d934c01e511b80a441a10dc56ff2ae33ec1821ca2a978045ee2396fc7a89"
+    },
+    "Assets/OurTaiko/Runtime/Play/INoteLaneOverlay.cs": {
+      "role": "index",
+      "sha256": "9366e0ea26908153a5eccf7ec98a6d619bc4f2ec147fcff38a0508944264bdca",
+      "size": 1236,
+      "normalized_sha256": "9366e0ea26908153a5eccf7ec98a6d619bc4f2ec147fcff38a0508944264bdca"
+    },
+    "Assets/OurTaiko/Runtime/Play/JudgeCounterView.cs": {
+      "role": "index",
+      "sha256": "381e815fb8cd95601564ed155c5997523821d5bb6b5d21686c17ba3bdf84e2c5",
+      "size": 3016,
+      "normalized_sha256": "381e815fb8cd95601564ed155c5997523821d5bb6b5d21686c17ba3bdf84e2c5"
+    },
+    "Assets/OurTaiko/Runtime/Play/KusudamaView.cs": {
+      "role": "index",
+      "sha256": "82b8e7c10096ea88f4f1a5945dffb26b0612854490c74ad699b311c2bfcebfb8",
+      "size": 5059,
+      "normalized_sha256": "82b8e7c10096ea88f4f1a5945dffb26b0612854490c74ad699b311c2bfcebfb8"
+    },
+    "Assets/OurTaiko/Runtime/Play/LaneHudViews.cs": {
+      "role": "index",
+      "sha256": "aca03f192bcd36f23ae26df8b3e2ef06efaaab99587208dce6c612d08bfadc6f",
+      "size": 672,
+      "normalized_sha256": "aca03f192bcd36f23ae26df8b3e2ef06efaaab99587208dce6c612d08bfadc6f"
+    },
+    "Assets/OurTaiko/Runtime/Play/LaneSprite.cs": {
+      "role": "index",
+      "sha256": "efa27c385a0ace1a753b6c76fd5f404b3a551e727574af89f46b9f5a093156bd",
+      "size": 2294,
+      "normalized_sha256": "efa27c385a0ace1a753b6c76fd5f404b3a551e727574af89f46b9f5a093156bd"
+    },
+    "Assets/OurTaiko/Runtime/Play/LaneSpriteLayer.cs": {
+      "role": "index",
+      "sha256": "6d287d53b0f18c2394775ba1e2fe4eab45b128bc61439abddb630f706bcc2f9b",
+      "size": 2455,
+      "normalized_sha256": "6d287d53b0f18c2394775ba1e2fe4eab45b128bc61439abddb630f706bcc2f9b"
+    },
+    "Assets/OurTaiko/Runtime/Play/LaneViews.cs": {
+      "role": "index",
+      "sha256": "7a4d812c25e4379b9e56f8f111de4f5e66daa9ff94a10a242483f54d5ea018cf",
+      "size": 1725,
+      "normalized_sha256": "7a4d812c25e4379b9e56f8f111de4f5e66daa9ff94a10a242483f54d5ea018cf"
+    },
+    "Assets/OurTaiko/Runtime/Play/ModifierBadgeView.cs": {
+      "role": "index",
+      "sha256": "f66d07ac2de6e858a2b692f6d831a2cdd367eee9a5cbf2a3b4f49c5fccc79cbd",
+      "size": 2700,
+      "normalized_sha256": "f66d07ac2de6e858a2b692f6d831a2cdd367eee9a5cbf2a3b4f49c5fccc79cbd"
+    },
+    "Assets/OurTaiko/Runtime/Play/MoviePlayer.cs": {
+      "role": "index",
+      "sha256": "55e1be3132995607fa0523ffb14303651bdb7beb36f14e1f76ff68341662ddd0",
+      "size": 1829,
+      "normalized_sha256": "55e1be3132995607fa0523ffb14303651bdb7beb36f14e1f76ff68341662ddd0"
+    },
+    "Assets/OurTaiko/Runtime/Play/MultiHudView.cs": {
+      "role": "index",
+      "sha256": "a9ccfddd6a3fe3c536ce9579984684ffba4f7af21f04882a4da38e8f0b500ea4",
+      "size": 9937,
+      "normalized_sha256": "a9ccfddd6a3fe3c536ce9579984684ffba4f7af21f04882a4da38e8f0b500ea4"
+    },
+    "Assets/OurTaiko/Runtime/Play/NoteArcView.cs": {
+      "role": "index",
+      "sha256": "b641128099a5232a5a6e431792abca749fe0594890d728a63b428233bb83574f",
+      "size": 3981,
+      "normalized_sha256": "b641128099a5232a5a6e431792abca749fe0594890d728a63b428233bb83574f"
+    },
+    "Assets/OurTaiko/Runtime/Play/NoteLabelRows.cs": {
+      "role": "index",
+      "sha256": "c963a95376d3897f69d8838a287b6723bf8f91fa4f3330f5e7fe6a3d2723c795",
+      "size": 2589,
+      "normalized_sha256": "c963a95376d3897f69d8838a287b6723bf8f91fa4f3330f5e7fe6a3d2723c795"
+    },
+    "Assets/OurTaiko/Runtime/Play/NoteLaneRenderer.cs": {
+      "role": "index",
+      "sha256": "50f672d908a2971fa833c4460cbf547332a7de387554e6482427e884f1819469",
+      "size": 28015,
+      "normalized_sha256": "50f672d908a2971fa833c4460cbf547332a7de387554e6482427e884f1819469"
+    },
+    "Assets/OurTaiko/Runtime/Play/PauseMenuView.cs": {
+      "role": "index",
+      "sha256": "ce483cb08877fb06922b397e668a14947aab273d389ffd5b6c6e36fc03947e7d",
+      "size": 6531,
+      "normalized_sha256": "ce483cb08877fb06922b397e668a14947aab273d389ffd5b6c6e36fc03947e7d"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlayScene.Ghost.cs": {
+      "role": "index",
+      "sha256": "43e33a544f4dacd050c3cd6b5d6f87dab697276ccf006f6c2ae3f6d831238158",
+      "size": 3194,
+      "normalized_sha256": "43e33a544f4dacd050c3cd6b5d6f87dab697276ccf006f6c2ae3f6d831238158"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlayScene.ModeSwitch.cs": {
+      "role": "index",
+      "sha256": "9fa772778fce7e402a32d887f3bff3e820c2c9cbf2af2f615eca636808a1604c",
+      "size": 3391,
+      "normalized_sha256": "9fa772778fce7e402a32d887f3bff3e820c2c9cbf2af2f615eca636808a1604c"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlayScene.Multi.cs": {
+      "role": "index",
+      "sha256": "206e4e36aa8177a500b4e93b7aa292bfe8b684cec9cf1dbf371885ec00c93f62",
+      "size": 6936,
+      "normalized_sha256": "206e4e36aa8177a500b4e93b7aa292bfe8b684cec9cf1dbf371885ec00c93f62"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlayScene.Practice.cs": {
+      "role": "index",
+      "sha256": "639e361ea8cd5b4f5b8091f8c9e991fb6afcf456d1d5e2227f70f63778052f20",
+      "size": 10468,
+      "normalized_sha256": "639e361ea8cd5b4f5b8091f8c9e991fb6afcf456d1d5e2227f70f63778052f20"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlayScene.Replay.cs": {
+      "role": "index",
+      "sha256": "c58adfbdf7e126624829d6a26505845a43c80003a9f40fc8ba2c500c33d3097f",
+      "size": 1732,
+      "normalized_sha256": "c58adfbdf7e126624829d6a26505845a43c80003a9f40fc8ba2c500c33d3097f"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlayScene.cs": {
+      "role": "index",
+      "sha256": "c759abe1df553efef3b9397f3fd2aa8c21c159555cd001a292687025a381c26d",
+      "size": 24696,
+      "normalized_sha256": "c759abe1df553efef3b9397f3fd2aa8c21c159555cd001a292687025a381c26d"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlaySceneBase.cs": {
+      "role": "index",
+      "sha256": "9e495ada30d1861151be3eb5cf6c974b47efc93685b0fbd3c1f8dbc085f62488",
+      "size": 2492,
+      "normalized_sha256": "9e495ada30d1861151be3eb5cf6c974b47efc93685b0fbd3c1f8dbc085f62488"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlayScoreRankView.cs": {
+      "role": "index",
+      "sha256": "3b6babe1fccf7092fbbd3bb1bbbe3ac087a4033120ca87b2553233b42a288b4e",
+      "size": 1140,
+      "normalized_sha256": "3b6babe1fccf7092fbbd3bb1bbbe3ac087a4033120ca87b2553233b42a288b4e"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlayerLane.cs": {
+      "role": "index",
+      "sha256": "eac8fc3876ba58abb2cfa53dbcbc5a86dd6f4661dfed7c92a2a006578aa6c44f",
+      "size": 28139,
+      "normalized_sha256": "eac8fc3876ba58abb2cfa53dbcbc5a86dd6f4661dfed7c92a2a006578aa6c44f"
+    },
+    "Assets/OurTaiko/Runtime/Play/PlayfieldMask.cs": {
+      "role": "index",
+      "sha256": "df1f21590f828353ab439da66081a8198ae0cd34134d6b5d273938102c669c58",
+      "size": 4384,
+      "normalized_sha256": "df1f21590f828353ab439da66081a8198ae0cd34134d6b5d273938102c669c58"
+    },
+    "Assets/OurTaiko/Runtime/Play/PracticeTimingReview.cs": {
+      "role": "index",
+      "sha256": "0aa697a4c0d9a131781b7a3e61e50b64a6975dd8fe0507ee190e623965ebb054",
+      "size": 6959,
+      "normalized_sha256": "0aa697a4c0d9a131781b7a3e61e50b64a6975dd8fe0507ee190e623965ebb054"
+    },
+    "Assets/OurTaiko/Runtime/Play/PracticeView.cs": {
+      "role": "index",
+      "sha256": "ac579e99c503069c7f71b5e693a28781669182bf88b306b760154bafb4c31c47",
+      "size": 1620,
+      "normalized_sha256": "ac579e99c503069c7f71b5e693a28781669182bf88b306b760154bafb4c31c47"
+    },
+    "Assets/OurTaiko/Runtime/Play/ScoreAdditionView.cs": {
+      "role": "index",
+      "sha256": "15ed7743d903c9e543c651ed968c381903ebb4703693c6af9ce99d64749bb16d",
+      "size": 2068,
+      "normalized_sha256": "15ed7743d903c9e543c651ed968c381903ebb4703693c6af9ce99d64749bb16d"
+    },
+    "Assets/OurTaiko/Runtime/Play/ScoreCounterView.cs": {
+      "role": "index",
+      "sha256": "55bbf7b3067b0ea5a6c161653307d19c8d31bf52363bb2e3522992d5b1018dba",
+      "size": 3981,
+      "normalized_sha256": "55bbf7b3067b0ea5a6c161653307d19c8d31bf52363bb2e3522992d5b1018dba"
+    },
+    "Assets/OurTaiko/Runtime/Play/SoulGaugeView.cs": {
+      "role": "index",
+      "sha256": "4a251d80ad4eabc3db3bed5c17ab1bdd6beecb74f36e3a00044dd2a1e743493b",
+      "size": 7084,
+      "normalized_sha256": "4a251d80ad4eabc3db3bed5c17ab1bdd6beecb74f36e3a00044dd2a1e743493b"
+    },
+    "Assets/OurTaiko/Runtime/Play/TimingFeedbackView.cs": {
+      "role": "index",
+      "sha256": "eaa5a9cb6070e2200ea10e9975f19870c9437e46baf704b93cabffb52ba226b8",
+      "size": 879,
+      "normalized_sha256": "eaa5a9cb6070e2200ea10e9975f19870c9437e46baf704b93cabffb52ba226b8"
+    },
+    "Assets/OurTaiko/Runtime/Play/TimingOffsetText.cs": {
+      "role": "index",
+      "sha256": "aa29214a847f52c18675a99f53a90d21bcf0f7c62e2ad6cd0da8ef71328663c9",
+      "size": 829,
+      "normalized_sha256": "aa29214a847f52c18675a99f53a90d21bcf0f7c62e2ad6cd0da8ef71328663c9"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/AnimatedFloat.cs": {
+      "role": "index",
+      "sha256": "2c893d01b8ef7a01f04323bad5b73f9f0589a3dd95e091a1d2b0283da7115ce0",
+      "size": 327,
+      "normalized_sha256": "2c893d01b8ef7a01f04323bad5b73f9f0589a3dd95e091a1d2b0283da7115ce0"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ChartRatingPrompt.cs": {
+      "role": "index",
+      "sha256": "42c8e460828c2c6377b2b569c6005dd382ef7d9184a0ccef77a9c984184a12cc",
+      "size": 3034,
+      "normalized_sha256": "42c8e460828c2c6377b2b569c6005dd382ef7d9184a0ccef77a9c984184a12cc"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/CircularHitArea.cs": {
+      "role": "index",
+      "sha256": "fd107f2157dd8f1146bb00742bf80abd860f38c60a2d790c61b7799dc6a75d79",
+      "size": 673,
+      "normalized_sha256": "fd107f2157dd8f1146bb00742bf80abd860f38c60a2d790c61b7799dc6a75d79"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ClipSampler.cs": {
+      "role": "index",
+      "sha256": "da7fa2ee8be1b1a0bff7974da755d5f4079e63a959874f06e8f41aaf08955465",
+      "size": 2355,
+      "normalized_sha256": "da7fa2ee8be1b1a0bff7974da755d5f4079e63a959874f06e8f41aaf08955465"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/DanIntroView.cs": {
+      "role": "index",
+      "sha256": "82f999e8d76992f454c5313b78cb21e5354c4d4b04fd5d94a77cd0dd41dbedff",
+      "size": 6812,
+      "normalized_sha256": "82f999e8d76992f454c5313b78cb21e5354c4d4b04fd5d94a77cd0dd41dbedff"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/DanLoadingCover.cs": {
+      "role": "index",
+      "sha256": "4f3c6ac016ed80b0bdca859671c8dde00041789a12446700202c0d4a3822b4f1",
+      "size": 4821,
+      "normalized_sha256": "4f3c6ac016ed80b0bdca859671c8dde00041789a12446700202c0d4a3822b4f1"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/DanResultScene.cs": {
+      "role": "index",
+      "sha256": "6f23dcd6e53cf813ed7b7ba46dd9ee5adad3bd86cdd9da5e5686fdf281f8e6e9",
+      "size": 40841,
+      "normalized_sha256": "6f23dcd6e53cf813ed7b7ba46dd9ee5adad3bd86cdd9da5e5686fdf281f8e6e9"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/DanResultView.cs": {
+      "role": "index",
+      "sha256": "248e748cebff67e8c1fd28fdf0ea6a36bb1ec920081769afeba69d611992f720",
+      "size": 4946,
+      "normalized_sha256": "248e748cebff67e8c1fd28fdf0ea6a36bb1ec920081769afeba69d611992f720"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/DanRun.cs": {
+      "role": "index",
+      "sha256": "e28ca0387b136dbf1f1dbbc14d51624a516cb8639a58cfc0a4f2f47b716a5307",
+      "size": 2635,
+      "normalized_sha256": "e28ca0387b136dbf1f1dbbc14d51624a516cb8639a58cfc0a4f2f47b716a5307"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/DanSelectScene.cs": {
+      "role": "index",
+      "sha256": "12b50246d370ae2c0a1a95611332484ca72d20791451f76fdde10762a41471da",
+      "size": 35926,
+      "normalized_sha256": "12b50246d370ae2c0a1a95611332484ca72d20791451f76fdde10762a41471da"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/DanSelectView.cs": {
+      "role": "index",
+      "sha256": "1492c4a1d54c22210a0c5bfe51c351e1547f861c3154a6bc9add1774190a13a1",
+      "size": 3478,
+      "normalized_sha256": "1492c4a1d54c22210a0c5bfe51c351e1547f861c3154a6bc9add1774190a13a1"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/DanSelectWidgets.cs": {
+      "role": "index",
+      "sha256": "69ebe30ad18d5755b96151ea6436281bcb7ed6124c7e9c6bcbf692608b75139a",
+      "size": 13734,
+      "normalized_sha256": "69ebe30ad18d5755b96151ea6436281bcb7ed6124c7e9c6bcbf692608b75139a"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/EntryScene.cs": {
+      "role": "index",
+      "sha256": "a56ee99c6fa91d7d4a5f226fb4d6ac2e87c977dd8d6ef9ab84af9b9e408b50e0",
+      "size": 17310,
+      "normalized_sha256": "a56ee99c6fa91d7d4a5f226fb4d6ac2e87c977dd8d6ef9ab84af9b9e408b50e0"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/EntryView.cs": {
+      "role": "index",
+      "sha256": "941b1605f7aaae77c2df258f331a31c7a6611e96a87a741df2d77b1554091e7e",
+      "size": 2579,
+      "normalized_sha256": "941b1605f7aaae77c2df258f331a31c7a6611e96a87a741df2d77b1554091e7e"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/EntryViews.cs": {
+      "role": "index",
+      "sha256": "8b1125ba20613fec75527cdc26ca40940d45e7cb8c20447483fbbbddfb31bec1",
+      "size": 16318,
+      "normalized_sha256": "8b1125ba20613fec75527cdc26ca40940d45e7cb8c20447483fbbbddfb31bec1"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/FolderBoardView.cs": {
+      "role": "index",
+      "sha256": "8dfda5bc09098aadc03bcea93f08fd69c743f8cbe54affd7acd963cef79f5477",
+      "size": 1769,
+      "normalized_sha256": "8dfda5bc09098aadc03bcea93f08fd69c743f8cbe54affd7acd963cef79f5477"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/GhostArt.cs": {
+      "role": "index",
+      "sha256": "4168c575386c4e53fdc1fe4cf51faf7ed1e442d4a4a1d0559c31d93f1061dc9f",
+      "size": 840,
+      "normalized_sha256": "4168c575386c4e53fdc1fe4cf51faf7ed1e442d4a4a1d0559c31d93f1061dc9f"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/GhostSelectScene.Build.cs": {
+      "role": "index",
+      "sha256": "8bd77adc2daa224262ad41a5293a3ed7b19014f56e158b4bb6db07b1b251d591",
+      "size": 10260,
+      "normalized_sha256": "8bd77adc2daa224262ad41a5293a3ed7b19014f56e158b4bb6db07b1b251d591"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/GhostSelectScene.cs": {
+      "role": "index",
+      "sha256": "f8fb6fe0c0540bfefaa32b862401b2133a86a9f46b55b6fd454cd098ecf535c7",
+      "size": 20636,
+      "normalized_sha256": "f8fb6fe0c0540bfefaa32b862401b2133a86a9f46b55b6fd454cd098ecf535c7"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/GlobalOverlays.cs": {
+      "role": "index",
+      "sha256": "a0834baaf4d43a42ec37392107bffc8aff7816f215abd02981ce2b65f608a0cc",
+      "size": 6396,
+      "normalized_sha256": "a0834baaf4d43a42ec37392107bffc8aff7816f215abd02981ce2b65f608a0cc"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/LocalSongLibrary.cs": {
+      "role": "index",
+      "sha256": "68313f123e571232ca0901c09569cf022ca95d54e1c14ac293e9379a409f77e3",
+      "size": 7984,
+      "normalized_sha256": "68313f123e571232ca0901c09569cf022ca95d54e1c14ac293e9379a409f77e3"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/MultiRoomScene.Build.cs": {
+      "role": "index",
+      "sha256": "c305ed7220b367474b833e36916b17b3fcaefd3dd65bc0ef652df74df5a2ba4b",
+      "size": 22938,
+      "normalized_sha256": "c305ed7220b367474b833e36916b17b3fcaefd3dd65bc0ef652df74df5a2ba4b"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/MultiRoomScene.cs": {
+      "role": "index",
+      "sha256": "449fef43fd824e1fdb64c815149fdaa8344a4f579423ae316d2bf9984d6148ab",
+      "size": 13508,
+      "normalized_sha256": "449fef43fd824e1fdb64c815149fdaa8344a4f579423ae316d2bf9984d6148ab"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/NameplateView.cs": {
+      "role": "index",
+      "sha256": "8c0030388189c9e6a02a67b7f1719287f46b88c47cfc7db6446d3bca80bed951",
+      "size": 8393,
+      "normalized_sha256": "8c0030388189c9e6a02a67b7f1719287f46b88c47cfc7db6446d3bca80bed951"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/OptionPanel.cs": {
+      "role": "index",
+      "sha256": "d51d613805053cabc29bab8fcb0d6265aa54d401d8e8b759a37d76a5ebd0d41c",
+      "size": 8419,
+      "normalized_sha256": "d51d613805053cabc29bab8fcb0d6265aa54d401d8e8b759a37d76a5ebd0d41c"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/OptionPanelView.cs": {
+      "role": "index",
+      "sha256": "96f16d34ef9362ef38c31a560c7788453ea0dccb273b24ea702d25e361d12913",
+      "size": 944,
+      "normalized_sha256": "96f16d34ef9362ef38c31a560c7788453ea0dccb273b24ea702d25e361d12913"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/PlateUi.cs": {
+      "role": "index",
+      "sha256": "7c1f9600b39cacfd71d810240a637217f2f0850a464a947578619b4a398006d2",
+      "size": 9917,
+      "normalized_sha256": "7c1f9600b39cacfd71d810240a637217f2f0850a464a947578619b4a398006d2"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/PlayerInfoController.cs": {
+      "role": "index",
+      "sha256": "197f54afcda2d46a0af5869824a91f7fb601643ca501e62724a945ad5e2d681f",
+      "size": 4108,
+      "normalized_sha256": "197f54afcda2d46a0af5869824a91f7fb601643ca501e62724a945ad5e2d681f"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/PointerRelay.cs": {
+      "role": "index",
+      "sha256": "7de17938fdbf6eaaa03eb6d362840d30b25874ef34ff986d962d797a2935ffee",
+      "size": 2158,
+      "normalized_sha256": "7de17938fdbf6eaaa03eb6d362840d30b25874ef34ff986d962d797a2935ffee"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/PresentedScene.cs": {
+      "role": "index",
+      "sha256": "c13299b64e546592a7b19ba133b0d09b2fabc2a178dd0ac3c653bac3d01e3d14",
+      "size": 4878,
+      "normalized_sha256": "c13299b64e546592a7b19ba133b0d09b2fabc2a178dd0ac3c653bac3d01e3d14"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/RatingArt.cs": {
+      "role": "index",
+      "sha256": "878a7ad5aae71d7ed2f5e4c2628671e6c9c15eccee155a231e053bbe85c08bd0",
+      "size": 831,
+      "normalized_sha256": "878a7ad5aae71d7ed2f5e4c2628671e6c9c15eccee155a231e053bbe85c08bd0"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ResultAnalysisView.cs": {
+      "role": "index",
+      "sha256": "6f081595f129927d6b28ebfe4b7a25081603bf2a4db1184459630a11f1a42369",
+      "size": 8059,
+      "normalized_sha256": "6f081595f129927d6b28ebfe4b7a25081603bf2a4db1184459630a11f1a42369"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ResultBackground.cs": {
+      "role": "index",
+      "sha256": "40a6fbf0a5bd607396b2796be380bfbcd1e97a8275fdd7ec8c630fc4f46e14f0",
+      "size": 4783,
+      "normalized_sha256": "40a6fbf0a5bd607396b2796be380bfbcd1e97a8275fdd7ec8c630fc4f46e14f0"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ResultBoard.cs": {
+      "role": "index",
+      "sha256": "d307d0cc651e503411d910af4d76e68b70904906b198da2f775dde7f4f6640cc",
+      "size": 18083,
+      "normalized_sha256": "d307d0cc651e503411d910af4d76e68b70904906b198da2f775dde7f4f6640cc"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ResultBoardView.cs": {
+      "role": "index",
+      "sha256": "60242c78248301d7e2e1759925f3ea06f0a486404d6f4b40d68a00ce2803d16d",
+      "size": 1907,
+      "normalized_sha256": "60242c78248301d7e2e1759925f3ea06f0a486404d6f4b40d68a00ce2803d16d"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ResultPointerControl.cs": {
+      "role": "index",
+      "sha256": "dd3a92708b4ded7fde323bc1c27acd105fc16ce520422592278b191a04b55d6b",
+      "size": 2046,
+      "normalized_sha256": "dd3a92708b4ded7fde323bc1c27acd105fc16ce520422592278b191a04b55d6b"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ResultScene.Rating.cs": {
+      "role": "index",
+      "sha256": "04bdb3bd3d7b2ce3e5fb38e9bc2302b37edcdc28c9cda722ea29b4dc44114e2a",
+      "size": 3254,
+      "normalized_sha256": "04bdb3bd3d7b2ce3e5fb38e9bc2302b37edcdc28c9cda722ea29b4dc44114e2a"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ResultScene.cs": {
+      "role": "index",
+      "sha256": "9d9fcd69351afc0628237b15dfec7bfeb878195298306f1d410d8f513fe54eea",
+      "size": 22028,
+      "normalized_sha256": "9d9fcd69351afc0628237b15dfec7bfeb878195298306f1d410d8f513fe54eea"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ResultView.cs": {
+      "role": "index",
+      "sha256": "bfaf20f47e72531a6891ee6f3a6afa496722146a86a0948a44f2e1c81f87b386",
+      "size": 1700,
+      "normalized_sha256": "bfaf20f47e72531a6891ee6f3a6afa496722146a86a0948a44f2e1c81f87b386"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/RewardOverlay.cs": {
+      "role": "index",
+      "sha256": "08bbfb555db484d835edc3b3775f58cc8406364adce46d05a8de2b5f1e0e8be4",
+      "size": 22978,
+      "normalized_sha256": "08bbfb555db484d835edc3b3775f58cc8406364adce46d05a8de2b5f1e0e8be4"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.Ghost.cs": {
+      "role": "index",
+      "sha256": "ee3b7c6c1c71a725f21edf78f838d56842b3984336feaf661df4d8eed985a972",
+      "size": 2052,
+      "normalized_sha256": "ee3b7c6c1c71a725f21edf78f838d56842b3984336feaf661df4d8eed985a972"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.ModeSwitch.cs": {
+      "role": "index",
+      "sha256": "942229d94b4b3252044478c9d0ce4958cda71bec36efae379cdff52e32b970d7",
+      "size": 2444,
+      "normalized_sha256": "942229d94b4b3252044478c9d0ce4958cda71bec36efae379cdff52e32b970d7"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.Multi.cs": {
+      "role": "index",
+      "sha256": "f108d80a947239fc776a51fdcde442de9f3c73842a0b9929d971b71bfc21ad4c",
+      "size": 1686,
+      "normalized_sha256": "f108d80a947239fc776a51fdcde442de9f3c73842a0b9929d971b71bfc21ad4c"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SceneSwitcher.cs": {
+      "role": "index",
+      "sha256": "e5800af15f0bdb664321b07117e27906132cc6950193c622e941863be79bb754",
+      "size": 26861,
+      "normalized_sha256": "e5800af15f0bdb664321b07117e27906132cc6950193c622e941863be79bb754"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ScoreRankAnimation.cs": {
+      "role": "index",
+      "sha256": "8841bb226971cf1880d9b4c3c30c1c66a509b72c3f278e18dbeba62b3d423ae3",
+      "size": 4256,
+      "normalized_sha256": "8841bb226971cf1880d9b4c3c30c1c66a509b72c3f278e18dbeba62b3d423ae3"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/ScoreRankView.cs": {
+      "role": "index",
+      "sha256": "0890eb4b3f183738aaabcf74b54413ca504dd2714b1b0844a525bf1c6143b8de",
+      "size": 1248,
+      "normalized_sha256": "0890eb4b3f183738aaabcf74b54413ca504dd2714b1b0844a525bf1c6143b8de"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SettingManager.cs": {
+      "role": "index",
+      "sha256": "0b04d18072e1693ffc2b71e45b15988c935ddb7bc6b81c8e3ba7d69848d0cebb",
+      "size": 4406,
+      "normalized_sha256": "0b04d18072e1693ffc2b71e45b15988c935ddb7bc6b81c8e3ba7d69848d0cebb"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SkinUi.cs": {
+      "role": "index",
+      "sha256": "12b6b284268e9c3171063fbbe82ea3e64e337b9a8f9aab2105b99008f2814cff",
+      "size": 4780,
+      "normalized_sha256": "12b6b284268e9c3171063fbbe82ea3e64e337b9a8f9aab2105b99008f2814cff"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongBestScoreView.cs": {
+      "role": "index",
+      "sha256": "f2b6c5a44554108caa59ddbb3d03a54ed070ae8abe048b3b332b5bee396e6448",
+      "size": 3686,
+      "normalized_sha256": "f2b6c5a44554108caa59ddbb3d03a54ed070ae8abe048b3b332b5bee396e6448"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongBoardView.cs": {
+      "role": "index",
+      "sha256": "12b51dba52480cac3cf6ecd8c8dff0131aaee55b52935ca4516693a94aaedc11",
+      "size": 1283,
+      "normalized_sha256": "12b51dba52480cac3cf6ecd8c8dff0131aaee55b52935ca4516693a94aaedc11"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongLoadingScene.cs": {
+      "role": "index",
+      "sha256": "e5acff3fa951024cc95a95abd31fc9669ccd03a5a6016c18765a849f8b3f9a09",
+      "size": 12461,
+      "normalized_sha256": "e5acff3fa951024cc95a95abd31fc9669ccd03a5a6016c18765a849f8b3f9a09"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongPreview.cs": {
+      "role": "index",
+      "sha256": "1ddaf67669bd1ce154fc516f41ad516d315b3e90ea1228450dc65ffe61a73caf",
+      "size": 7370,
+      "normalized_sha256": "1ddaf67669bd1ce154fc516f41ad516d315b3e90ea1228450dc65ffe61a73caf"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongSearchView.cs": {
+      "role": "index",
+      "sha256": "3aa61f43a418967e4ef94ff5b56105aa5611b7daea234ecc67026268f0731386",
+      "size": 13855,
+      "normalized_sha256": "3aa61f43a418967e4ef94ff5b56105aa5611b7daea234ecc67026268f0731386"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongSelectManager.Search.cs": {
+      "role": "index",
+      "sha256": "08a40b13b8ba2f8101186c81123821f14758d2006b2f41db66b71dead0705dc9",
+      "size": 7677,
+      "normalized_sha256": "08a40b13b8ba2f8101186c81123821f14758d2006b2f41db66b71dead0705dc9"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongSelectManager.cs": {
+      "role": "index",
+      "sha256": "9513916d141ec0f6b3c791b5c26f4a72700847d9c5f34dd09dc84c8bb731c6d2",
+      "size": 36323,
+      "normalized_sha256": "9513916d141ec0f6b3c791b5c26f4a72700847d9c5f34dd09dc84c8bb731c6d2"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongSelectOverlayView.cs": {
+      "role": "index",
+      "sha256": "0bf9e11b828f7229a1ca59f006314565bdb6bacc230f25044023c02cf20396ad",
+      "size": 501,
+      "normalized_sha256": "0bf9e11b828f7229a1ca59f006314565bdb6bacc230f25044023c02cf20396ad"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongSelectScene.Boards.cs": {
+      "role": "index",
+      "sha256": "5d61bedff575bab179ad0bbc68b71cefd6317268947e5585adf46628c1cb1897",
+      "size": 10933,
+      "normalized_sha256": "5d61bedff575bab179ad0bbc68b71cefd6317268947e5585adf46628c1cb1897"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongSelectScene.Drawing.cs": {
+      "role": "index",
+      "sha256": "70b2308f593ad026eaf2e22c1d55ec3119bea659f5c47922162193553d960a40",
+      "size": 18937,
+      "normalized_sha256": "70b2308f593ad026eaf2e22c1d55ec3119bea659f5c47922162193553d960a40"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongSelectScene.Swipe.cs": {
+      "role": "index",
+      "sha256": "870a56bf9d07ef4009e8d04b4a559a949f953a41358945845860b34036c7a523",
+      "size": 4175,
+      "normalized_sha256": "870a56bf9d07ef4009e8d04b4a559a949f953a41358945845860b34036c7a523"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongSelectScene.cs": {
+      "role": "index",
+      "sha256": "8616e9d54459404d235d336179e774221a03230e099cf382be4e9eb03798e2f8",
+      "size": 25339,
+      "normalized_sha256": "8616e9d54459404d235d336179e774221a03230e099cf382be4e9eb03798e2f8"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongSelectView.cs": {
+      "role": "index",
+      "sha256": "7a34cede311d65f4bd11f0ca722a5a851172f6280efae937d3a945c6be960cf1",
+      "size": 2397,
+      "normalized_sha256": "7a34cede311d65f4bd11f0ca722a5a851172f6280efae937d3a945c6be960cf1"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SongTransition.cs": {
+      "role": "index",
+      "sha256": "33b8fe334099822fbead6a4cd891af344a4c873c7e6f1ee6d720451d61c92d97",
+      "size": 7547,
+      "normalized_sha256": "33b8fe334099822fbead6a4cd891af344a4c873c7e6f1ee6d720451d61c92d97"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/SwipeRelay.cs": {
+      "role": "index",
+      "sha256": "4499694cdd60e096b31a6b8e514f1eaad617bba36a459f7d3d82cf5993cfe683",
+      "size": 1660,
+      "normalized_sha256": "4499694cdd60e096b31a6b8e514f1eaad617bba36a459f7d3d82cf5993cfe683"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/TimingHistogramGraphic.cs": {
+      "role": "index",
+      "sha256": "87889e3d66d40962288eef08457e0a295fc8c97ec06b755624f24fe517d14e93",
+      "size": 3390,
+      "normalized_sha256": "87889e3d66d40962288eef08457e0a295fc8c97ec06b755624f24fe517d14e93"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/WheelMomentum.cs": {
+      "role": "index",
+      "sha256": "1bc960005b4cea9c60c1a6412ad9bc5811d9d2529a68053b8caaaab64e9d190e",
+      "size": 4105,
+      "normalized_sha256": "1bc960005b4cea9c60c1a6412ad9bc5811d9d2529a68053b8caaaab64e9d190e"
+    },
+    "Assets/OurTaiko/Runtime/Scenes/WheelSwipe.cs": {
+      "role": "index",
+      "sha256": "464c2e7d4e969934e322bc5ee93f7667212998cc853a8b137a208d21fda94083",
+      "size": 2425,
+      "normalized_sha256": "464c2e7d4e969934e322bc5ee93f7667212998cc853a8b137a208d21fda94083"
+    },
+    "Assets/OurTaiko/Runtime/Settings/SettingsCatalog.cs": {
+      "role": "index",
+      "sha256": "2051e426d58ebde8432a2064e221547528dffa291f8d0e9a695038a54f8c9214",
+      "size": 33821,
+      "normalized_sha256": "2051e426d58ebde8432a2064e221547528dffa291f8d0e9a695038a54f8c9214"
+    },
+    "Assets/OurTaiko/Runtime/Settings/SettingsNavigator.cs": {
+      "role": "index",
+      "sha256": "906caf66b159c5fa22a6bda43a9269dd81c09d025d46bdddc41025bbb8ff8d92",
+      "size": 13278,
+      "normalized_sha256": "906caf66b159c5fa22a6bda43a9269dd81c09d025d46bdddc41025bbb8ff8d92"
+    },
+    "Assets/OurTaiko/Runtime/Settings/SettingsOverlay.cs": {
+      "role": "index",
+      "sha256": "4ce90fc624c790df7df637eef6743bb31faa611a2d7266255c21c32c8f9b050e",
+      "size": 21306,
+      "normalized_sha256": "4ce90fc624c790df7df637eef6743bb31faa611a2d7266255c21c32c8f9b050e"
+    },
+    "Assets/OurTaiko/Runtime/Settings/SettingsOverlayView.cs": {
+      "role": "index",
+      "sha256": "e487b657b46a630957de4e74b176fc45c083b4921a8e6137eac704da56bb6238",
+      "size": 74972,
+      "normalized_sha256": "e487b657b46a630957de4e74b176fc45c083b4921a8e6137eac704da56bb6238"
+    },
+    "Assets/OurTaiko/Runtime/Settings/SettingsShapes.cs": {
+      "role": "index",
+      "sha256": "6d6c7344891bf5ebf70c1d30a4d418bea4b5784a79d96a1449726465a9f39dcf",
+      "size": 4140,
+      "normalized_sha256": "6d6c7344891bf5ebf70c1d30a4d418bea4b5784a79d96a1449726465a9f39dcf"
+    },
+    "Assets/OurTaiko/Tests/EditMode/AccuracyBranchTests.cs": {
+      "role": "index",
+      "sha256": "425a6e36ff5b0f1748304a469b89edf64df8992c8a71481a326a96b4c3b9d774",
+      "size": 5913,
+      "normalized_sha256": "425a6e36ff5b0f1748304a469b89edf64df8992c8a71481a326a96b4c3b9d774"
+    },
+    "Assets/OurTaiko/Tests/EditMode/AdLibTests.cs": {
+      "role": "index",
+      "sha256": "e2e547a7b41b509cb405012d9f878b18deb094f12ace781daa5e12d3ef187b54",
+      "size": 5269,
+      "normalized_sha256": "e2e547a7b41b509cb405012d9f878b18deb094f12ace781daa5e12d3ef187b54"
+    },
+    "Assets/OurTaiko/Tests/EditMode/AnimationClipTests.cs": {
+      "role": "index",
+      "sha256": "1f9b2275b3f7c51d1d9122864a07206cce424c662d30006e6eec2d929e6b1861",
+      "size": 20303,
+      "normalized_sha256": "1f9b2275b3f7c51d1d9122864a07206cce424c662d30006e6eec2d929e6b1861"
+    },
+    "Assets/OurTaiko/Tests/EditMode/AudioClockTests.cs": {
+      "role": "index",
+      "sha256": "7f952672635094a328ed6a7ca6d00f26c89c6ccd47a9aefabe93fdbdfa4c97d1",
+      "size": 4086,
+      "normalized_sha256": "7f952672635094a328ed6a7ca6d00f26c89c6ccd47a9aefabe93fdbdfa4c97d1"
+    },
+    "Assets/OurTaiko/Tests/EditMode/AudioOptionsTests.cs": {
+      "role": "index",
+      "sha256": "083703239b8ddc144596064a4ea72d9eeed6216d8832e244645b20e6a5a6a3e2",
+      "size": 3142,
+      "normalized_sha256": "083703239b8ddc144596064a4ea72d9eeed6216d8832e244645b20e6a5a6a3e2"
+    },
+    "Assets/OurTaiko/Tests/EditMode/AutoSoundAheadTests.cs": {
+      "role": "index",
+      "sha256": "8f12f5f66d58694b2b1f86a459b4f894f93dc11c7edaccef5c12b51b605564db",
+      "size": 1187,
+      "normalized_sha256": "8f12f5f66d58694b2b1f86a459b4f894f93dc11c7edaccef5c12b51b605564db"
+    },
+    "Assets/OurTaiko/Tests/EditMode/BranchConditionTests.cs": {
+      "role": "index",
+      "sha256": "60e2843651dad5c24a3775e13f73789b9640f417c14275fad3cc1f6590c8b700",
+      "size": 7469,
+      "normalized_sha256": "60e2843651dad5c24a3775e13f73789b9640f417c14275fad3cc1f6590c8b700"
+    },
+    "Assets/OurTaiko/Tests/EditMode/BranchRouteTests.cs": {
+      "role": "index",
+      "sha256": "0515324570fb784c5a92c5338f1265398ceb79e629592073e5cda581abac219e",
+      "size": 8137,
+      "normalized_sha256": "0515324570fb784c5a92c5338f1265398ceb79e629592073e5cda581abac219e"
+    },
+    "Assets/OurTaiko/Tests/EditMode/Chara3DTests.cs": {
+      "role": "index",
+      "sha256": "0b3334a2f6bb2935cce02831cc12ed8eabff0d33043480472444b4bd2ecf9740",
+      "size": 11611,
+      "normalized_sha256": "0b3334a2f6bb2935cce02831cc12ed8eabff0d33043480472444b4bd2ecf9740"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ChartCursorTests.cs": {
+      "role": "index",
+      "sha256": "5b7a255d42b189aa9e2eab9b2ddf11deec04a2a93f876bdf02c1c7c3a4f0b3a1",
+      "size": 15215,
+      "normalized_sha256": "5b7a255d42b189aa9e2eab9b2ddf11deec04a2a93f876bdf02c1c7c3a4f0b3a1"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ChartSideTests.cs": {
+      "role": "index",
+      "sha256": "e0d4b0c71319a78d9d617ab85916a9ff835997b428c6a13fcc5da38ea60b11cd",
+      "size": 8982,
+      "normalized_sha256": "e0d4b0c71319a78d9d617ab85916a9ff835997b428c6a13fcc5da38ea60b11cd"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ControlGuideClipTests.cs": {
+      "role": "index",
+      "sha256": "e8d559447088362e126030fc8e9e7b5396c5ceb224dbbe67569dbdb88522d2cf",
+      "size": 2976,
+      "normalized_sha256": "e8d559447088362e126030fc8e9e7b5396c5ceb224dbbe67569dbdb88522d2cf"
+    },
+    "Assets/OurTaiko/Tests/EditMode/DanResultLogicTests.cs": {
+      "role": "index",
+      "sha256": "cf69486a26036ab908c28badff194321da6fa5fda3038355ee9dab833fd2dd3c",
+      "size": 11914,
+      "normalized_sha256": "cf69486a26036ab908c28badff194321da6fa5fda3038355ee9dab833fd2dd3c"
+    },
+    "Assets/OurTaiko/Tests/EditMode/DanSelectLogicTests.cs": {
+      "role": "index",
+      "sha256": "cb156c5cb7d993538b4d8aa1d89eb5f3d75af5b4389360fbc335bc9942420d9d",
+      "size": 4892,
+      "normalized_sha256": "cb156c5cb7d993538b4d8aa1d89eb5f3d75af5b4389360fbc335bc9942420d9d"
+    },
+    "Assets/OurTaiko/Tests/EditMode/DanSelectPagesTests.cs": {
+      "role": "index",
+      "sha256": "664380bae9b921ba901dab71b1f558c3e79693b13a0cec286e80a9061de5b2fc",
+      "size": 4308,
+      "normalized_sha256": "664380bae9b921ba901dab71b1f558c3e79693b13a0cec286e80a9061de5b2fc"
+    },
+    "Assets/OurTaiko/Tests/EditMode/DanTests.cs": {
+      "role": "index",
+      "sha256": "4886eee7cf973fe34fbaf52234339bca57acc1ac06d8f8100adbced02eda0aef",
+      "size": 29702,
+      "normalized_sha256": "4886eee7cf973fe34fbaf52234339bca57acc1ac06d8f8100adbced02eda0aef"
+    },
+    "Assets/OurTaiko/Tests/EditMode/DancerTests.cs": {
+      "role": "index",
+      "sha256": "c6a1c334f91c757452563c8e0485f64e02106b3605d7e5f3cc6070a2ad26909e",
+      "size": 11114,
+      "normalized_sha256": "c6a1c334f91c757452563c8e0485f64e02106b3605d7e5f3cc6070a2ad26909e"
+    },
+    "Assets/OurTaiko/Tests/EditMode/DistributionTests.cs": {
+      "role": "index",
+      "sha256": "6d1354f420b4bec5e03011e0d0c167cc93bf6a2ab9c64d2a9928f603fa6ad6dc",
+      "size": 9850,
+      "normalized_sha256": "6d1354f420b4bec5e03011e0d0c167cc93bf6a2ab9c64d2a9928f603fa6ad6dc"
+    },
+    "Assets/OurTaiko/Tests/EditMode/DonDownloadsTests.cs": {
+      "role": "index",
+      "sha256": "a198d2e6dd94f1db11cb3179f57268b9f7a87070f8881490f931d39ca4f22097",
+      "size": 8972,
+      "normalized_sha256": "a198d2e6dd94f1db11cb3179f57268b9f7a87070f8881490f931d39ca4f22097"
+    },
+    "Assets/OurTaiko/Tests/EditMode/DrumrollBranchTests.cs": {
+      "role": "index",
+      "sha256": "3dcccfecf7bf3eec76190e0544e55b97f0df18a8b85b9fb57f39bfdf31fbfac5",
+      "size": 5543,
+      "normalized_sha256": "3dcccfecf7bf3eec76190e0544e55b97f0df18a8b85b9fb57f39bfdf31fbfac5"
+    },
+    "Assets/OurTaiko/Tests/EditMode/EndingClipTests.cs": {
+      "role": "index",
+      "sha256": "6ca88c07ee56a20857e1cbbd77e8a4393ceef698bdaf5077bff8deab85c46b7c",
+      "size": 5075,
+      "normalized_sha256": "6ca88c07ee56a20857e1cbbd77e8a4393ceef698bdaf5077bff8deab85c46b7c"
+    },
+    "Assets/OurTaiko/Tests/EditMode/FanmadeClientTests.cs": {
+      "role": "index",
+      "sha256": "06869dcf3b7d3748d5f7a702078c238880d25fef86a066667ac34f80f44d1bb1",
+      "size": 53026,
+      "normalized_sha256": "06869dcf3b7d3748d5f7a702078c238880d25fef86a066667ac34f80f44d1bb1"
+    },
+    "Assets/OurTaiko/Tests/EditMode/GogoTests.cs": {
+      "role": "index",
+      "sha256": "043bdeac97665b39f257ab7fb5e741713b9da88601552ec017f02d34713970e5",
+      "size": 2484,
+      "normalized_sha256": "043bdeac97665b39f257ab7fb5e741713b9da88601552ec017f02d34713970e5"
+    },
+    "Assets/OurTaiko/Tests/EditMode/GogoVisualTests.cs": {
+      "role": "index",
+      "sha256": "b75966970510275a852e2d882086cc2adccdba1b1a01e9c978b7b72c2ab77c0f",
+      "size": 6324,
+      "normalized_sha256": "b75966970510275a852e2d882086cc2adccdba1b1a01e9c978b7b72c2ab77c0f"
+    },
+    "Assets/OurTaiko/Tests/EditMode/HidUsageTests.cs": {
+      "role": "index",
+      "sha256": "21047688897a374be3612d0850dc1dbd8c5efe0ee00807a27cdde4a95e390b4f",
+      "size": 1491,
+      "normalized_sha256": "21047688897a374be3612d0850dc1dbd8c5efe0ee00807a27cdde4a95e390b4f"
+    },
+    "Assets/OurTaiko/Tests/EditMode/JudgeShiftTests.cs": {
+      "role": "index",
+      "sha256": "7e6b81e0e9be03602252a042e26daa4608b356c94712f02046bc83170f0e076d",
+      "size": 2832,
+      "normalized_sha256": "7e6b81e0e9be03602252a042e26daa4608b356c94712f02046bc83170f0e076d"
+    },
+    "Assets/OurTaiko/Tests/EditMode/KadonTests.cs": {
+      "role": "index",
+      "sha256": "81e7321676322c11ccef378ca895ddbf6781ed4a36c3479f4b49e5fbebdda069",
+      "size": 4703,
+      "normalized_sha256": "81e7321676322c11ccef378ca895ddbf6781ed4a36c3479f4b49e5fbebdda069"
+    },
+    "Assets/OurTaiko/Tests/EditMode/KeyRepeatTests.cs": {
+      "role": "index",
+      "sha256": "d2c3f40727ec7f19c8a177ac602449fea09b46c2c627781484326c760676035e",
+      "size": 2375,
+      "normalized_sha256": "d2c3f40727ec7f19c8a177ac602449fea09b46c2c627781484326c760676035e"
+    },
+    "Assets/OurTaiko/Tests/EditMode/KeyboardBindingsTests.cs": {
+      "role": "index",
+      "sha256": "0f44ef62133ab104b3344083aed7cd7cd227deaa9274306ac4ea4c89c91e2e9d",
+      "size": 5911,
+      "normalized_sha256": "0f44ef62133ab104b3344083aed7cd7cd227deaa9274306ac4ea4c89c91e2e9d"
+    },
+    "Assets/OurTaiko/Tests/EditMode/KusudamaTests.cs": {
+      "role": "index",
+      "sha256": "2c5f47e16f9920a2142195820c20c05988d4505b677c4965a77e7a2322c59b7a",
+      "size": 6999,
+      "normalized_sha256": "2c5f47e16f9920a2142195820c20c05988d4505b677c4965a77e7a2322c59b7a"
+    },
+    "Assets/OurTaiko/Tests/EditMode/LaneAlphaTests.cs": {
+      "role": "index",
+      "sha256": "ac53a9520d683ccb4161b75835ffa42f45584edd6125fcc1ea8be5af9bdde27f",
+      "size": 2799,
+      "normalized_sha256": "ac53a9520d683ccb4161b75835ffa42f45584edd6125fcc1ea8be5af9bdde27f"
+    },
+    "Assets/OurTaiko/Tests/EditMode/LinuxAudioBuildTests.cs": {
+      "role": "index",
+      "sha256": "8b758cdd34e59b7a7ed3a928c0d1141edc9c23953970e01cc672680b28d16a53",
+      "size": 4624,
+      "normalized_sha256": "8b758cdd34e59b7a7ed3a928c0d1141edc9c23953970e01cc672680b28d16a53"
+    },
+    "Assets/OurTaiko/Tests/EditMode/LocalSongScannerTests.cs": {
+      "role": "index",
+      "sha256": "fbee97ca8c9471180db8fc63be70b204972618157439089fab6af757199aaf80",
+      "size": 10348,
+      "normalized_sha256": "fbee97ca8c9471180db8fc63be70b204972618157439089fab6af757199aaf80"
+    },
+    "Assets/OurTaiko/Tests/EditMode/LogTests.cs": {
+      "role": "index",
+      "sha256": "e31904241cd6e3dc5ffe99df7a42bff7976082f11bb173ae2618cb1dcc3e78d1",
+      "size": 4300,
+      "normalized_sha256": "e31904241cd6e3dc5ffe99df7a42bff7976082f11bb173ae2618cb1dcc3e78d1"
+    },
+    "Assets/OurTaiko/Tests/EditMode/MineTests.cs": {
+      "role": "index",
+      "sha256": "5b28ade224e5181a9d353f6442d092cd822ddf93c8e3cedb7a1091b8c3d92717",
+      "size": 6553,
+      "normalized_sha256": "5b28ade224e5181a9d353f6442d092cd822ddf93c8e3cedb7a1091b8c3d92717"
+    },
+    "Assets/OurTaiko/Tests/EditMode/MixedBranchTests.cs": {
+      "role": "index",
+      "sha256": "81a2403c71b3fa9482534b738d27bcfd921fab36e26f730b0038b80a924839cb",
+      "size": 7051,
+      "normalized_sha256": "81a2403c71b3fa9482534b738d27bcfd921fab36e26f730b0038b80a924839cb"
+    },
+    "Assets/OurTaiko/Tests/EditMode/MovieSyncTests.cs": {
+      "role": "index",
+      "sha256": "2b8117b9d6b262424626b233de8169937f002995e3c27b3cc02b5a1b95f2c5db",
+      "size": 4844,
+      "normalized_sha256": "2b8117b9d6b262424626b233de8169937f002995e3c27b3cc02b5a1b95f2c5db"
+    },
+    "Assets/OurTaiko/Tests/EditMode/NameplateArtTests.cs": {
+      "role": "index",
+      "sha256": "f71f6186b63afd6902a582c9da530972df789a59b06bc972f5954ed2a31b6268",
+      "size": 11041,
+      "normalized_sha256": "f71f6186b63afd6902a582c9da530972df789a59b06bc972f5954ed2a31b6268"
+    },
+    "Assets/OurTaiko/Tests/EditMode/NameplateTests.cs": {
+      "role": "index",
+      "sha256": "ea12ba2d5d722d3d2ba1b37b6b038273af88c7d00caa774b8a7cf1d9adffed79",
+      "size": 3883,
+      "normalized_sha256": "ea12ba2d5d722d3d2ba1b37b6b038273af88c7d00caa774b8a7cf1d9adffed79"
+    },
+    "Assets/OurTaiko/Tests/EditMode/NoteExpressionTests.cs": {
+      "role": "index",
+      "sha256": "bf7accfc7f38ba71825d9af06470251741e78338c001c5e9785081e6ef87020a",
+      "size": 7608,
+      "normalized_sha256": "bf7accfc7f38ba71825d9af06470251741e78338c001c5e9785081e6ef87020a"
+    },
+    "Assets/OurTaiko/Tests/EditMode/NoteLabelRowsTests.cs": {
+      "role": "index",
+      "sha256": "3a0158c6fd3198665c2e8980f54f169288c0cbcd663f9a75cc29cbd2393ce77b",
+      "size": 2287,
+      "normalized_sha256": "3a0158c6fd3198665c2e8980f54f169288c0cbcd663f9a75cc29cbd2393ce77b"
+    },
+    "Assets/OurTaiko/Tests/EditMode/OfflineCacheTests.cs": {
+      "role": "index",
+      "sha256": "f9dcb1e570ed735d8a893d2f6e2eb157a2e9b09da6af2a1543f4df9599d49a2a",
+      "size": 11382,
+      "normalized_sha256": "f9dcb1e570ed735d8a893d2f6e2eb157a2e9b09da6af2a1543f4df9599d49a2a"
+    },
+    "Assets/OurTaiko/Tests/EditMode/OffsetSettingsTests.cs": {
+      "role": "index",
+      "sha256": "29cd3d4fb36c07bde448342a0e602a6fdafdf711fff274a8e95fb08602795768",
+      "size": 16795,
+      "normalized_sha256": "29cd3d4fb36c07bde448342a0e602a6fdafdf711fff274a8e95fb08602795768"
+    },
+    "Assets/OurTaiko/Tests/EditMode/OnlinePreviewTests.cs": {
+      "role": "index",
+      "sha256": "f29783bef136792bf4b0edafaf43638437ca84eac47878d50e6354b42c5c2429",
+      "size": 4802,
+      "normalized_sha256": "f29783bef136792bf4b0edafaf43638437ca84eac47878d50e6354b42c5c2429"
+    },
+    "Assets/OurTaiko/Tests/EditMode/OnlineScoreRankTests.cs": {
+      "role": "index",
+      "sha256": "b57e5fbed50aa02ba1e822f4b4bac7bb9dd4d91d86b65d1c8a0dce2deb3aa8b7",
+      "size": 5367,
+      "normalized_sha256": "b57e5fbed50aa02ba1e822f4b4bac7bb9dd4d91d86b65d1c8a0dce2deb3aa8b7"
+    },
+    "Assets/OurTaiko/Tests/EditMode/OtanimTests.cs": {
+      "role": "index",
+      "sha256": "f359dc6db3868f2733b498c1ef64cbab6479d2b0777c45b6c05152a9b638bf74",
+      "size": 10865,
+      "normalized_sha256": "f359dc6db3868f2733b498c1ef64cbab6479d2b0777c45b6c05152a9b638bf74"
+    },
+    "Assets/OurTaiko/Tests/EditMode/OurTaiko.Tests.asmdef": {
+      "role": "index",
+      "sha256": "015a82ffd67a19cdba9afc4423215fb271cc2db40049d0d2e9693da243802866",
+      "size": 343,
+      "normalized_sha256": "015a82ffd67a19cdba9afc4423215fb271cc2db40049d0d2e9693da243802866"
+    },
+    "Assets/OurTaiko/Tests/EditMode/OurTaikoAccountTests.cs": {
+      "role": "index",
+      "sha256": "207547ea4e1937267353667e798872fecc132aa88b8f75868905e15aac13fe2b",
+      "size": 18584,
+      "normalized_sha256": "207547ea4e1937267353667e798872fecc132aa88b8f75868905e15aac13fe2b"
+    },
+    "Assets/OurTaiko/Tests/EditMode/PicturesTests.cs": {
+      "role": "index",
+      "sha256": "6ef1d23df21ad952bd659f1c9031f2858d65e8f69c26219665f2e144e08e470b",
+      "size": 2288,
+      "normalized_sha256": "6ef1d23df21ad952bd659f1c9031f2858d65e8f69c26219665f2e144e08e470b"
+    },
+    "Assets/OurTaiko/Tests/EditMode/PlayDrawOrderTests.cs": {
+      "role": "index",
+      "sha256": "117675c5e49cfebe60020ff988817ea0d4e2060ada583545b438695f881d1fc4",
+      "size": 3413,
+      "normalized_sha256": "117675c5e49cfebe60020ff988817ea0d4e2060ada583545b438695f881d1fc4"
+    },
+    "Assets/OurTaiko/Tests/EditMode/PracticeTests.cs": {
+      "role": "index",
+      "sha256": "3da0584c2f6dc13b8d0c8399c551c929226102ec66eb9fc706dd0c64be3b9c1b",
+      "size": 11217,
+      "normalized_sha256": "3da0584c2f6dc13b8d0c8399c551c929226102ec66eb9fc706dd0c64be3b9c1b"
+    },
+    "Assets/OurTaiko/Tests/EditMode/QuietTestRun.cs": {
+      "role": "index",
+      "sha256": "33ac24fc937a451d74ae4d6e2db6ac5db301b948563196f898773ef373aae185",
+      "size": 288,
+      "normalized_sha256": "33ac24fc937a451d74ae4d6e2db6ac5db301b948563196f898773ef373aae185"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ReferencePlaySession.cs": {
+      "role": "index",
+      "sha256": "5539af3e10fd77401b5c59d2d0358c0d687b47df24e789fd865c20139078e289",
+      "size": 11407,
+      "normalized_sha256": "5539af3e10fd77401b5c59d2d0358c0d687b47df24e789fd865c20139078e289"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ReplayTests.cs": {
+      "role": "index",
+      "sha256": "a76752af40d6c5812e5d0cc228e24e81cd991b58a8769f51e6395d98bbf68077",
+      "size": 8651,
+      "normalized_sha256": "a76752af40d6c5812e5d0cc228e24e81cd991b58a8769f51e6395d98bbf68077"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ResourceDownloadTests.cs": {
+      "role": "index",
+      "sha256": "2f8ca603ed461fbd77d362a1d564d1142968d84284456192d8bef6d27b19088d",
+      "size": 23694,
+      "normalized_sha256": "2f8ca603ed461fbd77d362a1d564d1142968d84284456192d8bef6d27b19088d"
+    },
+    "Assets/OurTaiko/Tests/EditMode/RewardInboxTests.cs": {
+      "role": "index",
+      "sha256": "2530bedfb9a253d919a1b91690f5785abb22cd65c6901400dd430a062fe0ca34",
+      "size": 10068,
+      "normalized_sha256": "2530bedfb9a253d919a1b91690f5785abb22cd65c6901400dd430a062fe0ca34"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ScoreAdditionClipTests.cs": {
+      "role": "index",
+      "sha256": "24b0021bc96c62c1d89e1cde36b234c5d5ee7a43cd4127060e3b1f20783ec2b6",
+      "size": 2656,
+      "normalized_sha256": "24b0021bc96c62c1d89e1cde36b234c5d5ee7a43cd4127060e3b1f20783ec2b6"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ScoreBranchTests.cs": {
+      "role": "index",
+      "sha256": "5603578686ce9906007ec95538ce01b885d58bc67ceccbaf8e0e6559d35f840d",
+      "size": 5332,
+      "normalized_sha256": "5603578686ce9906007ec95538ce01b885d58bc67ceccbaf8e0e6559d35f840d"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ScoreDatabaseTests.cs": {
+      "role": "index",
+      "sha256": "ca3518f772d7c74d53b6bbc57840bb1c81e5b60c58c3feb581a1c7371ac8ace3",
+      "size": 1878,
+      "normalized_sha256": "ca3518f772d7c74d53b6bbc57840bb1c81e5b60c58c3feb581a1c7371ac8ace3"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ScoreRankTests.cs": {
+      "role": "index",
+      "sha256": "a98bd7a61745a9ed9af67ddd7fc630661f91a17c82c4d27b69467b47ad77d8b3",
+      "size": 8667,
+      "normalized_sha256": "a98bd7a61745a9ed9af67ddd7fc630661f91a17c82c4d27b69467b47ad77d8b3"
+    },
+    "Assets/OurTaiko/Tests/EditMode/ScrollModeTests.cs": {
+      "role": "index",
+      "sha256": "4ffaf181fba0ca1d2ee7c3b291a87a1a0492185ba18de8cb8f712f41e37d84de",
+      "size": 16217,
+      "normalized_sha256": "4ffaf181fba0ca1d2ee7c3b291a87a1a0492185ba18de8cb8f712f41e37d84de"
+    },
+    "Assets/OurTaiko/Tests/EditMode/SettingsNavigatorTests.cs": {
+      "role": "index",
+      "sha256": "c1d6b333d248407b3865090ef27abced332958ac447b10696537d78b299546c1",
+      "size": 16833,
+      "normalized_sha256": "c1d6b333d248407b3865090ef27abced332958ac447b10696537d78b299546c1"
+    },
+    "Assets/OurTaiko/Tests/EditMode/SongClockTests.cs": {
+      "role": "index",
+      "sha256": "48080a25e6128024af687785874bef128407de7656391cf493ea76c60ccbb9b7",
+      "size": 4653,
+      "normalized_sha256": "48080a25e6128024af687785874bef128407de7656391cf493ea76c60ccbb9b7"
+    },
+    "Assets/OurTaiko/Tests/EditMode/SongEndTests.cs": {
+      "role": "index",
+      "sha256": "3b50b48e9cca6bf73c4df9f98488db276152564fc15012bbf9aa75cb81ce0daa",
+      "size": 1964,
+      "normalized_sha256": "3b50b48e9cca6bf73c4df9f98488db276152564fc15012bbf9aa75cb81ce0daa"
+    },
+    "Assets/OurTaiko/Tests/EditMode/SongLanguageTests.cs": {
+      "role": "index",
+      "sha256": "7b09f541d056c621bbb6c8e93a9ec005723df132400b5c1c6e905210f0bd1132",
+      "size": 5091,
+      "normalized_sha256": "7b09f541d056c621bbb6c8e93a9ec005723df132400b5c1c6e905210f0bd1132"
+    },
+    "Assets/OurTaiko/Tests/EditMode/SongLibraryPathsTests.cs": {
+      "role": "index",
+      "sha256": "0daefd454666af818f8418ecfd25289c0daf55f0d2f4f232637df2502cd7c67b",
+      "size": 8780,
+      "normalized_sha256": "0daefd454666af818f8418ecfd25289c0daf55f0d2f4f232637df2502cd7c67b"
+    },
+    "Assets/OurTaiko/Tests/EditMode/SongSearchTests.cs": {
+      "role": "index",
+      "sha256": "accd8b28fd970d7dd18077353e8f68e0de41a553dde98531203f77de0ad6d82c",
+      "size": 6001,
+      "normalized_sha256": "accd8b28fd970d7dd18077353e8f68e0de41a553dde98531203f77de0ad6d82c"
+    },
+    "Assets/OurTaiko/Tests/EditMode/SongSelectSavedAssetTests.cs": {
+      "role": "index",
+      "sha256": "2b36d27d26a17cb739a01186b6064cbd8d6cb52c0dea353d562f83e3873f5d0a",
+      "size": 6615,
+      "normalized_sha256": "2b36d27d26a17cb739a01186b6064cbd8d6cb52c0dea353d562f83e3873f5d0a"
+    },
+    "Assets/OurTaiko/Tests/EditMode/SoundSettingsTests.cs": {
+      "role": "index",
+      "sha256": "4e2b3c9fec2b4f71bae21b5dfa588f6c9aa6655ff1b54d1000a935fd51deaa9a",
+      "size": 18164,
+      "normalized_sha256": "4e2b3c9fec2b4f71bae21b5dfa588f6c9aa6655ff1b54d1000a935fd51deaa9a"
+    },
+    "Assets/OurTaiko/Tests/EditMode/SuddenTests.cs": {
+      "role": "index",
+      "sha256": "b4862e072b714c87db54ac165e6254abb3c37ea70fdbb235489617d14739e1ca",
+      "size": 4639,
+      "normalized_sha256": "b4862e072b714c87db54ac165e6254abb3c37ea70fdbb235489617d14739e1ca"
+    },
+    "Assets/OurTaiko/Tests/EditMode/TimingCalibrationTests.cs": {
+      "role": "index",
+      "sha256": "a25f81bbab03fda32c8de2d453ec4642dd9aaf48c0eef22a4f75515be5384b72",
+      "size": 5115,
+      "normalized_sha256": "a25f81bbab03fda32c8de2d453ec4642dd9aaf48c0eef22a4f75515be5384b72"
+    },
+    "Assets/OurTaiko/Tests/EditMode/TimingStatisticsTests.cs": {
+      "role": "index",
+      "sha256": "7d18e34f273afde82b1889313be363a66552e3ded87f3495a246c0002eb03117",
+      "size": 7292,
+      "normalized_sha256": "7d18e34f273afde82b1889313be363a66552e3ded87f3495a246c0002eb03117"
+    },
+    "Assets/OurTaiko/Tests/EditMode/WheelMomentumTests.cs": {
+      "role": "index",
+      "sha256": "89ed184fad12e77ee47f9aed31b53046e0840f7c887a7f024cff08756217a522",
+      "size": 3717,
+      "normalized_sha256": "89ed184fad12e77ee47f9aed31b53046e0840f7c887a7f024cff08756217a522"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/BranchTests.cs": {
+      "role": "index",
+      "sha256": "bc90b58f7d382fcf01bdd53bb52e2627e0a2a7e7a5dffecfb89d162991ca87a5",
+      "size": 19355,
+      "normalized_sha256": "bc90b58f7d382fcf01bdd53bb52e2627e0a2a7e7a5dffecfb89d162991ca87a5"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/ChartTests.cs": {
+      "role": "index",
+      "sha256": "a09341c33c5bcc663cae2a6272d93050e64879f8e4c25eb03e96592ccaad3939",
+      "size": 10179,
+      "normalized_sha256": "a09341c33c5bcc663cae2a6272d93050e64879f8e4c25eb03e96592ccaad3939"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/ComboGlimmerClipTests.cs": {
+      "role": "index",
+      "sha256": "f8e27e6be3fa8b4f11cd85e7d147f50bd1092a38eb50f466bb4e0fcab1c865d6",
+      "size": 2874,
+      "normalized_sha256": "f8e27e6be3fa8b4f11cd85e7d147f50bd1092a38eb50f466bb4e0fcab1c865d6"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/EntryTests.cs": {
+      "role": "index",
+      "sha256": "0732d98905024be7f226e11c10e062bd11371a76fd6d219fff427a8b722f9bfc",
+      "size": 1154,
+      "normalized_sha256": "0732d98905024be7f226e11c10e062bd11371a76fd6d219fff427a8b722f9bfc"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/HitFaceTests.cs": {
+      "role": "index",
+      "sha256": "8c4548d0b62f0e7c882d7cb4b239743d646ce6f6547819caa09796fa00fd3ffb",
+      "size": 4005,
+      "normalized_sha256": "8c4548d0b62f0e7c882d7cb4b239743d646ce6f6547819caa09796fa00fd3ffb"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/NoteArcPathTests.cs": {
+      "role": "index",
+      "sha256": "8c373ce8904c2e6855233c7252822bca0cbfb79c870adcdab09766da217c2c5f",
+      "size": 3069,
+      "normalized_sha256": "8c373ce8904c2e6855233c7252822bca0cbfb79c870adcdab09766da217c2c5f"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/NoteMojiTests.cs": {
+      "role": "index",
+      "sha256": "080cb377644afd54a14997177eb94231f729ee452a892bb87d70a00cbaf183cf",
+      "size": 5132,
+      "normalized_sha256": "080cb377644afd54a14997177eb94231f729ee452a892bb87d70a00cbaf183cf"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/NoteScrollTests.cs": {
+      "role": "index",
+      "sha256": "a756aa03551d9371f5a02d502d297efd89aaef7dcbd70bbcf8f84be0af236cda",
+      "size": 2914,
+      "normalized_sha256": "a756aa03551d9371f5a02d502d297efd89aaef7dcbd70bbcf8f84be0af236cda"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/OurTaiko.FinishedTests.asmdef": {
+      "role": "index",
+      "sha256": "470ee4311c6044f3b2dfd0bee53c4f5573b5f5d34d6a4df592a67148c99ed0e9",
+      "size": 182,
+      "normalized_sha256": "470ee4311c6044f3b2dfd0bee53c4f5573b5f5d34d6a4df592a67148c99ed0e9"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/PlayOptionsTests.cs": {
+      "role": "index",
+      "sha256": "19f9b3a71af4b4c573e4f371db4e1abc261d4d74fac71cc429c185ff9e86f66e",
+      "size": 6715,
+      "normalized_sha256": "19f9b3a71af4b4c573e4f371db4e1abc261d4d74fac71cc429c185ff9e86f66e"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/SettingsCatalogTests.cs": {
+      "role": "index",
+      "sha256": "ffee05fc19efb5c6427c5404ebaf9c5825c662bbebd48dc2c89a7a475ee52234",
+      "size": 8912,
+      "normalized_sha256": "ffee05fc19efb5c6427c5404ebaf9c5825c662bbebd48dc2c89a7a475ee52234"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/ShinuchiTests.cs": {
+      "role": "index",
+      "sha256": "4acb1c77070a805239106d6ee55b43873bd7428f96d538d00b769c0500147ab7",
+      "size": 6463,
+      "normalized_sha256": "4acb1c77070a805239106d6ee55b43873bd7428f96d538d00b769c0500147ab7"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/SongSelectResultCoreTests.cs": {
+      "role": "index",
+      "sha256": "139f6d92c2fe43eface6515caf93283850060cc80ba3df18c64830469358a049",
+      "size": 10481,
+      "normalized_sha256": "139f6d92c2fe43eface6515caf93283850060cc80ba3df18c64830469358a049"
+    },
+    "Assets/OurTaiko/Tests/Finished/EditMode/SoulGaugeTests.cs": {
+      "role": "index",
+      "sha256": "bae0728ee051a0850f9dce74b5b1182bf983d3d5c89c8cf8f17ff8468234d2f2",
+      "size": 7408,
+      "normalized_sha256": "bae0728ee051a0850f9dce74b5b1182bf983d3d5c89c8cf8f17ff8468234d2f2"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/ComboFlowTests.cs": {
+      "role": "index",
+      "sha256": "581c6e73f9e2c399ed8923eb508ff3440166b627c11d33c579283438b08fef60",
+      "size": 8162,
+      "normalized_sha256": "581c6e73f9e2c399ed8923eb508ff3440166b627c11d33c579283438b08fef60"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/DrumInputMutexTests.cs": {
+      "role": "index",
+      "sha256": "ef1828b59e3df736af5daa105bb14c7ea1e5de8547e153a1acd27041ad6a20f9",
+      "size": 7454,
+      "normalized_sha256": "ef1828b59e3df736af5daa105bb14c7ea1e5de8547e153a1acd27041ad6a20f9"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/EntryFlowTests.cs": {
+      "role": "index",
+      "sha256": "adf8158b4f31269ebda7dd4b8056d47585e4068e1e2833c5e9fba3522a07bfb2",
+      "size": 4506,
+      "normalized_sha256": "adf8158b4f31269ebda7dd4b8056d47585e4068e1e2833c5e9fba3522a07bfb2"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/EntryTouchFlowTests.cs": {
+      "role": "index",
+      "sha256": "15db615052718152943d94ad6a99293ad84c72dfb52fd6d42114867162dd167f",
+      "size": 5049,
+      "normalized_sha256": "15db615052718152943d94ad6a99293ad84c72dfb52fd6d42114867162dd167f"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/GlobalSceneSwitcherTests.cs": {
+      "role": "index",
+      "sha256": "46daae5a62f82db6240606fdb5e8d0cd0ba6bb8b61570a1df7cd7c2179daaaba",
+      "size": 9560,
+      "normalized_sha256": "46daae5a62f82db6240606fdb5e8d0cd0ba6bb8b61570a1df7cd7c2179daaaba"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/HitFaceFlowTests.cs": {
+      "role": "index",
+      "sha256": "d2ba23cadb1987c1999ac907caadc3ecf53e4f9909e7361fd41a29bd27f962e3",
+      "size": 5239,
+      "normalized_sha256": "d2ba23cadb1987c1999ac907caadc3ecf53e4f9909e7361fd41a29bd27f962e3"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/LaneDifficultyFlowTests.cs": {
+      "role": "index",
+      "sha256": "647d7d28d61d4eda38f977ac66bd0af8263763725b11776130b03312de7660d8",
+      "size": 1584,
+      "normalized_sha256": "647d7d28d61d4eda38f977ac66bd0af8263763725b11776130b03312de7660d8"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/NoteArcFlowTests.cs": {
+      "role": "index",
+      "sha256": "ba93252863d846a52273d36354c4961a2df1c1f07e1cc1f7591f792e63d76384",
+      "size": 8672,
+      "normalized_sha256": "ba93252863d846a52273d36354c4961a2df1c1f07e1cc1f7591f792e63d76384"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/NoteMojiFlowTests.cs": {
+      "role": "index",
+      "sha256": "2f49e0a06b895c2c85982ba8e16e884ac5c494b2f0aabb24f712d23780d5441b",
+      "size": 13231,
+      "normalized_sha256": "2f49e0a06b895c2c85982ba8e16e884ac5c494b2f0aabb24f712d23780d5441b"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/OurTaiko.FinishedPlayModeTests.asmdef": {
+      "role": "index",
+      "sha256": "9485567f4fcfa0baef5a630d775a91a04f14bc629180a9d4aa15b61ca2e16af4",
+      "size": 236,
+      "normalized_sha256": "9485567f4fcfa0baef5a630d775a91a04f14bc629180a9d4aa15b61ca2e16af4"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/PlayOptionsFlowTests.cs": {
+      "role": "index",
+      "sha256": "5814f0d9f5331473368a9bed0e64bd911d426b406abe7a63adb88a9ac6fd5bc8",
+      "size": 3039,
+      "normalized_sha256": "5814f0d9f5331473368a9bed0e64bd911d426b406abe7a63adb88a9ac6fd5bc8"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/PlayfieldMaskFlowTests.cs": {
+      "role": "index",
+      "sha256": "ebcb846555f4cb696640b4f4115c1f25cd24cf59790d7e5598d6798b174ec49a",
+      "size": 3192,
+      "normalized_sha256": "ebcb846555f4cb696640b4f4115c1f25cd24cf59790d7e5598d6798b174ec49a"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/SceneFlowTests.cs": {
+      "role": "index",
+      "sha256": "7b5bbd3f45e89341a0c22e02a7ae8962be22c66df799877908c5ccdbc36f852c",
+      "size": 46353,
+      "normalized_sha256": "7b5bbd3f45e89341a0c22e02a7ae8962be22c66df799877908c5ccdbc36f852c"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/ScoreGaugeFlowTests.cs": {
+      "role": "index",
+      "sha256": "93238799971e400c257fdc4c27f1ac00c5580a46dde34fcf02825bc5f66f4104",
+      "size": 5925,
+      "normalized_sha256": "93238799971e400c257fdc4c27f1ac00c5580a46dde34fcf02825bc5f66f4104"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/SettingsBoardFlowTests.cs": {
+      "role": "index",
+      "sha256": "9f1f15c28d2c0fc14f4304d94f72ec649d8811b47366d072f3d3ad4b281ef158",
+      "size": 8790,
+      "normalized_sha256": "9f1f15c28d2c0fc14f4304d94f72ec649d8811b47366d072f3d3ad4b281ef158"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/SongLoadingCurtainTests.cs": {
+      "role": "index",
+      "sha256": "66571e4f15fb52c729dea5de8f9726e87f2a2a8d8cfbc82ccf78f50de172f98e",
+      "size": 9489,
+      "normalized_sha256": "66571e4f15fb52c729dea5de8f9726e87f2a2a8d8cfbc82ccf78f50de172f98e"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/SongSelectResultTests.cs": {
+      "role": "index",
+      "sha256": "88e4a622ee62d8943875d5372c6f77a1d3d31c5d6faa8ecaaa13b40ee70c33d7",
+      "size": 11167,
+      "normalized_sha256": "88e4a622ee62d8943875d5372c6f77a1d3d31c5d6faa8ecaaa13b40ee70c33d7"
+    },
+    "Assets/OurTaiko/Tests/Finished/PlayMode/TestScoreStore.cs": {
+      "role": "index",
+      "sha256": "790ce59bf601cdda3d3037d269d6599f1fdd4e2fb3e40727d451b8af85724003",
+      "size": 371,
+      "normalized_sha256": "790ce59bf601cdda3d3037d269d6599f1fdd4e2fb3e40727d451b8af85724003"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/AccountSettingsFlowTests.cs": {
+      "role": "index",
+      "sha256": "90f17f295a6c71aba77cd0b3d98f4c4a1c58392fa332c5988b2049757480400a",
+      "size": 12727,
+      "normalized_sha256": "90f17f295a6c71aba77cd0b3d98f4c4a1c58392fa332c5988b2049757480400a"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/AudioFallbackTests.cs": {
+      "role": "index",
+      "sha256": "533a01da7f9ca408f6f509bc692879d8bf86c185eb562070e11f13e83d7df353",
+      "size": 3033,
+      "normalized_sha256": "533a01da7f9ca408f6f509bc692879d8bf86c185eb562070e11f13e83d7df353"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/AutoSoundAheadFlowTests.cs": {
+      "role": "index",
+      "sha256": "4ecb4eeff21b4e747f669e068f29c753ecdd5479ecf62c7439d92c0425643aaa",
+      "size": 3546,
+      "normalized_sha256": "4ecb4eeff21b4e747f669e068f29c753ecdd5479ecf62c7439d92c0425643aaa"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/BackgroundMovieFlowTests.cs": {
+      "role": "index",
+      "sha256": "d6ea1aa2ba5b9fcc7c591bf3d62be0c53291374d0dece44c9cd1775921399d22",
+      "size": 10060,
+      "normalized_sha256": "d6ea1aa2ba5b9fcc7c591bf3d62be0c53291374d0dece44c9cd1775921399d22"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/BalloonOverlayFlowTests.cs": {
+      "role": "index",
+      "sha256": "b26719f18384281c6a401bfc5790080e7e07644483afea1925f025f0e209a3d4",
+      "size": 4034,
+      "normalized_sha256": "b26719f18384281c6a401bfc5790080e7e07644483afea1925f025f0e209a3d4"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/BranchLaneFlowTests.cs": {
+      "role": "index",
+      "sha256": "3871c6453cd5cfca019389a1a7c619ed99f79ac13756859653f693af7f31ea7c",
+      "size": 7764,
+      "normalized_sha256": "3871c6453cd5cfca019389a1a7c619ed99f79ac13756859653f693af7f31ea7c"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/BuiltInServersFlowTests.cs": {
+      "role": "index",
+      "sha256": "aa9c6421d7a382e2e2c35bcbd7e697ff1a61a6fe56e69b3e415948fddde63871",
+      "size": 11325,
+      "normalized_sha256": "aa9c6421d7a382e2e2c35bcbd7e697ff1a61a6fe56e69b3e415948fddde63871"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/ChartRatingFlowTests.cs": {
+      "role": "index",
+      "sha256": "309e58cb4c0ed59009246ffbc71a64e490218271bbace7b72c3272fa641aa091",
+      "size": 8549,
+      "normalized_sha256": "309e58cb4c0ed59009246ffbc71a64e490218271bbace7b72c3272fa641aa091"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/DanPlayFlowTests.cs": {
+      "role": "index",
+      "sha256": "a3146f420f307e1ff8577511b1aaf42bad2886a4e4c0cc0980a31e20139eb912",
+      "size": 17767,
+      "normalized_sha256": "a3146f420f307e1ff8577511b1aaf42bad2886a4e4c0cc0980a31e20139eb912"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/DanResultFlowTests.cs": {
+      "role": "index",
+      "sha256": "dfc6eeea2de2743a07287db873df25f7bffd89eafc3ccc39bbcdd168afc269df",
+      "size": 14539,
+      "normalized_sha256": "dfc6eeea2de2743a07287db873df25f7bffd89eafc3ccc39bbcdd168afc269df"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/DanSelectFlowTests.cs": {
+      "role": "index",
+      "sha256": "8f140e219f92bd922d094f3c6adc476be542b39717cbce222d2122488cd91605",
+      "size": 17925,
+      "normalized_sha256": "8f140e219f92bd922d094f3c6adc476be542b39717cbce222d2122488cd91605"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/DonFlowTests.cs": {
+      "role": "index",
+      "sha256": "9bc417f67f43e12c7df1f89a5c07f2fcf14014d37ee222742f039ba8693d13d2",
+      "size": 12399,
+      "normalized_sha256": "9bc417f67f43e12c7df1f89a5c07f2fcf14014d37ee222742f039ba8693d13d2"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/DoublePlayFlowTests.cs": {
+      "role": "index",
+      "sha256": "0d33778ac7150a64cca6bdb623c9a6aff7919a2e343d4e2f268f0edc4a4877e5",
+      "size": 13035,
+      "normalized_sha256": "0d33778ac7150a64cca6bdb623c9a6aff7919a2e343d4e2f268f0edc4a4877e5"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/DrumrollCounterFlowTests.cs": {
+      "role": "index",
+      "sha256": "d7340fb4c4566048498bf2ae748586fb803205232f44e8ddce9ac2e8e9da6ff8",
+      "size": 8921,
+      "normalized_sha256": "d7340fb4c4566048498bf2ae748586fb803205232f44e8ddce9ac2e8e9da6ff8"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/EndingFlowTests.cs": {
+      "role": "index",
+      "sha256": "67db9634857f43541fedc3f2fc09acc33132d164b400d8c7321d4daccceab500",
+      "size": 9868,
+      "normalized_sha256": "67db9634857f43541fedc3f2fc09acc33132d164b400d8c7321d4daccceab500"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/GameTimelineTests.cs": {
+      "role": "index",
+      "sha256": "c2a37b7cffb1df22084f2c0bf083756eacd6b9ddb02553695bf6191ce19a6e15",
+      "size": 1089,
+      "normalized_sha256": "c2a37b7cffb1df22084f2c0bf083756eacd6b9ddb02553695bf6191ce19a6e15"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/GhostBattleFlowTests.cs": {
+      "role": "index",
+      "sha256": "042bfc4ff72a5e8379737c8c0407a34faef178daee232a7f7b117bd7205e1b14",
+      "size": 25683,
+      "normalized_sha256": "042bfc4ff72a5e8379737c8c0407a34faef178daee232a7f7b117bd7205e1b14"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/GlobalOverlayFlowTests.cs": {
+      "role": "index",
+      "sha256": "1f5528a45b042f6e441969370a77e070bf6a19454b8cd281eea119afb3cd11a7",
+      "size": 3243,
+      "normalized_sha256": "1f5528a45b042f6e441969370a77e070bf6a19454b8cd281eea119afb3cd11a7"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/GogoFlowTests.cs": {
+      "role": "index",
+      "sha256": "d26584ad72d7f9b00443da2743d4c509f1ffdedaec15b6ea5a3cbdea612b053d",
+      "size": 3084,
+      "normalized_sha256": "d26584ad72d7f9b00443da2743d4c509f1ffdedaec15b6ea5a3cbdea612b053d"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/HitFeedbackClockTests.cs": {
+      "role": "index",
+      "sha256": "14e3f5c9c6c6e19095f17de8317653c7bb200c0cc09c63d1d7440176d21f1e8e",
+      "size": 11648,
+      "normalized_sha256": "14e3f5c9c6c6e19095f17de8317653c7bb200c0cc09c63d1d7440176d21f1e8e"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/InputDelayFlowTests.cs": {
+      "role": "index",
+      "sha256": "9a9de69a0f59decc3c51e35061398d1b6c46749efcb78c4fcd5b823d0958429d",
+      "size": 10051,
+      "normalized_sha256": "9a9de69a0f59decc3c51e35061398d1b6c46749efcb78c4fcd5b823d0958429d"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/InputLogFlowTests.cs": {
+      "role": "index",
+      "sha256": "6b3a9adac779b512959b451f266b355ebc63f66408b0a6c21092b0c3672c0a96",
+      "size": 6709,
+      "normalized_sha256": "6b3a9adac779b512959b451f266b355ebc63f66408b0a6c21092b0c3672c0a96"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/JudgeCounterFlowTests.cs": {
+      "role": "index",
+      "sha256": "334f8f353e81f157792bf92422a738dc61f316f3aed9db8edf7c55c66bac8859",
+      "size": 3824,
+      "normalized_sha256": "334f8f353e81f157792bf92422a738dc61f316f3aed9db8edf7c55c66bac8859"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/KeyboardBindingsFlowTests.cs": {
+      "role": "index",
+      "sha256": "2514e36d6c55c4337c3f483a873acda2cf6f0a4683fd3341d03e32b9024ea689",
+      "size": 8754,
+      "normalized_sha256": "2514e36d6c55c4337c3f483a873acda2cf6f0a4683fd3341d03e32b9024ea689"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/KeyboardSourceFlowTests.cs": {
+      "role": "index",
+      "sha256": "acaa2fe4a0e96b6e7ce101bbdbf17f2798830ff548a19e23f6f9305928333ea7",
+      "size": 5108,
+      "normalized_sha256": "acaa2fe4a0e96b6e7ce101bbdbf17f2798830ff548a19e23f6f9305928333ea7"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/KusudamaFlowTests.cs": {
+      "role": "index",
+      "sha256": "fc768164fc02828d122a7cac2c275858df85157e6b6cad45d7cc377e24d89f9b",
+      "size": 7470,
+      "normalized_sha256": "fc768164fc02828d122a7cac2c275858df85157e6b6cad45d7cc377e24d89f9b"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/LaneAlphaFlowTests.cs": {
+      "role": "index",
+      "sha256": "3ad7188c3698f221d3ceb7814b2604c469c3df0d68c6325dbe726b4f69238738",
+      "size": 4185,
+      "normalized_sha256": "3ad7188c3698f221d3ceb7814b2604c469c3df0d68c6325dbe726b4f69238738"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/LaneLeftEdgeFlowTests.cs": {
+      "role": "index",
+      "sha256": "8f7542afaa170f8407837b16084500d1509b6e003418fc59240821f36e7b22b7",
+      "size": 2748,
+      "normalized_sha256": "8f7542afaa170f8407837b16084500d1509b6e003418fc59240821f36e7b22b7"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/LinuxAlsaAudioTests.cs": {
+      "role": "index",
+      "sha256": "f063641e63fec93bbd5a203788559b37b7caa97a7522cb4a589d2fdc72d28493",
+      "size": 7390,
+      "normalized_sha256": "f063641e63fec93bbd5a203788559b37b7caa97a7522cb4a589d2fdc72d28493"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/MenuBoardLayoutTests.cs": {
+      "role": "index",
+      "sha256": "8f7acc43c374751bf3861e6a5b97632825b4a1796dd0028eda00e4422dd6e43a",
+      "size": 5916,
+      "normalized_sha256": "8f7acc43c374751bf3861e6a5b97632825b4a1796dd0028eda00e4422dd6e43a"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/MultiLiveServerTests.cs": {
+      "role": "index",
+      "sha256": "90ec2ea1d708f6448b68b88f8681cce52081725b19b55d6c81fa721a969fd51f",
+      "size": 6842,
+      "normalized_sha256": "90ec2ea1d708f6448b68b88f8681cce52081725b19b55d6c81fa721a969fd51f"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/MultiRoomFlowTests.cs": {
+      "role": "index",
+      "sha256": "e816fd0e332b4c621e717e10e7ab2f7adbc2543339052aea893da8b9d10934b5",
+      "size": 43337,
+      "normalized_sha256": "e816fd0e332b4c621e717e10e7ab2f7adbc2543339052aea893da8b9d10934b5"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/NameplateFlowTests.cs": {
+      "role": "index",
+      "sha256": "57eee228a02aa60fcc174e899538beaff98d0401f1055b8fb5b08ba5b1e78f82",
+      "size": 15834,
+      "normalized_sha256": "57eee228a02aa60fcc174e899538beaff98d0401f1055b8fb5b08ba5b1e78f82"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/NativeAudioTests.cs": {
+      "role": "index",
+      "sha256": "72b193bb32a88954b4cee3705b1b75890807bed28f64aa47a16bdfc21af17aaf",
+      "size": 3739,
+      "normalized_sha256": "72b193bb32a88954b4cee3705b1b75890807bed28f64aa47a16bdfc21af17aaf"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/NativeDecoderTests.cs": {
+      "role": "index",
+      "sha256": "e353f6918585f1e9c8929746262e9017a04b47a6fa9e988efc4d58b73e0a5e6a",
+      "size": 3766,
+      "normalized_sha256": "e353f6918585f1e9c8929746262e9017a04b47a6fa9e988efc4d58b73e0a5e6a"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/NestedFolderFlowTests.cs": {
+      "role": "index",
+      "sha256": "3a9f7660bbffc1d26aed5ac9db0ba45f95b8c77fa23a8027197e0aa48dfbe6d9",
+      "size": 9360,
+      "normalized_sha256": "3a9f7660bbffc1d26aed5ac9db0ba45f95b8c77fa23a8027197e0aa48dfbe6d9"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/NoteExpressionFlowTests.cs": {
+      "role": "index",
+      "sha256": "35e0582b821020ffed07ec0bf081fe74d02b9440e669ef3e83c649d1b7e175c1",
+      "size": 7196,
+      "normalized_sha256": "35e0582b821020ffed07ec0bf081fe74d02b9440e669ef3e83c649d1b7e175c1"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/OffsetFlowTests.cs": {
+      "role": "index",
+      "sha256": "681efa0d02b22db59bd073b6452c1f7ab0f6cbab91458f2a249839334d478749",
+      "size": 11130,
+      "normalized_sha256": "681efa0d02b22db59bd073b6452c1f7ab0f6cbab91458f2a249839334d478749"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/OnlinePreviewFlowTests.cs": {
+      "role": "index",
+      "sha256": "e332b38bf1cb19049ca4aef5a94682a4239f5f7dba45945d21f95cc9fb5b1a07",
+      "size": 9275,
+      "normalized_sha256": "e332b38bf1cb19049ca4aef5a94682a4239f5f7dba45945d21f95cc9fb5b1a07"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/OnlineSongFlowTests.cs": {
+      "role": "index",
+      "sha256": "bf6fbf1b3358ea09713e6902567f187972ab321964989ddf2169eaf57ab7345c",
+      "size": 36788,
+      "normalized_sha256": "bf6fbf1b3358ea09713e6902567f187972ab321964989ddf2169eaf57ab7345c"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/OurTaiko.PlayModeTests.asmdef": {
+      "role": "index",
+      "sha256": "9e3922717b3b5b652a1e691b41d98d51de8fe1f0ca0b1014cc25321144f8abed",
+      "size": 454,
+      "normalized_sha256": "9e3922717b3b5b652a1e691b41d98d51de8fe1f0ca0b1014cc25321144f8abed"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/PauseMenuFlowTests.cs": {
+      "role": "index",
+      "sha256": "21b355c9ac7e89bf63febd0cd7e9ab2339657a216cb74a1c209b4a26304f3ea5",
+      "size": 26651,
+      "normalized_sha256": "21b355c9ac7e89bf63febd0cd7e9ab2339657a216cb74a1c209b4a26304f3ea5"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/PlayScoreRankFlowTests.cs": {
+      "role": "index",
+      "sha256": "e10361ce64e952c2b0d74de32035933fa99bcef57b1db22e09a115904b5f648c",
+      "size": 7185,
+      "normalized_sha256": "e10361ce64e952c2b0d74de32035933fa99bcef57b1db22e09a115904b5f648c"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/PracticeFlowTests.cs": {
+      "role": "index",
+      "sha256": "ae0ee2fe0b05d71f36df92dbf3c3d5c958be84a3c04c1c5ceb5a11c6b3257705",
+      "size": 48938,
+      "normalized_sha256": "ae0ee2fe0b05d71f36df92dbf3c3d5c958be84a3c04c1c5ceb5a11c6b3257705"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/PuchiAnimFlowTests.cs": {
+      "role": "index",
+      "sha256": "760bb8e32bd285cd8959fd42c99ca81f1d4c215e2e15142b8e802ed62f0cec2a",
+      "size": 9348,
+      "normalized_sha256": "760bb8e32bd285cd8959fd42c99ca81f1d4c215e2e15142b8e802ed62f0cec2a"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/ReplayFlowTests.cs": {
+      "role": "index",
+      "sha256": "b1fb5f61e46f8947a856b645353ee06815f7aa7fa75f625b2961fdfd28fe284b",
+      "size": 4939,
+      "normalized_sha256": "b1fb5f61e46f8947a856b645353ee06815f7aa7fa75f625b2961fdfd28fe284b"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/ResultScoreFlowTests.cs": {
+      "role": "index",
+      "sha256": "0e3a90a9b3be862a0ddac4622cfa72a42273608da7d81e70396c1bb190fe2297",
+      "size": 3503,
+      "normalized_sha256": "0e3a90a9b3be862a0ddac4622cfa72a42273608da7d81e70396c1bb190fe2297"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/RewardOverlayFlowTests.cs": {
+      "role": "index",
+      "sha256": "c8f220126b952a91151962072fd718dfb33773625dc59a8f9f0da1b01c2e58ed",
+      "size": 15665,
+      "normalized_sha256": "c8f220126b952a91151962072fd718dfb33773625dc59a8f9f0da1b01c2e58ed"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/ScoreAdditionFlowTests.cs": {
+      "role": "index",
+      "sha256": "ab90786a2834ca591e0cf1c6de4320551f20e19ac16905f52d2d06580d08248d",
+      "size": 6305,
+      "normalized_sha256": "ab90786a2834ca591e0cf1c6de4320551f20e19ac16905f52d2d06580d08248d"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/ScoreRankFlowTests.cs": {
+      "role": "index",
+      "sha256": "345bfaffb53f282492cb1eed2d9b1a097c5c9ba97cedc87c8a01878ca72b147c",
+      "size": 8377,
+      "normalized_sha256": "345bfaffb53f282492cb1eed2d9b1a097c5c9ba97cedc87c8a01878ca72b147c"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/ScrollModeFlowTests.cs": {
+      "role": "index",
+      "sha256": "51d840ce807474e585a528e63c1fd16306be925096de88907aefc5a072c76d11",
+      "size": 16299,
+      "normalized_sha256": "51d840ce807474e585a528e63c1fd16306be925096de88907aefc5a072c76d11"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/SettingsOverlayFlowTests.cs": {
+      "role": "index",
+      "sha256": "31c9746e27d7c493c4b7aadda820664d87869705878f1b2eccce3292ef6499d2",
+      "size": 16108,
+      "normalized_sha256": "31c9746e27d7c493c4b7aadda820664d87869705878f1b2eccce3292ef6499d2"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/SongLanguageFlowTests.cs": {
+      "role": "index",
+      "sha256": "eed55527fc728e6d80e70bd4a3cfec47fb61ed7219426086c267a5cd6f4ded21",
+      "size": 5929,
+      "normalized_sha256": "eed55527fc728e6d80e70bd4a3cfec47fb61ed7219426086c267a5cd6f4ded21"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/SongLibraryPathsFlowTests.cs": {
+      "role": "index",
+      "sha256": "fbb5c842caca7f598f0dfa577c741c373a94bcc42eaf7a61827e50b155667482",
+      "size": 6805,
+      "normalized_sha256": "fbb5c842caca7f598f0dfa577c741c373a94bcc42eaf7a61827e50b155667482"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/SongSearchFlowTests.cs": {
+      "role": "index",
+      "sha256": "d9368c384956b3fa8d8fc6bc446b50b07beb40a49fd39753a73125d54ad6fff7",
+      "size": 30608,
+      "normalized_sha256": "d9368c384956b3fa8d8fc6bc446b50b07beb40a49fd39753a73125d54ad6fff7"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/SongSelectKeyRepeatFlowTests.cs": {
+      "role": "index",
+      "sha256": "6ca75ea1013663d7b7aa6da98adbabc36832c74cc9463522b67a5a3bbe44eed7",
+      "size": 5899,
+      "normalized_sha256": "6ca75ea1013663d7b7aa6da98adbabc36832c74cc9463522b67a5a3bbe44eed7"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/SongSelectSavedLayoutTests.cs": {
+      "role": "index",
+      "sha256": "47f19b6446c7c404c210008efdbad83e0e8406f158a532c34fe31bcb6bbb9377",
+      "size": 9220,
+      "normalized_sha256": "47f19b6446c7c404c210008efdbad83e0e8406f158a532c34fe31bcb6bbb9377"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/SoundSettingsFlowTests.cs": {
+      "role": "index",
+      "sha256": "1d2cacdeb3bda43c0a6178e0aea63740ade4a6260c540dff9555e4eb9f8f27ee",
+      "size": 18767,
+      "normalized_sha256": "1d2cacdeb3bda43c0a6178e0aea63740ade4a6260c540dff9555e4eb9f8f27ee"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/SpriteLaneFlowTests.cs": {
+      "role": "index",
+      "sha256": "a1ed7f674723bd50d04b39fe149939a2b364c58b293eaf0dc2883d4558a3dfee",
+      "size": 5757,
+      "normalized_sha256": "a1ed7f674723bd50d04b39fe149939a2b364c58b293eaf0dc2883d4558a3dfee"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/TestScoreStore.cs": {
+      "role": "index",
+      "sha256": "790ce59bf601cdda3d3037d269d6599f1fdd4e2fb3e40727d451b8af85724003",
+      "size": 371,
+      "normalized_sha256": "790ce59bf601cdda3d3037d269d6599f1fdd4e2fb3e40727d451b8af85724003"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/TimingAnalysisFlowTests.cs": {
+      "role": "index",
+      "sha256": "707ed77e2f916f79def9b60240972637e41f471f4b1094fa086143dd79a6eca4",
+      "size": 18642,
+      "normalized_sha256": "707ed77e2f916f79def9b60240972637e41f471f4b1094fa086143dd79a6eca4"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/TimingCalibrationFlowTests.cs": {
+      "role": "index",
+      "sha256": "9b1f1f5685e11cd4356ea151e82bcd991a266358244e2a70115e152c5147e885",
+      "size": 7810,
+      "normalized_sha256": "9b1f1f5685e11cd4356ea151e82bcd991a266358244e2a70115e152c5147e885"
+    },
+    "Assets/OurTaiko/Tests/PlayMode/TwoPlayerMenuFlowTests.cs": {
+      "role": "index",
+      "sha256": "7d5ee4cbf416309d0825461dcc274fa13b3c6f66388eb029c85ad9b335d1f391",
+      "size": 11116,
+      "normalized_sha256": "7d5ee4cbf416309d0825461dcc274fa13b3c6f66388eb029c85ad9b335d1f391"
+    },
+    "Assets/OurTaiko/Tests/Player/LinuxAudioPlayerProbe.cs": {
+      "role": "index",
+      "sha256": "1c814e2770ebf0b3b7a0d1dbc10aea146c8c00a580cc4b1f1f0bf7774d1ac6ba",
+      "size": 8295,
+      "normalized_sha256": "1c814e2770ebf0b3b7a0d1dbc10aea146c8c00a580cc4b1f1f0bf7774d1ac6ba"
+    },
+    "Assets/OurTaiko/Tests/Shared/FanmadeFixture.cs": {
+      "role": "index",
+      "sha256": "52a3d23cd1d13d93a0db5e56ad2d1702e88f3139212bfbb9572248a0b2ff5a38",
+      "size": 40341,
+      "normalized_sha256": "52a3d23cd1d13d93a0db5e56ad2d1702e88f3139212bfbb9572248a0b2ff5a38"
+    },
+    "Assets/OurTaiko/Tests/Shared/OtanimFixture.cs": {
+      "role": "index",
+      "sha256": "1cece12a9fc333984d3fbf5c2f60147a53731301824c8e0fc9b0d0af5c07beea",
+      "size": 5243,
+      "normalized_sha256": "1cece12a9fc333984d3fbf5c2f60147a53731301824c8e0fc9b0d0af5c07beea"
+    },
+    "Assets/OurTaiko/Tests/Shared/OurTaiko.TestSupport.asmdef": {
+      "role": "index",
+      "sha256": "d66082b564b800a6ab9c8a57d4b3a1aa68ba5e9d2d85c1fa88c2b6604dad0d05",
+      "size": 159,
+      "normalized_sha256": "d66082b564b800a6ab9c8a57d4b3a1aa68ba5e9d2d85c1fa88c2b6604dad0d05"
+    },
+    "Assets/OurTaiko/Tests/Shared/TestCapture.cs": {
+      "role": "index",
+      "sha256": "d134f251367bdfb606eedc7fae2d7c469ac94a96fc98c53531518f4b045abe09",
+      "size": 4831,
+      "normalized_sha256": "d134f251367bdfb606eedc7fae2d7c469ac94a96fc98c53531518f4b045abe09"
+    },
+    "Assets/OurTaiko/Tests/Shared/TestData.cs": {
+      "role": "index",
+      "sha256": "220797778672d00038281b72649a3ecff032c393beb0628a65d7280e4f644089",
+      "size": 4737,
+      "normalized_sha256": "220797778672d00038281b72649a3ecff032c393beb0628a65d7280e4f644089"
+    },
+    "Assets/OurTaiko/Tests/Shared/TestPlay.cs": {
+      "role": "index",
+      "sha256": "60361dfc94264c6a056c311e838bceaa9c44b27a9b96108706a23e41d89f858d",
+      "size": 1679,
+      "normalized_sha256": "60361dfc94264c6a056c311e838bceaa9c44b27a9b96108706a23e41d89f858d"
+    },
+    "Assets/OurTaiko/Tests/Shared/TestSongs.cs": {
+      "role": "index",
+      "sha256": "fbb0a4b57c957b2538ae202342bcf14f9d360fc0d62d5a5da64172058be4113f",
+      "size": 2318,
+      "normalized_sha256": "fbb0a4b57c957b2538ae202342bcf14f9d360fc0d62d5a5da64172058be4113f"
+    },
+    "Assets/OurTaiko/Tests/Shared/Waits.cs": {
+      "role": "index",
+      "sha256": "4e8551994bb348bf0c31face6985dc7c535f16c3a9e0bf2e37a5205d9eed4fda",
+      "size": 1260,
+      "normalized_sha256": "4e8551994bb348bf0c31face6985dc7c535f16c3a9e0bf2e37a5205d9eed4fda"
+    },
+    "Assets/Plugins/Android/RefreshRate.java": {
+      "role": "index",
+      "sha256": "19f0ab778e5245abb4e4cc8bd048c0dccc0b0f91115043460d248ae57a6a5f8b",
+      "size": 9826,
+      "normalized_sha256": "19f0ab778e5245abb4e4cc8bd048c0dccc0b0f91115043460d248ae57a6a5f8b"
+    },
+    "Assets/Plugins/MajdataPlay/Diagnostics/MajDebug.cs": {
+      "role": "index",
+      "sha256": "01212b6fd4a0fa20ce580100077e499aabbec12c9beaaf2a09df4fe24d604ce1",
+      "size": 1217,
+      "normalized_sha256": "01212b6fd4a0fa20ce580100077e499aabbec12c9beaaf2a09df4fe24d604ce1"
+    },
+    "Assets/Plugins/MajdataPlay/Diagnostics/MajdataPlay.Diagnostics.asmdef": {
+      "role": "index",
+      "sha256": "f8b415fa6e17b39107e71364513321ae42958bd580f10f1fe7f45ec9299ff4b4",
+      "size": 381,
+      "normalized_sha256": "f8b415fa6e17b39107e71364513321ae42958bd580f10f1fe7f45ec9299ff4b4"
+    },
+    "Assets/Plugins/MajdataPlay/Diagnostics/UnityProfiler.cs": {
+      "role": "index",
+      "sha256": "9316c0d94861085d2811eb732acdba87068aa82d70c7c95183c946f6027b0257",
+      "size": 641,
+      "normalized_sha256": "9316c0d94861085d2811eb732acdba87068aa82d70c7c95183c946f6027b0257"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Editor/AssemblyInfo.cs": {
+      "role": "index",
+      "sha256": "d36eff8ff7179450f18ceaa74b9c6bde6021b2462f7c38bde164031295e4b8b5",
+      "size": 219,
+      "normalized_sha256": "d36eff8ff7179450f18ceaa74b9c6bde6021b2462f7c38bde164031295e4b8b5"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Editor/FFmpegIosPostprocess.cs": {
+      "role": "index",
+      "sha256": "1bec9bad3676bed5d372483578a50c6224a99e447b9648798fd0661a5e44716a",
+      "size": 1611,
+      "normalized_sha256": "1bec9bad3676bed5d372483578a50c6224a99e447b9648798fd0661a5e44716a"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Editor/FFmpegVideoPlayerEditor.cs": {
+      "role": "index",
+      "sha256": "b1779d00c9c7732245d5e52dcbb9de3b9c87b61b31e03c99d4378e32417a6765",
+      "size": 5588,
+      "normalized_sha256": "b1779d00c9c7732245d5e52dcbb9de3b9c87b61b31e03c99d4378e32417a6765"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Editor/MajdataPlay.FFmpeg.Editor.asmdef": {
+      "role": "index",
+      "sha256": "75ce0afe45572b10b53ac842474b7135c8471230287e5ee0f1ab90950721917c",
+      "size": 465,
+      "normalized_sha256": "75ce0afe45572b10b53ac842474b7135c8471230287e5ee0f1ab90950721917c"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/AssemblyInfo.cs": {
+      "role": "index",
+      "sha256": "7d06e1aae3718d561fb2081561710cb7ef575c9e8caf46c5a9df50e90cbbd8fa",
+      "size": 171,
+      "normalized_sha256": "7d06e1aae3718d561fb2081561710cb7ef575c9e8caf46c5a9df50e90cbbd8fa"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Decoding/DecodedVideoFrame.cs": {
+      "role": "index",
+      "sha256": "3bfb00a9f7cce29841f7ff49555a01556a593c12aa3966cc84b8819a38d2dfb0",
+      "size": 13431,
+      "normalized_sha256": "3bfb00a9f7cce29841f7ff49555a01556a593c12aa3966cc84b8819a38d2dfb0"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Decoding/DecoderOptions.cs": {
+      "role": "index",
+      "sha256": "5055b70fb00eb393f9d31fab7e8e36811496d9a9feb80d5bcb4456471ce9fbea",
+      "size": 10911,
+      "normalized_sha256": "5055b70fb00eb393f9d31fab7e8e36811496d9a9feb80d5bcb4456471ce9fbea"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Decoding/FFmpegVideoDecoder.cs": {
+      "role": "index",
+      "sha256": "29aa841c3e9a9cef05e0e12a3e4c15f44c90d453673a0eb9f783e4f110ea31be",
+      "size": 107733,
+      "normalized_sha256": "29aa841c3e9a9cef05e0e12a3e4c15f44c90d453673a0eb9f783e4f110ea31be"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Decoding/VideoFrameConverter.cs": {
+      "role": "index",
+      "sha256": "eeba84a753301442c8a3bc2ba58110c6a8c7131203fef15310c073ab23a5ac17",
+      "size": 28809,
+      "normalized_sha256": "eeba84a753301442c8a3bc2ba58110c6a8c7131203fef15310c073ab23a5ac17"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/FFmpegVideoPlayer.cs": {
+      "role": "index",
+      "sha256": "efc1ca976ab6f4da564959f02a2f6e439961067dcb836d7c8c8cae2809a8ecfc",
+      "size": 62125,
+      "normalized_sha256": "efc1ca976ab6f4da564959f02a2f6e439961067dcb836d7c8c8cae2809a8ecfc"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Internal/GpuCompletionWait.cs": {
+      "role": "index",
+      "sha256": "f0badf51de4aa173fa185d889e4793e08643ab3078c18f03a3cb287e19e41a22",
+      "size": 3415,
+      "normalized_sha256": "f0badf51de4aa173fa185d889e4793e08643ab3078c18f03a3cb287e19e41a22"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Internal/PlaybackClock.cs": {
+      "role": "index",
+      "sha256": "955af0ff14cf21ced337d9e1f912f23a5ec8e00d1b48cf9c47d87718406ed9a0",
+      "size": 3227,
+      "normalized_sha256": "955af0ff14cf21ced337d9e1f912f23a5ec8e00d1b48cf9c47d87718406ed9a0"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Internal/VideoBandExecutor.cs": {
+      "role": "index",
+      "sha256": "e8efdc20510f0e6bbee6c5a755097277019c468998d84230dcd395724839798b",
+      "size": 11030,
+      "normalized_sha256": "e8efdc20510f0e6bbee6c5a755097277019c468998d84230dcd395724839798b"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Internal/VideoBitRateTracker.cs": {
+      "role": "index",
+      "sha256": "9a8fe6e8b0453837c162323fc4cbf57f5110d5595aaa0ef1fbecf22ea4fba17c",
+      "size": 5706,
+      "normalized_sha256": "9a8fe6e8b0453837c162323fc4cbf57f5110d5595aaa0ef1fbecf22ea4fba17c"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Internal/VideoDecodeSession.cs": {
+      "role": "index",
+      "sha256": "5c01cb2412440d8b3d175b5a6a3c938932f9980e138e61d206624a030e82d635",
+      "size": 23707,
+      "normalized_sha256": "5c01cb2412440d8b3d175b5a6a3c938932f9980e138e61d206624a030e82d635"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Internal/VideoPixelKernels.cs": {
+      "role": "index",
+      "sha256": "c57f54747e7d1d39178e583901adf5e044935dd2c87dcb95b6453bd7523841a7",
+      "size": 28281,
+      "normalized_sha256": "c57f54747e7d1d39178e583901adf5e044935dd2c87dcb95b6453bd7523841a7"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Internal/Yuv420Planes.cs": {
+      "role": "index",
+      "sha256": "65067e71ab8703a4aae313d546160325b4b86e95696b82db902a24f2f8d8bf78",
+      "size": 1359,
+      "normalized_sha256": "65067e71ab8703a4aae313d546160325b4b86e95696b82db902a24f2f8d8bf78"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Interop/AndroidContentInterop.cs": {
+      "role": "index",
+      "sha256": "d3c6cd4519d1f53d7ae1b5f8888083568fa81435e9a2174b6690a93e9045c913",
+      "size": 7778,
+      "normalized_sha256": "d3c6cd4519d1f53d7ae1b5f8888083568fa81435e9a2174b6690a93e9045c913"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Interop/D3D12VideoInterop.cs": {
+      "role": "index",
+      "sha256": "4cfc7422aba75c5f01159c72c51fb5063d158942655119e3d984f8ab3f1d3337",
+      "size": 3357,
+      "normalized_sha256": "4cfc7422aba75c5f01159c72c51fb5063d158942655119e3d984f8ab3f1d3337"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Interop/FFmpegVideoPlayer.Hardware.cs": {
+      "role": "index",
+      "sha256": "697799aa9d18db195b221a304307d55669c0cfbd2d232c45cfb03507eddbe6e8",
+      "size": 12468,
+      "normalized_sha256": "697799aa9d18db195b221a304307d55669c0cfbd2d232c45cfb03507eddbe6e8"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Interop/HardwareTextureRetirementPump.cs": {
+      "role": "index",
+      "sha256": "e533e226f02cd8c61c5ba3ced2a809d92c80699a5f0cfd507e795313f2b2e50c",
+      "size": 2547,
+      "normalized_sha256": "e533e226f02cd8c61c5ba3ced2a809d92c80699a5f0cfd507e795313f2b2e50c"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Interop/HardwareVideoPresenter.cs": {
+      "role": "index",
+      "sha256": "f2b08bad488c28201ebf68b2d21b007b63314f70f306a8866b563776acda1877",
+      "size": 60296,
+      "normalized_sha256": "f2b08bad488c28201ebf68b2d21b007b63314f70f306a8866b563776acda1877"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/Interop/VulkanVideoInterop.cs": {
+      "role": "index",
+      "sha256": "ab33f7654b973d50b2d6441cb43f2e9616207a29a835cf8239c76fe95b35d7bc",
+      "size": 51206,
+      "normalized_sha256": "ab33f7654b973d50b2d6441cb43f2e9616207a29a835cf8239c76fe95b35d7bc"
+    },
+    "Assets/Plugins/MajdataPlay/FFmpeg/Runtime/MajdataPlay.FFmpeg.asmdef": {
+      "role": "index",
+      "sha256": "ba447fdec807f1ef4aa6982af38ca5c3a149e09de22719d46d6add6a5eec2608",
+      "size": 675,
+      "normalized_sha256": "ba447fdec807f1ef4aa6982af38ca5c3a149e09de22719d46d6add6a5eec2608"
+    },
+    "Assets/Plugins/iOS/OurTaikoKeyboard.mm": {
+      "role": "index",
+      "sha256": "f8a03aa36b41e3bac42ff14eedca75d8a47b3f858d852ea4503458ea7bfef83c",
+      "size": 3779,
+      "normalized_sha256": "f8a03aa36b41e3bac42ff14eedca75d8a47b3f858d852ea4503458ea7bfef83c"
+    },
+    "Assets/Settings/InputSystem_Actions.inputactions": {
+      "role": "index",
+      "sha256": "1c6cbb519d65ecfe19a29231735b7f54741a20ac1a8ad4f46a18e1bfb28a3c39",
+      "size": 41005,
+      "normalized_sha256": "1c6cbb519d65ecfe19a29231735b7f54741a20ac1a8ad4f46a18e1bfb28a3c39"
+    },
+    "Assets/csc.rsp": {
+      "role": "index",
+      "sha256": "18ceb8d7a2ff98596c7e961734f1a61f3e08707260228069885c7142f212d8f2",
+      "size": 24,
+      "normalized_sha256": "18ceb8d7a2ff98596c7e961734f1a61f3e08707260228069885c7142f212d8f2"
+    },
+    "CONTRIBUTING.md": {
+      "role": "index",
+      "sha256": "0f2eb53876da5244790be46ea7a8a43df4a49abbddc4283183b9d9312f2e2090",
+      "size": 8952,
+      "normalized_sha256": "0f2eb53876da5244790be46ea7a8a43df4a49abbddc4283183b9d9312f2e2090"
+    },
+    "Documentation/LinuxAudio.md": {
+      "role": "index",
+      "sha256": "e94a23f7193f455ca57fd2134a686cd34a26244d78e4d620412ad5ad974f34a4",
+      "size": 9783,
+      "normalized_sha256": "e94a23f7193f455ca57fd2134a686cd34a26244d78e4d620412ad5ad974f34a4"
+    },
+    "Documentation/ghost-art.swift": {
+      "role": "index",
+      "sha256": "674516d129ed76e14cddc454fe9db1b5ffafafd99c4ce36257077404bda0b64d",
+      "size": 13095,
+      "normalized_sha256": "674516d129ed76e14cddc454fe9db1b5ffafafd99c4ce36257077404bda0b64d"
+    },
+    "Documentation/multi-art.swift": {
+      "role": "index",
+      "sha256": "535f7145272bdb6314880e11dfcd4a2cf561ae787900031fade26d3cadc9c048",
+      "size": 26128,
+      "normalized_sha256": "535f7145272bdb6314880e11dfcd4a2cf561ae787900031fade26d3cadc9c048"
+    },
+    "Documentation/rating-art.swift": {
+      "role": "index",
+      "sha256": "fc0668c010607fe404cf58afb49bbaf7584dd9bb2cef10c3020f061822a34bed",
+      "size": 8052,
+      "normalized_sha256": "fc0668c010607fe404cf58afb49bbaf7584dd9bb2cef10c3020f061822a34bed"
+    },
+    "Packages/manifest.json": {
+      "role": "index",
+      "sha256": "2b83d688fdecf9c5cdcc38e2f7b540a59fb8cfdf5d701bfc4605ef7f440102ad",
+      "size": 3046,
+      "normalized_sha256": "2b83d688fdecf9c5cdcc38e2f7b540a59fb8cfdf5d701bfc4605ef7f440102ad"
+    },
+    "ProjectSettings/ProjectVersion.txt": {
+      "role": "index",
+      "sha256": "1eac9aed61309ea22f15b0324e5a6e73f2e45db08c90deb7ae4495a25f454664",
+      "size": 83,
+      "normalized_sha256": "1eac9aed61309ea22f15b0324e5a6e73f2e45db08c90deb7ae4495a25f454664"
+    },
+    "README.en.md": {
+      "role": "index",
+      "sha256": "1bf9966ad48cf5b50c4caa3d0e2229bd7a9c0b914979f670bea6335eb8049b17",
+      "size": 5257,
+      "normalized_sha256": "1bf9966ad48cf5b50c4caa3d0e2229bd7a9c0b914979f670bea6335eb8049b17"
+    },
+    "README.ja.md": {
+      "role": "index",
+      "sha256": "ef1b670be715a712749ca0852c0ca7e14065b0fa015c84b42c4799e5e695bccd",
+      "size": 6372,
+      "normalized_sha256": "ef1b670be715a712749ca0852c0ca7e14065b0fa015c84b42c4799e5e695bccd"
+    },
+    "README.md": {
+      "role": "index",
+      "sha256": "e8290d3a8e3d1bf4a989e6a8128805dcd886f09d8dcc82ceb6be2f0c31c71ec2",
+      "size": 5343,
+      "normalized_sha256": "e8290d3a8e3d1bf4a989e6a8128805dcd886f09d8dcc82ceb6be2f0c31c71ec2"
+    },
+    "aoci.code.txt": {
+      "role": "index",
+      "sha256": "780b2a28ee2508e35e208815566d515c12642e10748932da3114233db94d7660",
+      "size": 206286,
+      "normalized_sha256": "780b2a28ee2508e35e208815566d515c12642e10748932da3114233db94d7660"
+    },
+    "aoci.meta.txt": {
+      "role": "index",
+      "sha256": "ebafbe54981dfb23686171bb5253ded8c2bbf9c697b73a1b1af9283d686a5cc4",
+      "size": 2307,
+      "normalized_sha256": "ebafbe54981dfb23686171bb5253ded8c2bbf9c697b73a1b1af9283d686a5cc4"
+    },
+    "aoci.txt": {
+      "role": "index",
+      "sha256": "c85d44101b7e17579fb590ff6b74b67ee806256d2b3b4d08d5a908d48f3ec6e5",
+      "size": 301,
+      "normalized_sha256": "c85d44101b7e17579fb590ff6b74b67ee806256d2b3b4d08d5a908d48f3ec6e5"
+    },
+    "fastlane/Fastfile": {
+      "role": "index",
+      "sha256": "f728786bc6d373af42923727a6721f2b3667d183fee4937a1e9a05d88b3f60e8",
+      "size": 5650,
+      "normalized_sha256": "f728786bc6d373af42923727a6721f2b3667d183fee4937a1e9a05d88b3f60e8"
+    },
+    "fastlane/Gemfile": {
+      "role": "index",
+      "sha256": "d75e950fcbfb014f8edede7105969987c3d7c66062f33a77ea34305d515238f9",
+      "size": 72,
+      "normalized_sha256": "d75e950fcbfb014f8edede7105969987c3d7c66062f33a77ea34305d515238f9"
+    }
+  },
+  "managed_scope": {
+    "version": "managed-scope-baseline/v1",
+    "policy_identity": "2c82e6f5191b639e0ed4edc4bd63d557890a695762b57802bf23a99908c91c81",
+    "observe_change_policy": "review_required",
+    "budget_policy_identity": "15e9b37a6c57e9bf03c9df3d0d049eb5b9a7f5540f9d34960408114e2538a32d",
+    "budget_policy": {
+      "version": "cognition-budget-policy/v1",
+      "mode": "enforce",
+      "whole_index": {
+        "target_tokens": 200000,
+        "warning_tokens": 300000,
+        "max_tokens": 400000
+      },
+      "r": [
+        {
+          "min_c": 1,
+          "max_c": 4,
+          "target_tokens": 25,
+          "max_tokens": 50
+        },
+        {
+          "min_c": 5,
+          "max_c": 7,
+          "target_tokens": 45,
+          "max_tokens": 90
+        },
+        {
+          "min_c": 8,
+          "max_c": 8,
+          "target_tokens": 70,
+          "max_tokens": 140
+        },
+        {
+          "min_c": 9,
+          "max_c": 9,
+          "target_tokens": 90,
+          "max_tokens": 180
+        }
+      ],
+      "s": [
+        {
+          "min_c": 1,
+          "max_c": 4,
+          "target_tokens": 20,
+          "max_tokens": 40
+        },
+        {
+          "min_c": 5,
+          "max_c": 7,
+          "target_tokens": 40,
+          "max_tokens": 80
+        },
+        {
+          "min_c": 8,
+          "max_c": 8,
+          "target_tokens": 70,
+          "max_tokens": 140
+        },
+        {
+          "min_c": 9,
+          "max_c": 9,
+          "target_tokens": 100,
+          "max_tokens": 200
+        }
+      ]
+    },
+    "apply_authorization_mode": "auto"
+  }
+}

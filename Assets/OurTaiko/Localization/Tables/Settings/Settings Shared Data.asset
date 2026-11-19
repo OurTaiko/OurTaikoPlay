@@ -883,6 +883,18 @@ MonoBehaviour:
     m_Key: audio.alsaShared
     m_Metadata:
       m_Items: []
+  - m_Id: 2895769534193664
+    m_Key: sidebar.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2895769542582272
+    m_Key: sidebar.subtitle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2895769542582273
+    m_Key: sidebar.categories
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

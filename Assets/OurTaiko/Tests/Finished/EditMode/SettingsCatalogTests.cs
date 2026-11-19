@@ -26,6 +26,42 @@ namespace OurTaiko.Tests
             Assert.That(GameSettings.FromJson("{\"display\":{\"targetFrameRate\":60}}").display.vSync, Is.False);
         }
 
+        [TestCase(SoundPlatform.Android)]
+        [TestCase(SoundPlatform.Desktop)]
+        public void SidebarCanHideAndRestoreEveryCategoryAcrossSaves(SoundPlatform platform)
+        {
+            var catalog = SettingsCatalog.Pages(platform);
+            var settings = GameSettings.FromJson("{\"general\":{\"language\":\"en\"},\"play\":{\"audioOffsetMs\":17}}");
+            var nav = new SettingsNavigator(catalog, settings);
+            var categories = new[] { "general", "controls", "play", "display", "sound", "accounts" };
+            Assert.That(nav.Pages.Select(p => p.Id), Is.EqualTo(categories.Append("sidebar")));
+            nav.Move(categories.Length);
+            nav.Confirm();
+            Assert.That(nav.Page.Rows.Select(r => r.Id), Is.EqualTo(categories.Select(id => "show-" + id)));
+
+            for (int i = 0; i < categories.Length; i++)
+            {
+                Assert.That(nav.SetRow(i, 0), Is.EqualTo(SettingsNavigator.Result.Changed));
+                Assert.That(nav.Page.Id, Is.EqualTo("sidebar"));
+                Assert.That(nav.Row.Id, Is.EqualTo("show-" + categories[i]));
+                Assert.That(nav.Pages.Select(p => p.Id), Is.EqualTo(categories.Skip(i + 1).Append("sidebar")));
+            }
+
+            nav = new SettingsNavigator(SettingsCatalog.Pages(platform), GameSettings.FromJson(nav.Settings.ToJson()));
+            Assert.That(nav.Pages.Select(p => p.Id), Is.EqualTo(new[] { "sidebar" }));
+            nav.Move(1);
+            Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Close));
+            nav.Move(-1);
+            nav.Confirm();
+            for (int i = categories.Length - 1; i >= 0; i--)
+            {
+                Assert.That(nav.SetRow(i, 1), Is.EqualTo(SettingsNavigator.Result.Changed));
+                Assert.That(nav.Page.Id, Is.EqualTo("sidebar"));
+            }
+            Assert.That(nav.Pages.Select(p => p.Id), Is.EqualTo(categories.Append("sidebar")));
+            Assert.That(nav.Settings.play.audioOffsetMs, Is.EqualTo(17));
+        }
+
         [Test]
         public void DrumPadStartsOffInTheEditorWhateverTheBuildTarget()
         {
@@ -62,6 +98,17 @@ namespace OurTaiko.Tests
             Assert.That(odd.display.TargetFrameRate, Is.EqualTo(120));
             nav = OnPage("display", odd);
             Assert.That(nav.Row.Get(nav.Settings), Is.Zero);
+        }
+
+        [Test]
+        public void AndroidKeepsKeyboardMappingsAndHidesFixedFrameRateControls()
+        {
+            var pages = SettingsCatalog.Pages(SoundPlatform.Android);
+            Assert.That(pages.Select(page => page.Id), Does.Contain("controls"));
+
+            var display = pages.Single(page => page.Id == "display");
+            display.Refresh(new GameSettings());
+            Assert.That(display.Rows.Select(row => row.Id), Is.EqualTo(new[] { "chara-3d", "movie", "lane-opacity" }));
         }
 
         [Test]
