@@ -314,7 +314,8 @@ namespace OurTaiko
             {
                 // The IME can close or lose focus before the player taps a dialog button.
                 field.shouldHideSoftKeyboard = false;
-                field.shouldHideMobileInput = false;
+                field.shouldHideMobileInput = true;
+                field.restoreOriginalTextOnEscape = false;
             }
             else
                 field.onEndEdit.AddListener(_ => { if (modal.gameObject.activeSelf && field.gameObject.activeSelf) CancelText?.Invoke(); });
@@ -714,6 +715,8 @@ namespace OurTaiko
             if (wasTyping && !typing) field.SetTextWithoutNotify("");
             if (textActions != null)
             {
+                card.anchorMin = card.anchorMax = card.pivot = typing ? new Vector2(.5f, 1) : new Vector2(.5f, .5f);
+                card.anchoredPosition = Vector2.zero;
                 textActions.gameObject.SetActive(typing);
                 modalText.gameObject.SetActive(capture);
                 if (typing)
