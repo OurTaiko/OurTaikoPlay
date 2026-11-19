@@ -1,7 +1,7 @@
 {
   "version": 1,
   "created_at": "2026-11-19T21:29:00Z",
-  "updated_at": "2026-11-19T21:38:28Z",
+  "updated_at": "2026-11-19T22:23:26Z",
   "files": {
     ".gitattributes": {
       "role": "index",
@@ -39,17 +39,35 @@
       "size": 14724,
       "normalized_sha256": "7ea4a36bdce9932fd6f955c62388381fcd6d85974578b33b0e384f955cf8200e"
     },
+    ".github/unity-test/Dockerfile": {
+      "role": "index",
+      "sha256": "00f2077b01873a2a2fe689d9e95e7560184aacead2bf175b2be8f928e417f54e",
+      "size": 302,
+      "normalized_sha256": "00f2077b01873a2a2fe689d9e95e7560184aacead2bf175b2be8f928e417f54e"
+    },
+    ".github/unity-test/asound.conf": {
+      "role": "index",
+      "sha256": "9bbda3d632c0d37c95017e50b97a71dfb167a200b3faa5c2a78aba7b71290345",
+      "size": 56,
+      "normalized_sha256": "9bbda3d632c0d37c95017e50b97a71dfb167a200b3faa5c2a78aba7b71290345"
+    },
+    ".github/unity-test/audio.sh": {
+      "role": "index",
+      "sha256": "b79db6a92ef9cf579ba38c3f780d600c09b400a14aedef789398d4947bb33bf0",
+      "size": 385,
+      "normalized_sha256": "b79db6a92ef9cf579ba38c3f780d600c09b400a14aedef789398d4947bb33bf0"
+    },
     ".github/workflows/build.yml": {
       "role": "index",
-      "sha256": "c147f89d87d79e797bf288712d839116a3ed0c7bf227fbf988201ac4812ff625",
-      "size": 17387,
-      "normalized_sha256": "c147f89d87d79e797bf288712d839116a3ed0c7bf227fbf988201ac4812ff625"
+      "sha256": "b946638339c33241c2e6e64a0d3a7dde8e7bc9d7b5550331af8f2f39a07d8c66",
+      "size": 17452,
+      "normalized_sha256": "b946638339c33241c2e6e64a0d3a7dde8e7bc9d7b5550331af8f2f39a07d8c66"
     },
     ".github/workflows/test.yml": {
       "role": "index",
-      "sha256": "43255b91f342e49811ea907943157189bd366daf494abd600f2bc6253415f6d5",
-      "size": 2528,
-      "normalized_sha256": "43255b91f342e49811ea907943157189bd366daf494abd600f2bc6253415f6d5"
+      "sha256": "49946aeb6e5621a040553daeab57e98522202f33536242638b99353c1d8b4965",
+      "size": 2933,
+      "normalized_sha256": "49946aeb6e5621a040553daeab57e98522202f33536242638b99353c1d8b4965"
     },
     ".gitignore": {
       "role": "index",
@@ -65,9 +83,9 @@
     },
     "AGENTS.md": {
       "role": "index",
-      "sha256": "ef5b45b3c1c969d4646b4629c7fc7d0f3351e6c7f0897bc67532b841a3542da4",
-      "size": 20074,
-      "normalized_sha256": "ef5b45b3c1c969d4646b4629c7fc7d0f3351e6c7f0897bc67532b841a3542da4"
+      "sha256": "2a4459d7c2ea45ea49e58231df348a700c35a5890c17b196d779aca680d67076",
+      "size": 20109,
+      "normalized_sha256": "2a4459d7c2ea45ea49e58231df348a700c35a5890c17b196d779aca680d67076"
     },
     "Assets/OurTaiko/Editor/AudioAssetBuild.cs": {
       "role": "index",
@@ -197,9 +215,9 @@
     },
     "Assets/OurTaiko/Localization/Strings/Settings.csv": {
       "role": "index",
-      "sha256": "b86c1cdcfc696a29e59f750efda77fbd2c5a20df343193c688ba7be5df54366a",
-      "size": 32557,
-      "normalized_sha256": "b86c1cdcfc696a29e59f750efda77fbd2c5a20df343193c688ba7be5df54366a"
+      "sha256": "f6cc2a1ba87853cf781394c369e5ae67b30a77714e02e67556d86b028a27439c",
+      "size": 32937,
+      "normalized_sha256": "f6cc2a1ba87853cf781394c369e5ae67b30a77714e02e67556d86b028a27439c"
     },
     "Assets/OurTaiko/Resources/Chara/DonComposite.shader": {
       "role": "index",
@@ -245,9 +263,9 @@
     },
     "Assets/OurTaiko/Runtime/Audio/AudioEngine.cs": {
       "role": "index",
-      "sha256": "c7f4e568c9b417fea19d6d8106adb215f44e41b286e95197f57e0f41918a0486",
-      "size": 22813,
-      "normalized_sha256": "c7f4e568c9b417fea19d6d8106adb215f44e41b286e95197f57e0f41918a0486"
+      "sha256": "a330802fe2ac78587d99eeb32d0af8578e715bc81cdfc1964983b6837fbbbaa8",
+      "size": 22836,
+      "normalized_sha256": "a330802fe2ac78587d99eeb32d0af8578e715bc81cdfc1964983b6837fbbbaa8"
     },
     "Assets/OurTaiko/Runtime/Audio/AudioOptions.cs": {
       "role": "index",
@@ -443,9 +461,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/DisplayRefreshRate.cs": {
       "role": "index",
-      "sha256": "5ce5836f41a864ca757b5f2e3f8559e1f4670c521fe01476707604d3f75a0760",
-      "size": 2675,
-      "normalized_sha256": "5ce5836f41a864ca757b5f2e3f8559e1f4670c521fe01476707604d3f75a0760"
+      "sha256": "753671e199f7cd11cd6a5a9387215cd1138be98fab047c2880185bd2d83ba2c5",
+      "size": 2976,
+      "normalized_sha256": "753671e199f7cd11cd6a5a9387215cd1138be98fab047c2880185bd2d83ba2c5"
     },
     "Assets/OurTaiko/Runtime/Core/EntryFlow.cs": {
       "role": "index",
@@ -455,9 +473,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/GameLoop.cs": {
       "role": "index",
-      "sha256": "3aece703c63c3b69afa8465f42aee8f58b64e2427cf7d593dad9e551100aa910",
-      "size": 789,
-      "normalized_sha256": "3aece703c63c3b69afa8465f42aee8f58b64e2427cf7d593dad9e551100aa910"
+      "sha256": "5e5cdaa857311d4565d3e9511e969cbe7798ea42dd4074df22f4565872c2a333",
+      "size": 1192,
+      "normalized_sha256": "5e5cdaa857311d4565d3e9511e969cbe7798ea42dd4074df22f4565872c2a333"
     },
     "Assets/OurTaiko/Runtime/Core/GamePaths.cs": {
       "role": "index",
@@ -467,9 +485,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/GameSettings.cs": {
       "role": "index",
-      "sha256": "b43986d61c3d770d5ca04fc03d0d8c7bae301ac6a481ca242fa6fd2b924ab5d2",
-      "size": 10293,
-      "normalized_sha256": "b43986d61c3d770d5ca04fc03d0d8c7bae301ac6a481ca242fa6fd2b924ab5d2"
+      "sha256": "bc3b2703020b0e3287e6920be4b3d9c2b54bb4e77ba303f153a3568da68e9d73",
+      "size": 10925,
+      "normalized_sha256": "bc3b2703020b0e3287e6920be4b3d9c2b54bb4e77ba303f153a3568da68e9d73"
     },
     "Assets/OurTaiko/Runtime/Core/GameTimeline.cs": {
       "role": "index",
@@ -647,9 +665,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/SongClock.cs": {
       "role": "index",
-      "sha256": "e59f5d5e2228ce6c0e3c90d8a2d39f60a689b84cf0ba7efbb41c27ffaaf40fe5",
-      "size": 3715,
-      "normalized_sha256": "e59f5d5e2228ce6c0e3c90d8a2d39f60a689b84cf0ba7efbb41c27ffaaf40fe5"
+      "sha256": "ccf9a5cd863096fc7c4b541803d2a3be8096a465a5929c64a8f88d219005731a",
+      "size": 3743,
+      "normalized_sha256": "ccf9a5cd863096fc7c4b541803d2a3be8096a465a5929c64a8f88d219005731a"
     },
     "Assets/OurTaiko/Runtime/Core/SongDefinition.cs": {
       "role": "index",
@@ -1625,27 +1643,27 @@
     },
     "Assets/OurTaiko/Runtime/Settings/SettingsCatalog.cs": {
       "role": "index",
-      "sha256": "b9a70203a6d7bb01946cd4564718c8ad7005252a94f974536782afe09421768d",
-      "size": 32703,
-      "normalized_sha256": "b9a70203a6d7bb01946cd4564718c8ad7005252a94f974536782afe09421768d"
+      "sha256": "2051e426d58ebde8432a2064e221547528dffa291f8d0e9a695038a54f8c9214",
+      "size": 33821,
+      "normalized_sha256": "2051e426d58ebde8432a2064e221547528dffa291f8d0e9a695038a54f8c9214"
     },
     "Assets/OurTaiko/Runtime/Settings/SettingsNavigator.cs": {
       "role": "index",
-      "sha256": "4fbf52a6b3ee9119278b271bdc0e6dc36b22bf4f2269a310741b474dee7163f0",
-      "size": 12649,
-      "normalized_sha256": "4fbf52a6b3ee9119278b271bdc0e6dc36b22bf4f2269a310741b474dee7163f0"
+      "sha256": "906caf66b159c5fa22a6bda43a9269dd81c09d025d46bdddc41025bbb8ff8d92",
+      "size": 13278,
+      "normalized_sha256": "906caf66b159c5fa22a6bda43a9269dd81c09d025d46bdddc41025bbb8ff8d92"
     },
     "Assets/OurTaiko/Runtime/Settings/SettingsOverlay.cs": {
       "role": "index",
-      "sha256": "0427eff88e8c9590904f83a47ebe4c8daf744f6605d9c8276898aed3cd7b8425",
-      "size": 21152,
-      "normalized_sha256": "0427eff88e8c9590904f83a47ebe4c8daf744f6605d9c8276898aed3cd7b8425"
+      "sha256": "4ce90fc624c790df7df637eef6743bb31faa611a2d7266255c21c32c8f9b050e",
+      "size": 21306,
+      "normalized_sha256": "4ce90fc624c790df7df637eef6743bb31faa611a2d7266255c21c32c8f9b050e"
     },
     "Assets/OurTaiko/Runtime/Settings/SettingsOverlayView.cs": {
       "role": "index",
-      "sha256": "e41b8e40a39c5d2559bfac30f2b53d8229c239a7f4c5866e1524167be3aed441",
-      "size": 68604,
-      "normalized_sha256": "e41b8e40a39c5d2559bfac30f2b53d8229c239a7f4c5866e1524167be3aed441"
+      "sha256": "e487b657b46a630957de4e74b176fc45c083b4921a8e6137eac704da56bb6238",
+      "size": 74972,
+      "normalized_sha256": "e487b657b46a630957de4e74b176fc45c083b4921a8e6137eac704da56bb6238"
     },
     "Assets/OurTaiko/Runtime/Settings/SettingsShapes.cs": {
       "role": "index",
@@ -2021,9 +2039,9 @@
     },
     "Assets/OurTaiko/Tests/EditMode/SettingsNavigatorTests.cs": {
       "role": "index",
-      "sha256": "f8d89440701eb963ccb50e431f9c5996d9f2bf9c32e1d59ff9a3e9db5225cdf5",
-      "size": 16808,
-      "normalized_sha256": "f8d89440701eb963ccb50e431f9c5996d9f2bf9c32e1d59ff9a3e9db5225cdf5"
+      "sha256": "c1d6b333d248407b3865090ef27abced332958ac447b10696537d78b299546c1",
+      "size": 16833,
+      "normalized_sha256": "c1d6b333d248407b3865090ef27abced332958ac447b10696537d78b299546c1"
     },
     "Assets/OurTaiko/Tests/EditMode/SongClockTests.cs": {
       "role": "index",
@@ -2153,9 +2171,9 @@
     },
     "Assets/OurTaiko/Tests/Finished/EditMode/SettingsCatalogTests.cs": {
       "role": "index",
-      "sha256": "7b4e6e17e2c26bf086ff24a767c3973759a2910953675713d13a98dbeb8333aa",
-      "size": 6366,
-      "normalized_sha256": "7b4e6e17e2c26bf086ff24a767c3973759a2910953675713d13a98dbeb8333aa"
+      "sha256": "ffee05fc19efb5c6427c5404ebaf9c5825c662bbebd48dc2c89a7a475ee52234",
+      "size": 8912,
+      "normalized_sha256": "ffee05fc19efb5c6427c5404ebaf9c5825c662bbebd48dc2c89a7a475ee52234"
     },
     "Assets/OurTaiko/Tests/Finished/EditMode/ShinuchiTests.cs": {
       "role": "index",
@@ -2189,9 +2207,9 @@
     },
     "Assets/OurTaiko/Tests/Finished/PlayMode/EntryFlowTests.cs": {
       "role": "index",
-      "sha256": "637a6e78b381cc44e5d1b23a7dc07821ef343604502be7703f8b0f2f3e67a701",
-      "size": 4444,
-      "normalized_sha256": "637a6e78b381cc44e5d1b23a7dc07821ef343604502be7703f8b0f2f3e67a701"
+      "sha256": "adf8158b4f31269ebda7dd4b8056d47585e4068e1e2833c5e9fba3522a07bfb2",
+      "size": 4506,
+      "normalized_sha256": "adf8158b4f31269ebda7dd4b8056d47585e4068e1e2833c5e9fba3522a07bfb2"
     },
     "Assets/OurTaiko/Tests/Finished/PlayMode/EntryTouchFlowTests.cs": {
       "role": "index",
@@ -2261,9 +2279,9 @@
     },
     "Assets/OurTaiko/Tests/Finished/PlayMode/SettingsBoardFlowTests.cs": {
       "role": "index",
-      "sha256": "ca6505542cc8429bb6b5087dd6d7f11ad3ba5ed28fbb744235a0a57d73ac81cd",
-      "size": 8779,
-      "normalized_sha256": "ca6505542cc8429bb6b5087dd6d7f11ad3ba5ed28fbb744235a0a57d73ac81cd"
+      "sha256": "9f1f15c28d2c0fc14f4304d94f72ec649d8811b47366d072f3d3ad4b281ef158",
+      "size": 8790,
+      "normalized_sha256": "9f1f15c28d2c0fc14f4304d94f72ec649d8811b47366d072f3d3ad4b281ef158"
     },
     "Assets/OurTaiko/Tests/Finished/PlayMode/SongLoadingCurtainTests.cs": {
       "role": "index",
@@ -2303,9 +2321,9 @@
     },
     "Assets/OurTaiko/Tests/PlayMode/BackgroundMovieFlowTests.cs": {
       "role": "index",
-      "sha256": "9a648fab03ce3cf2694b5152e1e2c03d59324e63c843f421fb09c628327b872c",
-      "size": 9852,
-      "normalized_sha256": "9a648fab03ce3cf2694b5152e1e2c03d59324e63c843f421fb09c628327b872c"
+      "sha256": "d6ea1aa2ba5b9fcc7c591bf3d62be0c53291374d0dece44c9cd1775921399d22",
+      "size": 10060,
+      "normalized_sha256": "d6ea1aa2ba5b9fcc7c591bf3d62be0c53291374d0dece44c9cd1775921399d22"
     },
     "Assets/OurTaiko/Tests/PlayMode/BalloonOverlayFlowTests.cs": {
       "role": "index",
@@ -2573,9 +2591,9 @@
     },
     "Assets/OurTaiko/Tests/PlayMode/ScoreAdditionFlowTests.cs": {
       "role": "index",
-      "sha256": "3572079da8843bfcb322bcf5021121f4ae2b56463292c2fc3e2c79861b70e1fc",
-      "size": 6185,
-      "normalized_sha256": "3572079da8843bfcb322bcf5021121f4ae2b56463292c2fc3e2c79861b70e1fc"
+      "sha256": "ab90786a2834ca591e0cf1c6de4320551f20e19ac16905f52d2d06580d08248d",
+      "size": 6305,
+      "normalized_sha256": "ab90786a2834ca591e0cf1c6de4320551f20e19ac16905f52d2d06580d08248d"
     },
     "Assets/OurTaiko/Tests/PlayMode/ScoreRankFlowTests.cs": {
       "role": "index",
@@ -2591,9 +2609,9 @@
     },
     "Assets/OurTaiko/Tests/PlayMode/SettingsOverlayFlowTests.cs": {
       "role": "index",
-      "sha256": "ef6ae80939289b9835a2b6d12428fe7b2587fdfc9cf0bc444704719b43c74db2",
-      "size": 9783,
-      "normalized_sha256": "ef6ae80939289b9835a2b6d12428fe7b2587fdfc9cf0bc444704719b43c74db2"
+      "sha256": "31c9746e27d7c493c4b7aadda820664d87869705878f1b2eccce3292ef6499d2",
+      "size": 16108,
+      "normalized_sha256": "31c9746e27d7c493c4b7aadda820664d87869705878f1b2eccce3292ef6499d2"
     },
     "Assets/OurTaiko/Tests/PlayMode/SongLanguageFlowTests.cs": {
       "role": "index",
@@ -2621,15 +2639,15 @@
     },
     "Assets/OurTaiko/Tests/PlayMode/SongSelectSavedLayoutTests.cs": {
       "role": "index",
-      "sha256": "fec6ad96cc8a6d4749e6d8ae44b6063c8a14b2bc8e9df20e31014d8aa72dbbd7",
-      "size": 9170,
-      "normalized_sha256": "fec6ad96cc8a6d4749e6d8ae44b6063c8a14b2bc8e9df20e31014d8aa72dbbd7"
+      "sha256": "47f19b6446c7c404c210008efdbad83e0e8406f158a532c34fe31bcb6bbb9377",
+      "size": 9220,
+      "normalized_sha256": "47f19b6446c7c404c210008efdbad83e0e8406f158a532c34fe31bcb6bbb9377"
     },
     "Assets/OurTaiko/Tests/PlayMode/SoundSettingsFlowTests.cs": {
       "role": "index",
-      "sha256": "81c6e0ae24b1f810d35b3065ffec9ddc0b9e4894bdac0d2caa39748e8f5130a1",
-      "size": 18687,
-      "normalized_sha256": "81c6e0ae24b1f810d35b3065ffec9ddc0b9e4894bdac0d2caa39748e8f5130a1"
+      "sha256": "1d2cacdeb3bda43c0a6178e0aea63740ade4a6260c540dff9555e4eb9f8f27ee",
+      "size": 18767,
+      "normalized_sha256": "1d2cacdeb3bda43c0a6178e0aea63740ade4a6260c540dff9555e4eb9f8f27ee"
     },
     "Assets/OurTaiko/Tests/PlayMode/SpriteLaneFlowTests.cs": {
       "role": "index",
@@ -2903,9 +2921,9 @@
     },
     "CONTRIBUTING.md": {
       "role": "index",
-      "sha256": "3b5d9155a57bcd10d4b00f5ad8e6e6488b3258ba24bfb85abbfc3ebd50b499b2",
-      "size": 8896,
-      "normalized_sha256": "3b5d9155a57bcd10d4b00f5ad8e6e6488b3258ba24bfb85abbfc3ebd50b499b2"
+      "sha256": "0f2eb53876da5244790be46ea7a8a43df4a49abbddc4283183b9d9312f2e2090",
+      "size": 8952,
+      "normalized_sha256": "0f2eb53876da5244790be46ea7a8a43df4a49abbddc4283183b9d9312f2e2090"
     },
     "Documentation/LinuxAudio.md": {
       "role": "index",
@@ -2963,9 +2981,9 @@
     },
     "aoci.code.txt": {
       "role": "index",
-      "sha256": "42ff80d4551be53154b8acc875d20fccd00bb4827fecf2c4cc53356b008c1406",
-      "size": 204847,
-      "normalized_sha256": "42ff80d4551be53154b8acc875d20fccd00bb4827fecf2c4cc53356b008c1406"
+      "sha256": "780b2a28ee2508e35e208815566d515c12642e10748932da3114233db94d7660",
+      "size": 206286,
+      "normalized_sha256": "780b2a28ee2508e35e208815566d515c12642e10748932da3114233db94d7660"
     },
     "aoci.meta.txt": {
       "role": "index",
