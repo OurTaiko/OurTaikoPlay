@@ -83,7 +83,7 @@ PlayMode 把 `-testPlatform` 换成 `PlayMode`、程序集换成 `OurTaiko.Finis
 
 - 任意位置的 `*.md`（`README*.md`、`AGENTS.md`、`CONTRIBUTING.md`、`PROVENANCE.md` 等）；
 - AOCI 索引：`aoci*.txt`、`.aoci/`；
-- `.github/pull_request_template.md`、`.github/workflows/test.yml`。
+- `.github/pull_request_template.md`、`.github/workflows/test.yml` 及只供它使用的测试镜像 `.github/unity-test/`。
 
 只要推送里有一个其他文件（包括 `.md` 对应的 `.meta`），就照常构建发布。推送 `v*` 标签和手动运行不受影响。需要单个提交跳过构建时，也可以在提交信息里写 `[skip ci]`。
 

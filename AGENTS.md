@@ -37,7 +37,7 @@ CI 不在 PR 上运行，`Test` 工作流只能手动触发，构建也不等测
 
 ## 4. 不触发构建的提交
 
-`Build` 工作流对只改文档和 AOCI 索引的推送不运行（`README*.md`、`AGENTS.md`、`CONTRIBUTING.md` 等 `*.md`、`aoci*.txt`、`.aoci/`、`.github/pull_request_template.md`、`.github/workflows/test.yml`）。只要推送里有一个其他文件，就照常构建发布。改这份列表时同步修改 `.github/workflows/build.yml` 的 `paths-ignore` 和 CONTRIBUTING.md。
+`Build` 工作流对只改文档和 AOCI 索引的推送不运行（`README*.md`、`AGENTS.md`、`CONTRIBUTING.md` 等 `*.md`、`aoci*.txt`、`.aoci/`、`.github/pull_request_template.md`、`.github/workflows/test.yml` 及它用的 `.github/unity-test/`）。只要推送里有一个其他文件，就照常构建发布。改这份列表时同步修改 `.github/workflows/build.yml` 的 `paths-ignore` 和 CONTRIBUTING.md。
 
 <!-- aoci:begin -->
 ## AOCI Repository Cognition

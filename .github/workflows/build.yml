@@ -5,8 +5,8 @@ run-name: OurTaikoPlay ${{ github.ref_name }}
 # The Windows and macOS builds also go live in the RhythmHub launcher: v* tags on its stable channel,
 # main on its nightly channel (only the latest nightly is kept). See sparkbarry/MajdataHub.
 # Tests do not gate builds; run the Test workflow manually when needed.
-# A push to main that only touches documentation or the AOCI index (read by coding agents only)
-# builds nothing; one other file in the push builds as usual. GitHub does not apply path filters
+# A push to main that only touches documentation, the AOCI index (read by coding agents only) or
+# the Test workflow and its image builds nothing; one other file in the push builds as usual. GitHub does not apply path filters
 # to tag pushes. Keep this list in step with CONTRIBUTING.md.
 on:
   push:
@@ -17,6 +17,7 @@ on:
       - "aoci*.txt"
       - ".aoci/**"
       - ".github/workflows/test.yml"
+      - ".github/unity-test/**"
   workflow_dispatch:
 
 permissions:
