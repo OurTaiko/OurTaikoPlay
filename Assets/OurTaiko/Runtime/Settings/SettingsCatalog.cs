@@ -185,7 +185,26 @@ namespace OurTaiko
 
         static string Signed(int ms) => (ms > 0 ? "+" : "") + ms + " ms";
 
-        public static IReadOnlyList<SettingPage> Pages(SoundPlatform platform) => new[]
+        internal const string Sidebar = "sidebar";
+
+        public static IReadOnlyList<SettingPage> Pages(SoundPlatform platform)
+        {
+            var categories = Categories(platform);
+            var sidebar = new SettingPage(Sidebar, () => T("sidebar.title"), () => T("sidebar.subtitle"), _ => new[]
+            {
+                new SettingGroup(T("sidebar.categories"), categories.Select(page =>
+                    SettingRow.Toggle("show-" + page.Id, page.Title, page.Subtitle,
+                        s => !s.general.hiddenSettingsPages.Contains(page.Id),
+                        (s, show) =>
+                        {
+                            s.general.hiddenSettingsPages.RemoveAll(id => id == page.Id);
+                            if (!show) s.general.hiddenSettingsPages.Add(page.Id);
+                        })).ToArray()),
+            });
+            return categories.Append(sidebar).ToArray();
+        }
+
+        static SettingPage[] Categories(SoundPlatform platform) => new[]
         {
             new SettingPage("general", () => T("general.title"), () => T("general.subtitle"), _ => new[]
             {
@@ -229,15 +248,7 @@ namespace OurTaiko
             }),
             new SettingPage("display", () => T("display.title"), () => T("display.subtitle"), _ => new[]
             {
-                new SettingGroup(T("display.group.rendering"),
-                    SettingRow.Choice("frame-rate", T("display.frameRate"), T("display.frameRateDesc"),
-                        new[] { "120", "60", T("display.unlimited") },
-                        s => Array.IndexOf(DisplaySettings.FrameRates, s.display.targetFrameRate),
-                        (s, i) => s.display.targetFrameRate = DisplaySettings.FrameRates[i]),
-                    SettingRow.Toggle("vsync", T("display.vsync"), T("display.vsyncDesc"),
-                        s => s.display.vSync, (s, on) => s.display.vSync = on),
-                    SettingRow.Toggle("chara-3d", T("display.chara3D"), T("display.chara3DDesc"),
-                        s => s.display.chara3D, (s, on) => s.display.chara3D = on)),
+                new SettingGroup(T("display.group.rendering"), Rendering(platform).ToArray()),
                 new SettingGroup(T("display.group.movie"),
                     SettingRow.Toggle("movie", T("display.movie"), T("display.movieDesc"),
                         s => s.display.backgroundMovie, (s, on) => s.display.backgroundMovie = on),
@@ -255,6 +266,21 @@ namespace OurTaiko
                     SettingRow.Action(RefreshLogin, T("accounts.refreshLogin"), T("accounts.refreshLoginDesc"), T("accounts.refresh"))),
             }),
         };
+
+        static IEnumerable<SettingRow> Rendering(SoundPlatform platform)
+        {
+            if (platform != SoundPlatform.Android)
+            {
+                yield return SettingRow.Choice("frame-rate", T("display.frameRate"), T("display.frameRateDesc"),
+                    new[] { "120", "60", T("display.unlimited") },
+                    s => Array.IndexOf(DisplaySettings.FrameRates, s.display.targetFrameRate),
+                    (s, i) => s.display.targetFrameRate = DisplaySettings.FrameRates[i]);
+                yield return SettingRow.Toggle("vsync", T("display.vsync"), T("display.vsyncDesc"),
+                    s => s.display.vSync, (s, on) => s.display.vSync = on);
+            }
+            yield return SettingRow.Toggle("chara-3d", T("display.chara3D"), T("display.chara3DDesc"),
+                s => s.display.chara3D, (s, on) => s.display.chara3D = on);
+        }
 
         // TimingDisplays.Names in the selected language, in TimingDisplay order.
         public static string[] TimingDisplayNames() => new[] { T("play.timingDisplay.goodAndOk"), L10n.Get("Common", "judge.ok"), T("value.off") };

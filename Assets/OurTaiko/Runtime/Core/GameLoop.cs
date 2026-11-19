@@ -22,5 +22,18 @@ namespace OurTaiko
             GameTimeline.UpdateFrame();
             InputManager.OnPreUpdate();
         }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        System.Collections.IEnumerator Start()
+        {
+            var wait = new WaitForSecondsRealtime(1);
+            while (true)
+            {
+                yield return wait;
+                int fps = DisplayRefreshRate.CurrentTarget;
+                if (Application.targetFrameRate != fps) Application.targetFrameRate = fps;
+            }
+        }
+#endif
     }
 }

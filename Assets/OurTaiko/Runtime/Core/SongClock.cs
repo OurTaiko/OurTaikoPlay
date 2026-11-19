@@ -8,7 +8,8 @@ namespace OurTaiko
     // restarts from that moment, and BassSimple pulls 80% of the drift in for two seconds.
     public sealed class SongClock
     {
-        const double SyncSeconds = 2, SyncStrength = 0.8;
+        public const double SyncSeconds = 2;
+        const double SyncStrength = 0.8;
         double origin, runningSince, trackPosition, trackStart = double.NaN;
         bool paused, trackWaiting;
         public bool Started { get; private set; }

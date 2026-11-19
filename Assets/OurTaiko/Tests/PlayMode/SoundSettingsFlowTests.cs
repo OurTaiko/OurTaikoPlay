@@ -71,7 +71,7 @@ namespace OurTaiko.Tests
                 Assert.That(saved.audio.deviceBufferMs, Is.EqualTo(73));
                 Assert.That(saved.audio.volume.master, Is.EqualTo(.5f));
                 Assert.That(entry.bgm.IsAudioPlaying(), Is.True);
-                overlay.Move(1);
+                overlay.Move(nav.Page.Rows.ToList().FindIndex(row => row.Id == "device-period") - nav.RowIndex);
                 Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "sound.devicePeriod")));
                 overlay.Confirm(); overlay.Move(4); overlay.Confirm();
                 Assert.That(settings.Settings.audio.devicePeriodMs, Is.EqualTo(4));

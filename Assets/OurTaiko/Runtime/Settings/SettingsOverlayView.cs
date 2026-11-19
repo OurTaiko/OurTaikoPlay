@@ -22,7 +22,7 @@ namespace OurTaiko
             RowColor = new Color(1, 1, 1, 0.035f), RowFocus = new Color(0.31f, 0.85f, 0.92f, 0.10f), Selected = Hex(0x22304D),
             TrackOff = Hex(0x3A4763), TrackOn = Hex(0x2FA9BE), Groove = Hex(0x1D2840), SliderTrack = Hex(0x2A3754);
 
-        const float Inset = 30, HeaderHeight = 108, FooterHeight = 90, RailWidth = 435, RailItem = 102, RowHeight = 120,
+        const float Inset = 30, HeaderHeight = 108, FooterHeight = 90, RailWidth = 435, RailItem = 102, RailGap = 9, RailFadeHeight = 36, RowHeight = 120,
             RowGap = 12, GroupGap = 39, WrappedSpacing = -32, SectionHeight = 48, PagePad = 48, SheetWidth = 810, SheetOption = 126, DescWidth = 760;
 
         // Taps and drags, wired by SettingsOverlay. SetRow is a tap's change; DragRow is one in the
@@ -34,20 +34,29 @@ namespace OurTaiko
         public Action CancelText;
 
         CanvasGroup group;
+        RectTransform railViewport, railEntries;
+        (RectTransform root, Image box, TextMeshProUGUI label) railClose;
+        RailScrollFade railTopFade, railBottomFade;
+        int railCount;
+        bool followRail;
         RectTransform panel, rail, viewport, list, sheet, modal, ring, glow;
         Image shade, ringImage, glowImage, sheetShade, modalShade;
         TextMeshProUGUI headerTitle, breadcrumb, footerText, backHint, donHint, moveHint, modalTitle, modalText, sheetTitle, sheetText;
         readonly TextMeshProUGUI[] seatNames = new TextMeshProUGUI[2];
         readonly Image[] seatDots = new Image[2];
         RectTransform hints, sheetViewport, sheetList, card;
+        RectTransform textActions;
+        TextMeshProUGUI textCancel, textConfirm;
         float sheetBaseY, sheetScroll, sheetScrollTarget;
         TMP_InputField field;
+        static bool UsesTouchTextActions => Application.platform == RuntimePlatform.Android;
         readonly List<(RectTransform root, Image box, TextMeshProUGUI label)> railItems = new();
         readonly List<RowView> rows = new();
         readonly List<(RectTransform root, Image box, Image radio, Image dot)> sheetItems = new();
         TextMeshProUGUI pageTitle, pageSubtitle, banner;
         Image bannerBox;
-        int shownPage = -1, shownSheetRow = -1;
+        SettingPage shownPage;
+        int shownSheetRow = -1;
         string rowsSignature;
         float scroll, scrollTarget, listHeight, focusTop, focusBottom, sheetOffset = 1, openAt, bumpAt = -10, bumpDirection;
         bool following = true, ringPlaced, closing;
@@ -146,6 +155,51 @@ namespace OurTaiko
             edge.color = new Color(1, 1, 1, 0.07f);
             edge.rectTransform.anchorMin = new Vector2(1, 0); edge.rectTransform.anchorMax = Vector2.one;
             edge.rectTransform.sizeDelta = new Vector2(1, 0); edge.rectTransform.anchoredPosition = Vector2.zero;
+
+            railViewport = Node("Rail Viewport", rail);
+            Stretch(railViewport, 0, 24, 0, 24 + RailItem + RailGap);
+            railViewport.gameObject.AddComponent<RectMask2D>();
+            railEntries = Node("Entries", railViewport);
+            Top(railEntries, 0, 0, 0, 0);
+            railViewport.gameObject.AddComponent<Image>().color = Color.clear;
+            railViewport.gameObject.AddComponent<SettingsScroll>().Scrolled = delta =>
+            {
+                followRail = false;
+                PositionRail(railEntries.anchoredPosition.y + delta);
+            };
+
+            railTopFade = BuildRailFade(atTop: true);
+            railBottomFade = BuildRailFade(atTop: false);
+
+            railClose = BuildRailButton("Close", rail, () => TapPage?.Invoke(railCount));
+            railClose.root.anchorMin = Vector2.zero;
+            railClose.root.anchorMax = Vector2.right;
+            railClose.root.offsetMin = new Vector2(21, 24);
+            railClose.root.offsetMax = new Vector2(-21, 24 + RailItem);
+        }
+
+        RailScrollFade BuildRailFade(bool atTop)
+        {
+            var rect = Node(atTop ? "Top Fade" : "Bottom Fade", railViewport);
+            rect.anchorMin = atTop ? Vector2.up : Vector2.zero;
+            rect.anchorMax = atTop ? Vector2.one : Vector2.right;
+            rect.offsetMin = new Vector2(0, atTop ? -RailFadeHeight : 0);
+            rect.offsetMax = new Vector2(0, atTop ? 0 : RailFadeHeight);
+            var fade = rect.gameObject.AddComponent<RailScrollFade>();
+            fade.AtTop = atTop;
+            fade.color = Hex(0x0D1424);
+            fade.raycastTarget = false;
+            return fade;
+        }
+
+        (RectTransform root, Image box, TextMeshProUGUI label) BuildRailButton(string name, Transform parent, Action onTap)
+        {
+            var box = SettingsShapes.Box(name, parent, Color.clear, 24);
+            box.raycastTarget = true;
+            box.gameObject.AddComponent<PointerRelay>().Clicked = onTap;
+            var label = Label("Label", box.transform, "", 33, Muted, TextAlignmentOptions.MidlineLeft);
+            Stretch(label.rectTransform, 30, 0, 18, 0);
+            return (box.rectTransform, box, label);
         }
 
         void BuildPage()
@@ -263,6 +317,19 @@ namespace OurTaiko
             modalText.lineSpacing = WrappedSpacing;
             Top(modalText.rectTransform, 54, 300, -54, 90);
             BuildField();
+            if (UsesTouchTextActions)
+            {
+                textActions = Node("Text Actions", card);
+                Top(textActions, 54, 292, -54, 84);
+                var cancel = ButtonBox(textActions, "Cancel", Button, 210, 84, () => CancelText?.Invoke());
+                Pin(cancel.rectTransform, 0, 42, left: true, width: 210);
+                textCancel = Label("Label", cancel.transform, "", 32, Ink, TextAlignmentOptions.Center);
+                Stretch(textCancel.rectTransform, 0, 0, 0, 0);
+                var confirm = ButtonBox(textActions, "Confirm", Ink, 210, 84, () => SubmitText?.Invoke(field.text));
+                Pin(confirm.rectTransform, 0, 42, left: false);
+                textConfirm = Label("Label", confirm.transform, "", 32, Hex(0x0D1424), TextAlignmentOptions.Center);
+                Stretch(textConfirm.rectTransform, 0, 0, 0, 0);
+            }
             modal.gameObject.SetActive(false);
         }
 
@@ -293,7 +360,15 @@ namespace OurTaiko
             field.caretWidth = 3;
             field.selectionColor = Alpha(Cyan, 0.35f);
             field.onSubmit.AddListener(value => SubmitText?.Invoke(value));
-            field.onEndEdit.AddListener(_ => { if (modal.gameObject.activeSelf && field.gameObject.activeSelf) CancelText?.Invoke(); });
+            if (UsesTouchTextActions)
+            {
+                // The IME can close or lose focus before the player taps a dialog button.
+                field.shouldHideSoftKeyboard = false;
+                field.shouldHideMobileInput = true;
+                field.restoreOriginalTextOnEscape = false;
+            }
+            else
+                field.onEndEdit.AddListener(_ => { if (modal.gameObject.activeSelf && field.gameObject.activeSelf) CancelText?.Invoke(); });
         }
 
         // -- Showing --------------------------------------------------------------------------
@@ -306,7 +381,9 @@ namespace OurTaiko
             group.blocksRaycasts = true;
             ringPlaced = false;
             following = true;
-            shownPage = -1;
+            shownPage = null;
+            followRail = true;
+            railEntries.anchoredPosition = Vector2.zero;
         }
 
         public void Close()
@@ -354,7 +431,7 @@ namespace OurTaiko
         public void Show(SettingsNavigator nav, string status, string sound, bool soundPending)
         {
             ShowRail(nav);
-            if (nav.PageIndex != shownPage || Signature(nav) != rowsSignature) BuildRows(nav);
+            if (nav.Page != shownPage || Signature(nav) != rowsSignature) BuildRows(nav);
             breadcrumb.text = nav.Page != null ? "›  " + nav.Page.Title : "";
             if (banner != null)
             {
@@ -367,6 +444,7 @@ namespace OurTaiko
             }
             for (int i = 0; i < rows.Count; i++) rows[i].Show(nav, i, this);
             shownNav = nav;
+            PositionRail(railEntries.anchoredPosition.y);
             Layout(nav);
             ShowSheet(nav);
             ShowModal(nav);
@@ -402,31 +480,47 @@ namespace OurTaiko
 
         void ShowRail(SettingsNavigator nav)
         {
-            int count = nav.Pages.Count + 1;
+            int count = nav.Pages.Count;
+            if (count != railCount || nav.Zone == SettingsZone.Rail && (lastZone != nav.Zone || lastFocus != -1 - nav.PageIndex))
+                followRail = true;
+            railCount = count;
             while (railItems.Count < count)
             {
                 int index = railItems.Count;
-                var box = SettingsShapes.Box("Category" + index, rail, Color.clear, 24);
-                box.raycastTarget = true;
-                box.gameObject.AddComponent<PointerRelay>().Clicked = () => TapPage?.Invoke(index);
-                var label = Label("Label", box.transform, "", 33, Muted, TextAlignmentOptions.MidlineLeft);
-                Stretch(label.rectTransform, 30, 0, 18, 0);
-                railItems.Add((box.rectTransform, box, label));
+                railItems.Add(BuildRailButton("Category" + index, railEntries, () => TapPage?.Invoke(index)));
             }
             for (int i = 0; i < railItems.Count; i++)
             {
                 var (root, box, label) = railItems[i];
-                bool close = i == nav.Pages.Count;
-                root.anchorMin = new Vector2(0, close ? 0 : 1); root.anchorMax = new Vector2(1, close ? 0 : 1);
-                root.pivot = new Vector2(0.5f, close ? 0 : 1);
-                root.offsetMin = new Vector2(21, 0); root.offsetMax = new Vector2(-21, 0);
-                root.sizeDelta = new Vector2(-42, RailItem);
-                root.anchoredPosition = new Vector2(0, close ? 24 : -24 - i * (RailItem + 9));
-                label.text = close ? L10n.Get("Common", "close") : nav.Pages[i].Title;
+                root.gameObject.SetActive(i < count);
+                if (i >= count) continue;
+                Top(root, 21, i * (RailItem + RailGap), -21, RailItem);
+                label.text = nav.Pages[i].Title;
                 bool selected = i == nav.PageIndex;
                 box.color = selected ? Selected : Color.clear;
                 Recolor(label, selected ? Ink : Muted);
             }
+            railClose.label.text = L10n.Get("Common", "close");
+            railClose.box.color = nav.OnClose ? Selected : Color.clear;
+            Recolor(railClose.label, nav.OnClose ? Ink : Muted);
+        }
+
+        void PositionRail(float offset)
+        {
+            float visible = railViewport.rect.height;
+            float height = Mathf.Max(visible, railCount * (RailItem + RailGap) - RailGap);
+            railEntries.sizeDelta = new Vector2(0, height);
+            if (followRail && shownNav != null && shownNav.Zone == SettingsZone.Rail && !shownNav.OnClose)
+            {
+                float top = shownNav.PageIndex * (RailItem + RailGap);
+                float margin = Mathf.Clamp((visible - RailItem) / 2, 0, RailFadeHeight);
+                offset = Mathf.Clamp(offset, top + RailItem + margin - visible, top - margin);
+            }
+            float maxOffset = height - visible;
+            offset = Mathf.Clamp(offset, 0, maxOffset);
+            railEntries.anchoredPosition = new Vector2(0, offset);
+            railTopFade.enabled = offset > 0.5f;
+            railBottomFade.enabled = maxOffset - offset > 0.5f;
         }
 
         // Rows are rebuilt when the page, its set of rows or a row's text changes, not for a value
@@ -446,8 +540,8 @@ namespace OurTaiko
 
         void BuildRows(SettingsNavigator nav)
         {
-            bool samePage = nav.PageIndex == shownPage;
-            shownPage = nav.PageIndex;
+            bool samePage = nav.Page == shownPage;
+            shownPage = nav.Page;
             rowsSignature = Signature(nav);
             foreach (Transform child in list) Destroy(child.gameObject);
             rows.Clear();
@@ -686,9 +780,22 @@ namespace OurTaiko
         void ShowModal(SettingsNavigator nav)
         {
             bool typing = nav.Zone == SettingsZone.Typing, capture = nav.Zone == SettingsZone.Capture;
-            bool was = modal.gameObject.activeSelf;
+            bool wasTyping = field.gameObject.activeSelf;
             modal.gameObject.SetActive(typing || capture);
             field.gameObject.SetActive(typing);
+            if (wasTyping && !typing) field.SetTextWithoutNotify("");
+            if (textActions != null)
+            {
+                card.anchorMin = card.anchorMax = card.pivot = typing ? new Vector2(.5f, 1) : new Vector2(.5f, .5f);
+                card.anchoredPosition = Vector2.zero;
+                textActions.gameObject.SetActive(typing);
+                modalText.gameObject.SetActive(capture);
+                if (typing)
+                {
+                    textCancel.text = L10n.Get("Common", "cancel");
+                    textConfirm.text = L10n.Get("Common", "ok");
+                }
+            }
             if (!typing && !capture) return;
             string group = nav.Page.Groups[nav.Page.GroupOf(nav.RowIndex)].Title;
             modalTitle.text = capture ? T("modal.pressKey", nav.Row.Label) : (group.Length <= 2 ? group + "  ·  " : "") + nav.Row.Label;
@@ -696,7 +803,7 @@ namespace OurTaiko
                 ? T("modal.captureHint")
                 : T(nav.Row.Kind == SettingKind.Password ? "modal.passwordHint" : "modal.textHint");
             Top(modalText.rectTransform, 54, capture ? 138 : 300, -54, 90);
-            if (typing && !was)
+            if (typing && !wasTyping)
             {
                 field.contentType = nav.Row.Kind == SettingKind.Password ? TMP_InputField.ContentType.Password : TMP_InputField.ContentType.Standard;
                 ((TextMeshProUGUI)field.placeholder).text = T(nav.Row.Kind == SettingKind.Password ? "accounts.password" : "accounts.username");
@@ -714,6 +821,7 @@ namespace OurTaiko
         {
             float now = Time.unscaledTime, dt = Time.unscaledDeltaTime;
             FitSafeArea();
+            PositionRail(railEntries.anchoredPosition.y);
             float t = Mathf.Clamp01((now - openAt) / (closing ? 0.12f : 0.18f));
             float eased = 1 - Mathf.Pow(1 - t, 3);
             group.alpha = closing ? 1 - eased : eased;
@@ -787,7 +895,8 @@ namespace OurTaiko
             {
                 case SettingsZone.Rail:
                     int page = -1 - lastFocus;
-                    return page >= 0 && page < railItems.Count ? railItems[page].root : null;
+                    if (page == railCount) return railClose.root;
+                    return followRail && page >= 0 && page < railItems.Count ? railItems[page].root : null;
                 case SettingsZone.Sheet:
                     int option = lastFocus - 1000;
                     return option >= 0 && option < sheetItems.Count ? sheetItems[option].root : null;
@@ -917,7 +1026,12 @@ namespace OurTaiko
                 Index = index;
                 box = SettingsShapes.Box(row.Id, list, RowColor, 24);
                 box.raycastTarget = true;
-                box.gameObject.AddComponent<PointerRelay>().Clicked = () => view.TapRow?.Invoke(index);
+                bool opensText = UsesTouchTextActions && row.Kind is (SettingKind.Text or SettingKind.Password);
+                box.gameObject.AddComponent<PointerRelay>().Clicked = () =>
+                {
+                    if (opensText) view.OpenRow?.Invoke(index);
+                    else view.TapRow?.Invoke(index);
+                };
                 Root = box.rectTransform;
                 label = Label("Label", Root, row.Label, 36, Ink, TextAlignmentOptions.MidlineLeft);
                 label.rectTransform.anchorMin = label.rectTransform.anchorMax = label.rectTransform.pivot = new Vector2(0, 1);
@@ -1171,6 +1285,26 @@ namespace OurTaiko
                 knobAt = Mathf.Lerp(knobAt, knobGoal, 1 - Mathf.Exp(-dt * (row.Kind == SettingKind.Toggle ? 26 : 40)));
                 knob.rectTransform.anchoredPosition = new Vector2(knobAt, 0);
                 if (fill != null) fill.rectTransform.sizeDelta = new Vector2(Mathf.Max(18, knobAt), 0);
+            }
+        }
+    }
+
+    // A vertical gradient that becomes transparent towards the category labels.
+    public sealed class RailScrollFade : Image
+    {
+        public bool AtTop { get; set; }
+
+        protected override void OnPopulateMesh(VertexHelper mesh)
+        {
+            base.OnPopulateMesh(mesh);
+            var vertex = new UIVertex();
+            for (int i = 0; i < mesh.currentVertCount; i++)
+            {
+                mesh.PopulateUIVertex(ref vertex, i);
+                bool upperVertex = vertex.position.y > rectTransform.rect.center.y;
+                if (AtTop != upperVertex)
+                    vertex.color.a = 0;
+                mesh.SetUIVertex(vertex, i);
             }
         }
     }
