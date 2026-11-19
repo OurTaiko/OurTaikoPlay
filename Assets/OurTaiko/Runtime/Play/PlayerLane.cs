@@ -18,7 +18,11 @@ namespace OurTaiko
         // The drum this lane reads: its seat's, or the leading side (SceneSwitcher.Lead) for the first lane.
         public int DrumSeat { get; set; }
         public PlayerInput Input => InputManager.Players[DrumSeat];
+        // What this lane judges and scores, and what its HUD reports.
         public PlaySession Session { get; internal set; }
+        // Practice: what the paused lane draws while the stopped attempt stays in Session.
+        public PlaySession Preview { get; set; }
+        public PlaySession Shown => Preview ?? Session;
         public bool AutoPlay { get; }
         public PlayOptions Options { get; }
         // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
@@ -129,6 +133,7 @@ namespace OurTaiko
         {
             if (Session != null) Session.Judged -= OnJudged;
             Session = session;
+            Preview = null;
             ResetSoundAhead();
             if (Session != null) Session.Judged += OnJudged;
         }
@@ -193,8 +198,8 @@ namespace OurTaiko
         public void RenderNotes(double time, bool preview, bool hideSkipped)
         {
             ShiftJudge(time);
-            if (!renderer.Render(Session, time, preview, hideSkipped)) return;
-            if (Views.gogo != null) Views.gogo.ShowTime(Session, time, preview);
+            if (!renderer.Render(Shown, time, preview, hideSkipped)) return;
+            if (Views.gogo != null) Views.gogo.ShowTime(Shown, time, preview);
             ShowLaneAlpha(time, preview);
         }
 
@@ -217,7 +222,7 @@ namespace OurTaiko
                     .Select(c => c.TryGetComponent(out CanvasGroup group) ? group : c.gameObject.AddComponent<CanvasGroup>())
                     .ToArray();
             }
-            float alpha = (float)Session.LaneAlphaAt(time, preview) * scene.MovieLaneAlpha;
+            float alpha = (float)Shown.LaneAlphaAt(time, preview) * scene.MovieLaneAlpha;
             foreach (var group in laneBackground)
                 if (group.alpha != alpha) group.alpha = alpha;
         }
@@ -455,12 +460,22 @@ namespace OurTaiko
         void UpdateBranchLane(double time)
         {
             if (Views.branchLane == null) return;
-            Views.branchLane.Select(Session.DisplayBranchAt(time), time);
+            Views.branchLane.Select(Shown.DisplayBranchAt(time), time);
             Views.branchLane.ShowTime(time);
         }
         public void ShowBranchTime(double time)
         {
             if (Views.branchLane != null) Views.branchLane.ShowTime(time);
+        }
+
+        // Practice: the attempt stopped. Its score, counts, combo and gauge stay up; what was
+        // still animating on the chart clock does not.
+        public void StopAttempt()
+        {
+            ResetSoundAhead();
+            Views.comboAnnounce.Hide();
+            ResetEffects();
+            DonChara?.Reset();
         }
 
         // Practice: everything this lane shows starts over at a new attempt.
@@ -501,7 +516,7 @@ namespace OurTaiko
         {
             if (Views.branchLane == null) return;
             Views.branchLane.Initialize(Session.Chart.Branches.Count > 0);
-            Views.branchLane.SetImmediate(Session.DisplayBranchAt(time));
+            Views.branchLane.SetImmediate(Shown.DisplayBranchAt(time));
         }
 
         // OpenTaiko draws the soul gauge after the lane and before the notes (t進行描画_ゲージ, then
