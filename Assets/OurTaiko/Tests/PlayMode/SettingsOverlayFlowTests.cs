@@ -83,6 +83,31 @@ namespace OurTaiko.Tests
             overlay.Close();
         }
 
+        [UnityTest]
+        public IEnumerator SidebarFadeAppearsOnlyWhenMoreCategoriesAreBelow()
+        {
+            Settings.UseUnsaved(new GameSettings());
+            var overlay = SettingsOverlay.Open();
+            yield return null;
+            var viewport = (RectTransform)overlay.View.transform.Find("Panel/Rail/Rail Viewport");
+            var fade = viewport.GetComponentInChildren<RailScrollFade>(true);
+            var scroll = viewport.GetComponent<SettingsScroll>();
+            viewport.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 663);
+            scroll.Scrolled(0);
+            Assert.That(fade.isActiveAndEnabled, Is.True);
+            Assert.That(fade.raycastTarget, Is.False);
+
+            scroll.Scrolled(1000);
+            Assert.That(fade.isActiveAndEnabled, Is.False);
+            scroll.Scrolled(-48);
+            Assert.That(fade.isActiveAndEnabled, Is.True);
+
+            viewport.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 800);
+            yield return null;
+            Assert.That(fade.isActiveAndEnabled, Is.False);
+            overlay.Close();
+        }
+
         [TearDown]
         public void RestoreDefaults()
         {

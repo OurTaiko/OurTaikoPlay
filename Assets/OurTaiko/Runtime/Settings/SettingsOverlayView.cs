@@ -36,6 +36,7 @@ namespace OurTaiko
         CanvasGroup group;
         RectTransform railViewport, railEntries;
         (RectTransform root, Image box, TextMeshProUGUI label) railClose;
+        RailScrollFade railFade;
         int railCount;
         bool followRail;
         RectTransform panel, rail, viewport, list, sheet, modal, ring, glow;
@@ -166,6 +167,15 @@ namespace OurTaiko
                 followRail = false;
                 PositionRail(railEntries.anchoredPosition.y + delta);
             };
+
+            var fadeRect = Node("Scroll Fade", railViewport);
+            fadeRect.anchorMin = Vector2.zero;
+            fadeRect.anchorMax = Vector2.right;
+            fadeRect.offsetMin = Vector2.zero;
+            fadeRect.offsetMax = new Vector2(0, 36);
+            railFade = fadeRect.gameObject.AddComponent<RailScrollFade>();
+            railFade.color = Alpha(Section, 0.38f);
+            railFade.raycastTarget = false;
 
             railClose = BuildRailButton("Close", rail, () => TapPage?.Invoke(railCount));
             railClose.root.anchorMin = Vector2.zero;
@@ -497,7 +507,10 @@ namespace OurTaiko
                 float top = shownNav.PageIndex * (RailItem + RailGap);
                 offset = Mathf.Clamp(offset, top + RailItem - visible, top);
             }
-            railEntries.anchoredPosition = new Vector2(0, Mathf.Clamp(offset, 0, height - visible));
+            float maxOffset = height - visible;
+            offset = Mathf.Clamp(offset, 0, maxOffset);
+            railEntries.anchoredPosition = new Vector2(0, offset);
+            railFade.enabled = maxOffset - offset > 0.5f;
         }
 
         // Rows are rebuilt when the page, its set of rows or a row's text changes, not for a value
@@ -1262,6 +1275,23 @@ namespace OurTaiko
                 knobAt = Mathf.Lerp(knobAt, knobGoal, 1 - Mathf.Exp(-dt * (row.Kind == SettingKind.Toggle ? 26 : 40)));
                 knob.rectTransform.anchoredPosition = new Vector2(knobAt, 0);
                 if (fill != null) fill.rectTransform.sizeDelta = new Vector2(Mathf.Max(18, knobAt), 0);
+            }
+        }
+    }
+
+    // A vertical gradient that becomes transparent towards the category labels.
+    public sealed class RailScrollFade : Image
+    {
+        protected override void OnPopulateMesh(VertexHelper mesh)
+        {
+            base.OnPopulateMesh(mesh);
+            var vertex = new UIVertex();
+            for (int i = 0; i < mesh.currentVertCount; i++)
+            {
+                mesh.PopulateUIVertex(ref vertex, i);
+                if (vertex.position.y > rectTransform.rect.center.y)
+                    vertex.color.a = 0;
+                mesh.SetUIVertex(vertex, i);
             }
         }
     }
