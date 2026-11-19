@@ -27,6 +27,12 @@ namespace OurTaiko.Tests
                     .Where(r => r.name.StartsWith("Category")).ToArray();
                 var labels = entries.Select(e => e.GetComponentInChildren<TMPro.TMP_Text>().text);
                 Assert.That(labels, Is.EqualTo(overlay.Navigator.Pages.Select(p => p.Title).Append(L10n.Get("Common", "close"))));
+                foreach (var entry in entries)
+                {
+                    var rect = (RectTransform)entry.transform;
+                    Assert.That(rect.anchorMin.y, Is.EqualTo(rect.anchorMax.y));
+                    Assert.That(rect.rect.height, Is.EqualTo(102f).Within(0.01f));
+                }
                 for (int i = 1; i < entries.Length; i++)
                 {
                     var above = (RectTransform)entries[i - 1].transform;

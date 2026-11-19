@@ -22,7 +22,7 @@ namespace OurTaiko
             RowColor = new Color(1, 1, 1, 0.035f), RowFocus = new Color(0.31f, 0.85f, 0.92f, 0.10f), Selected = Hex(0x22304D),
             TrackOff = Hex(0x3A4763), TrackOn = Hex(0x2FA9BE), Groove = Hex(0x1D2840), SliderTrack = Hex(0x2A3754);
 
-        const float Inset = 30, HeaderHeight = 108, FooterHeight = 90, RailWidth = 435, RowHeight = 120,
+        const float Inset = 30, HeaderHeight = 108, FooterHeight = 90, RailWidth = 435, RailItem = 102, RailGap = 9, RowHeight = 120,
             RowGap = 12, GroupGap = 39, WrappedSpacing = -32, SectionHeight = 48, PagePad = 48, SheetWidth = 810, SheetOption = 126, DescWidth = 760;
 
         // Taps and drags, wired by SettingsOverlay. SetRow is a tap's change; DragRow is one in the
@@ -34,7 +34,9 @@ namespace OurTaiko
         public Action CancelText;
 
         CanvasGroup group;
-        RectTransform railEntries;
+        RectTransform railViewport, railEntries;
+        int railCount;
+        bool followRail;
         RectTransform panel, rail, viewport, list, sheet, modal, ring, glow;
         Image shade, ringImage, glowImage, sheetShade, modalShade;
         TextMeshProUGUI headerTitle, breadcrumb, footerText, backHint, donHint, moveHint, modalTitle, modalText, sheetTitle, sheetText;
@@ -152,8 +154,17 @@ namespace OurTaiko
             edge.rectTransform.anchorMin = new Vector2(1, 0); edge.rectTransform.anchorMax = Vector2.one;
             edge.rectTransform.sizeDelta = new Vector2(1, 0); edge.rectTransform.anchoredPosition = Vector2.zero;
 
-            railEntries = Node("Entries", rail);
-            Stretch(railEntries, 0, 24, 0, 24);
+            railViewport = Node("Rail Viewport", rail);
+            Stretch(railViewport, 0, 24, 0, 24);
+            railViewport.gameObject.AddComponent<RectMask2D>();
+            railEntries = Node("Entries", railViewport);
+            Top(railEntries, 0, 0, 0, 0);
+            back.raycastTarget = true;
+            rail.gameObject.AddComponent<SettingsScroll>().Scrolled = delta =>
+            {
+                followRail = false;
+                PositionRail(railEntries.anchoredPosition.y + delta);
+            };
         }
 
         void BuildPage()
@@ -336,6 +347,8 @@ namespace OurTaiko
             ringPlaced = false;
             following = true;
             shownPage = null;
+            followRail = true;
+            railEntries.anchoredPosition = Vector2.zero;
         }
 
         public void Close()
@@ -396,6 +409,7 @@ namespace OurTaiko
             }
             for (int i = 0; i < rows.Count; i++) rows[i].Show(nav, i, this);
             shownNav = nav;
+            PositionRail(railEntries.anchoredPosition.y);
             Layout(nav);
             ShowSheet(nav);
             ShowModal(nav);
@@ -432,6 +446,9 @@ namespace OurTaiko
         void ShowRail(SettingsNavigator nav)
         {
             int count = nav.Pages.Count + 1;
+            if (count != railCount || nav.Zone == SettingsZone.Rail && (lastZone != nav.Zone || lastFocus != -1 - nav.PageIndex))
+                followRail = true;
+            railCount = count;
             while (railItems.Count < count)
             {
                 int index = railItems.Count;
@@ -448,18 +465,32 @@ namespace OurTaiko
                 root.gameObject.SetActive(i < count);
                 if (i >= count) continue;
                 bool close = i == nav.Pages.Count;
-                // Reserve one slot per category and one for Close, even when some are hidden.
-                float slot = 1f / (nav.AllPages.Count + 1);
-                float bottom = close ? 0 : 1 - (i + 1) * slot;
-                root.anchorMin = new Vector2(0, bottom);
-                root.anchorMax = new Vector2(1, bottom + slot);
-                root.offsetMin = new Vector2(21, 4);
-                root.offsetMax = new Vector2(-21, -4);
+                Top(root, 21, i * (RailItem + RailGap), -21, RailItem);
+                if (close)
+                {
+                    root.anchorMin = Vector2.zero;
+                    root.anchorMax = Vector2.right;
+                    root.pivot = new Vector2(0.5f, 0);
+                    root.anchoredPosition = Vector2.zero;
+                }
                 label.text = close ? L10n.Get("Common", "close") : nav.Pages[i].Title;
                 bool selected = i == nav.PageIndex;
                 box.color = selected ? Selected : Color.clear;
                 Recolor(label, selected ? Ink : Muted);
             }
+        }
+
+        void PositionRail(float offset)
+        {
+            float visible = railViewport.rect.height;
+            float height = Mathf.Max(visible, railCount * (RailItem + RailGap) - RailGap);
+            railEntries.sizeDelta = new Vector2(0, height);
+            if (followRail && shownNav != null && shownNav.Zone == SettingsZone.Rail)
+            {
+                float top = shownNav.OnClose ? height - RailItem : shownNav.PageIndex * (RailItem + RailGap);
+                offset = Mathf.Clamp(offset, top + RailItem - visible, top);
+            }
+            railEntries.anchoredPosition = new Vector2(0, Mathf.Clamp(offset, 0, height - visible));
         }
 
         // Rows are rebuilt when the page, its set of rows or a row's text changes, not for a value
@@ -760,6 +791,7 @@ namespace OurTaiko
         {
             float now = Time.unscaledTime, dt = Time.unscaledDeltaTime;
             FitSafeArea();
+            PositionRail(railEntries.anchoredPosition.y);
             float t = Mathf.Clamp01((now - openAt) / (closing ? 0.12f : 0.18f));
             float eased = 1 - Mathf.Pow(1 - t, 3);
             group.alpha = closing ? 1 - eased : eased;
@@ -833,7 +865,7 @@ namespace OurTaiko
             {
                 case SettingsZone.Rail:
                     int page = -1 - lastFocus;
-                    return page >= 0 && page < railItems.Count ? railItems[page].root : null;
+                    return followRail && page >= 0 && page < railItems.Count ? railItems[page].root : null;
                 case SettingsZone.Sheet:
                     int option = lastFocus - 1000;
                     return option >= 0 && option < sheetItems.Count ? sheetItems[option].root : null;
