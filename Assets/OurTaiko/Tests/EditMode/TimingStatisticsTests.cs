@@ -110,6 +110,35 @@ namespace OurTaiko.Tests
         static TimingStatistics Stats(params double[] values) => new TimingStatistics(values.Select((value, i) =>
             new HitTiming(i, value, Judgment.Good)), 0, 25.025, 75.075, 108.442);
 
+        // Custom windows go up to JudgeWindowMaxMs, so a judged hit can lie far past the standard ones.
+        [Test]
+        public void WideCustomWindowsKeepEveryJudgedHitInTheHistogram()
+        {
+            var chart = new TaikoChart { Course = "Oni" };
+            chart.Notes.Add(new ChartNote { Kind = NoteKind.Don, Time = 1, Bpm = 120 });
+            chart.Notes.Add(new ChartNote { Kind = NoteKind.Ka, Time = 2, Bpm = 120 });
+            var session = new PlaySession(chart, judgeWindows: JudgeWindows.FromMs(25, 75, PlaySettings.JudgeWindowMaxMs));
+            Assert.That(session.Hit(false, .71), Is.EqualTo(Judgment.Bad));
+            Assert.That(session.Hit(true, 2.29), Is.EqualTo(Judgment.Bad));
+            PlayResult result = null;
+            Assert.DoesNotThrow(() => result = PlayResult.From(session, "wide", false));
+            var stats = result.Timing;
+            Assert.That(stats.Count, Is.EqualTo(2));
+            Assert.That(stats.Bins.Sum(), Is.EqualTo(2), "Every judged hit lands in a column.");
+            Assert.That(stats.MaximumMs, Is.GreaterThan(stats.BadWindowMs), "The axis holds the whole 不可 window.");
+            Assert.That(stats.MinimumMs, Is.EqualTo(-stats.MaximumMs));
+            Assert.That(stats.Bins.Count, Is.EqualTo((int)Math.Round((stats.MaximumMs - stats.MinimumMs) / TimingStatistics.BinWidthMs)));
+            Assert.That(stats.Bins[stats.Bins.Count / 2 + (int)Math.Round(290 / TimingStatistics.BinWidthMs)], Is.EqualTo(1),
+                "Columns stay 5 ms wide and centred on zero.");
+        }
+        [Test]
+        public void StandardWindowsKeepTheStandardAxis()
+        {
+            var stats = Stats(0);
+            Assert.That((stats.MinimumMs, stats.MaximumMs, stats.Bins.Count), Is.EqualTo((-132.5, 132.5, 53)));
+            Assert.Throws<ArgumentOutOfRangeException>(() => Stats(140), "A sample outside every window is still a bug.");
+        }
+
         [Test]
         public void LaneRetargetingRecordsTheActuallyJudgedNote()
         {
