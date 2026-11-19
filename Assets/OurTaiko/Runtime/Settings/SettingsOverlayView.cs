@@ -22,7 +22,7 @@ namespace OurTaiko
             RowColor = new Color(1, 1, 1, 0.035f), RowFocus = new Color(0.31f, 0.85f, 0.92f, 0.10f), Selected = Hex(0x22304D),
             TrackOff = Hex(0x3A4763), TrackOn = Hex(0x2FA9BE), Groove = Hex(0x1D2840), SliderTrack = Hex(0x2A3754);
 
-        const float Inset = 30, HeaderHeight = 108, FooterHeight = 90, RailWidth = 435, RailItem = 102, RailGap = 9, RowHeight = 120,
+        const float Inset = 30, HeaderHeight = 108, FooterHeight = 90, RailWidth = 435, RailItem = 102, RailGap = 9, RailFadeHeight = 36, RowHeight = 120,
             RowGap = 12, GroupGap = 39, WrappedSpacing = -32, SectionHeight = 48, PagePad = 48, SheetWidth = 810, SheetOption = 126, DescWidth = 760;
 
         // Taps and drags, wired by SettingsOverlay. SetRow is a tap's change; DragRow is one in the
@@ -180,15 +180,14 @@ namespace OurTaiko
 
         RailScrollFade BuildRailFade(bool atTop)
         {
-            const float height = 36;
             var rect = Node(atTop ? "Top Fade" : "Bottom Fade", railViewport);
             rect.anchorMin = atTop ? Vector2.up : Vector2.zero;
             rect.anchorMax = atTop ? Vector2.one : Vector2.right;
-            rect.offsetMin = new Vector2(0, atTop ? -height : 0);
-            rect.offsetMax = new Vector2(0, atTop ? 0 : height);
+            rect.offsetMin = new Vector2(0, atTop ? -RailFadeHeight : 0);
+            rect.offsetMax = new Vector2(0, atTop ? 0 : RailFadeHeight);
             var fade = rect.gameObject.AddComponent<RailScrollFade>();
             fade.AtTop = atTop;
-            fade.color = Alpha(Section, 0.38f);
+            fade.color = Hex(0x0D1424);
             fade.raycastTarget = false;
             return fade;
         }
@@ -514,7 +513,8 @@ namespace OurTaiko
             if (followRail && shownNav != null && shownNav.Zone == SettingsZone.Rail && !shownNav.OnClose)
             {
                 float top = shownNav.PageIndex * (RailItem + RailGap);
-                offset = Mathf.Clamp(offset, top + RailItem - visible, top);
+                float margin = Mathf.Clamp((visible - RailItem) / 2, 0, RailFadeHeight);
+                offset = Mathf.Clamp(offset, top + RailItem + margin - visible, top - margin);
             }
             float maxOffset = height - visible;
             offset = Mathf.Clamp(offset, 0, maxOffset);

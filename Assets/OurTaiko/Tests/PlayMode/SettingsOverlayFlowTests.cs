@@ -116,6 +116,32 @@ namespace OurTaiko.Tests
             overlay.Close();
         }
 
+        [UnityTest]
+        public IEnumerator RailNavigationKeepsSelectedCategoryClearOfFades()
+        {
+            Settings.UseUnsaved(new GameSettings());
+            var overlay = SettingsOverlay.Open();
+            yield return null;
+            var viewport = (RectTransform)overlay.View.transform.Find("Panel/Rail/Rail Viewport");
+            viewport.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 663);
+            void CheckSelection()
+            {
+                var row = (RectTransform)viewport.Find("Entries/Category" + overlay.Navigator.PageIndex);
+                var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(viewport, row);
+                foreach (var fade in viewport.GetComponentsInChildren<RailScrollFade>())
+                {
+                    if (!fade.enabled) continue;
+                    var strip = RectTransformUtility.CalculateRelativeRectTransformBounds(viewport, fade.transform);
+                    if (fade.AtTop) Assert.That(bounds.max.y, Is.LessThanOrEqualTo(strip.min.y + 0.01f));
+                    else Assert.That(bounds.min.y, Is.GreaterThanOrEqualTo(strip.max.y - 0.01f));
+                }
+            }
+
+            for (int i = 1; i < overlay.Navigator.Pages.Count; i++) { overlay.Move(1); CheckSelection(); }
+            for (int i = overlay.Navigator.Pages.Count - 1; i > 0; i--) { overlay.Move(-1); CheckSelection(); }
+            overlay.Close();
+        }
+
         [TearDown]
         public void RestoreDefaults()
         {
