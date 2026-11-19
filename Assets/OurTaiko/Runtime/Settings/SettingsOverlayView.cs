@@ -36,7 +36,7 @@ namespace OurTaiko
         CanvasGroup group;
         RectTransform railViewport, railEntries;
         (RectTransform root, Image box, TextMeshProUGUI label) railClose;
-        RailScrollFade railFade;
+        RailScrollFade railTopFade, railBottomFade;
         int railCount;
         bool followRail;
         RectTransform panel, rail, viewport, list, sheet, modal, ring, glow;
@@ -168,20 +168,29 @@ namespace OurTaiko
                 PositionRail(railEntries.anchoredPosition.y + delta);
             };
 
-            var fadeRect = Node("Scroll Fade", railViewport);
-            fadeRect.anchorMin = Vector2.zero;
-            fadeRect.anchorMax = Vector2.right;
-            fadeRect.offsetMin = Vector2.zero;
-            fadeRect.offsetMax = new Vector2(0, 36);
-            railFade = fadeRect.gameObject.AddComponent<RailScrollFade>();
-            railFade.color = Alpha(Section, 0.38f);
-            railFade.raycastTarget = false;
+            railTopFade = BuildRailFade(atTop: true);
+            railBottomFade = BuildRailFade(atTop: false);
 
             railClose = BuildRailButton("Close", rail, () => TapPage?.Invoke(railCount));
             railClose.root.anchorMin = Vector2.zero;
             railClose.root.anchorMax = Vector2.right;
             railClose.root.offsetMin = new Vector2(21, 24);
             railClose.root.offsetMax = new Vector2(-21, 24 + RailItem);
+        }
+
+        RailScrollFade BuildRailFade(bool atTop)
+        {
+            const float height = 36;
+            var rect = Node(atTop ? "Top Fade" : "Bottom Fade", railViewport);
+            rect.anchorMin = atTop ? Vector2.up : Vector2.zero;
+            rect.anchorMax = atTop ? Vector2.one : Vector2.right;
+            rect.offsetMin = new Vector2(0, atTop ? -height : 0);
+            rect.offsetMax = new Vector2(0, atTop ? 0 : height);
+            var fade = rect.gameObject.AddComponent<RailScrollFade>();
+            fade.AtTop = atTop;
+            fade.color = Alpha(Section, 0.38f);
+            fade.raycastTarget = false;
+            return fade;
         }
 
         (RectTransform root, Image box, TextMeshProUGUI label) BuildRailButton(string name, Transform parent, Action onTap)
@@ -510,7 +519,8 @@ namespace OurTaiko
             float maxOffset = height - visible;
             offset = Mathf.Clamp(offset, 0, maxOffset);
             railEntries.anchoredPosition = new Vector2(0, offset);
-            railFade.enabled = maxOffset - offset > 0.5f;
+            railTopFade.enabled = offset > 0.5f;
+            railBottomFade.enabled = maxOffset - offset > 0.5f;
         }
 
         // Rows are rebuilt when the page, its set of rows or a row's text changes, not for a value
@@ -1282,6 +1292,8 @@ namespace OurTaiko
     // A vertical gradient that becomes transparent towards the category labels.
     public sealed class RailScrollFade : Image
     {
+        public bool AtTop { get; set; }
+
         protected override void OnPopulateMesh(VertexHelper mesh)
         {
             base.OnPopulateMesh(mesh);
@@ -1289,7 +1301,8 @@ namespace OurTaiko
             for (int i = 0; i < mesh.currentVertCount; i++)
             {
                 mesh.PopulateUIVertex(ref vertex, i);
-                if (vertex.position.y > rectTransform.rect.center.y)
+                bool upperVertex = vertex.position.y > rectTransform.rect.center.y;
+                if (AtTop != upperVertex)
                     vertex.color.a = 0;
                 mesh.SetUIVertex(vertex, i);
             }

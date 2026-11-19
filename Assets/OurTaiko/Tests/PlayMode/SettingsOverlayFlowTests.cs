@@ -84,27 +84,35 @@ namespace OurTaiko.Tests
         }
 
         [UnityTest]
-        public IEnumerator SidebarFadeAppearsOnlyWhenMoreCategoriesAreBelow()
+        public IEnumerator SidebarFadesShowAvailableScrollDirections()
         {
             Settings.UseUnsaved(new GameSettings());
             var overlay = SettingsOverlay.Open();
             yield return null;
             var viewport = (RectTransform)overlay.View.transform.Find("Panel/Rail/Rail Viewport");
-            var fade = viewport.GetComponentInChildren<RailScrollFade>(true);
+            var top = viewport.Find("Top Fade").GetComponent<RailScrollFade>();
+            var bottom = viewport.Find("Bottom Fade").GetComponent<RailScrollFade>();
             var scroll = viewport.GetComponent<SettingsScroll>();
             viewport.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 663);
             scroll.Scrolled(0);
-            Assert.That(fade.isActiveAndEnabled, Is.True);
-            Assert.That(fade.raycastTarget, Is.False);
+            Assert.That(top.raycastTarget || bottom.raycastTarget, Is.False);
+            void CheckFades(bool above, bool below)
+            {
+                Assert.That(top.isActiveAndEnabled, Is.EqualTo(above));
+                Assert.That(bottom.isActiveAndEnabled, Is.EqualTo(below));
+            }
 
+            CheckFades(false, true);
+            scroll.Scrolled(48);
+            CheckFades(true, true);
             scroll.Scrolled(1000);
-            Assert.That(fade.isActiveAndEnabled, Is.False);
-            scroll.Scrolled(-48);
-            Assert.That(fade.isActiveAndEnabled, Is.True);
+            CheckFades(true, false);
+            scroll.Scrolled(-1000);
+            CheckFades(false, true);
 
             viewport.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 800);
             yield return null;
-            Assert.That(fade.isActiveAndEnabled, Is.False);
+            CheckFades(false, false);
             overlay.Close();
         }
 
