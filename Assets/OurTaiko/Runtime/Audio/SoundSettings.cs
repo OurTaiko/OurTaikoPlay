@@ -4,7 +4,7 @@ using UnityEngine;
 namespace OurTaiko
 {
     public enum AudioGroup { Effects, Bgm, Track, Drum, Voice }
-    public enum SoundPlatform { Desktop, Windows, Android, IOS }
+    public enum SoundPlatform { Desktop, Windows, Android, IOS, Linux }
 
     [Serializable]
     public sealed class SoundVolumes
@@ -31,6 +31,8 @@ namespace OurTaiko
                 return SoundPlatform.Android;
 #elif UNITY_IOS && !UNITY_EDITOR
                 return SoundPlatform.IOS;
+#elif UNITY_EDITOR_LINUX || (UNITY_STANDALONE_LINUX && !UNITY_EDITOR)
+                return SoundPlatform.Linux;
 #else
                 return SoundPlatform.Desktop;
 #endif

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
@@ -36,7 +37,9 @@ namespace OurTaiko.Tests
                 if (practice) play.practiceView.panel.SetActive(false);
                 var canvas = play.firstLane.noteLayer.GetComponentInParent<Canvas>().rootCanvas;
                 Assert.That(canvas.renderMode, Is.EqualTo(RenderMode.ScreenSpaceCamera));
-                Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<UnityEngine.UI.Graphic>(true), Is.Empty);
+                // No UI graphics: a practice timing label (PracticeTimingReview) is a world-space
+                // TextMeshPro, drawn by a MeshRenderer like the notes, though TMP_Text is a Graphic.
+                Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<UnityEngine.UI.Graphic>(true).Where(g => !(g is TMPro.TextMeshPro)), Is.Empty);
                 Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<CanvasRenderer>(true), Is.Empty);
                 Assert.That(play.firstLane.mojiLayer.GetComponentsInChildren<CanvasRenderer>(true), Is.Empty);
                 var pass = play.firstLane.noteLayer.GetComponent<LaneSpriteLayer>();

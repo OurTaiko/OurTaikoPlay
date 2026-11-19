@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace OurTaiko.Online
 {
-    // One recorded play on a server's public replay list (GET /api/v1/replays): the play's block
+    // One recorded play on a server's public replay list (GET /api/v2/replays): the play's block
     // and score, the song, and who played it.
     public sealed class FanmadeReplay
     {
@@ -70,7 +70,7 @@ namespace OurTaiko.Online
             await endpoint.Transport.WaitAsync(cancel);
             try
             {
-                string path = "/api/v1/replays?page=" + page + "&sort=" + Uri.EscapeDataString(sort);
+                string path = "/api/v2/replays?page=" + page + "&sort=" + Uri.EscapeDataString(sort);
                 if (!string.IsNullOrEmpty(categoryId)) path += "&categoryId=" + Uri.EscapeDataString(categoryId);
                 var reply = Json.Parse(await endpoint.RequestAsync(path, cancel: cancel));
                 if (!(reply["items"] is JArray items)) throw new FanmadeException("API_REPLAY_INVALID");
@@ -91,14 +91,14 @@ namespace OurTaiko.Online
             return result;
         }
 
-        // The listed play's recording (GET /api/v1/scores/{id}/replay). Refused when it was played on
+        // The listed play's recording (GET /api/v2/scores/{id}/replay). Refused when it was played on
         // files the song has replaced since, or on another song.
         public async Task<PlayRecord> ReplayRecordAsync(FanmadeReplay replay, CancellationToken cancel = default)
         {
             var endpoint = ConnectedEndpoint(replay.Server) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
             JObject reply;
             await endpoint.Transport.WaitAsync(cancel);
-            try { reply = Json.Parse(await endpoint.RequestAsync("/api/v1/scores/" + replay.ScoreId + "/replay", cancel: cancel)); }
+            try { reply = Json.Parse(await endpoint.RequestAsync("/api/v2/scores/" + replay.ScoreId + "/replay", cancel: cancel)); }
             catch (HttpStatusException error) when (error.Status == 404) { throw new FanmadeException("REPLAY_NOT_FOUND"); }
             finally { endpoint.Transport.Release(); }
             var score = reply["score"];
@@ -118,7 +118,7 @@ namespace OurTaiko.Online
             await endpoint.Transport.WaitAsync(cancel);
             try
             {
-                var chart = FanmadeChart.From(Json.Parse(await endpoint.RequestAsync("/api/v1/charts/" + replay.SongId + "?by=id", cancel: cancel)), endpoint.Id);
+                var chart = FanmadeChart.From(Json.Parse(await endpoint.RequestAsync("/api/v2/charts/" + replay.SongId + "?by=id", cancel: cancel)), endpoint.Id);
                 return chart.IsPlayable ? chart : null;
             }
             catch (HttpStatusException error) when (error.Status == 404) { return null; }

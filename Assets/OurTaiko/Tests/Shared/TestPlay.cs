@@ -18,5 +18,19 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(switcher.SelectedPlayScene);
             yield return null;
         }
+
+        // Practice: starts the next attempt from where the paused lane was moved to, confirming each
+        // stage of the menu as a player does. Moving the lane (PlayScene.MovePractice) only previews;
+        // the attempt, and the score and effects of the last one, are reset when it starts. A confirm
+        // opens the next stage in the same frame, so each waits a frame.
+        public static IEnumerator StartPracticeAttempt(PlayScene play)
+        {
+            while (!play.ChoosingPracticeSpeed)
+            {
+                play.ConfirmPractice();
+                yield return null;
+            }
+            play.ConfirmPractice();
+        }
     }
 }

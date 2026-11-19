@@ -60,7 +60,7 @@ namespace OurTaiko
         {
             var course = new DanCourse { Id = GaidenId, Server = Trim(server), Color = GaidenColor };
             course.Titles[""] = GaidenTitle;
-            return new DanCourseEntry { Course = course, Path = Trim(server) + "/api/v1/game/dans/{code}", IsGaiden = true };
+            return new DanCourseEntry { Course = course, Path = Trim(server) + "/api/v2/game/dans/{code}", IsGaiden = true };
         }
 
         // A course a code fetched joins its page before the 外伝 entry, or replaces the listed one

@@ -200,7 +200,7 @@ namespace OurTaiko.Tests
             Assert.That(Keys(list), Is.EqualTo(new[] { play1, "back" }), "One page: no page plates.");
             Assert.That(list.Focused.Key, Is.EqualTo(play1));
             Assert.That(list.AllText, Does.Contain("Ghost Song").And.Contain("Rival").And.Contain("978,000").And.Contain("★8"));
-            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/replays"), Is.EqualTo(3), "Each category loads once: すべて with its server, the others when opened.");
+            Assert.That(fixture.Requests.Count(r => r == "GET /api/v2/replays"), Is.EqualTo(3), "Each category loads once: すべて with its server, the others when opened.");
             TestCapture.Capture("GhostSelectPlays.png");
 
             yield return Race(list);
@@ -346,9 +346,9 @@ namespace OurTaiko.Tests
             yield return TestData.Connect();
             yield return OpenList(false);
             var list = Object.FindAnyObjectByType<GhostSelectScene>();
-            yield return Waits.Until(() => list.Servers.Count == 1 && !list.IsLoading && fixture.Requests.Count(r => r == "GET /api/v1/replays") == 1, seconds: 10);
+            yield return Waits.Until(() => list.Servers.Count == 1 && !list.IsLoading && fixture.Requests.Count(r => r == "GET /api/v2/replays") == 1, seconds: 10);
             yield return new WaitForSecondsRealtime(1);
-            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/replays"), Is.EqualTo(1), "A failed page is not asked for again by itself.");
+            Assert.That(fixture.Requests.Count(r => r == "GET /api/v2/replays"), Is.EqualTo(1), "A failed page is not asked for again by itself.");
             Assert.That(list.AllText, Does.Contain(L10n.Get("Play", "ghostSelect.offline")), "The server's board says its plays could not be had.");
             // Opening the category asks once more.
             list.Confirm();
@@ -356,7 +356,7 @@ namespace OurTaiko.Tests
             list.Press("category:");
             yield return Waits.Until(() => list.Rows.Count == 1, () => "Rows: " + list.Status, 10);
             Assert.That(list.Rows.Single().ScoreId, Is.EqualTo((string)row["id"]));
-            Assert.That(fixture.Requests.Count(r => r == "GET /api/v1/replays"), Is.EqualTo(2));
+            Assert.That(fixture.Requests.Count(r => r == "GET /api/v2/replays"), Is.EqualTo(2));
         }
 
         [UnityTest]

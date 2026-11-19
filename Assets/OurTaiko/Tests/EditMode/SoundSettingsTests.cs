@@ -20,10 +20,21 @@ namespace OurTaiko.Tests
         static SettingRow[] Rows(SoundPlatform platform, AudioBackend backend = AudioBackend.Automatic)
             => SettingsCatalog.Sound(platform, backend).SelectMany(g => g.Rows).ToArray();
 
+        [TestCase("pipewire", true)]
+        [TestCase("pulseaudio", true)]
+        [TestCase("jackd", true)]
+        [TestCase("jackdbus", true)]
+        [TestCase("raw-client", false)]
+        [TestCase("OurTaikoPlay", false)]
+        [TestCase(null, false)]
+        public void OnlySessionAudioServerOwnersMayBeAskedToYield(string process, bool expected)
+            => Assert.That(LinuxAudioDevices.IsSessionAudioServer(process), Is.EqualTo(expected));
+
         [TestCase(SoundPlatform.Windows)]
         [TestCase(SoundPlatform.Android)]
         [TestCase(SoundPlatform.IOS)]
         [TestCase(SoundPlatform.Desktop)]
+        [TestCase(SoundPlatform.Linux)]
         public void SoundMenuOffersVolumesAndPlatformSupportedBackends(SoundPlatform platform)
         {
             var groups = SettingsCatalog.Sound(platform, AudioBackend.Automatic);
@@ -44,6 +55,114 @@ namespace OurTaiko.Tests
             Assert.That(backend.OptionNotes.Count, Is.EqualTo(backend.Options.Count));
             Assert.That(groups[1].Rows.All(r => r.AppliesOnClose), Is.True, "Every output row waits for the overlay to close.");
             Assert.That(groups[0].Rows.Any(r => r.AppliesOnClose), Is.False, "Volumes apply at once.");
+        }
+
+        [TestCase(AudioBackend.Automatic)]
+        [TestCase(AudioBackend.BassSimple)]
+        public void AlsaIsABassSimpleRowThatOnlyLinuxShows(AudioBackend backend)
+        {
+            var linux = Rows(SoundPlatform.Linux, backend);
+            var row = linux.Single(r => r.Id == "linux-alsa-device");
+            Assert.That(row.Description, Is.EqualTo(L10n.Get("Settings", "sound.alsa.deviceDesc")));
+            Assert.That(row.AppliesOnClose, Is.True);
+            Assert.That(row.Options[0], Is.EqualTo(L10n.Get("Settings", "value.off")));
+            Assert.That(row.Get(new GameSettings()), Is.EqualTo(0));
+            Assert.That(linux.Count(r => r.Id == "device-period"), Is.EqualTo(1));
+            Assert.That(linux.Count(r => r.Id == "device-buffer"), Is.EqualTo(1));
+            Assert.That(linux.Single(r => r.Id == "backend").Options, Is.EqualTo(new[] { L10n.Get("Settings", "sound.automatic"), "BassSimple" }));
+            foreach (var platform in new[] { SoundPlatform.Windows, SoundPlatform.Desktop, SoundPlatform.Android, SoundPlatform.IOS })
+                Assert.That(Rows(platform, backend).Any(r => r.Id == "linux-alsa-device"), Is.False);
+        }
+
+        [Test]
+        public void ASavedCardThatIsNotConnectedStaysSelectedAndSaved()
+        {
+            const string saved = "sysfs:/sys/devices/absent|hardware:|pcm:0";
+            var row = SettingsCatalog.Sound(SoundPlatform.Linux, AudioBackend.Automatic, saved).SelectMany(g => g.Rows).Single(r => r.Id == "linux-alsa-device");
+            var settings = new GameSettings();
+            settings.audio.linuxAlsaDevice = saved;
+            Assert.That(row.Options[1], Is.EqualTo(L10n.Get("Settings", "sound.alsa.missing")));
+            Assert.That(row.OptionNotes.Count, Is.EqualTo(row.Options.Count));
+            Assert.That(row.Get(settings), Is.EqualTo(1));
+            row.Set(settings, 1);
+            Assert.That(settings.audio.linuxAlsaDevice, Is.EqualTo(saved));
+            row.Set(settings, 0);
+            Assert.That(settings.audio.linuxAlsaDevice, Is.Empty);
+        }
+
+        [TestCase(SoundPlatform.Linux, AudioBackend.Automatic, "card", true)]
+        [TestCase(SoundPlatform.Linux, AudioBackend.BassSimple, "card", true)]
+        [TestCase(SoundPlatform.Linux, AudioBackend.BassSimple, "", false)]
+        [TestCase(SoundPlatform.Linux, AudioBackend.BassWASAPI, "card", false)]
+        [TestCase(SoundPlatform.Windows, AudioBackend.Automatic, "card", false)]
+        [TestCase(SoundPlatform.Desktop, AudioBackend.BassSimple, "card", false)]
+        [TestCase(SoundPlatform.Android, AudioBackend.BassSimple, "card", false)]
+        [TestCase(SoundPlatform.IOS, AudioBackend.BassSimple, "card", false)]
+        public void OnlyLinuxBassSimpleReadsTheSavedCard(SoundPlatform platform, AudioBackend backend, string card, bool expected)
+            => Assert.That(new AudioOptions { backend = backend, linuxAlsaDevice = card }.UsesLinuxAlsa(platform), Is.EqualTo(expected));
+
+        [TestCase("en", "microphone", "BassSimple · ALSA Exclusive · Card", "BassSimple · Not exclusive: gone")]
+        [TestCase("ja", "マイク", "BassSimple · ALSA 排他 · Card", "BassSimple · 排他なし：gone")]
+        [TestCase("zh", "麦克风", "BassSimple · ALSA 独占 · Card", "BassSimple · 未能独占：gone")]
+        public void AlsaWarningAndBannerFollowTheSelectedLanguage(string language, string inputWarning, string exclusive, string shared)
+        {
+            string previous = L10n.Language;
+            try
+            {
+                L10n.SetLanguage(language);
+                Assert.That(Rows(SoundPlatform.Linux).Single(r => r.Id == "linux-alsa-device").Description, Does.Contain(inputWarning));
+                Assert.That(SettingsCatalog.OutputStatus(AudioBackend.BassSimple, "Card", null), Does.Contain(exclusive));
+                Assert.That(SettingsCatalog.OutputStatus(AudioBackend.BassSimple, null, "gone"), Does.Contain(shared));
+                Assert.That(SettingsCatalog.OutputStatus(AudioBackend.BassWASAPI, null, null), Is.EqualTo(L10n.Format("Settings", "audio.current", "BassWASAPI")));
+            }
+            finally { L10n.SetLanguage(previous); }
+        }
+
+        [TestCase(0, AudioBackend.Automatic)]
+        [TestCase(1, AudioBackend.BassSimple)]
+        [TestCase(2, AudioBackend.BassWASAPI)]
+        [TestCase(3, AudioBackend.BassASIO)]
+        [TestCase(4, AudioBackend.Automatic)]
+        [TestCase(5, AudioBackend.Automatic)]
+        [TestCase(99, AudioBackend.Automatic)]
+        public void PersistedBackendValuesRemainCompatible(int value, AudioBackend expected)
+        {
+            Assert.That(GameSettings.FromJson("{\"audio\":{\"backend\":" + value + "}}").audio.backend, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void AlsaStableSelectionRoundTripsAndRequiresDeviceReopening()
+        {
+            var original = new GameSettings();
+            Assert.That(original.audio.backend, Is.EqualTo(AudioBackend.Automatic));
+            Assert.That(original.audio.linuxAlsaDevice, Is.Empty);
+            var settings = original.Clone();
+            settings.audio.backend = AudioBackend.BassSimple;
+            settings.audio.linuxAlsaDevice = LinuxAudioDevices.StableId("/sys/devices/example-usb-port", 3);
+            settings.audio.sampleRate = 48000; settings.audio.devicePeriodMs = 7; settings.audio.deviceBufferMs = 28;
+            var restored = settings.Clone();
+            Assert.That(restored.audio.SameDeviceSettings(settings.audio), Is.True);
+            Assert.That(restored.audio.linuxAlsaDevice, Is.EqualTo(settings.audio.linuxAlsaDevice));
+            Assert.That(restored.audio.sampleRate, Is.EqualTo(48000));
+            Assert.That(restored.audio.devicePeriodMs, Is.EqualTo(7));
+            Assert.That(restored.audio.deviceBufferMs, Is.EqualTo(28));
+            restored.audio.linuxAlsaDevice += "-different";
+            Assert.That(restored.audio.SameDeviceSettings(settings.audio), Is.False);
+        }
+
+        [Test]
+        public void StableDeviceMatchingDoesNotDependOnEnumerationOrderNamesOrCardNumbers()
+        {
+            string id = LinuxAudioDevices.StableId("/sys/devices/example-port", 0);
+            var selected = new LinuxAudioDevice(id, "Renamed", "hw:7,0", 10, 7, 0);
+            var other = new LinuxAudioDevice(LinuxAudioDevices.StableId("/sys/devices/other-port", 0), "Renamed", "hw:2,0", 3, 2, 0);
+            Assert.That(LinuxAudioDevices.Resolve(new[] { other, selected }, id), Is.SameAs(selected));
+            Assert.That(LinuxAudioDevices.Resolve(new[] { selected, other }, id), Is.SameAs(selected));
+            Assert.That(LinuxAudioDevices.Resolve(new[] { other }, id), Is.Null);
+            Assert.That(LinuxAudioDevices.Resolve(new[] { selected }, ""), Is.Null);
+            Assert.That(LinuxAudioDevices.Resolve(new[] { selected, selected }, id), Is.Null);
+            Assert.That(LinuxAudioDevices.StableId("/sys/devices/example-port", 0, "serial-one"),
+                Is.Not.EqualTo(LinuxAudioDevices.StableId("/sys/devices/example-port", 0, "serial-two")));
         }
 
         // A Windows settings file with BassWASAPI opened on another platform: the row shows Automatic

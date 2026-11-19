@@ -36,7 +36,7 @@ namespace OurTaiko.Online
                 for (int attempt = 0; attempt < 2; attempt++)
                 {
                     cancel.ThrowIfCancellationRequested();
-                    string described = await e.AuthorizedAsync("/api/v1/charts/" + selected.Id + "?by=id", cancel: cancel);
+                    string described = await e.AuthorizedAsync("/api/v2/charts/" + selected.Id + "?by=id", cancel: cancel);
                     var c = FanmadeChart.From(Json.Parse(described), e.Id);
                     if (c.Id != selected.Id) throw new FanmadeException("RESOURCE_CHART_MISMATCH");
                     c.Category = selected.Category; c.Genre = selected.Genre;

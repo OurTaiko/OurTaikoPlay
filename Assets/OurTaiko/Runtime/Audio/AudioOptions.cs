@@ -4,7 +4,8 @@ namespace OurTaiko
 {
     // Values are persisted as integers; 4 was the removed Unity output and now reads as Automatic.
     // Every backend decodes and mixes with BASS; the name says how it outputs. BassSimple is BASS's own
-    // cross-platform output (through the system mixer); BassWASAPI and BassASIO are Windows-only.
+    // cross-platform output (on Linux it can reserve one ALSA card, AudioOptions.linuxAlsaDevice);
+    // BassWASAPI and BassASIO are Windows-only.
     public enum AudioBackend { Automatic, BassSimple, BassWASAPI, BassASIO }
 
     // What the song clock reads while the music plays. Heard: the music coming out of the speakers now
@@ -53,6 +54,9 @@ namespace OurTaiko
         public float wasapiPeriodSeconds = 0;
         public int asioDevice;
         public int asioBufferSamples;
+        // Linux only: the stable id of the ALSA card BassSimple reserves; empty is the shared output.
+        // Saved on every platform, read only on Linux.
+        public string linuxAlsaDevice = "";
         // Not a device setting: read every frame, so a change needs no reopening of the output.
         public AudioClock clock = AudioClock.Automatic;
 
@@ -61,12 +65,15 @@ namespace OurTaiko
             && devicePeriodMs == b.devicePeriodMs && deviceBufferMs == b.deviceBufferMs && androidAAudio == b.androidAAudio
             && wasapiExclusive == b.wasapiExclusive && wasapiRaw == b.wasapiRaw && wasapiAsync == b.wasapiAsync
             && wasapiBufferSeconds == b.wasapiBufferSeconds && wasapiPeriodSeconds == b.wasapiPeriodSeconds
-            && asioDevice == b.asioDevice && asioBufferSamples == b.asioBufferSamples;
+            && asioDevice == b.asioDevice && asioBufferSamples == b.asioBufferSamples
+            && string.Equals(linuxAlsaDevice ?? "", b.linuxAlsaDevice ?? "", StringComparison.Ordinal);
 
         public AudioBackend Backend => Enum.IsDefined(typeof(AudioBackend), backend) ? backend : AudioBackend.Automatic;
         public AudioClock Clock => Enum.IsDefined(typeof(AudioClock), clock) ? clock : AudioClock.Automatic;
         // `actual` is the output that opened (AudioEngine.Backend), never Automatic.
         public bool HeardClock(AudioBackend actual) => Clock == AudioClock.Heard || Clock == AudioClock.Automatic && actual == AudioBackend.BassSimple;
+        public bool UsesLinuxAlsa(SoundPlatform platform) => platform == SoundPlatform.Linux && !string.IsNullOrEmpty(linuxAlsaDevice)
+            && (Backend == AudioBackend.Automatic || Backend == AudioBackend.BassSimple);
         public int Rate => sampleRate >= 8000 && sampleRate <= 192000 ? sampleRate : 44100;
         static bool Mobile(SoundPlatform platform) => platform == SoundPlatform.Android || platform == SoundPlatform.IOS;
         public int Period(SoundPlatform platform) => Math.Clamp(devicePeriodMs == 0 ? (Mobile(platform) ? 8 : 16) : devicePeriodMs, 1, 100);

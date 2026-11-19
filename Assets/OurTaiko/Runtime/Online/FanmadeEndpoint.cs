@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -150,10 +152,31 @@ namespace OurTaiko.Online
         }
 
         // A request to the site this server is a source of, not to the server: path is the site's
-        // own ("/api/v1/game/sources"). Anonymous unless a session is given. The answer holds what
+        // own ("/api/v2/game/sources"). Anonymous unless a session is given. The answer holds what
         // every source would answer by itself, so it is given as long as those would take together.
-        public async Task<string> SiteRequestAsync(string path, CancellationToken cancel = default, string bearer = "")
-            => new UTF8Encoding(false).GetString(await SendAsync(Config.site + path, path, "", "", DefaultLimit, cancel, null, bearer ?? "", 60));
+        // body: a POST with this JSON instead of a GET.
+        public async Task<string> SiteRequestAsync(string path, CancellationToken cancel = default, string bearer = "", string body = "")
+            => new UTF8Encoding(false).GetString(await SendAsync(Config.site + path, path, body ?? "", "", DefaultLimit, cancel, null, bearer ?? "", 60));
+
+        // The header of a site's every answer to a signed-in request: how many rewards that player
+        // has not seen (OurTaikoNet's internal/rewards). See PendingRewardsHeard.
+        public const string PendingRewardsHeader = "X-Pending-Rewards";
+
+        // An answer said how many rewards a seat's player has not seen: the endpoint, the seat and
+        // the number. Raised for every answer that carries PendingRewardsHeader, on whatever thread
+        // the answer came in on; what to do about it is the listener's (RewardInbox).
+        public static event Action<FanmadeEndpoint, int, int> PendingRewardsHeard;
+
+        void HearPendingRewards(HttpResponseMessage response, string token)
+        {
+            if (string.IsNullOrEmpty(token) || PendingRewardsHeard == null) return;
+            if (!response.Headers.TryGetValues(PendingRewardsHeader, out var values)) return;
+            if (!int.TryParse(values.FirstOrDefault(), NumberStyles.None, CultureInfo.InvariantCulture, out int count)) return;
+            int seat = Array.FindIndex(Seats, s => s.IsAuthenticated && s.Token == token);
+            if (seat < 0) return;
+            try { PendingRewardsHeard(this, seat, count); }
+            catch (Exception error) { Log.Warn("Rewards", "A listener failed: " + error.Message); }
+        }
 
         public Task<byte[]> RequestBytesAsync(string path, string body = "", string key = "", long limit = DefaultLimit,
             CancellationToken cancel = default, Action<long, long> progress = null, string bearer = null, HttpMethod method = null)
@@ -164,7 +187,7 @@ namespace OurTaiko.Online
         {
             string token = bearer ?? Seats[0].Token;
             if (cancel.IsCancellationRequested) throw new FanmadeException("DOWNLOAD_CANCELLED");
-            // Files come from signed resource links (ResourceBytesAsync); API calls are small.
+            // Files come from the distribution root (ResourceBytesAsync); API calls are small.
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(seconds));
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
             using var request = new HttpRequestMessage(method ?? (string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post), address);
@@ -180,6 +203,7 @@ namespace OurTaiko.Online
                 using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token);
                 int status = (int)response.StatusCode;
                 Log.Debug("Online", $"{request.Method} {Config.DisplayName} {path.Split('?')[0]}: {status}");
+                HearPendingRewards(response, token);
                 if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 long total = response.Content.Headers.ContentLength ?? 0;
                 if (total > limit) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");

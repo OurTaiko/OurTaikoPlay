@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 namespace OurTaiko.Online
 {
     // A player's vote on a chart, the website's own up and down vote
-    // (GET and PUT /api/v1/game/charts/{id}/vote).
+    // (GET and PUT /api/v2/game/charts/{id}/vote).
     public sealed partial class FanmadeClient
     {
         // The seat's vote on the chart: 1, -1, or 0 for none yet. null when it cannot be told: the
@@ -46,6 +46,6 @@ namespace OurTaiko.Online
             }
         }
 
-        static string VotePath(FanmadeChart chart) => "/api/v1/game/charts/" + System.Uri.EscapeDataString(chart.Id) + "/vote";
+        static string VotePath(FanmadeChart chart) => "/api/v2/game/charts/" + System.Uri.EscapeDataString(chart.Id) + "/vote";
     }
 }

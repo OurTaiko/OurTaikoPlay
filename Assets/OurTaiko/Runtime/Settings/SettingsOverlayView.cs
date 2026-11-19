@@ -385,6 +385,8 @@ namespace OurTaiko
             {
                 bannerBox.gameObject.SetActive(sound != null && nav.Page?.ShowsAudioOutput == true);
                 banner.text = sound ?? "";
+                float height = Mathf.Max(84, banner.GetPreferredValues(banner.text, Mathf.Max(1, list.rect.width - 60), 0).y + 36);
+                Top(bannerBox.rectTransform, 0, 168, 0, height);
                 bannerBox.color = soundPending ? Alpha(Amber, 0.12f) : new Color(1, 1, 1, 0.05f);
                 Recolor(banner, soundPending ? Amber : Ink);
             }
@@ -489,7 +491,9 @@ namespace OurTaiko
                 bannerBox = SettingsShapes.Box("Output", list, new Color(1, 1, 1, 0.05f), 24);
                 Top(bannerBox.rectTransform, 0, 168, 0, 84);
                 banner = Label("Text", bannerBox.transform, "", 28, Ink, TextAlignmentOptions.MidlineLeft);
-                banner.overflowMode = TextOverflowModes.Ellipsis;
+                banner.textWrappingMode = TextWrappingModes.Normal;
+                banner.lineSpacing = WrappedSpacing;
+                banner.overflowMode = TextOverflowModes.Overflow;
                 Stretch(banner.rectTransform, 30, 0, 30, 0);
             }
             int index = 0;
@@ -602,7 +606,7 @@ namespace OurTaiko
         {
             // y is where each row is drawn this frame (animated heights); goal is where it is heading,
             // which the scroll follows so it does not chase a moving row.
-            float y = banner != null && bannerBox.gameObject.activeSelf ? 282 : 168, goal = y;
+            float y = banner != null && bannerBox.gameObject.activeSelf ? 198 + bannerBox.rectTransform.rect.height : 168, goal = y;
             bool first = true;
             focusTop = focusBottom = -1;
             foreach (var row in rows)
