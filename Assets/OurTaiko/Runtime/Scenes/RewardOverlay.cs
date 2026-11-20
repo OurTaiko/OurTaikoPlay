@@ -152,7 +152,7 @@ namespace OurTaiko
             if (screens.Count == 0 && Time.realtimeSinceStartup - screensFoundAt > 0.25f)
             {
                 screensFoundAt = Time.realtimeSinceStartup;
-                screens.AddRange(FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+                screens.AddRange(FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude)
                     .Where(b => b.gameObject.scene == scene).OfType<ISettledScreen>());
             }
             return screens.All(screen => screen.IsSettled);
