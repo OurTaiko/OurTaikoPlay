@@ -38,7 +38,7 @@ namespace OurTaiko
 
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            foreach (var label in FindObjectsByType<LocalizedText>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var label in FindObjectsByType<LocalizedText>(FindObjectsInactive.Include))
                 if (label.gameObject.scene == scene) label.Apply();
         }
 
