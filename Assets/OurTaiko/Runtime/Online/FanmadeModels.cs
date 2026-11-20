@@ -17,8 +17,10 @@ namespace OurTaiko.Online
     {
         public readonly int Status;
         public readonly int RetryAfterSeconds;
-        public HttpStatusException(int status, int retryAfterSeconds = 0) : base("HTTP_" + status)
+        public readonly string ErrorCode;
+        public HttpStatusException(int status, int retryAfterSeconds = 0, string errorCode = null) : base("HTTP_" + status)
         {
+            ErrorCode = errorCode;
             Status = status;
             RetryAfterSeconds = retryAfterSeconds;
         }

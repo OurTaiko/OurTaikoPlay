@@ -154,8 +154,15 @@ namespace OurTaiko.Online
         public async Task<OurTaikoAccount> BrowserLoginAsync(string deviceName, Action<string, string> authorize,
             CancellationToken cancel)
         {
-            var grant = await SendAsync(HttpMethod.Post, DeviceStart, null,
-                new JObject { ["deviceName"] = deviceName }, cancel);
+            JObject grant;
+            try
+            {
+                grant = await SendAsync(HttpMethod.Post, DeviceStart, null, new JObject { ["deviceName"] = deviceName }, cancel);
+            }
+            catch (HttpStatusException error) when (error.Status == 404)
+            {
+                throw new FanmadeException("DEVICE_UNAVAILABLE", error);
+            }
             string secret = Json.Str(grant, "deviceCode"), code = Json.Str(grant, "userCode");
             if (!Json.HexId(secret, 64) || code.Length != 8 || !code.All(ch => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".Contains(ch)))
                 throw new FanmadeException("API_TOKEN_INVALID");
@@ -176,13 +183,21 @@ namespace OurTaiko.Online
                             new JObject { ["deviceCode"] = secret }, expires.Token);
                         if ((bool?)reply["pending"] != true) return ReadAccount(reply);
                     }
+                    catch (HttpStatusException error) when (error.Status == 410)
+                    {
+                        throw new FanmadeException("DEVICE_EXPIRED", error);
+                    }
+                    catch (HttpStatusException error) when (error.Status == 403 && error.ErrorCode == "DEVICE_DENIED")
+                    {
+                        throw new FanmadeException("DEVICE_DENIED", error);
+                    }
                     catch (HttpStatusException error) when (error.Status == 429)
                     {
-                        interval = Math.Max(Math.Min(interval + 5, seconds), error.RetryAfterSeconds);
+                        interval = Math.Min(seconds, Math.Max(interval + 5, error.RetryAfterSeconds));
                     }
                     catch (FanmadeException error) when (error.Message is "NETWORK_ERROR" or "NETWORK_TIMEOUT")
                     {
-                        interval = Math.Min(interval * 2, seconds);
+                        interval = (int)Math.Min((long)interval * 2, seconds);
                     }
                 }
             }
@@ -235,24 +250,23 @@ namespace OurTaiko.Online
                 using var response = await http.SendAsync(request, linked.Token);
                 int status = (int)response.StatusCode;
                 Log.Debug("Account", $"{method} {path}: {status}");
-                if (path == DeviceStart && status == 404) throw new FanmadeException("DEVICE_UNAVAILABLE");
-                if (path == DeviceToken)
-                {
-                    if (status == 410) throw new FanmadeException("DEVICE_EXPIRED");
-                    if (status == 429)
-                    {
-                        double delay = response.Headers.RetryAfter?.Delta?.TotalSeconds ?? 0;
-                        throw new HttpStatusException(status, (int)Math.Min(delay, 600));
-                    }
-                    if (status == 403 && response.Content.Headers.ContentType?.MediaType == "application/json")
-                    {
-                        string detail = await response.Content.ReadAsStringAsync();
-                        if (detail.Length <= 64 * 1024 && (string)Json.Parse(detail)["code"] == "DEVICE_DENIED")
-                            throw new FanmadeException("DEVICE_DENIED");
-                    }
-                }
-                if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 string text = await response.Content.ReadAsStringAsync();
+                if (status < 200 || status >= 300)
+                {
+                    var retryAfter = response.Headers.RetryAfter;
+                    double delay = (retryAfter?.Delta ?? (retryAfter?.Date - DateTimeOffset.UtcNow))?.TotalSeconds ?? 0;
+                    string code = null;
+                    if (text.Length <= 64 * 1024 && response.Content.Headers.ContentType?.MediaType == "application/json")
+                    {
+                        try
+                        {
+                            var value = JObject.Parse(text)["code"];
+                            if (value?.Type == JTokenType.String) code = (string)value;
+                        }
+                        catch (Newtonsoft.Json.JsonException) { /* A malformed error body still carries its HTTP status. */ }
+                    }
+                    throw new HttpStatusException(status, (int)Math.Clamp(Math.Ceiling(delay), 0, int.MaxValue), code);
+                }
                 if (text.Length > 64 * 1024) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");
                 return Json.Parse(text);
             }

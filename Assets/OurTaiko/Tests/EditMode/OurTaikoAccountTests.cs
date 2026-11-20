@@ -92,6 +92,30 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void BrowserSignInRecoversFromAnInterruptedPoll()
+        {
+            int polls = 0;
+            var elapsed = new System.Diagnostics.Stopwatch();
+            fixture.ApprovedDeviceUser = "ka";
+            fixture.CustomRequest = context =>
+            {
+                if (context.Request.Url.AbsolutePath != "/api/v1/game/account/device/token" || ++polls != 1)
+                    return false;
+                elapsed.Start();
+                // Interrupt an incomplete body so the transport observes a broken connection.
+                context.Response.ContentLength64 = 64;
+                context.Response.OutputStream.WriteByte((byte)'{');
+                context.Response.OutputStream.Flush();
+                context.Response.Abort();
+                return true;
+            };
+            var account = Run(() => center.BrowserLoginAsync("1P", (_, _) => {}, default));
+            Assert.That(account.Username, Is.EqualTo("ka"));
+            Assert.That(polls, Is.EqualTo(2));
+            Assert.That(elapsed.ElapsedMilliseconds, Is.GreaterThanOrEqualTo(1900));
+        }
+
+        [Test]
         public void CancellingBrowserAuthorizationStopsBeforePolling()
         {
             using var cancel = new System.Threading.CancellationTokenSource();
