@@ -269,15 +269,14 @@ namespace OurTaiko
 
         static IEnumerable<SettingRow> Rendering(SoundPlatform platform)
         {
-            if (platform != SoundPlatform.Android)
-            {
-                yield return SettingRow.Choice("frame-rate", T("display.frameRate"), T("display.frameRateDesc"),
-                    new[] { "120", "60", T("display.unlimited") },
-                    s => Array.IndexOf(DisplaySettings.FrameRates, s.display.targetFrameRate),
-                    (s, i) => s.display.targetFrameRate = DisplaySettings.FrameRates[i]);
+            yield return SettingRow.Choice("frame-rate", T("display.frameRate"), T("display.frameRateDesc"),
+                new[] { "120", "60", T("display.unlimited") },
+                s => Array.IndexOf(DisplaySettings.FrameRates, s.display.targetFrameRate),
+                (s, i) => s.display.targetFrameRate = DisplaySettings.FrameRates[i]);
+            // Phones ignore vSyncCount; they always wait for the display.
+            if (platform != SoundPlatform.Android && platform != SoundPlatform.IOS)
                 yield return SettingRow.Toggle("vsync", T("display.vsync"), T("display.vsyncDesc"),
                     s => s.display.vSync, (s, on) => s.display.vSync = on);
-            }
             yield return SettingRow.Toggle("chara-3d", T("display.chara3D"), T("display.chara3DDesc"),
                 s => s.display.chara3D, (s, on) => s.display.chara3D = on);
         }

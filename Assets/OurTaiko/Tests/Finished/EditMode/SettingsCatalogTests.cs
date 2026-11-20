@@ -100,15 +100,16 @@ namespace OurTaiko.Tests
             Assert.That(nav.Row.Get(nav.Settings), Is.Zero);
         }
 
-        [Test]
-        public void AndroidKeepsKeyboardMappingsAndHidesFixedFrameRateControls()
+        [TestCase(SoundPlatform.Android)]
+        [TestCase(SoundPlatform.IOS)]
+        public void PhonesKeepKeyboardMappingsAndFrameRateButNotVSync(SoundPlatform platform)
         {
-            var pages = SettingsCatalog.Pages(SoundPlatform.Android);
+            var pages = SettingsCatalog.Pages(platform);
             Assert.That(pages.Select(page => page.Id), Does.Contain("controls"));
 
             var display = pages.Single(page => page.Id == "display");
             display.Refresh(new GameSettings());
-            Assert.That(display.Rows.Select(row => row.Id), Is.EqualTo(new[] { "chara-3d", "movie", "lane-opacity" }));
+            Assert.That(display.Rows.Select(row => row.Id), Is.EqualTo(new[] { "frame-rate", "chara-3d", "movie", "lane-opacity" }));
         }
 
         [Test]

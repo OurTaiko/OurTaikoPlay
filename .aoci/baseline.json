@@ -1,7 +1,7 @@
 {
   "version": 1,
   "created_at": "2026-11-19T21:29:00Z",
-  "updated_at": "2026-11-20T06:03:43Z",
+  "updated_at": "2026-11-20T08:57:57Z",
   "files": {
     ".gitattributes": {
       "role": "index",
@@ -461,9 +461,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/DisplayRefreshRate.cs": {
       "role": "index",
-      "sha256": "753671e199f7cd11cd6a5a9387215cd1138be98fab047c2880185bd2d83ba2c5",
-      "size": 2976,
-      "normalized_sha256": "753671e199f7cd11cd6a5a9387215cd1138be98fab047c2880185bd2d83ba2c5"
+      "sha256": "52431f201b8136c0d298cbaa6900e579f49867e431eb54709c3e16f6c1a6dee2",
+      "size": 3789,
+      "normalized_sha256": "52431f201b8136c0d298cbaa6900e579f49867e431eb54709c3e16f6c1a6dee2"
     },
     "Assets/OurTaiko/Runtime/Core/EntryFlow.cs": {
       "role": "index",
@@ -473,9 +473,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/GameLoop.cs": {
       "role": "index",
-      "sha256": "5e5cdaa857311d4565d3e9511e969cbe7798ea42dd4074df22f4565872c2a333",
-      "size": 1192,
-      "normalized_sha256": "5e5cdaa857311d4565d3e9511e969cbe7798ea42dd4074df22f4565872c2a333"
+      "sha256": "3aece703c63c3b69afa8465f42aee8f58b64e2427cf7d593dad9e551100aa910",
+      "size": 789,
+      "normalized_sha256": "3aece703c63c3b69afa8465f42aee8f58b64e2427cf7d593dad9e551100aa910"
     },
     "Assets/OurTaiko/Runtime/Core/GamePaths.cs": {
       "role": "index",
@@ -485,9 +485,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/GameSettings.cs": {
       "role": "index",
-      "sha256": "bc3b2703020b0e3287e6920be4b3d9c2b54bb4e77ba303f153a3568da68e9d73",
-      "size": 10925,
-      "normalized_sha256": "bc3b2703020b0e3287e6920be4b3d9c2b54bb4e77ba303f153a3568da68e9d73"
+      "sha256": "a7c72265b9562b06fd4b440b61e45153122e9fed6a871de2b501a40671a29f97",
+      "size": 10850,
+      "normalized_sha256": "a7c72265b9562b06fd4b440b61e45153122e9fed6a871de2b501a40671a29f97"
     },
     "Assets/OurTaiko/Runtime/Core/GameTimeline.cs": {
       "role": "index",
@@ -1637,9 +1637,9 @@
     },
     "Assets/OurTaiko/Runtime/Settings/SettingsCatalog.cs": {
       "role": "index",
-      "sha256": "1af74d509bc54afdc78790bd88227044af71cef8d3478db244861d7b67380d12",
-      "size": 33991,
-      "normalized_sha256": "1af74d509bc54afdc78790bd88227044af71cef8d3478db244861d7b67380d12"
+      "sha256": "d6cdb1b1bec35f9160475fac5b59c59c68f955a2a7a49fdd124afd095abce071",
+      "size": 34055,
+      "normalized_sha256": "d6cdb1b1bec35f9160475fac5b59c59c68f955a2a7a49fdd124afd095abce071"
     },
     "Assets/OurTaiko/Runtime/Settings/SettingsNavigator.cs": {
       "role": "index",
@@ -2159,9 +2159,9 @@
     },
     "Assets/OurTaiko/Tests/Finished/EditMode/SettingsCatalogTests.cs": {
       "role": "index",
-      "sha256": "ffee05fc19efb5c6427c5404ebaf9c5825c662bbebd48dc2c89a7a475ee52234",
-      "size": 8912,
-      "normalized_sha256": "ffee05fc19efb5c6427c5404ebaf9c5825c662bbebd48dc2c89a7a475ee52234"
+      "sha256": "7c5797f0d16b330ca2033ef8e1fe1c5c424936d8a8381833339c67b59c28dbdf",
+      "size": 8991,
+      "normalized_sha256": "7c5797f0d16b330ca2033ef8e1fe1c5c424936d8a8381833339c67b59c28dbdf"
     },
     "Assets/OurTaiko/Tests/Finished/EditMode/ShinuchiTests.cs": {
       "role": "index",
@@ -2723,9 +2723,9 @@
     },
     "Assets/Plugins/Android/RefreshRate.java": {
       "role": "index",
-      "sha256": "19f0ab778e5245abb4e4cc8bd048c0dccc0b0f91115043460d248ae57a6a5f8b",
-      "size": 9826,
-      "normalized_sha256": "19f0ab778e5245abb4e4cc8bd048c0dccc0b0f91115043460d248ae57a6a5f8b"
+      "sha256": "41915da4bad7c9f213bebd5b9d7c95f1a0db4329388e62e45f0bbf2ac5a998d6",
+      "size": 10144,
+      "normalized_sha256": "41915da4bad7c9f213bebd5b9d7c95f1a0db4329388e62e45f0bbf2ac5a998d6"
     },
     "Assets/Plugins/MajdataPlay/Diagnostics/MajDebug.cs": {
       "role": "index",
@@ -2889,6 +2889,12 @@
       "size": 675,
       "normalized_sha256": "ba447fdec807f1ef4aa6982af38ca5c3a149e09de22719d46d6add6a5eec2608"
     },
+    "Assets/Plugins/iOS/OurTaikoDisplay.mm": {
+      "role": "index",
+      "sha256": "4b43522e37167f16ae543a4384263fbdf2ba46f1e8584439fd2bf4dba7e8b310",
+      "size": 411,
+      "normalized_sha256": "4b43522e37167f16ae543a4384263fbdf2ba46f1e8584439fd2bf4dba7e8b310"
+    },
     "Assets/Plugins/iOS/OurTaikoKeyboard.mm": {
       "role": "index",
       "sha256": "f8a03aa36b41e3bac42ff14eedca75d8a47b3f858d852ea4503458ea7bfef83c",
@@ -2969,9 +2975,9 @@
     },
     "aoci.code.txt": {
       "role": "index",
-      "sha256": "90b7177964fb4bcd60e23396b5faa63836af3a41e04240d6202490d01e659d42",
-      "size": 205843,
-      "normalized_sha256": "90b7177964fb4bcd60e23396b5faa63836af3a41e04240d6202490d01e659d42"
+      "sha256": "e3cbf49f74defb6773efc378da63fbc6a1a304be78de919e3e33f38e5eab7db1",
+      "size": 206272,
+      "normalized_sha256": "e3cbf49f74defb6773efc378da63fbc6a1a304be78de919e3e33f38e5eab7db1"
     },
     "aoci.meta.txt": {
       "role": "index",

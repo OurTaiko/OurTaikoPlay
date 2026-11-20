@@ -8,34 +8,44 @@ namespace OurTaiko
     // for more, and several vendors' systems leave the display at 60 Hz for an app that states no
     // preference; Plugins/Android/RefreshRate.java asks both ways and keeps asking as the surface
     // is recreated. The system may still refuse (power saving, heat, a vendor's list of games):
-    // the log lines here say what the display did. Does nothing off Android.
+    // the log lines here say what the display did. On iOS it only reads the fastest rate the screen
+    // has, for Unlimited (Plugins/iOS/OurTaikoDisplay.mm). Does nothing elsewhere.
     public static class DisplayRefreshRate
     {
         const string Tag = "Display";
-        static int requested = int.MinValue;
+        static int requested = int.MinValue, requestedRate;
         static bool reportPending;
 
-        internal static int CurrentTarget
+        // fps: the frames per second the game wants; 0 asks for the fastest the display has.
+        // Returns the refresh rate of the display mode asked for, the rate the game should draw at:
+        // a cap that does not divide the display's rate (120 on a 90 or 144 Hz display) would be
+        // divided down by frame pacing. Off Android, or when the request fails, returns fallback.
+        public static int Request(int fps, int fallback)
         {
-            get
-            {
-                var rate = Screen.currentResolution.refreshRateRatio;
-                return rate.numerator > 0 && rate.denominator > 0 ? Mathf.Max(1, Mathf.RoundToInt((float)rate.value)) : 60;
-            }
-        }
-
-        // fps: the frames per second the game will draw; 0 asks for the fastest the display has.
-        public static void Request(int fps)
-        {
-            if (fps == requested) return;
+#if UNITY_IOS && !UNITY_EDITOR
+            // iOS needs no request: it draws up to the screen's rate by itself. Unlimited is the
+            // fastest the screen has.
+            if (fps != 0) return fallback;
+            int fastest = OurTaikoDisplay_MaximumFramesPerSecond();
+            return fastest > 0 ? fastest : fallback;
+#else
+            if (fps == requested) return requestedRate;
             requested = fps;
+            requestedRate = fallback;
             Call((plugin, activity) =>
             {
                 Log.Info(Tag, $"Asking for {Describe(fps)}. Before: {plugin.CallStatic<string>("state", activity)}");
-                plugin.CallStatic("request", activity, (float)fps);
+                float rate = plugin.CallStatic<float>("request", activity, (float)fps);
+                if (rate > 0) requestedRate = Mathf.RoundToInt(rate);
                 reportPending = true;
             });
+            return requestedRate;
+#endif
         }
+
+#if UNITY_IOS && !UNITY_EDITOR
+        [System.Runtime.InteropServices.DllImport("__Internal")] static extern int OurTaikoDisplay_MaximumFramesPerSecond();
+#endif
 
         // Logs once what the display did with the last request. The switch is not immediate, so
         // this is called some time after it: SceneSwitcher does on each scene change.
