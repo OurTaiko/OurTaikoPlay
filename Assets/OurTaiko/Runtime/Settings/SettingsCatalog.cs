@@ -273,8 +273,8 @@ namespace OurTaiko
                 new[] { "120", "60", T("display.unlimited") },
                 s => Array.IndexOf(DisplaySettings.FrameRates, s.display.targetFrameRate),
                 (s, i) => s.display.targetFrameRate = DisplaySettings.FrameRates[i]);
-            // Android ignores vSyncCount; frame pacing always waits for the display there.
-            if (platform != SoundPlatform.Android)
+            // Phones ignore vSyncCount; they always wait for the display.
+            if (platform != SoundPlatform.Android && platform != SoundPlatform.IOS)
                 yield return SettingRow.Toggle("vsync", T("display.vsync"), T("display.vsyncDesc"),
                     s => s.display.vSync, (s, on) => s.display.vSync = on);
             yield return SettingRow.Toggle("chara-3d", T("display.chara3D"), T("display.chara3DDesc"),

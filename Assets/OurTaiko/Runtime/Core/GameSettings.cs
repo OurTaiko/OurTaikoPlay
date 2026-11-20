@@ -182,15 +182,17 @@ namespace OurTaiko
         // Applies these settings to the running player; render every frame (no frame skipping).
         public void Apply()
         {
-            QualitySettings.vSyncCount = Application.platform != RuntimePlatform.Android && vSync ? 1 : 0;
+            QualitySettings.vSyncCount = !Application.isMobilePlatform && vSync ? 1 : 0;
             UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
             // Android gives a game 60 Hz until it asks for more, and the game then draws at the
-            // rate of the display mode it asked for; see DisplayRefreshRate.
+            // rate of the display mode it asked for; on iOS Unlimited is the screen's fastest rate.
+            // See DisplayRefreshRate.
             Application.targetFrameRate = DisplayRefreshRate.Request(targetFrameRate == Unlimited ? 0 : TargetFrameRate, TargetFrameRate);
         }
 
         // An unknown value in settings.json falls back to the 120 FPS default. On mobile -1 means
-        // the platform default (30 or 60), so Unlimited asks for more than any display refreshes.
+        // the platform default (30 or 60), so when the platform cannot say how fast its display is,
+        // Unlimited asks for more than any display refreshes.
         public int TargetFrameRate
         {
             get
