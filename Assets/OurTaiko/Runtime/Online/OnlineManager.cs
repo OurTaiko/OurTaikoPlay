@@ -175,6 +175,17 @@ namespace OurTaiko.Online
         public async Task SignInAsync(int seat, string username, string password, CancellationToken cancel = default, bool connect = true)
         {
             var account = await Center.LoginAsync(username, password, DeviceName(seat), cancel);
+            await CompleteSignInAsync(seat, account, cancel, connect);
+        }
+
+        public async Task BrowserSignInAsync(int seat, Action<string, string> authorize, CancellationToken cancel)
+        {
+            var account = await Center.BrowserLoginAsync(DeviceName(seat), authorize, cancel);
+            await CompleteSignInAsync(seat, account, cancel, true);
+        }
+
+        async Task CompleteSignInAsync(int seat, OurTaikoAccount account, CancellationToken cancel, bool connect)
+        {
             Accounts.Seats[seat] = account;
             SaveAccounts();
             expired[seat] = false;

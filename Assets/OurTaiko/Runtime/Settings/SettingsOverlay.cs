@@ -354,7 +354,8 @@ namespace OurTaiko
         {
             var online = OnlineManager.EnsureInstance();
             if (runningId != null || online.IsBusy) { status = T("status.busy"); Refresh(); return; }
-            bool account = action.StartsWith(SettingsCatalog.SignIn) || action.StartsWith(SettingsCatalog.SignOut);
+            bool browser = action.StartsWith(SettingsCatalog.BrowserLogin);
+            bool account = browser || action.StartsWith(SettingsCatalog.SignIn) || action.StartsWith(SettingsCatalog.SignOut);
             int seat = account ? action[action.Length - 1] - '0' : 0;
             var settings = Navigator.Settings;
             string username = seat == 0 ? settings.accounts.p1Username : settings.accounts.p2Username;
@@ -376,12 +377,32 @@ namespace OurTaiko
                     await online.LoadSongListAsync(cancel.Token);
                     status = online.SongListSummary;
                 }
-                else if (action.StartsWith(SettingsCatalog.SignIn))
+                else if (browser || action.StartsWith(SettingsCatalog.SignIn))
                 {
                     try
                     {
-                        await online.SignInAsync(seat, username, text, cancel.Token);
+                        if (browser)
+                            await online.BrowserSignInAsync(seat, (url, code) =>
+                            {
+                                status = T("accounts.browserCode", code);
+                                row.Status = code;
+                                Refresh();
+                                Application.OpenURL(url);
+                            }, cancel.Token);
+                        else await online.SignInAsync(seat, username, text, cancel.Token);
                         status = T("status.signedInAs", seat + 1, online.Accounts.Seats[seat].Nickname, online.LoginSummary);
+                    }
+                    catch (FanmadeException error) when (error.Message == "DEVICE_UNAVAILABLE")
+                    {
+                        status = T("accounts.browserUnavailable");
+                    }
+                    catch (FanmadeException error) when (error.Message == "DEVICE_EXPIRED")
+                    {
+                        status = T("accounts.browserExpired");
+                    }
+                    catch (FanmadeException error) when (error.Message == "DEVICE_DENIED")
+                    {
+                        status = T("accounts.browserDenied");
                     }
                     catch (Exception error) when (!cancel.IsCancellationRequested)
                     {

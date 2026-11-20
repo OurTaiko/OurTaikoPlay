@@ -127,6 +127,8 @@ namespace OurTaiko.Online
     // session of each server that names this account center in its catalog.
     public sealed class AccountCenter : IDisposable
     {
+        const string DeviceStart = "/api/v1/game/account/device";
+        const string DeviceToken = DeviceStart + "/token";
         public const string DefaultIssuer = "https://sso.ourtaiko.org";
         public readonly string Issuer;
         readonly HttpClient http;
@@ -146,6 +148,67 @@ namespace OurTaiko.Online
         {
             var body = new JObject { ["username"] = username ?? "", ["password"] = password ?? "", ["deviceName"] = deviceName ?? "" };
             var reply = await SendAsync(HttpMethod.Post, "/api/v1/game/account/login", null, body, cancel);
+            return ReadAccount(reply);
+        }
+
+        public async Task<OurTaikoAccount> BrowserLoginAsync(string deviceName, Action<string, string> authorize,
+            CancellationToken cancel)
+        {
+            JObject grant;
+            try
+            {
+                grant = await SendAsync(HttpMethod.Post, DeviceStart, null, new JObject { ["deviceName"] = deviceName }, cancel);
+            }
+            catch (HttpStatusException error) when (error.Status == 404)
+            {
+                throw new FanmadeException("DEVICE_UNAVAILABLE", error);
+            }
+            string secret = Json.Str(grant, "deviceCode"), code = Json.Str(grant, "userCode");
+            if (!Json.HexId(secret, 64) || code.Length != 8 || !code.All(ch => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".Contains(ch)))
+                throw new FanmadeException("API_TOKEN_INVALID");
+            int seconds = (int?)grant["expiresIn"] ?? 0, interval = (int?)grant["interval"] ?? 0;
+            if (seconds < 1 || seconds > 600 || interval < 1 || interval > seconds) throw new FanmadeException("API_TOKEN_INVALID");
+            using var expires = CancellationTokenSource.CreateLinkedTokenSource(cancel);
+            expires.CancelAfter(TimeSpan.FromSeconds(seconds));
+            cancel.ThrowIfCancellationRequested();
+            authorize(Issuer + "/game/authorize/?code=" + code, code);
+            try
+            {
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(interval), expires.Token);
+                    try
+                    {
+                        var reply = await SendAsync(HttpMethod.Post, DeviceToken, null,
+                            new JObject { ["deviceCode"] = secret }, expires.Token);
+                        if ((bool?)reply["pending"] != true) return ReadAccount(reply);
+                    }
+                    catch (HttpStatusException error) when (error.Status == 410)
+                    {
+                        throw new FanmadeException("DEVICE_EXPIRED", error);
+                    }
+                    catch (HttpStatusException error) when (error.Status == 403 && error.ErrorCode == "DEVICE_DENIED")
+                    {
+                        throw new FanmadeException("DEVICE_DENIED", error);
+                    }
+                    catch (HttpStatusException error) when (error.Status == 429)
+                    {
+                        interval = Math.Min(seconds, Math.Max(interval + 5, error.RetryAfterSeconds));
+                    }
+                    catch (FanmadeException error) when (error.Message is "NETWORK_ERROR" or "NETWORK_TIMEOUT")
+                    {
+                        interval = (int)Math.Min((long)interval * 2, seconds);
+                    }
+                }
+            }
+            catch (Exception) when (!cancel.IsCancellationRequested && expires.IsCancellationRequested)
+            {
+                throw new FanmadeException("DEVICE_EXPIRED");
+            }
+        }
+
+        static OurTaikoAccount ReadAccount(JObject reply)
+        {
             var account = new OurTaikoAccount { Token = Json.Str(reply, "token") };
             if (!Json.HexId(account.Token, 64)) throw new FanmadeException("API_TOKEN_INVALID");
             account.SetUser(reply["user"]);
@@ -187,8 +250,23 @@ namespace OurTaiko.Online
                 using var response = await http.SendAsync(request, linked.Token);
                 int status = (int)response.StatusCode;
                 Log.Debug("Account", $"{method} {path}: {status}");
-                if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 string text = await response.Content.ReadAsStringAsync();
+                if (status < 200 || status >= 300)
+                {
+                    var retryAfter = response.Headers.RetryAfter;
+                    double delay = (retryAfter?.Delta ?? (retryAfter?.Date - DateTimeOffset.UtcNow))?.TotalSeconds ?? 0;
+                    string code = null;
+                    if (text.Length <= 64 * 1024 && response.Content.Headers.ContentType?.MediaType == "application/json")
+                    {
+                        try
+                        {
+                            var value = JObject.Parse(text)["code"];
+                            if (value?.Type == JTokenType.String) code = (string)value;
+                        }
+                        catch (Newtonsoft.Json.JsonException) { /* A malformed error body still carries its HTTP status. */ }
+                    }
+                    throw new HttpStatusException(status, (int)Math.Clamp(Math.Ceiling(delay), 0, int.MaxValue), code);
+                }
                 if (text.Length > 64 * 1024) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");
                 return Json.Parse(text);
             }

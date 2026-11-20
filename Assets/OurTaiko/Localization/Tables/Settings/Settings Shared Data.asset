@@ -15,6 +15,30 @@ MonoBehaviour:
   m_TableCollectionName: Settings
   m_TableCollectionNameGuidString: 2a185a638057348dbbad39c7696cb86b
   m_Entries:
+  - m_Id: 2523232274997250
+    m_Key: accounts.browser
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997251
+    m_Key: accounts.browserHint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997252
+    m_Key: accounts.browserCode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997253
+    m_Key: accounts.browserUnavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997254
+    m_Key: accounts.browserExpired
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2523232274997255
+    m_Key: accounts.browserDenied
+    m_Metadata:
+      m_Items: []
   - m_Id: 133160960
     m_Key: value.on
     m_Metadata:

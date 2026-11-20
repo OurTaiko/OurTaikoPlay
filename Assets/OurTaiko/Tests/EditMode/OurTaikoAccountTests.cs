@@ -43,6 +43,87 @@ namespace OurTaiko.Tests
         static T Run<T>(Func<Task<T>> body) => Task.Run(body).GetAwaiter().GetResult();
         static void Run(Func<Task> body) => Task.Run(body).GetAwaiter().GetResult();
 
+        [Test]
+        public void BrowserSignInUsesOnlyThePublicCodeInTheBrowser()
+        {
+            fixture.ApprovedDeviceUser = "ka";
+            var account = Run(() => center.BrowserLoginAsync("2P", (url, code) =>
+            {
+                Assert.That(code, Is.EqualTo("TESTABCD"));
+                Assert.That(url, Is.EqualTo(center.Issuer + "/game/authorize/?code=" + code));
+            }, default));
+            Assert.That(account.Username, Is.EqualTo("ka"));
+            Assert.That(fixture.AccountTokens[account.Token], Is.EqualTo("ka"));
+            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/account/login"));
+        }
+
+        [TestCase(404, "device", "DEVICE_UNAVAILABLE")]
+        [TestCase(410, "device/token", "DEVICE_EXPIRED")]
+        [TestCase(403, "device/token", "DEVICE_DENIED")]
+        public void BrowserAuthorizationReportsTheOutcomeOfItsOwnRequest(int status, string route, string expected)
+        {
+            fixture.CustomRequest = context =>
+            {
+                if (context.Request.Url.AbsolutePath != "/api/v1/game/account/" + route) return false;
+                fixture.Reply(context, status, new Newtonsoft.Json.Linq.JObject { ["code"] = expected });
+                return true;
+            };
+            var error = Assert.Throws<FanmadeException>(() => Run(() => center.BrowserLoginAsync("1P", (_, _) => {}, default)));
+            Assert.That(error.Message, Is.EqualTo(expected));
+        }
+
+        [TestCase(202)]
+        [TestCase(429)]
+        public void BrowserAuthorizationContinuesPolling(int firstStatus)
+        {
+            int polls = 0;
+            var elapsed = new System.Diagnostics.Stopwatch();
+            fixture.ApprovedDeviceUser = "ka";
+            fixture.CustomRequest = context =>
+            {
+                if (!context.Request.Url.AbsolutePath.EndsWith("/device/token") || ++polls != 1) return false;
+                elapsed.Start();
+                fixture.Reply(context, firstStatus, new Newtonsoft.Json.Linq.JObject { ["pending"] = true });
+                return true;
+            };
+            Assert.That(Run(() => center.BrowserLoginAsync("1P", (_, _) => {}, default)).Username, Is.EqualTo("ka"));
+            Assert.That(polls, Is.EqualTo(2));
+            Assert.That(elapsed.ElapsedMilliseconds, Is.GreaterThanOrEqualTo(firstStatus == 429 ? 5900 : 900));
+        }
+
+        [Test]
+        public void BrowserSignInRecoversFromAnInterruptedPoll()
+        {
+            int polls = 0;
+            var elapsed = new System.Diagnostics.Stopwatch();
+            fixture.ApprovedDeviceUser = "ka";
+            fixture.CustomRequest = context =>
+            {
+                if (context.Request.Url.AbsolutePath != "/api/v1/game/account/device/token" || ++polls != 1)
+                    return false;
+                elapsed.Start();
+                // Interrupt an incomplete body so the transport observes a broken connection.
+                context.Response.ContentLength64 = 64;
+                context.Response.OutputStream.WriteByte((byte)'{');
+                context.Response.OutputStream.Flush();
+                context.Response.Abort();
+                return true;
+            };
+            var account = Run(() => center.BrowserLoginAsync("1P", (_, _) => {}, default));
+            Assert.That(account.Username, Is.EqualTo("ka"));
+            Assert.That(polls, Is.EqualTo(2));
+            Assert.That(elapsed.ElapsedMilliseconds, Is.GreaterThanOrEqualTo(1900));
+        }
+
+        [Test]
+        public void CancellingBrowserAuthorizationStopsBeforePolling()
+        {
+            using var cancel = new System.Threading.CancellationTokenSource();
+            Assert.Catch<OperationCanceledException>(() => Run(() =>
+                center.BrowserLoginAsync("2P", (_, _) => cancel.Cancel(), cancel.Token)));
+            Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v1/game/account/device/token"));
+        }
+
         // A built-in style server: the catalog first, then the seat signed in with a traded session.
         FanmadeEndpoint Catalog()
         {

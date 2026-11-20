@@ -30,10 +30,14 @@ OurTaikoPlay is an open-source Taiko rhythm game built from scratch in Unity (C#
 | Menus / Selection | Back | `Esc` |
 | Gameplay | Pause / Resume | `Space` or `Esc` |
 | Gameplay | Restart | `F1` |
+| Windows | Toggle fullscreen | `Alt` + `Enter` |
+| Android | Same as `Esc` | System Back button or gesture |
 
 - Supports touch screen drums and mouse clicks.
 - Big notes register fully on a single-side strike.
 - For charts with both Oni and Ura Oni, press Right 10 times consecutively on the Oni card to toggle.
+
+**Browser sign-in**: Open the account settings for 1P or 2P and choose browser sign-in. Check the code shown in the game, the device and the account before approving, then return to the game. You can start again after declining or use a password with an older account center.
 
 ## Running from Source
 

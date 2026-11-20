@@ -20,7 +20,7 @@ namespace OurTaiko.Tests
             Assert.That(nav.Page.Groups.Select(g => g.Title), Is.EqualTo(new[] { "1P", "2P", L10n.Get("Settings", "accounts.group.servers") }));
             Assert.That(nav.Page.Rows.Select(r => r.Label), Is.EqualTo(new[]
             {
-                "username", "password", "signOut", "username", "password", "signOut", "refreshSongList", "refreshLogin",
+                "username", "password", "signOut", "browser", "username", "password", "signOut", "browser", "refreshSongList", "refreshLogin",
             }.Select(key => L10n.Get("Settings", "accounts." + key))));
             Assert.That(nav.Row.Display(nav.Settings), Is.EqualTo(L10n.Get("Settings", "value.notSet")));
             Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Entered));
@@ -42,10 +42,12 @@ namespace OurTaiko.Tests
             Assert.That(nav.Settings.ToJson(), Does.Not.Contain("katsu"));
             nav.Move(1);
             Assert.That(nav.Row.ActionId, Is.EqualTo(SettingsCatalog.SignOut + "0"));
-            nav.Move(3);
+            nav.Move(4);
             Assert.That(nav.Row.ActionId, Is.EqualTo(SettingsCatalog.SignOut + "1"));
 
             // The buttons open nothing: the overlay runs them and writes their status.
+            nav.Move(1);
+            Assert.That(nav.Row.ActionId, Is.EqualTo(SettingsCatalog.BrowserLogin + "1"));
             nav.Move(1);
             Assert.That(nav.Row.ActionId, Is.EqualTo(SettingsCatalog.RefreshSongList));
             Assert.That(nav.Confirm(), Is.EqualTo(SettingsNavigator.Result.Action));
