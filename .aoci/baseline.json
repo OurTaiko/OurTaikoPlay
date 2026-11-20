@@ -1,7 +1,7 @@
 {
   "version": 1,
   "created_at": "2026-11-19T21:29:00Z",
-  "updated_at": "2026-11-20T06:03:43Z",
+  "updated_at": "2026-11-20T08:46:00Z",
   "files": {
     ".gitattributes": {
       "role": "index",
@@ -461,9 +461,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/DisplayRefreshRate.cs": {
       "role": "index",
-      "sha256": "753671e199f7cd11cd6a5a9387215cd1138be98fab047c2880185bd2d83ba2c5",
-      "size": 2976,
-      "normalized_sha256": "753671e199f7cd11cd6a5a9387215cd1138be98fab047c2880185bd2d83ba2c5"
+      "sha256": "bdf23160069bbdb430bd2f7ff7954e6c769995aacc0c812ac1b844c5a8d97470",
+      "size": 3173,
+      "normalized_sha256": "bdf23160069bbdb430bd2f7ff7954e6c769995aacc0c812ac1b844c5a8d97470"
     },
     "Assets/OurTaiko/Runtime/Core/EntryFlow.cs": {
       "role": "index",
@@ -473,9 +473,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/GameLoop.cs": {
       "role": "index",
-      "sha256": "5e5cdaa857311d4565d3e9511e969cbe7798ea42dd4074df22f4565872c2a333",
-      "size": 1192,
-      "normalized_sha256": "5e5cdaa857311d4565d3e9511e969cbe7798ea42dd4074df22f4565872c2a333"
+      "sha256": "3aece703c63c3b69afa8465f42aee8f58b64e2427cf7d593dad9e551100aa910",
+      "size": 789,
+      "normalized_sha256": "3aece703c63c3b69afa8465f42aee8f58b64e2427cf7d593dad9e551100aa910"
     },
     "Assets/OurTaiko/Runtime/Core/GamePaths.cs": {
       "role": "index",
@@ -485,9 +485,9 @@
     },
     "Assets/OurTaiko/Runtime/Core/GameSettings.cs": {
       "role": "index",
-      "sha256": "bc3b2703020b0e3287e6920be4b3d9c2b54bb4e77ba303f153a3568da68e9d73",
-      "size": 10925,
-      "normalized_sha256": "bc3b2703020b0e3287e6920be4b3d9c2b54bb4e77ba303f153a3568da68e9d73"
+      "sha256": "f0deb3d4305284e450fab9f8aa4ae2705d653d329fd118821948067f6a149628",
+      "size": 10741,
+      "normalized_sha256": "f0deb3d4305284e450fab9f8aa4ae2705d653d329fd118821948067f6a149628"
     },
     "Assets/OurTaiko/Runtime/Core/GameTimeline.cs": {
       "role": "index",
@@ -1637,9 +1637,9 @@
     },
     "Assets/OurTaiko/Runtime/Settings/SettingsCatalog.cs": {
       "role": "index",
-      "sha256": "1af74d509bc54afdc78790bd88227044af71cef8d3478db244861d7b67380d12",
-      "size": 33991,
-      "normalized_sha256": "1af74d509bc54afdc78790bd88227044af71cef8d3478db244861d7b67380d12"
+      "sha256": "5bd1353c98f15d85a731e810f103d96f39decacc6242daa0706d42ab7504e458",
+      "size": 34039,
+      "normalized_sha256": "5bd1353c98f15d85a731e810f103d96f39decacc6242daa0706d42ab7504e458"
     },
     "Assets/OurTaiko/Runtime/Settings/SettingsNavigator.cs": {
       "role": "index",
@@ -2159,9 +2159,9 @@
     },
     "Assets/OurTaiko/Tests/Finished/EditMode/SettingsCatalogTests.cs": {
       "role": "index",
-      "sha256": "ffee05fc19efb5c6427c5404ebaf9c5825c662bbebd48dc2c89a7a475ee52234",
-      "size": 8912,
-      "normalized_sha256": "ffee05fc19efb5c6427c5404ebaf9c5825c662bbebd48dc2c89a7a475ee52234"
+      "sha256": "dcaf1766a1944f03a5de559edcd2c223708afd3fa9f08a17fefd801f6210c57e",
+      "size": 8919,
+      "normalized_sha256": "dcaf1766a1944f03a5de559edcd2c223708afd3fa9f08a17fefd801f6210c57e"
     },
     "Assets/OurTaiko/Tests/Finished/EditMode/ShinuchiTests.cs": {
       "role": "index",
@@ -2723,9 +2723,9 @@
     },
     "Assets/Plugins/Android/RefreshRate.java": {
       "role": "index",
-      "sha256": "19f0ab778e5245abb4e4cc8bd048c0dccc0b0f91115043460d248ae57a6a5f8b",
-      "size": 9826,
-      "normalized_sha256": "19f0ab778e5245abb4e4cc8bd048c0dccc0b0f91115043460d248ae57a6a5f8b"
+      "sha256": "41915da4bad7c9f213bebd5b9d7c95f1a0db4329388e62e45f0bbf2ac5a998d6",
+      "size": 10144,
+      "normalized_sha256": "41915da4bad7c9f213bebd5b9d7c95f1a0db4329388e62e45f0bbf2ac5a998d6"
     },
     "Assets/Plugins/MajdataPlay/Diagnostics/MajDebug.cs": {
       "role": "index",
@@ -2969,9 +2969,9 @@
     },
     "aoci.code.txt": {
       "role": "index",
-      "sha256": "90b7177964fb4bcd60e23396b5faa63836af3a41e04240d6202490d01e659d42",
-      "size": 205843,
-      "normalized_sha256": "90b7177964fb4bcd60e23396b5faa63836af3a41e04240d6202490d01e659d42"
+      "sha256": "9f40d696655606540c3e5ac98d214d0eed78d6cd109d32b8234732213740ab98",
+      "size": 205846,
+      "normalized_sha256": "9f40d696655606540c3e5ac98d214d0eed78d6cd109d32b8234732213740ab98"
     },
     "aoci.meta.txt": {
       "role": "index",
