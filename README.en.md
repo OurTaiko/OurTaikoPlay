@@ -31,7 +31,7 @@ OurTaikoPlay is an open-source Taiko rhythm game built from scratch in Unity (C#
 | Gameplay | Pause / Resume | `Space` or `Esc` |
 | Gameplay | Restart | `F1` |
 | Windows | Toggle fullscreen | `Alt` + `Enter` |
-| Android entry screen | Exit the game | System Back button or gesture |
+| Android | Same as `Esc` | System Back button or gesture |
 
 - Supports touch screen drums and mouse clicks.
 - Big notes register fully on a single-side strike.
