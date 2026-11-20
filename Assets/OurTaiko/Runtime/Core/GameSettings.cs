@@ -184,19 +184,17 @@ namespace OurTaiko
         {
             QualitySettings.vSyncCount = Application.platform != RuntimePlatform.Android && vSync ? 1 : 0;
             UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
-            Application.targetFrameRate = TargetFrameRate;
-            // Android gives a game 60 Hz until it asks for more; see DisplayRefreshRate.
-            DisplayRefreshRate.Request(Application.platform == RuntimePlatform.Android || targetFrameRate == Unlimited ? 0 : TargetFrameRate);
+            // Android gives a game 60 Hz until it asks for more, and the game then draws at the
+            // rate of the display mode it asked for; see DisplayRefreshRate.
+            Application.targetFrameRate = DisplayRefreshRate.Request(targetFrameRate == Unlimited ? 0 : TargetFrameRate, TargetFrameRate);
         }
 
-        // Android can divide the active refresh rate down when a fixed cap does not align with it.
-        // Ask for the display limit on Android, including when loading an old fixed-cap setting.
-        // On iOS, -1 means the platform default, so Unlimited also requests the display limit.
+        // An unknown value in settings.json falls back to the 120 FPS default. On mobile -1 means
+        // the platform default (30 or 60), so Unlimited asks for more than any display refreshes.
         public int TargetFrameRate
         {
             get
             {
-                if (Application.platform == RuntimePlatform.Android) return DisplayRefreshRate.CurrentTarget;
                 if (Array.IndexOf(FrameRates, targetFrameRate) < 0) return FrameRates[0];
                 if (targetFrameRate == Unlimited && Application.isMobilePlatform) return MobileDisplayLimit;
                 return targetFrameRate;

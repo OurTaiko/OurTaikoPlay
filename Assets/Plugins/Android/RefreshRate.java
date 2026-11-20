@@ -59,8 +59,11 @@ public final class RefreshRate implements SurfaceHolder.Callback, Application.Ac
         activity.getApplication().registerActivityLifecycleCallbacks(this);
     }
 
-    // fps: the frames per second the game will draw; 0 or less asks for the fastest the display has.
-    public static void request(final Activity activity, final float fps) {
+    // fps: the frames per second the game wants; 0 or less asks for the fastest the display has.
+    // Returns the refresh rate of the display mode asked for, which the game draws at so that every
+    // frame lands on a refresh. Callable from any thread; the request itself runs on the UI thread.
+    public static float request(final Activity activity, final float fps) {
+        float rate = pick(activity.getWindowManager().getDefaultDisplay(), fps).getRefreshRate();
         activity.runOnUiThread(new Runnable() {
             @Override public void run() {
                 if (current == null || current.activity != activity) {
@@ -72,6 +75,7 @@ public final class RefreshRate implements SurfaceHolder.Callback, Application.Ac
                 if (!current.paused) current.startMiuiBeat();
             }
         });
+        return rate;
     }
 
     // The display as this app sees it, for the game's log. Callable from any thread.
