@@ -27,8 +27,9 @@ namespace OurTaiko
         {
             mesh.Clear();
             Rect r = rectTransform.rect;
-            float X(double ms) => r.xMin + (float)((ms - TimingStatistics.MinimumMs) /
-                (TimingStatistics.MaximumMs - TimingStatistics.MinimumMs)) * r.width;
+            // The axis follows the play's windows (TimingStatistics.MaximumMs); the standard one when empty.
+            double range = statistics?.MaximumMs ?? TimingStatistics.StandardRangeMs;
+            float X(double ms) => r.xMin + (float)((ms + range) / (2 * range)) * r.width;
             void Box(float left, float bottom, float right, float top, Color32 color)
             {
                 int i = mesh.currentVertCount;
@@ -52,9 +53,9 @@ namespace OurTaiko
                 Box(r.xMin, y, r.xMax, y + 1, new Color32(120, 112, 98, 60));
             }
             if (statistics != null)
-                for (int i = 0; i < TimingStatistics.BinCount; i++)
+                for (int i = 0; i < statistics.Bins.Count; i++)
                 {
-                    double start = TimingStatistics.MinimumMs + i * TimingStatistics.BinWidthMs;
+                    double start = statistics.MinimumMs + i * TimingStatistics.BinWidthMs;
                     float top = r.yMin + r.height * statistics.Bins[i] / AxisMaximum;
                     if (statistics.Bins[i] > 0)
                         Box(X(start) + 1, r.yMin, X(start + TimingStatistics.BinWidthMs) - 1, top, new Color32(226, 83, 38, 255));
