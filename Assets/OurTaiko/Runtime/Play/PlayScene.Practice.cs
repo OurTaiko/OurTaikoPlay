@@ -48,7 +48,7 @@ namespace OurTaiko
             PausePractice(true);
         }
         void RefreshPracticeBars() => Practice.SetBars(Session.Chart.Bars
-            .Where(Session.IsPracticePreviewActive).Select(bar => bar.Time));
+            .Where(Lane1.Shown.IsPracticePreviewActive).Select(bar => bar.Time));
 
         void TogglePracticePause()
         {
@@ -67,25 +67,40 @@ namespace OurTaiko
             songClock.Pause(); IsPaused = true; practiceRewinding = false;
             music.StopAudio(); hitAudio.StopAudio();
             PracticeStage = FirstPracticeStage;
-            if (first) Session = new PlaySession(Session.Chart, judgeOffset, ForcedBranch, 1, judgeWindows);
             RefreshPracticeBars();
             // The cursor is visual chart time, so a bar aligns exactly even with configured offsets.
             double position = first ? TakePracticeStart() : SongTime - AudioOffset - VisualOffset;
             Practice.PauseAt(position, GameTimeline.FrameTime);
             songClock.Seek(position + AudioOffset + VisualOffset, Practice.Speed);
-            ResetPracticeAttempt(position);
+            Lane1.StopAttempt();
+            PreviewPracticeAt(position);
             pauseOpenedFrame = Time.frameCount;
             pauseButton.interactable = true;
             ShowPracticePause();
         }
+        // A replay is judged again from its first press up to here, at the speed it was played.
+        PlaySession PracticeSessionAt(double position) => IsReplay
+            ? replay.SessionAt(Session.Chart, position + VisualOffset)
+            : PlaySession.PracticeAt(Session.Chart, position + VisualOffset, Session, practiceBranch, Practice.Speed);
+        // The paused lane browses on a session of its own: the stopped attempt stays the lane's
+        // Session, and on the HUD, until the next one replaces it.
+        void PreviewPracticeAt(double position)
+        {
+            Lane1.Preview = PracticeSessionAt(position);
+            Lane1.ResetBranchLane(position + VisualOffset);
+        }
         void ResetPracticeAttempt(double position)
         {
-            var previous = Session;
-            // A replay is judged again from its first press up to here, at the speed it was played.
-            Session = IsReplay ? replay.SessionAt(previous.Chart, position + VisualOffset)
-                : PlaySession.PracticeAt(previous.Chart, position + VisualOffset, previous, practiceBranch, Practice.Speed);
+            Session = PracticeSessionAt(position);
             Lane1.ResetBranchLane(position + VisualOffset);
             Lane1.ResetAttempt();
+        }
+        // The pause menu's restart throws the attempt away at once, and returns to the first measure.
+        void RestartPractice()
+        {
+            PracticeAttemptCleared?.Invoke();
+            ResetPracticeAttempt(Practice.Target);
+            PausePractice(true);
         }
         void ShowPracticePause()
         {
@@ -166,7 +181,7 @@ namespace OurTaiko
             var route = (BranchRoute)Math.Max((int)BranchRoute.Normal, Math.Min((int)BranchRoute.Master, (int)PracticeBranch + direction));
             if (route == PracticeBranch) return;
             practiceBranch = route;
-            ResetPracticeAttempt(Practice.Target);
+            PreviewPracticeAt(Practice.Target);
             RefreshPracticeBars();
             Practice.PauseAt(Practice.Target, GameTimeline.FrameTime);
         }

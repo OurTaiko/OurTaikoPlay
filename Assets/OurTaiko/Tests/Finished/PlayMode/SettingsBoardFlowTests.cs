@@ -73,7 +73,7 @@ namespace OurTaiko.Tests
                 var overlay = SettingsOverlay.Instance;
                 var nav = overlay.Navigator;
                 var view = overlay.View;
-                Assert.That(nav.Pages.Select(p => p.Title), Is.EqualTo(new[] { "general", "controls", "play", "display", "sound", "accounts" }.Select(p => L10n.Get("Settings", p + ".title"))));
+                Assert.That(nav.Pages.Select(p => p.Title), Is.EqualTo(new[] { "general", "controls", "play", "display", "sound", "accounts", "sidebar" }.Select(p => L10n.Get("Settings", p + ".title"))));
                 yield return null;
 
                 // Touch: tapping a category selects it, tapping it again opens it; tapping a row

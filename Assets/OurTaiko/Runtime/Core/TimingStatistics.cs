@@ -16,8 +16,12 @@ namespace OurTaiko
     // A detached snapshot of actual manual note hits. Misses have no measured timing.
     public sealed class TimingStatistics
     {
-        public const double BinWidthMs = 5, MinimumMs = -132.5, MaximumMs = 132.5;
-        public const int BinCount = 53;
+        // Columns are 5 ms wide with one centred on zero. The axis is at least the standard ±132.5 ms
+        // and grows by whole columns past the play's 不可 window, which custom windows
+        // (up to PlaySettings.JudgeWindowMaxMs) and practice rates can widen.
+        public const double BinWidthMs = 5, StandardRangeMs = 132.5;
+        public double MinimumMs => -MaximumMs;
+        public double MaximumMs { get; }
         public IReadOnlyList<HitTiming> Samples { get; }
         public IReadOnlyList<int> Bins { get; }
         public int Count => Samples.Count;
@@ -32,26 +36,36 @@ namespace OurTaiko
         public double OkWindowMs { get; }
         public double BadWindowMs { get; }
 
+        // The smallest half-width on the column grid that is past badWindowMs, and no less than the standard.
+        public static double RangeFor(double badWindowMs)
+        {
+            if (double.IsNaN(badWindowMs) || double.IsInfinity(badWindowMs) || badWindowMs < 0)
+                throw new ArgumentOutOfRangeException(nameof(badWindowMs));
+            double half = BinWidthMs / 2;
+            return Math.Max(StandardRangeMs, half + (Math.Floor((badWindowMs - half) / BinWidthMs) + 1) * BinWidthMs);
+        }
+
         public TimingStatistics(IEnumerable<HitTiming> samples, int misses, double goodWindowMs,
             double okWindowMs, double badWindowMs)
         {
             Samples = Array.AsReadOnly(samples.ToArray());
             Misses = misses;
             GoodWindowMs = goodWindowMs; OkWindowMs = okWindowMs; BadWindowMs = badWindowMs;
-            var bins = new int[BinCount];
+            MaximumMs = RangeFor(badWindowMs);
+            var bins = new int[(int)Math.Round(2 * MaximumMs / BinWidthMs)];
             double mean = 0, m2 = 0, absolute = 0;
             int count = 0;
             foreach (var sample in Samples)
             {
                 double value = sample.OffsetMs;
                 if (double.IsNaN(value) || double.IsInfinity(value) || value < MinimumMs || value > MaximumMs)
-                    throw new ArgumentOutOfRangeException(nameof(samples), "Timing is outside the supported judgment windows.");
+                    throw new ArgumentOutOfRangeException(nameof(samples), "Timing is outside the play's judgment windows.");
                 if (value < 0) Early++; else if (value > 0) Late++; else Exact++;
                 double delta = value - mean;
                 mean += delta / ++count;
                 m2 += delta * (value - mean);
                 absolute += Math.Abs(value);
-                int bin = Math.Min(BinCount - 1, (int)Math.Floor((value - MinimumMs) / BinWidthMs));
+                int bin = Math.Min(bins.Length - 1, (int)Math.Floor((value - MinimumMs) / BinWidthMs));
                 bins[bin]++;
             }
             Bins = Array.AsReadOnly(bins);

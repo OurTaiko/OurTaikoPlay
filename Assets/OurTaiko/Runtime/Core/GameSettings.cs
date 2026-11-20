@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace OurTaiko
@@ -23,6 +24,7 @@ namespace OurTaiko
             if (!string.IsNullOrWhiteSpace(json)) JsonUtility.FromJsonOverwrite(json, settings);
             settings.general ??= new GeneralSettings();
             settings.general.songLibraryPaths ??= Array.Empty<string>();
+            settings.general.hiddenSettingsPages ??= new List<string>();
             settings.general.keyboard ??= new KeyboardBindings();
             settings.general.keyboard.Normalize();
             settings.play ??= new PlaySettings();
@@ -49,6 +51,8 @@ namespace OurTaiko
         // File-only option. Additional folders alongside the always-included default Songs
         // folder. Each custom folder must be an absolute path on the current platform.
         public string[] songLibraryPaths = Array.Empty<string>();
+        // Stable page IDs. An empty list (including older saves) shows every category.
+        public List<string> hiddenSettingsPages = new List<string>();
         public KeyboardBindings keyboard = new KeyboardBindings();
         public string Language => Array.IndexOf(Languages, language) >= 0 ? language
             : language == "zh_tw" ? "zh"
@@ -158,6 +162,7 @@ namespace OurTaiko
     {
         public const int Unlimited = -1;
         public static readonly int[] FrameRates = { 120, 60, Unlimited };
+        const int MobileDisplayLimit = 1000;
 
         // Application.targetFrameRate: 120, 60 or Unlimited (-1).
         public int targetFrameRate = 120;
@@ -177,21 +182,23 @@ namespace OurTaiko
         // Applies these settings to the running player; render every frame (no frame skipping).
         public void Apply()
         {
-            QualitySettings.vSyncCount = vSync ? 1 : 0;
+            QualitySettings.vSyncCount = Application.platform != RuntimePlatform.Android && vSync ? 1 : 0;
             UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
             Application.targetFrameRate = TargetFrameRate;
             // Android gives a game 60 Hz until it asks for more; see DisplayRefreshRate.
-            DisplayRefreshRate.Request(targetFrameRate == Unlimited ? 0 : TargetFrameRate);
+            DisplayRefreshRate.Request(Application.platform == RuntimePlatform.Android || targetFrameRate == Unlimited ? 0 : TargetFrameRate);
         }
 
-        // An unknown value in settings.json falls back to the 120 FPS default. On mobile -1 means
-        // the platform default (30 or 60), so Unlimited asks for more than any display refreshes.
+        // Android can divide the active refresh rate down when a fixed cap does not align with it.
+        // Ask for the display limit on Android, including when loading an old fixed-cap setting.
+        // On iOS, -1 means the platform default, so Unlimited also requests the display limit.
         public int TargetFrameRate
         {
             get
             {
+                if (Application.platform == RuntimePlatform.Android) return DisplayRefreshRate.CurrentTarget;
                 if (Array.IndexOf(FrameRates, targetFrameRate) < 0) return FrameRates[0];
-                if (targetFrameRate == Unlimited && Application.isMobilePlatform) return 1000;
+                if (targetFrameRate == Unlimited && Application.isMobilePlatform) return MobileDisplayLimit;
                 return targetFrameRate;
             }
         }

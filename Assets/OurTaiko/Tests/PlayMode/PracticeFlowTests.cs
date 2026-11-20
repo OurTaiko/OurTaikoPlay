@@ -215,9 +215,10 @@ namespace OurTaiko.Tests
             Assert.That(play.music.AudioPosition(), Is.EqualTo(play.SongTime).Within(0.15));
             play.pauseButton.onClick.Invoke(); yield return null;
             Assert.That(play.IsPaused && !play.pausePanel.activeSelf, Is.True);
-            Assert.That(play.Session.Good + play.Session.Ok + play.Session.Bad + play.Session.Rolls, Is.Zero);
+            Assert.That(play.Lane1.Shown.Good + play.Lane1.Shown.Ok + play.Lane1.Shown.Bad + play.Lane1.Shown.Rolls, Is.Zero);
             Assert.That(play.music.IsAudioPlaying(), Is.False);
             yield return Click(play.practiceView.confirm);
+            Assert.That(play.ChoosingPracticeSpeed, Is.True, "The click on the confirm button must open the speed page.");
             for (int i = 0; i < 4; i++) yield return Press(Key.K);
             Assert.That(play.Practice.Speed, Is.EqualTo(1.2));
             yield return Click(play.practiceView.confirm);
@@ -267,7 +268,7 @@ namespace OurTaiko.Tests
             Assert.That(play.Practice.Target, Is.EqualTo(0));
             Assert.That(play.IsFinished, Is.False);
             Assert.That(play.ChoosingPracticeSpeed, Is.False);
-            Assert.That(play.Session.Good + play.Session.Bad, Is.Zero);
+            Assert.That(play.Lane1.Shown.Good + play.Lane1.Shown.Bad, Is.Zero);
             Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
             Assert.That(SceneSwitcher.Instance.SongsPlayed, Is.Zero);
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
@@ -288,8 +289,10 @@ namespace OurTaiko.Tests
             // Let the remaining notes miss and exercise Finish(), rather than manually pausing.
             yield return Waits.Until(() => play.IsPaused);
             Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First));
-            Assert.That(play.Session, Is.Not.SameAs(completed));
-            Assert.That(play.Session.HitTimings, Is.Empty, "The browsing session must not inherit judgments.");
+            Assert.That(play.Session, Is.SameAs(completed), "The completed attempt stays until the next one starts.");
+            Assert.That(play.Lane1.Shown.HitTimings, Is.Empty, "The browsing session must not inherit judgments.");
+            Assert.That(play.firstLane.judgeCounter.Text(0), Is.EqualTo(completed.Good.ToString()),
+                "Song end must keep the completed attempt's counts on the HUD.");
             Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Any(t => t.name == "PracticeTiming" && t.gameObject.activeInHierarchy), Is.False);
@@ -423,13 +426,13 @@ namespace OurTaiko.Tests
             yield return Press(Key.Escape);
             Assert.That(play.IsPaused, Is.True);
             Assert.That(play.pausePanel.activeSelf, Is.False, "Escape opens the practice measure browser.");
-            Assert.That(play.Session.HitTimings.Count, Is.Zero, "Review must not carry judgments into the next attempt.");
+            Assert.That(play.Lane1.Shown.HitTimings.Count, Is.Zero, "Review must not carry judgments into the browsing session.");
             // The synthetic judgments were seeded during preparation; browse to their measure.
-            var browsingSession = play.Session;
+            var browsingSession = play.Lane1.Shown;
             play.MovePractice(1);
             yield return new WaitForSecondsRealtime(.3f);
             Canvas.ForceUpdateCanvases();
-            Assert.That(play.Session, Is.SameAs(browsingSession), "Measure browsing must not rebuild chart-sized judgment state.");
+            Assert.That(play.Lane1.Shown, Is.SameAs(browsingSession), "Measure browsing must not rebuild chart-sized judgment state.");
             var labels = hitIndices.Select(i => play.NoteRoot(i).Find("PracticeTiming").GetComponent<TMP_Text>()).ToArray();
             for (int i = 0; i < labels.Length; i++)
             {
@@ -494,6 +497,62 @@ namespace OurTaiko.Tests
                 Assert.That(label.rectTransform.anchoredPosition.y, Is.EqualTo(offsets[i] < 0 ? -72 : 72));
             }
         }
+        [UnityTest]
+        public IEnumerator LastAttemptStatsStayUntilTheNextAttemptStarts()
+        {
+            yield return StartPractice(AudioBackend.BassSimple, false,
+                "TITLE:Practice Test\nBPM:120\nCOURSE:Oni\nLEVEL:1\n#START\n#SCROLL 0.3\n1110,\n5008,\n1111,\n#END");
+            yield return Press(Key.F); yield return Press(Key.F);
+            yield return Waits.Until(() => !play.IsPaused);
+            var attempt = play.Session;
+            var notes = attempt.Chart.Notes;
+            attempt.Hit(false, notes[0].Time + .09);
+            attempt.Hit(false, notes[1].Time);
+            attempt.Hit(false, notes[2].Time + .05);
+            attempt.Hit(false, notes[3].Time + .01);
+            Assert.That((attempt.Good, attempt.Ok, attempt.Bad, attempt.Rolls), Is.EqualTo((1, 1, 1, 1)));
+            string score = play.firstLane.scoreCounter.Text;
+            int combo = play.Lane1.DisplayCombo;
+            double gauge = play.Lane1.GaugePoints;
+            Assert.That(score, Is.Not.EqualTo("0"));
+            Assert.That(combo, Is.GreaterThan(0));
+            Assert.That(gauge, Is.GreaterThan(0));
+            void AssertAttemptShown()
+            {
+                AssertShownStats(score, "1", "1", "1", "1");
+                Assert.That(play.Session, Is.SameAs(attempt));
+                Assert.That(play.Lane1.DisplayCombo, Is.EqualTo(combo));
+                Assert.That(play.Lane1.GaugePoints, Is.EqualTo(gauge));
+            }
+
+            yield return Press(Key.Escape);
+            Assert.That(play.IsPaused, Is.True);
+            Assert.That(play.Lane1.Shown, Is.Not.SameAs(attempt));
+            Assert.That(play.Lane1.Shown.Good, Is.Zero, "The browsing session must not inherit judgments.");
+            AssertAttemptShown();
+
+            yield return null;
+            play.MovePractice(1);
+            yield return null;
+            AssertAttemptShown();
+
+            yield return Press(Key.F);
+            AssertAttemptShown();
+            yield return Press(Key.F);
+            Assert.That(play.Session, Is.Not.SameAs(attempt));
+            Assert.That(play.Lane1.Preview, Is.Null);
+            AssertShownStats("0", "0", "0", "0", "0");
+            Assert.That(play.Lane1.DisplayCombo, Is.Zero);
+            Assert.That(play.Lane1.GaugePoints, Is.Zero);
+            yield return Waits.Until(() => !play.IsPaused);
+            AssertShownStats("0", "0", "0", "0", "0");
+        }
+        void AssertShownStats(string score, string good, string ok, string bad, string rolls)
+        {
+            Assert.That(play.firstLane.scoreCounter.Text, Is.EqualTo(score));
+            var counts = play.firstLane.judgeCounter;
+            Assert.That((counts.Text(0), counts.Text(1), counts.Text(2), counts.Text(3)), Is.EqualTo((good, ok, bad, rolls)));
+        }
         [UnityTest, Category("SpriteRendering")]
         public IEnumerator TimingReviewCanBeToggledDuringPauseWithoutChangingTheAttempt()
         {
@@ -506,7 +565,7 @@ namespace OurTaiko.Tests
             attempt.Hit(false, attempt.Chart.Notes[2].Time + .012);
             int score = attempt.Score, timings = attempt.HitTimings.Count, bad = attempt.Bad;
             yield return Press(Key.Escape);
-            var browsing = play.Session;
+            var browsing = play.Lane1.Shown;
             double target = play.Practice.Target;
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Any(t => t.name == "PracticeTiming"), Is.False,
@@ -533,18 +592,19 @@ namespace OurTaiko.Tests
             manager.Set(settings);
             yield return null; yield return null;
             Assert.That(hit.gameObject.activeInHierarchy && missed.gameObject.activeInHierarchy, Is.True);
-            Assert.That(play.Session, Is.SameAs(browsing));
+            Assert.That(play.Lane1.Shown, Is.SameAs(browsing));
             Assert.That(play.Practice.Target, Is.EqualTo(target));
             Assert.That((attempt.Score, attempt.HitTimings.Count, attempt.Bad), Is.EqualTo((score, timings, bad)),
                 "Toggling review only changes visibility, not the recorded attempt.");
             play.TogglePause();
             yield return new WaitForSecondsRealtime(PauseMenuView.FadeDuration + .05f);
             play.Restart();
-            yield return Waits.Until(() => play.Session != browsing && !play.pausePanel.activeSelf);
+            yield return Waits.Until(() => play.Lane1.Shown != browsing && !play.pausePanel.activeSelf);
             Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First));
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
                 "A manual restart must discard the old timing offsets and missed-note marks.");
+            AssertShownStats("0", "0", "0", "0", "0");
         }
 
         // Misses would select 普通 at both branches; practice must keep the menu's route instead.
@@ -567,7 +627,7 @@ namespace OurTaiko.Tests
             Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
             Assert.That(play.Practice.Count, Is.EqualTo(bars));
             var notes = play.Session.Chart.Notes;
-            Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Session.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True);
+            Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Lane1.Shown.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True);
             yield return Press(Key.F);
             Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure));
             Assert.That(play.practiceView.heading.text, Is.EqualTo(L10n.Get("Play", "practice.measure.heading")));
@@ -597,7 +657,7 @@ namespace OurTaiko.Tests
             yield return Press(Key.K); yield return Press(Key.K);
             Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Master));
             var notes = play.Session.Chart.Notes;
-            Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Session.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True,
+            Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Lane1.Shown.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True,
                 "達人 falls back to the authored 玄人 notes.");
             yield return Press(Key.F); yield return Press(Key.F); yield return Press(Key.F);
             yield return Waits.Until(() => play.Session.BranchHistory.Count == 1);

@@ -1,0 +1,454 @@
+{
+  "version": 2,
+  "locale": "en-US",
+  "index_path": "aoci.txt",
+  "exclude_dirs": [
+    "node_modules",
+    ".next",
+    ".output",
+    "__pycache__",
+    ".venv",
+    "venv",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".tox",
+    ".nox",
+    "htmlcov"
+  ],
+  "exclude_root_dirs": [
+    "backup",
+    "backups",
+    "build",
+    "cache",
+    "coverage",
+    "dist",
+    "target",
+    "tmp",
+    "uploads",
+    "artifacts",
+    "vendor"
+  ],
+  "exclude_files": [
+    "*.backup.*",
+    "*.bak",
+    ".coverage"
+  ],
+  "exclude_exts": [],
+  "curation_exclude": [],
+  "hook_strict": false,
+  "ledger_enabled": true,
+  "line_ending_tolerance": true,
+  "cognition_refresh_threshold": 30,
+  "overview_delivery": {
+    "chunk_tokens": 7000
+  },
+  "managed_scope": {
+    "version": "managed-scope-policy/v2",
+    "profile": "production",
+    "observe_change_policy": "review_required",
+    "approval_mode": "inherit",
+    "approval_thresholds": {
+      "entry_removal_count": 25,
+      "entry_removal_percent": 25
+    },
+    "rules": [
+      {
+        "rule_id": "starter-vendored-static-libs",
+        "action": "observe",
+        "pattern": "**/static/**/libs/**",
+        "pattern_kind": "glob",
+        "reason": "vendored static assets and generated bundles are observed, not indexed; delete this rule before the first scan if the path holds your own code",
+        "source": "builtin",
+        "created_by": "aoci-init",
+        "order": 100,
+        "enabled": true
+      },
+      {
+        "rule_id": "starter-vendored-static-lib",
+        "action": "observe",
+        "pattern": "**/static/**/lib/**",
+        "pattern_kind": "glob",
+        "reason": "vendored static assets and generated bundles are observed, not indexed; delete this rule before the first scan if the path holds your own code",
+        "source": "builtin",
+        "created_by": "aoci-init",
+        "order": 101,
+        "enabled": true
+      },
+      {
+        "rule_id": "starter-vendored-static-plugins",
+        "action": "observe",
+        "pattern": "**/static/**/plugins/**",
+        "pattern_kind": "glob",
+        "reason": "vendored static assets and generated bundles are observed, not indexed; delete this rule before the first scan if the path holds your own code",
+        "source": "builtin",
+        "created_by": "aoci-init",
+        "order": 102,
+        "enabled": true
+      },
+      {
+        "rule_id": "starter-vendored-min-js",
+        "action": "observe",
+        "pattern": "**/*.min.js",
+        "pattern_kind": "glob",
+        "reason": "vendored static assets and generated bundles are observed, not indexed; delete this rule before the first scan if the path holds your own code",
+        "source": "builtin",
+        "created_by": "aoci-init",
+        "order": 103,
+        "enabled": true
+      },
+      {
+        "rule_id": "starter-vendored-min-css",
+        "action": "observe",
+        "pattern": "**/*.min.css",
+        "pattern_kind": "glob",
+        "reason": "vendored static assets and generated bundles are observed, not indexed; delete this rule before the first scan if the path holds your own code",
+        "source": "builtin",
+        "created_by": "aoci-init",
+        "order": 104,
+        "enabled": true
+      },
+      {
+        "rule_id": "starter-vendored-source-map",
+        "action": "observe",
+        "pattern": "**/*.map",
+        "pattern_kind": "glob",
+        "reason": "vendored static assets and generated bundles are observed, not indexed; delete this rule before the first scan if the path holds your own code",
+        "source": "builtin",
+        "created_by": "aoci-init",
+        "order": 105,
+        "enabled": true
+      },
+      {
+        "rule_id": "starter-vendored-fonts",
+        "action": "observe",
+        "pattern": "**/fonts/**",
+        "pattern_kind": "glob",
+        "reason": "vendored static assets and generated bundles are observed, not indexed; delete this rule before the first scan if the path holds your own code",
+        "source": "builtin",
+        "created_by": "aoci-init",
+        "order": 106,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-exclude-default",
+        "action": "exclude",
+        "pattern": "**",
+        "pattern_kind": "glob",
+        "reason": "Unity project: assets, .meta, binaries and vendored plugins are not indexed; only the code, build and documentation files allowed below are",
+        "source": "user",
+        "created_by": "human",
+        "order": 200,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-ourtaiko-cs",
+        "action": "index",
+        "pattern": "Assets/OurTaiko/**/*.cs",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 300,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-ourtaiko-asmdef",
+        "action": "index",
+        "pattern": "Assets/OurTaiko/**/*.asmdef",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 301,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-ourtaiko-shader",
+        "action": "index",
+        "pattern": "Assets/OurTaiko/**/*.shader",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 302,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-ourtaiko-localization-strings-csv",
+        "action": "index",
+        "pattern": "Assets/OurTaiko/Localization/Strings/*.csv",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 303,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-plugins-majdataplay-cs",
+        "action": "index",
+        "pattern": "Assets/Plugins/MajdataPlay/**/*.cs",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 304,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-plugins-majdataplay-asmdef",
+        "action": "index",
+        "pattern": "Assets/Plugins/MajdataPlay/**/*.asmdef",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 305,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-plugins-ios-mm",
+        "action": "index",
+        "pattern": "Assets/Plugins/iOS/*.mm",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 306,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-plugins-android-java",
+        "action": "index",
+        "pattern": "Assets/Plugins/Android/*.java",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 307,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-csc-rsp",
+        "action": "index",
+        "pattern": "Assets/csc.rsp",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 308,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-assets-settings-inputsystem-actions-inputactions",
+        "action": "index",
+        "pattern": "Assets/Settings/InputSystem_Actions.inputactions",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 309,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-github",
+        "action": "index",
+        "pattern": ".github/**",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 310,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-fastlane-fastfile",
+        "action": "index",
+        "pattern": "fastlane/Fastfile",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 311,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-fastlane-gemfile",
+        "action": "index",
+        "pattern": "fastlane/Gemfile",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 312,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-packages-manifest-json",
+        "action": "index",
+        "pattern": "Packages/manifest.json",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 313,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-projectsettings-projectversion-txt",
+        "action": "index",
+        "pattern": "ProjectSettings/ProjectVersion.txt",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 314,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-gitmodules",
+        "action": "index",
+        "pattern": ".gitmodules",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 315,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-gitattributes",
+        "action": "index",
+        "pattern": ".gitattributes",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 316,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-gitignore",
+        "action": "index",
+        "pattern": ".gitignore",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 317,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-md",
+        "action": "index",
+        "pattern": "*.md",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 318,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-documentation-md",
+        "action": "index",
+        "pattern": "Documentation/*.md",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 319,
+        "enabled": true
+      },
+      {
+        "rule_id": "project-index-documentation-swift",
+        "action": "index",
+        "pattern": "Documentation/*.swift",
+        "pattern_kind": "glob",
+        "reason": "Project code, build or documentation file read by agents",
+        "source": "user",
+        "created_by": "human",
+        "order": 320,
+        "enabled": true
+      }
+    ]
+  },
+  "cognition_budget": {
+    "version": "cognition-budget-policy/v1",
+    "mode": "enforce",
+    "whole_index": {
+      "target_tokens": 200000,
+      "warning_tokens": 300000,
+      "max_tokens": 400000
+    },
+    "r": [
+      {
+        "min_c": 1,
+        "max_c": 4,
+        "target_tokens": 25,
+        "max_tokens": 50
+      },
+      {
+        "min_c": 5,
+        "max_c": 7,
+        "target_tokens": 45,
+        "max_tokens": 90
+      },
+      {
+        "min_c": 8,
+        "max_c": 8,
+        "target_tokens": 70,
+        "max_tokens": 140
+      },
+      {
+        "min_c": 9,
+        "max_c": 9,
+        "target_tokens": 90,
+        "max_tokens": 180
+      }
+    ],
+    "s": [
+      {
+        "min_c": 1,
+        "max_c": 4,
+        "target_tokens": 20,
+        "max_tokens": 40
+      },
+      {
+        "min_c": 5,
+        "max_c": 7,
+        "target_tokens": 40,
+        "max_tokens": 80
+      },
+      {
+        "min_c": 8,
+        "max_c": 8,
+        "target_tokens": 70,
+        "max_tokens": 140
+      },
+      {
+        "min_c": 9,
+        "max_c": 9,
+        "target_tokens": 100,
+        "max_tokens": 200
+      }
+    ]
+  },
+  "installed_agents": [],
+  "automation": {
+    "mode": "auto"
+  },
+  "ai": {
+    "enabled": false,
+    "provider": "openai-compatible",
+    "base_url": "",
+    "model": "",
+    "api_key_env": "",
+    "timeout_seconds": 0,
+    "max_concurrency": 0,
+    "max_input_tokens": 0,
+    "token_accounting": "auto",
+    "prompt_snapshot": "redacted"
+  }
+}

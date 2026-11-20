@@ -221,3 +221,6 @@ accounts.browserCode,Check this code in your browser: {0},ブラウザーでこ�
 accounts.browserUnavailable,Browser sign-in is unavailable. Use your password instead.,ブラウザーログインは利用できません。パスワードでログインしてください。,账号中心暂不支持网页登录，请使用密码登录。,Browser authorization
 accounts.browserExpired,Authorization expired. Start browser sign-in again.,有効期限切れです。もう一度ログインしてください。,授权已过期，请重新发起网页登录。,Browser authorization
 status.seatNotSignedIn,{0}P is not signed in.,{0}P はログインしていません。,{0}P 未登录。,Footer message; {0} seat number
+sidebar.title,Settings Sidebar,設定サイドバー,侧栏,Settings category title
+sidebar.subtitle,Choose which categories appear in the sidebar.,サイドバーに表示する項目を選びます。,选择要在侧栏中显示的分类。,Settings category subtitle
+sidebar.categories,Visible categories,表示する項目,显示的分类,Group of sidebar visibility switches
