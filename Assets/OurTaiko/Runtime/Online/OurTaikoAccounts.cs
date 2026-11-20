@@ -127,6 +127,8 @@ namespace OurTaiko.Online
     // session of each server that names this account center in its catalog.
     public sealed class AccountCenter : IDisposable
     {
+        const string DeviceStart = "/api/v1/game/account/device";
+        const string DeviceToken = DeviceStart + "/token";
         public const string DefaultIssuer = "https://sso.ourtaiko.org";
         public readonly string Issuer;
         readonly HttpClient http;
@@ -152,7 +154,7 @@ namespace OurTaiko.Online
         public async Task<OurTaikoAccount> BrowserLoginAsync(string deviceName, Action<string, string> authorize,
             CancellationToken cancel)
         {
-            var grant = await SendAsync(HttpMethod.Post, "/api/v1/game/account/device", null,
+            var grant = await SendAsync(HttpMethod.Post, DeviceStart, null,
                 new JObject { ["deviceName"] = deviceName }, cancel);
             string secret = Json.Str(grant, "deviceCode"), code = Json.Str(grant, "userCode");
             if (!Json.HexId(secret, 64) || code.Length != 8 || !code.All(ch => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".Contains(ch)))
@@ -170,16 +172,23 @@ namespace OurTaiko.Online
                     await Task.Delay(TimeSpan.FromSeconds(interval), expires.Token);
                     try
                     {
-                        var reply = await SendAsync(HttpMethod.Post, "/api/v1/game/account/device/token", null,
+                        var reply = await SendAsync(HttpMethod.Post, DeviceToken, null,
                             new JObject { ["deviceCode"] = secret }, expires.Token);
                         if ((bool?)reply["pending"] != true) return ReadAccount(reply);
                     }
-                    catch (HttpStatusException error) when (error.Status == 429) { interval = Math.Min(interval + 5, 60); }
+                    catch (HttpStatusException error) when (error.Status == 429)
+                    {
+                        interval = Math.Max(Math.Min(interval + 5, seconds), error.RetryAfterSeconds);
+                    }
+                    catch (FanmadeException error) when (error.Message is "NETWORK_ERROR" or "NETWORK_TIMEOUT")
+                    {
+                        interval = Math.Min(interval * 2, seconds);
+                    }
                 }
             }
             catch (Exception) when (!cancel.IsCancellationRequested && expires.IsCancellationRequested)
             {
-                throw new HttpStatusException(410);
+                throw new FanmadeException("DEVICE_EXPIRED");
             }
         }
 
@@ -226,6 +235,22 @@ namespace OurTaiko.Online
                 using var response = await http.SendAsync(request, linked.Token);
                 int status = (int)response.StatusCode;
                 Log.Debug("Account", $"{method} {path}: {status}");
+                if (path == DeviceStart && status == 404) throw new FanmadeException("DEVICE_UNAVAILABLE");
+                if (path == DeviceToken)
+                {
+                    if (status == 410) throw new FanmadeException("DEVICE_EXPIRED");
+                    if (status == 429)
+                    {
+                        double delay = response.Headers.RetryAfter?.Delta?.TotalSeconds ?? 0;
+                        throw new HttpStatusException(status, (int)Math.Min(delay, 600));
+                    }
+                    if (status == 403 && response.Content.Headers.ContentType?.MediaType == "application/json")
+                    {
+                        string detail = await response.Content.ReadAsStringAsync();
+                        if (detail.Length <= 64 * 1024 && (string)Json.Parse(detail)["code"] == "DEVICE_DENIED")
+                            throw new FanmadeException("DEVICE_DENIED");
+                    }
+                }
                 if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 string text = await response.Content.ReadAsStringAsync();
                 if (text.Length > 64 * 1024) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");

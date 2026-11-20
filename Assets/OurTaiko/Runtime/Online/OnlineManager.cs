@@ -186,7 +186,6 @@ namespace OurTaiko.Online
 
         async Task CompleteSignInAsync(int seat, OurTaikoAccount account, CancellationToken cancel, bool connect)
         {
-            cancel.ThrowIfCancellationRequested();
             Accounts.Seats[seat] = account;
             SaveAccounts();
             expired[seat] = false;

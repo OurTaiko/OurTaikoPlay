@@ -906,6 +906,10 @@ MonoBehaviour:
     m_Localized: "Authorization expired. Start browser sign-in again."
     m_Metadata:
       m_Items: []
+  - m_Id: 2523232274997255
+    m_Localized: Authorization declined.
+    m_Metadata:
+      m_Items: []
   - m_Id: 2895769534193664
     m_Localized: Settings Sidebar
     m_Metadata:

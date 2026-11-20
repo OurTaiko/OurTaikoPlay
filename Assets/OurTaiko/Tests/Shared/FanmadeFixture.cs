@@ -632,7 +632,7 @@ namespace OurTaiko.Tests
         public bool Gzip;
         public int GzippedReplies;
 
-        void Reply(HttpListenerContext context, int status, JToken body)
+        public void Reply(HttpListenerContext context, int status, JToken body)
         {
             context.Response.StatusCode = status;
             context.Response.ContentType = "application/json";

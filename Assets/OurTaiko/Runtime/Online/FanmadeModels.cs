@@ -16,7 +16,12 @@ namespace OurTaiko.Online
     public sealed class HttpStatusException : FanmadeException
     {
         public readonly int Status;
-        public HttpStatusException(int status) : base("HTTP_" + status) { Status = status; }
+        public readonly int RetryAfterSeconds;
+        public HttpStatusException(int status, int retryAfterSeconds = 0) : base("HTTP_" + status)
+        {
+            Status = status;
+            RetryAfterSeconds = retryAfterSeconds;
+        }
     }
 
     // One chart block: a course (Easy..Edit) on one side, as the arcade keeps a single, a 1P and a

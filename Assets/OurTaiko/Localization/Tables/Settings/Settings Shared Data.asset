@@ -35,6 +35,10 @@ MonoBehaviour:
     m_Key: accounts.browserExpired
     m_Metadata:
       m_Items: []
+  - m_Id: 2523232274997255
+    m_Key: accounts.browserDenied
+    m_Metadata:
+      m_Items: []
   - m_Id: 133160960
     m_Key: value.on
     m_Metadata:
