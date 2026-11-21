@@ -1,7 +1,7 @@
 {
   "version": 1,
   "created_at": "2026-11-19T21:29:00Z",
-  "updated_at": "2026-11-20T08:57:57Z",
+  "updated_at": "2026-11-21T03:19:11Z",
   "files": {
     ".gitattributes": {
       "role": "index",
@@ -293,9 +293,9 @@
     },
     "Assets/OurTaiko/Runtime/Audio/NativeAudioSample.cs": {
       "role": "index",
-      "sha256": "080b23f6d7fffa514611d9f02979cd17d51189d82777c801ed2085be02cab7d4",
-      "size": 8590,
-      "normalized_sha256": "080b23f6d7fffa514611d9f02979cd17d51189d82777c801ed2085be02cab7d4"
+      "sha256": "4fc4dd253177d5bd6438e32a65f7a285c13c707d51d08e8b342cffbd5155da1b",
+      "size": 8880,
+      "normalized_sha256": "4fc4dd253177d5bd6438e32a65f7a285c13c707d51d08e8b342cffbd5155da1b"
     },
     "Assets/OurTaiko/Runtime/Audio/SoundSettings.cs": {
       "role": "index",
@@ -2495,9 +2495,9 @@
     },
     "Assets/OurTaiko/Tests/PlayMode/NativeDecoderTests.cs": {
       "role": "index",
-      "sha256": "e353f6918585f1e9c8929746262e9017a04b47a6fa9e988efc4d58b73e0a5e6a",
-      "size": 3766,
-      "normalized_sha256": "e353f6918585f1e9c8929746262e9017a04b47a6fa9e988efc4d58b73e0a5e6a"
+      "sha256": "819e99cf6fad0d3ad530486156ef9b47c48a0e0206e8c65d7894035025c482d3",
+      "size": 5557,
+      "normalized_sha256": "819e99cf6fad0d3ad530486156ef9b47c48a0e0206e8c65d7894035025c482d3"
     },
     "Assets/OurTaiko/Tests/PlayMode/NestedFolderFlowTests.cs": {
       "role": "index",
@@ -2975,9 +2975,9 @@
     },
     "aoci.code.txt": {
       "role": "index",
-      "sha256": "e3cbf49f74defb6773efc378da63fbc6a1a304be78de919e3e33f38e5eab7db1",
-      "size": 206272,
-      "normalized_sha256": "e3cbf49f74defb6773efc378da63fbc6a1a304be78de919e3e33f38e5eab7db1"
+      "sha256": "ad2946883ca6109c76642b1e137d6ba4b7c275f150c1c2030324337f6d494484",
+      "size": 206535,
+      "normalized_sha256": "ad2946883ca6109c76642b1e137d6ba4b7c275f150c1c2030324337f6d494484"
     },
     "aoci.meta.txt": {
       "role": "index",
