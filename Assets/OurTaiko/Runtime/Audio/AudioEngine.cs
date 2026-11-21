@@ -373,6 +373,7 @@ namespace OurTaiko
                     // Keep live volume changes while restoring the last usable device configuration.
                     var restored = manager.Settings.Clone();
                     previous.volume = restored.audio.volume;
+                    previous.balanceLoudness = restored.audio.balanceLoudness;
                     restored.audio = previous;
                     manager.Set(restored);
                     throw new InvalidOperationException("Could not apply audio settings; restored " + Backend + ": " + error.Message, error);

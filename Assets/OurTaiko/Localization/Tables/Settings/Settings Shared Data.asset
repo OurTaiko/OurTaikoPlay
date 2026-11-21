@@ -919,6 +919,14 @@ MonoBehaviour:
     m_Key: sidebar.categories
     m_Metadata:
       m_Items: []
+  - m_Id: 3580288037806080
+    m_Key: sound.balance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3580288042000384
+    m_Key: sound.balanceDesc
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

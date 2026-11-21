@@ -96,6 +96,13 @@ namespace OurTaiko
             }
         }
 
+        static AudioLevel? FullSongLevel(Online.OnlineManager online, SongDefinition song)
+        {
+            var chart = online.ChartOf(song);
+            try { return chart != null && online.Client.AudioLevels.TryGet(chart.AudioHash, out var level) ? level : null; }
+            catch (SQLite.SQLiteException error) { Log.Warn("Preview", "Audio level not read: " + error.Message); return null; }
+        }
+
         // An online song's preview file comes from its server (cached by content) and starts at
         // its beginning; a local song decodes its own audio and starts at DEMOSTART.
         IEnumerator Load(SongDefinition song, double demoStart, int generation)
@@ -151,7 +158,10 @@ namespace OurTaiko
                         target = onlineSong = ScriptableObject.CreateInstance<SongDefinition>();
                         onlineSong.hideFlags = HideFlags.DontSave;
                     }
-                    target.SetPreparedAudio(decode.Take());
+                    var audio = decode.Take();
+                    // The excerpt takes its whole song's level once that song has been played.
+                    if (remote && FullSongLevel(online, song) is AudioLevel level) audio.Level = level;
+                    target.SetPreparedAudio(audio);
                     source.SetAudioSong(target, false);
                     double start = remote ? 0 : Math.Clamp(demoStart, 0, Math.Max(0, source.AudioLength() - 0.1));
                     source.SeekAudio(start);

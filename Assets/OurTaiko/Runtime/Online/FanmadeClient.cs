@@ -53,6 +53,8 @@ namespace OurTaiko.Online
         public PendingDanQueue DanQueue { get; }
         // The charts prepared so far, playable while their server is not connected.
         public OfflineChartStore Offline { get; }
+        // What each played song's full audio measured, for its preview to sound the same.
+        public AudioLevelStore AudioLevels { get; }
         public FanmadeClient(string cacheRoot, string databasePath = null)
         {
             CacheRoot = Path.GetFullPath(cacheRoot);
@@ -60,6 +62,7 @@ namespace OurTaiko.Online
             UploadQueue = new PendingScoreQueue(database);
             DanQueue = new PendingDanQueue(database);
             Offline = new OfflineChartStore(database);
+            AudioLevels = new AudioLevelStore(database);
         }
 
         // A 段位 attempt's answer: Profile is OurTaikoProfile's reply ({granted, nameplate}) or null

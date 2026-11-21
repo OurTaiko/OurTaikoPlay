@@ -922,6 +922,14 @@ MonoBehaviour:
     m_Localized: Visible categories
     m_Metadata:
       m_Items: []
+  - m_Id: 3580288037806080
+    m_Localized: Even Out Song Volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3580288042000384
+    m_Localized: 'Plays every song at a similar loudness. Off: each song plays as loud as its file allows.'
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

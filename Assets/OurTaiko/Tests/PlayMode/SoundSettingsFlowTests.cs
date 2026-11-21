@@ -56,6 +56,15 @@ namespace OurTaiko.Tests
                 Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "sound.voice")));
                 overlay.Side(-1); // previews voice using the Voice group
                 overlay.Move(1);
+                Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "sound.balance")));
+                Assert.That(settings.Settings.audio.balanceLoudness, Is.True);
+                overlay.Confirm();
+                Assert.That(settings.Settings.audio.balanceLoudness, Is.False);
+                Assert.That(GameSettings.FromJson(File.ReadAllText(settings.FilePath)).audio.balanceLoudness, Is.False);
+                Assert.That(engine.HasPendingDeviceChanges, Is.False, "Balancing applies at once, without reopening the output.");
+                overlay.Confirm();
+                Assert.That(settings.Settings.audio.balanceLoudness, Is.True);
+                overlay.Move(1);
                 Assert.That(nav.Row.Label, Is.EqualTo(L10n.Get("Settings", "sound.backend")));
                 overlay.Confirm();
                 overlay.Move(nav.SheetOptions.Count - 1); // BassSimple, the last choice everywhere
@@ -278,6 +287,39 @@ namespace OurTaiko.Tests
             Object.Destroy(overlay.gameObject);
             settings.UseUnsaved(new GameSettings());
             yield return WaitFor(engine.ApplyPendingSettingsAsync());
+        }
+
+        // Turning loudness balancing off or on changes a playing song's gain at once.
+        [UnityTest]
+        public IEnumerator LoudnessBalancingAppliesToThePlayingSongLive()
+        {
+            var settings = SettingManager.EnsureInstance(); settings.UseUnsaved(new GameSettings());
+            const int rate = 48000;
+            var pcm = new short[rate * 4 * 2];
+            for (int i = 0; i < rate * 4; i++) pcm[i * 2] = pcm[i * 2 + 1] = (short)(.5f * 32767 * System.Math.Sin(2 * System.Math.PI * 997 * i / rate));
+            string file = Path.Combine(Application.temporaryCachePath, "balance-" + System.Guid.NewGuid() + ".wav");
+            File.WriteAllBytes(file, NativeDecoderTests.Wav(pcm, rate));
+            var song = ScriptableObject.CreateInstance<SongDefinition>(); song.audioPath = file;
+            var go = new GameObject("BalanceTest"); var source = go.AddComponent<AudioSource>(); source.volume = 1;
+            try
+            {
+                source.SetAudioSong(song, false); source.PlayAudio();
+                yield return null;
+                var bus = source.GetComponent<AudioBus>();
+                // About -6 LUFS: turned down toward -10.
+                float balanced = (float)System.Math.Pow(10, (AudioLevel.TargetLufs - 20 * System.Math.Log10(.5 * 32767 / 32768.0)) / 20);
+                Assert.That(bus.MainOutputVolume, Is.EqualTo(balanced).Within(.01));
+                var off = new GameSettings(); off.audio.balanceLoudness = false;
+                settings.UseUnsaved(off);
+                Assert.That(bus.MainOutputVolume, Is.EqualTo(2f).Within(.01), "Off: the loudest sample is brought to full scale");
+                settings.UseUnsaved(new GameSettings());
+                Assert.That(bus.MainOutputVolume, Is.EqualTo(balanced).Within(.01));
+            }
+            finally
+            {
+                Object.Destroy(go); Object.Destroy(song); settings.UseUnsaved(new GameSettings());
+                File.Delete(file);
+            }
         }
 
         [UnityTest]

@@ -24,10 +24,13 @@ namespace OurTaiko
         void ApplyVolumes(GameSettings unused)
         {
             if (engine == null || source == null) return;
+            Balance();
             main?.SetVolume(MainVolume);
             foreach (var pair in tracks) pair.Value.SetVolume(Volume(Group));
             foreach (var pair in effects) pair.Value.SetVolume(Volume(effectGroups.TryGetValue(pair.Key, out var group) ? group : Group));
         }
+        // Song audio is measured when decoded; whether its gain balances loudness is the player's choice.
+        void Balance() { if (main != null) main.BalanceLoudness = settings.Settings.audio.balanceLoudness; }
         readonly Dictionary<AudioClip, NativeAudioSample> tracks = new();
         readonly Dictionary<AudioClip, NativeAudioSample> effects = new();
         NativeAudioSample main;
@@ -78,6 +81,7 @@ namespace OurTaiko
                     : value.music != null ? AudioAssetCatalog.Read(value.music) : null;
                 if (bytes != null) main = new NativeAudioSample(bytes, engine, true, gameplay);
             }
+            Balance();
         }
         public void PrepareMain()
         {

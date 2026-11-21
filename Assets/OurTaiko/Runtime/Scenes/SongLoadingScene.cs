@@ -107,9 +107,24 @@ namespace OurTaiko
             using (var decode = new BackgroundAudioDecode(() => encoded ?? System.IO.File.ReadAllBytes(path), engine, true))
             {
                 while (!decode.IsDone) yield return null;
-                if (decode.Succeeded) song.SetPreparedAudio(decode.Take());
+                if (decode.Succeeded)
+                {
+                    var audio = decode.Take();
+                    RecordLevel(song, audio.Level);
+                    song.SetPreparedAudio(audio);
+                }
                 else { Error = "AUDIO_DECODE_FAILED"; Log.Exception("Loading", decode.Error); }
             }
+        }
+
+        // A server song's preview plays at its full audio's level from now on (AudioLevelStore).
+        static void RecordLevel(SongDefinition song, AudioLevel level)
+        {
+            var online = OnlineManager.Instance;
+            var chart = online?.ChartOf(song);
+            if (chart == null) return;
+            try { online.Client.AudioLevels.Save(chart.AudioHash, level); }
+            catch (SQLite.SQLiteException error) { Log.Warn("Loading", "Audio level not stored: " + error.Message); }
         }
 
         // 段位道場 (under its own loading cover): every song of the course, in order: a server's song is downloaded first, then
