@@ -1,7 +1,7 @@
 {
   "version": 1,
   "created_at": "2026-11-19T21:29:00Z",
-  "updated_at": "2026-11-21T04:12:29Z",
+  "updated_at": "2026-11-21T05:51:10Z",
   "files": {
     ".gitattributes": {
       "role": "index",
@@ -59,9 +59,9 @@
     },
     ".github/workflows/build.yml": {
       "role": "index",
-      "sha256": "b946638339c33241c2e6e64a0d3a7dde8e7bc9d7b5550331af8f2f39a07d8c66",
-      "size": 17452,
-      "normalized_sha256": "b946638339c33241c2e6e64a0d3a7dde8e7bc9d7b5550331af8f2f39a07d8c66"
+      "sha256": "73b7f2615cc798b85ec477ec547b8beeedc26be8107ad588a843449c6aa922df",
+      "size": 18324,
+      "normalized_sha256": "73b7f2615cc798b85ec477ec547b8beeedc26be8107ad588a843449c6aa922df"
     },
     ".github/workflows/test.yml": {
       "role": "index",
@@ -941,9 +941,9 @@
     },
     "Assets/OurTaiko/Runtime/Online/RewardInbox.cs": {
       "role": "index",
-      "sha256": "02b19d813066d4c2ffad520c7e55bfb5b1fdb77b10108da4ce259f690d967f00",
-      "size": 13612,
-      "normalized_sha256": "02b19d813066d4c2ffad520c7e55bfb5b1fdb77b10108da4ce259f690d967f00"
+      "sha256": "cd1f204bed9722684c4d82cdfe310b904e062eda2ceeec3ba3a56da8c70d6a10",
+      "size": 14232,
+      "normalized_sha256": "cd1f204bed9722684c4d82cdfe310b904e062eda2ceeec3ba3a56da8c70d6a10"
     },
     "Assets/OurTaiko/Runtime/Online/ServerConfig.cs": {
       "role": "index",
@@ -2015,9 +2015,9 @@
     },
     "Assets/OurTaiko/Tests/EditMode/RewardInboxTests.cs": {
       "role": "index",
-      "sha256": "2530bedfb9a253d919a1b91690f5785abb22cd65c6901400dd430a062fe0ca34",
-      "size": 10068,
-      "normalized_sha256": "2530bedfb9a253d919a1b91690f5785abb22cd65c6901400dd430a062fe0ca34"
+      "sha256": "31af6aaba016adc2df0660a2b7b369b4cc586fbbb64f3079e657c2c421474fe6",
+      "size": 11184,
+      "normalized_sha256": "31af6aaba016adc2df0660a2b7b369b4cc586fbbb64f3079e657c2c421474fe6"
     },
     "Assets/OurTaiko/Tests/EditMode/ScoreAdditionClipTests.cs": {
       "role": "index",
@@ -2999,9 +2999,9 @@
     },
     "aoci.code.txt": {
       "role": "index",
-      "sha256": "b91684bc76acc7362f90634e5feea269e0c806e44a4945bc5ea6aa6882e738dd",
-      "size": 209162,
-      "normalized_sha256": "b91684bc76acc7362f90634e5feea269e0c806e44a4945bc5ea6aa6882e738dd"
+      "sha256": "8955f01ede45722f27f3fad61a44513ab83a72981ef4a5373892feab50ffa382",
+      "size": 209408,
+      "normalized_sha256": "8955f01ede45722f27f3fad61a44513ab83a72981ef4a5373892feab50ffa382"
     },
     "aoci.meta.txt": {
       "role": "index",
