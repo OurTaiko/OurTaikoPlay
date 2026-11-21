@@ -166,14 +166,25 @@ namespace OurTaiko.Online
         }
 
         // Fetches for every owner that has rewards waiting and none queued, fetched or being marked.
+        // The overlay calls this on every frame of the whole game and nearly every one finds nothing
+        // to do, so looking allocates nothing: the lists are made only when there is work.
         public void Pump()
         {
-            Forget(o => !o.Site.Current);
-            List<(string key, Owner owner)> due;
+            ForgetGone();
+            List<(string key, Owner owner)> due = null;
             lock (gate)
-                due = owners.Where(p => p.Value.Waiting > 0 && !p.Value.Fetching && !p.Value.Marking && !queue.Any(r => r.Owner == p.Key))
-                    .Select(p => (p.Key, p.Value)).ToList();
+                foreach (var p in owners)
+                    if (p.Value.Waiting > 0 && !p.Value.Fetching && !p.Value.Marking && !IsQueued(p.Key))
+                        (due ??= new List<(string key, Owner owner)>()).Add((p.Key, p.Value));
+            if (due == null) return;
             foreach (var (key, owner) in due) _ = FetchAsync(key, owner);
+        }
+
+        // Under gate.
+        bool IsQueued(string owner)
+        {
+            foreach (var reward in queue) if (reward.Owner == owner) return true;
+            return false;
         }
 
         async Task FetchAsync(string key, Owner owner)
@@ -229,17 +240,23 @@ namespace OurTaiko.Online
             finally { lock (gate) owner.Marking = false; }
         }
 
-        // Forgets the owners the test says (signed out, someone else on the seat now) and what of
+        // Forgets the owners who are gone (signed out, someone else on the seat now) and what of
         // theirs is queued, without marking anything: it is still theirs to see.
-        void Forget(Func<Owner, bool> gone)
+        void ForgetGone()
         {
+            List<string> gone = null;
             bool changed = false;
             lock (gate)
-                foreach (var key in owners.Where(p => gone(p.Value)).Select(p => p.Key).ToList())
+            {
+                foreach (var p in owners)
+                    if (!p.Value.Site.Current) (gone ??= new List<string>()).Add(p.Key);
+                if (gone == null) return;
+                foreach (string key in gone)
                 {
                     owners.Remove(key);
                     changed |= queue.RemoveAll(r => r.Owner == key) > 0;
                 }
+            }
             if (changed) Changed?.Invoke();
         }
 

@@ -82,6 +82,27 @@ namespace OurTaiko.Tests
             Assert.That(site.Fetches, Is.EqualTo(1));
         }
 
+        // The overlay pumps on every frame of the whole game, a play included, and nearly every one
+        // of those finds nothing to fetch: looking must not leave garbage behind.
+        [Test]
+        public void AFrameWithNothingToFetchAllocatesNothing()
+        {
+            var inbox = new RewardInbox();
+            var site = new Site();
+            site.Give(1, Reward.TitleKind, Title("one"));
+
+            inbox.Heard("site\nplayer", 0, 0, site);
+            inbox.Pump();
+            Assert.That(() => inbox.Pump(), UnityEngine.TestTools.Constraints.ConstraintExtensions.AllocatingGCMemory(Is.Not), "A signed-in player with nothing waiting.");
+
+            // Queued and told of again: still nothing to fetch until the overlay has shown it.
+            inbox.Heard("site\nplayer", 0, 1, site);
+            inbox.Pump();
+            inbox.Heard("site\nplayer", 0, 1, site);
+            Assert.That(() => inbox.Pump(), UnityEngine.TestTools.Constraints.ConstraintExtensions.AllocatingGCMemory(Is.Not), "A reward waiting in the queue.");
+            Assert.That(site.Fetches, Is.EqualTo(1));
+        }
+
         [Test]
         public void ShownRewardsAreMarkedSeenForTheirOwnerOnly()
         {
