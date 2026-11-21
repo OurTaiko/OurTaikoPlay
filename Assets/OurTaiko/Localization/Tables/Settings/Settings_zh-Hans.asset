@@ -922,6 +922,14 @@ MonoBehaviour:
     m_Localized: "\u663E\u793A\u7684\u5206\u7C7B"
     m_Metadata:
       m_Items: []
+  - m_Id: 3580288037806080
+    m_Localized: "统一歌曲音量"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3580288042000384
+    m_Localized: "让每首歌以相近的响度播放。关闭时，每首歌按文件允许的最大音量播放。"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

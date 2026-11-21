@@ -39,8 +39,9 @@ namespace OurTaiko.Tests
         {
             var groups = SettingsCatalog.Sound(platform, AudioBackend.Automatic);
             Assert.That(groups.Select(g => g.Title), Is.EqualTo(new[] { "volume", "output", "timing" }.Select(key => L10n.Get("Settings", "sound.group." + key))));
-            Assert.That(groups[0].Rows.Select(r => r.Label), Is.EqualTo(new[] { "master", "bgm", "track", "drum", "effects", "voice" }.Select(key => L10n.Get("Settings", "sound." + key))));
-            Assert.That(groups[0].Rows.All(r => r.Kind == SettingKind.Slider), Is.True);
+            Assert.That(groups[0].Rows.Select(r => r.Label), Is.EqualTo(new[] { "master", "bgm", "track", "drum", "effects", "voice", "balance" }.Select(key => L10n.Get("Settings", "sound." + key))));
+            Assert.That(groups[0].Rows.Take(6).All(r => r.Kind == SettingKind.Slider), Is.True);
+            Assert.That(groups[0].Rows[6].Kind, Is.EqualTo(SettingKind.Toggle));
             var backend = groups[1].Rows[0];
             Assert.That(backend.Label, Is.EqualTo(L10n.Get("Settings", "sound.backend")));
             Assert.That(backend.Kind, Is.EqualTo(SettingKind.List));
@@ -234,7 +235,7 @@ namespace OurTaiko.Tests
             nav.Move(4); nav.Confirm();
             other.Move(4); other.Confirm();
             Assert.That(nav.Page.Id, Is.EqualTo("sound"));
-            nav.Move(6);
+            nav.Move(7);
             Assert.That(nav.Row.Id, Is.EqualTo("backend"));
             nav.Confirm(); nav.Move(2);
             Assert.That(nav.Page.Rows.Any(r => r.Id == "wasapi-buffer"), Is.True, "Moving in the sheet changes nothing.");

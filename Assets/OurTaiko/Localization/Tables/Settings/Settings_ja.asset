@@ -922,6 +922,14 @@ MonoBehaviour:
     m_Localized: "\u8868\u793A\u3059\u308B\u9805\u76EE"
     m_Metadata:
       m_Items: []
+  - m_Id: 3580288037806080
+    m_Localized: "曲の音量をそろえる"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3580288042000384
+    m_Localized: "どの曲も同じくらいの大きさで再生します。オフ：曲ごとにファイルの最大音量で再生します。"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

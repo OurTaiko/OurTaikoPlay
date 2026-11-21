@@ -409,7 +409,9 @@ namespace OurTaiko
                 Volume("track-volume", T("sound.track"), T("sound.trackDesc"), v => v.track, (v, n) => v.track = n),
                 Volume("drum-volume", T("sound.drum"), T("sound.drumDesc"), v => v.drum, (v, n) => v.drum = n).Previews(AudioGroup.Drum),
                 Volume("effects-volume", T("sound.effects"), T("sound.effectsDesc"), v => v.effects, (v, n) => v.effects = n),
-                Volume("voice-volume", T("sound.voice"), T("sound.voiceDesc"), v => v.voice, (v, n) => v.voice = n).Previews(AudioGroup.Voice));
+                Volume("voice-volume", T("sound.voice"), T("sound.voiceDesc"), v => v.voice, (v, n) => v.voice = n).Previews(AudioGroup.Voice),
+                SettingRow.Toggle("balance-loudness", T("sound.balance"), T("sound.balanceDesc"),
+                    s => s.audio.balanceLoudness, (s, v) => s.audio.balanceLoudness = v));
 
             var output = new List<SettingRow>
             {

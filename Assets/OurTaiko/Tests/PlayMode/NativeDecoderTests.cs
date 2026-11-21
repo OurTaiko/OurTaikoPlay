@@ -86,7 +86,26 @@ namespace OurTaiko.Tests
             Assert.That(NativeAudioSample.LiveStreams, Is.EqualTo(before));
         }
 
-        static byte[] Wav(short[] stereo, int rate)
+        // The decode measures the song's loudness; the bus decides whether the gain balances it.
+        [TestCase(0.1f)]
+        [TestCase(0.9f)]
+        public void DecodeMeasuresLoudnessForBalancing(float amplitude)
+        {
+            const int rate = 48000;
+            var pcm = new short[rate * 4 * 2];
+            for (int i = 0; i < rate * 4; i++)
+                pcm[i * 2] = pcm[i * 2 + 1] = (short)(amplitude * 32767 * System.Math.Sin(2 * System.Math.PI * 997 * i / rate));
+            // BS.1770: a sine on both channels reads its own level in dBFS.
+            double expected = 20 * System.Math.Log10(amplitude * 32767 / 32768.0);
+            using var sample = new NativeAudioSample(Wav(pcm, rate), AudioEngine.EnsureInstance());
+            Assert.That(sample.Level.Loudness, Is.EqualTo(expected).Within(0.1));
+            Assert.That(sample.Level.Peak, Is.EqualTo(amplitude).Within(0.001));
+            Assert.That(sample.Gain, Is.EqualTo(1 / sample.Level.Peak).Within(0.001), "Balancing is off until the bus turns it on");
+            sample.BalanceLoudness = true;
+            Assert.That(sample.Gain, Is.EqualTo(System.Math.Min(1 / sample.Level.Peak, System.Math.Pow(10, (AudioLevel.TargetLufs - expected) / 20))).Within(0.01));
+        }
+
+        internal static byte[] Wav(short[] stereo, int rate)
         {
             using var stream = new MemoryStream();
             using var w = new BinaryWriter(stream);

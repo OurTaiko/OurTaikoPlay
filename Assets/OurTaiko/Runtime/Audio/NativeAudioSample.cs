@@ -24,7 +24,12 @@ namespace OurTaiko
         public static int LiveStreams => System.Threading.Volatile.Read(ref liveStreams);
         public int EncodedBytes { get; private set; }
         public double Length { get; private set; }
-        public float Gain { get; private set; } = 1;
+        // What the decode measured (Unmeasured unless normalize); a caller may put a better
+        // measurement of the same song here (an online preview takes its full song's, AudioLevelStore).
+        public AudioLevel Level { get; set; } = AudioLevel.Unmeasured;
+        // Set from the player's setting (AudioOptions.balanceLoudness) by the bus that plays it.
+        public bool BalanceLoudness { get; set; }
+        public float Gain => Level.Gain(BalanceLoudness);
         public string Format { get; private set; }
         GCHandle data;
         int stream, decode, resampler;
@@ -66,24 +71,7 @@ namespace OurTaiko
                 {
                     decode = Open(data.AddrOfPinnedObject(), encoded.LongLength, BassFlags.Decode | BassFlags.Prescan | BassFlags.AsyncFile);
                     Format = Bass.ChannelGetInfo(decode).ChannelType.ToString();
-                    if (normalize)
-                    {
-                        long length = Bass.ChannelGetLength(decode), previous = -1;
-                        double peak = 0;
-                        long position;
-                        while ((position = Bass.ChannelGetPosition(decode)) >= 0 && position < length && position != previous)
-                        {
-                            previous = position;
-                            // left | right << 16, unsigned: a full-scale right channel reads as a
-                            // negative int, and only -1 (0xFFFFFFFF) is an error or the end.
-                            int level = Bass.ChannelGetLevel(decode);
-                            if (level == -1) break;
-                            uint channels = unchecked((uint)level);
-                            peak = Math.Max(peak, Math.Max(channels & 0xffff, channels >> 16) / 32768.0);
-                        }
-                        Gain = peak > 0 ? (float)(1 / peak) : 1;
-                        Check(Bass.ChannelSetPosition(decode, 0), "Reset normalized stream");
-                    }
+                    if (normalize) Level = Measure(data.AddrOfPinnedObject(), encoded.LongLength);
                     if (speedChange)
                     {
                         stream = BassFx.TempoCreate(decode, mixed ? BassFlags.Decode : BassFlags.Default);
@@ -111,6 +99,28 @@ namespace OurTaiko
                 catch { Dispose(); throw; }
                 samples.Add(this);
             }
+        }
+        // Decodes the whole file once more as float, apart from the playing channels, for its
+        // loudness and peak; the samples are clamped to full scale as the 16-bit playback decode clips them.
+        static AudioLevel Measure(IntPtr address, long size)
+        {
+            int channel = Open(address, size, BassFlags.Decode | BassFlags.Float);
+            try
+            {
+                var info = Bass.ChannelGetInfo(channel);
+                int channels = Math.Max(1, info.Channels);
+                var meter = new LoudnessMeter(info.Frequency, channels);
+                var buffer = new float[16384 / channels * channels];
+                int read;
+                while ((read = Bass.ChannelGetData(channel, buffer, buffer.Length * sizeof(float))) > 0)
+                {
+                    int count = read / sizeof(float);
+                    for (int i = 0; i < count; i++) buffer[i] = Math.Clamp(buffer[i], -1f, 1f);
+                    meter.Add(buffer, count);
+                }
+                return new AudioLevel(meter.Peak, meter.Integrated());
+            }
+            finally { Free(channel); }
         }
         public float OutputVolume => disposed ? 0 : (float)Bass.ChannelGetAttribute(stream, ChannelAttribute.Volume);
         public void SetVolume(float volume)

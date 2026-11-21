@@ -40,6 +40,9 @@ namespace OurTaiko
         public AudioBackend backend = AudioBackend.Automatic;
         public int sampleRate = 44100;
         public SoundVolumes volume = new SoundVolumes();
+        // Not a device setting: songs play at a common loudness (AudioLevel) instead of with
+        // their loudest sample at full scale. Applied live by AudioBus.
+        public bool balanceLoudness = true;
         public int updatePeriodMs = 100, playbackBufferMs = 1000;
         // 0 = platform default: MajdataPlay's 8 ms period on mobile (16 ms on desktop); buffer 16 ms on
         // Android (MajdataPlay's recommended setting), 32 ms on iOS and 64 ms on desktop.

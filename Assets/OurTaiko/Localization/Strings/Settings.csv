@@ -105,6 +105,8 @@ sound.effects,Effects,効果音,音效,Volume row
 sound.effectsDesc,"Menu feedback, balloon pops and result effects.",メニューの操作音、風船の破裂、成績発表の効果音。,菜单操作音、气球破裂和成绩画面的音效。,Volume row description
 sound.voice,Voice,ボイス,语音,Volume row
 sound.voiceDesc,"Entry, song selection, combo and result voices.",エントリー・曲えらび・コンボ・成績発表のボイス。,开始画面、选曲、连击和成绩画面的语音。,Volume row description
+sound.balance,Even Out Song Volume,曲の音量をそろえる,统一歌曲音量,Toggle row
+sound.balanceDesc,"Plays every song at a similar loudness. Off: each song plays as loud as its file allows.",どの曲も同じくらいの大きさで再生します。オフ：曲ごとにファイルの最大音量で再生します。,让每首歌以相近的响度播放。关闭时，每首歌按文件允许的最大音量播放。,Toggle row description
 sound.backend,Output Backend,出力方式,输出后端,Row; options keep the backend names except Automatic
 sound.backendDesc,How the game talks to the audio device. ASIO requires a driver.,オーディオデバイスへの出力方法です。ASIO にはドライバが必要です。,游戏与音频设备通信的方式。ASIO 需要驱动。,Output Backend description
 sound.automatic,Automatic,自動,自动,Option of Output Backend and Song Clock
