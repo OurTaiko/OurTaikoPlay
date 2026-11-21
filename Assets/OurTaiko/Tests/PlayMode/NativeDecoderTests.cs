@@ -66,6 +66,40 @@ namespace OurTaiko.Tests
             }
             Assert.That(NativeAudioSample.LiveStreams, Is.EqualTo(before));
         }
+        // BASS packs a level as left | right << 16 in an unsigned word: a full-scale right channel
+        // reads as a negative int, which must not end the peak scan early (a quiet opening then
+        // set the gain to dozens of times the song's volume).
+        [Test]
+        public void NormalizationScansPastFullScaleRightChannel()
+        {
+            const int rate = 44100, quiet = rate / 2;
+            var pcm = new short[rate * 2 * 2];
+            for (int i = 0; i < rate * 2; i++)
+            {
+                short wave = (short)(i % 100 < 50 ? 1 : -1);
+                pcm[i * 2] = (short)(wave * (i < quiet ? 1000 : 16384));
+                pcm[i * 2 + 1] = (short)(i < quiet ? wave * 1000 : wave < 0 ? short.MinValue : short.MaxValue);
+            }
+            int before = NativeAudioSample.LiveStreams;
+            using (var sample = new NativeAudioSample(Wav(pcm, rate), AudioEngine.EnsureInstance()))
+                Assert.That(sample.Gain, Is.InRange(0.99f, 1.01f));
+            Assert.That(NativeAudioSample.LiveStreams, Is.EqualTo(before));
+        }
+
+        static byte[] Wav(short[] stereo, int rate)
+        {
+            using var stream = new MemoryStream();
+            using var w = new BinaryWriter(stream);
+            int bytes = stereo.Length * 2;
+            w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); w.Write(36 + bytes);
+            w.Write(System.Text.Encoding.ASCII.GetBytes("WAVEfmt ")); w.Write(16);
+            w.Write((short)1); w.Write((short)2); w.Write(rate); w.Write(rate * 4); w.Write((short)4); w.Write((short)16);
+            w.Write(System.Text.Encoding.ASCII.GetBytes("data")); w.Write(bytes);
+            foreach (short s in stereo) w.Write(s);
+            w.Flush();
+            return stream.ToArray();
+        }
+
         [Test]
         public void InvalidDataReleasesPartialStreams()
         {

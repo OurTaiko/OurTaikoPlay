@@ -74,9 +74,12 @@ namespace OurTaiko
                         while ((position = Bass.ChannelGetPosition(decode)) >= 0 && position < length && position != previous)
                         {
                             previous = position;
+                            // left | right << 16, unsigned: a full-scale right channel reads as a
+                            // negative int, and only -1 (0xFFFFFFFF) is an error or the end.
                             int level = Bass.ChannelGetLevel(decode);
-                            if (level < 0) break;
-                            peak = Math.Max(peak, (level & 0xffff) / 32768.0);
+                            if (level == -1) break;
+                            uint channels = unchecked((uint)level);
+                            peak = Math.Max(peak, Math.Max(channels & 0xffff, channels >> 16) / 32768.0);
                         }
                         Gain = peak > 0 ? (float)(1 / peak) : 1;
                         Check(Bass.ChannelSetPosition(decode, 0), "Reset normalized stream");
