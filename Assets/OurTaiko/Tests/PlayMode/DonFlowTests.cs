@@ -221,5 +221,66 @@ namespace OurTaiko.Tests
             }
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
         }
+
+        // The canvas draws the Don over only the part of its area it is in (DonImage.Shown), which
+        // must give the picture drawing the whole area gives (to a rounding step), mirrored as well.
+        [UnityTest]
+        public IEnumerator DrawingOnlyTheDonsPartOfItsAreaGivesTheSamePicture()
+        {
+            var root = new GameObject("DonShownTest", typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler));
+            var canvas = root.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = root.GetComponent<UnityEngine.UI.CanvasScaler>();
+            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 1;
+            var backdrop = new GameObject("Backdrop", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            backdrop.transform.SetParent(root.transform, false);
+            var area = (RectTransform)backdrop.transform;
+            area.anchorMin = Vector2.zero; area.anchorMax = Vector2.one; area.sizeDelta = Vector2.zero;
+            backdrop.GetComponent<UnityEngine.UI.Image>().color = new Color(0.93f, 0.91f, 0.86f);
+            try
+            {
+                // A clock that stands still: the Dons are not drawn again between the captures.
+                var first = DonView.Create(root.transform, "Don1P", 560.3f, 800.7f);
+                first.Clock = () => 0;
+                first.Show(DonLook.Default()).SetAnim(DonAnim.Combo);
+                var second = DonView.Create(root.transform, "Don2P", 1360, 800);
+                second.Clock = () => 0;
+                second.Show(DonLook.Default(1), true).SetAnim(DonAnim.Sabi);
+                yield return null;
+                yield return null;
+
+                var images = new[] { first.GetComponent<DonImage>(), second.GetComponent<DonImage>() };
+                foreach (var image in images)
+                {
+                    Assert.That(image.enabled && image.texture != null, "The Don is drawn.");
+                    Assert.That(image.Shown.width * image.Shown.height, Is.GreaterThan(0).And.LessThan(0.35f), "Only the Don's part of the area is drawn.");
+                }
+                TestCapture.Capture("DonShownPart.png", canvas: canvas);
+                foreach (var image in images) image.Shown = new Rect(0, 0, 1, 1);
+                TestCapture.Capture("DonShownWhole.png", canvas: canvas);
+
+                var part = new Texture2D(2, 2); var whole = new Texture2D(2, 2);
+                part.LoadImage(System.IO.File.ReadAllBytes("TestResults/DonShownPart.png"));
+                whole.LoadImage(System.IO.File.ReadAllBytes("TestResults/DonShownWhole.png"));
+                Color32[] shown = part.GetPixels32(), all = whole.GetPixels32();
+                Object.Destroy(part); Object.Destroy(whole);
+                var back = all[0];
+                Assert.That(all.Count(p => p.r != back.r || p.g != back.g || p.b != back.b), Is.GreaterThan(20000), "The capture shows no Don.");
+                // The same texels through a smaller quad: the texture coordinates are interpolated
+                // from other corners, which may round a channel of a pixel the other way.
+                int differing = 0, largest = 0;
+                for (int i = 0; i < all.Length; i++)
+                {
+                    int d = Mathf.Max(Mathf.Abs(shown[i].r - all[i].r), Mathf.Abs(shown[i].g - all[i].g), Mathf.Abs(shown[i].b - all[i].b));
+                    if (d > 0) differing++;
+                    largest = Mathf.Max(largest, d);
+                }
+                Assert.That(largest, Is.LessThanOrEqualTo(1), "Drawing only the Don's part changed the picture.");
+                Assert.That(differing, Is.LessThan(2000), "Drawing only the Don's part changed the picture.");
+            }
+            finally { Object.Destroy(root); }
+        }
     }
 }

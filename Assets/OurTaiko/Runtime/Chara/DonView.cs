@@ -8,9 +8,9 @@ namespace OurTaiko.Chara
     // A 3D Don on a canvas. The Don stands at this RectTransform's pivot, in the 1920×1080 layout's
     // units (YataiDON's skin positions times 1.5 for a 1280 skin); the rect is the area it may
     // cover. It renders into a render target (supersampled, only when something changed, as
-    // YataiDON caches it) that the RawImage shows through the outline and tint pass; a puchichara
-    // is drawn beside it as a child image.
-    [RequireComponent(typeof(RawImage))]
+    // YataiDON caches it) that the DonImage shows through the outline and tint pass, over the part
+    // of the area the Don is in; a puchichara is drawn beside it as a child image.
+    [RequireComponent(typeof(DonImage))]
     public sealed class DonView : MonoBehaviour
     {
         public const float LayoutScale = 1.5f; // 1080 lines over YataiDON's 720
@@ -27,6 +27,24 @@ namespace OurTaiko.Chara
             return Mathf.Max(1, Mathf.Min(wanted, SystemInfo.GetRenderTextureSupportedMSAASampleCount(desc)));
         }
 
+        // The part of a width × height area the canvas has to draw for a Don that covers `covered`
+        // of it (Chara3D.Covered), as a share of the area with y up: widened by the composite's rim
+        // (1.5 units at draw scale 1) and the screen pixel it averages over, then out to the next
+        // of ShownSteps lines each way, so that a pose a little larger does not rebuild the canvas.
+        // The composite reads the target twenty times a pixel; most of the area is empty.
+        public static UnityEngine.Rect ShownPart(UnityEngine.Rect covered, float width, float height, float drawScale, float ppu)
+        {
+            if (covered.width <= 0 || covered.height <= 0 || width <= 0 || height <= 0) return default;
+            float margin = 1.5f * drawScale + 2 * Supersample / Mathf.Max(ppu, 0.01f);
+            float left = Mathf.Floor((covered.xMin - margin) / width * ShownSteps) / ShownSteps;
+            float right = Mathf.Ceil((covered.xMax + margin) / width * ShownSteps) / ShownSteps;
+            float bottom = Mathf.Floor((1 - (covered.yMax + margin) / height) * ShownSteps) / ShownSteps;
+            float top = Mathf.Ceil((1 - (covered.yMin - margin) / height) * ShownSteps) / ShownSteps;
+            left = Mathf.Clamp01(left); right = Mathf.Clamp01(right); bottom = Mathf.Clamp01(bottom); top = Mathf.Clamp01(top);
+            return right <= left || top <= bottom ? default : UnityEngine.Rect.MinMaxRect(left, bottom, right, top);
+        }
+        const float ShownSteps = 32;
+
         [Tooltip("Draw size (YataiDON's draw scale_mul).")]
         public float drawScale = 1f;
 
@@ -34,7 +52,7 @@ namespace OurTaiko.Chara
         // The clock the motions run on, in milliseconds (real time unless a scene sets one).
         public Func<double> Clock;
 
-        RawImage image;
+        DonImage image;
         RawImage puchi;
         PuchiAnimGraphic puchiAnim;
         Material composite, puchiMaterial;
@@ -54,7 +72,7 @@ namespace OurTaiko.Chara
         public static DonView Create(Transform parent, string name, float x, float y, float width = 640, float height = 640,
             float pivotY = 0.2f, int? sortingOrder = null)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage));
+            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(DonImage));
             go.layer = parent.gameObject.layer;
             var rect = (RectTransform)go.transform;
             rect.SetParent(parent, false);
@@ -90,7 +108,7 @@ namespace OurTaiko.Chara
 
         void Awake()
         {
-            image = GetComponent<RawImage>();
+            image = GetComponent<DonImage>();
             image.raycastTarget = false;
             if (compositeShader == null) compositeShader = Resources.Load<Shader>(DonLibrary.Root + "DonComposite");
             if (puchiShader == null) puchiShader = Resources.Load<Shader>(DonLibrary.Root + "DonPuchi");
@@ -225,6 +243,7 @@ namespace OurTaiko.Chara
                 Chara.Render(cmd, target, rect.width, rect.height, x, y, size, outline);
                 Graphics.ExecuteCommandBuffer(cmd);
                 renderedSize = rect.size; renderedScale = drawScale; renderedPpu = ppu;
+                image.Shown = ShownPart(Chara.Covered, rect.width, rect.height, drawScale, ppu);
             }
             // YataiDON's 3 texels of a target at twice the screen: 1.5 screen pixels at 1080 lines.
             composite.SetFloat("_Thickness", 1.5f * drawScale * ppu);
