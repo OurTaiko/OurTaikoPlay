@@ -109,6 +109,9 @@ namespace OurTaiko.Chara
         public Texture2D FaceSheet => faceSheet;
         // Something the drawn picture shows changed since the last Render.
         public bool Dirty { get; set; } = true;
+        // The part of the area the last Render drew in, black line included (units, y down from the
+        // area's top left; it may reach past the area). Empty when there was nothing to draw.
+        public Rect Covered { get; private set; }
         public DonAnim Anim => (DonAnim)animIndex;
         public int Face => currentFace;
 
@@ -570,8 +573,14 @@ namespace OurTaiko.Chara
         // outlinePx is the black line's width in target pixels (YataiDON: 2.5 per 720 lines).
         public void Render(CommandBuffer cmd, RenderTexture target, float width, float height, float x, float y, float size, float outlinePx)
         {
-            cmd.SetRenderTarget(target);
+            // The whole target is cleared and drawn again, and only its picture is read afterwards:
+            // nothing of the last one is loaded, the samples are resolved without being kept, and
+            // the depth is thrown away. Loading and storing the multisampled colour and depth of a
+            // target this size on every redraw is memory traffic a phone's GPU feels.
+            var color = target.antiAliasing > 1 ? RenderBufferStoreAction.Resolve : RenderBufferStoreAction.Store;
+            cmd.SetRenderTarget(target, RenderBufferLoadAction.DontCare, color, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmd.ClearRenderTarget(true, true, Color.clear);
+            Covered = default;
             if (parts.Count == 0) { Dirty = false; return; }
             float cx = width * 0.5f, cy = height * 0.5f;
             var view = Matrix4x4.identity;
@@ -583,6 +592,7 @@ namespace OurTaiko.Chara
             cmd.SetGlobalVector(OutlineId, new Vector4(outlinePx, 0.3f, 0, 0));
             cmd.SetGlobalVector(ScreenSizeId, new Vector4(target.width, target.height, 0, 0));
             var model = ModelMatrix(x, y, size);
+            Covered = CoveredBy(model, outlinePx * width / target.width);
             foreach (var part in parts)
             {
                 var data = part.Data;
@@ -607,6 +617,26 @@ namespace OurTaiko.Chara
                     cmd.DrawMesh(part.Meshes[p], model, part.Materials[mat], 0, 1);
                 }
             Dirty = false;
+        }
+
+        // The area the meshes fall on as posed now: the model matrix puts a vertex at its place in
+        // the area (the camera only looks down z), so it is the bounds of every posed vertex (the
+        // meshes' own bounds are a fixed box that keeps them from being culled), widened by the
+        // black line pushed out of them. A few thousand vertices, once a redraw.
+        Rect CoveredBy(Matrix4x4 model, float outline)
+        {
+            float left = float.MaxValue, top = float.MaxValue, right = float.MinValue, bottom = float.MinValue;
+            foreach (var part in parts)
+                foreach (var positions in part.Positions)
+                    foreach (var position in positions)
+                    {
+                        var at = model.MultiplyPoint3x4(position);
+                        if (at.x < left) left = at.x;
+                        if (at.x > right) right = at.x;
+                        if (at.y < top) top = at.y;
+                        if (at.y > bottom) bottom = at.y;
+                    }
+            return left > right ? default : Rect.MinMaxRect(left - outline, top - outline, right + outline, bottom + outline);
         }
 
         static readonly int OutlineId = Shader.PropertyToID("_DonOutline");

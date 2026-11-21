@@ -234,5 +234,52 @@ namespace OurTaiko.Tests
             }
             finally { UnityEngine.Object.DestroyImmediate(picture); }
         }
+
+        // The canvas draws only the part of the Don's area the Don is in (DonView.ShownPart), since
+        // the rim pass costs twenty texture reads a pixel: in every motion that part must hold all
+        // of the Don and its rim, and be a small share of the 640 × 640 a lane gives it.
+        [Test]
+        public void TheShownPartOfItsAreaHoldsTheWholeDonInEveryMotion()
+        {
+            const int Width = 640, Height = 640;
+            var options = new Editor.DonPreview.Options { Screen = 0, Supersample = 1, Msaa = 1, Footprint = true };
+            foreach (bool mirror in new[] { false, true })
+            {
+                var chara = new Chara3D(DonLook.Default(), mirror, useSkinPose: true);
+                try
+                {
+                    chara.SetFrozen(true);
+                    float largest = 0;
+                    for (int anim = 0; anim < (int)DonAnim.MirrorOffset; anim++)
+                    foreach (float progress in new[] { 0f, 0.3f, 0.6f, 0.9f })
+                    {
+                        chara.SetAnim((DonAnim)anim);
+                        chara.SetAnimProgress(progress);
+                        var picture = Editor.DonPreview.Render(chara, Width, Height, 0.5f, 0.2f, 1, options);
+                        try
+                        {
+                            var shown = DonView.ShownPart(chara.Covered, Width, Height, 1, 1);
+                            largest = Mathf.Max(largest, shown.width * shown.height);
+                            var pixels = picture.GetPixels32();
+                            var back = pixels[0];
+                            int drawn = 0, outside = 0;
+                            for (int i = 0; i < pixels.Length; i++)
+                            {
+                                var p = pixels[i];
+                                if (p.r == back.r && p.g == back.g && p.b == back.b) continue;
+                                drawn++;
+                                float x = (i % picture.width + 0.5f) / picture.width, y = (i / picture.width + 0.5f) / picture.height;
+                                if (!shown.Contains(new Vector2(x, y))) outside++;
+                            }
+                            Assert.That(drawn, Is.GreaterThan(1000), $"{(DonAnim)anim} at {progress}: nothing drawn");
+                            Assert.That(outside, Is.Zero, $"{(DonAnim)anim} at {progress} (mirror {mirror}): part of the Don is outside what the canvas draws ({shown})");
+                        }
+                        finally { UnityEngine.Object.DestroyImmediate(picture); }
+                    }
+                    Assert.That(largest, Is.LessThan(0.35f), "The canvas draws most of the area whatever the Don covers.");
+                }
+                finally { chara.Dispose(); }
+            }
+        }
     }
 }
