@@ -573,7 +573,12 @@ namespace OurTaiko.Chara
         // outlinePx is the black line's width in target pixels (YataiDON: 2.5 per 720 lines).
         public void Render(CommandBuffer cmd, RenderTexture target, float width, float height, float x, float y, float size, float outlinePx)
         {
-            cmd.SetRenderTarget(target);
+            // The whole target is cleared and drawn again, and only its picture is read afterwards:
+            // nothing of the last one is loaded, the samples are resolved without being kept, and
+            // the depth is thrown away. Loading and storing the multisampled colour and depth of a
+            // target this size on every redraw is memory traffic a phone's GPU feels.
+            var color = target.antiAliasing > 1 ? RenderBufferStoreAction.Resolve : RenderBufferStoreAction.Store;
+            cmd.SetRenderTarget(target, RenderBufferLoadAction.DontCare, color, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmd.ClearRenderTarget(true, true, Color.clear);
             Covered = default;
             if (parts.Count == 0) { Dirty = false; return; }
