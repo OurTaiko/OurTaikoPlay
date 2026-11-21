@@ -289,6 +289,20 @@ jobs:
           restore-keys: |
             Library-iOS-
 
+      # game-ci installs the Editor with `Unity Hub -- --headless install`, which Unity Hub 4
+      # (Homebrew's unity-hub since 2026-11-21) no longer has. Unity's standalone CLI installs it
+      # instead, at the path game-ci checks first (/Applications/Unity/Hub/Editor/<version>), so
+      # game-ci uses it and skips its own install.
+      - name: Install the Unity Editor
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n 's/^m_EditorVersion: //p' ProjectSettings/ProjectVersion.txt)
+          export UNITY_CLI_HOME="$RUNNER_TEMP/unity-cli"
+          curl -fsSL https://unity.com/install.sh | bash
+          "$UNITY_CLI_HOME/bin/unity" install "$VERSION" --module ios --architecture arm64 \
+            --yes --accept-eula --non-interactive --no-banner
+          test -x "/Applications/Unity/Hub/Editor/$VERSION/Unity.app/Contents/MacOS/Unity"
+
       # CFBundleShortVersionString must be plain dotted numbers, so iOS takes the bare version;
       # the build number (CFBundleVersion) is the commit count, set by PlayerBuilds.
       - uses: game-ci/unity-builder@v4
