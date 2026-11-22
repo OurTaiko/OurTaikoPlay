@@ -11,7 +11,7 @@ namespace OurTaiko
     {
         // YataiDON skin chara_3d, Nijiiro layout (1920×1080), from the lane's top left: "game_p1",
         // "game_p2" (a 2P lane, below it), "game_balloon" (while a balloon is being hit). The judge
-        // counter panel (JudgeCounterView) covers game_p1 for now; the user will move the panel.
+        // counter panel (JudgeCounterView) stands to the right of game_p1 and game_p2, clear of both.
         static readonly Vector2 SpotP1 = new Vector2(248, 29);
         static readonly Vector2 SpotP2 = new Vector2(240, 558);
         static readonly Vector2 SpotBalloon = new Vector2(630, 180);

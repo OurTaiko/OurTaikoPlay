@@ -1,4 +1,5 @@
 # Generated 2026-11-04 from DanPlayScene at c3fe9be, before NoteLane became a prefab (play-lane-prefabs step 2).
+# Refreshed 2026-11-22: the judge counter has a 良率 row, and the drumroll counter draws over the HUD (Player::draw_overlays).
 Viewport1920x1080/Backdrop
 Viewport1920x1080/DanBackground/Plate
 Viewport1920x1080/DanBackground/layer_a
@@ -177,7 +178,6 @@ Viewport1920x1080/NoteLane/Nameplate/Dan
 Viewport1920x1080/NoteLane/Nameplate/Badge
 Viewport1920x1080/NoteLane/Nameplate/Title
 Viewport1920x1080/NoteLane/Nameplate/Name
-Viewport1920x1080/NoteLane/DrumrollCounter/Bubble
 Viewport1920x1080/NoteLane/ScoreCounter/Cover
 Viewport1920x1080/NoteLane/Ending/DanCharacter0
 Viewport1920x1080/NoteLane/Ending/DanCharacter1
@@ -235,6 +235,8 @@ Viewport1920x1080/ComboAnnounce/Number/Digit1
 Viewport1920x1080/ComboAnnounce/Number/Digit2
 Viewport1920x1080/ComboAnnounce/Number/Text
 Viewport1920x1080/JudgeCounter
+Viewport1920x1080/JudgeCounter/Rate/Bar
+Viewport1920x1080/JudgeCounter/Rate/Label
 Viewport1920x1080/JudgeCounter/Good/Bar
 Viewport1920x1080/JudgeCounter/Good/Label
 Viewport1920x1080/JudgeCounter/Good/Count/Digit0
@@ -259,6 +261,7 @@ Viewport1920x1080/ResultPanel/Back
 Viewport1920x1080/ResultPanel/Back/Label
 Viewport1920x1080/FpsPanel
 Viewport1920x1080/FpsPanel/FpsCounter
+Viewport1920x1080/NoteLane/DrumrollCounter/Bubble
 Viewport1920x1080/NoteLane/ScoreCounter/ScoreAddition/Digit0
 Viewport1920x1080/NoteLane/ScoreCounter/ScoreAddition/Digit1
 Viewport1920x1080/NoteLane/ScoreCounter/ScoreAddition/Digit2

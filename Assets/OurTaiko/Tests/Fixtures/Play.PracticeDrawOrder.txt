@@ -1,6 +1,7 @@
 # Original scene at 12f5bd5: runtime score additions at order 1; pause explicitly moved to front.
 # Refreshed 2026-10-24 after 3f7fdad (GogoTint -> GogoEffects), 96cb157 (Nameplate/DanRing) and d6f4e56 (Kusudama).
 # Refreshed 2026-10-29 for BackgroundMovie (practice plays the movie too).
+# Refreshed 2026-11-22: the judge counter has a 良率 row, and the drumroll counter draws over the HUD (Player::draw_overlays).
 Viewport1920x1080/Backdrop
 Viewport1920x1080/HeaderPattern0
 Viewport1920x1080/HeaderPattern1
@@ -67,7 +68,6 @@ Viewport1920x1080/NoteLane/Nameplate/Dan
 Viewport1920x1080/NoteLane/Nameplate/Badge
 Viewport1920x1080/NoteLane/Nameplate/Title
 Viewport1920x1080/NoteLane/Nameplate/Name
-Viewport1920x1080/NoteLane/DrumrollCounter/Bubble
 Viewport1920x1080/NoteLane/ScoreCounter/Cover
 Viewport1920x1080/SoulGauge/Border
 Viewport1920x1080/SoulGauge/Empty
@@ -91,6 +91,8 @@ Viewport1920x1080/ComboAnnounce/Number/Digit1
 Viewport1920x1080/ComboAnnounce/Number/Digit2
 Viewport1920x1080/ComboAnnounce/Number/Text
 Viewport1920x1080/JudgeCounter
+Viewport1920x1080/JudgeCounter/Rate/Bar
+Viewport1920x1080/JudgeCounter/Rate/Label
 Viewport1920x1080/JudgeCounter/Good/Bar
 Viewport1920x1080/JudgeCounter/Good/Label
 Viewport1920x1080/JudgeCounter/Good/Count/Digit0
@@ -125,6 +127,7 @@ Viewport1920x1080/PracticeControls/Next
 Viewport1920x1080/PracticeControls/Next/Label
 Viewport1920x1080/PracticeControls/Confirm
 Viewport1920x1080/PracticeControls/Confirm/Label
+Viewport1920x1080/NoteLane/DrumrollCounter/Bubble
 Viewport1920x1080/NoteLane/ScoreCounter/ScoreAddition/Digit0
 Viewport1920x1080/NoteLane/ScoreCounter/ScoreAddition/Digit1
 Viewport1920x1080/NoteLane/ScoreCounter/ScoreAddition/Digit2

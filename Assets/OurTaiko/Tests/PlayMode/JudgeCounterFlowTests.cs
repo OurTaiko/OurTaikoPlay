@@ -31,7 +31,12 @@ namespace OurTaiko.Tests
                 Assert.That(counter.transform.parent, Is.SameAs(play.firstLane.comboAnnounce.transform.parent));
                 Assert.That(counter.transform.GetSiblingIndex(), Is.EqualTo(play.firstLane.comboAnnounce.transform.GetSiblingIndex() + 1));
                 Assert.That(counter.digits, Is.EqualTo(play.firstLane.scoreCounter.digits), "Counts use the score counter's digits.");
+                // Player::draw_overlays draws the drumroll counter after the judge counter: its fan, which
+                // opens beside the Don too, goes over the panel.
+                Assert.That(play.firstLane.drumrollCounter.GetComponentInParent<Canvas>(true).sortingOrder,
+                    Is.GreaterThan(counter.GetComponentInParent<Canvas>().sortingOrder));
                 for (int row = 0; row < 4; row++) Assert.That(counter.Text(row), Is.EqualTo("0"));
+                Assert.That(counter.RateText, Is.EqualTo("100.0"), "Nothing judged yet reads 100.0%.");
 
                 var session = play.Session;
                 var notes = session.Chart.Notes;
@@ -50,6 +55,21 @@ namespace OurTaiko.Tests
                 Assert.That(counter.Digit(0, 0).rectTransform.anchoredPosition.x,
                     Is.EqualTo(-counter.pitch * counter.counts[0].rect.height).Within(0.01f));
                 Assert.That(last.sizeDelta.y, Is.EqualTo(counter.counts[0].rect.height));
+
+                // 良率 on top: (10 + 1) / 12 = 91.66…%, cut to 91.6, the tenth and % smaller on the same baseline.
+                Assert.That(counter.RateText, Is.EqualTo("91.6"));
+                Assert.That(counter.rate.parent.GetSiblingIndex(), Is.LessThan(counter.counts[0].parent.GetSiblingIndex()));
+                Assert.That(counter.RateGlyph(0).gameObject.activeSelf, Is.False, "Two whole digits use the two right slots.");
+                Assert.That(new[] { counter.RateGlyph(1).sprite, counter.RateGlyph(2).sprite, counter.RateGlyph(3).sprite,
+                    counter.RateGlyph(4).sprite, counter.RateGlyph(5).sprite },
+                    Is.EqualTo(new[] { counter.digits[9], counter.digits[1], counter.rateDot, counter.digits[6], counter.ratePercent }));
+                var whole = counter.RateGlyph(2).rectTransform; var tenth = counter.RateGlyph(4).rectTransform;
+                Assert.That(whole.sizeDelta.y, Is.EqualTo(counter.rateHeight).Within(0.01f));
+                Assert.That(tenth.sizeDelta.y, Is.EqualTo(counter.rateHeight * counter.rateSmall).Within(0.01f));
+                float Baseline(RectTransform glyph) => glyph.anchoredPosition.y
+                    + glyph.sizeDelta.y * (0.5f - JudgeCounterView.Baseline / JudgeCounterView.CellHeight);
+                Assert.That(Baseline(tenth), Is.EqualTo(Baseline(whole)).Within(0.01f));
+                Assert.That(counter.RateGlyph(5).rectTransform.anchoredPosition.x, Is.LessThanOrEqualTo(0.01f), "The % ends at the rect's right edge.");
                 TestCapture.Capture("JudgeCounter.png");
             }
             finally
