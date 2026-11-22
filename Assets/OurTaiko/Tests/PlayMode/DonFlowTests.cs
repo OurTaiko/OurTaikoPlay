@@ -50,6 +50,12 @@ namespace OurTaiko.Tests
                 var seen = new HashSet<DonAnim>();
                 bool captured = false, capturedBalloon = false;
                 Vector2 balloonSpot = default;
+                int balloonOrder = int.MinValue;
+                var donCanvas = view.GetComponent<Canvas>();
+                int laneOrder = play.firstLane.GetComponent<Canvas>().sortingOrder;
+                int foregroundOrder = play.firstLane.noteLayer.parent.parent.Find("LaneForeground").GetComponent<Canvas>().sortingOrder;
+                int balloonCounterOrder = play.firstLane.balloonCounter.GetComponentInParent<Canvas>().sortingOrder;
+                Assert.That(donCanvas.sortingOrder, Is.LessThan(laneOrder), "Standing above the lane, the Don is behind it.");
                 while (!play.IsFinished && Time.realtimeSinceStartup < deadline + 15)
                 {
                     yield return null;
@@ -59,6 +65,7 @@ namespace OurTaiko.Tests
                     if (anim == DonAnim.BalloonLoop)
                     {
                         balloonSpot = ((RectTransform)view.transform).anchoredPosition;
+                        balloonOrder = donCanvas.sortingOrder;
                         if (!capturedBalloon) { capturedBalloon = true; TestCapture.Capture("DonPlayBalloon.png"); }
                     }
                 }
@@ -66,8 +73,14 @@ namespace OurTaiko.Tests
                 Assert.That(seen.Contains(DonAnim.SabiStart) || seen.Contains(DonAnim.Sabi), "GOGO TIME dances.");
                 Assert.That(seen, Does.Contain(DonAnim.BalloonLoop), "A balloon being hit is held.");
                 Assert.That(balloonSpot, Is.EqualTo(new Vector2(630, -180)), "The Don holds the balloon at the skin's game_balloon.");
+                // Player::draw_overlays (issue #113): the Don holding the balloon is drawn over the lane,
+                // its notes and its foreground, and under the balloon counter.
+                Assert.That(balloonOrder, Is.GreaterThan(laneOrder).And.GreaterThan(foregroundOrder),
+                    "The Don holding the balloon is not covered by the lane.");
+                Assert.That(balloonOrder, Is.LessThan(balloonCounterOrder), "The balloon counter stays on top.");
                 Assert.That(seen, Does.Contain(DonAnim.BalloonSuccess), "A popped balloon cheers.");
                 Assert.That(((RectTransform)view.transform).anchoredPosition, Is.EqualTo(new Vector2(248, -29)), "Back above the lane.");
+                Assert.That(donCanvas.sortingOrder, Is.LessThan(laneOrder), "And behind it again.");
                 Assert.That(view.GetComponent<UnityEngine.UI.RawImage>().texture, Is.Not.Null);
             }
             finally
