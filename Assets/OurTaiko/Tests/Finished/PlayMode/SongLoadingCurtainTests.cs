@@ -37,7 +37,7 @@ namespace OurTaiko.Tests
             Assert.That(curtain.title.text, Is.EqualTo("TEST PULSE"));
             foreach (var text in new[] { curtain.title, curtain.subtitle })
             {
-                Assert.That(text.font, Is.SameAs(SkinUi.Font), "All text uses the one UI font.");
+                Assert.That(UiFonts.IsUiFont(text.font), Is.True, "All text uses the UI faces.");
                 // Properties, not identity: TMP uses a per-page copy for glyphs on later atlas pages.
                 var material = text.fontSharedMaterial;
                 Assert.That(material.GetColor(ShaderUtilities.ID_OutlineColor), Is.EqualTo(Color.black));

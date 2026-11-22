@@ -351,7 +351,7 @@ namespace OurTaiko
             field.textViewport = area;
             field.textComponent = text;
             field.placeholder = placeholder;
-            field.fontAsset = SkinUi.Font;
+            field.fontAsset = UiFonts.Default;
             field.pointSize = 39;
             field.richText = false;
             field.lineType = TMP_InputField.LineType.SingleLine;
@@ -978,7 +978,7 @@ namespace OurTaiko
         {
             bool dark = SkinUi.IsDark(color);
             text.color = color;
-            if (dark != (text.fontSharedMaterial == SkinUi.Font.material)) text.UseUiFont();
+            if (dark == UiFonts.IsOutlined(text)) text.UseUiFont();
         }
 
         internal static Image ButtonBox(Transform parent, string name, Color color, float width, float height, Action clicked)

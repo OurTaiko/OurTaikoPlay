@@ -92,7 +92,7 @@ Unity 内の **OurTaiko → Build** から各プラットフォーム向けに�
 
 ## 謝辞
 
-- **[Sigaer](https://github.com/Sigaer)** — [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/main/Assets/OurTaiko/Art/DDFont.ttf) フォントの提供。
+- **[Sigaer](https://github.com/Sigaer)** — [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/aee145dac58debe0d016e58ecdb745723ed75ae2/Assets/OurTaiko/Art/DDFont.ttf) フォントの提供。
 - **[TeamMajdata / MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)** — 音声設計の着想および [ManagedBass フォーク](https://github.com/TeamMajdata/ManagedBass) のメンテナンス。
 - **[YataiDON](https://github.com/Yonokid/YataiDON)** & **[OpenTaiko](https://github.com/0auBSQ/OpenTaiko)** — ゲームプレイや譜面処理の設計参考。
 - BASS、[unity-sqlite-net](https://github.com/gilzoide/unity-sqlite-net)、[Material Symbols](Documentation/ThirdParty/MaterialSymbols/README.md)、ならびにコミュニティのアセット制作者の皆様（詳細は [NOTICE](NOTICE) および [素材一覧](Documentation/ImportedAssets.json) を参照）。

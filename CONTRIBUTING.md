@@ -73,7 +73,7 @@ Unity -batchmode -projectPath . -runTests -testPlatform EditMode \
   -testResults TestResults/editmode.xml -logFile TestResults/editmode.log
 ```
 
-PlayMode 把 `-testPlatform` 换成 `PlayMode`、程序集换成 `OurTaiko.FinishedPlayModeTests`（不要加 `-quit`）。分类 `AudioDevice` 的测试需要真实的音频设备，只能在本机跑。batchmode 结束后执行 `git checkout -- "Assets/OurTaiko/Resources/Nijiiro UI SDF.asset"`，它会清空动态字体图集。也可以在 GitHub 上手动运行 `Test` 工作流。
+PlayMode 把 `-testPlatform` 换成 `PlayMode`、程序集换成 `OurTaiko.FinishedPlayModeTests`（不要加 `-quit`）。分类 `AudioDevice` 的测试需要真实的音频设备，只能在本机跑。batchmode 结束后执行 `git checkout -- Assets/OurTaiko/Resources/UiFonts`，它会清空动态字体图集。也可以在 GitHub 上手动运行 `Test` 工作流。
 
 - 修 bug 时先写一个能复现它的测试，确认它在修复前失败、修复后通过。
 - 新增行为要有对应的测试；不要为了让测试通过而修改或删除原有测试的断言，除非那条断言描述的行为本身就是这次要改的，并在 PR 里说明。

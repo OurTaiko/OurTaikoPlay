@@ -92,7 +92,7 @@ Build the player using **OurTaiko → Build** inside Unity.
 
 ## Acknowledgments
 
-- **[Sigaer](https://github.com/Sigaer)** — Providing the [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/main/Assets/OurTaiko/Art/DDFont.ttf) font.
+- **[Sigaer](https://github.com/Sigaer)** — Providing the [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/aee145dac58debe0d016e58ecdb745723ed75ae2/Assets/OurTaiko/Art/DDFont.ttf) font.
 - **[TeamMajdata / MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)** — Audio architecture inspiration and the [ManagedBass fork](https://github.com/TeamMajdata/ManagedBass).
 - **[YataiDON](https://github.com/Yonokid/YataiDON)** & **[OpenTaiko](https://github.com/0auBSQ/OpenTaiko)** — Gameplay and chart parsing references.
 - Authors and contributors of BASS, [unity-sqlite-net](https://github.com/gilzoide/unity-sqlite-net), [Material Symbols](Documentation/ThirdParty/MaterialSymbols/README.md), and community art/audio assets (see [NOTICE](NOTICE) and [ImportedAssets.json](Documentation/ImportedAssets.json)).
