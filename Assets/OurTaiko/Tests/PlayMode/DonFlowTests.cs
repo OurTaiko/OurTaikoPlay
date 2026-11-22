@@ -47,6 +47,8 @@ namespace OurTaiko.Tests
                 Assert.That(view.Chara, Is.Not.Null);
                 Assert.That(((RectTransform)view.transform).anchoredPosition, Is.EqualTo(new Vector2(248, -29)));
 
+                var counter = (RectTransform)play.firstLane.judgeCounter.transform;
+                Assert.That(Drawn(view).Overlaps(World(counter)), Is.False, "The judge counter stands beside the Don, not over it.");
                 var seen = new HashSet<DonAnim>();
                 bool captured = false, capturedBalloon = false;
                 Vector2 balloonSpot = default;
@@ -66,6 +68,9 @@ namespace OurTaiko.Tests
                     {
                         balloonSpot = ((RectTransform)view.transform).anchoredPosition;
                         balloonOrder = donCanvas.sortingOrder;
+                        Assert.That(Drawn(view).Overlaps(World(counter)), Is.False, "Nor over the Don holding the balloon.");
+                        Assert.That(World((RectTransform)play.firstLane.balloonCounter.transform).Overlaps(World(counter)), Is.False,
+                            "Nor over the balloon counter.");
                         if (!capturedBalloon) { capturedBalloon = true; TestCapture.Capture("DonPlayBalloon.png"); }
                     }
                 }
@@ -91,6 +96,25 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
         }
 
+        // A rect's area on the canvas, and the part of a Don's that its last render drew in, black
+        // line included (Chara3D.Covered: units of the area, y down from its top left).
+        static Rect World(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+        }
+
+        static Rect Drawn(DonView view)
+        {
+            var rect = (RectTransform)view.transform;
+            var area = World(rect);
+            var covered = view.Chara.Covered;
+            float sx = area.width / rect.rect.width, sy = area.height / rect.rect.height;
+            return Rect.MinMaxRect(area.xMin + covered.xMin * sx, area.yMax - covered.yMax * sy,
+                area.xMin + covered.xMax * sx, area.yMax - covered.yMin * sy);
+        }
+
         [UnityTest]
         public IEnumerator EachLaneOfTwoPlayersHasItsDon()
         {
@@ -114,6 +138,9 @@ namespace OurTaiko.Tests
                 Assert.That(((RectTransform)first.View.transform).anchoredPosition, Is.EqualTo(new Vector2(248, -29)));
                 Assert.That(((RectTransform)second.View.transform).anchoredPosition, Is.EqualTo(new Vector2(240, -558)), "game_p2: below the 2P lane.");
                 Assert.That(first.View.GetComponent<UnityEngine.UI.RawImage>().enabled && second.View.GetComponent<UnityEngine.UI.RawImage>().enabled);
+                Assert.That(Drawn(first.View).Overlaps(World((RectTransform)play.firstLane.judgeCounter.transform)), Is.False);
+                Assert.That(Drawn(second.View).Overlaps(World((RectTransform)play.secondLane.judgeCounter.transform)), Is.False,
+                    "2P's judge counter stands beside 2P's Don.");
                 TestCapture.Capture("DonDoublePlay.png");
             }
             finally
