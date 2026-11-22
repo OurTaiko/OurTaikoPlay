@@ -15,8 +15,12 @@ namespace OurTaiko
         static readonly Vector2 SpotP1 = new Vector2(248, 29);
         static readonly Vector2 SpotP2 = new Vector2(240, 558);
         static readonly Vector2 SpotBalloon = new Vector2(630, 180);
-        // DonLayerOrder: over the header and the song title, under the lane (-50) and notes.
+        // Player::draw_lane_cover: standing on the lane, over the header and the song title, under
+        // the lane (-50) and notes.
         public const int SortingOrder = -60;
+        // Player::draw_overlays: holding a balloon, over the lane, its notes and its foreground (50:
+        // drum, nameplate) and under the HUD (100) with the judge and balloon counters.
+        public const int BalloonSortingOrder = 90;
         const int MissStreakTint = 6; // misses in a row that darken the Don
 
         readonly PlayerLane lane;
@@ -52,7 +56,16 @@ namespace OurTaiko
             if (Chara == null) return;
             Chara.SetTint(Color.black, 0);
             Chara.SetAnim(DonAnim.Normal);
-            View.MoveTo(home.x, home.y);
+            Stand(false);
+        }
+
+        // Where the Don stands and which layer draws it: on its spot under the lane, or holding the
+        // balloon over it.
+        void Stand(bool holdingBalloon)
+        {
+            var spot = holdingBalloon ? SpotBalloon : home;
+            View.MoveTo(spot.x, spot.y);
+            View.SortingOrder = holdingBalloon ? BalloonSortingOrder : SortingOrder;
         }
 
         public void OnJudged(int index, Judgment result)
@@ -102,7 +115,7 @@ namespace OurTaiko
         {
             finishedBalloon = balloon;
             balloon = -1; balloonIdle = false; balloonCounting = false;
-            View.MoveTo(home.x, home.y);
+            Stand(false);
         }
 
         // Once a frame, on the chart clock: tempo, GOGO, the gauge, the balloon, the tint.
@@ -170,8 +183,7 @@ namespace OurTaiko
                 Chara.SetAnim(DonAnim.BalloonNoBeat);
             }
             // Player::draw_lane_cover / draw_overlays: the Don holds the balloon while it is hit.
-            var spot = balloonCounting ? SpotBalloon : home;
-            View.MoveTo(spot.x, spot.y);
+            Stand(balloonCounting);
         }
 
         // Player::spawn_ending_anim: a cleared play without a 不可 cheers.

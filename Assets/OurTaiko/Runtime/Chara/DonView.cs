@@ -92,6 +92,14 @@ namespace OurTaiko.Chara
         // Moves the Don to (x, y) of its parent, as Create places it.
         public void MoveTo(float x, float y) => Rect.anchoredPosition = new Vector2(x, -y);
 
+        // The order of the Don's own canvas (Create's sortingOrder), for a Don whose place among the
+        // scene's layers changes as it moves.
+        public int SortingOrder
+        {
+            get => GetComponent<Canvas>().sortingOrder;
+            set => GetComponent<Canvas>().sortingOrder = value;
+        }
+
         // Fades the Don and its puchichara (a seat's plate fading in, a screen fading out).
         public float Alpha
         {
