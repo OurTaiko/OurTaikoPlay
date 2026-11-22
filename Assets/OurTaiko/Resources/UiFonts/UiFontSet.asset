@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c80be952c8fc54ed7bced6f5e3ae709c, type: 3}
+  m_Name: UiFontSet
+  m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.UiFontSet
+  faces:
+  - font: {fileID: 11400000, guid: fe664c22ff91d4508b1e872ca7c61bcd, type: 2}
+    outline: {fileID: 2100000, guid: 7cfaeb9994d3d4cbbb9fd140d0c9f1f2, type: 2}
+    scripts: 01000000i
+  - font: {fileID: 11400000, guid: a223a4de5d4c1403c85a658f55086bcf, type: 2}
+    outline: {fileID: 2100000, guid: ffe09fdc783964f1bafebf21d01722e4, type: 2}
+    scripts: 0200000003000000i

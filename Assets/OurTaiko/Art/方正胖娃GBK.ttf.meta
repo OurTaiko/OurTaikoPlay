@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 05a6b0d54f2384faa8acd3fb23b8cc8f
+guid: 3a4b3d0b40aca4bdbb7c81a62b1b35e2
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,13 +9,14 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - FZSuXinShiLiuKai-R-JF
+  - FZPangWa-M18
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
+  subsetRecipes: []
   userData: 
   assetBundleName: 
   assetBundleVariant: 

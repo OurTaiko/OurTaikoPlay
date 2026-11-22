@@ -93,7 +93,7 @@ cd OurTaikoPlay
 
 ## 致谢
 
-- **[Sigaer](https://github.com/Sigaer)** — 提供 [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/main/Assets/OurTaiko/Art/DDFont.ttf) 字体支持。
+- **[Sigaer](https://github.com/Sigaer)** — 提供 [DDFont.ttf](https://github.com/OurTaiko/OurTaikoPlay/blob/aee145dac58debe0d016e58ecdb745723ed75ae2/Assets/OurTaiko/Art/DDFont.ttf) 字体支持。
 - **[TeamMajdata / MajdataPlay](https://github.com/TeamMajdata/MajdataPlay)** — 音频架构启发与 [ManagedBass 分支](https://github.com/TeamMajdata/ManagedBass) 维护。
 - **[YataiDON](https://github.com/Yonokid/YataiDON)** & **[OpenTaiko](https://github.com/0auBSQ/OpenTaiko)** — 玩法表现与谱面解析参考。
 - 以及 BASS、[unity-sqlite-net](https://github.com/gilzoide/unity-sqlite-net)、[Material Symbols](Documentation/ThirdParty/MaterialSymbols/README.md) 与社区美术、音频资源的作者（详见 [NOTICE](NOTICE) 与 [素材清单](Documentation/ImportedAssets.json)）。

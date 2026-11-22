@@ -236,7 +236,7 @@ namespace OurTaiko.Tests
         // text's glyphs all sit on a later page of the dynamic atlas.
         static void AssertUiFont(TMP_Text text)
         {
-            Assert.That(text.font, Is.SameAs(SkinUi.Font), "The play scene name and title must use the shared UI font.");
+            Assert.That(UiFonts.IsUiFont(text.font), Is.True, "The play scene name and title must use the UI faces.");
             var material = text.fontSharedMaterial;
             float width = SkinUi.IsDark(text.color) ? 0 : SkinUi.OutlineWidth;
             Assert.That(material.GetFloat(ShaderUtilities.ID_OutlineWidth), Is.EqualTo(width),

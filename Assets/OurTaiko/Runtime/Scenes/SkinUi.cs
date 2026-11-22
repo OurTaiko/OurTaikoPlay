@@ -8,9 +8,6 @@ namespace OurTaiko
     // coordinates, every element is anchored to the stage's top-left corner and the Canvas scales it.
     public static class SkinUi
     {
-        static TMP_FontAsset font;
-        static Material outlineMaterial;
-
         public static RectTransform Rect(string name, Transform parent, float width = 0, float height = 0)
         {
             var rect = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
@@ -46,17 +43,10 @@ namespace OurTaiko
             graphic.enabled = alpha > 0.001f;
         }
 
-        // All text uses one SDF font. Light text gets an opaque black outline; text that is itself
-        // black (or near-black) gets none. TMP outline widths are a fraction of the em, so the
-        // border follows each text's font size and scale.
-        public const string FontName = "Nijiiro UI SDF", OutlineMaterialName = "Nijiiro UI SDF Outline";
+        // Text is drawn in the UI face of its script (UiFonts), one face per text. Light text gets an
+        // opaque black outline; text that is itself black (or near-black) gets none. TMP outline widths
+        // are a fraction of the em, so the border follows each text's font size and scale.
         public const float OutlineWidth = 0.125f;
-
-        public static TMP_FontAsset Font => font != null ? font : font = Resources.Load<TMP_FontAsset>(FontName)
-            ?? throw new System.InvalidOperationException("Missing " + FontName + " font asset.");
-        public static Material OutlineMaterial => outlineMaterial != null ? outlineMaterial
-            : outlineMaterial = Resources.Load<Material>(OutlineMaterialName)
-            ?? throw new System.InvalidOperationException("Missing " + OutlineMaterialName + " material.");
 
         public static TextMeshProUGUI Text(string name, Transform parent, float size)
         {
@@ -74,12 +64,11 @@ namespace OurTaiko
 
         public static bool IsDark(Color color) => 0.2126f * color.r + 0.7152f * color.g + 0.0722f * color.b < 0.3f;
 
-        // Binds the shared font and, by the text's colour, the outline or plain shared material
-        // (never a per-text instance). Call again after changing a text between light and dark.
+        // Binds the UI face of the text's script and, by the text's colour, its outline or plain shared
+        // material (never a per-text instance). Call again after changing a text between light and dark.
         public static void UseUiFont(this TMP_Text text)
         {
-            text.font = Font;
-            text.fontSharedMaterial = IsDark(text.color) ? Font.material : OutlineMaterial;
+            UiFonts.Use(text, outlined: !IsDark(text.color));
             text.UpdateMeshPadding();
         }
 
@@ -87,6 +76,7 @@ namespace OurTaiko
         public static void Squeeze(this TMP_Text text, float maxWidth, float minScale = 0)
         {
             text.rectTransform.localScale = Vector3.one;
+            UiFonts.Attach(text); // measure the face the text will be drawn in
             float width = text.preferredWidth;
             float scale = width > maxWidth && width > 0 ? Mathf.Max(minScale, maxWidth / width) : 1;
             text.rectTransform.localScale = new Vector3(scale, 1, 1);

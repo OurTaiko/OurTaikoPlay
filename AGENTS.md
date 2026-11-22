@@ -39,7 +39,7 @@ CI 不在 PR 上运行，`Test` 工作流只能手动触发，构建也不等测
 - 改了构建脚本、`Packages/`、`ProjectSettings/` 或平台相关代码：至少在本机构建一个受影响的平台；
 - 修 bug 先写能复现它的测试。
 
-用户开着 Unity Editor 时 batchmode 打不开同一个项目，先确认 Editor 已关闭，或改用 Editor 内的测试运行器。每次 batchmode 之后 `git checkout -- "Assets/OurTaiko/Resources/Nijiiro UI SDF.asset"`（batchmode 会把动态字体图集清空），再 `git status` 确认只有预期的文件变了。
+用户开着 Unity Editor 时 batchmode 打不开同一个项目，先确认 Editor 已关闭，或改用 Editor 内的测试运行器。每次 batchmode 之后 `git checkout -- Assets/OurTaiko/Resources/UiFonts`（batchmode 会把动态字体图集清空），再 `git status` 确认只有预期的文件变了。
 
 在 PR 描述的「测试」一栏写明实际运行的命令和结果；无法运行的检查如实说明，不要声称通过。
 
