@@ -13,6 +13,7 @@
 - [ ] EditMode：`OurTaiko.FinishedTests`
 - [ ] PlayMode：`OurTaiko.FinishedPlayModeTests`
 - [ ] 其他（相关的开发中测试、本机构建的平台、在 Editor 或真机上实际试玩等）：
+- [ ] 没有修改 AOCI 文件（`aoci*.txt`、`.aoci/`）；只有 AOCI 维护 PR 才改它们，且只改它们
 
 ## 发布影响
 
