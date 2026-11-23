@@ -85,7 +85,9 @@ for k, n in enumerate(("normal", "clear")):
         True,
         0,
         (
-            [draw(b, p, i, 30 + (i - f / 180) * w, 0, 1.5) for i in range(5)]
+            # The strip starts 20 px in (texture.json) and scrolls left by a tile in 3 s, so
+            # the tile before the first is on screen from the start.
+            [draw(b, p, i, 30 + (i - f / 180) * w, 0, 1.5) for i in range(-1, 5)]
             for f in range(180)
         ),
     )
