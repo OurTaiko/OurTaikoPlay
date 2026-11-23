@@ -25,6 +25,13 @@ namespace OurTaiko
         [Tooltip("The chart's background movie behind the lanes; practice moves it with the measure.")]
         public BackgroundMovieView movie;
         double movieOffset;
+        [Tooltip("Play.Practice's menu. A scene with one plays PracticeMode; empty in every other play scene.")]
+        public PracticeView practiceView;
+        public bool IsPractice => practiceView != null;
+        // The practice menu and its attempts; null outside practice.
+        public PracticeMode Practice { get; private set; }
+        // How this play differs from a normal one (PlayMode); chosen once, in ChooseMode.
+        PlayMode mode = PlayMode.Normal;
 
         // One lane per seat: 1P, then 2P in Play.Double.
         public IReadOnlyList<PlayerLane> Lanes => lanes;
@@ -179,6 +186,15 @@ namespace OurTaiko
             // file, so one OFFSET leads the song in.
             songClock.Start(GameTimeline.AudioNow, Math.Max(2, Session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset)));
             if (!mode.Begin()) StartDueMusic();
+        }
+
+        // The one place a play mode is registered. A direct Editor run must return to the same mode
+        // after Back and another song; PracticeMode reads SceneSwitcher.PracticeMode as it takes the
+        // mode switch's hand-over, so that is written first.
+        void ChooseMode()
+        {
+            switcher.PracticeMode = IsPractice;
+            if (IsPractice) mode = Practice = new PracticeMode(this, practiceView, switcher);
         }
 
         // SongLoadingScene parsed each seat's chart behind the curtain; restarts and direct runs parse
