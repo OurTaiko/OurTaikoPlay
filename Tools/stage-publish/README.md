@@ -52,7 +52,7 @@ stage/bundle/<版本>/<平台>/<部件>-<名字>.<hash16>        一个文件一
     "Condition": {
       "StringEquals": {
         "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-        "token.actions.githubusercontent.com:sub": "repo:OurTaiko/OurTaikoPlay:ref:refs/heads/main"
+        "token.actions.githubusercontent.com:sub": "repo:OurTaiko@252237704/OurTaikoPlay@1400725485:ref:refs/heads/main"
       }
     }
   }]
@@ -60,6 +60,12 @@ stage/bundle/<版本>/<平台>/<部件>-<名字>.<hash16>        一个文件一
 ```
 
 所以工作流要从 `main` 运行；从别的分支运行会在登录 AWS 时被拒。
+
+`sub` 里的组织和仓库后面带着 `@数字 ID`：这个仓库开了 GitHub OIDC 的不可变身份（`use_immutable_subject`），工作流报出的身份就是这个形式。写成不带 ID 的 `repo:OurTaiko/OurTaikoPlay:…` 对不上，登录会以 `Not authorized to perform sts:AssumeRoleWithWebIdentity` 失败。当前的前缀可以这样查：
+
+```bash
+gh api repos/OurTaiko/OurTaikoPlay/actions/oidc/customization/sub
+```
 
 最小的权限策略（只能写 `stage*` 目录、按前缀列出，以及让分配上的缓存失效；不能删除）：
 
