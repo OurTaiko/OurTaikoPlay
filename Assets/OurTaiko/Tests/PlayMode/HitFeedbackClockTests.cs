@@ -70,7 +70,7 @@ namespace OurTaiko.Tests
                 {
                     // Seeking after an odd number of strikes must start the next attempt on the right.
                     var previous = play.Session;
-                    play.MovePractice(0);
+                    play.Practice.Move(0);
                     yield return TestPlay.StartPracticeAttempt(play);
                     Assert.That(play.Session, Is.Not.SameAs(previous), "Starting practice rebuilds the judgment session.");
                     strikes = 0;
@@ -129,7 +129,7 @@ namespace OurTaiko.Tests
                 if (practice)
                 {
                     yield return null;
-                    play.ConfirmPractice(); yield return null; play.ConfirmPractice();
+                    play.Practice.Confirm(); yield return null; play.Practice.Confirm();
                     while (play.IsPaused) yield return null;
                 }
                 double lastNormal = double.NegativeInfinity;

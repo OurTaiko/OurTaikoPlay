@@ -6,22 +6,11 @@ namespace OurTaiko
     // The pause menu's "Switch to Practice" / "Switch to Normal Play". A mode change is a new
     // single-player scene through SceneSwitcher.SwitchToPractice / SwitchToNormalPlay, never a live session with a flipped
     // flag: normal play hands over where it was, and practice opens at that measure on the branch it
-    // showed; normal play always starts over. PlayScene calls the two hooks below and nothing else of this.
+    // showed (PracticeMode takes it); normal play always starts over. PlayScene calls AddModeSwitch and
+    // nothing else of this.
     public sealed partial class PlayScene
     {
         bool switchingMode;
-        // Where a normal play left off, in visual chart time; the first practice pause snaps to it.
-        double? practiceEntryPosition;
-
-        // Before the lanes are made: the route and position a normal play passed into this practice.
-        void TakeModeSwitchEntry()
-        {
-            if (IsPractice && switcher.TakePracticeEntry(out double position, out BranchRoute branch))
-            {
-                practiceEntryPosition = position;
-                practiceBranch = branch;
-            }
-        }
 
         // After the chart loaded. Two players never switch, as the switch would drop 2P (Entry keeps 2P
         // out of practice for the same reason), nor does a ghost battle, which would drop its recording.
@@ -33,14 +22,6 @@ namespace OurTaiko
             if (IsReplay || switcher.Seated.Count == 2 || IsGhost || IsPractice && !Session.Chart.Branches.All(b => b.HasAllRoutes)) return;
             pauseMenu.modeSwitch.onClick.AddListener(SwitchMode);
             pauseMenu.OfferModeSwitch(IsPractice);
-        }
-
-        // The first practice pause's cursor: the handed-over measure once, otherwise the first bar.
-        double TakePracticeStart()
-        {
-            double position = practiceEntryPosition.HasValue ? Practice.SnapToMeasure(practiceEntryPosition.Value) : Practice.First;
-            practiceEntryPosition = null;
-            return position;
         }
 
         public void SwitchMode()

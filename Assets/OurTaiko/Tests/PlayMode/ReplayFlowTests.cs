@@ -51,19 +51,19 @@ namespace OurTaiko.Tests
             switcher.Replay = record;
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked, seconds: 40);
             var play = Object.FindAnyObjectByType<PlayScene>();
-            yield return Waits.Until(() => play.Practice != null && play.IsPaused);
+            yield return Waits.Until(() => play.Practice?.Progress != null && play.IsPaused);
             yield return null;
             Assert.That(play.IsReplay, Is.True);
             Assert.That(play.Session.Chart.Notes.Select(n => n.IsKa), Is.EqualTo(notes.Select(n => !n.IsKa)), "The record's options rebuilt the chart.");
             Assert.That(play.Session.ForcedBranch, Is.Null);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Measure));
             Assert.That(play.drumPad == null || !play.drumPad.gameObject.activeSelf, Is.True, "Nobody plays a replay.");
 
             PlaySession ended = null;
-            play.PracticeAttemptStopped += attempt => ended = attempt;
-            play.ConfirmPractice(); yield return null; yield return null;
-            Assert.That(play.ChoosingPracticeSpeed, Is.True);
-            play.ConfirmPractice();
+            play.Practice.AttemptStopped += attempt => ended = attempt;
+            play.Practice.Confirm(); yield return null; yield return null;
+            Assert.That(play.Practice.ChoosingSpeed, Is.True);
+            play.Practice.Confirm();
             yield return Waits.Until(() => !play.IsPaused);
             int sounds = play.DrumSounds;
             yield return Waits.Until(() => ended != null, seconds: 40);
@@ -73,11 +73,11 @@ namespace OurTaiko.Tests
             Assert.That(play.DrumSounds - sounds, Is.EqualTo(15), "One drum sound a recorded press.");
 
             // Back at the first measure, paused. The third measure opens with the measures before it judged.
-            yield return Waits.Until(() => play.IsPaused && play.PracticeStage == PracticeStage.Measure);
+            yield return Waits.Until(() => play.IsPaused && play.Practice.Stage == PracticeStage.Measure);
             yield return null;
-            play.MovePractice(1); yield return null; play.MovePractice(1); yield return null;
-            play.ConfirmPractice(); yield return null; yield return null;
-            play.ConfirmPractice();
+            play.Practice.Move(1); yield return null; play.Practice.Move(1); yield return null;
+            play.Practice.Confirm(); yield return null; yield return null;
+            play.Practice.Confirm();
             yield return Waits.Until(() => !play.IsPaused);
             // Playback starts in the lead-in before that measure, with what the play had there.
             Assert.That(play.Session.Good, Is.InRange(1, 7));

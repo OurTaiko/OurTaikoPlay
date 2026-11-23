@@ -248,9 +248,9 @@ namespace OurTaiko.Tests
                 if (practice)
                 {
                     // Browsing measures only moves the preview; the attempt starts over when practice starts.
-                    play.MovePractice(1);
-                    while (play.PracticeStage != PracticeStage.Speed) { yield return null; play.ConfirmPractice(); }
-                    yield return null; play.ConfirmPractice();
+                    play.Practice.Move(1);
+                    while (play.Practice.Stage != PracticeStage.Speed) { yield return null; play.Practice.Confirm(); }
+                    yield return null; play.Practice.Confirm();
                     Assert.That(feedback.label.alpha, Is.Zero);
                     Assert.That(play.Session.HitTimings, Is.Empty);
                 }

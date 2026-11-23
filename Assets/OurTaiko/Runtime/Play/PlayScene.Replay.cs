@@ -24,9 +24,6 @@ namespace OurTaiko
             judgeWindows = null;
         }
 
-        // The route practice forces on every branch; a replay forces none.
-        BranchRoute? ForcedBranch => IsReplay ? (BranchRoute?)null : practiceBranch;
-
         TaikoChart PrepareReplayChart(string course, string side)
         {
             var chart = song.ParseBlock(course, side);

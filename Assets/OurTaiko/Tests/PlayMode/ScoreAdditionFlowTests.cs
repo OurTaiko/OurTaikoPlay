@@ -70,7 +70,7 @@ namespace OurTaiko.Tests
                 if (practice)
                 {
                     // Moving the paused lane only previews; the next attempt clears the additions.
-                    play.MovePractice(1);
+                    play.Practice.Move(1);
                     yield return TestPlay.StartPracticeAttempt(play);
                     Assert.That(counter.Additions.All(a => !a.gameObject.activeSelf), Is.True, "A new practice attempt clears old additions.");
                     Assert.That(counter.Text, Is.EqualTo("0"));

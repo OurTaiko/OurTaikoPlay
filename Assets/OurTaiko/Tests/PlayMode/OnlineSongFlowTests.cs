@@ -222,9 +222,9 @@ namespace OurTaiko.Tests
             Assert.That(play.music.AudioLength(), Is.GreaterThan(0));
             Assert.That(fixture.Downloads, Is.EqualTo(2));
             yield return WaitUntil(() => !SceneSwitcher.Instance.IsInputBlocked, 10);
-            play.ConfirmPractice();
+            play.Practice.Confirm();
             yield return null;
-            play.ConfirmPractice();
+            play.Practice.Confirm();
             yield return WaitUntil(() => !play.IsPaused, 5);
             yield return WaitUntil(() => play.IsPaused, 20);
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.PracticeScene));
