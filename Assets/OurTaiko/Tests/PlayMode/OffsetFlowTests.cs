@@ -94,21 +94,21 @@ namespace OurTaiko.Tests
                 yield return TestPlay.Open(song, "Oni", false);
                 yield return Wait(() => !switcher.IsInputBlocked && SceneManager.GetActiveScene().name == switcher.SelectedPlayScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
-                yield return Wait(() => play.Session != null && (!practice || play.Practice != null));
+                yield return Wait(() => play.Session != null && (!practice || play.Practice?.Progress != null));
                 yield return null;
                 Assert.That(play.Session.JudgeOffset, Is.EqualTo(b / 1000.0));
                 if (practice)
                 {
                     Assert.That(play.BarRoot(0).anchoredPosition.x, Is.EqualTo(120).Within(.1));
                     Assert.That(play.SongTime, Is.EqualTo(a / 1000.0).Within(1e-6), "B must not move the bar cursor or audio seek.");
-                    play.MovePractice(1); yield return new WaitForSecondsRealtime(.25f);
+                    play.Practice.Move(1); yield return new WaitForSecondsRealtime(.25f);
                     Assert.That(play.BarRoot(1).anchoredPosition.x, Is.EqualTo(120).Within(.1));
                     Assert.That(play.SongTime, Is.EqualTo(2 + a / 1000.0).Within(1e-6));
-                    play.MovePractice(-1); yield return new WaitForSecondsRealtime(.25f);
-                    play.ConfirmPractice(); yield return null;
-                    play.MovePractice(-1); play.MovePractice(-1);
-                    play.ConfirmPractice(); yield return null;
-                    Assert.That(play.Practice.Speed, Is.EqualTo(.8));
+                    play.Practice.Move(-1); yield return new WaitForSecondsRealtime(.25f);
+                    play.Practice.Confirm(); yield return null;
+                    play.Practice.Move(-1); play.Practice.Move(-1);
+                    play.Practice.Confirm(); yield return null;
+                    Assert.That(play.Practice.Progress.Speed, Is.EqualTo(.8));
                 }
                 // A and B are real milliseconds: in chart time they shrink with the practice speed.
                 double rate = practice ? .8 : 1, audio = a / 1000.0 * rate, judge = b / 1000.0 * rate;

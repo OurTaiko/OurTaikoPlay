@@ -86,15 +86,15 @@ namespace OurTaiko.Tests
                 Assert.That(play.IsPractice, Is.True);
                 Assert.That(play.movie, Is.SameAs(movie));
                 Assert.That(movie.HasMovie, Is.True);
-                yield return Wait(() => play.Practice != null && play.IsPaused && movie.player.IsPrepared);
+                yield return Wait(() => play.Practice?.Progress != null && play.IsPaused && movie.player.IsPrepared);
                 // Measure 3 starts at 4 s (BPM 120): 3 s into the movie, followed while paused.
-                play.MovePractice(1); play.MovePractice(1);
+                play.Practice.Move(1); play.Practice.Move(1);
                 yield return Wait(() => !movie.player.IsSeeking && System.Math.Abs(movie.player.Position - (play.SongTime - 1)) < .05);
                 Assert.That(movie.player.IsPlaying, Is.False);
                 Assert.That(movie.IsShowing, Is.True);
                 // The measure, then the speed (kept at 1): practice plays from just before the measure.
-                play.ConfirmPractice(); yield return null;
-                play.ConfirmPractice();
+                play.Practice.Confirm(); yield return null;
+                play.Practice.Confirm();
                 yield return Wait(() => !play.IsPaused);
                 yield return new WaitForSecondsRealtime(1.5f);
                 Assert.That(movie.player.IsPlaying, Is.True);
