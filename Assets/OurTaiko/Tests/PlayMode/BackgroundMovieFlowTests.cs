@@ -25,7 +25,7 @@ namespace OurTaiko.Tests
             try
             {
                 Assert.That(movie.HasMovie, Is.True);
-                Assert.That(movie.stageArt.Length, Is.EqualTo(9));
+                Assert.That(movie.stageArt.Select(g => g.name), Is.EquivalentTo(new[] { "Backdrop", "Dancers", "StageUpper", "StageLower", "StageRenda", "StageFooter", "StageCrowd" }));
                 Assert.That(movie.stageArt.All(g => g.alpha == 0), Is.True, "the stage art is hidden");
                 Assert.That(movie.laneBackgrounds.All(g => Mathf.Approximately(g.alpha, .4f)), Is.True);
                 Assert.That(movie.blackout.enabled, Is.True);

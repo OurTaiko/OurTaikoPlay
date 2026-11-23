@@ -106,7 +106,7 @@ namespace OurTaiko
         {
             Practice.Update(GameTimeline.FrameTime);
             RenderNotes(Practice.Position);
-            SampleDancers(Practice.Position);
+            SampleStage(Practice.Position);
             practiceView.Show(PracticeStage, Practice, PracticeBranch);
         }
         void UpdatePracticePause()
@@ -160,7 +160,7 @@ namespace OurTaiko
         {
             Practice.Update(GameTimeline.FrameTime);
             RenderNotes(Practice.Position);
-            SampleDancers(Practice.Position);
+            SampleStage(Practice.Position);
             if (Practice.Scrolling) return;
             practiceRewinding = false;
             music.pitch = (float)Practice.Speed;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -97,7 +96,7 @@ namespace OurTaiko.Chara
                     foreach (JObject f in (JArray)answer["files"] ?? new JArray())
                         files.Add(((string)f["kind"], (int)f["id"], (string)f["3dCharaPath"], (long)f["size"], (string)f["sha256"]));
                     await DownloadAsync(files, siteBase, cacheRoot, cancel);
-                    foreach (var f in files) DonLibrary.UseFile(f.kind, f.id, FanmadeObjectPath(cacheRoot, f.hash));
+                    foreach (var f in files) DonLibrary.UseFile(f.kind, f.id, Online.ObjectCache.PathOf(cacheRoot, f.hash));
                     Remember(cacheRoot, userId, answer);
                     Wear(seat, userId, look);
                     return;
@@ -142,16 +141,6 @@ namespace OurTaiko.Chara
             return result;
         }
 
-        static string FanmadeObjectPath(string cacheRoot, string hash) => Path.Combine(cacheRoot, "objects", hash.Substring(0, 2), hash);
-
-        static bool Matches(string path, long size, string hash)
-        {
-            if (!File.Exists(path) || new FileInfo(path).Length != size) return false;
-            using var stream = File.OpenRead(path);
-            using var sha = SHA256.Create();
-            return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant() == hash;
-        }
-
         // The files the cache lacks, from the root the site names (asked only when one is missing).
         static async Task DownloadAsync(List<(string kind, int id, string path, long size, string hash)> files, string siteBase, string cacheRoot, CancellationToken cancel)
         {
@@ -160,8 +149,8 @@ namespace OurTaiko.Chara
             {
                 if (f.hash == null || f.hash.Length != 64) throw new InvalidDataException("bad hash for " + f.kind + " " + f.id);
                 if (!Online.Distribution.ValidPath(f.path)) throw new InvalidDataException("bad path for " + f.kind + " " + f.id);
-                string path = FanmadeObjectPath(cacheRoot, f.hash);
-                if (!await Task.Run(() => Matches(path, f.size, f.hash), cancel)) lacking.Add((f.path, f.size, f.hash));
+                string path = Online.ObjectCache.PathOf(cacheRoot, f.hash);
+                if (!await Task.Run(() => Online.ObjectCache.Matches(path, f.size, f.hash), cancel)) lacking.Add((f.path, f.size, f.hash));
             }
             if (lacking.Count == 0) return;
             var root = await Online.Distribution.RootAsync(siteBase, cancel);
@@ -174,52 +163,12 @@ namespace OurTaiko.Chara
                 foreach (var (address, size, hash) in missing)
                 {
                     long before = Received;
-                    var data = await Online.Distribution.FetchAsync(address, url => FetchFileAsync(url, size, hash, before, cancel), cancel);
-                    await Task.Run(() => Store(FanmadeObjectPath(cacheRoot, hash), data), cancel);
+                    var data = await Online.Distribution.FetchAsync(address, url => Online.ObjectCache.FetchAsync(http, url, size, hash, got => Received = before + got, cancel), cancel);
+                    await Task.Run(() => Online.ObjectCache.Store(Online.ObjectCache.PathOf(cacheRoot, hash), data), cancel);
                     Received = before + size;
                 }
             }
             finally { Received = 0; Expected = 0; }
-        }
-
-        // One file's bytes from one address, checked against its size and hash; Received counts
-        // from `before` as they come (and again from there when the canonical root is tried).
-        static async Task<byte[]> FetchFileAsync(string url, long size, string hash, long before, CancellationToken cancel)
-        {
-            Received = before;
-            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel);
-            if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode + " for " + url);
-            using var stream = await response.Content.ReadAsStreamAsync();
-            var bytes = new MemoryStream((int)Math.Min(size, int.MaxValue));
-            var buffer = new byte[81920];
-            int read;
-            while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, cancel)) > 0)
-            {
-                if (bytes.Length + read > size) throw new InvalidDataException("the download of " + url + " is larger than its size");
-                bytes.Write(buffer, 0, read);
-                Received = before + bytes.Length;
-            }
-            var data = bytes.ToArray();
-            string got = await Task.Run(() =>
-            {
-                using var sha = SHA256.Create();
-                return BitConverter.ToString(sha.ComputeHash(data)).Replace("-", "").ToLowerInvariant();
-            }, cancel);
-            if (data.LongLength != size || got != hash) throw new InvalidDataException("the download of " + url + " does not match its hash");
-            return data;
-        }
-
-        static void Store(string path, byte[] data)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            string temporary = path + "." + Guid.NewGuid().ToString("N").Substring(0, 8) + ".part";
-            try
-            {
-                File.WriteAllBytes(temporary, data);
-                if (File.Exists(path)) File.Replace(temporary, path, null); else File.Move(temporary, path);
-            }
-            catch (IOException) when (File.Exists(path)) { }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }
 
         // ---- the remembered looks: {userId: <the site's answer>} ----
@@ -261,9 +210,9 @@ namespace OurTaiko.Chara
             foreach (JObject f in files)
             {
                 string hash = (string)f["sha256"];
-                if (hash == null || hash.Length != 64 || !Matches(FanmadeObjectPath(cacheRoot, hash), (long?)f["size"] ?? -1, hash)) return false;
+                if (hash == null || hash.Length != 64 || !Online.ObjectCache.Matches(Online.ObjectCache.PathOf(cacheRoot, hash), (long?)f["size"] ?? -1, hash)) return false;
             }
-            foreach (JObject f in files) DonLibrary.UseFile((string)f["kind"], (int)f["id"], FanmadeObjectPath(cacheRoot, (string)f["sha256"]));
+            foreach (JObject f in files) DonLibrary.UseFile((string)f["kind"], (int)f["id"], Online.ObjectCache.PathOf(cacheRoot, (string)f["sha256"]));
             return true;
         }
     }

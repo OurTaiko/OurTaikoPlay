@@ -20,8 +20,8 @@ namespace OurTaiko
         public GameObject pausePanel, resultPanel;
         public PauseMenuView pauseMenu;
         public UnityEngine.UI.Button pauseButton, restartButton, backButton, resumeButton, resultRestart, resultBack;
-        [Tooltip("The backdrop's dancers, on the chart's tempo and the soul gauge. DoublePlayScene has none.")]
-        public DancerTroupeView dancers;
+        [Tooltip("The backdrop: the sets the chart's #SCENEPRESET asks for or a draw, following the players' gauges, misses and drumrolls.")]
+        public StageView stage;
         [Tooltip("The chart's background movie behind the lanes; practice moves it with the measure.")]
         public BackgroundMovieView movie;
         double movieOffset;
@@ -149,6 +149,14 @@ namespace OurTaiko
                 displayInfo = song.ReadDisplayInfo();
                 title.text = displayInfo.Title;
                 ShowSubtitleLines(displayInfo);
+                if (stage != null)
+                {
+                    // SongLoadingScene chose it and fetched what it needs; a play entered any other
+                    // way gets one out of what is here.
+                    var prepared = switcher.PreparedStage(song);
+                    if (prepared.HasValue) stage.Use(prepared.Value);
+                    else stage.Setup(song.ScenePresets(displayInfo.ScenePreset));
+                }
                 music.SetAudioSong(song);
                 hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, adLibHit, mineHit);
                 // Both seats play one file, so the song's one BGMOVIE plays behind both lanes.
@@ -301,7 +309,7 @@ namespace OurTaiko
             bool preview = IsPractice && IsPaused, hideSkipped = IsPractice && (!IsPaused || practiceRewinding);
             foreach (var lane in lanes) lane.ShowVisuals(time, time - visualOffset * songClock.Rate, preview, hideSkipped);
             if (kusudama != null) kusudama.ShowTime(time);
-            SampleDancers(time);
+            SampleStage(time);
         }
 
         // 1P's drum (touch drum, tests); see PlayerLane.Hit.
@@ -476,9 +484,16 @@ namespace OurTaiko
 
         public const int SoulGaugeOrder = -20;
 
-        void SampleDancers(double time)
+        void SampleStage(double time)
         {
-            if (dancers != null) dancers.ShowTime(time, Lane1.Shown.BpmAt(time), Lane1.Shown.GaugePoints / SoulGauge.MaximumPoints, Lane1.Shown.IsClear);
+            if (stage != null) stage.Show(time, lanes);
+        }
+
+        internal override void StageJudged(int seat, bool missed, double bpm) => stage?.Judged(seat, missed, bpm);
+
+        internal override void DrumrollHit(int seat)
+        {
+            if (stage != null) stage.DrumrollHit(seat);
         }
     }
 }

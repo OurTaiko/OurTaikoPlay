@@ -49,7 +49,7 @@ namespace OurTaiko.Tests
                 double observeUntil = GameTimeline.FrameTime + .45;
                 while (GameTimeline.FrameTime < observeUntil)
                 {
-                    dancerFrames.Add(play.dancers.dancers[0].Frame);
+                    dancerFrames.Add(play.stage.dancers.dancers[0].Frame);
                     fireFrames.Add(play.firstLane.soulGauge.fire.sprite);
                     rainbowFrames.Add(play.firstLane.soulGauge.rainbowA.sprite);
                     Assert.That(play.Session.Version, Is.EqualTo(version), "Presentation must not advance judgment after the result is captured.");

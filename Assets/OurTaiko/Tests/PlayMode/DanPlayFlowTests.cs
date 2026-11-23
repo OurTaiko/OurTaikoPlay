@@ -70,9 +70,10 @@ namespace OurTaiko.Tests
             var scene = Object.FindAnyObjectByType<DanPlayScene>();
             Assert.That(scene.SongIndex, Is.Zero);
             // The dojo's own top band: its cloud layers slide.
-            var band = Object.FindAnyObjectByType<DanBackgroundView>();
-            Assert.That(band, Is.Not.Null);
-            float cloud = band.layers[0].image.uvRect.x;
+            var band = Object.FindObjectsByType<StageBandView>().Single(b => b.name == "DanBackground");
+            Assert.That(band.Layers.Select(l => l.clip), Is.EqualTo(new[] { "normal_back", "normal_mid_b", "normal_mid_c", "normal_petals", "normal_front" }));
+            Assert.That(band.Layers.Select(l => l.Clip.Frames.Length), Is.EqualTo(new[] { 1280, 1599, 1759, 320, 1280 }), "Each layer comes round in its own time.");
+            double cloud = band.Seconds;
             Assert.That(scene.view.rows.Count(r => r.root.gameObject.activeSelf), Is.EqualTo(2), "The gauge exam has its plate, not a row.");
             Assert.That(scene.view.gaugePlate.gameObject.activeSelf, Is.True);
             Assert.That(scene.view.gaugeValue.text, Is.EqualTo(L10n.Format("Dan", "exam.gaugeMore", 10)));
@@ -100,7 +101,9 @@ namespace OurTaiko.Tests
             Assert.That(scene.view.between.gameObject.activeSelf, Is.False, "The song starts once the doors' black fill and title have cleared.");
             Assert.That(scene.BetweenElapsedMs, Is.GreaterThan(DanBetween.TotalMs + 2000), "The title goes, then the song's 2 s lead.");
             var first = scene.Session;
-            Assert.That(band.layers[0].image.uvRect.x, Is.Not.EqualTo(cloud));
+            Assert.That(band.Seconds, Is.GreaterThan(cloud));
+            // The petals are out of the band for part of their clip, so that layer may draw nothing.
+            Assert.That(band.Layers.Where(l => l.clip != "normal_petals").Select(l => l.RunCount), Has.All.EqualTo(1), "Every layer is drawn.");
             TestCapture.Capture("DanPlay.png");
 
             // The doors close over the lane with song B's title.

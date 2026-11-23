@@ -320,6 +320,21 @@ namespace OurTaiko
             preparedCharts[seat] = null; preparedSongs[seat] = null; preparedCourses[seat] = null;
             return chart;
         }
+        // The backdrop SongLoadingScene prepared for the song (its files are here to draw). It is
+        // kept, not taken: a restart of the same song plays on the same backdrop.
+        SongDefinition stagedSong;
+        StageChoice stagedChoice;
+
+        public void SetPreparedStage(SongDefinition song, StageChoice choice)
+        {
+            stagedSong = song; stagedChoice = choice;
+        }
+
+        public StageChoice? PreparedStage(SongDefinition song) => song != null && stagedSong == song ? stagedChoice : (StageChoice?)null;
+
+        // The backdrop mode of the scene a play of the selected song is in.
+        public StageMode SelectedStageMode => PracticeMode ? StageMode.Practice : SelectedPlayScene == DoublePlayScene ? StageMode.Double : StageMode.Single;
+
         public void Restart() => SwitchScene(SelectedPlayScene);
         public void ReturnToMenu() => SwitchScene(Application.CanStreamedLevelBeLoaded(ReturnScene) ? ReturnScene : MenuScene);
         public void ShowResult(PlayResult result, SongDefinition song = null, Online.PlayRecord record = null,

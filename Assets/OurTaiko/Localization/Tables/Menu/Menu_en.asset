@@ -446,6 +446,10 @@ MonoBehaviour:
     m_Localized: online with everyone!
     m_Metadata:
       m_Items: []
+  - m_Id: 4325258893975552
+    m_Localized: Backdrop {0}
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

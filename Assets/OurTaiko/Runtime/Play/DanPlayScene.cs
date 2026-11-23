@@ -57,6 +57,8 @@ namespace OurTaiko
         readonly SongClock songClock = new SongClock();
         [Tooltip("Each song's background movie behind the lane.")]
         public BackgroundMovieView movie;
+        [Tooltip("The backdrop: the stage catalog's DAN set, the same for every song of a course.")]
+        public StageView stage;
         double movieOffset;
         readonly List<PlayResult> songResults = new List<PlayResult>();
         readonly List<Online.PlayRecord> songRecords = new List<Online.PlayRecord>();
@@ -91,6 +93,7 @@ namespace OurTaiko
             PlayfieldMask.Cover(this);
             switcher.PracticeMode = false; switcher.SeatLeadAlone();
             switcher.SceneChanging += PrepareToLeave;
+            if (stage != null) stage.Setup(System.Array.Empty<string>());
             Run = switcher.CurrentDan;
             if (Run == null && switcher.SelectedDan != null && switcher.SelectedDan.IsPlayable) Run = new DanRun(switcher.SelectedDan);
             if (Run == null)

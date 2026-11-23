@@ -362,11 +362,11 @@
       "hash": "51afb07b99dfb2ffea5b8ff2112f7e3434cb7e74"
     },
     "org.ourtaiko.tjaparser": {
-      "version": "https://github.com/OurTaiko/TJAParser.git#v0.13.0",
+      "version": "https://github.com/OurTaiko/TJAParser.git#v0.15.0",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "1fc709f8cc2e2f5e8481b4e0e63547ebf72a9969"
+      "hash": "70a76ac6dd4b21e065faffc12114827089fe4cf3"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",

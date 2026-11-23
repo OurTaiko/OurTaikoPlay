@@ -1,0 +1,128 @@
+name: Stage bundles
+run-name: Stage bundles to ${{ inputs.folder }}
+
+# Publishes the play backdrops' asset bundles and catalog. The game carries only a few sets; every
+# other one is downloaded as it is needed from https://distrib.ourtaiko.org/<folder>/ (see
+# Tools/stage-publish/README.md). The sets' .otanim files are not in this repository: whoever makes
+# them uploads them (Tools/stage-publish/build.py, then publish.sh), and this workflow fetches them
+# from there, has Unity build each platform's bundles and uploads those, then the catalog
+# (Tools/stage-publish/catalog.json at the ref it runs on).
+# Run it by hand after new originals are uploaded, or after the catalog, the importer or the
+# bundle version changes. Nothing is ever deleted or replaced: every bundle's name carries its
+# hash, and only the JSON beside them says which ones are current.
+on:
+  workflow_dispatch:
+    inputs:
+      folder:
+        description: Folder under the distribution root (stage is what released games read)
+        default: stage
+        required: true
+
+permissions:
+  contents: read
+  id-token: write # signs in to AWS through GitHub OIDC
+
+concurrency:
+  group: stage-bundles-${{ inputs.folder }}
+
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+  BUCKET: s3://ourtaiko-public
+  DISTRIBUTION: E29SNWDH0GYCHC
+  FOLDER: ${{ inputs.folder }}
+
+jobs:
+  bundles:
+    name: Bundles (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows, platform: StandaloneWindows64 }
+          - { name: macos, platform: StandaloneOSX }
+          - { name: linux, platform: StandaloneLinux64 }
+          - { name: android, platform: Android }
+          - { name: ios, platform: iOS }
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune --all --force > /dev/null
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          lfs: false
+      - uses: ./.github/actions/lfs-pull
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-stage-${{ matrix.platform }}-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'Packages/packages-lock.json') }}
+          restore-keys: |
+            Library-stage-${{ matrix.platform }}-
+            Library-${{ matrix.platform }}-
+      # The builder's Unity launch is sometimes killed at once (see build.yml); retry once.
+      - id: unity
+        uses: game-ci/unity-builder@v4
+        continue-on-error: true
+        with:
+          targetPlatform: ${{ matrix.platform }}
+          buildMethod: OurTaiko.Editor.StageBundles.BuildBatch
+          customParameters: -stageBundleDir build/stage-bundles -stageSourceRoot https://distrib.ourtaiko.org/${{ inputs.folder }}
+          versioning: None
+      - name: Retry the Unity run
+        if: steps.unity.outcome == 'failure'
+        uses: game-ci/unity-builder@v4
+        with:
+          targetPlatform: ${{ matrix.platform }}
+          buildMethod: OurTaiko.Editor.StageBundles.BuildBatch
+          customParameters: -stageBundleDir build/stage-bundles -stageSourceRoot https://distrib.ourtaiko.org/${{ inputs.folder }}
+          versioning: None
+      - name: Check what was built
+        run: |
+          set -- build/stage-bundles/stage/bundle/*/${{ matrix.name }}
+          [ $# -eq 1 ] && [ -f "$1/index.json" ] || { echo "expected one bundle/<version>/${{ matrix.name }}/index.json, found: $*" >&2; exit 1; }
+          echo "BUNDLES=$1" >> "$GITHUB_ENV"
+          echo "$(ls "$1" | wc -l) files, $(du -sh "$1" | cut -f1)"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.STAGE_PUBLISH_ROLE_ARN }}
+          aws-region: ${{ vars.STAGE_PUBLISH_REGION || 'ap-northeast-1' }}
+      # The bundles first, their index last: an index never names a bundle that is not there yet.
+      - name: Upload the bundles
+        run: |
+          dest="$BUCKET/$FOLDER/${BUNDLES#build/stage-bundles/stage/}"
+          aws s3 sync "$BUNDLES" "$dest" --exclude '*.json' --size-only \
+            --content-type application/octet-stream --cache-control 'public, max-age=31536000, immutable'
+          aws s3 cp "$BUNDLES/index.json" "$dest/index.json" \
+            --content-type application/json --cache-control 'public, max-age=300'
+
+  # Only once every platform has its bundles: a game that reads the new catalog finds them. The
+  # catalog is the repository's file at the same commit the bundle jobs built from.
+  catalog:
+    name: Catalog
+    needs: bundles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: Tools/stage-publish
+          lfs: false
+      - name: Check the catalog is JSON
+        run: |
+          python3 -c 'import json,re,sys; t=open(sys.argv[1],encoding="utf-8").read(); t=re.sub(r"/\*.*?\*/","",t,flags=re.S); json.loads("\n".join(l for l in t.splitlines() if not l.lstrip().startswith("//")))' Tools/stage-publish/catalog.json
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.STAGE_PUBLISH_ROLE_ARN }}
+          aws-region: ${{ vars.STAGE_PUBLISH_REGION || 'ap-northeast-1' }}
+      - name: Upload the catalog
+        run: |
+          aws s3 cp Tools/stage-publish/catalog.json "$BUCKET/$FOLDER/catalog.json" \
+            --content-type application/json --cache-control 'public, max-age=300'
+          # CloudFront takes a wildcard only at the end of a path; the bundles it also covers never change.
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" \
+            --paths "/$FOLDER/catalog.json" "/$FOLDER/bundle/*" \
+            --query 'Invalidation.{Id:Id,Status:Status}' --output text

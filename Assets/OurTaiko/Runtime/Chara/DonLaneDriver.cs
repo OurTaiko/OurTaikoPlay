@@ -21,14 +21,13 @@ namespace OurTaiko
         // Player::draw_overlays: holding a balloon, over the lane, its notes and its foreground (50:
         // drum, nameplate) and under the HUD (100) with the judge and balloon counters.
         public const int BalloonSortingOrder = 90;
-        const int MissStreakTint = 6; // misses in a row that darken the Don
+        const int MissStreakTint = PlayerLane.MissStreakDark; // misses in a row that darken the Don
 
         readonly PlayerLane lane;
         public DonView View { get; }
         Chara3D Chara => View.Chara;
         readonly Vector2 home;
 
-        int missStreak;
         bool gogo, gaugeClear, gaugeFull, tintedMissStreak, tintedRainbow;
         // A balloon: its note, whether hits stopped for a while, whether its counter is up.
         int balloon = -1, finishedBalloon = -1;
@@ -50,7 +49,6 @@ namespace OurTaiko
         // A new play or practice attempt: the Don starts over, as at the start of a song.
         public void Reset()
         {
-            missStreak = 0;
             gogo = gaugeClear = gaugeFull = tintedMissStreak = tintedRainbow = false;
             balloon = finishedBalloon = -1; balloonIdle = balloonCounting = false;
             if (Chara == null) return;
@@ -80,13 +78,11 @@ namespace OurTaiko
             if (result == Judgment.Bad)
             {
                 // Player::on_miss
-                missStreak++;
-                if (!gogo && missStreak <= MissStreakTint)
-                    Chara.SetAnim(missStreak == MissStreakTint ? DonAnim.Miss6 : DonAnim.Miss);
+                if (!gogo && lane.MissStreak <= MissStreakTint)
+                    Chara.SetAnim(lane.MissStreak == MissStreakTint ? DonAnim.Miss6 : DonAnim.Miss);
                 return;
             }
             // Player::on_note_correct: every tenth combo outside GOGO TIME
-            missStreak = 0;
             int combo = lane.DisplayCombo;
             if (!note.IsLong && combo > 0 && combo % 10 == 0 && !gogo) Chara.SetAnim(DonAnim.Combo);
         }
@@ -130,8 +126,8 @@ namespace OurTaiko
             {
                 gogo = gogoNow;
                 if (gogo) { Chara.SetAnim(DonAnim.Sabi); Chara.SetAnim(DonAnim.SabiStart); }
-                else if (missStreak > 0 && missStreak < MissStreakTint) Chara.SetAnim(DonAnim.Miss);
-                else if (missStreak > 0) Chara.SetAnim(DonAnim.Miss6);
+                else if (lane.MissStreak > 0 && lane.MissStreak < MissStreakTint) Chara.SetAnim(DonAnim.Miss);
+                else if (lane.MissStreak > 0) Chara.SetAnim(DonAnim.Miss6);
                 else Chara.SetAnim(RestAnim);
             }
 
@@ -139,7 +135,7 @@ namespace OurTaiko
             bool fullNow = shared?.IsFull ?? session.IsGaugeFull;
             if (fullNow && !gaugeFull) Chara.SetAnim(DonAnim.FullGage);
             gaugeFull = fullNow;
-            bool streakNow = missStreak >= MissStreakTint;
+            bool streakNow = lane.MissStreak >= MissStreakTint;
             if (streakNow != tintedMissStreak || fullNow != tintedRainbow)
             {
                 if (tintedMissStreak && !streakNow) Chara.SetAnim(RestAnim);

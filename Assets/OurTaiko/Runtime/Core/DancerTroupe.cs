@@ -29,19 +29,26 @@ namespace OurTaiko
         public int Active { get; private set; }
         public int Slots => rigs.Length;
 
-        public DancerTroupe(IReadOnlyList<DancerRig> slots)
+        // The fewest on stage: three of the usual troupe, one of a troupe whose lead comes first.
+        readonly int least;
+
+        public DancerTroupe(IReadOnlyList<DancerRig> slots, bool leadFirst = false)
         {
+            least = leadFirst ? 1 : MinDancers;
             rigs = new DancerRig[slots.Count];
             for (int i = 0; i < rigs.Length; i++) rigs[i] = slots[i];
             dancers = new Dancer[rigs.Length];
-            // The playhead is still 0, so the first three hop in together.
-            SetCount(MinDancers);
+            // The playhead is still 0, so the first ones hop in together.
+            SetCount(least);
         }
 
         // Background:handle_dancer_count with the engine's clear_progress of 1: the fourth dancer
         // from half a gauge, the fifth with the clear state.
-        public static int CountFor(double gauge, bool clear)
-            => clear ? 5 : Math.Max(MinDancers, Math.Min(5, (int)Math.Floor(2 * gauge + 3)));
+        // A collab troupe (leadFirst) starts with its lead alone and grows to five at the clear.
+        public static int CountFor(double gauge, bool clear, bool leadFirst = false)
+            => clear ? 5
+                : leadFirst ? Math.Max(1, Math.Min(5, (int)Math.Floor(4 * gauge + 1)))
+                : Math.Max(MinDancers, Math.Min(5, (int)Math.Floor(2 * gauge + 3)));
 
         // Time never runs the playhead backwards; a tempo change retimes the whole troupe at once.
         public void Advance(double time, double bpm)
@@ -61,7 +68,7 @@ namespace OurTaiko
         // Grows and shrinks slot by slot, from the centre outwards.
         public void SetCount(int count)
         {
-            count = Math.Max(Math.Min(MinDancers, rigs.Length), Math.Min(rigs.Length, count));
+            count = Math.Max(Math.Min(least, rigs.Length), Math.Min(rigs.Length, count));
             while (Active < count) Enter(Active++);
             while (Active > count) Leave(--Active);
         }

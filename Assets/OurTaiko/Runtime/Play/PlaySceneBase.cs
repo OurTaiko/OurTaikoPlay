@@ -39,5 +39,8 @@ namespace OurTaiko
         // The lane backgrounds' opacity under the background movie (BackgroundMovieView.LaneAlpha;
         // 1 without one). #LANE_ALPHA is multiplied by it.
         internal virtual float MovieLaneAlpha => 1;
+        // A drumroll of this seat was hit (the backdrop throws its drumroll effect).
+        internal virtual void StageJudged(int seat, bool missed, double bpm) { }
+        internal virtual void DrumrollHit(int seat) { }
     }
 }

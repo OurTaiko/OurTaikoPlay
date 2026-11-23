@@ -1,20 +1,20 @@
 using System.Linq;
 using NUnit.Framework;
+using OurTaiko.Chara;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Experimental.Rendering;
 using Object = UnityEngine.Object;
 
 namespace OurTaiko.Tests
 {
-    // The backdrop dancers: the troupe's shared playhead (Nijiiro ArcadeDancerGroup), the frames
-    // redrawn on one canvas per variant, and the clips and prefabs built from the rig.
+    // The backdrop dancers: the troupe's shared playhead (Nijiiro ArcadeDancerGroup's rules) and
+    // each dancer's timeline baked into one .otanim clip.
     public sealed class DancerTests
     {
-        const string Art = "Assets/OurTaiko/Art/background/dancer/dancer_0/";
-        const string Prefabs = "Assets/OurTaiko/Generated/Dancers/";
-        static readonly int[] FrameCounts = { 19, 19, 27, 23, 23 };
+        const string Art = "Assets/OurTaiko/Resources/Stage/dancers/";
+        const int Dancers = 5;
 
         // 150 BPM is 100 rig frames a second.
         static DancerTroupe TroupeAt(double frame, out double time)
@@ -116,84 +116,38 @@ namespace OurTaiko.Tests
             Assert.That(DancerTroupe.CountFor(0.7, true), Is.EqualTo(5));
         }
 
-        [Test]
-        public void EveryFrameOfAVariantSharesOneCanvasAndPivot()
+        static OtanimAsset Dancer(int which) => TestStage.Asset($"dancers/toho_{which}");
+
+        // The middle of what a frame draws, in stage pixels from the left.
+        static float Middle(Otanim file, Otanim.Clip rig, int frame)
         {
-            for (int v = 0; v < FrameCounts.Length; v++)
+            var xs = rig.Frames[frame].Draws.SelectMany(d => Enumerable.Range(0, file.Parts[d.Part].UVs.Length).Select(i => rig.Positions[d.Offset + 2 * i])).ToArray();
+            return (xs.Min() + xs.Max()) / 2;
+        }
+
+        // Each dancer's timeline is baked whole at 40 frames a beat: two beats in, eight of dance,
+        // two out, drawn where that dancer stands on the stage.
+        [Test]
+        public void EachDancerIsItsWholeTimelineInItsOwnPlace()
+        {
+            var middles = new float[Dancers];
+            for (int k = 0; k < Dancers; k++)
             {
-                var sprites = Enumerable.Range(0, FrameCounts[v])
-                    .Select(i => AssetDatabase.LoadAssetAtPath<Sprite>($"{Art}{v}_loop/{i}.png")).ToArray();
-                Assert.That(sprites, Has.None.Null, "variant " + v);
-                Assert.That(sprites.Select(s => s.rect.size).Distinct().Count(), Is.EqualTo(1), "canvas of variant " + v);
-                Assert.That(sprites.Select(s => s.pivot).Distinct().Count(), Is.EqualTo(1), "pivot of variant " + v);
-                // Each sprite is its whole file; the atlas it is drawn from does not change that.
-                foreach (var sprite in sprites)
-                {
-                    ((TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(sprite))).GetSourceTextureWidthAndHeight(out int width, out int height);
-                    Assert.That(sprite.rect.size, Is.EqualTo(new Vector2(width, height)), sprite.name);
-                }
+                var asset = Dancer(k);
+                var rig = asset.File.Find(DancerView.RigClip);
+                Assert.That((rig.Fps, rig.Loop, rig.Frames.Length), Is.EqualTo((40f, false, 480)));
+                Assert.That(Enumerable.Range(80, 320).All(f => rig.Frames[f].Draws.Length >= 1), Is.True, "It is on stage for the whole dance.");
+                Assert.That(asset.File.View, Is.EqualTo(new Rect(0, 0, 1920, 1080)), "The clip is the whole stage.");
+                Assert.That(GraphicsFormatUtility.IsCompressedFormat(asset.texture.graphicsFormat), Is.True, "The pictures are block-compressed.");
+                middles[k] = Middle(asset.File, rig, 80);
             }
-        }
-
-        // A layer's saved rect already matches every frame, so only the sprite changes between frames.
-        [Test]
-        public void EachPrefabLayerIsTheVariantCanvasPivotedOnTheRigOrigin()
-        {
-            for (int v = 0; v < FrameCounts.Length; v++)
-            {
-                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{Prefabs}Dancer0_{v}.prefab");
-                Assert.That(prefab, Is.Not.Null);
-                var view = prefab.GetComponent<DancerView>();
-                Assert.That((view.frames, view.dance, view.leave), Is.EqualTo((800, 80, 720)));
-                Assert.That(prefab.GetComponent<ClipSampler>().clip.name, Is.EqualTo("Dancer0_" + v));
-                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{Art}{v}_loop/0.png");
-                var layers = prefab.GetComponentsInChildren<Image>(true);
-                Assert.That(layers.Length, Is.EqualTo(v == 2 ? 2 : 1));
-                foreach (var layer in layers)
-                {
-                    Assert.That(layer.rectTransform.sizeDelta, Is.EqualTo(sprite.rect.size));
-                    Assert.That(Vector2.Scale(layer.rectTransform.pivot, sprite.rect.size), Is.EqualTo(sprite.pivot));
-                }
-            }
-        }
-
-        static void Shown(int variant, int frame, System.Action<RectTransform[]> check)
-        {
-            var dancer = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>($"{Prefabs}Dancer0_{variant}.prefab"));
-            try
-            {
-                dancer.GetComponent<DancerView>().Show(frame);
-                check(dancer.GetComponentsInChildren<Image>(true).Select(i => i.rectTransform).ToArray());
-            }
-            finally { Object.DestroyImmediate(dancer); }
+            // In the order they come: centre, left, right, far left, far right.
+            Assert.That(new[] { 3, 1, 0, 2, 4 }.Select(k => middles[k]), Is.Ordered);
+            Assert.That(middles[0], Is.EqualTo(960).Within(40));
         }
 
         [Test]
-        public void OneAtlasHoldsEveryFrame()
-        {
-            var atlas = AssetDatabase.LoadAssetAtPath<UnityEngine.U2D.SpriteAtlas>(Prefabs + "Dancer0.spriteatlasv2");
-            Assert.That(atlas, Is.Not.Null);
-            Assert.That(atlas.spriteCount, Is.EqualTo(FrameCounts.Sum()));
-        }
-
-        static string SpriteOf(RectTransform layer) => layer.GetComponent<Image>().sprite.name;
-
-        [Test]
-        public void TheClipHoldsEachRigKeyUntilTheNext()
-        {
-            // dancer_0.lua variant 0: {0,{{0,-5,296,1,1,0,1}}}, {26,{{1,-5,-260,...}}}, {51,{{0,-5,-176,1,0.92708,...}}},
-            // {80,{{3,-5,-185,...}}}, {100,{{4,-5,-185,...}}}.
-            Shown(0, 0, l => { Assert.That(SpriteOf(l[0]), Is.EqualTo("0")); Assert.That(l[0].anchoredPosition, Is.EqualTo(new Vector2(-5, -296))); });
-            Shown(0, 26, l => { Assert.That(SpriteOf(l[0]), Is.EqualTo("1")); Assert.That(l[0].anchoredPosition.y, Is.EqualTo(260)); });
-            Shown(0, 51, l => { Assert.That(l[0].anchoredPosition.y, Is.EqualTo(176)); Assert.That(l[0].localScale.y, Is.EqualTo(0.92708f).Within(1e-5)); });
-            Shown(0, 79, l => { Assert.That(SpriteOf(l[0]), Is.EqualTo("0")); Assert.That(l[0].localScale.y, Is.EqualTo(1)); });
-            Shown(0, 80, l => { Assert.That(SpriteOf(l[0]), Is.EqualTo("3")); Assert.That(l[0].anchoredPosition, Is.EqualTo(new Vector2(-5, 185))); });
-            Shown(0, 99, l => Assert.That(SpriteOf(l[0]), Is.EqualTo("3")));
-            Shown(0, 100, l => Assert.That(SpriteOf(l[0]), Is.EqualTo("4")));
-        }
-
-        [Test]
-        public void BothPlayScenesStandFiveDancersBehindTheFooter()
+        public void BothPlayScenesStandFiveDancersOnTheLowerBand()
         {
             foreach (string path in new[] { "Assets/Scenes/Play/Play.Single.unity", "Assets/Scenes/Play/Play.Practice.unity" })
             {
@@ -201,18 +155,80 @@ namespace OurTaiko.Tests
                 try
                 {
                     var play = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<PlayScene>(true)).Single();
-                    var troupe = play.dancers;
-                    Assert.That(troupe.slots.Select(s => s.anchoredPosition), Is.EqualTo(new[] { 960, 640, 1280, 319, 1601 }.Select(x => new Vector2(x, -1005))));
-                    Assert.That(troupe.dancers.Select(d => d.GetComponent<ClipSampler>().clip.name),
-                        Is.EqualTo(Enumerable.Range(0, 5).Select(v => "Dancer0_" + v)));
-                    Assert.That(troupe.dancers.Select((d, i) => d.transform.parent == troupe.slots[i]), Has.All.True);
-                    var footer = troupe.transform.parent.Find("Footer");
-                    Assert.That(troupe.transform.GetSiblingIndex(), Is.EqualTo(footer.GetSiblingIndex() - 1));
+                    var troupe = play.stage.dancers;
+                    Assert.That(troupe.dancers.Select(d => d.View.asset), Has.All.Null, "The stage gives them their troupe when a play starts.");
+                    // Each clip is the whole stage, so every dancer's rect is the troupe's, which is the stage's.
+                    Assert.That(((RectTransform)troupe.transform).anchoredPosition, Is.EqualTo(Vector2.zero));
+                    Assert.That(((RectTransform)troupe.transform).sizeDelta, Is.EqualTo(new Vector2(1920, 1080)));
+                    foreach (var dancer in troupe.dancers)
+                    {
+                        var rect = (RectTransform)dancer.transform;
+                        Assert.That((rect.parent, rect.anchorMin, rect.anchorMax, rect.offsetMin, rect.offsetMax),
+                            Is.EqualTo((troupe.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero)));
+                    }
+                    // Drawn over the scene they stand in.
+                    var lower = troupe.transform.parent.Find("StageLower");
+                    Assert.That(troupe.transform.GetSiblingIndex(), Is.GreaterThan(lower.GetSiblingIndex()));
                     // The centre dancer is drawn last.
-                    Assert.That(troupe.slots.Select(s => s.GetSiblingIndex()), Is.EqualTo(new[] { 4, 3, 2, 1, 0 }));
+                    Assert.That(troupe.dancers.Select(d => d.transform.GetSiblingIndex()), Is.EqualTo(new[] { 4, 3, 2, 1, 0 }));
+
+                    TestStage.Require("TOHO");
+                    play.stage.Setup("TOHO", new System.Random(1));
+                    if (play.stage.mode == StageMode.Practice)
+                    {
+                        Assert.That(play.stage.Choice.Preset, Is.EqualTo("PRACTICE"));
+                        Assert.That(troupe.Troupe, Is.Null);
+                        continue;
+                    }
+                    Assert.That(play.stage.Choice.Troupe, Is.EqualTo("toho"));
+                    Assert.That(troupe.dancers.Select(d => d.View.asset), Is.EqualTo(Enumerable.Range(0, Dancers).Select(Dancer)));
+                    Assert.That((troupe.Troupe.Slots, troupe.Troupe.Active, troupe.IsMovie), Is.EqualTo((5, 1, false)), "The lead of a collab troupe comes alone.");
                 }
                 finally { EditorSceneManager.ClosePreviewScene(scene); }
             }
+        }
+
+        // A collab troupe's lead comes alone; the others join as the gauge fills, all by the clear.
+        [Test]
+        public void ATroupeWhoseLeadComesFirstGrowsToFiveByTheClear()
+        {
+            var troupe = new DancerTroupe(Enumerable.Repeat(new DancerRig(800, 80, 720), 5).ToArray(), leadFirst: true);
+            Assert.That(troupe.Active, Is.EqualTo(1));
+            Assert.That(new[] { 0, 0.24, 0.25, 0.5, 0.75, 0.99 }.Select(g => DancerTroupe.CountFor(g, false, true)), Is.EqualTo(new[] { 1, 1, 2, 3, 4, 4 }));
+            Assert.That(DancerTroupe.CountFor(0.7, true, true), Is.EqualTo(5));
+            troupe.SetCount(0);
+            Assert.That(troupe.Active, Is.EqualTo(1), "The lead stays.");
+            // The usual troupe is unchanged: three, the fourth from half a gauge.
+            Assert.That(new[] { 0, 0.49, 0.5, 0.99 }.Select(g => DancerTroupe.CountFor(g, false)), Is.EqualTo(new[] { 3, 3, 4, 4 }));
+        }
+
+        // A troupe that is one movie: all of it on stage from the start, replayed on the beat.
+        [Test]
+        public void AMovieTroupeIsOneClipReplayedOnTheBeat()
+        {
+            var root = new GameObject("Dancers", typeof(RectTransform), typeof(DancerTroupeView));
+            try
+            {
+                var view = root.GetComponent<DancerTroupeView>();
+                view.dancers = Enumerable.Range(0, 2).Select(i =>
+                {
+                    var go = new GameObject("Dancer" + i, typeof(RectTransform), typeof(OtanimView), typeof(DancerView));
+                    go.transform.SetParent(root.transform, false);
+                    return go.GetComponent<DancerView>();
+                }).ToArray();
+                view.Use(new[] { Dancer(1) }, new StageTroupe { name = "movie", movie = true });
+                int frames = Dancer(1).File.Find(DancerView.RigClip).Frames.Length;
+                Assert.That((view.IsMovie, view.Troupe.Slots), Is.EqualTo((true, 1)));
+                // 150 BPM is 100 rig frames a second.
+                view.ShowTime(0, 150, 0, false);
+                view.ShowTime(1.005, 150, 0, false);
+                Assert.That((view.dancers[0].Frame, view.dancers[1].Frame), Is.EqualTo((100, -1)));
+                view.ShowTime(1.005 + frames / 100.0, 150, 0, false);
+                Assert.That(view.dancers[0].Frame, Is.EqualTo(100), "It comes round.");
+                view.Use(null, null);
+                Assert.That((view.Troupe, view.dancers[0].Frame), Is.EqualTo(((DancerTroupe)null, -1)));
+            }
+            finally { Object.DestroyImmediate(root); }
         }
     }
 }
