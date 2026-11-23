@@ -76,7 +76,7 @@ namespace OurTaiko
         public TaikoChart Parse(string requestedCourse, string seat = "p1", bool together = false)
         {
             var (blockCourse, side) = ResolveBlock(string.IsNullOrEmpty(requestedCourse) ? course : requestedCourse, seat, together);
-            return TjaParser.Parse(chart.text, blockCourse, side);
+            return ScoredTja.Parse(chart.text, blockCourse, side);
         }
         // The side a seat plays on a course (SeatBlocks), decided once before the play: the play
         // parses that block and the result uploads to it. A chart that cannot be read gets the
@@ -90,7 +90,7 @@ namespace OurTaiko
         // A block named outright (course and side): the side decided before the play, or the one
         // a 段位 course pins. No seat choice is made here; an empty course is the song's own.
         public TaikoChart ParseBlock(string blockCourse, string side)
-            => TjaParser.Parse(chart.text, string.IsNullOrEmpty(blockCourse) ? course : blockCourse, side);
+            => ScoredTja.Parse(chart.text, string.IsNullOrEmpty(blockCourse) ? course : blockCourse, side);
         public SongInfo ReadInfo() => SongInfo.Read(chart.text);
         // MOVIEOFFSET: how many seconds after the music starts the movie does (negative: before).
         // Online charts lose their headers when they are made playable; the server keeps it.

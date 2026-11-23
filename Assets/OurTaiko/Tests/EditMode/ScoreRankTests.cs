@@ -13,13 +13,15 @@ namespace OurTaiko.Tests
             Assert.That(ScoreRankUtil.FromScore(1000000), Is.EqualTo(ScoreRank.None));
             Assert.That(ScoreRankUtil.FromScore(950000), Is.EqualTo(ScoreRank.PurpleMiyabi));
             var song = ScriptableObject.CreateInstance<SongDefinition>();
-            var first = new TextAsset("BPM:120\nCOURSE:Easy\n#START\n1111,\n#END\nCOURSE:Oni\n#START\n1110,\n#END");
+            var first = new TextAsset("BPM:120\nCOURSE:Easy\n#START\n1111,\n#END\nCOURSE:Oni\n#START\n1110,\n5000,\n0080,\n#END");
             var changed = new TextAsset("BPM:120\nCOURSE:Oni\n#START\n1111,\n#END");
             try
             {
                 song.chart = first;
                 Assert.That(ScoreRankUtil.FromScore(1000000, song.RankThreshold(Difficulty.Easy)), Is.EqualTo(ScoreRank.Kiwami));
                 Assert.That(ScoreRankUtil.FromScore(1000000, song.RankThreshold(Difficulty.Oni)), Is.EqualTo(ScoreRank.PurpleMiyabi));
+                Assert.That(song.RankThreshold(Difficulty.Oni), Is.EqualTo(1000020));
+                Assert.That(new PlaySession(song.Parse("Oni")).BaseScore, Is.EqualTo(331640));
                 Assert.That(song.RankThreshold(Difficulty.Oni), Is.EqualTo(new PlaySession(song.Parse("Oni")).KiwamiThreshold));
                 song.chart = changed;
                 Assert.That(ScoreRankUtil.FromScore(1000000, song.RankThreshold(Difficulty.Oni)), Is.EqualTo(ScoreRank.Kiwami));
@@ -36,14 +38,14 @@ namespace OurTaiko.Tests
 
         [TestCase("1110,", "", 333340, 1000020)]
         [TestCase("1111,", "", 250000, 1000000)]
-        [TestCase("1000,\n5000,\n0080,\n1000,", "", 497470, 1000940)]
+        [TestCase("1000,\n5000,\n0080,\n1000,", "", 497450, 1000000)]
         [TestCase("1234,\n5008,\n7008,\n9008,", "BALLOON:150,2", 246820, 1000480)]
         [TestCase("0000,", "", 1000000, 1000000)]
         public void KiwamiUsesActualChartBudgetAndRoundedRollEstimate(string body, string metadata, int baseScore, int ceiling)
         {
-            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\nLEVEL:8\n" + metadata + "\n#START\n" + body + "\n#END");
+            var chart = ScoredTja.Parse("BPM:120\nCOURSE:Oni\nLEVEL:8\n" + metadata + "\n#START\n" + body + "\n#END");
             var session = new PlaySession(chart);
-            Assert.That(session.BaseScore, Is.EqualTo(baseScore), "The scoring policy is unchanged.");
+            Assert.That(session.BaseScore, Is.EqualTo(baseScore));
             Assert.That(session.KiwamiThreshold, Is.EqualTo(ceiling));
             Assert.That((int)ScoreRankUtil.FromScore(ceiling - 1, ceiling), Is.EqualTo(6));
             Assert.That((int)ScoreRankUtil.FromScore(ceiling, ceiling), Is.EqualTo(7));

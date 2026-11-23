@@ -67,7 +67,7 @@ namespace OurTaiko.Online
                             return selected.Difficulties.Select(d =>
                             {
                                 cancel.ThrowIfCancellationRequested();
-                                return d == null ? 0 : ScoreRankUtil.KiwamiThreshold(TjaParser.Parse(text, d.Course, d.Side));
+                                return d == null ? 0 : ScoreRankUtil.KiwamiThreshold(ScoredTja.Parse(text, d.Course, d.Side));
                             }).ToArray();
                         }, cancel);
                     }

@@ -5,6 +5,7 @@ namespace OurTaiko
     // Pure scoring policy. Timing, combos, GOGO, note size and rendering belong to other modules.
     public sealed class ShinuchiScore
     {
+        // Legacy policy for charts outside the source-based estimator's validated scope.
         // Keep the float literal used in tja.cpp::calculate_base_score, including its precision.
         public const float EstimatedRollHitsPerSecond = 16.920079999994086f;
         public const int LongHitPoints = 100;
@@ -15,6 +16,12 @@ namespace OurTaiko
         public ShinuchiScore(ChartStatistics statistics)
         {
             if (statistics == null) throw new ArgumentNullException(nameof(statistics));
+            if (statistics.ScoreEstimate != null)
+            {
+                BaseScore = statistics.ScoreEstimate.BaseScore;
+                CeilingScore = statistics.ScoreEstimate.CeilingScore;
+                return;
+            }
             if (statistics.JudgeableNotes == 0) BaseScore = 1000000;
             else
             {

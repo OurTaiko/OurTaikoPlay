@@ -12,10 +12,12 @@ namespace OurTaiko
         public IReadOnlyList<int> RouteNotes { get; }
         public int BalloonHitBudget { get; }
         public double DrumrollMilliseconds { get; }
+        internal TjaScoreEstimate ScoreEstimate { get; }
 
         public ChartStatistics(TaikoChart chart)
         {
             if (chart == null) throw new ArgumentNullException(nameof(chart));
+            ScoreEstimate = ScoredTja.Estimate(chart);
             int judgeableNotes = 0, balloonHitBudget = 0;
             double drumrollMilliseconds = 0;
             // Player::reset_chart aggregates the common list followed by every Master section.
@@ -31,7 +33,7 @@ namespace OurTaiko
                     if (note.BranchId < 0 || note.Route == chart.Branches[note.BranchId].ResolveRoute((BranchRoute)route)) routeNotes[route]++;
             }
             RouteNotes = routeNotes;
-            BalloonHitBudget = balloonHitBudget;
+            BalloonHitBudget = ScoreEstimate?.BalloonHits ?? balloonHitBudget;
             DrumrollMilliseconds = drumrollMilliseconds;
 
             void Accumulate(int branchId)

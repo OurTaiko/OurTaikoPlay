@@ -5,7 +5,7 @@ namespace OurTaiko.Tests
 {
     public sealed class ShinuchiTests
     {
-        static TaikoChart Parse(string body, string metadata = "") => TjaParser.Parse(
+        static TaikoChart Parse(string body, string metadata = "") => ScoredTja.Parse(
             "BPM:120\nCOURSE:Oni\nLEVEL:8\n" + metadata + "\n#START\n" + body + "\n#END");
 
         [Test]
@@ -70,9 +70,9 @@ namespace OurTaiko.Tests
         public void FullRollDurationReducesBaseScoreRegardlessOfBarsOrLineBreaks(string body)
         {
             var session = new PlaySession(Parse(body));
-            Assert.That(session.BaseScore, Is.EqualTo(497470), "Budget the full three seconds, not only the two seconds to the next bar.");
+            Assert.That(session.BaseScore, Is.EqualTo(497450), "Budget the full three seconds: k=45, H=51.");
             session.Hit(false, 0); session.Hit(false, 6);
-            Assert.That(session.Score, Is.EqualTo(994940));
+            Assert.That(session.Score, Is.EqualTo(994900));
         }
 
         [Test]
