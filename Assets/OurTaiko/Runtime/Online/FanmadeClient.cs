@@ -446,7 +446,7 @@ namespace OurTaiko.Online
                     string id = Json.Str(v, "id");
                     if (!ValidCategory(id) || byCategory.ContainsKey(id)) throw new FanmadeException("API_CATEGORY_INVALID");
                     var folder = new FanmadeCategory { Server = e.Id, ServerName = e.Config.DisplayName,
-                        Id = id, Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre") };
+                        Id = id, Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre"), ScenePreset = Json.Optional(v, "scenePreset") };
                     folders.Add(folder);
                     byCategory.Add(id, folder);
                     expectedCounts.Add(id, Json.Number(v, "chartCount"));

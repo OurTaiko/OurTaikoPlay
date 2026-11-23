@@ -113,33 +113,20 @@ namespace OurTaiko.Tests
             Assert.That(LocalSongScanner.Scan(root, "ja").Folders[0].Title, Is.EqualTo("Re:Zero"));
         }
 
-        // A box.def's #SCENEPRESET is for everything in its folder; a chart hears the folders it is
-        // in from the nearest outwards, and a folder that names none (or a plain directory) is
-        // not heard at all.
+        // A box.def's #SCENEPRESET is its folder's; which songs it is for is song select's to say,
+        // by the folders a song is opened from.
         [Test]
-        public void ChartsHearTheScenePresetsOfTheFoldersTheyAreIn()
+        public void ABoxDefNamesItsFoldersBackdrop()
         {
-            Write("loose.tja", Chart("Loose"));
             Write("Outer/box.def", "#TITLE:Outer\n#SCENEPRESET: TOHO \n");
             Write("Outer/o.tja", Chart("O"));
-            Write("Outer/Plain/p.tja", Chart("P"));
             Write("Outer/Quiet/box.def", "#TITLE:Quiet\n");
             Write("Outer/Quiet/q.tja", Chart("Q"));
             Write("Outer/Quiet/Inner/box.def", "#SCENEPRESET:MIKU\n#SCENEPRESET:GUMI\n");
             Write("Outer/Quiet/Inner/i.tja", Chart("I"));
-            Write("Other/box.def", "#TITLE:Other\n");
-            Write("Other/x.tja", Chart("X"));
-            var catalog = LocalSongScanner.Scan(root);
-            Assert.That(catalog.Songs[0].FolderScenePresets, Is.Empty);
-            var other = catalog.Folders[0];
-            var outer = catalog.Folders[1];
+            var outer = LocalSongScanner.Scan(root).Folders[0];
             var quiet = outer.Folders[0];
-            var inner = quiet.Folders[0];
-            Assert.That(new[] { other, outer, quiet, inner }.Select(f => f.ScenePreset), Is.EqualTo(new[] { "", "TOHO", "", "GUMI" }), "The last #SCENEPRESET of a box.def is the one.");
-            Assert.That(other.Charts[0].FolderScenePresets, Is.Empty);
-            Assert.That(outer.Charts.Select(c => c.FolderScenePresets), Has.All.EqualTo(new[] { "TOHO" }), "Its own chart and the one in a plain directory.");
-            Assert.That(quiet.Charts[0].FolderScenePresets, Is.EqualTo(new[] { "TOHO" }));
-            Assert.That(inner.Charts[0].FolderScenePresets, Is.EqualTo(new[] { "GUMI", "TOHO" }));
+            Assert.That(new[] { outer, quiet, quiet.Folders[0] }.Select(f => f.ScenePreset), Is.EqualTo(new[] { "TOHO", "", "GUMI" }), "The last #SCENEPRESET of a box.def is the one.");
         }
 
         [Test]

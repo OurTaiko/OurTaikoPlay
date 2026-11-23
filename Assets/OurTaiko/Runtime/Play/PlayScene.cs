@@ -155,7 +155,7 @@ namespace OurTaiko
                     // way gets one out of what is here.
                     var prepared = switcher.PreparedStage(song);
                     if (prepared.HasValue) stage.Use(prepared.Value);
-                    else stage.Setup(song.ScenePresets(displayInfo.ScenePreset));
+                    else stage.Setup(switcher.ScenePresets(displayInfo.ScenePreset));
                 }
                 music.SetAudioSong(song);
                 hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, adLibHit, mineHit);

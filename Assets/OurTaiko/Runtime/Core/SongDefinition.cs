@@ -12,19 +12,6 @@ namespace OurTaiko
         // online one. null when the chart has none.
         [System.NonSerialized] public string moviePath;
         [System.NonSerialized] public string localChartSha256;
-        // The #SCENEPRESET of the folders the song is listed in, the nearest first; null when
-        // none names one.
-        [System.NonSerialized] public string[] folderScenePresets;
-
-        // The play backdrops asked for this song, the one that counts most first: the chart's
-        // own SCENEPRESET (`own`), then its folders' from the nearest outwards.
-        public string[] ScenePresets(string own)
-        {
-            var asked = new System.Collections.Generic.List<string>();
-            if (!string.IsNullOrWhiteSpace(own)) asked.Add(own);
-            if (folderScenePresets != null) asked.AddRange(folderScenePresets);
-            return asked.ToArray();
-        }
         // Online charts and authored assets keep their existing identity. Disk charts
         // use their raw file hash; name remains the entry identity for navigation/audio.
         public string ScoreKey => string.IsNullOrEmpty(localChartSha256) ? name : localChartSha256;

@@ -382,7 +382,7 @@ namespace OurTaiko
                 return;
             }
             string course2P = Switcher.Seated.Count == 2 ? info.Course(cursors[1].Selected).Course : null;
-            Switcher.Play(FocusedSong, info.Course(cursors[0].Selected).Course, AutoPlay, course2P, PlayOptions.Second.auto);
+            Switcher.Play(FocusedSong, info.Course(cursors[0].Selected).Course, AutoPlay, course2P, PlayOptions.Second.auto, ScenePresetsOf(items[Focused]));
         }
 
         // Leaving the scene keeps option changes made with the panel still open.
@@ -488,6 +488,18 @@ namespace OurTaiko
         int AnchorOf(int folder) => items.FindIndex(item => item.Kind == ItemKind.Back && item.Folder == folder);
 
         // The folder a board lists in, -1 at the root.
+        // The backdrops asked for by the folders a board is in, the nearest first: its own folder,
+        // then each one that holds it. Folders that name none are not in it. A search lists songs
+        // out of their folders, so its boards have none.
+        public string[] ScenePresetsOf(WheelItem item)
+        {
+            var asked = new List<string>();
+            if (SearchActive) return asked.ToArray();
+            for (int folder = Holder(item); folder >= 0; folder = parents[folder])
+                if (!string.IsNullOrWhiteSpace(folders[folder].ScenePreset)) asked.Add(folders[folder].ScenePreset.Trim());
+            return asked.ToArray();
+        }
+
         int Holder(WheelItem item) => item.Kind == ItemKind.Folder ? parents[item.Folder] : item.Folder;
 
         bool Inside(int folder, int outer)
