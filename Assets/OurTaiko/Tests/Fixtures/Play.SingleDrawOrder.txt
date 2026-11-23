@@ -2,22 +2,10 @@
 # Refreshed 2026-10-24 after 3f7fdad (GogoTint -> GogoEffects), 96cb157 (Nameplate/DanRing) and d6f4e56 (Kusudama).
 # Refreshed 2026-10-28 for BackgroundMovie (blackout and movie behind the dancers, footer and lanes).
 # Refreshed 2026-11-22: the judge counter has a 良率 row, and the drumroll counter draws over the HUD (Player::draw_overlays).
+# Refreshed 2026-11-22: the backdrop (header, scene, dancers, the dojo's band) is .otanim, whose graphics are made as it plays; its saved pictures are gone.
 Viewport1920x1080/Backdrop
-Viewport1920x1080/HeaderPattern0
-Viewport1920x1080/HeaderPattern1
-Viewport1920x1080/HeaderPattern2
-Viewport1920x1080/HeaderPattern3
-Viewport1920x1080/FestivalBackground
-Viewport1920x1080/FestivalLights
 Viewport1920x1080/BackgroundMovie/Blackout
 Viewport1920x1080/BackgroundMovie/Screen
-Viewport1920x1080/Dancers/Slot5/Dancer0_4/Layer0
-Viewport1920x1080/Dancers/Slot4/Dancer0_3/Layer0
-Viewport1920x1080/Dancers/Slot3/Dancer0_2/Layer0
-Viewport1920x1080/Dancers/Slot3/Dancer0_2/Layer1
-Viewport1920x1080/Dancers/Slot2/Dancer0_1/Layer0
-Viewport1920x1080/Dancers/Slot1/Dancer0_0/Layer0
-Viewport1920x1080/Footer
 Viewport1920x1080/SongTitle
 Viewport1920x1080/SongSubtitle
 Viewport1920x1080/NoteLane/LaneBackground

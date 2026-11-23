@@ -15,6 +15,9 @@ TestResults/
 *.pidb
 *.unityproj
 
+# The play backdrops the game does not carry: published, not in the repository (Tools/stage-publish).
+/Assets/OurTaiko/StageSource/
+/Assets/OurTaiko/StageSource.meta
 /Assets/OurTaikoNativeAudioBuild/
 /Assets/OurTaikoNativeAudioBuild.meta
 .vscode

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+
+  "presets": {
+    "DAN": { "header": "dojo", "scene": "dojo", "clear": "-", "dancers": "-", "footer": "-", "crowd": "-", "renda": "-" },
+    "PRACTICE": { "header": "practice", "scene": "practice", "clear": "-", "dancers": "-", "footer": "-", "crowd": "-", "renda": "-" },
+    "TUTORIAL": { "header": "tutorial", "scene": "tutorial", "clear": "-", "dancers": "-", "footer": "-", "crowd": "-", "renda": "-" }
+  },
+
+  "sets": {
+    "header": {
+      "dojo": { "random": false },
+      "common_0": { "syncClear": true },
+      "practice": { "random": false, "syncClear": true },
+      "tutorial": { "random": false }
+    },
+    "scene": {
+      "dojo": { "random": false },
+      "common_0": {},
+      "practice": { "random": false },
+      "tutorial": { "random": false }
+    },
+    "clear": {
+      "common_0": {}
+    },
+    "dancers": {
+      "common_0": {}
+    },
+    "footer": {
+      "common_0": {}
+    },
+    "crowd": {
+      "common_0": {}
+    },
+    "renda": {
+      "common_0": { "spread": [[300, 80]] }
+    }
+  }
+}

@@ -2,15 +2,8 @@
 # Regenerated in step 3: each seat's HUD now sits under its own LaneHud, so 1P's six HUD pieces (SoulGauge..BalloonCounter)
 # draw before 2P's six instead of interleaved with them; the two halves do not overlap and every other line is unchanged.
 # Refreshed 2026-11-22: the judge counter has a 良率 row, and the drumroll counter draws over the HUD (Player::draw_overlays).
+# Refreshed 2026-11-22: the backdrop (header, scene, dancers, the dojo's band) is .otanim, whose graphics are made as it plays; its saved pictures are gone.
 Viewport1920x1080/Backdrop
-Viewport1920x1080/HeaderPattern0
-Viewport1920x1080/HeaderPattern2P0
-Viewport1920x1080/HeaderPattern1
-Viewport1920x1080/HeaderPattern2P1
-Viewport1920x1080/HeaderPattern2
-Viewport1920x1080/HeaderPattern2P2
-Viewport1920x1080/HeaderPattern3
-Viewport1920x1080/HeaderPattern2P3
 Viewport1920x1080/BackgroundMovie/Blackout
 Viewport1920x1080/BackgroundMovie/Screen
 Viewport1920x1080/SongTitle

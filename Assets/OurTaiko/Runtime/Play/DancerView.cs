@@ -1,30 +1,39 @@
+using OurTaiko.Chara;
 using UnityEngine;
 
 namespace OurTaiko
 {
-    // One dancer variant. Its clip is the rig timeline at DancerTroupe.BeatFrames frames per
-    // second: which frame each layer shows, where, and how squashed. The frames share one canvas
-    // with the rig origin at the layer's pivot, so a frame swap alone keeps the dancer in place.
-    [RequireComponent(typeof(ClipSampler))]
+    // One of the backdrop's dancers. Its "rig" clip is its whole timeline at DancerTroupe.BeatFrames
+    // frames per second, drawn where it stands on the stage: the way in, the looped dance and the
+    // way out. The troupe picks the frame; this only draws it.
+    [RequireComponent(typeof(OtanimView))]
     public sealed class DancerView : MonoBehaviour
     {
-        [Tooltip("Rig frames in the clip, where the looped dance starts, and where the way out starts.")]
-        public int frames, dance, leave;
+        public const string RigClip = "rig";
 
-        public DancerRig Rig => new DancerRig(frames, dance, leave);
         public int Frame { get; private set; } = int.MinValue;
-        ClipSampler sampler;
+        // How many frames the rig has; 0 without a file.
+        public int Frames => View.File?.Find(RigClip)?.Frames.Length ?? 0;
+        OtanimView view;
+
+        public OtanimView View => view != null ? view : view = GetComponent<OtanimView>();
+
+        // This dancer's file; null takes it off the stage.
+        public void Use(OtanimAsset file)
+        {
+            View.Use(file, RigClip);
+            Frame = int.MinValue;
+            Show(-1);
+        }
 
         // A rig frame, or -1 while off stage.
         public void Show(int frame)
         {
             if (frame == Frame) return;
             Frame = frame;
-            gameObject.SetActive(frame >= 0);
-            if (frame < 0) return;
-            if (sampler == null) sampler = GetComponent<ClipSampler>();
-            // Mid-frame, clear of the keys' float rounding.
-            sampler.Sample((frame + 0.5) / DancerTroupe.BeatFrames);
+            // Mid-frame, clear of float rounding. The rig's frames are pictures, each on a part of
+            // its own, so none is eased into the next.
+            View.Show(frame < 0 ? null : View.Clip, (frame + 0.5) / DancerTroupe.BeatFrames);
         }
     }
 }

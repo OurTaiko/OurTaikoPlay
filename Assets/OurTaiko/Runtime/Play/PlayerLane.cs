@@ -23,6 +23,9 @@ namespace OurTaiko
         // Practice: what the paused lane draws while the stopped attempt stays in Session.
         public PlaySession Preview { get; set; }
         public PlaySession Shown => Preview ?? Session;
+        // Misses in a row; any other judged note ends the streak. The Don and the backdrop darken on it.
+        public int MissStreak { get; private set; }
+        public const int MissStreakDark = 6;
         public bool AutoPlay { get; }
         public PlayOptions Options { get; }
         // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
@@ -104,6 +107,7 @@ namespace OurTaiko
                 foreach (var overlay in overlays) renderer.AddOverlay(overlay);
             }
             renderer.Prepare(Session);
+            MissStreak = 0;
             PrepareDon();
             scene.hitAudio.PrepareAudioEffects(Don, Ka);
             scene.hitAudio.PrepareAudioEffects(v.comboAnnounce.voices);
@@ -352,10 +356,15 @@ namespace OurTaiko
         {
             var v = Views;
             if (result == Judgment.Bad) comboCarried = false;
+            // Player::on_miss / on_note_correct: a drumroll or balloon hit neither adds to the streak nor ends it.
+            if (result == Judgment.Bad) MissStreak++;
+            else if (result != Judgment.Roll) MissStreak = 0;
             DonChara?.OnJudged(index, result);
             var judged = Session.Chart.Notes[index];
+            if (result == Judgment.Roll && judged.IsDrumroll) scene.DrumrollHit(Seat);
             if (result != Judgment.Roll)
             {
+                scene.StageJudged(Seat, result == Judgment.Bad, Session.BpmAt(ChartTime));
                 // A mine is shown as 不可 but costs its own damage.
                 if (judged.IsMine) SharedGauge?.ApplyMine();
                 else SharedGauge?.ApplyJudgment(result, Session.GaugeRoute(index));
@@ -475,6 +484,7 @@ namespace OurTaiko
             ResetSoundAhead();
             Views.comboAnnounce.Hide();
             ResetEffects();
+            MissStreak = 0;
             DonChara?.Reset();
         }
 
@@ -489,6 +499,7 @@ namespace OurTaiko
             lastCombo = DisplayCombo;
             v.comboAnnounce.Hide();
             ResetEffects();
+            MissStreak = 0;
             DonChara?.Reset();
             v.soulGauge.Initialize(GaugeThreshold);
             if (GaugePoints > 0) v.soulGauge.SetPoints(GaugePoints, -1e6);

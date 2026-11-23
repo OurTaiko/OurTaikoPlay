@@ -14,6 +14,9 @@ namespace OurTaiko
     {
         public string Key, FilePath, Text, AudioPath, MoviePath, Sha256;
         public SongInfo Info;
+        // The #SCENEPRESET of the box.def folders the chart is in, the nearest first; folders
+        // that name none are not in it.
+        public string[] FolderScenePresets = Array.Empty<string>();
     }
 
     // A directory holding a box.def. Folders are its box.def sub-folders, Charts the charts in it and
@@ -21,6 +24,9 @@ namespace OurTaiko
     public sealed class LocalFolder
     {
         public string Key, Title, Genre = "", Path;
+        // The play backdrop its box.def asks for (#SCENEPRESET), for the charts in it and in the
+        // folders inside it that ask for none themselves; "" when it names none.
+        public string ScenePreset = "";
         public readonly List<LocalFolder> Folders = new List<LocalFolder>();
         public readonly List<LocalChart> Charts = new List<LocalChart>();
     }
@@ -106,28 +112,30 @@ namespace OurTaiko
             var catalog = new LocalSongCatalog();
             if (string.IsNullOrEmpty(root) || !Directory.Exists(root)) return catalog;
             root = Path.GetFullPath(root);
-            Collect(root, root, catalog.Songs, catalog.Folders, language, 0);
+            Collect(root, root, catalog.Songs, catalog.Folders, language, 0, Array.Empty<string>());
             Sort(catalog.Songs, catalog.Folders);
             return catalog;
         }
 
         // One directory into the lists it belongs to: its charts, then each sub-directory, a box.def
-        // one as a folder read on its own and any other one into these same lists.
-        static void Collect(string root, string dir, List<LocalChart> charts, List<LocalFolder> folders, string language, int depth)
+        // one as a folder read on its own and any other one into these same lists. presets are the
+        // #SCENEPRESET of the folders dir is in, the nearest first.
+        static void Collect(string root, string dir, List<LocalChart> charts, List<LocalFolder> folders, string language, int depth, string[] presets)
         {
-            foreach (string file in Files(dir)) Add(charts, root, file);
+            foreach (string file in Files(dir)) Add(charts, root, file, presets);
             if (depth >= MaxDepth) return;
             foreach (string child in Directories(dir))
             {
                 if (!File.Exists(Path.Combine(child, "box.def")))
                 {
-                    Collect(root, child, charts, folders, language, depth + 1);
+                    Collect(root, child, charts, folders, language, depth + 1, presets);
                     continue;
                 }
                 var folder = ReadBoxDef(child, language);
                 folder.Key = "local/" + Relative(root, child);
                 folder.Path = child;
-                Collect(root, child, folder.Charts, folder.Folders, language, depth + 1);
+                var inside = folder.ScenePreset.Length > 0 ? presets.Prepend(folder.ScenePreset).ToArray() : presets;
+                Collect(root, child, folder.Charts, folder.Folders, language, depth + 1, inside);
                 Sort(folder.Charts, folder.Folders);
                 if (folder.Charts.Count > 0 || folder.Folders.Count > 0) folders.Add(folder);
             }
@@ -147,7 +155,7 @@ namespace OurTaiko
             return byPath != 0 ? byPath : string.CompareOrdinal(a, b);
         }
 
-        static void Add(List<LocalChart> list, string root, string file)
+        static void Add(List<LocalChart> list, string root, string file, string[] presets)
         {
             try
             {
@@ -170,7 +178,7 @@ namespace OurTaiko
                 {
                     Key = relative.Substring(0, relative.Length - Path.GetExtension(relative).Length),
                     Sha256 = BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(),
-                    FilePath = file, Text = text, Info = info,
+                    FilePath = file, Text = text, Info = info, FolderScenePresets = presets,
                     AudioPath = audio != null && File.Exists(audio) ? audio : null,
                     MoviePath = movie != null && File.Exists(movie) ? movie : null,
                 });
@@ -202,12 +210,13 @@ namespace OurTaiko
         // CBoxDef.t読み込み: "#KEY:value" lines, the last of a key winning. #TITLE<LANG> (#TITLEJA,
         // #TITLEZH...) is the title in that language and #TITLE the default one (CLocalizationData);
         // #GENRE is the folder's genre, with OurTaikoPlayer's #COLLECTION standing in when there is
-        // none. A folder without a title shows its directory name.
+        // none. #SCENEPRESET is ours: the play backdrop for what is in the folder. A folder without
+        // a title shows its directory name.
         static LocalFolder ReadBoxDef(string dir, string language)
         {
             var folder = new LocalFolder { Title = Path.GetFileName(dir) };
             string localized = "#TITLE" + new string((language ?? "en").Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
-            string text, title = null, titleLocalized = null, genre = null, collection = null;
+            string text, title = null, titleLocalized = null, genre = null, collection = null, preset = null;
             try { text = ReadText(File.ReadAllBytes(Path.Combine(dir, "box.def"))); }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException) { return folder; }
             foreach (string raw in text.Replace("\r", "").Split('\n'))
@@ -220,9 +229,11 @@ namespace OurTaiko
                 else if (key == localized) titleLocalized = value;
                 else if (key == "#GENRE") genre = value;
                 else if (key == "#COLLECTION") collection = value;
+                else if (key == "#SCENEPRESET") preset = value;
             }
             if (!string.IsNullOrEmpty(titleLocalized ?? title)) folder.Title = titleLocalized ?? title;
             folder.Genre = genre ?? collection ?? "";
+            folder.ScenePreset = preset ?? "";
             return folder;
         }
 

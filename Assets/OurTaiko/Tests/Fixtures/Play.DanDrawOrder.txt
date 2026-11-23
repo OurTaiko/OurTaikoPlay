@@ -1,24 +1,9 @@
 # Generated 2026-11-04 from DanPlayScene at c3fe9be, before NoteLane became a prefab (play-lane-prefabs step 2).
 # Refreshed 2026-11-22: the judge counter has a 良率 row, and the drumroll counter draws over the HUD (Player::draw_overlays).
+# Refreshed 2026-11-22: the backdrop (header, scene, dancers, the dojo's band) is .otanim, whose graphics are made as it plays; its saved pictures are gone.
 Viewport1920x1080/Backdrop
-Viewport1920x1080/DanBackground/Plate
-Viewport1920x1080/DanBackground/layer_a
-Viewport1920x1080/DanBackground/layer_b
-Viewport1920x1080/DanBackground/layer_c
-Viewport1920x1080/DanBackground/Petal0
-Viewport1920x1080/DanBackground/Petal1
-Viewport1920x1080/DanBackground/layer_d
-Viewport1920x1080/FestivalBackground
-Viewport1920x1080/FestivalLights
 Viewport1920x1080/BackgroundMovie/Blackout
 Viewport1920x1080/BackgroundMovie/Screen
-Viewport1920x1080/Dancers/Slot5/Dancer0_4/Layer0
-Viewport1920x1080/Dancers/Slot4/Dancer0_3/Layer0
-Viewport1920x1080/Dancers/Slot3/Dancer0_2/Layer0
-Viewport1920x1080/Dancers/Slot3/Dancer0_2/Layer1
-Viewport1920x1080/Dancers/Slot2/Dancer0_1/Layer0
-Viewport1920x1080/Dancers/Slot1/Dancer0_0/Layer0
-Viewport1920x1080/Footer
 Viewport1920x1080/DanInfo/TotalNotes
 Viewport1920x1080/DanInfo/Exam1/Background
 Viewport1920x1080/DanInfo/Exam1/Badge

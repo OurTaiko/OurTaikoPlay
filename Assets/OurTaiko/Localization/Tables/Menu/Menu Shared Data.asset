@@ -443,6 +443,10 @@ MonoBehaviour:
     m_Key: entry.multi.info1
     m_Metadata:
       m_Items: []
+  - m_Id: 4325258893975552
+    m_Key: loading.stageFile
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

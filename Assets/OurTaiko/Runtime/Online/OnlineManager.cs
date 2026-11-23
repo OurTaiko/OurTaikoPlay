@@ -318,6 +318,7 @@ namespace OurTaiko.Online
                 // The account's own playlists are folders too.
                 if (this != null && refresh) RefreshSongs();
                 await FetchNameplateArtAsync(cancel);
+                await FetchStageCatalogAsync(cancel);
                 await FetchDonsAsync(cancel);
             }
             finally { Activity = ""; LoginSummary = string.Join("   •   ", results); IsBusy = false; }
@@ -341,6 +342,15 @@ namespace OurTaiko.Online
             if (cancel.IsCancellationRequested) return;
             Activity = L10n.Get("Online", "activity.nameplateArt");
             try { await NameplateArt.FetchAsync(Client.CacheRoot, cancel); }
+            catch (OperationCanceledException) { }
+        }
+
+        // The play backdrops' catalog and index (StageDownloads), read with every sign-in check like
+        // the nameplate's art; a backdrop's own files come when a play that uses it is loaded.
+        async Task FetchStageCatalogAsync(CancellationToken cancel)
+        {
+            if (cancel.IsCancellationRequested) return;
+            try { await StageDownloads.RefreshAsync(ServerConfig.Site, cancel); }
             catch (OperationCanceledException) { }
         }
 

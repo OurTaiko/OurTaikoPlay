@@ -89,7 +89,7 @@ namespace OurTaiko.Tests
             Assert.That(first.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.Zero, "1P reads the P1 block.");
             Assert.That(second.Chart.Notes.Count(n => n.Kind == NoteKind.Don), Is.EqualTo(1), "2P reads the P2 block.");
             Assert.That((SceneSwitcher.Instance.SideOf(0), SceneSwitcher.Instance.SideOf(1)), Is.EqualTo(("p1", "p2")), "decided before the play");
-            Assert.That(play.dancers, Is.Null, "Two players have no dancers.");
+            Assert.That(play.stage.dancers, Is.Null, "Two players have no dancers.");
             // The play option badges sit where 1P's do on its own lane, flipped inside the mirrored score cover.
             Assert.That(play.secondLane.modifierBadges.flipped && !play.firstLane.modifierBadges.flipped, Is.True);
             Assert.That(Corners(play.secondLane.modifierBadges.transform).center.y - Corners(play.secondLane.transform).yMax,

@@ -96,6 +96,26 @@ namespace OurTaiko.Chara
             return output.ToArray();
         }
 
+        // The file with its picture taken out: an imported .otanim keeps the picture as a texture
+        // asset beside it (OtanimAsset), not as PNG bytes to decode again when it is shown.
+        public static byte[] WithoutTexture(byte[] bytes)
+        {
+            if (!IsOtanim(bytes) || bytes.Length < 8) throw new InvalidDataException("not an otanim file");
+            var head = new Reader(bytes);
+            using var output = new MemoryStream();
+            output.Write(head.Bytes(8), 0, 8);
+            while (!head.AtEnd)
+            {
+                byte[] tag = head.Bytes(4);
+                byte[] payload = head.Bytes((int)head.U32());
+                if (Encoding.ASCII.GetString(tag) == "TEXR") payload = Array.Empty<byte>();
+                output.Write(tag, 0, 4);
+                output.Write(BitConverter.GetBytes((uint)payload.Length), 0, 4);
+                output.Write(payload, 0, payload.Length);
+            }
+            return output.ToArray();
+        }
+
         public static Otanim Parse(byte[] bytes)
         {
             if (!IsOtanim(bytes) || bytes.Length < 8) throw new InvalidDataException("not an otanim file");
@@ -236,10 +256,19 @@ namespace OurTaiko.Chara
             return n > 1 ? (int)Math.Floor(at / (n - 1)) : (int)Math.Floor(at);
         }
 
+        // What the clip draws at t seconds, back to front.
+        public static Draw[] DrawsAt(Clip clip, double seconds)
+        {
+            FrameAt(clip, seconds, out int f, out _, out _);
+            return clip.Frames[f].Draws;
+        }
+
         // Writes the clip at t seconds as triangles into a mesh fitting `box` (layout units, y up),
         // keeping the view's aspect; frames are eased into each other where the same part is in
-        // both. Additive parts get 2 added to u (the shader takes it back off).
-        public void Sample(Clip clip, double seconds, Rect box, bool mirror, Color32 tint, List<UIVertex> vertices, List<int> indices)
+        // both. Additive parts get 2 added to u (the shader takes it back off). first and count
+        // pick a run of the frame's draws, for a player that gives each blend its own mesh.
+        public void Sample(Clip clip, double seconds, Rect box, bool mirror, Color32 tint, List<UIVertex> vertices, List<int> indices,
+            int first = 0, int count = int.MaxValue)
         {
             FrameAt(clip, seconds, out int f, out int nf, out float t);
             var frame = clip.Frames[f];
@@ -248,8 +277,10 @@ namespace OurTaiko.Chara
             float ox = box.center.x - View.center.x * scale;
             float oy = box.center.y - View.center.y * scale;
             float cx = box.center.x;
-            foreach (var draw in frame.Draws)
+            int end = (int)Math.Min(frame.Draws.Length, (long)first + count);
+            for (int n = first; n < end; n++)
             {
+                var draw = frame.Draws[n];
                 var part = Parts[draw.Part];
                 int nextOffset = -1;
                 Color32 nextColor = draw.Color;

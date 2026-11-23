@@ -98,6 +98,7 @@ loading.preparing,Preparing the chart…,譜面を準備中…,正在准备谱�
 loading.chartFile,Chart {0},譜面 {0},谱面 {0},Download status of the chart file; {0} = state or progress
 loading.audioFile,Audio {0},音源 {0},音频 {0},Download status of the audio file; {0} = state or progress
 loading.movieFile,Video {0},映像 {0},视频 {0},Download status of the movie file; {0} = state or progress
+loading.stageFile,Backdrop {0},背景 {0},背景 {0},Download status of the play backdrop's files; {0} = progress
 loading.waiting,waiting,待機中,等待中,Download file state
 loading.verifying,verifying,確認中,校验中,Download file state
 loading.cached,cached,キャッシュ済み,已缓存,Download file state

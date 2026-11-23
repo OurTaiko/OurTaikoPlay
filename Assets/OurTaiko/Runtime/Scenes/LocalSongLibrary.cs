@@ -165,6 +165,7 @@ namespace OurTaiko
             song.audioPath = chart.AudioPath;
             song.moviePath = chart.MoviePath;
             song.localChartSha256 = chart.Sha256;
+            song.folderScenePresets = chart.FolderScenePresets;
             song.genre = Online.OnlineManager.GenreFrame(string.IsNullOrEmpty(folderGenre) ? chart.Info.Genre : folderGenre);
             var oni = chart.Info.Course(Difficulty.Oni);
             song.course = (oni ?? chart.Info.Courses().Last()).Course;
