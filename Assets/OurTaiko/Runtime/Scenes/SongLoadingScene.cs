@@ -102,7 +102,7 @@ namespace OurTaiko
         IEnumerator PrepareStage(SceneSwitcher switcher, OnlineManager online, SongDefinition song)
         {
             string[] presets;
-            try { presets = song.ScenePresets(song.ReadDisplayInfo().ScenePreset); }
+            try { presets = switcher.ScenePresets(song.ReadDisplayInfo().ScenePreset); }
             catch (Exception error) { Log.Warn("Loading", "The chart's backdrop could not be read: " + error.Message); yield break; }
             using var cancel = new CancellationTokenSource();
             var task = StageDownloads.ResolveAsync(presets, switcher.SelectedStageMode, Math.Max(1, switcher.Seated.Count), new System.Random(),

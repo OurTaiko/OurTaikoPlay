@@ -192,10 +192,11 @@ namespace OurTaiko
         }
 
         public void Play(SongDefinition song, bool autoPlay = false) => Play(song, null, autoPlay);
-        public void Play(SongDefinition song, string course, bool autoPlay, string course2P = null, bool autoPlay2P = false)
+        // folderScenePresets: the backdrops the folders the song was opened from ask for, the nearest first.
+        public void Play(SongDefinition song, string course, bool autoPlay, string course2P = null, bool autoPlay2P = false, string[] folderScenePresets = null)
         {
             if (IsInputBlocked || song == null) return;
-            Select(song, course, autoPlay, course2P, autoPlay2P);
+            Select(song, course, autoPlay, course2P, autoPlay2P, folderScenePresets);
             ResetPendingPlay();
             if (!IsPlayScene(CurrentScene) && CurrentScene != ResultScene && CurrentScene != SongLoadingScene && !string.IsNullOrEmpty(CurrentScene))
                 ReturnScene = CurrentScene;
@@ -264,8 +265,24 @@ namespace OurTaiko
 
         // The song the play scenes load next; Play() sets it before switching. Each seat's side is
         // decided here, alone or two together as the mode stands now.
-        public void Select(SongDefinition song, string course = null, bool autoPlay = false, string course2P = null, bool autoPlay2P = false)
+        // The play backdrops asked for the selected song, the one that counts most first: the
+        // chart's own SCENEPRESET (`own`), then those of the folders it was opened from, from the
+        // nearest outwards. A play that is not opened from a folder (a search's, a ghost battle's,
+        // a room's) has only the chart's.
+        public string[] ScenePresets(string own)
         {
+            var asked = new List<string>();
+            if (!string.IsNullOrWhiteSpace(own)) asked.Add(own);
+            asked.AddRange(folderScenePresets);
+            return asked.ToArray();
+        }
+
+        string[] folderScenePresets = Array.Empty<string>();
+
+        public void Select(SongDefinition song, string course = null, bool autoPlay = false, string course2P = null, bool autoPlay2P = false,
+            string[] folderScenePresets = null)
+        {
+            this.folderScenePresets = folderScenePresets ?? Array.Empty<string>();
             ClearPracticeEntry();
             Replay = null; Ghost = null; Multi = null;
             SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;

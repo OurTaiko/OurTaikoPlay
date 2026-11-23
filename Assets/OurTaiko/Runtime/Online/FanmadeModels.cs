@@ -194,6 +194,8 @@ namespace OurTaiko.Online
     public sealed class FanmadeCategory
     {
         public string Server = "", ServerName = "", Id = "", Title = "", Genre = "";
+        // The play backdrop the server names for the folder ("scenePreset"); "" when it names none.
+        public string ScenePreset = "";
         public readonly List<string> ChartIds = new List<string>();
     }
 
@@ -206,6 +208,8 @@ namespace OurTaiko.Online
         // The most a cover may have: what the server lets a cover upload become (8 MiB).
         public const long MaxCoverBytes = 8L * 1024 * 1024;
         public string Server = "", ServerName = "", Id = "", Title = "", Genre = "", Kind = "", Owner = "";
+        // The play backdrop its owner chose for it ("scenePreset"); "" when none.
+        public string ScenePreset = "";
         public FanmadeResource Cover;
         public readonly List<string> ChartIds = new List<string>();
 
@@ -215,7 +219,7 @@ namespace OurTaiko.Online
         {
             if (!(v["chartIds"] is JArray members)) throw new FanmadeException("API_PLAYLIST_INVALID");
             var playlist = new FanmadePlaylist { Server = server, ServerName = serverName, Id = Json.Str(v, "id"),
-                Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre"), Kind = Json.Str(v, "kind"), Owner = Json.Str(v, "owner") };
+                Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre"), Kind = Json.Str(v, "kind"), Owner = Json.Str(v, "owner"), ScenePreset = Json.Optional(v, "scenePreset") };
             if (playlist.Id.Length == 0) throw new FanmadeException("API_PLAYLIST_INVALID");
             // A cover is always a WebP; a playlist without one leaves the path out or empty.
             if (v["songListCoverPath"]?.Type == JTokenType.String && ((string)v["songListCoverPath"]).Length > 0)
@@ -392,6 +396,13 @@ namespace OurTaiko.Online
                 return JToken.ReadFrom(reader) as JObject ?? throw new FanmadeException("API_JSON_INVALID");
             }
             catch (Newtonsoft.Json.JsonException error) { throw new FanmadeException("API_JSON_INVALID", error); }
+        }
+
+        // A string a server may leave out (one older than the field): "" then, and for anything else than a string.
+        public static string Optional(JToken v, string key)
+        {
+            var value = v is JObject o ? o[key] : null;
+            return value != null && value.Type == JTokenType.String ? ((string)value).Trim() : "";
         }
 
         public static string Str(JToken v, string key)

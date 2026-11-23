@@ -12,6 +12,10 @@ namespace OurTaiko
         // The endpoint id of a server folder; null for local folders.
         public string Server;
         public int Genre;
+        // The play backdrop the folder asks for, for the songs opened from it and from the folders
+        // inside it that ask for none: a box.def's #SCENEPRESET, a server category's or playlist's
+        // scenePreset. "" when it names none.
+        public string ScenePreset = "";
         // The box.def folders inside a local folder (OpenTaiko's nested BOX); server folders have none.
         public SongFolder[] Folders = Array.Empty<SongFolder>();
         public SongDefinition[] Songs = Array.Empty<SongDefinition>();

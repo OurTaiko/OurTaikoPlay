@@ -135,7 +135,7 @@ namespace OurTaiko
             // OpenTaiko: a song takes its folder's genre when the box.def names one, else its own GENRE.
             SongFolder Folder(LocalFolder folder) => new SongFolder
             {
-                Key = folder.Key, Title = folder.Title, Genre = Online.OnlineManager.GenreFrame(folder.Genre),
+                Key = folder.Key, Title = folder.Title, Genre = Online.OnlineManager.GenreFrame(folder.Genre), ScenePreset = folder.ScenePreset,
                 Folders = folder.Folders.Select(Folder).ToArray(),
                 Songs = folder.Charts.Select(chart => Song(chart, folder.Genre, keep)).ToArray(),
             };
@@ -165,7 +165,6 @@ namespace OurTaiko
             song.audioPath = chart.AudioPath;
             song.moviePath = chart.MoviePath;
             song.localChartSha256 = chart.Sha256;
-            song.folderScenePresets = chart.FolderScenePresets;
             song.genre = Online.OnlineManager.GenreFrame(string.IsNullOrEmpty(folderGenre) ? chart.Info.Genre : folderGenre);
             var oni = chart.Info.Course(Difficulty.Oni);
             song.course = (oni ?? chart.Info.Courses().Last()).Course;
