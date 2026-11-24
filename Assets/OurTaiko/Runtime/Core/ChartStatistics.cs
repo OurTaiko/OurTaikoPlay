@@ -10,18 +10,22 @@ namespace OurTaiko
         // Judgeable notes on each whole route (Normal, Expert, Master): OpenTaiko nノーツ数_Branch,
         // which sizes the soul gauge increments of that route.
         public IReadOnlyList<int> RouteNotes { get; }
-        public int BalloonHitBudget { get; }
+        public long BalloonHitBudget { get; }
         public double DrumrollMilliseconds { get; }
-        internal TjaScoreEstimate ScoreEstimate { get; }
+        public TjaFraction DrumrollScoreMicroseconds { get; }
+        public Difficulty Difficulty { get; }
 
         public ChartStatistics(TaikoChart chart)
         {
             if (chart == null) throw new ArgumentNullException(nameof(chart));
-            ScoreEstimate = ScoredTja.Estimate(chart);
-            int judgeableNotes = 0, balloonHitBudget = 0;
+            Difficulty = SongInfo.DifficultyOf(chart.Course)
+                ?? throw new ArgumentException("Chart has an unsupported course.", nameof(chart));
+            int judgeableNotes = 0;
+            long balloonHitBudget = 0;
+            TjaFraction drumrollScoreMicroseconds = 0;
             double drumrollMilliseconds = 0;
             // Player::reset_chart aggregates the common list followed by every Master section.
-            // Preserve that order for the source's double accumulation of roll durations.
+            // Preserve that order for playback totals; scoring durations remain exact.
             Accumulate(-1);
             for (int branch = 0; branch < chart.Branches.Count; branch++) Accumulate(branch);
             JudgeableNotes = judgeableNotes;
@@ -33,7 +37,8 @@ namespace OurTaiko
                     if (note.BranchId < 0 || note.Route == chart.Branches[note.BranchId].ResolveRoute((BranchRoute)route)) routeNotes[route]++;
             }
             RouteNotes = routeNotes;
-            BalloonHitBudget = ScoreEstimate?.BalloonHits ?? balloonHitBudget;
+            BalloonHitBudget = balloonHitBudget;
+            DrumrollScoreMicroseconds = drumrollScoreMicroseconds;
             DrumrollMilliseconds = drumrollMilliseconds;
 
             void Accumulate(int branchId)
@@ -43,9 +48,13 @@ namespace OurTaiko
                     // A branch without #M counts the route drawn in its place.
                     if (note.BranchId != branchId || (branchId >= 0 && note.Route != chart.Branches[branchId].ResolveRoute(BranchRoute.Master))) continue;
                     if (IsJudgeable(note)) judgeableNotes++;
-                    else if (note.IsBalloon) balloonHitBudget += Math.Min(100, note.BalloonHits);
+                    else if (note.IsBalloon) balloonHitBudget += Math.Max(0, note.BalloonHits);
                     else if (note.IsDrumroll)
+                    {
                         drumrollMilliseconds += (note.EndTime - note.Time) * 1000;
+                        // A reversed roll (negative DELAY) has no playable hit budget.
+                        if (note.ScoreDuration > 0) drumrollScoreMicroseconds += note.ScoreDuration;
+                    }
                 }
             }
         }

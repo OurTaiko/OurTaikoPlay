@@ -5,7 +5,7 @@ namespace OurTaiko.Tests
 {
     public sealed class ShinuchiTests
     {
-        static TaikoChart Parse(string body, string metadata = "") => ScoredTja.Parse(
+        static TaikoChart Parse(string body, string metadata = "") => TjaParser.Parse(
             "BPM:120\nCOURSE:Oni\nLEVEL:8\n" + metadata + "\n#START\n" + body + "\n#END");
 
         [Test]
@@ -29,10 +29,10 @@ namespace OurTaiko.Tests
         {
             var chart = Parse("#GOGOSTART\n1234,\n5008,\n7008,\n9008,", "BALLOON:150,2");
             var session = new PlaySession(chart);
-            Assert.That(session.BaseScore, Is.EqualTo(246820), "Only the first 100 required hits of each balloon enter the base-score budget.");
+            Assert.That(session.BaseScore, Is.EqualTo(245580), "All required balloon and Kusudama hits enter the budget.");
             session.Hit(false, 0); session.Hit(true, 0.56);
             session.Hit(false, 1); session.Hit(true, 1.5);
-            Assert.That(session.Score, Is.EqualTo(863870));
+            Assert.That(session.Score, Is.EqualTo(859530));
             double gauge = session.GaugePoints;
             session.Hit(false, 2.1); session.Hit(true, 2.1);
             Assert.That(session.Hit(true, 4.1), Is.EqualTo(Judgment.None));
@@ -42,7 +42,7 @@ namespace OurTaiko.Tests
             session.Hit(false, 6.1); session.Hit(false, 6.1);
             Assert.That(session.Resolved[6], Is.True);
             Assert.That(session.Rolls, Is.EqualTo(154));
-            Assert.That(session.Score, Is.EqualTo(879270), "Every long-note hit adds 100, without a pop bonus.");
+            Assert.That(session.Score, Is.EqualTo(874930), "Every long-note hit adds 100, without a pop bonus.");
             Assert.That(session.GaugePoints, Is.EqualTo(gauge), "Long notes never change the soul gauge.");
         }
 
@@ -84,17 +84,17 @@ namespace OurTaiko.Tests
             Assert.That(statistics.BalloonHitBudget, Is.EqualTo(3));
             Assert.That(statistics.DrumrollMilliseconds, Is.EqualTo(3000));
             var session = new PlaySession(chart);
-            Assert.That(session.BaseScore, Is.EqualTo(248660));
+            Assert.That(session.BaseScore, Is.EqualTo(248650));
             session.Advance(20, true);
             Assert.That(session.CurrentBranch, Is.EqualTo(BranchRoute.Normal));
             Assert.That(session.Good, Is.EqualTo(6));
             Assert.That(session.Rolls, Is.Zero, "Unselected Master balloons and rolls enter only the fixed budget.");
-            Assert.That(session.Score, Is.EqualTo(1491960));
+            Assert.That(session.Score, Is.EqualTo(1491900));
             Assert.That(session.GaugePoints, Is.EqualTo(10000));
         }
 
         [Test]
-        public void ChartsWithoutOrdinaryNotesUseReferenceFallbackAndMissingBalloonCountsUseFive()
+        public void ChartsWithoutOrdinaryNotesKeepBaseScoreAndMissingBalloonCountsUseFive()
         {
             var session = new PlaySession(Parse("7008,\n9008,"));
             Assert.That(session.BaseScore, Is.EqualTo(1000000));
@@ -105,6 +105,29 @@ namespace OurTaiko.Tests
             Assert.That(session.Score, Is.EqualTo(1000));
             Assert.That(session.GaugePoints, Is.Zero);
             Assert.That(new PlaySession(Parse("0000,")).BaseScore, Is.EqualTo(1000000));
+        }
+
+        [Test]
+        public void AdLibAddsBonusOutsideTheCeilingAndMineStillOnlyPenalizes()
+        {
+            var chart = Parse("1FC0,\n5008,");
+            var session = new PlaySession(chart);
+            Assert.That(new ChartStatistics(chart).JudgeableNotes, Is.EqualTo(1));
+            Assert.That(session.BaseScore, Is.EqualTo(997500));
+            session.Hit(false, 0);
+            double gauge = session.GaugePoints;
+            session.Hit(false, .5);
+            Assert.That(session.Score, Is.EqualTo(1995000));
+            Assert.That(session.Score, Is.GreaterThan(session.KiwamiThreshold));
+            Assert.That(new[] { session.Good, session.Ok, session.Bad }, Is.EqualTo(new[] { 1, 0, 0 }));
+            Assert.That(session.AdLibGood, Is.EqualTo(1));
+            Assert.That(session.Combo, Is.EqualTo(2));
+            Assert.That(session.GaugePoints, Is.GreaterThanOrEqualTo(gauge));
+            session.Hit(false, 1);
+            Assert.That(session.Score, Is.EqualTo(1995000));
+            Assert.That(session.Combo, Is.Zero);
+            Assert.That(session.MinesHit, Is.EqualTo(1));
+            Assert.That(session.GaugePoints, Is.LessThan(gauge));
         }
 
         [Test]

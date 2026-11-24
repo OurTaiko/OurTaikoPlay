@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 
 namespace OurTaiko.Tests
@@ -6,11 +7,10 @@ namespace OurTaiko.Tests
     public sealed class TjaShinuchiTests
     {
         static TaikoChart Parse(string body, string course = "Oni", string metadata = "")
-            => ScoredTja.Parse("BPM:120\nCOURSE:" + course + "\n" + metadata + "\n#START\n" + body + "\n#END", course);
-
+            => TjaParser.Parse("BPM:120\nCOURSE:" + course + "\n" + metadata + "\n#START\n" + body + "\n#END", course);
         static ShinuchiScore Score(TaikoChart chart) => new ShinuchiScore(new ChartStatistics(chart));
 
-        [TestCase("Easy", 998900)] // floor(6 * 1.5) = 9; ceil(9*9/8) = 11
+        [TestCase("Easy", 998900)]
         [TestCase("Normal", 998700)]
         [TestCase("Hard", 998300)]
         [TestCase("Oni", 997500)]
@@ -25,106 +25,110 @@ namespace OurTaiko.Tests
         }
 
         [Test]
-        public void QuantizeEachBeatBeforeSummingAndDoNotAddAnEpsilon()
+        public void AllRollsAreSummedBeforeTheSingleFloorAndCeiling()
         {
-            // Six BPM-180 beats are 1.999998 seconds, so k=29, H=33 (not k=30, H=34).
-            var score = Score(Parse("1000,\n5000,\n0080,", metadata: "BPM:180"));
-            Assert.That(score.BaseScore, Is.EqualTo(996700));
-            Assert.That(score.CeilingScore, Is.EqualTo(1000000));
+            string roll = "58" + new string('0', 94) + ",\n";
+            Assert.That(Score(Parse("1000,\n" + roll + roll)).BaseScore, Is.EqualTo(999800));
+            Assert.That(Score(Parse("1000,\n5000,\n0080,", metadata: "BPM:180")).BaseScore, Is.EqualTo(996700));
         }
 
-        [TestCase(3, 2, 997700)]
-        [TestCase(96, 1, 1000000)]
-        public void OffGridTailUsesAtMostOneSlot(int slots, int tail, int initial)
+        [TestCase("1110,\n7008,", 328340, 1000020)]
+        [TestCase("1110,\n9008,", 328340, 1000020)]
+        [TestCase("111G,\n5008,", 249380, 1000020)]
+        [TestCase("111F,\n5008,", 332500, 1000000)]
+        [TestCase("111C,\n5008,", 332500, 1000000)]
+        [TestCase("1110,\n5000,", 332200, 1000000)]
+        [TestCase("1110,\n5\n#MEASURE 3/4\n008,", 332640, 1000020)]
+        public void SpecialNotesAndToleratedSyntaxUseOneFormula(string body, int initial, int ceiling)
         {
-            string roll = "5" + new string('0', tail - 1) + "8" + new string('0', slots - tail - 1) + ",";
-            var score = Score(Parse("1000,\n" + roll));
-            // The three-slot roll ends at 8/3 + 1/12 = 11/4 beats: H=23.
-            // The 96-slot roll lasts 1/24 + 1/24 = 1/12 beat: k=0, H=0.
-            Assert.That(score.BaseScore, Is.EqualTo(initial));
-        }
-
-        [Test]
-        public void AggregateRollsBeforeFlooring()
-        {
-            // Each roll lasts 1/24 second; individually k=0, together k=1 and H=2.
-            string roll = "58" + new string('0', 94) + ",";
-            Assert.That(Score(Parse("1000,\n" + roll + "\n" + roll)).BaseScore, Is.EqualTo(999800));
-        }
-
-        [Test]
-        public void IntegrateTempoChangesAndOnlyDelaysInsideRolls()
-        {
-            // 2 beats at 120 + 1 beat at 240 + .25 delay = 1.5 seconds, H=25.
-            var score = Score(Parse("#DELAY 10\n1000,\n50\n#BPMCHANGE 240\n#DELAY .25\n08,\n#DELAY 10"));
-            Assert.That(score.BaseScore, Is.EqualTo(997500));
-        }
-
-        [Test]
-        public void BalloonBudgetIsNotCappedAtOneHundred()
-        {
-            // 150 hits in 3 seconds is within the validated 60 hits/s limit.
-            var score = Score(Parse("1110,\n7000,\n0080,", metadata: "BALLOON:150"));
-            Assert.That(score.BaseScore, Is.EqualTo(328340));
-            Assert.That(score.CeilingScore, Is.EqualTo(1000020));
-        }
-
-        [TestCase("1110,\n5000,\n0080,", "", 331640, 1000020)]
-        [TestCase("1110,\n5000,\n,\n0080,", "", 330500, 1000000)]
-        [TestCase("1110,\n#MEASURE 1/3\n5008,", "", 333070, 1000010)]
-        [TestCase("1110,\n5000000000008000,", "", 332500, 1000000)]
-        [TestCase("1110,\n5008", "", 332500, 1000000)]
-        [TestCase("1110,\n50/* 999, #DELAY -1 */08 // comment", "", 332500, 1000000)]
-        [TestCase("1110,\n#GOGOSTART\n60\n08,", "OFFSET:1.2345", 332500, 1000000)]
-        public void SourceGridTimingAndRoundUpToTenPoints(string body, string metadata, int initial, int ceiling)
-        {
-            var score = Score(Parse(body, metadata: metadata));
+            var score = Score(Parse(body, metadata: "BALLOON:150"));
             Assert.That(score.BaseScore, Is.EqualTo(initial));
             Assert.That(score.CeilingScore, Is.EqualTo(ceiling));
         }
 
-        [Test]
-        public void SourceAnalysisDoesNotChangePlaybackTiming()
+        [TestCase("p1")]
+        [TestCase("p2")]
+        public void PlayerBlocksUseTheSameFormula(string side)
         {
-            const string text = "BPM:180\nOFFSET:.314\nCOURSE:Oni\n#START\n1110,\n#MEASURE 1/3\n50\n#BPMCHANGE 137\n#DELAY .3\n08,\n#END";
-            var legacy = TjaParser.Parse(text);
-            var chart = ScoredTja.Parse(text);
-            Assert.That(chart.Notes.Count, Is.EqualTo(legacy.Notes.Count));
-            for (int i = 0; i < chart.Notes.Count; i++)
-            {
-                Assert.That(chart.Notes[i].Time, Is.EqualTo(legacy.Notes[i].Time));
-                Assert.That(chart.Notes[i].EndTime, Is.EqualTo(legacy.Notes[i].EndTime));
-                Assert.That(chart.Notes[i].Beat, Is.EqualTo(legacy.Notes[i].Beat));
-            }
+            const string text = "BPM:120\nCOURSE:Oni\n#START P1\n1110,\n5008,\n#END\n#START P2\n1110,\n5008,\n#END";
+            var score = Score(TjaParser.Parse(text, "Oni", side));
+            Assert.That(score.BaseScore, Is.EqualTo(332500));
+            Assert.That(score.CeilingScore, Is.EqualTo(1000000));
+        }
+
+        [Test]
+        public void CommonAndMasterRoutesSupplyTheBudget()
+        {
+            var chart = Parse("1000,\n5008,\n#BRANCHSTART p,50,80\n#N\n1111,\n#E\n7008,\n#M\n1100,\n5008,\n9008,\n#BRANCHEND", metadata: "BALLOONMAS:150");
+            var stats = new ChartStatistics(chart);
+            Assert.That(stats.JudgeableNotes, Is.EqualTo(3));
+            Assert.That(stats.BalloonHitBudget, Is.EqualTo(150));
+            Assert.That(stats.DrumrollScoreMicroseconds, Is.EqualTo((TjaFraction)3000000));
+            Assert.That(Score(chart).BaseScore, Is.EqualTo(326640));
+            Assert.That(Score(chart).CeilingScore, Is.EqualTo(1000020));
+        }
+
+        [Test]
+        public void MissingMasterUsesTheExistingRouteResolution()
+        {
+            var chart = Parse("1000,\n#BRANCHSTART p,50,80\n#N\n1000,\n#E\n1100,\n5008,\n#BRANCHEND");
+            Assert.That(new ChartStatistics(chart).JudgeableNotes, Is.EqualTo(3));
+            Assert.That(Score(chart).BaseScore, Is.EqualTo(332500));
+        }
+
+        [TestCase(9999, 1000000)]
+        [TestCase(10000, 1000020)]
+        [TestCase(10001, 1000120)]
+        public void ExhaustedBudgetStillAwardsAtLeastTenPerGood(int hits, int ceiling)
+        {
+            var score = Score(Parse("1100,\n7008,", metadata: "BALLOON:" + hits));
+            Assert.That(score.BaseScore, Is.EqualTo(hits == 9999 ? 50 : 10));
+            Assert.That(score.CeilingScore, Is.EqualTo(ceiling));
+            Assert.That(score.ApplyJudgment(Judgment.Good), Is.EqualTo(score.BaseScore));
+        }
+
+        [TestCase("0000,", 1000000)]
+        [TestCase("7008,", 1000100)]
+        public void NoJudgedNotesKeepsMillionPointBase(string body, int ceiling)
+        {
+            var score = Score(Parse(body, metadata: "BALLOON:10001"));
+            Assert.That(score.BaseScore, Is.EqualTo(1000000));
+            Assert.That(score.CeilingScore, Is.EqualTo(ceiling));
+        }
+
+        [Test]
+        public void HugeBalloonBudgetsDoNotOverflowBeforeThresholdSaturation()
+        {
+            var chart = Parse("1000,\n7008,\n9008,", metadata: "BALLOON:2147483647,2147483647");
+            Assert.That(new ChartStatistics(chart).BalloonHitBudget, Is.EqualTo(4294967294L));
+            Assert.That(Score(chart).BaseScore, Is.EqualTo(10));
+            Assert.That(Score(chart).CeilingScore, Is.EqualTo(int.MaxValue));
+        }
+
+        [Test]
+        public void NegativeRequirementsAndReversedRollsCannotSubtractFromBudget()
+        {
+            var chart = Parse("1000,\n5\n#DELAY -3\n008,\n7008,", metadata: "BALLOON:-5");
+            Assert.That(new ChartStatistics(chart).BalloonHitBudget, Is.Zero);
+            Assert.That(new ChartStatistics(chart).DrumrollScoreMicroseconds, Is.EqualTo(default(TjaFraction)));
+            Assert.That(Score(chart).BaseScore, Is.EqualTo(1000000));
+        }
+
+        [Test]
+        public void ConstructedChartsUseTheSameExplicitDurationContract()
+        {
+            var chart = new TaikoChart();
+            chart.Notes.Add(new ChartNote { Kind = NoteKind.Don });
+            chart.Notes.Add(new ChartNote { Kind = NoteKind.Roll, ScoreDuration = 1500000 });
+            Assert.That(Score(chart).BaseScore, Is.EqualTo(997500));
         }
 
         [Test]
         public void OnlyTheRequestedCourseContributes()
         {
             const string text = "BPM:120\nCOURSE:Easy\n#START\n1110,\n#END\nCOURSE:Oni\n#START\n1110,\n5008,\n#END";
-            Assert.That(Score(ScoredTja.Parse(text, "Easy")).BaseScore, Is.EqualTo(333340));
-            Assert.That(Score(ScoredTja.Parse(text, "Oni")).BaseScore, Is.EqualTo(332500));
+            Assert.That(Score(TjaParser.Parse(text, "Easy")).BaseScore, Is.EqualTo(333340));
+            Assert.That(Score(TjaParser.Parse(text, "Oni")).BaseScore, Is.EqualTo(332500));
         }
-
-        [TestCase("1110,\n5008,", "#START P1", "p1")]
-        [TestCase("1110,\n9008,", "#START", "single")]
-        [TestCase("1110,\n7008,", "#START", "single")]
-        [TestCase("1110,\n#DELAY -1\n5008,", "#START", "single")]
-        [TestCase("1110,\n5000,", "#START", "single")]
-        [TestCase("1110,\n5\n#MEASURE 3/4\n008,", "#START", "single")]
-        [TestCase("111G,\n5008,", "#START", "single")]
-        [TestCase("0000,\n5008,", "#START", "single")]
-        public void OutsideValidatedScopeKeepsLegacyScoring(string body, string start, string side)
-        {
-            string text = "BPM:120\nCOURSE:Oni\nBALLOON:150\n" + start + "\n" + body + "\n#END";
-            var expected = Score(TjaParser.Parse(text, "Oni", side));
-            var actual = Score(ScoredTja.Parse(text, "Oni", side));
-            Assert.That(actual.BaseScore, Is.EqualTo(expected.BaseScore));
-            Assert.That(actual.CeilingScore, Is.EqualTo(expected.CeilingScore));
-        }
-
-        [Test]
-        public void ParsingStillRejectsInvalidCharts()
-            => Assert.Throws<FormatException>(() => Parse("#BPMCHANGE 0\n1000,"));
     }
 }

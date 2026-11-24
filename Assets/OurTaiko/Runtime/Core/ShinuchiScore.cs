@@ -1,13 +1,11 @@
 using System;
+using System.Numerics;
 
 namespace OurTaiko
 {
     // Pure scoring policy. Timing, combos, GOGO, note size and rendering belong to other modules.
     public sealed class ShinuchiScore
     {
-        // Legacy policy for charts outside the source-based estimator's validated scope.
-        // Keep the float literal used in tja.cpp::calculate_base_score, including its precision.
-        public const float EstimatedRollHitsPerSecond = 16.920079999994086f;
         public const int LongHitPoints = 100;
         public int BaseScore { get; }
         public int CeilingScore { get; }
@@ -16,27 +14,23 @@ namespace OurTaiko
         public ShinuchiScore(ChartStatistics statistics)
         {
             if (statistics == null) throw new ArgumentNullException(nameof(statistics));
-            if (statistics.ScoreEstimate != null)
+            TjaFraction rate = statistics.Difficulty switch
             {
-                BaseScore = statistics.ScoreEstimate.BaseScore;
-                CeilingScore = statistics.ScoreEstimate.CeilingScore;
-                return;
-            }
-            if (statistics.JudgeableNotes == 0) BaseScore = 1000000;
-            else
-            {
-                float budget = 1000000f - statistics.BalloonHitBudget * 100f;
-                double perTen = (budget - EstimatedRollHitsPerSecond * statistics.DrumrollMilliseconds / 1000f * 100f)
-                    / statistics.JudgeableNotes / 10f;
-                BaseScore = (int)Math.Ceiling(perTen) * 10;
-            }
-            // OpenTaiko GetCeilingGen4ShinUchiScore: full-good note points + balloon
-            // budget + estimated rolls rounded UP to ten hits, at least one million.
-            // Use this player's actual base score, balloon budget and roll rate.
-            double rollPoints = Math.Ceiling(EstimatedRollHitsPerSecond * statistics.DrumrollMilliseconds / 1000 / 10)
-                * LongHitPoints * 10;
-            CeilingScore = (int)Math.Min(int.MaxValue, Math.Max(1000000,
-                (long)BaseScore * statistics.JudgeableNotes + (long)statistics.BalloonHitBudget * LongHitPoints + rollPoints));
+                Difficulty.Easy => 6,
+                Difficulty.Normal => new TjaFraction(15, 2),
+                Difficulty.Hard => 10,
+                _ => 15,
+            };
+            var k = (statistics.DrumrollScoreMicroseconds * rate / 1000000).Floor;
+            var hits = (9 * k + 7) / 8;
+            var budget = (statistics.BalloonHitBudget + hits) * LongHitPoints;
+            // No judged notes keeps the established single-hit value. An exhausted budget still
+            // gives ordinary notes a positive ten-point unit; the ceiling includes the full budget.
+            BaseScore = statistics.JudgeableNotes == 0 ? 1000000 : (int)BigInteger.Max(10,
+                10 * new TjaFraction(1000000 - budget, (BigInteger)10 * statistics.JudgeableNotes).Ceiling);
+            // Rank thresholds are int throughout the game. Saturate only at that storage boundary.
+            CeilingScore = (int)BigInteger.Min(int.MaxValue, BigInteger.Max(1000000,
+                (BigInteger)BaseScore * statistics.JudgeableNotes + budget));
         }
 
         public int ApplyJudgment(Judgment judgment)

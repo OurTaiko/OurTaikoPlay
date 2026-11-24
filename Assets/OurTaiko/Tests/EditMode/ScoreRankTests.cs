@@ -39,11 +39,11 @@ namespace OurTaiko.Tests
         [TestCase("1110,", "", 333340, 1000020)]
         [TestCase("1111,", "", 250000, 1000000)]
         [TestCase("1000,\n5000,\n0080,\n1000,", "", 497450, 1000000)]
-        [TestCase("1234,\n5008,\n7008,\n9008,", "BALLOON:150,2", 246820, 1000480)]
+        [TestCase("1234,\n5008,\n7008,\n9008,", "BALLOON:150,2", 245580, 1000020)]
         [TestCase("0000,", "", 1000000, 1000000)]
-        public void KiwamiUsesActualChartBudgetAndRoundedRollEstimate(string body, string metadata, int baseScore, int ceiling)
+        public void KiwamiUsesUnifiedChartBudget(string body, string metadata, int baseScore, int ceiling)
         {
-            var chart = ScoredTja.Parse("BPM:120\nCOURSE:Oni\nLEVEL:8\n" + metadata + "\n#START\n" + body + "\n#END");
+            var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\nLEVEL:8\n" + metadata + "\n#START\n" + body + "\n#END");
             var session = new PlaySession(chart);
             Assert.That(session.BaseScore, Is.EqualTo(baseScore));
             Assert.That(session.KiwamiThreshold, Is.EqualTo(ceiling));
