@@ -15,10 +15,10 @@ namespace OurTaiko
         // Online charts and authored assets keep their existing identity. Disk charts
         // use their raw file hash; name remains the entry identity for navigation/audio.
         public string ScoreKey => string.IsNullOrEmpty(localChartSha256) ? name : localChartSha256;
-        NativeAudioSample preparedAudio;
+        IPreparedAudio preparedAudio;
         public bool HasPreparedAudio => preparedAudio != null && !preparedAudio.IsDisposed;
-        public void SetPreparedAudio(NativeAudioSample audio) { preparedAudio?.Dispose(); preparedAudio = audio; }
-        public NativeAudioSample TakePreparedAudio() { var audio = preparedAudio; preparedAudio = null; return audio?.IsDisposed == true ? null : audio; }
+        public void SetPreparedAudio(IPreparedAudio audio) { preparedAudio?.Dispose(); preparedAudio = audio; }
+        public IPreparedAudio TakePreparedAudio() { var audio = preparedAudio; preparedAudio = null; return audio?.IsDisposed == true ? null : audio; }
         void OnDisable() { preparedAudio?.Dispose(); preparedAudio = null; }
         public string course = "Oni";
         [Tooltip("Positive values delay judgments relative to the music, in milliseconds.")]
@@ -84,10 +84,9 @@ namespace OurTaiko
         public double MovieOffset() => onlineChart != null ? onlineChart.MovieOffset : chart != null ? ReadInfo().MovieOffset : 0;
         // Display metadata is separate from the parsed chart and score identity. Online songs take it
         // from the server's metadata: their chart is only set once SongLoadingScene downloads it.
-        public SongInfo ReadDisplayInfo()
-        {
-            string language = SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language : "en";
-            return onlineChart != null ? onlineChart.ToSongInfo(language) : SongInfo.Read(chart.text, language);
-        }
+        // language picks the titles (GeneralSettings.Language); the screens call the overload
+        // without one, which reads the player's (SongDisplay.ReadDisplayInfo).
+        public SongInfo ReadDisplayInfo(string language)
+            => onlineChart != null ? onlineChart.ToSongInfo(language) : SongInfo.Read(chart.text, language);
     }
 }

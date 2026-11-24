@@ -44,9 +44,10 @@ namespace OurTaiko
             }
             return new Regex(pattern.Append(@"\z").ToString(), RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Singleline, TimeSpan.FromMilliseconds(100));
         }
+        // A song of the local library, by its TJA: the courses are the same in every language.
         public bool MatchesLocal(SongDefinition song)
         {
-            if (!Matches(song.ReadDisplayInfo())) return false;
+            if (!Matches(song.ReadInfo())) return false;
             if (Keyword.Length == 0) return true;
             return TjaLines.Read(song.chart.text).Any(line => line.Kind == TjaLineKind.Header
                 && (line.Key.StartsWith("TITLE") || line.Key.StartsWith("SUBTITLE") || line.Key == "MAKER") && MatchesText(line.Value));

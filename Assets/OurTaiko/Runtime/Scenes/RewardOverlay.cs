@@ -267,7 +267,7 @@ namespace OurTaiko
             else DrawDan(reward);
 
             int verdict = reward.Data["verdict"]?.Type == Newtonsoft.Json.Linq.JTokenType.Integer ? (int)reward.Data["verdict"] : 0;
-            string source = reward.Kind == Reward.DanKind ? DanResultFlow.RankName(reward.DanIndex) + "　" + DanResultFlow.VerdictName(verdict)
+            string source = reward.Kind == Reward.DanKind ? DanText.RankName(reward.DanIndex) + "　" + DanResultFlow.VerdictName(verdict)
                 : reward.CourseTitle.Length > 0 ? L10n.Format("Online", "rewards.fromCourse", reward.CourseTitle)
                 : reward.Service == "rule" ? L10n.Get("Online", "rewards.fromRule")
                 : reward.Service == "admin" ? L10n.Get("Online", "rewards.fromAdmin") : "";
@@ -388,7 +388,7 @@ namespace OurTaiko
                 SkinUi.Image("Rank", holder, (reward.DanGold ? NameplateArt.GoldDanTexts : NameplateArt.DanTexts)[dan], width, height).rectTransform.Center(width / 2, height / 2);
             }
             // Without the emblem art (never downloaded) its name stands in for it.
-            else Text(holder, DanResultFlow.RankName(dan), 96, width / 2, height / 2, reward.DanGold ? PlateUi.Gold : Color.white);
+            else Text(holder, DanText.RankName(dan), 96, width / 2, height / 2, reward.DanGold ? PlateUi.Gold : Color.white);
         }
 
         TextMeshProUGUI Text(Transform parent, string text, float size, float x, float y, Color? color = null, bool dark = false)

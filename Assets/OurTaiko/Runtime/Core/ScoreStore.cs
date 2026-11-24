@@ -44,13 +44,15 @@ namespace OurTaiko
             foreach (var record in db.Table<Record>()) records[record.key] = record;
         }
 
+        // A server song's key (OnlineManager.SongKey): its bests are the server's, never stored here.
+        public static bool IsOnlineKey(string key) => key != null && key.StartsWith("fanmade/", StringComparison.Ordinal);
         public static string Key(string chartKey, Difficulty difficulty) => chartKey + "/" + SongInfo.CourseName(difficulty);
         public Record Get(string chartKey, Difficulty difficulty)
-            => !SongScores.IsOnlineKey(chartKey) && records.TryGetValue(Key(chartKey, difficulty), out var record) ? record : null;
+            => !IsOnlineKey(chartKey) && records.TryGetValue(Key(chartKey, difficulty), out var record) ? record : null;
 
         public void Save(PlayResult result)
         {
-            if (!result.IsRecordable || SongScores.IsOnlineKey(result.ChartKey)) return;
+            if (!result.IsRecordable || IsOnlineKey(result.ChartKey)) return;
             string key = Key(result.ChartKey, result.Difficulty);
             records.TryGetValue(key, out var best);
             result.PreviousBest = best?.score ?? 0;

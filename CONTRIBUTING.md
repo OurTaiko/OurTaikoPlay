@@ -10,7 +10,7 @@ AI 编程助手（AI Agent）除本文外还要遵守 [AGENTS.md](AGENTS.md)，�
 
 | 目录 | 职责 |
 |---|---|
-| `Runtime/Core` | 谱面、曲库、存档、段位等不依赖画面的核心数据与逻辑 |
+| `Runtime/Core` | 谱面、曲库、存档、段位等不依赖画面的核心数据与逻辑；单独的程序集 `OurTaiko.Core`，只被上层引用，自己不引用 Runtime 的其他部分（用到上层的类型会编译失败） |
 | `Runtime/Play` | 演奏：音符、判定、魂槽、连打、分歧 |
 | `Runtime/Audio` | BASS 音频引擎与各平台输出（WASAPI、ASIO、ALSA 等） |
 | `Runtime/Input` | 键盘、太鼓控制器与触屏输入 |

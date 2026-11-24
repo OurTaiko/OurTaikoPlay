@@ -99,7 +99,7 @@ namespace OurTaiko.Online
                         foreach (var category in list.Where(x => x.ChartIds.Contains(c.Id)))
                             categories.Add(new JObject { ["id"] = category.Id, ["title"] = category.Title, ["genre"] = category.Genre });
                 }
-                Offline.Save(new OfflineChartStore.Entry
+                Offline.Save(new CachedChart
                 {
                     Server = e.Id, ServerUrl = e.Config.baseUrl, ServerName = e.Config.DisplayName, ServerGenre = e.GenreFrame, ChartId = c.Id,
                     ChartJson = described, Categories = categories.ToString(Newtonsoft.Json.Formatting.None),
@@ -116,7 +116,7 @@ namespace OurTaiko.Online
         // The offline counterpart of PrepareAsync: the chart as the server last described it, its
         // TJA and audio from the object cache, each checked against its recorded size and SHA-256 as
         // a download would be. The server is never contacted; a damaged or missing file refuses the play.
-        async Task<(string Tja, string AudioPath, FanmadeChart Chart)> PrepareOfflineAsync(FanmadeChart selected, OfflineChartStore.Entry cached,
+        async Task<(string Tja, string AudioPath, FanmadeChart Chart)> PrepareOfflineAsync(FanmadeChart selected, CachedChart cached,
             CancellationToken cancel, Action<DownloadProgress> progress, bool movie)
         {
             var state = new DownloadProgress();

@@ -1,5 +1,5 @@
 {
   "name": "OurTaiko.TestSupport",
-  "references": ["OurTaiko.Runtime", "OurTaiko.TjaParser", "Unity.ugui"],
+  "references": ["OurTaiko.Runtime", "OurTaiko.Core", "OurTaiko.TjaParser", "Unity.ugui"],
   "defineConstraints": ["UNITY_INCLUDE_TESTS"]
 }

@@ -1,44 +1,29 @@
 using System;
 using System.Linq;
-using SQLite;
 
 namespace OurTaiko.Online
 {
     // An outbox, never a source of historical best scores. Endpoint includes server AND account.
+    // Its rows are PendingScoreUpload (the file's format, beside GameDatabase).
     public sealed class PendingScoreQueue
     {
-        [UnityEngine.Scripting.Preserve, Table("PendingScoreUploads")]
-        public sealed class Entry
-        {
-            [PrimaryKey] public string Key { get; set; }
-            [Indexed] public string Endpoint { get; set; }
-            [Column("Body")] public string Body { get; set; }
-            [Column("Rejected")] public bool Rejected { get; set; }
-            // The played block's content hash (rows queued before 2026-10-23 have the TJA file hash
-            // in the old TjaHash column instead and are rejected).
-            public string ChartHash { get; set; }
-            public string AudioHash { get; set; }
-            // The played song; null in rows queued before bodies named only the block.
-            public string Song { get; set; }
-            [Column("Created")] public long Created { get; set; }
-        }
         readonly GameDatabase database;
         readonly object sync = new();
         public PendingScoreQueue(string path) : this(new GameDatabase(path)) { }
         public PendingScoreQueue(GameDatabase database) => this.database = database;
         public void Enqueue(string endpoint, string key, string body, string chartHash = null, string audioHash = null, string song = null)
         {
-            lock (sync) { using var db = database.Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, ChartHash = chartHash, AudioHash = audioHash, Song = song, Created = DateTime.UtcNow.Ticks }); }
+            lock (sync) { using var db = database.Open(); db.Insert(new PendingScoreUpload { Endpoint = endpoint, Key = key, Body = body, ChartHash = chartHash, AudioHash = audioHash, Song = song, Created = DateTime.UtcNow.Ticks }); }
         }
-        public Entry[] Pending(string endpoint)
+        public PendingScoreUpload[] Pending(string endpoint)
         {
-            lock (sync) { using var db = database.Open(); return db.Table<Entry>().Where(x => x.Endpoint == endpoint && !x.Rejected).OrderBy(x => x.Created).ToArray(); }
+            lock (sync) { using var db = database.Open(); return db.Table<PendingScoreUpload>().Where(x => x.Endpoint == endpoint && !x.Rejected).OrderBy(x => x.Created).ToArray(); }
         }
         public int RejectedCount(string endpoint)
         {
-            lock (sync) { using var db = database.Open(); return db.Table<Entry>().Count(x => x.Endpoint == endpoint && x.Rejected); }
+            lock (sync) { using var db = database.Open(); return db.Table<PendingScoreUpload>().Count(x => x.Endpoint == endpoint && x.Rejected); }
         }
-        public void Remove(string key) { lock (sync) { using var db = database.Open(); db.Delete<Entry>(key); } }
+        public void Remove(string key) { lock (sync) { using var db = database.Open(); db.Delete<PendingScoreUpload>(key); } }
         public void Reject(string key)
         {
             lock (sync) { using var db = database.Open(); db.Execute("UPDATE PendingScoreUploads SET Rejected = 1 WHERE Key = ?", key); }
@@ -46,31 +31,23 @@ namespace OurTaiko.Online
     }
 
     // 段位 attempts waiting for their server (POST /api/v2/game/dan-results), in the same file as
-    // the scores. Endpoint is the account's queue key (FanmadeEndpoint.AccountIdOf).
+    // the scores. Endpoint is the account's queue key (FanmadeEndpoint.AccountIdOf). Its rows are
+    // PendingDanAttempt.
     public sealed class PendingDanQueue
     {
-        [UnityEngine.Scripting.Preserve, Table("PendingDanAttempts")]
-        public sealed class Entry
-        {
-            [PrimaryKey] public string Key { get; set; }
-            [Indexed] public string Endpoint { get; set; }
-            public string Body { get; set; }
-            public bool Rejected { get; set; }
-            public long Created { get; set; }
-        }
         readonly GameDatabase database;
         readonly object sync = new();
         public PendingDanQueue(string path) : this(new GameDatabase(path)) { }
         public PendingDanQueue(GameDatabase database) => this.database = database;
         public void Enqueue(string endpoint, string key, string body)
         {
-            lock (sync) { using var db = database.Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, Created = DateTime.UtcNow.Ticks }); }
+            lock (sync) { using var db = database.Open(); db.Insert(new PendingDanAttempt { Endpoint = endpoint, Key = key, Body = body, Created = DateTime.UtcNow.Ticks }); }
         }
-        public Entry[] Pending(string endpoint)
+        public PendingDanAttempt[] Pending(string endpoint)
         {
-            lock (sync) { using var db = database.Open(); return db.Table<Entry>().Where(x => x.Endpoint == endpoint && !x.Rejected).OrderBy(x => x.Created).ToArray(); }
+            lock (sync) { using var db = database.Open(); return db.Table<PendingDanAttempt>().Where(x => x.Endpoint == endpoint && !x.Rejected).OrderBy(x => x.Created).ToArray(); }
         }
-        public void Remove(string key) { lock (sync) { using var db = database.Open(); db.Delete<Entry>(key); } }
+        public void Remove(string key) { lock (sync) { using var db = database.Open(); db.Delete<PendingDanAttempt>(key); } }
         public void Reject(string key)
         {
             lock (sync) { using var db = database.Open(); db.Execute("UPDATE PendingDanAttempts SET Rejected = 1 WHERE Key = ?", key); }
