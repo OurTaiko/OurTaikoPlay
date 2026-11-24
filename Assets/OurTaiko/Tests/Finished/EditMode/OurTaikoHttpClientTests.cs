@@ -28,14 +28,27 @@ namespace OurTaiko.Tests
         [Test]
         public void TheUserAgentNamesTheGameItsVersionAndPlatform()
         {
-            Assert.That(OurTaikoHttpClient.Describe("1.0.2", RuntimePlatform.WindowsPlayer, "Windows 11  (10.0.26100) 64bit", "X64", false),
-                Is.EqualTo("OurTaikoPlay/1.0.2 (Windows; Windows 11 10.0.26100 64bit; X64)"));
+            Assert.That(OurTaikoHttpClient.Describe("1.0.2-1234", RuntimePlatform.WindowsPlayer, "Windows 11  (10.0.26100) 64bit", "X64", false),
+                Is.EqualTo("OurTaikoPlay/1.0.2-1234 (Windows; Windows 11 10.0.26100 64bit; X64)"));
             Assert.That(OurTaikoHttpClient.Describe("1.0.2", RuntimePlatform.Android, "Android OS 16 / API-36 (BP2A.250605.031.A1/123)", "Arm64", false),
                 Is.EqualTo("OurTaikoPlay/1.0.2 (Android; Android OS 16 / API-36 BP2A.250605.031.A1/123; Arm64)"));
             Assert.That(OurTaikoHttpClient.Describe("1.0.2", RuntimePlatform.OSXEditor, "Mac OS X 15.5.0", "Arm64", true),
                 Is.EqualTo("OurTaikoPlay/1.0.2 (macOS; Mac OS X 15.5.0; Arm64; Editor)"));
             Assert.That(OurTaikoHttpClient.Describe("1.0.2", RuntimePlatform.IPhonePlayer, "iOS 18.5", "Arm64", false),
                 Is.EqualTo("OurTaikoPlay/1.0.2 (iOS; iOS 18.5; Arm64)"));
+        }
+
+        [Test]
+        public void TheVersionIsTheVersionAndTheBuildNumber()
+        {
+            // iOS: CFBundleShortVersionString and CFBundleVersion.
+            Assert.That(GameVersion.Compose("1.0.2", "1234"), Is.EqualTo("1.0.2-1234"));
+            Assert.That(GameVersion.Compose("1.0.2", " 1234\n"), Is.EqualTo("1.0.2-1234"));
+            // Desktop and Android: CI already gave the whole string as the version.
+            Assert.That(GameVersion.Compose("1.0.2-1234", "1234"), Is.EqualTo("1.0.2-1234"));
+            // No number (the Editor, a build from the menu).
+            Assert.That(GameVersion.Compose("1.0.2", ""), Is.EqualTo("1.0.2"));
+            Assert.That(GameVersion.Compose("1.0.2", null), Is.EqualTo("1.0.2"));
         }
 
         [Test]
@@ -54,7 +67,7 @@ namespace OurTaiko.Tests
         {
             string heard = null;
             site.CustomRequest = context => { heard = context.Request.UserAgent; return false; };
-            Assert.That(OurTaikoHttpClient.UserAgent, Does.StartWith("OurTaikoPlay/" + Application.version + " ("));
+            Assert.That(OurTaikoHttpClient.UserAgent, Does.StartWith("OurTaikoPlay/" + GameVersion.Full + " ("));
             Run(() => Distribution.RootAsync(site.BaseUrl));
             Assert.That(heard, Is.EqualTo(OurTaikoHttpClient.UserAgent));
             heard = null;

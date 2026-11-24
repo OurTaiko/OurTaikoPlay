@@ -128,7 +128,7 @@ namespace OurTaiko
                 Application.logMessageReceivedThreaded += FromUnity;
                 Application.quitting += Stop;
             }
-            Log.Info("Log", $"OurTaiko {Application.version} on {Application.platform} ({SystemInfo.operatingSystem}); level {Log.MinimumLevel}");
+            Log.Info("Log", $"OurTaiko {GameVersion.Full} on {Application.platform} ({SystemInfo.operatingSystem}); level {Log.MinimumLevel}");
         }
 
         public static void Stop()

@@ -14,9 +14,9 @@ namespace OurTaiko.Online
     //
     //   - redirects are not followed, cookies are not kept, and the system proxy is not used (what
     //     the API client always did; the public files are served where they are asked for);
-    //   - every request says what asks, in User-Agent: the game, its version, the platform, the
-    //     operating system and the processor, e.g.
-    //       OurTaikoPlay/1.0.2 (Windows; Windows 11 10.0.26100 64bit; X64)
+    //   - every request says what asks, in User-Agent: the game, its version and build number
+    //     (GameVersion), the platform, the operating system and the processor, e.g.
+    //       OurTaikoPlay/1.0.2-1234 (Windows; Windows 11 10.0.26100 64bit; X64)
     //     so the servers' logs can tell the game's versions and platforms apart (a version before
     //     this one sends none);
     //   - the client has no timeout of its own: a request is bounded by the caller's, through
@@ -31,8 +31,8 @@ namespace OurTaiko.Online
         static string userAgent;
         static readonly Lazy<HttpClient> shared = new Lazy<HttpClient>(Create, LazyThreadSafetyMode.ExecutionAndPublication);
 
-        // What the game says it is. Unity's version and platform can only be read on the main
-        // thread, while the first request may start on any; so it is read at load, before any.
+        // What the game says it is. The version can only be read on the main thread, while the
+        // first request may start on any; so it is read at load, before any.
         public static string UserAgent => userAgent ?? Product;
 
         public static HttpClient Shared => shared.Value;
@@ -43,7 +43,7 @@ namespace OurTaiko.Online
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Describe()
         {
-            userAgent ??= Describe(Application.version, Application.platform, SystemInfo.operatingSystem,
+            userAgent ??= Describe(GameVersion.Full, Application.platform, SystemInfo.operatingSystem,
                 RuntimeInformation.ProcessArchitecture.ToString(), Application.isEditor);
         }
 
