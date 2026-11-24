@@ -79,8 +79,7 @@ namespace OurTaiko.Online
         // False once the song's files were replaced after the play.
         public bool IsLatest = true;
         // The rank the server gave the score against its chart's kiwami line (OurTaikoNet's
-        // net.score_rank); null when it has none: the chart's content was replaced since, or a
-        // server from before ranks were kept.
+        // net.score_rank); null when it gave none (the chart's content was replaced since).
         public ScoreRank? ScoreRank;
 
         public static OnlineScore From(JToken v) => new OnlineScore

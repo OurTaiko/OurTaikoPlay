@@ -117,8 +117,6 @@ namespace OurTaiko.Tests
             Assert.That(client.Status, Does.Contain("offline cache"));
             var preview = Assert.Throws<OnlineException>(() => Run(() => client.PreparePreviewAsync(cached)));
             Assert.That(preview.Message, Is.EqualTo("PREVIEW_UNAVAILABLE"), "The preview reads the cache too (this one cached no excerpt).");
-            var rank = Assert.Throws<OnlineException>(() => Run(() => client.PrepareRankThresholdsAsync(cached)));
-            Assert.That(rank.Message, Is.EqualTo("SERVER_NOT_CONNECTED"));
             Assert.That(fixture.Requests.Count, Is.EqualTo(requests), "Nothing tries the unreachable server.");
         }
 

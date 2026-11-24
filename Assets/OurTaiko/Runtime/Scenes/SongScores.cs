@@ -32,20 +32,12 @@ namespace OurTaiko
         public static ScoreRank Rank(SongDefinition song, Difficulty difficulty)
         {
             var record = Get(song, difficulty);
-            // An online best comes with the rank its server gave it: no need to read the chart.
-            // Without one (a server from before ranks, or a score it did not rank) it is worked
-            // out against the chart's line, as a local best's is.
-            if (record?.serverRank is ScoreRank given) return given;
+            // An online best's rank is the one OurTaikoNet gave it (none when it gave none).
+            if (IsOnline(song)) return record?.serverRank ?? ScoreRank.None;
             int score = record?.score ?? 0;
             // No score has no rank, whatever the chart: no need to read it.
             if (score <= 0) return ScoreRank.None;
-            int? threshold = song.RankThreshold(difficulty);
-            if (!threshold.HasValue && IsOnline(song))
-            {
-                var manager = Online.OnlineManager.Instance;
-                threshold = manager?.Client.RankThreshold(manager.ChartOf(song), (int)difficulty);
-            }
-            return ScoreRankUtil.FromScore(score, threshold);
+            return ScoreRankUtil.FromScore(score, song.RankThreshold(difficulty));
         }
     }
 }
