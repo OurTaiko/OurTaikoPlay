@@ -2,6 +2,7 @@
   "name": "OurTaiko.Runtime",
   "rootNamespace": "OurTaiko",
   "references": [
+    "OurTaiko.Core",
     "OurTaiko.TjaParser",
     "Unity.TextMeshPro",
     "Unity.ugui",

@@ -178,7 +178,7 @@ namespace OurTaiko
                 catch (Exception error) { Error = "CHART_LOAD_FAILED"; Log.Exception("Loading", error, this); break; }
                 // Each entry keeps its own decoded audio, so a song played twice starts at once both times.
                 yield return DecodeAudio(song);
-                dan.Audio[i] = song.TakePreparedAudio();
+                dan.Audio[i] = (NativeAudioSample)song.TakePreparedAudio();
             }
             if (Error != null)
             {

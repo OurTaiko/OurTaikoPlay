@@ -5,9 +5,8 @@ namespace OurTaiko
     // Server bests are session data loaded at login, never a fallback to the local database.
     public static class SongScores
     {
-        public static bool IsOnlineKey(string key) => key != null && key.StartsWith("fanmade/", StringComparison.Ordinal);
         public static bool IsOnline(SongDefinition song) => song != null &&
-            (IsOnlineKey(song.name) || (Online.OnlineManager.Instance != null && Online.OnlineManager.Instance.IsOnline(song)));
+            (ScoreStore.IsOnlineKey(song.name) || (Online.OnlineManager.Instance != null && Online.OnlineManager.Instance.IsOnline(song)));
 
         // An online song's best is the account's of `seat`: by default the side a lone player sits on
         // (InputManager.Lead; 1P's with two players). Local songs keep one record for every seat.

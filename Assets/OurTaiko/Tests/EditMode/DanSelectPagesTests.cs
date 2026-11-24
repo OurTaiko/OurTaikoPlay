@@ -20,7 +20,7 @@ namespace OurTaiko.Tests
             var pages = DanSelectPages.Build(
                 new[] { Entry("local-a", null, false), Entry("local-b", null, false, "broken") },
                 new[] { Entry("f-official", Fanmade + "/"), Entry("f-community", Fanmade, false), Entry("d-official", Database), Entry("f-broken", Fanmade, true, "bad"), Entry("x-official", "https://other.example") },
-                new[] { Entry("stand-in", "https://other.example", false) }, Fanmade, Database);
+                new[] { Entry("stand-in", "https://other.example", false) }, Fanmade, Database, DanText.LocalPageTitle, DanText.GaidenTitle);
             Assert.That(pages.Count, Is.EqualTo(3));
             Assert.That(pages[0].Title, Is.EqualTo(L10n.Get("Dan", "select.pageLocal")));
             Assert.That(pages[0].IsLocal, Is.True);
@@ -40,7 +40,7 @@ namespace OurTaiko.Tests
         [Test]
         public void ACodesCourseJoinsBeforeTheGaidenEntryOrReplacesItsListedSelf()
         {
-            var pages = DanSelectPages.Build(new DanCourseEntry[0], new[] { Entry("10", Fanmade) }, new DanCourseEntry[0], Fanmade, Database);
+            var pages = DanSelectPages.Build(new DanCourseEntry[0], new[] { Entry("10", Fanmade) }, new DanCourseEntry[0], Fanmade, Database, DanText.LocalPageTitle, DanText.GaidenTitle);
             var page = pages[1];
             Assert.That(DanSelectPages.Insert(page, Entry("77", Fanmade, false)), Is.EqualTo(1));
             CollectionAssert.AreEqual(new[] { "10", "77", "gaiden" }, Ids(page));

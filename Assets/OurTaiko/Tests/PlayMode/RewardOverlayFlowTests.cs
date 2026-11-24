@@ -99,7 +99,7 @@ namespace OurTaiko.Tests
             Assert.That((Overlay.Index, Overlay.Current.Id, Overlay.IsReady), Is.EqualTo((1, dan, false)));
             Overlay.Don();
             Assert.That(Overlay.IsReady, Is.True, "A hit while it comes in shows it at once.");
-            Assert.That(Overlay.AllText, Does.Contain(L10n.Get("Online", "rewards.dan")).And.Contain(DanResultFlow.RankName(22))
+            Assert.That(Overlay.AllText, Does.Contain(L10n.Get("Online", "rewards.dan")).And.Contain(DanText.RankName(22))
                 .And.Contain(L10n.Get("Online", "rewards.close")));
             yield return null;
             TestCapture.Capture("RewardDan.png", canvas: TestCapture.SceneCanvas(), over: Overlay.Canvas);

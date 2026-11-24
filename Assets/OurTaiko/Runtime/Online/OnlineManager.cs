@@ -37,8 +37,8 @@ namespace OurTaiko.Online
         // The names of the servers OfflineFolders stand in for, by endpoint id.
         readonly Dictionary<string, string> offlineServerNames = new Dictionary<string, string>();
         // The offline store as last scanned (OfflineChartStore.Scan on a worker, like the songs folder).
-        OfflineChartStore.Entry[] cached = Array.Empty<OfflineChartStore.Entry>();
-        Task<OfflineChartStore.Entry[]> cacheScan;
+        CachedChart[] cached = Array.Empty<CachedChart>();
+        Task<CachedChart[]> cacheScan;
         bool cacheScanned;
         readonly Dictionary<string, (SongDefinition Song, FanmadeChart Chart)> byKey = new Dictionary<string, (SongDefinition, FanmadeChart)>();
         readonly Dictionary<SongDefinition, FanmadeChart> charts = new Dictionary<SongDefinition, FanmadeChart>();
@@ -556,7 +556,7 @@ namespace OurTaiko.Online
             ClearSongs();
             builtInEndpoints.Clear();
             Client = new FanmadeClient(root, databasePath);
-            cached = Array.Empty<OfflineChartStore.Entry>();
+            cached = Array.Empty<CachedChart>();
             cacheScan = null; cacheScanned = false;
         }
 

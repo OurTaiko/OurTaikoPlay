@@ -1,0 +1,8 @@
+{
+  "name": "OurTaiko.Core",
+  "rootNamespace": "OurTaiko",
+  "references": [
+    "OurTaiko.TjaParser",
+    "Gilzoide.SqliteNet"
+  ]
+}
