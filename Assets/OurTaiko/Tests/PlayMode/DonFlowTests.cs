@@ -14,6 +14,10 @@ namespace OurTaiko.Tests
     // The 3D Don ported from YataiDON on the lane: it stands above the lane, cheers every tenth
     // combo, dances through GOGO TIME, holds a balloon while it is hit, and stays away with the
     // setting off.
+    //
+    // Not in Finished/: DrawingOnlyTheDonsPartOfItsAreaGivesTheSamePicture fails in batchmode on
+    // macOS (2 pixels differ, 1 allowed) while it passes in the Editor, and EachLaneOfTwoPlayersHasItsDon
+    // once ran past the 180 s test timeout; promote the class once both pass reliably.
     public sealed class DonFlowTests
     {
         const string Chart = "TITLE:Don Test\nBPM:240\nBALLOON:12\nCOURSE:Oni\nLEVEL:5\n#START\n" +

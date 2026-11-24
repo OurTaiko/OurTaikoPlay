@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       suite:
-        description: Test assemblies
+        description: Test assemblies (in-progress has PlayMode tests only)
         type: choice
         default: finished
         options: [finished, in-progress, all]
@@ -46,11 +46,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: ${{ fromJSON(github.event_name == 'pull_request' && '["editmode"]' || (inputs.mode == 'both' && '["editmode","playmode"]' || format('["{0}"]', inputs.mode))) }}
+        # Every EditMode test is in the finished suite, so in-progress runs PlayMode only.
+        mode: ${{ fromJSON(github.event_name == 'pull_request' && '["editmode"]' || (inputs.suite == 'in-progress' && '["playmode"]' || (inputs.mode == 'both' && '["editmode","playmode"]' || format('["{0}"]', inputs.mode)))) }}
     env:
       SUITE: ${{ github.event_name == 'pull_request' && 'finished' || inputs.suite }}
       FINISHED: ${{ matrix.mode == 'editmode' && 'OurTaiko.FinishedTests' || 'OurTaiko.FinishedPlayModeTests' }}
-      IN_PROGRESS: ${{ matrix.mode == 'editmode' && 'OurTaiko.Tests' || 'OurTaiko.PlayModeTests' }}
+      IN_PROGRESS: OurTaiko.PlayModeTests
     steps:
       - uses: actions/checkout@v4
         with:

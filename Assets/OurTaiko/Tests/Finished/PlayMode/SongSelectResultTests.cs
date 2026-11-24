@@ -19,6 +19,8 @@ namespace OurTaiko.Tests
             yield return null;
             var switcher = SceneSwitcher.Instance;
             switcher.LastDifficulty[0] = -1;
+            // Earlier tests may have saved a best for this course; this auto play must not add one.
+            int savedBefore = ScoreStore.Shared.Revision;
             switcher.SwitchScene(SceneSwitcher.SongSelectScene);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
             var select = Object.FindAnyObjectByType<SongSelectScene>();
@@ -105,7 +107,7 @@ namespace OurTaiko.Tests
             var result = Object.FindAnyObjectByType<ResultScene>();
             Assert.That(result.Result.Bad == 0 && result.Result.Ok == 0, Is.True);
             Assert.That(result.Result.GaugeState, Is.EqualTo(GaugeState.Full));
-            Assert.That(ScoreStore.Shared.Get(TestSongs.Load(TestSongs.TestPulse).ScoreKey, Difficulty.Oni), Is.Null, "Auto play is never saved.");
+            Assert.That(ScoreStore.Shared.Revision, Is.EqualTo(savedBefore), "Auto play is never saved.");
             yield return WaitUntil(() => result.Sequence.GaugeShown >= 30);
             Capture("ResultGaugeFilling.png");
             yield return WaitUntil(() => result.Sequence.RowsLanded >= 3);

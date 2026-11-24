@@ -45,7 +45,7 @@ namespace OurTaiko.Tests
         static IEnumerable<TestCaseData> Charts()
         {
             foreach (string course in new[] { "Oni", "Hard", "Normal", "Easy" })
-                yield return new TestCaseData("Tests/EditMode/Charts/Donkama2000.txt", course).SetName("{m}(Donkama2000 " + course + ")");
+                yield return new TestCaseData("Tests/Finished/EditMode/Charts/Donkama2000.txt", course).SetName("{m}(Donkama2000 " + course + ")");
             yield return new TestCaseData("Tests/Shared/Songs~/1 TestPulse.tja", "Oni").SetName("{m}(TestPulse Oni)");
             yield return new TestCaseData("Tests/Shared/Songs~/3 BranchTraining.tja", "Oni").SetName("{m}(BranchTraining Oni)");
             yield return new TestCaseData(null, "Oni").SetName("{m}(Synthetic scrolls)");

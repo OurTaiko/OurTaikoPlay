@@ -9,6 +9,8 @@ using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
+    // Not in Finished/: these run only on Linux, and the exclusive-output test needs idle ALSA
+    // hardware named by OURTAIKO_TEST_ALSA_DEVICE; everywhere else they are skipped.
     public sealed class LinuxAlsaAudioTests
     {
         static IEnumerator WaitFor(System.Threading.Tasks.Task task, bool fails = false)
