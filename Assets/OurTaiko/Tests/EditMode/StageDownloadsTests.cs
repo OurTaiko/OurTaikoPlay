@@ -98,7 +98,9 @@ namespace OurTaiko.Tests
                 string path = context.Request.Url.AbsolutePath;
                 if (!path.StartsWith("/stage/", StringComparison.Ordinal)) return false;
                 if (down) return Reply(context, 503, new byte[0]);
-                if (path == "/stage/catalog.json") return Reply(context, 200, catalogJson);
+                // The catalog of the bundles' own version; the old one beside them is version 1's.
+                if (path == "/stage/bundle/" + StageLibrary.BundleVersion + "/catalog.json") return Reply(context, 200, catalogJson);
+                if (path == "/stage/catalog.json") return Reply(context, 200, System.Text.Encoding.UTF8.GetBytes("{\"version\": 1, \"presets\": {\"OLD\": {}}}"));
                 if (path == bundles + "index.json") return Reply(context, 200, System.Text.Encoding.UTF8.GetBytes(indexJson));
                 if (path.StartsWith(bundles + "header-far.", StringComparison.Ordinal))
                 {

@@ -3,7 +3,7 @@ import math
 import subprocess
 from pathlib import Path
 from PIL import Image
-from bake import Bake, base, out
+from bake import RENDA_HEIGHT, Bake, base, out
 import tempfile
 
 parent = base.parent / "PyTaikoGreen"
@@ -64,7 +64,7 @@ for name in ("animal", "buttoburst", "funassyi", "oshiri"):
         if row[0] == "C":
             flush()
             _, folder, file, clip, count, start = row
-            height = {"header": 276, "chibi": 276, "renda": 276, "dancers": 1080}.get(
+            height = {"header": 276, "chibi": 276, "renda": RENDA_HEIGHT, "dancers": 1080}.get(
                 folder, 540
             )
             b = files.setdefault((folder, file), Bake(height))

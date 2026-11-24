@@ -60,7 +60,7 @@ namespace OurTaiko.Tests
 
             preview.Run(new StagePreview.Shot("full", 1, hits: true), 1);
             Assert.That(stage.crowd.ClearAlpha, Is.EqualTo(1f), "The crowd comes with a full gauge.");
-            Assert.That(stage.renda[0].Out, Is.GreaterThan(0), "A drumroll throws its effect over the header.");
+            Assert.That(stage.renda[0].Out, Is.GreaterThan(0), "A drumroll throws its effect across the play area.");
         }
 
         // A pack for solo play brings its hit characters; another backdrop takes them away.

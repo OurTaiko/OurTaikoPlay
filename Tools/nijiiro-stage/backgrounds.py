@@ -1,5 +1,5 @@
 import math
-from bake import Bake, graphics, out, scripts, table
+from bake import RENDA_HEIGHT, Bake, graphics, out, scripts, table
 
 alphabet = [chr(i) for i in range(33, 127) if i not in (34, 92)]
 digits = {c: i for i, c in enumerate(alphabet)}
@@ -18,6 +18,46 @@ def channel(v):
             n = n * 92 + digits[c]
         values.append(base + step * n)
     return values
+
+
+# Where each collab's drumroll pieces start, from PyTaikoGreen's port of it (its 1280x720 numbers):
+# (left, top, right, bottom) of the area a hit is picked from, and whether that is where the
+# picture's top-left corner goes (its RendaController) or its centre (TOHO's own). The skin's
+# RendaClip picks by eye instead (left edge, y 560..1000), which a cabinet video shows wrong: the
+# IDOLiSH7 hearts there all come from under the bottom edge between x 90 and 924, as these do.
+RENDA_AREA = {
+    "b_001": (1280, 384, 1480, 672, "corner"),  # miku: notes across from the right edge
+    "b_003": (1280, 384, 1480, 672, "corner"),  # gumi
+    "b_004": (1280, 384, 1480, 672, "corner"),  # ia
+    "b_005": (0, 720, 500, 740, "corner"),  # lovelive: up and right from under the bottom-left
+    "b_006": (0, 720, 500, 740, "corner"),  # i7id7 (i7tri, i7rev, i7natsu use it)
+    "b_010": (0, 720, 500, 740, "corner"),  # imas
+    "b_013": (0, 720, 500, 740, "corner"),  # imas_sidem
+    "b_014": (0, 720, 500, 740, "corner"),  # yokai
+    "b_020": (0, 720, 500, 740, "corner"),  # a3
+    "b_019": (0, 420, 1279, 719, "corner"),  # mario: ? blocks anywhere in the lower half
+    "b_002": (400, 300, 880, 320, "centre"),  # toho: above the dancers
+}
+
+# Collab drumrolls whose numbers and pictures are the 1280x720 cabinet's rather than 1920x1080.
+# Every other renda_anim file is 1.5 times PyTaikoGreen's 720p port of it (miku's -2060 across is
+# -3090 here, lovelive's 1560/-1648 is 2340/-2472); TOHO's equals it number for number (rings -40
+# down and +-160/+-320 across, a fan of nine spraying ~1000), and its pictures are the 720p ones
+# too (the ring is 128 px in both), so the cabinet draws it half as big again as the file says.
+RENDA_720P = {"b_002"}
+
+
+def renda_start(key, t, rows, k):
+    """Where a hit of this clip starts in 1080 (the middle of its area) and the area's half size;
+    the catalog's spread for the set is that half size."""
+    left, top, right, bottom, anchor = RENDA_AREA[key]
+    x, y = (left + right) / 2 * 1.5, (top + bottom) / 2 * 1.5
+    if anchor == "corner":
+        # The file's pieces are placed by their origin, the port's picture by its corner.
+        first = next(row for row in rows if row)[0]
+        s = shape(t["shapes"], first[0])
+        x, y = x + s[2] * k, y + s[3] * k
+    return (x, y), ((right - left) / 2 * 1.5, (bottom - top) / 2 * 1.5)
 
 
 def shape(t, k):
@@ -143,10 +183,10 @@ def export(src):
         crowd = parent == "fever_anim"
         name = key.removeprefix("f_")
         folder = "crowd" if crowd else "renda"
-        b = Bake(540 if crowd else 276)
+        b = Bake(540 if crowd else RENDA_HEIGHT)
         directory = graphics / (("fevera_" if crowd else "rendaa_") + name)
 
-        def frames(rows, x, y):
+        def frames(rows, x, y, k=1):
             for row in rows:
                 ds = []
                 for i, (pic, dx, dy, sx, sy, rot, a, *mir) in enumerate(row):
@@ -157,12 +197,12 @@ def export(src):
                         b.draw(
                             directory / f"s{pic}.png",
                             i,
-                            x + dx,
-                            y + dy,
+                            x + dx * k,
+                            y + dy * k,
                             s[2],
                             s[3],
-                            sx,
-                            sy,
+                            sx * k,
+                            sy * k,
                             rot,
                             a,
                             bool(mir and mir[0]),
@@ -179,9 +219,11 @@ def export(src):
             if end < t["nframes"]:
                 b.clip("release", 40, False, 0, frames(t["frames"][end:], 0, 0))
         else:
+            k = 1.5 if key in RENDA_720P else 1
             for i, p in enumerate(t["parts"]):
-                x = 1900 if p["dx"] < -1 else 20 if p["dx"] > 1 else 960
-                b.clip("hit_" + str(i), 60, False, 0, frames(p["frames"], x, 138))
+                (x, y), spread = renda_start(key, t, p["frames"], k)
+                b.clip("hit_" + str(i), 60, False, 0, frames(p["frames"], x, y, k))
+            print(f"{name} renda spread {spread[0]:g} {spread[1]:g}", flush=True)
     path = out / folder / (name + ".otanim")
     b.save(path)
     print(path, flush=True)

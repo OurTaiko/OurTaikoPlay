@@ -212,6 +212,9 @@ namespace OurTaiko.Tests
 
         static T[] In<T>(UnityEngine.SceneManagement.Scene scene) where T : Component => scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<T>(true)).ToArray();
 
+        // Where in its 1920x1080 file a drumroll hit starts (Tools/nijiiro-stage, RENDA_SPAWN_Y).
+        const float RendaSpawnRow = 780;
+
         [Test]
         public void ThePlayScenesHaveTheStagesParts()
         {
@@ -232,6 +235,18 @@ namespace OurTaiko.Tests
                         Assert.That(stage.headers.Select(b => (b.name, b.player)), Is.EqualTo(new[] { ("StageUpper", 0), ("StageUpper2P", 1) }));
                         Assert.That(stage.renda.Select(r => (r.name, r.player)), Is.EqualTo(new[] { ("StageRenda", 0), ("StageRenda2P", 1) }));
                         Assert.That(((RectTransform)stage.headers[1].transform).anchoredPosition, Is.EqualTo(new Vector2(0, -804)));
+                        foreach (var header in stage.headers)
+                        {
+                            // A drumroll's hits start on its player's header (the files' y 780, the middle of a
+                            // header's 276), and it is seen only over that player's half of the screen.
+                            var effect = (RectTransform)stage.renda.Single(r => r.player == header.player).transform;
+                            var band = (RectTransform)header.transform;
+                            Assert.That(effect.anchoredPosition.y - RendaSpawnRow, Is.EqualTo(band.anchoredPosition.y - 138), effect.name);
+                            var padding = effect.GetComponent<UnityEngine.UI.RectMask2D>().padding;
+                            float top = effect.anchoredPosition.y - padding.w, bottom = effect.anchoredPosition.y - 1080 + padding.y;
+                            if (header.player == 0) Assert.That((top, bottom >= -540), Is.EqualTo((0f, true)), effect.name);
+                            else Assert.That((top, bottom), Is.EqualTo((-540f, -1080f)), effect.name);
+                        }
                         Assert.That((stage.scene, stage.footer, stage.crowd, stage.dancers), Is.EqualTo(((StageBandView)null, (StageBandView)null, (StageBandView)null, (DancerTroupeView)null)));
                     }
                     else
@@ -239,6 +254,11 @@ namespace OurTaiko.Tests
                         Assert.That(stage.headers.Select(b => (b.name, b.player)), Is.EqualTo(new[] { ("StageUpper", 0) }));
                         Assert.That(stage.renda.Select(r => (r.name, r.player)), Is.EqualTo(new[] { ("StageRenda", 0) }));
                         Assert.That((stage.scene.name, stage.footer.name, stage.crowd.name, stage.dancers.name), Is.EqualTo(("StageLower", "StageFooter", "StageCrowd", "Dancers")));
+                        // A drumroll's hits fly over the whole play area, over the scene and behind the dancers,
+                        // as the skin draws them; its files are the size of the screen.
+                        var renda = (RectTransform)stage.renda[0].transform;
+                        Assert.That((renda.anchoredPosition, renda.GetComponent<UnityEngine.UI.RectMask2D>().padding), Is.EqualTo((Vector2.zero, Vector4.zero)));
+                        Assert.That(new Component[] { stage.scene, stage.renda[0], stage.dancers }.Select(c => c.transform.GetSiblingIndex()), Is.Ordered);
                         // Back to front: the scene, the dancers, the stand, the crowd. A canvas of the dancers' own
                         // with its own sorting order would put them over the stand and the crowd.
                         Assert.That(new Component[] { stage.scene, stage.dancers, stage.footer, stage.crowd }.Select(c => c.transform.GetSiblingIndex()), Is.Ordered);
@@ -256,10 +276,9 @@ namespace OurTaiko.Tests
                     foreach (var header in stage.headers)
                     {
                         Assert.That(((RectTransform)header.transform).sizeDelta, Is.EqualTo(new Vector2(1920, 276)));
-                        // Each drumroll effect is over its player's header.
+                        // Each drumroll effect is over its player's header, the size of the files.
                         var effect = stage.renda.Single(r => r.player == header.player);
-                        Assert.That(((RectTransform)effect.transform).anchoredPosition, Is.EqualTo(((RectTransform)header.transform).anchoredPosition));
-                        Assert.That(((RectTransform)effect.transform).sizeDelta, Is.EqualTo(new Vector2(1920, 276)));
+                        Assert.That(((RectTransform)effect.transform).sizeDelta, Is.EqualTo(new Vector2(1920, 1080)));
                         Assert.That(effect.transform.GetSiblingIndex(), Is.GreaterThan(header.transform.GetSiblingIndex()));
                     }
                     // Over the plain backdrop, under the background movie and everything of the play.
