@@ -1,6 +1,6 @@
 import math
 from PIL import Image
-from bake import RENDA_HEIGHT, RENDA_SPAWN_Y, Bake, base, graphics, out, scripts, table
+from bake import RENDA_HEIGHT, Bake, base, graphics, out, scripts, table
 
 
 def draw(b, path, i, x, y, scale=1):
@@ -10,6 +10,19 @@ def draw(b, path, i, x, y, scale=1):
 def static(b, path, name, x, y, scale=1):
     b.clip(name, 60, True, 0, [[draw(b, path, 0, x, y, scale)]])
 
+
+# The default drumrolls as PyTaikoGreen's bg_objects/renda.lua flies them (SPECS), in its 1280x720
+# numbers: each picture's flight time, how far it goes, its turn, and the area (left, top, right,
+# bottom) its top-left corner starts in (the spec's x/y ranges on top of texture.json's y). This
+# skin's pictures are those 720p ones and its own renda.lua kept their 720p speeds and a spawn area
+# picked by eye, so everything here is enlarged 1.5 times, as the collab drumrolls the cabinet
+# draws in 1080 are. The middle of the area is baked; the catalog's spread is its half size.
+GENERIC = [
+    dict(ms=(2000, 2083, 1950, 2250, 1733, 2000), dx=2060, dy=-1300, spin=0, area=(0, 720, 500, 740)),
+    dict(ms=(2000,), dx=2060, dy=0, spin=720, area=(0, 360, 0, 560)),
+    dict(ms=(2000,), dx=1560, dy=-1648, spin=0, area=(0, 720, 500, 740)),
+]
+UP = 1.5
 
 for i in range(3):
     b = Bake(540)
@@ -22,10 +35,15 @@ for i in range(3):
         if source.is_dir()
         else [source.with_suffix(".png")]
     )
+    spec = GENERIC[i]
+    left, top, right, bottom = spec["area"]
     for j, path in enumerate(pics):
         with Image.open(path) as im:
             w, h = im.size
-        vx, vy, spin = [(17.3, -10.9, 0), (17.3, 0, -6), (13.1, -13.8, 0)][i]
+        n = round(spec["ms"][j % len(spec["ms"])] * 60 / 1000)
+        # The picture's centre, where it turns.
+        x0 = ((left + right) / 2 + w / 2) * UP
+        y0 = ((top + bottom) / 2 + h / 2) * UP
         b.clip(
             f"hit_{j}",
             60,
@@ -36,20 +54,20 @@ for i in range(3):
                     b.draw(
                         path,
                         0,
-                        # The middle of where the skin spawns them (x 6..1100).
-                        553 + vx * f,
-                        RENDA_SPAWN_Y + vy * f,
+                        x0 + spec["dx"] * UP * f / n,
+                        y0 + spec["dy"] * UP * f / n,
                         w / 2,
                         h / 2,
-                        1,
-                        1,
-                        spin * f,
+                        UP,
+                        UP,
+                        spec["spin"] * f / n,
                         1,
                     )
                 ]
-                for f in range(120)
+                for f in range(n)
             ),
         )
+    print(f"common_{i} renda spread {(right - left) / 2 * UP:g} {(bottom - top) / 2 * UP:g}", flush=True)
     b.save(out / "renda" / f"renda_{i}.otanim")
 b = Bake(540)
 directory = graphics / "bg_fever/bg_fever_3"

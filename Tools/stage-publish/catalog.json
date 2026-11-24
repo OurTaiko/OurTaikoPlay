@@ -184,20 +184,20 @@
       "funassyi": { "random": false, "spread": [[375, 15]] },
       "buttoburst": { "random": false, "spread": [[375, 15]] },
       "animal": { "random": false, "spread": [[375, 15]] },
-      "miku": { "random": false, "spread": [[200, 220]] },
+      "miku": { "random": false, "spread": [[150, 216]] },
       "toho": { "random": false, "spread": [[360, 15]] },
-      "gumi": { "random": false, "spread": [[200, 220]] },
-      "ia": { "random": false, "spread": [[200, 220]] },
-      "lovelive": { "random": false, "spread": [[200, 220]] },
-      "i7id7": { "random": false, "spread": [[200, 220]] },
-      "imas": { "random": false, "spread": [[200, 220]] },
-      "imas_sidem": { "random": false, "spread": [[200, 220]] },
-      "yokai": { "random": false, "spread": [[200, 220]] },
-      "mario": { "random": false, "spread": [[760, 220]] },
-      "a3": { "random": false, "spread": [[200, 220]] },
-      "common_0": { "spread": [[547, 240]] },
-      "common_1": { "spread": [[547, 240]] },
-      "common_2": { "spread": [[547, 240]] }
+      "gumi": { "random": false, "spread": [[150, 216]] },
+      "ia": { "random": false, "spread": [[150, 216]] },
+      "lovelive": { "random": false, "spread": [[375, 15]] },
+      "i7id7": { "random": false, "spread": [[375, 15]] },
+      "imas": { "random": false, "spread": [[375, 15]] },
+      "imas_sidem": { "random": false, "spread": [[375, 15]] },
+      "yokai": { "random": false, "spread": [[375, 15]] },
+      "mario": { "random": false, "spread": [[959, 224]] },
+      "a3": { "random": false, "spread": [[375, 15]] },
+      "common_0": { "spread": [[375, 15]] },
+      "common_1": { "spread": [[0, 150]] },
+      "common_2": { "spread": [[375, 15]] }
     }
   }
 }
