@@ -18,6 +18,8 @@ namespace OurTaiko.Tests
     //
     // The player is alone in a private room and goes through a whole round by the protocol; no
     // song is downloaded or played.
+    //
+    // Not in Finished/: it needs that external server; without it the test is skipped.
     public sealed class MultiLiveServerTests
     {
         static IEnumerator Until(Func<bool> condition, string what, float seconds = 15)

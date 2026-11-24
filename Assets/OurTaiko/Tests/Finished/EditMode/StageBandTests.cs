@@ -103,7 +103,7 @@ namespace OurTaiko.Tests
             {
                 // Three squares made for this test, back to front: plain, on a screen, plain. The one on a
                 // screen is out from the third of the clip's four frames.
-                var view = View(root.transform, "Assets/OurTaiko/Tests/EditMode/Stage/screen.otanim", "normal");
+                var view = View(root.transform, "Assets/OurTaiko/Tests/Finished/EditMode/Stage/screen.otanim", "normal");
                 var file = view.File;
                 bool Screen(Otanim.Draw draw) => file.Parts[draw.Part].Blend == Otanim.Blend.Screen;
                 Assert.That(Otanim.DrawsAt(view.Clip, 0.5 / 60).Any(Screen), Is.False);

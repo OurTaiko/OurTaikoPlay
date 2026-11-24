@@ -1,6 +1,8 @@
 {
   "name": "OurTaiko.FinishedTests",
-  "references": ["OurTaiko.Runtime", "OurTaiko.Core", "OurTaiko.TjaParser", "Unity.TextMeshPro", "Unity.ugui"],
+  "references": ["OurTaiko.Runtime", "OurTaiko.Core", "OurTaiko.TjaParser", "OurTaiko.TestSupport", "OurTaiko.Editor", "Unity.InputSystem", "Unity.TextMeshPro", "Unity.ugui", "Gilzoide.SqliteNet"],
   "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["nunit.framework.dll", "Newtonsoft.Json.dll"],
   "optionalUnityReferences": ["TestAssemblies"]
 }

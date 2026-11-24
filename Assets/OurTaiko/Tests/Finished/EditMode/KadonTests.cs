@@ -73,7 +73,7 @@ namespace OurTaiko.Tests
         // 2025-09-03): every note hit on time, each Kadon with don then ka 10 ms later, is a full combo.
         [Test] public void IrohaUtaFullComboWithItsKadons()
         {
-            var chart = TjaParser.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "OurTaiko", "Tests/EditMode/Charts/IrohaUta.txt")), "Oni");
+            var chart = TjaParser.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "OurTaiko", "Tests/Finished/EditMode/Charts/IrohaUta.txt")), "Oni");
             Assert.That(chart.Notes.Count(n => n.IsKadon), Is.EqualTo(4));
             int judgeable = new ChartStatistics(chart).JudgeableNotes;
             var session = new PlaySession(chart);
