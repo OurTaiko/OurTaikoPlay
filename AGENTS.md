@@ -32,7 +32,7 @@ PR 描述中必须写明本次工作所使用的 AI 模型名称（尽量写到�
 
 ## 3. 开 PR 之前完成回归测试
 
-CI 不在 PR 上运行，`Test` 工作流只能手动触发，构建也不等测试，所以本地测试是合并前唯一的关口。开 PR 之前按改动范围运行并通过（命令见 CONTRIBUTING.md「开 PR 前完成回归测试」）：
+PR 上只有 `Test` 工作流自动跑 EditMode 的 `OurTaiko.FinishedTests`（排除 `AudioDevice` 类别），而且只对本仓库的分支：fork 来的 PR 拿不到 Unity 许可，这项检查会被跳过；只改文档或 AOCI 索引的 PR 也不跑。它只是 PR 页面上的信号，不是合并的必要条件，构建也不等测试；PlayMode 和其他套件仍只能手动触发。所以本地测试仍是合并前的关口，PlayMode 也要在本地跑。开 PR 之前按改动范围运行并通过（命令见 CONTRIBUTING.md「开 PR 前完成回归测试」）：
 
 - 改了 `Runtime/` 或 `Editor/` 的代码：EditMode 测试，至少 `OurTaiko.FinishedTests` 全部通过；
 - 改了场景、预制体、画面流程、音频或输入：再加 PlayMode 测试，至少 `OurTaiko.FinishedPlayModeTests`；

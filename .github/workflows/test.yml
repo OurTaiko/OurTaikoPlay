@@ -1,7 +1,10 @@
 name: Test
-run-name: OurTaikoPlay tests (${{ inputs.suite }}, ${{ inputs.mode }}) ${{ github.ref_name }}
+run-name: OurTaikoPlay tests (${{ github.event_name == 'pull_request' && 'finished, editmode' || format('{0}, {1}', inputs.suite, inputs.mode) }}) ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.pull_request.number) || github.ref_name }}
 
-# Manual only; builds no longer wait for tests.
+# Builds do not wait for tests. Pull requests from branches of this repository get the EditMode
+# finished suite as a signal only (not a merge requirement); fork PRs get no secrets, so the job is
+# skipped for them. Everything else is run manually. The pull_request paths-ignore mirrors the
+# documentation and AOCI entries of build.yml; changes to this workflow or .github/unity-test do run it.
 on:
   workflow_dispatch:
     inputs:
@@ -15,10 +18,20 @@ on:
         type: choice
         default: both
         options: [both, editmode, playmode]
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "aoci*.txt"
+      - ".aoci/**"
 
 permissions:
   contents: read
   checks: write # unity-test-runner posts the test results as a check run
+
+# A new push to a PR cancels its previous run; every manual run gets a group of its own.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('test-pr-{0}', github.event.pull_request.number) || format('test-run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -28,12 +41,14 @@ env:
 jobs:
   test:
     name: Test (${{ matrix.mode }})
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        mode: ${{ fromJSON(inputs.mode == 'both' && '["editmode","playmode"]' || format('["{0}"]', inputs.mode)) }}
+        mode: ${{ fromJSON(github.event_name == 'pull_request' && '["editmode"]' || (inputs.mode == 'both' && '["editmode","playmode"]' || format('["{0}"]', inputs.mode))) }}
     env:
+      SUITE: ${{ github.event_name == 'pull_request' && 'finished' || inputs.suite }}
       FINISHED: ${{ matrix.mode == 'editmode' && 'OurTaiko.FinishedTests' || 'OurTaiko.FinishedPlayModeTests' }}
       IN_PROGRESS: ${{ matrix.mode == 'editmode' && 'OurTaiko.Tests' || 'OurTaiko.PlayModeTests' }}
     steps:
@@ -53,7 +68,7 @@ jobs:
       - id: assemblies
         run: |
           # "all" passes no filter: every project test assembly of this mode.
-          case "${{ inputs.suite }}" in
+          case "$SUITE" in
             finished) echo "filter=-assemblyNames $FINISHED" >> "$GITHUB_OUTPUT" ;;
             in-progress) echo "filter=-assemblyNames $IN_PROGRESS" >> "$GITHUB_OUTPUT" ;;
             *) echo "filter=" >> "$GITHUB_OUTPUT" ;;
