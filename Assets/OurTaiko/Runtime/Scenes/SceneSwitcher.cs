@@ -13,6 +13,20 @@ namespace OurTaiko
     // 段位道場's loading cover (DanLoadingCover).
     public enum TransitionStyle { Fade, Curtain, Dan }
 
+    // One seat's part of a finished play, for the result screen: its result and the record saved and
+    // uploaded with it (null: not kept, as a ghost's lane).
+    public readonly struct SeatResult
+    {
+        public readonly PlayResult Result;
+        public readonly Online.PlayRecord Record;
+
+        public SeatResult(PlayResult result, Online.PlayRecord record)
+        {
+            Result = result;
+            Record = record;
+        }
+    }
+
     // Global UI control, created before the first scene and retained across every load.
     public sealed partial class SceneSwitcher : MonoBehaviour
     {
@@ -51,6 +65,9 @@ namespace OurTaiko
         // A single-player mode: the leading player stays, the other leaves (a lone 2P stays 2P).
         public void SeatLeadAlone() => SetSeats(Lead);
         public string SelectedPlayScene => PracticeMode ? PracticeScene : seated.Count == 2 || PlaysGhost ? DoublePlayScene : GameScene;
+        // The request's mode, where the scene it is played in has it (practice has neither).
+        public bool PlaysGhost => Request?.Ghost != null && !PracticeMode;
+        public bool PlaysMulti => Request?.Multi != null && !PracticeMode;
         public static bool IsPlayScene(string scene) => scene == GameScene || scene == PracticeScene || scene == DoublePlayScene;
         public const string SongSelectScene = "CourseSelect.Enso", ResultScene = "Result.Enso", EntryScene = "Entry";
         // The first scene and where Back falls back to.
@@ -62,6 +79,7 @@ namespace OurTaiko
         public const string PresentedScene = "Presented";
         // 段位道場: Entry's board opens the course select; a course is played in Play.Dan.
         public const string DanSelectScene = "CourseSelect.Dan", DanPlayScene = "Play.Dan";
+        public const string GhostSelectScene = "CourseSelect.Ghost";
         // The course chosen on CourseSelect.Dan, for Play.Dan and the dan result; the ribbon returns to it.
         public DanCourseEntry SelectedDan { get; set; }
         // The highest rank among the listed courses (DanCourse.DanIndex): passing that one first
@@ -85,34 +103,21 @@ namespace OurTaiko
         [SerializeField, Min(0.01f)] float closeDuration = 0.9f;
         [SerializeField, Min(0.01f)] float openDuration = 0.8f;
 
-        public SongDefinition SelectedSong { get; private set; }
-        // TJA COURSE value chosen on the song list; null plays the SongDefinition's own course.
-        public string SelectedCourse { get; private set; }
-        public bool AutoPlay { get; private set; }
-        // 2P's own course and オート on the same song (Play.Double).
-        public string SelectedCourse2P { get; private set; }
-        public bool AutoPlay2P { get; private set; }
-        public string CourseOf(int seat) => seat == 1 ? SelectedCourse2P : SelectedCourse;
-        // The side each seat plays (ChartSide), decided by Select from SeatBlocks before the play:
-        // the chart is that block and the result uploads to it.
-        public string SelectedSide { get; private set; } = "single";
-        public string SelectedSide2P { get; private set; } = "p2";
-        public string SideOf(int seat) => seat == 1 ? SelectedSide2P : SelectedSide;
-        // A recorded play for the practice scene to show instead of a play (ReplayMode). Set
-        // after Select, which clears it; it stays for restarts of that song.
-        public Online.PlayRecord Replay { get; set; }
-        public bool AutoPlayOf(int seat) => seat == 1 ? AutoPlay2P : AutoPlay;
+        // What the play scenes play (PlayRequest): set by Play, PlayDan and the play mode switch, or by
+        // Select for a play scene opened directly. It stays for restarts; null before the first.
+        public PlayRequest Request { get; private set; }
         // Scene that started the current song; Back and the result screen return there.
         public string ReturnScene { get; private set; } = MenuScene;
-        public PlayResult LastResult { get; private set; }
-        // 2P's result of the last two-player play; null after a single-player one.
-        public PlayResult LastResult2P { get; private set; }
+        // Each seat's result of the last play, in its board's place: 1P's first (a ghost battle: the
+        // lane above first). Null for a seat the play did not have.
+        public PlayResult ResultOf(int seat) => seat < lastResults.Length ? lastResults[seat] : null;
+        PlayResult[] lastResults = Array.Empty<PlayResult>();
         // Consumed once by ResultScene; reopening a result must not save or upload it again.
         SongDefinition completedSong;
-        Online.PlayRecord completedRecord, completedRecord2P;
-        // global_data.last_difficulty / songs_played for the single local player.
-        public int LastDifficulty { get; set; } = -1;
-        public int LastDifficulty2P { get; set; } = -1;
+        Online.PlayRecord[] completedRecords = Array.Empty<Online.PlayRecord>();
+        // global_data.last_difficulty for each seat (the course its cursor starts on); songs_played
+        // for the credit.
+        public int[] LastDifficulty { get; } = { -1, -1 };
         public int SongsPlayed { get; private set; }
         public bool IsSwitching { get; private set; }
         public bool IsCovered => IsCurtainClosed || (transition != null && transition.alpha >= 0.999f);
@@ -191,16 +196,22 @@ namespace OurTaiko
             OnSceneChanged?.Invoke(this, (CurrentScene, LastScene));
         }
 
-        public void Play(SongDefinition song, bool autoPlay = false) => Play(song, null, autoPlay);
-        // folderScenePresets: the backdrops the folders the song was opened from ask for, the nearest first.
-        public void Play(SongDefinition song, string course, bool autoPlay, string course2P = null, bool autoPlay2P = false, string[] folderScenePresets = null)
+        // Plays the request: SongLoadingScene prepares it under the curtain, then the play scene opens.
+        // A ghost battle and a room's round have one player, the leading one (a lone 2P stays 2P),
+        // and are never practice. A room's round returns to the room, any other play to the scene it
+        // was started from.
+        public bool Play(PlayRequest request)
         {
-            if (IsInputBlocked || song == null) return;
-            Select(song, course, autoPlay, course2P, autoPlay2P, folderScenePresets);
+            if (IsInputBlocked || request?.Song == null || request.Ghost is { Record: null }) return false;
+            if (request.Ghost != null || request.Multi != null) { SeatLeadAlone(); PracticeMode = false; }
+            if (request.Multi != null) MultiPick = false;
+            Select(request);
             ResetPendingPlay();
-            if (!IsPlayScene(CurrentScene) && CurrentScene != ResultScene && CurrentScene != SongLoadingScene && !string.IsNullOrEmpty(CurrentScene))
+            if (request.Multi != null) ReturnScene = MultiRoomScene;
+            else if (!IsPlayScene(CurrentScene) && CurrentScene != ResultScene && CurrentScene != SongLoadingScene && !string.IsNullOrEmpty(CurrentScene))
                 ReturnScene = CurrentScene;
             LoadSelectedPlay();
+            return true;
         }
 
         // song_select.cpp select_song: the rainbow curtain closes, SongLoadingScene parses the chart and
@@ -208,7 +219,7 @@ namespace OurTaiko
         void LoadSelectedPlay()
         {
             if (songTransition == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(SelectedPlayScene); return; }
-            ShowSongOnCurtain(SelectedSong);
+            ShowSongOnCurtain(Request.Song);
             SwitchScene(SongLoadingScene, TransitionStyle.Curtain, false);
         }
 
@@ -217,7 +228,7 @@ namespace OurTaiko
         void ResetPendingPlay()
         {
             danLoadPending = false;
-            completedSong = null; completedRecord = completedRecord2P = null;
+            completedSong = null; completedRecords = Array.Empty<Online.PlayRecord>();
             Array.Clear(preparedCharts, 0, preparedCharts.Length);
             Array.Clear(preparedSongs, 0, preparedSongs.Length);
             Array.Clear(preparedCourses, 0, preparedCourses.Length);
@@ -232,7 +243,7 @@ namespace OurTaiko
             SelectedDan = entry;
             CurrentDan = new DanRun(entry);
             SeatLeadAlone(); PracticeMode = false;
-            Select(entry.Songs[0].Song, entry.Songs[0].Course, PlayOptions.ForSeat(Lead.Index()).auto);
+            Select(new PlayRequest(entry.Songs[0].Song, entry.Songs[0].Course, PlayOptions.ForSeat(Lead.Index()).auto));
             ResetPendingPlay();
             ReturnScene = DanSelectScene;
             if (songTransition == null && danCover == null || !Application.CanStreamedLevelBeLoaded(SongLoadingScene)) { SwitchScene(DanPlayScene); return true; }
@@ -263,33 +274,14 @@ namespace OurTaiko
             return CurrentDan;
         }
 
-        // The song the play scenes load next; Play() sets it before switching. Each seat's side is
-        // decided here, alone or two together as the mode stands now.
-        // The play backdrops asked for the selected song, the one that counts most first: the
-        // chart's own SCENEPRESET (`own`), then those of the folders it was opened from, from the
-        // nearest outwards. A play that is not opened from a folder (a search's, a ghost battle's,
-        // a room's) has only the chart's.
-        public string[] ScenePresets(string own)
+        // Makes `request` what the play scenes play next, replacing everything of the one before (its
+        // mode, its folders' backdrops, practice's hand-over), without loading it. Each seat's side
+        // is decided here, alone or two together as the seats stand now.
+        public void Select(PlayRequest request)
         {
-            var asked = new List<string>();
-            if (!string.IsNullOrWhiteSpace(own)) asked.Add(own);
-            asked.AddRange(folderScenePresets);
-            return asked.ToArray();
-        }
-
-        string[] folderScenePresets = Array.Empty<string>();
-
-        public void Select(SongDefinition song, string course = null, bool autoPlay = false, string course2P = null, bool autoPlay2P = false,
-            string[] folderScenePresets = null)
-        {
-            this.folderScenePresets = folderScenePresets ?? Array.Empty<string>();
-            ClearPracticeEntry();
-            Replay = null; Ghost = null; Multi = null;
-            SelectedSong = song; SelectedCourse = course; AutoPlay = autoPlay;
-            SelectedCourse2P = course2P ?? course; AutoPlay2P = autoPlay2P;
-            // The first seat reads its own side's blocks (Lead: 1P, or a lone 2P's 2P).
-            SelectedSide = song != null ? song.PlayedSide(SelectedCourse, SeatBlocks.Seats[Lead.Index()], seated.Count == 2) : "single";
-            SelectedSide2P = song != null ? song.PlayedSide(SelectedCourse2P, SeatBlocks.Seats[1], true) : "p2";
+            Request = request ?? throw new ArgumentNullException(nameof(request));
+            request.DecideSides(Lead, seated.Count == 2);
+            practiceEntry = request.PracticeEntry;
         }
 
         public void ShowSongOnCurtain(SongDefinition song)
@@ -354,24 +346,24 @@ namespace OurTaiko
 
         public void Restart() => SwitchScene(SelectedPlayScene);
         public void ReturnToMenu() => SwitchScene(Application.CanStreamedLevelBeLoaded(ReturnScene) ? ReturnScene : MenuScene);
-        public void ShowResult(PlayResult result, SongDefinition song = null, Online.PlayRecord record = null,
-            PlayResult result2P = null, Online.PlayRecord record2P = null)
+        // A result with nothing to save (a result screen opened on its own).
+        public void ShowResult(PlayResult result) => ShowResult(null, new SeatResult(result, null));
+
+        // The play of `song` has ended: each seat's result in its board's place, 1P's first.
+        public void ShowResult(SongDefinition song, params SeatResult[] seats)
         {
-            if (result == null || IsSwitching) return;
-            LastResult = result; LastResult2P = result2P;
-            completedSong = song; completedRecord = record; completedRecord2P = record2P;
+            if (seats == null || seats.Length == 0 || seats[0].Result == null || IsSwitching) return;
+            lastResults = Array.ConvertAll(seats, seat => seat.Result);
+            completedSong = song; completedRecords = Array.ConvertAll(seats, seat => seat.Record);
             SongsPlayed++;
             SwitchScene(ResultScene);
         }
 
-        internal bool TakeCompletedPlay(out SongDefinition song, out Online.PlayRecord record)
-            => TakeCompletedPlay(out song, out record, out _);
-
-        // record2P is null after a single-player play.
-        internal bool TakeCompletedPlay(out SongDefinition song, out Online.PlayRecord record, out Online.PlayRecord record2P)
+        // The records to keep with each seat's result (ResultOf), once.
+        internal bool TakeCompletedPlay(out SongDefinition song, out IReadOnlyList<Online.PlayRecord> records)
         {
-            song = completedSong; record = completedRecord; record2P = completedRecord2P;
-            completedSong = null; completedRecord = completedRecord2P = null;
+            song = completedSong; records = completedRecords;
+            completedSong = null; completedRecords = Array.Empty<Online.PlayRecord>();
             return song != null;
         }
 

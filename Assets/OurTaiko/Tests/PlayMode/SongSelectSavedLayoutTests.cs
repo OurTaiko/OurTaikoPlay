@@ -21,7 +21,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
                 yield return null;
-                SceneSwitcher.Instance.LastDifficulty = -1;
+                SceneSwitcher.Instance.LastDifficulty[0] = -1;
 
                 // Clone all ordinary scene roots together under an inactive parent. Unity remaps the
                 // controller's serialized references, and Awake cannot run until the edited copy is enabled.
@@ -77,7 +77,7 @@ namespace OurTaiko.Tests
                 // The local songs are in the Local folder: the copy reopens it on Test Pulse, as when
                 // coming back from that song.
                 SongSelectManager.Instance.OpenFolderAt(0);
-                SceneSwitcher.Instance.Select(TestSongs.Load(TestSongs.TestPulse));
+                SceneSwitcher.Instance.Select(new PlayRequest(TestSongs.Load(TestSongs.TestPulse)));
                 copy.SetActive(true);
                 yield return new WaitForSecondsRealtime(0.4f);
                 Assert.That(select.view, Is.SameAs(view));

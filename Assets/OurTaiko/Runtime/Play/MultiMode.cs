@@ -7,7 +7,16 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // マルチ演奏 (SceneSwitcher.Multi) in Play.Single (PlayScene.ChooseMode registers it): the room's
+    // One round of マルチ演奏: the room's song on the course this player took, played alone in
+    // Play.Single with the others' scores beside the lane (MultiMode). PlayRequest.MultiRound carries it.
+    public sealed class MultiMatch
+    {
+        // The room's round, so the play knows which start signal is its own.
+        public int Round;
+        public string Course = "Oni";
+    }
+
+    // マルチ演奏 (PlayRequest.Multi) in Play.Single (PlayScene.ChooseMode registers it): the room's
     // song on the course this player took, with the other players' scores along the top
     // (MultiHudView). The play is an ordinary one (the player's own options, drum and offsets,
     // standard judge windows, no オート) and its score is saved and uploaded as after any play. What
@@ -30,11 +39,11 @@ namespace OurTaiko
         PlayerStatus lastSent;
         bool finishSent;
 
-        internal MultiMode(PlayScene scene, SceneSwitcher switcher)
+        internal MultiMode(PlayScene scene, SceneSwitcher switcher, MultiMatch match)
         {
             this.scene = scene;
             this.switcher = switcher;
-            match = switcher.Multi;
+            this.match = match;
         }
 
         internal override bool StandardRules => true;

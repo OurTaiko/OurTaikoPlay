@@ -18,7 +18,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             var switcher = SceneSwitcher.Instance;
-            switcher.LastDifficulty = -1;
+            switcher.LastDifficulty[0] = -1;
             switcher.SwitchScene(SceneSwitcher.SongSelectScene);
             yield return WaitForScene(SceneSwitcher.SongSelectScene);
             var select = Object.FindAnyObjectByType<SongSelectScene>();
@@ -91,8 +91,8 @@ namespace OurTaiko.Tests
             select.Manager.Confirm();
             Assert.That(select.Manager.Phase, Is.EqualTo(SongSelectManager.State.Decided));
             yield return WaitForScene(SceneSwitcher.GameScene, 30);
-            Assert.That(switcher.SelectedCourse, Is.EqualTo("Oni"));
-            Assert.That(switcher.AutoPlay && switcher.LastDifficulty == (int)Difficulty.Oni, Is.True);
+            Assert.That(switcher.Request.Seats[0].Course, Is.EqualTo("Oni"));
+            Assert.That(switcher.Request.Seats[0].AutoPlay && switcher.LastDifficulty[0] == (int)Difficulty.Oni, Is.True);
             Assert.That(switcher.ReturnScene, Is.EqualTo(SceneSwitcher.SongSelectScene));
 
             var play = Object.FindAnyObjectByType<PlayScene>();

@@ -177,7 +177,7 @@ namespace OurTaiko
             parents = holders.ToArray();
             items.Clear();
             open.Clear();
-            var selected = Switcher.SelectedSong;
+            var selected = Switcher.Request?.Song;
             int remembered = -1;
             int reopen = Array.FindIndex(folders, f => f.Key == OpenFolderKey);
             if (reopen >= 0) for (int f = reopen; f >= 0; f = parents[f]) open.Insert(0, f);
@@ -361,8 +361,7 @@ namespace OurTaiko
                 default:
                     // Each seat decides on its own; the song starts once every seat has.
                     ready[seat] = true;
-                    if (seat == 0) Switcher.LastDifficulty = (int)cursors[0].Selected;
-                    else Switcher.LastDifficulty2P = (int)cursors[1].Selected;
+                    Switcher.LastDifficulty[seat] = (int)cursors[seat].Selected;
                     VoiceRequested?.Invoke(seat == 0 ? Voice.StartSong : Voice.StartSong2P);
                     if (Enumerable.Range(0, Seats).All(s => ready[s])) SetPhase(State.Decided);
                     break;
@@ -381,8 +380,13 @@ namespace OurTaiko
                 Switcher.SwitchScene(Switcher.SongSelectExit);
                 return;
             }
-            string course2P = Switcher.Seated.Count == 2 ? info.Course(cursors[1].Selected).Course : null;
-            Switcher.Play(FocusedSong, info.Course(cursors[0].Selected).Course, AutoPlay, course2P, PlayOptions.Second.auto, ScenePresetsOf(items[Focused]));
+            // 2P plays 1P's course when it is not seated (PlayRequest).
+            string secondCourse = Switcher.Seated.Count == 2 ? info.Course(cursors[1].Selected).Course : null;
+            Switcher.Play(new PlayRequest(FocusedSong, new[]
+            {
+                new SeatPlay(info.Course(cursors[0].Selected).Course, AutoPlay),
+                new SeatPlay(secondCourse, PlayOptions.Second.auto),
+            }, ScenePresetsOf(items[Focused])));
         }
 
         // Leaving the scene keeps option changes made with the panel still open.
@@ -639,7 +643,7 @@ namespace OurTaiko
         DifficultyCursor NewCursor(int seat)
         {
             var courses = items[Focused].Info.Courses().Select(c => c.Difficulty).ToList();
-            int preferred = seat == 0 ? Switcher.LastDifficulty : Switcher.LastDifficulty2P;
+            int preferred = Switcher.LastDifficulty[seat];
             if (SearchActive)
             {
                 var matching = items[Focused].Info.Courses().Where(SearchQuery.Matches).Select(c => c.Difficulty).ToList();

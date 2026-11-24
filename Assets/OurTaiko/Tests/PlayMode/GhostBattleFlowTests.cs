@@ -229,8 +229,8 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.ResultScene, seconds: 40);
             var switcher = SceneSwitcher.Instance;
             // The player struck nothing; the recording hit all but the fourth.
-            Assert.That((switcher.LastResult.Good, switcher.LastResult.Bad), Is.EqualTo((0, 8)));
-            Assert.That((switcher.LastResult2P.Good, switcher.LastResult2P.Ok, switcher.LastResult2P.Bad), Is.EqualTo((7, 0, 1)));
+            Assert.That((switcher.ResultOf(0).Good, switcher.ResultOf(0).Bad), Is.EqualTo((0, 8)));
+            Assert.That((switcher.ResultOf(1).Good, switcher.ResultOf(1).Ok, switcher.ResultOf(1).Bad), Is.EqualTo((7, 0, 1)));
             yield return null;
             var result = Object.FindAnyObjectByType<ResultScene>();
             Assert.That(result.Boards.Count, Is.EqualTo(2));
@@ -322,12 +322,12 @@ namespace OurTaiko.Tests
 
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.ResultScene, seconds: 40);
             var switcher = SceneSwitcher.Instance;
-            Assert.That((switcher.LastResult.Good, switcher.LastResult.Bad), Is.EqualTo((7, 1)), "The recording's result is above.");
-            Assert.That(switcher.LastResult2P.Good + switcher.LastResult2P.Ok + switcher.LastResult2P.Bad, Is.EqualTo(8));
+            Assert.That((switcher.ResultOf(0).Good, switcher.ResultOf(0).Bad), Is.EqualTo((7, 1)), "The recording's result is above.");
+            Assert.That(switcher.ResultOf(1).Good + switcher.ResultOf(1).Ok + switcher.ResultOf(1).Bad, Is.EqualTo(8));
             yield return Waits.Until(() => fixture.AcceptedScores.Count == 1, seconds: 10);
             Assert.That(fixture.AcceptedUsers.Single(), Is.EqualTo("ka"), "The lone 2P's play is 2P's account's.");
             // The best a lone 2P sees is their own account's; 1P is a guest and has none.
-            var played = switcher.SelectedSong;
+            var played = switcher.Request.Song;
             yield return Waits.Until(() => SongScores.Get(played, Difficulty.Oni) != null, seconds: 10);
             Assert.That(SongScores.Get(played, Difficulty.Oni, 0), Is.Null);
             var result = Object.FindAnyObjectByType<ResultScene>();

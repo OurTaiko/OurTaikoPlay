@@ -293,7 +293,7 @@ namespace OurTaiko
 
         string PreferredCourse()
         {
-            switch (switcher.LastDifficulty)
+            switch (switcher.LastDifficulty[0])
             {
                 case (int)Difficulty.Easy: return "Easy";
                 case (int)Difficulty.Normal: return "Normal";

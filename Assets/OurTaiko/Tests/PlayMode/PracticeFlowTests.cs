@@ -252,7 +252,7 @@ namespace OurTaiko.Tests
             play.backButton.onClick.Invoke();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True, "Another song must still enter practice.");
-            Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
+            Assert.That(SceneSwitcher.Instance.ResultOf(0), Is.Null);
         }
         [UnityTest]
         public IEnumerator FinishReturnsToFirstMeasureWithoutResultAndEntryHasIndependentRoute()
@@ -269,7 +269,7 @@ namespace OurTaiko.Tests
             Assert.That(play.IsFinished, Is.False);
             Assert.That(play.Practice.ChoosingSpeed, Is.False);
             Assert.That(play.Lane1.Shown.Good + play.Lane1.Shown.Bad, Is.Zero);
-            Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
+            Assert.That(SceneSwitcher.Instance.ResultOf(0), Is.Null);
             Assert.That(SceneSwitcher.Instance.SongsPlayed, Is.Zero);
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.PracticeScene));
@@ -293,7 +293,7 @@ namespace OurTaiko.Tests
             Assert.That(play.Lane1.Shown.HitTimings, Is.Empty, "The browsing session must not inherit judgments.");
             Assert.That(play.firstLane.judgeCounter.Text(0), Is.EqualTo(completed.Good.ToString()),
                 "Song end must keep the completed attempt's counts on the HUD.");
-            Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
+            Assert.That(SceneSwitcher.Instance.ResultOf(0), Is.Null);
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Any(t => t.name == "PracticeTiming" && t.gameObject.activeInHierarchy), Is.False);
             settings.play.practiceTimingReview = true;
@@ -366,8 +366,8 @@ namespace OurTaiko.Tests
             Assert.That(play.music.pitch, Is.EqualTo(1));
             Assert.That(play.Session.Score + play.Session.Bad + play.Session.Rolls, Is.Zero);
             Assert.That(play.Record.Inputs, Is.Empty);
-            Assert.That(switcher.SelectedSong, Is.SameAs(song));
-            Assert.That(switcher.SelectedCourse, Is.EqualTo("Oni"));
+            Assert.That(switcher.Request.Song, Is.SameAs(song));
+            Assert.That(switcher.Request.Seats[0].Course, Is.EqualTo("Oni"));
 
             yield return Waits.Until(() => play.SongTime >= 2.2);
             play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
@@ -390,7 +390,7 @@ namespace OurTaiko.Tests
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.view.ModeLabel.text, Is.EqualTo(L10n.Get("Menu", "select.practiceMode")));
             TestCapture.Capture("PracticeModeSongSelect.png");
-            switcher.Play(song, "Oni", false);
+            switcher.Play(new PlayRequest(song, "Oni", false));
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked
                 && Object.FindAnyObjectByType<PlayScene>()?.IsPaused == true);
             play = Object.FindAnyObjectByType<PlayScene>();
@@ -698,7 +698,7 @@ namespace OurTaiko.Tests
             entry.Ka(2); yield return new WaitForSecondsRealtime(0.3f); entry.Don();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
-            SceneSwitcher.Instance.Play(song, "Oni", false);
+            SceneSwitcher.Instance.Play(new PlayRequest(song, "Oni", false));
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !SceneSwitcher.Instance.IsInputBlocked);
         }
         IEnumerator Click(UnityEngine.UI.Button button)

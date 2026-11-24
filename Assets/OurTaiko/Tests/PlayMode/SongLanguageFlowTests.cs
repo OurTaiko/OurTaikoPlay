@@ -59,7 +59,7 @@ namespace OurTaiko.Tests
                 Assert.That(song.ReadDisplayInfo().Subtitle, Is.EqualTo("Base subtitle"), "Missing translations use the original, not Japanese.");
                 Assert.That(song.ReadInfo().Title, Is.EqualTo("Base"));
 
-                SceneSwitcher.Instance.Play(song, "Oni", true);
+                SceneSwitcher.Instance.Play(new PlayRequest(song, "Oni", true));
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.title.text, Is.EqualTo("中文歌名"));

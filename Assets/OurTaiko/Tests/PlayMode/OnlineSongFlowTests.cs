@@ -110,7 +110,7 @@ namespace OurTaiko.Tests
             Assert.That(board.crown.sprite, Is.SameAs(select.crownClear[(int)Difficulty.Oni]));
             TestCapture.Capture("SongSelectOnline.png");
 
-            SceneSwitcher.Instance.LastDifficulty = (int)Difficulty.Oni;
+            SceneSwitcher.Instance.LastDifficulty[0] = (int)Difficulty.Oni;
             select.Manager.Confirm();
             yield return WaitUntil(() => select.CourseFade >= 1, 5);
             Assert.That(select.Manager.Cursor.Selected, Is.EqualTo(Difficulty.Oni));
@@ -157,7 +157,7 @@ namespace OurTaiko.Tests
 
             // Reopening Result retains the display but does not submit the same play again.
             int uploads = fixture.Requests.Count(r => r == "POST /api/v2/game/scores");
-            int previousBest = SceneSwitcher.Instance.LastResult.PreviousBest;
+            int previousBest = SceneSwitcher.Instance.ResultOf(0).PreviousBest;
             yield return WaitUntil(() => !SceneSwitcher.Instance.IsInputBlocked, 10);
             SceneSwitcher.Instance.SwitchScene(SceneSwitcher.ResultScene);
             yield return WaitForScene(SceneSwitcher.ResultScene);
@@ -166,7 +166,7 @@ namespace OurTaiko.Tests
             uploadTask.GetAwaiter().GetResult();
             Assert.That(fixture.Requests.Count(r => r == "POST /api/v2/game/scores"), Is.EqualTo(uploads));
             Assert.That(fixture.AcceptedScores.IsEmpty, Is.True);
-            Assert.That(SceneSwitcher.Instance.LastResult.PreviousBest, Is.EqualTo(previousBest));
+            Assert.That(SceneSwitcher.Instance.ResultOf(0).PreviousBest, Is.EqualTo(previousBest));
 
             // Back from the result: the folder is open again on the song just played.
             yield return WaitUntil(() => !SceneSwitcher.Instance.IsInputBlocked, 10);
@@ -207,7 +207,7 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(.8f);
             var song = select.Manager.FocusedSong;
             Assert.That(OnlineManager.Instance.IsOnline(song), Is.True);
-            SceneSwitcher.Instance.LastDifficulty = (int)Difficulty.Oni;
+            SceneSwitcher.Instance.LastDifficulty[0] = (int)Difficulty.Oni;
             select.Manager.Confirm();
             yield return WaitUntil(() => select.CourseFade >= 1, 5);
             yield return null;
@@ -400,7 +400,7 @@ namespace OurTaiko.Tests
 
             var song = online.Folders[0].Songs.Single();
             fixture.Fail["/api/v2/charts/" + chart.Id] = 500;
-            SceneSwitcher.Instance.Play(song, "Oni", false);
+            SceneSwitcher.Instance.Play(new PlayRequest(song, "Oni", false));
             yield return WaitForScene(SceneSwitcher.SongLoadingScene, 10);
             var loading = Object.FindAnyObjectByType<SongLoadingScene>();
             yield return WaitUntil(() => loading.Error != null, 10);

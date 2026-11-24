@@ -90,6 +90,8 @@ namespace OurTaiko
         float subtitleShownAt;
         bool autoPlay;
         SceneSwitcher switcher;
+        // What this scene plays (SceneSwitcher.Request); null for a direct run without a song.
+        PlayRequest request;
         readonly List<DrumPad> pausedPads = new List<DrumPad>();
         bool closingPauseMenu;
         bool resuming, resumeLostFocus;
@@ -106,9 +108,10 @@ namespace OurTaiko
         {
             switcher = SceneSwitcher.EnsureInstance();
             PlayfieldMask.Cover(this);
+            request = switcher.Request;
             ChooseMode();
             switcher.SceneChanging += PrepareToLeave;
-            song = switcher.SelectedSong;
+            song = request?.Song;
             // Play scenes start from the song list; a direct run without a song goes back to Entry.
             if (song == null)
             {
@@ -116,7 +119,7 @@ namespace OurTaiko
                 switcher.SwitchScene(SceneSwitcher.MenuScene);
                 yield break;
             }
-            autoPlay = switcher.AutoPlay;
+            autoPlay = request.Seats[0].AutoPlay;
             var playSettings = SettingManager.EnsureInstance().Settings.play;
             playedAudioOffsetMs = playSettings.audioOffsetMs;
             audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
@@ -158,7 +161,7 @@ namespace OurTaiko
                     // way gets one out of what is here.
                     var prepared = switcher.PreparedStage(song);
                     if (prepared.HasValue) stage.Use(prepared.Value);
-                    else stage.Setup(switcher.ScenePresets(displayInfo.ScenePreset));
+                    else stage.Setup(request.ScenePresets(displayInfo.ScenePreset));
                 }
                 music.SetAudioSong(song);
                 hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, adLibHit, mineHit);
@@ -187,18 +190,19 @@ namespace OurTaiko
             if (!mode.Begin()) StartDueMusic();
         }
 
-        // The one place a play mode is registered. A direct Editor run must return to the same mode
-        // after Back and another song; PracticeMode reads SceneSwitcher.PracticeMode as it takes the
-        // mode switch's hand-over, and PlaysGhost and PlaysMulti read it, so that is written first.
-        // A replay is watched in the practice scene; a ghost battle needs two lanes, a room's round one.
+        // The one place a play mode is registered, each with its data from the request. A direct Editor
+        // run must return to the same mode after Back and another song; PracticeMode reads
+        // SceneSwitcher.PracticeMode as it takes the mode switch's hand-over, and PlaysGhost and
+        // PlaysMulti read it, so that is written first. A replay is watched in the practice scene; a
+        // ghost battle needs two lanes, a room's round one.
         void ChooseMode()
         {
             switcher.PracticeMode = IsPractice;
-            if (IsPractice) mode = Practice = switcher.Replay != null
-                ? new ReplayMode(this, practiceView, switcher)
+            if (IsPractice) mode = Practice = request?.Replay != null
+                ? new ReplayMode(this, practiceView, switcher, request.Replay)
                 : new PracticeMode(this, practiceView, switcher);
-            else if (secondLane != null && switcher.PlaysGhost) mode = Ghost = new GhostMode(this, switcher);
-            else if (secondLane == null && switcher.PlaysMulti) mode = Multi = new MultiMode(this, switcher);
+            else if (secondLane != null && switcher.PlaysGhost) mode = Ghost = new GhostMode(this, switcher, request.Ghost);
+            else if (secondLane == null && switcher.PlaysMulti) mode = Multi = new MultiMode(this, switcher, request.Multi);
         }
 
         // SongLoadingScene parsed each seat's chart behind the curtain; restarts and direct runs parse
@@ -207,16 +211,17 @@ namespace OurTaiko
         // prepared with the returned session once every seat has one.
         PlaySession AddLane(int seat, LaneViews views)
         {
-            string course = switcher.CourseOf(seat);
+            var part = request.Seats[seat];
+            string course = part.Course;
             // The first lane is played on the leading side (SceneSwitcher.Lead) unless two play.
             int side = seat == 0 ? switcher.Lead.Index() : seat;
             var options = mode.Options(seat, side);
-            var chart = mode.Chart(song, course, switcher.SideOf(seat), switcher.TakePreparedChart(song, course, seat))
-                ?? PrepareChart(song, course, switcher.SideOf(seat), side);
+            var chart = mode.Chart(song, course, part.Side, switcher.TakePreparedChart(song, course, seat))
+                ?? PrepareChart(song, course, part.Side, side);
             // A record striking the drum instead of the seat's input.
             var recording = mode.ReplayOf(seat);
             bool recorded = recording != null;
-            var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : !recorded && switcher.AutoPlayOf(seat), new Online.PlayRecord
+            var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : !recorded && part.AutoPlay, new Online.PlayRecord
             {
                 // Replay v1 stores already corrected judgment time. Keep its two-offset convention:
                 // visual time = recorded judgment time - VisualOffsetMs (B cancels here).
@@ -392,7 +397,7 @@ namespace OurTaiko
             foreach (var lane in lanes)
             {
                 lane.Result = PlayResult.From(lane.Session, song.ScoreKey, lane.AutoPlay, playedAudioOffsetMs);
-                lane.Result.Side = switcher.SideOf(lane.Seat);
+                lane.Result.Side = request.Seats[lane.Seat].Side;
                 lane.Result.Title = displayInfo.Title;
                 lane.Result.Subtitle = displayInfo.Subtitle;
             }
@@ -424,8 +429,7 @@ namespace OurTaiko
             if (elapsed < endingDuration) return;
             resultShown = true;
             if (mode.ShowResult()) return;
-            var second = lanes.Count > 1 ? lanes[1] : null;
-            switcher.ShowResult(Result, song, Record, second?.Result, second?.Record);
+            switcher.ShowResult(song, lanes.Select(lane => new SeatResult(lane.Result, lane.Record)).ToArray());
         }
         public void Restart()
         {

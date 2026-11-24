@@ -6,15 +6,20 @@ namespace OurTaiko.Tests
     // Opens the play scene for a song the way a scene opened directly does: no rainbow curtain and
     // no SongLoadingScene, which take about 2.5 s each time. SongLoadingCurtainTests and the flows
     // that start from the song select cover that route; a test about the play scene itself opens it
-    // here, with the same arguments as SceneSwitcher.Play.
+    // here, with the same request as SceneSwitcher.Play.
     public static class TestPlay
     {
-        public static IEnumerator Open(SongDefinition song, bool autoPlay = false) => Open(song, null, autoPlay);
+        public static IEnumerator Open(SongDefinition song, bool autoPlay = false) => Open(new PlayRequest(song, autoPlay: autoPlay));
 
-        public static IEnumerator Open(SongDefinition song, string course, bool autoPlay, string course2P = null, bool autoPlay2P = false)
+        public static IEnumerator Open(SongDefinition song, string course, bool autoPlay) => Open(new PlayRequest(song, course, autoPlay));
+
+        // Both seats' course and オート, 1P's first.
+        public static IEnumerator Open(SongDefinition song, SeatPlay first, SeatPlay second) => Open(new PlayRequest(song, new[] { first, second }));
+
+        public static IEnumerator Open(PlayRequest request)
         {
             var switcher = SceneSwitcher.EnsureInstance();
-            switcher.Select(song, course, autoPlay, course2P, autoPlay2P);
+            switcher.Select(request);
             yield return SceneManager.LoadSceneAsync(switcher.SelectedPlayScene);
             yield return null;
         }

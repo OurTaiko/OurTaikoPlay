@@ -127,7 +127,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 while (SceneSwitcher.Instance.IsInputBlocked) yield return null;
                 SceneSwitcher.Instance.SetSeats(Side.P1, Side.P2);
-                yield return TestPlay.Open(song, "Oni", true, "Oni", true);
+                yield return TestPlay.Open(song, new SeatPlay("Oni", true), new SeatPlay("Oni", true));
                 float deadline = Time.realtimeSinceStartup + 20;
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.DoublePlayScene)
                 { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }

@@ -140,7 +140,7 @@ namespace OurTaiko.Multi
                 var song = SongOf(room.Song);
                 var chart = OnlineManager.EnsureInstance().ChartOf(song);
                 if (!chart.Blocks.Any(block => block.Course == me.Course)) throw new MultiException("COURSE_MISSING");
-                if (!switcher.PlayMulti(song, me.Course, room.Round)) throw new MultiException("LOAD_FAILED");
+                if (!switcher.Play(PlayRequest.MultiRound(song, me.Course, room.Round))) throw new MultiException("LOAD_FAILED");
             }
             catch (Exception error)
             {

@@ -3,7 +3,22 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // ゴーストバトル (SceneSwitcher.Ghost) in Play.Double (PlayScene.ChooseMode registers it): the player
+    // ゴーストバトル (issue #53): the player against someone's recorded play of the same block. It
+    // plays in Play.Double: the player in the lane of their side (SceneSwitcher.Lead: 1P above, a lone 2P
+    // below) and the recording striking the other lane (GhostMode). PlayRequest.GhostBattle carries it.
+    public sealed class GhostMatch
+    {
+        public Online.PlayRecord Record;
+        // The recorded play's block; both lanes play it.
+        public string Course = "Oni", Side = "single";
+        public string Nickname = "", ScoreId = "", Server = "";
+        public long Score;
+        // The lane the player takes: 0 above (1P), 1 below (2P).
+        public int PlayerLane => SceneSwitcher.EnsureInstance().Lead.Index();
+        public int GhostLane => 1 - PlayerLane;
+    }
+
+    // ゴーストバトル (PlayRequest.Ghost) in Play.Double (PlayScene.ChooseMode registers it): the player
     // in the lane of their side and the recorded play striking the other one, as a replay does
     // (ReplayFeed). Both lanes read the recording's block, rebuilt with its options (speed, あべこべ,
     // ドロン, the notes ランダム flipped), so they play the same notes; the player keeps only their own
@@ -18,11 +33,11 @@ namespace OurTaiko
         // The recording's lane; Lane1 is the player's.
         public PlayerLane Lane => scene.Lanes.Count > 1 ? scene.Lanes[1] : null;
 
-        internal GhostMode(PlayScene scene, SceneSwitcher switcher)
+        internal GhostMode(PlayScene scene, SceneSwitcher switcher, GhostMatch match)
         {
             this.scene = scene;
             this.switcher = switcher;
-            Match = switcher.Ghost;
+            Match = match;
         }
 
         internal override bool StandardRules => true;
@@ -69,8 +84,8 @@ namespace OurTaiko
         {
             var above = scene.Lanes.First(lane => lane.Views == scene.firstLane);
             var below = scene.Lanes.First(lane => lane != above);
-            switcher.ShowResult(above.Result, scene.Song, above == scene.Lane1 ? scene.Record : null,
-                below.Result, below == scene.Lane1 ? scene.Record : null);
+            switcher.ShowResult(scene.Song, new SeatResult(above.Result, above == scene.Lane1 ? scene.Record : null),
+                new SeatResult(below.Result, below == scene.Lane1 ? scene.Record : null));
             return true;
         }
 
