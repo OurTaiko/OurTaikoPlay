@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using SQLite;
 
@@ -23,32 +22,26 @@ namespace OurTaiko.Online
             public string Song { get; set; }
             [Column("Created")] public long Created { get; set; }
         }
-        readonly string path;
+        readonly GameDatabase database;
         readonly object sync = new();
-        public PendingScoreQueue(string path)
-        {
-            this.path = path;
-            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
-            using var db = Open();
-            db.CreateTable<Entry>();
-        }
-        SQLiteConnection Open() => new SQLiteConnection(path) { BusyTimeout = TimeSpan.FromSeconds(5) };
+        public PendingScoreQueue(string path) : this(new GameDatabase(path)) { }
+        public PendingScoreQueue(GameDatabase database) => this.database = database;
         public void Enqueue(string endpoint, string key, string body, string chartHash = null, string audioHash = null, string song = null)
         {
-            lock (sync) { using var db = Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, ChartHash = chartHash, AudioHash = audioHash, Song = song, Created = DateTime.UtcNow.Ticks }); }
+            lock (sync) { using var db = database.Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, ChartHash = chartHash, AudioHash = audioHash, Song = song, Created = DateTime.UtcNow.Ticks }); }
         }
         public Entry[] Pending(string endpoint)
         {
-            lock (sync) { using var db = Open(); return db.Table<Entry>().Where(x => x.Endpoint == endpoint && !x.Rejected).OrderBy(x => x.Created).ToArray(); }
+            lock (sync) { using var db = database.Open(); return db.Table<Entry>().Where(x => x.Endpoint == endpoint && !x.Rejected).OrderBy(x => x.Created).ToArray(); }
         }
         public int RejectedCount(string endpoint)
         {
-            lock (sync) { using var db = Open(); return db.Table<Entry>().Count(x => x.Endpoint == endpoint && x.Rejected); }
+            lock (sync) { using var db = database.Open(); return db.Table<Entry>().Count(x => x.Endpoint == endpoint && x.Rejected); }
         }
-        public void Remove(string key) { lock (sync) { using var db = Open(); db.Delete<Entry>(key); } }
+        public void Remove(string key) { lock (sync) { using var db = database.Open(); db.Delete<Entry>(key); } }
         public void Reject(string key)
         {
-            lock (sync) { using var db = Open(); db.Execute("UPDATE PendingScoreUploads SET Rejected = 1 WHERE Key = ?", key); }
+            lock (sync) { using var db = database.Open(); db.Execute("UPDATE PendingScoreUploads SET Rejected = 1 WHERE Key = ?", key); }
         }
     }
 
@@ -65,28 +58,22 @@ namespace OurTaiko.Online
             public bool Rejected { get; set; }
             public long Created { get; set; }
         }
-        readonly string path;
+        readonly GameDatabase database;
         readonly object sync = new();
-        public PendingDanQueue(string path)
-        {
-            this.path = path;
-            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
-            using var db = Open();
-            db.CreateTable<Entry>();
-        }
-        SQLiteConnection Open() => new SQLiteConnection(path) { BusyTimeout = TimeSpan.FromSeconds(5) };
+        public PendingDanQueue(string path) : this(new GameDatabase(path)) { }
+        public PendingDanQueue(GameDatabase database) => this.database = database;
         public void Enqueue(string endpoint, string key, string body)
         {
-            lock (sync) { using var db = Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, Created = DateTime.UtcNow.Ticks }); }
+            lock (sync) { using var db = database.Open(); db.Insert(new Entry { Endpoint = endpoint, Key = key, Body = body, Created = DateTime.UtcNow.Ticks }); }
         }
         public Entry[] Pending(string endpoint)
         {
-            lock (sync) { using var db = Open(); return db.Table<Entry>().Where(x => x.Endpoint == endpoint && !x.Rejected).OrderBy(x => x.Created).ToArray(); }
+            lock (sync) { using var db = database.Open(); return db.Table<Entry>().Where(x => x.Endpoint == endpoint && !x.Rejected).OrderBy(x => x.Created).ToArray(); }
         }
-        public void Remove(string key) { lock (sync) { using var db = Open(); db.Delete<Entry>(key); } }
+        public void Remove(string key) { lock (sync) { using var db = database.Open(); db.Delete<Entry>(key); } }
         public void Reject(string key)
         {
-            lock (sync) { using var db = Open(); db.Execute("UPDATE PendingDanAttempts SET Rejected = 1 WHERE Key = ?", key); }
+            lock (sync) { using var db = database.Open(); db.Execute("UPDATE PendingDanAttempts SET Rejected = 1 WHERE Key = ?", key); }
         }
     }
 }

@@ -21,17 +21,11 @@ namespace OurTaiko.Online
             public long Measured { get; set; }
         }
 
-        readonly string path;
+        readonly GameDatabase database;
         readonly object sync = new object();
 
-        public AudioLevelStore(string path)
-        {
-            this.path = path;
-            using var db = Open();
-            db.CreateTable<Entry>();
-        }
-
-        SQLiteConnection Open() => new SQLiteConnection(path) { BusyTimeout = TimeSpan.FromSeconds(5) };
+        public AudioLevelStore(string path) : this(new GameDatabase(path)) { }
+        public AudioLevelStore(GameDatabase database) => this.database = database;
 
         public void Save(string hash, AudioLevel level)
         {
@@ -41,7 +35,7 @@ namespace OurTaiko.Online
                 Hash = hash, Meter = AudioLevel.MeterVersion, Peak = level.Peak,
                 Loudness = double.IsNaN(level.Loudness) ? (double?)null : level.Loudness, Measured = DateTime.UtcNow.Ticks,
             };
-            lock (sync) { using var db = Open(); db.InsertOrReplace(entry); }
+            lock (sync) { using var db = database.Open(); db.InsertOrReplace(entry); }
         }
 
         public bool TryGet(string hash, out AudioLevel level)
@@ -49,7 +43,7 @@ namespace OurTaiko.Online
             level = AudioLevel.Unmeasured;
             if (!Json.HexId(hash ?? "", 64)) return false;
             Entry entry;
-            lock (sync) { using var db = Open(); entry = db.Find<Entry>(hash); }
+            lock (sync) { using var db = database.Open(); entry = db.Find<Entry>(hash); }
             if (entry == null || entry.Meter != AudioLevel.MeterVersion) return false;
             level = new AudioLevel(entry.Peak, entry.Loudness ?? double.NaN);
             return true;

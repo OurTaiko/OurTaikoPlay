@@ -77,39 +77,32 @@ namespace OurTaiko.Online
 
         public static string KeyOf(string server, string chartId) => server + "/" + chartId;
 
-        readonly string path;
+        readonly GameDatabase database;
         readonly object sync = new object();
 
-        public OfflineChartStore(string path)
-        {
-            this.path = path;
-            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
-            using var db = Open();
-            db.CreateTable<Entry>();
-        }
-
-        SQLiteConnection Open() => new SQLiteConnection(path) { BusyTimeout = TimeSpan.FromSeconds(5) };
+        public OfflineChartStore(string path) : this(new GameDatabase(path)) { }
+        public OfflineChartStore(GameDatabase database) => this.database = database;
 
         // Records a chart just prepared; a chart cached before takes the newer description and files.
         public void Save(Entry entry)
         {
             entry.Key = KeyOf(entry.Server, entry.ChartId);
-            lock (sync) { using var db = Open(); db.InsertOrReplace(entry); }
+            lock (sync) { using var db = database.Open(); db.InsertOrReplace(entry); }
         }
 
         public Entry Get(string server, string chartId)
         {
-            lock (sync) { using var db = Open(); return db.Find<Entry>(KeyOf(server, chartId)); }
+            lock (sync) { using var db = database.Open(); return db.Find<Entry>(KeyOf(server, chartId)); }
         }
 
         public Entry[] All()
         {
-            lock (sync) { using var db = Open(); return db.Table<Entry>().ToArray(); }
+            lock (sync) { using var db = database.Open(); return db.Table<Entry>().ToArray(); }
         }
 
         public void Remove(string server, string chartId)
         {
-            lock (sync) { using var db = Open(); db.Delete<Entry>(KeyOf(server, chartId)); }
+            lock (sync) { using var db = database.Open(); db.Delete<Entry>(KeyOf(server, chartId)); }
         }
 
         // The cached charts whose TJA and audio are still in the object cache with their recorded
@@ -122,7 +115,7 @@ namespace OurTaiko.Online
             foreach (var entry in All())
                 (Exists(cacheRoot, entry.TjaHash, entry.TjaSize) && Exists(cacheRoot, entry.AudioHash, entry.AudioSize) ? kept : gone).Add(entry);
             if (gone.Count > 0)
-                lock (sync) { using var db = Open(); foreach (var entry in gone) db.Delete<Entry>(entry.Key); }
+                lock (sync) { using var db = database.Open(); foreach (var entry in gone) db.Delete<Entry>(entry.Key); }
             return kept.OrderBy(entry => entry.Cached).ToArray();
         }
 
