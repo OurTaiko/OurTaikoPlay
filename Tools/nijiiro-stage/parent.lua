@@ -116,6 +116,10 @@ end
 
 local renda = stage.renda
 local kinds = renda.kinds
+-- Each hit is baked from the middle of where the skin would spawn it; the game spreads hits
+-- around that by the set's catalog spread.
+renda.x, renda.x_range = renda.x + renda.x_range / 2, 0
+renda.y, renda.y_range = renda.y + renda.y_range / 2, 0
 for index, kind in ipairs(kinds) do
     renda.notes = {}
     renda.kinds = {kind}

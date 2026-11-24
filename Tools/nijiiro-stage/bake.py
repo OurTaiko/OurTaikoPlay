@@ -11,6 +11,14 @@ graphics = base / "Graphics/background"
 scripts = base / "Scripts/background"
 
 
+# A drumroll effect (renda) is drawn over the whole 1920x1080 play area (StageRendaView), under
+# the lanes, from a spot in the lower half: the skins spawn their pieces at y 540..1020, and many
+# fly or fall far beyond a header's 276. Each hit starts at RENDA_SPAWN_Y and the game moves it
+# off that by the set's catalog spread.
+RENDA_HEIGHT = 1080
+RENDA_SPAWN_Y = 780
+
+
 def table(path):
     return json.loads(
         subprocess.check_output(["lua", Path(__file__).with_name("tables.lua"), path])

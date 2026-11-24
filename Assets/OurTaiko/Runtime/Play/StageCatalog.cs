@@ -86,7 +86,7 @@ namespace OurTaiko
         public StageSet[] footers = Array.Empty<StageSet>();
         [Tooltip("The crowd of a full soul gauge, 1920×540, clip full.")]
         public StageSet[] crowds = Array.Empty<StageSet>();
-        [Tooltip("What a drumroll hit throws over the header, 1920×276: every hit plays one of the file's clips once.")]
+        [Tooltip("What a drumroll hit throws across the play area, 1920×1080 (hits start around y 780, in the lower half): every hit plays one of the file's clips once.")]
         public StageSet[] rendas = Array.Empty<StageSet>();
         public StagePack[] packs = Array.Empty<StagePack>();
 

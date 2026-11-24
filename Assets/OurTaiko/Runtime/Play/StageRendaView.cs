@@ -4,8 +4,11 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // What a player's drumroll throws over their header (Nijiiro renda): every hit plays one of the
-    // set's clips once, on the wall clock, and several can be out at a time.
+    // What a player's drumroll throws across the play area (Nijiiro renda): every hit plays one of
+    // the set's clips once, on the wall clock, and several can be out at a time. The files are
+    // 1920x1080 and a hit starts in their lower half; Play.Double shifts each player's layer so that
+    // band falls on the player's header and clips it to the player's half. The hit characters
+    // (UseCharacters) are a header-sized one on the header itself.
     [RequireComponent(typeof(RectTransform))]
     public sealed class StageRendaView : MonoBehaviour
     {

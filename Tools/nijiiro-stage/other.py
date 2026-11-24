@@ -1,6 +1,6 @@
 import math
 from PIL import Image
-from bake import Bake, base, graphics, out, scripts, table
+from bake import RENDA_HEIGHT, RENDA_SPAWN_Y, Bake, base, graphics, out, scripts, table
 
 
 def draw(b, path, i, x, y, scale=1):
@@ -15,7 +15,7 @@ for i in range(3):
     b = Bake(540)
     static(b, graphics / "footer" / f"{i}.png", "normal", 0, 474)
     b.save(out / "footer" / f"footer{i}.otanim")
-    b = Bake(276)
+    b = Bake(RENDA_HEIGHT)
     source = graphics / "renda" / f"renda_{i}"
     pics = (
         sorted(source.glob("*.png"))
@@ -36,8 +36,9 @@ for i in range(3):
                     b.draw(
                         path,
                         0,
-                        300 + vx * f,
-                        180 + vy * f,
+                        # The middle of where the skin spawns them (x 6..1100).
+                        553 + vx * f,
+                        RENDA_SPAWN_Y + vy * f,
                         w / 2,
                         h / 2,
                         1,

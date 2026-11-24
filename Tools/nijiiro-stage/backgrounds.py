@@ -1,5 +1,5 @@
 import math
-from bake import Bake, graphics, out, scripts, table
+from bake import RENDA_HEIGHT, RENDA_SPAWN_Y, Bake, graphics, out, scripts, table
 
 alphabet = [chr(i) for i in range(33, 127) if i not in (34, 92)]
 digits = {c: i for i, c in enumerate(alphabet)}
@@ -18,6 +18,16 @@ def channel(v):
             n = n * 92 + digits[c]
         values.append(base + step * n)
     return values
+
+
+def renda_spawn(rows):
+    """Where a collab drumroll clip starts across the screen: a clip whose pieces end up more
+    than half the screen away on average flies across it and enters from the side it comes
+    from; any other (a burst, a drop) starts in the middle. The skin's own `dx` is only its
+    last piece's travel, which for a burst spreading both ways says nothing of where it goes."""
+    last = next((row for row in reversed(rows) if row), [])
+    travel = sum(e[1] for e in last) / len(last) if last else 0
+    return 1900 if travel <= -960 else 20 if travel >= 960 else 960
 
 
 def shape(t, k):
@@ -143,7 +153,7 @@ def export(src):
         crowd = parent == "fever_anim"
         name = key.removeprefix("f_")
         folder = "crowd" if crowd else "renda"
-        b = Bake(540 if crowd else 276)
+        b = Bake(540 if crowd else RENDA_HEIGHT)
         directory = graphics / (("fevera_" if crowd else "rendaa_") + name)
 
         def frames(rows, x, y):
@@ -180,8 +190,13 @@ def export(src):
                 b.clip("release", 40, False, 0, frames(t["frames"][end:], 0, 0))
         else:
             for i, p in enumerate(t["parts"]):
-                x = 1900 if p["dx"] < -1 else 20 if p["dx"] > 1 else 960
-                b.clip("hit_" + str(i), 60, False, 0, frames(p["frames"], x, 138))
+                b.clip(
+                    "hit_" + str(i),
+                    60,
+                    False,
+                    0,
+                    frames(p["frames"], renda_spawn(p["frames"]), RENDA_SPAWN_Y),
+                )
     path = out / folder / (name + ".otanim")
     b.save(path)
     print(path, flush=True)
