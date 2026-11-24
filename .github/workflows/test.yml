@@ -1,5 +1,5 @@
 name: Test
-run-name: OurTaikoPlay tests (${{ github.event_name == 'pull_request' && 'finished, editmode' || format('{0}, {1}', inputs.suite, inputs.mode) }}) ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.pull_request.number) || github.ref_name }}
+run-name: "OurTaikoPlay tests (${{ github.event_name == 'pull_request' && 'finished, editmode' || format('{0}, {1}', inputs.suite, inputs.mode) }}) ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.pull_request.number) || github.ref_name }}"
 
 # Builds do not wait for tests. Pull requests from branches of this repository get the EditMode
 # finished suite as a signal only (not a merge requirement); fork PRs get no secrets, so the job is
