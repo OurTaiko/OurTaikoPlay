@@ -58,7 +58,7 @@ namespace OurTaiko.Online
         public FanmadeClient(string cacheRoot, string databasePath = null)
         {
             CacheRoot = Path.GetFullPath(cacheRoot);
-            string database = databasePath ?? Path.Combine(CacheRoot, "scores.sqlite3");
+            var database = new GameDatabase(databasePath ?? Path.Combine(CacheRoot, GameDatabase.FileName));
             UploadQueue = new PendingScoreQueue(database);
             DanQueue = new PendingDanQueue(database);
             Offline = new OfflineChartStore(database);

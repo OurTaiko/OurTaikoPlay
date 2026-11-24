@@ -70,8 +70,7 @@ namespace OurTaiko.Online
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            UseCache(Path.Combine(GamePaths.Root, "cache", "fanmade"),
-                Path.Combine(GamePaths.Root, "scores.sqlite3"));
+            UseCache(Path.Combine(GamePaths.Root, "cache", "fanmade"), GameDatabase.DefaultPath);
             UseAccounts(new AccountStore(Path.Combine(GamePaths.Root, AccountStore.FileName), DeviceSecret()), new AccountCenter());
             UseProfiles(new ProfileCenter());
         }
