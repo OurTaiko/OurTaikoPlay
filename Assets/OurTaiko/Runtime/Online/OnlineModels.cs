@@ -78,6 +78,9 @@ namespace OurTaiko.Online
         public long AdLibGood, AdLibOk, Mines;
         // False once the song's files were replaced after the play.
         public bool IsLatest = true;
+        // The rank the server gave the score against its chart's kiwami line (OurTaikoNet's
+        // net.score_rank); null when it gave none (the chart's content was replaced since).
+        public ScoreRank? ScoreRank;
 
         public static OnlineScore From(JToken v) => new OnlineScore
         {
@@ -91,6 +94,9 @@ namespace OurTaiko.Online
             AdLibGood = v["adlib"] is JArray a && a.Count == 2 ? Count(a[0]) : 0,
             AdLibOk = v["adlib"] is JArray b && b.Count == 2 ? Count(b[1]) : 0,
             Mines = Count(v["mines"]),
+            // A whole number 0–7; anything else (one too large for a long included) is none.
+            ScoreRank = v["scoreRank"] is JValue { Value: long rank } && rank >= 0 && rank <= ScoreRankUtil.Count
+                ? (ScoreRank)(int)rank : null,
         };
 
         // An optional count: 0 when missing or not a whole number of at least 0.

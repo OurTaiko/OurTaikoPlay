@@ -244,10 +244,11 @@ namespace OurTaiko.Tests
             Assert.That(client.Charts.Single().Id, Is.EqualTo("1617"));
             var result = Run(() => client.PrepareAsync(client.Charts.Single()));
             Assert.That(TjaParser.Parse(result.Tja, "Oni").Level, Is.EqualTo(8));
-            client.Submit(result.Chart, 3, new OnlineScore { Score = 7 }); Run(() => client.WaitForUploadsAsync());
+            client.Submit(result.Chart, 3, new OnlineScore { Good = 1, MaxCombo = 1 }); Run(() => client.WaitForUploadsAsync());
             Assert.That(api.AcceptedScores.TryDequeue(out var body), Is.True);
             Assert.That((long)body["difficultyId"], Is.EqualTo(chart.BlockId("Oni")));
-            Assert.That(client.Best(client.Charts.Single(), 3).Score, Is.EqualTo(7));
+            // One 良 of four notes, as the server scored it.
+            Assert.That(client.Best(client.Charts.Single(), 3).Score, Is.EqualTo(250000));
             foreach (string id in new[] { "1617", "1", new string('a', 32) }) Assert.That(OnlineChart.ValidId(id), Is.True, id);
             foreach (string id in new[] { "0", "012", "-5", "1e3", "abc", "", new string('9', 19) }) Assert.That(OnlineChart.ValidId(id), Is.False, id);
         }

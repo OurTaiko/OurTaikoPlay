@@ -43,7 +43,7 @@ namespace OurTaiko.Tests
             Assert.That(new[] { Route(BranchRoute.Normal), Route(BranchRoute.Expert), Route(BranchRoute.Master) }, Is.EqualTo(new[] { 20, 21, 22 }));
             Assert.That(chart.Notes.Last().BalloonHits, Is.EqualTo(30));
             // The Shinuchi budget counts what is played: common balloons from Normal, branches from Master.
-            Assert.That(new ChartStatistics(chart).BalloonHitBudget, Is.EqualTo(10 + 22 + 30));
+            Assert.That(ShinuchiScoring.Of(chart).BalloonHits, Is.EqualTo(10 + 22 + 30));
             // The header order does not matter, and BALLOON is BALLOONNOR.
             var reordered = Parse("7008,\n#BRANCHSTART p,50,80\n#N\n7008,\n#E\n7008,\n#M\n7008,\n#BRANCHEND",
                 "BALLOONMAS:12,22\nBALLOONEXP:11,21\nBALLOON:10,20");

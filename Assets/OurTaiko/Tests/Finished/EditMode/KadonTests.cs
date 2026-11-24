@@ -63,7 +63,7 @@ namespace OurTaiko.Tests
         [Test] public void ItCountsForScoreAndAutoplayHitsIt()
         {
             var chart = TjaParser.Parse("TITLE:Test\nBPM:120\nCOURSE:Oni\n#START\n1G2G,\n#END");
-            Assert.That(new ChartStatistics(chart).JudgeableNotes, Is.EqualTo(4));
+            Assert.That(ShinuchiScoring.Of(chart).JudgeableNotes, Is.EqualTo(4));
             var session = new PlaySession(chart);
             session.Advance(2, true);
             Assert.That(session.Good, Is.EqualTo(4));
@@ -75,7 +75,7 @@ namespace OurTaiko.Tests
         {
             var chart = TjaParser.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "OurTaiko", "Tests/Finished/EditMode/Charts/IrohaUta.txt")), "Oni");
             Assert.That(chart.Notes.Count(n => n.IsKadon), Is.EqualTo(4));
-            int judgeable = new ChartStatistics(chart).JudgeableNotes;
+            int judgeable = ShinuchiScoring.Of(chart).JudgeableNotes;
             var session = new PlaySession(chart);
             foreach (var note in chart.Notes.Where(n => !n.IsLong))
             {

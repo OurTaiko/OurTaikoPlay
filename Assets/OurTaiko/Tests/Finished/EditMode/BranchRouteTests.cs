@@ -131,8 +131,8 @@ namespace OurTaiko.Tests
         public void StatisticsCountTheRouteStandingInForMaster()
         {
             var withMaster = Parse("#BRANCHSTART p,50,80\n#N\n1000,\n#E\n2020,\n#M\n2020,\n#BRANCHEND");
-            Assert.That(new ChartStatistics(Parse(NoMaster)).JudgeableNotes, Is.EqualTo(new ChartStatistics(withMaster).JudgeableNotes));
-            Assert.That(new ChartStatistics(Parse(OnlyNormal)).JudgeableNotes, Is.EqualTo(9));
+            Assert.That(ShinuchiScoring.Of(Parse(NoMaster)).JudgeableNotes, Is.EqualTo(ShinuchiScoring.Of(withMaster).JudgeableNotes));
+            Assert.That(ShinuchiScoring.Of(Parse(OnlyNormal)).JudgeableNotes, Is.EqualTo(9));
         }
     }
 }

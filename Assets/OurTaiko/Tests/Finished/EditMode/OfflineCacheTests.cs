@@ -117,8 +117,6 @@ namespace OurTaiko.Tests
             Assert.That(client.Status, Does.Contain("offline cache"));
             var preview = Assert.Throws<OnlineException>(() => Run(() => client.PreparePreviewAsync(cached)));
             Assert.That(preview.Message, Is.EqualTo("PREVIEW_UNAVAILABLE"), "The preview reads the cache too (this one cached no excerpt).");
-            var rank = Assert.Throws<OnlineException>(() => Run(() => client.PrepareRankThresholdsAsync(cached)));
-            Assert.That(rank.Message, Is.EqualTo("SERVER_NOT_CONNECTED"));
             Assert.That(fixture.Requests.Count, Is.EqualTo(requests), "Nothing tries the unreachable server.");
         }
 
@@ -169,7 +167,7 @@ namespace OurTaiko.Tests
             Assert.That(client.Submit(cached, (int)Difficulty.Oni, new OnlineScore { Score = 4321 }), Is.False, "Without an account to queue under, nothing is queued.");
             Assert.That(client.Submit(new OnlineChart { Server = endpoint.Id, Id = second.Id }, (int)Difficulty.Oni, new OnlineScore(), offlineAccount: account), Is.False,
                 "A chart that is not cached is not queued either.");
-            Assert.That(client.Submit(cached, (int)Difficulty.Oni, new OnlineScore { Score = 4321 }, offlineAccount: account), Is.True);
+            Assert.That(client.Submit(cached, (int)Difficulty.Oni, new OnlineScore { Good = 3, Ok = 1, MaxCombo = 4 }, offlineAccount: account), Is.True);
             Assert.That(client.UploadQueue.Pending(account).Length, Is.EqualTo(1));
             Assert.That(fixture.AcceptedScores, Is.Empty);
 
@@ -178,8 +176,9 @@ namespace OurTaiko.Tests
             Assert.That(again.AccountIdOf(0), Is.EqualTo(account));
             Assert.That(client.UploadQueue.Pending(account), Is.Empty);
             Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
-            Assert.That((long)body["score"], Is.EqualTo(4321));
-            Assert.That(client.Best(client.Charts.First(c => c.Id == first.Id), (int)Difficulty.Oni).Score, Is.EqualTo(4321));
+            Assert.That(((long)body["good"], (long)body["ok"]), Is.EqualTo((3L, 1L)));
+            // The server scored the counts on its own: three 良 and a 可 of four notes.
+            Assert.That(client.Best(client.Charts.First(c => c.Id == first.Id), (int)Difficulty.Oni).Score, Is.EqualTo(875000));
         }
 
         [Test]

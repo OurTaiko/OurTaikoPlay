@@ -10,16 +10,19 @@ namespace OurTaiko.Tests
         [Test]
         public void UnknownChartNeverGuessesKiwamiAndLocalCoursesCacheSeparately()
         {
-            Assert.That(ScoreRankUtil.FromScore(1000000), Is.EqualTo(ScoreRank.None));
-            Assert.That(ScoreRankUtil.FromScore(950000), Is.EqualTo(ScoreRank.PurpleMiyabi));
+            // Every line is a share of the chart's kiwami line: without it there is no rank at all.
+            Assert.That(ScoreRankUtil.FromScore(1000000, null), Is.EqualTo(ScoreRank.None));
+            Assert.That(ScoreRankUtil.FromScore(950000, null), Is.EqualTo(ScoreRank.None));
             var song = ScriptableObject.CreateInstance<SongDefinition>();
-            var first = new TextAsset("BPM:120\nCOURSE:Easy\n#START\n1111,\n#END\nCOURSE:Oni\n#START\n1110,\n#END");
+            var first = new TextAsset("BPM:120\nCOURSE:Easy\n#START\n1111,\n#END\nCOURSE:Oni\n#START\n1110,\n5000,\n0080,\n#END");
             var changed = new TextAsset("BPM:120\nCOURSE:Oni\n#START\n1111,\n#END");
             try
             {
                 song.chart = first;
                 Assert.That(ScoreRankUtil.FromScore(1000000, song.RankThreshold(Difficulty.Easy)), Is.EqualTo(ScoreRank.Kiwami));
                 Assert.That(ScoreRankUtil.FromScore(1000000, song.RankThreshold(Difficulty.Oni)), Is.EqualTo(ScoreRank.PurpleMiyabi));
+                Assert.That(song.RankThreshold(Difficulty.Oni), Is.EqualTo(1000020));
+                Assert.That(new PlaySession(song.Parse("Oni")).BaseScore, Is.EqualTo(331640));
                 Assert.That(song.RankThreshold(Difficulty.Oni), Is.EqualTo(new PlaySession(song.Parse("Oni")).KiwamiThreshold));
                 song.chart = changed;
                 Assert.That(ScoreRankUtil.FromScore(1000000, song.RankThreshold(Difficulty.Oni)), Is.EqualTo(ScoreRank.Kiwami));
@@ -34,16 +37,25 @@ namespace OurTaiko.Tests
         [TestCase(1000000, 7)] [TestCase(int.MaxValue, 7)]
         public void ScoreThresholds(int score, int rank) => Assert.That((int)ScoreRankUtil.FromScore(score, 1000000), Is.EqualTo(rank));
 
+        // 50, 60, 70, 80, 90 and 95 % of the line, not rounded: 0.95 × 1000020 = 950019, and of
+        // 1234567, 50 % is 617283.5, so 617283 is short of it. OurTaikoNet's net.score_rank agrees.
+        [TestCase(1000020, 500010, 1)] [TestCase(1000020, 500009, 0)] [TestCase(1000020, 950019, 6)] [TestCase(1000020, 950018, 5)]
+        [TestCase(1000020, 1000019, 6)] [TestCase(1000020, 1000020, 7)]
+        [TestCase(1234567, 617284, 1)] [TestCase(1234567, 617283, 0)] [TestCase(1234567, 1111111, 5)] [TestCase(1234567, 1172839, 6)]
+        [TestCase(1234567, 1172838, 5)] [TestCase(1234567, 1234567, 7)]
+        public void LinesAreSharesOfTheKiwamiLine(int line, int score, int rank)
+            => Assert.That((int)ScoreRankUtil.FromScore(score, line), Is.EqualTo(rank));
+
         [TestCase("1110,", "", 333340, 1000020)]
         [TestCase("1111,", "", 250000, 1000000)]
-        [TestCase("1000,\n5000,\n0080,\n1000,", "", 497470, 1000940)]
-        [TestCase("1234,\n5008,\n7008,\n9008,", "BALLOON:150,2", 246820, 1000480)]
+        [TestCase("1000,\n5000,\n0080,\n1000,", "", 497450, 1000000)]
+        [TestCase("1234,\n5008,\n7008,\n9008,", "BALLOON:150,2", 245580, 1000020)]
         [TestCase("0000,", "", 1000000, 1000000)]
-        public void KiwamiUsesActualChartBudgetAndRoundedRollEstimate(string body, string metadata, int baseScore, int ceiling)
+        public void KiwamiUsesUnifiedChartBudget(string body, string metadata, int baseScore, int ceiling)
         {
             var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\nLEVEL:8\n" + metadata + "\n#START\n" + body + "\n#END");
             var session = new PlaySession(chart);
-            Assert.That(session.BaseScore, Is.EqualTo(baseScore), "The scoring policy is unchanged.");
+            Assert.That(session.BaseScore, Is.EqualTo(baseScore));
             Assert.That(session.KiwamiThreshold, Is.EqualTo(ceiling));
             Assert.That((int)ScoreRankUtil.FromScore(ceiling - 1, ceiling), Is.EqualTo(6));
             Assert.That((int)ScoreRankUtil.FromScore(ceiling, ceiling), Is.EqualTo(7));
@@ -62,8 +74,12 @@ namespace OurTaiko.Tests
             Assert.That((int)result.Rank, Is.EqualTo(7));
             result.Score = 1000000;
             Assert.That((int)result.Rank, Is.EqualTo(6), "One million alone does not earn Kiwami on this chart.");
-            foreach (var pair in new[] { (500000, 1), (600000, 2), (700000, 3), (800000, 4), (900000, 5), (950000, 6) })
+            // The lines are shares of this chart's line, 1000020, not of one million.
+            foreach (var pair in new[] { (500010, 1), (600012, 2), (700014, 3), (800016, 4), (900018, 5), (950019, 6) })
+            {
                 Assert.That((int)ScoreRankUtil.FromScore(pair.Item1, result.KiwamiThreshold), Is.EqualTo(pair.Item2));
+                Assert.That((int)ScoreRankUtil.FromScore(pair.Item1 - 1, result.KiwamiThreshold), Is.EqualTo(pair.Item2 - 1));
+            }
         }
 
         [TestCase(false)] [TestCase(true)]

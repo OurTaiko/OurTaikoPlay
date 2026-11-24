@@ -23,22 +23,21 @@ namespace OurTaiko
             return new ScoreStore.Record { key = ScoreStore.Key(song.name, difficulty), score = Clamp(best.Score),
                 good = Clamp(best.Good), ok = Clamp(best.Ok), bad = Clamp(best.Bad), maxCombo = Clamp(best.MaxCombo),
                 rolls = Clamp(best.Drumroll), crown = crown,
-                adLibGood = Clamp(best.AdLibGood), adLibOk = Clamp(best.AdLibOk), mines = Clamp(best.Mines) };
+                adLibGood = Clamp(best.AdLibGood), adLibOk = Clamp(best.AdLibOk), mines = Clamp(best.Mines),
+                serverRank = best.ScoreRank };
         }
 
         static int Clamp(long value) => (int)Math.Clamp(value, 0, int.MaxValue);
 
         public static ScoreRank Rank(SongDefinition song, Difficulty difficulty)
         {
-            int score = Get(song, difficulty)?.score ?? 0;
-            if (score < 1000000) return ScoreRankUtil.FromScore(score);
-            int? threshold = song.RankThreshold(difficulty);
-            if (!threshold.HasValue && IsOnline(song))
-            {
-                var manager = Online.OnlineManager.Instance;
-                threshold = manager?.Client.RankThreshold(manager.ChartOf(song), (int)difficulty);
-            }
-            return ScoreRankUtil.FromScore(score, threshold);
+            var record = Get(song, difficulty);
+            // An online best's rank is the one OurTaikoNet gave it (none when it gave none).
+            if (IsOnline(song)) return record?.serverRank ?? ScoreRank.None;
+            int score = record?.score ?? 0;
+            // No score has no rank, whatever the chart: no need to read it.
+            if (score <= 0) return ScoreRank.None;
+            return ScoreRankUtil.FromScore(score, song.RankThreshold(difficulty));
         }
     }
 }

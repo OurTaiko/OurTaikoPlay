@@ -139,7 +139,6 @@ namespace OurTaiko.Online
             uploads = null;
             lock (sync)
             {
-                ResetRankThresholds();
                 foreach (var e in endpoints) e.Dispose();
                 endpoints.Clear(); charts.Clear(); categoryLists.Clear(); playlistLists.Clear(); danLists.Clear();
                 personalPlaylists.Clear(); personalLists.Clear();
@@ -661,7 +660,9 @@ namespace OurTaiko.Online
         {
             // The block that was played names the song and course.
             var body = new JObject { ["difficultyId"] = block.Id };
-            body["good"] = score.Good; body["ok"] = score.Ok; body["bad"] = score.Bad; body["score"] = score.Score;
+            // No score: the servers work it out from the counts by the chart's scoring (their
+            // "score" field is deprecated), so every game version agrees.
+            body["good"] = score.Good; body["ok"] = score.Ok; body["bad"] = score.Bad;
             body["drumroll"] = score.Drumroll; body["max_combo"] = score.MaxCombo;
             body["ClearStatus"] = score.ClearStatus;
             // Sent only when there are any, so a play without them reads the same as before they existed.

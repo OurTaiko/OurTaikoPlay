@@ -23,7 +23,8 @@ namespace OurTaiko.Tests
         {
             fixture = new OnlineFixture();
             fixture.Users["ka"] = "don";
-            chart = new OnlineFixture.Chart { Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3 } };
+            // A single Oni block and a P2 one, four notes each: the server scores a 良 250000, a 可 125000.
+            chart = new OnlineFixture.Chart { Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja() + "#START P2\n1111,\n#END\n"), Audio = new byte[] { 1, 2, 3 } };
             chart.Difficulties.Add(("Oni", 8, "P2"));
             fixture.Charts.Add(chart);
             cache = Path.Combine(Path.GetTempPath(), "ourtaiko-accounts-" + Guid.NewGuid().ToString("N"));
@@ -209,17 +210,18 @@ namespace OurTaiko.Tests
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(900000));
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(800000), "2P reads its own account's p2 block.");
 
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 1000000, Good = 4, MaxCombo = 4 }, seat: 1, side: "p2"), Is.True);
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 950000, Good = 4, MaxCombo = 4 }, seat: 0, side: "single"), Is.True);
+            // The server works each score out from the counts: both beat the seat's best.
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Good = 3, Ok = 1, MaxCombo = 4 }, seat: 1, side: "p2"), Is.True);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Good = 4, MaxCombo = 4 }, seat: 0, side: "single"), Is.True);
             Drain();
             Assert.That(fixture.AcceptedUsers.ToArray(), Is.EquivalentTo(new[] { "don", "ka" }));
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(1000000));
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(950000));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(875000));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(1000000));
 
             client.SignOut(e, 1);
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2"), Is.Null);
             Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 1 }, seat: 1, side: "p2"), Is.False, "A guest seat uploads nothing.");
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(950000), "1P is untouched.");
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(1000000), "1P is untouched.");
             Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 1 }, seat: 0, side: "p1"), Is.False, "No block on the side played: nothing uploads.");
         }
 
@@ -245,13 +247,13 @@ namespace OurTaiko.Tests
             SignIn(e, 1, "don", "katsu");
             Assert.That(e.AccountIdOf(0), Is.EqualTo(e.AccountIdOf(1)));
             var listed = client.Chart(e.Id, chart.Id);
-            client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 10, Good = 1, MaxCombo = 1 }, seat: 0, side: "single");
-            client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 20, Good = 1, MaxCombo = 1 }, seat: 1, side: "p2");
+            client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Good = 1, MaxCombo = 1 }, seat: 0, side: "single");
+            client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Good = 2, MaxCombo = 2 }, seat: 1, side: "p2");
             Drain();
-            Assert.That(fixture.AcceptedScores.Select(s => (long)s["score"]), Is.EquivalentTo(new[] { 10L, 20L }));
+            Assert.That(fixture.AcceptedScores.Select(s => (long)s["good"]), Is.EquivalentTo(new[] { 1L, 2L }));
             // Each seat played its own block (2P the P2 one); both seats see both plays.
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(10));
-            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(20));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(250000));
+            Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(500000));
             Assert.That(e.Seats[0].ScoreCount, Is.EqualTo(2));
             Assert.That(e.Seats[1].ScoreCount, Is.EqualTo(2));
         }
@@ -288,7 +290,7 @@ namespace OurTaiko.Tests
             var record = new PlayRecord { Speed = 20 };
             record.Inputs.Add((10, 1));
             // The score is not queued on its own: it is part of the attempt, with what it was played on.
-            var score = client.DanAttemptScore(fixture.BaseUrl, listed, (int)Difficulty.Oni, new OnlineScore { Score = 500000, Good = 4, MaxCombo = 4, ClearStatus = 1 }, record, "single");
+            var score = client.DanAttemptScore(fixture.BaseUrl, listed, (int)Difficulty.Oni, new OnlineScore { Good = 2, MaxCombo = 2, ClearStatus = 1 }, record, "single");
             Assert.That(client.UploadQueue.Pending(e.AccountIdOf(0)), Is.Empty);
             Assert.That((long)score["difficultyId"], Is.EqualTo(chart.BlockId("Oni")));
             Assert.That((string)score["audioHash"], Is.EqualTo(listed.AudioHash));
@@ -302,10 +304,12 @@ namespace OurTaiko.Tests
             Assert.That(fixture.DanAttemptPaths.Single(), Is.EqualTo("/api/v2/game/dan-results"));
             Assert.That(sent.ContainsKey("songsPlayed"), Is.False, "The scores say how many songs were played.");
             var scores = (Newtonsoft.Json.Linq.JArray)sent["scores"];
-            Assert.That((int)scores[0]["score"], Is.EqualTo(500000));
+            Assert.That((int)scores[0]["good"], Is.EqualTo(2));
+            // No score goes with it: the server works it out from the counts ("score" is deprecated).
+            Assert.That(((Newtonsoft.Json.Linq.JObject)scores[0]).ContainsKey("score"), Is.False);
             Assert.That(scores[1].Type, Is.EqualTo(Newtonsoft.Json.Linq.JTokenType.Null));
             Assert.That(fixture.AcceptedScores, Is.Empty, "Nothing went to /game/scores.");
-            // What the server saved is the account's score from then on.
+            // What the server saved is the account's score from then on: two 良 of four notes.
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(500000));
             // One entry a song played, whatever was given.
             client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { score });

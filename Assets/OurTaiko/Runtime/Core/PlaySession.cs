@@ -148,7 +148,7 @@ namespace OurTaiko
             kusudamas = new Kusudama[chart.Notes.Count];
             for (int i = 0; i < chart.Notes.Count; i++)
                 if (chart.Notes[i].Kind == NoteKind.Kusudama) kusudamas[i] = new Kusudama(this, i);
-            var statistics = new ChartStatistics(chart);
+            var statistics = ShinuchiScoring.Of(chart);
             scoring = new ShinuchiScore(statistics);
             gauge = new SoulGauge(statistics.RouteNotes, chart.Course, chart.Level);
             branchCounter = new BranchCounter(branchFeed);

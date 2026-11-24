@@ -532,16 +532,36 @@ namespace OurTaiko.Tests
         // A score as the servers answer with it.
         JObject Saved(Chart chart, (string Course, int Level, string Player) block, JObject body)
         {
-            return new JObject
+            var saved = new JObject
             {
                 ["id"] = Hex(32), ["songId"] = IdToken(chart.Id), ["difficultyId"] = body["difficultyId"],
                 ["course"] = block.Course, ["side"] = Chart.Side(block.Player), ["isLatest"] = true,
-                ["good"] = body["good"], ["ok"] = body["ok"], ["bad"] = body["bad"], ["score"] = body["score"],
+                ["good"] = body["good"], ["ok"] = body["ok"], ["bad"] = body["bad"],
                 ["drumroll"] = body["drumroll"], ["max_combo"] = body["max_combo"],
                 ["ClearStatus"] = body["ClearStatus"] ?? new JValue(0),
                 // As the servers: always present, zero when the play sent none.
                 ["adlib"] = body["adlib"] ?? new JArray(0, 0), ["mines"] = body["mines"] ?? new JValue(0),
             };
+            ServerScore(chart, block, saved);
+            return saved;
+        }
+
+        // The servers work a score and its rank out from the counts by the block's 真打 scoring
+        // (OurTaikoNet's scores_shinuchi); the game sends no score. A fixture chart without a TJA
+        // scores as the servers' test blocks do: 良 1000, 可 500, a long-note hit 100, line 1000000.
+        static void ServerScore(Chart chart, (string Course, int Level, string Player) block, JObject saved)
+        {
+            int goodPoints = 1000, okPoints = 500, line = 1000000;
+            if (chart.Tja.Length > 0)
+            {
+                var scoring = ShinuchiScoring.Of(TjaParser.Parse(Encoding.UTF8.GetString(chart.Tja), block.Course, Chart.Side(block.Player)));
+                goodPoints = scoring.GoodPoints; okPoints = scoring.OkPoints; line = scoring.KiwamiThreshold;
+            }
+            var adlib = (JArray)saved["adlib"];
+            long score = ((long)saved["good"] + (long)adlib[0]) * goodPoints + ((long)saved["ok"] + (long)adlib[1]) * okPoints
+                + (long)saved["drumroll"] * ShinuchiScoring.LongHitPoints;
+            saved["score"] = score;
+            saved["scoreRank"] = (int)ScoreRankUtil.FromScore((int)Math.Min(score, int.MaxValue), line);
         }
 
         void Score(HttpListenerContext context, string user, string key, JObject body)

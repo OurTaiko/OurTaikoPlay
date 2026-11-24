@@ -239,6 +239,8 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             fixture.AddAccountScore("don", chart, "Oni", 500000, 0);
+            // The server's rank of the best: not the 白粋 the chart's line would give 500000.
+            fixture.AccountScores[0]["scoreRank"] = (int)ScoreRank.SilverSui;
             TestData.UseServers(fixture);
             yield return TestData.Connect("don");
             var online = OnlineManager.Instance;
@@ -252,17 +254,20 @@ namespace OurTaiko.Tests
             var song = select.Manager.FocusedSong;
             var board = select.wheel.GetComponentsInChildren<SongBoardView>().Single(v => v.title.text == "Fixture Song");
             Assert.That(board.crown.enabled, Is.False, "ClearStatus 0 wins even when bad and ok are zero.");
-            int score = 500000;
+            Assert.That(SongScores.Rank(song, Difficulty.Oni), Is.EqualTo(ScoreRank.SilverSui), "An online best's rank is its server's.");
+            int good = 100;
             foreach (int status in new[] { 1, 2, 3, 0 })
             {
                 // Contradictory counters ensure the explicit status, not inferred judgments, wins.
+                // One more 良 each time: the server scores every play above the one before.
                 Assert.That(online.Client.Submit(online.ChartOf(song), (int)Difficulty.Oni,
-                    new OnlineScore { Score = score += 10000, Good = 100, Bad = 10, ClearStatus = status }), Is.True);
+                    new OnlineScore { Good = ++good, Bad = 10, ClearStatus = status }), Is.True);
                 var upload = online.Client.WaitForUploadsAsync();
                 yield return WaitUntil(() => upload.IsCompleted, 10);
                 upload.GetAwaiter().GetResult();
                 yield return null;
                 Assert.That(SongScores.Get(song, Difficulty.Oni).crown, Is.EqualTo((Crown)status));
+                Assert.That(SongScores.Rank(song, Difficulty.Oni), Is.EqualTo(ScoreRank.Kiwami), "The rank the server gave the upload.");
                 Assert.That(board.crown.enabled, Is.EqualTo(status != 0));
                 if (status != 0)
                 {
