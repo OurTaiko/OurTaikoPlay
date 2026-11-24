@@ -1,27 +1,25 @@
-using System;
-
 namespace OurTaiko
 {
-    // Shared by song select, gameplay and results. A score alone cannot distinguish
-    // Miyabi from Kiwami: that requires the ceiling of the matching chart/course.
+    // Shared by song select, gameplay and results. Every rank line is a share of the chart's
+    // kiwami line (TJAParser ShinuchiScoring), so a score alone has no rank. OurTaikoNet's
+    // net.score_rank ranks the scores it stores the same way.
     public static class ScoreRankUtil
     {
         public const int Count = 7;
-        static readonly int[] Thresholds = { 500000, 600000, 700000, 800000, 900000, 950000 };
+        // 白粋, 銅粋, 銀粋, 金粋, 桃雅, 紫雅: these percent of the kiwami line, without rounding.
+        static readonly int[] Percents = { 50, 60, 70, 80, 90, 95 };
 
         public static int KiwamiThreshold(TaikoChart chart) => ShinuchiScoring.Of(chart).KiwamiThreshold;
 
-        // While an online chart is loading, hide an unresolved million-plus rank
-        // rather than briefly showing a wrong icon. Lower ranks need no chart data.
-        public static ScoreRank FromScore(int score, int? kiwamiThreshold = null)
+        // Without the chart's kiwami line (an online chart still loading) there is no rank to
+        // show, rather than a wrong one.
+        public static ScoreRank FromScore(int score, int? kiwamiThreshold)
         {
-            if (score >= 1000000)
-            {
-                if (!kiwamiThreshold.HasValue) return ScoreRank.None;
-                if (score >= Math.Max(1000000, kiwamiThreshold.Value)) return ScoreRank.Kiwami;
-            }
-            for (int i = Thresholds.Length - 1; i >= 0; i--)
-                if (score >= Thresholds[i]) return (ScoreRank)(i + 1);
+            if (!kiwamiThreshold.HasValue) return ScoreRank.None;
+            long line = kiwamiThreshold.Value;
+            if (score >= line) return ScoreRank.Kiwami;
+            for (int i = Percents.Length - 1; i >= 0; i--)
+                if (score * 100L >= line * Percents[i]) return (ScoreRank)(i + 1);
             return ScoreRank.None;
         }
     }

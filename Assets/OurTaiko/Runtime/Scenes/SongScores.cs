@@ -31,7 +31,8 @@ namespace OurTaiko
         public static ScoreRank Rank(SongDefinition song, Difficulty difficulty)
         {
             int score = Get(song, difficulty)?.score ?? 0;
-            if (score < 1000000) return ScoreRankUtil.FromScore(score);
+            // No score has no rank, whatever the chart: no need to read it.
+            if (score <= 0) return ScoreRank.None;
             int? threshold = song.RankThreshold(difficulty);
             if (!threshold.HasValue && IsOnline(song))
             {
