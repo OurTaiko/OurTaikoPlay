@@ -42,15 +42,15 @@ namespace OurTaiko.Online
     {
         // Server + "/" + ChartId.
         [PrimaryKey] public string Key { get; set; }
-        // The endpoint the chart came through (FanmadeEndpoint.Id), its API root and its name then.
+        // The endpoint the chart came through (OnlineEndpoint.Id), its API root and its name then.
         [Indexed] public string Server { get; set; }
         public string ServerUrl { get; set; }
         public string ServerName { get; set; }
-        // The server's own folder board then (FanmadeEndpoint.GenreFrame); 0 in entries cached
+        // The server's own folder board then (OnlineEndpoint.GenreFrame); 0 in entries cached
         // before servers named one.
         public int ServerGenre { get; set; }
         public string ChartId { get; set; }
-        // GET /api/v2/charts/{id} as received; FanmadeChart.From reads it back.
+        // GET /api/v2/charts/{id} as received; OnlineChart.From reads it back.
         public string ChartJson { get; set; }
         // [{"id","title","genre"}] in catalog order: the categories the chart was listed under.
         public string Categories { get; set; }
@@ -68,10 +68,10 @@ namespace OurTaiko.Online
         public long PreviewSize { get; set; }
         public long Cached { get; set; }
 
-        // The chart as the server described it when it was cached; throws FanmadeException on a damaged row.
-        public FanmadeChart ToChart()
+        // The chart as the server described it when it was cached; throws OnlineException on a damaged row.
+        public OnlineChart ToChart()
         {
-            var chart = FanmadeChart.From(Json.Parse(ChartJson ?? ""), Server);
+            var chart = OnlineChart.From(Json.Parse(ChartJson ?? ""), Server);
             chart.AudioName = AudioType == "audio/ogg" ? "audio.ogg" : "audio.mp3";
             var categories = CategoryList();
             if (categories.Count > 0) { chart.Category = categories[0].Title; chart.Genre = categories[0].Genre; }

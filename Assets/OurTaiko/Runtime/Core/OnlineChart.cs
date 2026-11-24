@@ -7,14 +7,14 @@ namespace OurTaiko.Online
 {
     // Thrown with OurTaikoPlayer's error codes (API_*, NETWORK_*, HTTP_<status>, DOWNLOAD_*), which
     // the login and loading screens show as they are.
-    public class FanmadeException : Exception
+    public class OnlineException : Exception
     {
-        public FanmadeException(string code, Exception inner = null) : base(code, inner) { }
+        public OnlineException(string code, Exception inner = null) : base(code, inner) { }
     }
 
     // One chart block: a course (Easy..Edit) on one side, as the arcade keeps a single, a 1P and a
     // 2P chart per course. The side is the block's #START: plain single, #START P1 p1, #START P2 p2.
-    public sealed class FanmadeDifficulty
+    public sealed class OnlineDifficulty
     {
         public string Course = "", Side = "single", Maker = "";
         // The block's id (chartSlotVersion 1).
@@ -33,7 +33,7 @@ namespace OurTaiko.Online
     // Only fields both versions of the API share are read: charts kept from version 1 (the offline
     // store keeps the JSON as received) and those in an online room's snapshot (which the room
     // service still sends in version 1's shape: uploader, coverUrl, ...) read as version 2's do.
-    public sealed class FanmadeChart
+    public sealed class OnlineChart
     {
         public string Server = "", Id = "", Title = "", Subtitle = "", Maker = "";
         // The audio file's hash (the download check); the chart itself is identified by its blocks.
@@ -46,17 +46,17 @@ namespace OurTaiko.Online
         public double MovieOffset;
         public string MoviePath;
         // The block the 1P seat reads for each of Easy..Edit; Block gives either seat's.
-        public FanmadeDifficulty[] Difficulties = new FanmadeDifficulty[5];
-        public readonly List<FanmadeDifficulty> Blocks = new List<FanmadeDifficulty>();
+        public OnlineDifficulty[] Difficulties = new OnlineDifficulty[5];
+        public readonly List<OnlineDifficulty> Blocks = new List<OnlineDifficulty>();
 
         public bool IsPlayable => Difficulties.Any(d => d != null);
         // Every block with its content hash: the same text for the same playable chart, whatever
         // the file or its headers (replaces the TJA file hash as the cache identity).
         public string BlocksKey => string.Join(",", Blocks.Select(b => b.Course + "/" + b.Side + "=" + b.ChartHash));
 
-        public static FanmadeChart From(JToken v, string server)
+        public static OnlineChart From(JToken v, string server)
         {
-            var c = new FanmadeChart
+            var c = new OnlineChart
             {
                 Server = server,
                 Id = Json.Id(v, "id"), Title = Json.Str(v, "title"),
@@ -64,38 +64,38 @@ namespace OurTaiko.Online
                 AudioHash = Json.Str(v, "audioHash"), AudioName = Json.Str(v, "audioName"),
             };
             if (!Json.ChartId(c.Id) || !Json.HexId(c.AudioHash, 64))
-                throw new FanmadeException("API_ID_INVALID");
+                throw new OnlineException("API_ID_INVALID");
             foreach (var (key, target) in new[] { ("titleTranslations", c.Titles), ("subtitleTranslations", c.Subtitles) })
             {
-                if (!(v[key] is JObject translations)) throw new FanmadeException("API_TRANSLATIONS_INVALID");
+                if (!(v[key] is JObject translations)) throw new OnlineException("API_TRANSLATIONS_INVALID");
                 foreach (var pair in translations)
                     if (pair.Value.Type == JTokenType.String) target[pair.Key] = (string)pair.Value;
             }
             if (!Json.IsNumber(v["bpm"]) || !Json.IsNumber(v["demoStart"]) || !Json.IsNumber(v["offset"]))
-                throw new FanmadeException("API_METADATA_INVALID");
+                throw new OnlineException("API_METADATA_INVALID");
             c.Bpm = (double)v["bpm"]; c.DemoStart = (double)v["demoStart"]; c.Offset = (double)v["offset"];
-            if (double.IsNaN(c.Offset) || double.IsInfinity(c.Offset)) throw new FanmadeException("API_METADATA_INVALID");
+            if (double.IsNaN(c.Offset) || double.IsInfinity(c.Offset)) throw new OnlineException("API_METADATA_INVALID");
             // Optional: servers without background movies leave it out.
             if (Json.IsNumber(v["movieOffset"])) c.MovieOffset = (double)v["movieOffset"];
             if (double.IsNaN(c.MovieOffset) || double.IsInfinity(c.MovieOffset)) c.MovieOffset = 0;
-            if (!(v["difficulties"] is JArray difficulties)) throw new FanmadeException("API_DIFFICULTIES_INVALID");
+            if (!(v["difficulties"] is JArray difficulties)) throw new OnlineException("API_DIFFICULTIES_INVALID");
             foreach (var d in difficulties)
             {
                 string name = Json.Str(d, "course"), side = Json.Str(d, "side");
                 long id = Json.Number(d, "id");
-                if (Array.IndexOf(ChartSide.All, side) < 0 || id <= 0) throw new FanmadeException("API_DIFFICULTY_INVALID");
+                if (Array.IndexOf(ChartSide.All, side) < 0 || id <= 0) throw new OnlineException("API_DIFFICULTY_INVALID");
                 int slot = SongInfo.CourseNames.IndexOf(name);
                 if (slot < 0) continue;  // Tower/Dan are not playable here.
                 long level = Json.Number(d, "level");
-                if (level > 100 || d["branching"]?.Type != JTokenType.Boolean) throw new FanmadeException("API_DIFFICULTY_INVALID");
+                if (level > 100 || d["branching"]?.Type != JTokenType.Boolean) throw new OnlineException("API_DIFFICULTY_INVALID");
                 string chartHash = Json.Str(d, "chartHash");
-                if (chartHash.Length > 0 && !ChartHashPattern.IsMatch(chartHash)) throw new FanmadeException("API_DIFFICULTY_INVALID");
-                var difficulty = new FanmadeDifficulty
+                if (chartHash.Length > 0 && !ChartHashPattern.IsMatch(chartHash)) throw new OnlineException("API_DIFFICULTY_INVALID");
+                var difficulty = new OnlineDifficulty
                 {
                     Id = id, Course = name, Side = side, Level = (int)level,
                     Maker = Json.Str(d, "maker"), Branching = (bool)d["branching"], ChartHash = chartHash,
                 };
-                if (c.Blocks.Any(x => x.Course == name && x.Side == side)) throw new FanmadeException("API_DIFFICULTY_INVALID");
+                if (c.Blocks.Any(x => x.Course == name && x.Side == side)) throw new OnlineException("API_DIFFICULTY_INVALID");
                 c.Blocks.Add(difficulty);
             }
             for (int i = 0; i < c.Difficulties.Length; i++) c.Difficulties[i] = c.Block(i);
@@ -107,12 +107,12 @@ namespace OurTaiko.Online
         static readonly System.Text.RegularExpressions.Regex ChartHashPattern = new System.Text.RegularExpressions.Regex("^v[0-9]+:[0-9a-f]{64}$");
 
         // The block on one side of a course; null when the course has none there.
-        public FanmadeDifficulty BlockOn(int course, string side)
+        public OnlineDifficulty BlockOn(int course, string side)
             => Blocks.Find(x => x.Course == SongInfo.CourseNames[course] && x.Side == side);
 
         // The block a seat ("p1" or "p2") plays on a course (0..4 for Easy..Edit), alone or with
         // two playing together (SeatBlocks); null when it has none.
-        public FanmadeDifficulty Block(int course, string seat = "p1", bool together = false)
+        public OnlineDifficulty Block(int course, string seat = "p1", bool together = false)
         {
             foreach (string side in SeatBlocks.Reads(seat, together))
             {
@@ -154,7 +154,7 @@ namespace OurTaiko.Online
                 string extension = System.IO.Path.GetExtension(AudioName).ToUpperInvariant();
                 if (extension == ".MP3") return "audio.mp3";
                 if (extension == ".OGG") return "audio.ogg";
-                throw new FanmadeException("API_AUDIO_FORMAT_UNSUPPORTED");
+                throw new OnlineException("API_AUDIO_FORMAT_UNSUPPORTED");
             }
         }
 

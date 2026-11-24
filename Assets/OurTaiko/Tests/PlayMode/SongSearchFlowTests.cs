@@ -19,7 +19,7 @@ namespace OurTaiko.Tests
 {
     public sealed class SongSearchFlowTests
     {
-        FanmadeFixture first, second;
+        OnlineFixture first, second;
         string root;
 
         [UnityTearDown]
@@ -37,14 +37,14 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator SearchesLocalFoldersAndAllServersThenRestoresBrowsing()
         {
-            first = new FanmadeFixture(); second = new FanmadeFixture();
-            first.Charts.Add(new FanmadeFixture.Chart { Title = "Keyword online A" });
+            first = new OnlineFixture(); second = new OnlineFixture();
+            first.Charts.Add(new OnlineFixture.Chart { Title = "Keyword online A" });
             // Uncategorized songs are absent from bootstrap's categories but still searchable/playable.
-            second.Charts.Add(new FanmadeFixture.Chart { Title = "Keyword online B", Categories = Array.Empty<string>() });
+            second.Charts.Add(new OnlineFixture.Chart { Title = "Keyword online B", Categories = Array.Empty<string>() });
             TestData.UseServers(first, second);
             yield return TestData.Connect();
             var online = OnlineManager.Instance;
-            string IdOf(FanmadeFixture fixture) => online.Client.Endpoints.First(e => e.Config.baseUrl.TrimEnd('/') == fixture.BaseUrl.TrimEnd('/')).Id;
+            string IdOf(OnlineFixture fixture) => online.Client.Endpoints.First(e => e.Config.baseUrl.TrimEnd('/') == fixture.BaseUrl.TrimEnd('/')).Id;
             string firstId = IdOf(first), secondId = IdOf(second);
             root = Path.Combine(Application.temporaryCachePath, "search-songs-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(Path.Combine(root, "Folder"));
@@ -244,8 +244,8 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator EditingCancelsAnOldRequestAndKeyboardFocusDoesNotMoveTheWheel()
         {
-            first = new FanmadeFixture();
-            first.Charts.Add(new FanmadeFixture.Chart { Title = "Fresh song" });
+            first = new OnlineFixture();
+            first.Charts.Add(new OnlineFixture.Chart { Title = "Fresh song" });
             TestData.UseServers(first);
             yield return TestData.Connect();
             var online = OnlineManager.Instance;

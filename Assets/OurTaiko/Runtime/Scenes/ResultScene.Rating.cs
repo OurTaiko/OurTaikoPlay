@@ -12,7 +12,7 @@ namespace OurTaiko
     // theirs on it yet. Two players at one screen are not asked.
     public sealed partial class ResultScene
     {
-        FanmadeChart ratingChart;
+        OnlineChart ratingChart;
         int ratingSeat;
         Task<int?> myVote;
         bool ratingAsked;

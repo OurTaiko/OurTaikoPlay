@@ -62,7 +62,7 @@ namespace OurTaiko
             // The offline cache of unreachable servers is searched here, by the metadata it keeps.
             if (scope != LocalKey)
                 local.AddRange(online.OfflineSongs.Where(s => (server == null || s.onlineChart?.Server == server) && query.MatchesCached(s)));
-            var replies = scope == LocalKey ? Array.Empty<FanmadeSearchResult>() : await online.Client.SearchAsync(query, cancel, server);
+            var replies = scope == LocalKey ? Array.Empty<OnlineSearchResult>() : await online.Client.SearchAsync(query, cancel, server);
             cancel.ThrowIfCancellationRequested();
             if (version != searchVersion) return;
             var found = local;

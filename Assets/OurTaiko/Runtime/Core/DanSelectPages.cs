@@ -19,7 +19,7 @@ namespace OurTaiko
 
     public static class DanSelectPages
     {
-        public const string FanmadeTitle = "Fanmade", DatabaseTitle = "Database";
+        public const string OnlineTitle = "Fanmade", DatabaseTitle = "Database";
         public const string GaidenId = "gaiden";
         // box/folder 6: the green plaque.
         public const int GaidenColor = 6;
@@ -34,7 +34,7 @@ namespace OurTaiko
             var pages = new List<DanSelectPage>
             {
                 new DanSelectPage { Title = localTitle },
-                new DanSelectPage { Title = FanmadeTitle, Server = Trim(fanmadeUrl) },
+                new DanSelectPage { Title = OnlineTitle, Server = Trim(fanmadeUrl) },
                 new DanSelectPage { Title = DatabaseTitle, Server = Trim(databaseUrl) },
             };
             pages[0].Courses.AddRange(local);

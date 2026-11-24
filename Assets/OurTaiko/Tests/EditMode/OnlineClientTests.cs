@@ -10,24 +10,24 @@ using OurTaiko.Online;
 
 namespace OurTaiko.Tests
 {
-    // FanmadeClient against the local fixture API, after OurTaikoPlayer's tests/fanmade/client.cpp.
-    public sealed class FanmadeClientTests
+    // OnlineClient against the local fixture API, after OurTaikoPlayer's tests/fanmade/client.cpp.
+    public sealed class OnlineClientTests
     {
-        FanmadeFixture fixture;
-        FanmadeClient client;
+        OnlineFixture fixture;
+        OnlineClient client;
         string cache;
-        FanmadeFixture.Chart first, second;
+        OnlineFixture.Chart first, second;
 
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture();
-            first = new FanmadeFixture.Chart { Title = "First", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3, 4 }, Categories = new[] { "game", "pop" } };
-            second = new FanmadeFixture.Chart { Title = "Second", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Hard")), Audio = new byte[] { 5, 6 }, Categories = new[] { "pop" } };
+            fixture = new OnlineFixture();
+            first = new OnlineFixture.Chart { Title = "First", Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3, 4 }, Categories = new[] { "game", "pop" } };
+            second = new OnlineFixture.Chart { Title = "Second", Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja("Hard")), Audio = new byte[] { 5, 6 }, Categories = new[] { "pop" } };
             second.Difficulties[0] = ("Hard", 5, "");
             fixture.Charts.Add(first); fixture.Charts.Add(second);
             cache = Path.Combine(Path.GetTempPath(), "ourtaiko-fanmade-" + Guid.NewGuid().ToString("N"));
-            client = new FanmadeClient(cache);
+            client = new OnlineClient(cache);
         }
 
         [TearDown]
@@ -43,7 +43,7 @@ namespace OurTaiko.Tests
         static T Run<T>(Func<Task<T>> body) => Task.Run(body).GetAwaiter().GetResult();
 
         // The song list, and unless a guest, don signed in to 1P's seat with its OurTaiko account.
-        FanmadeEndpoint Connect(bool guest)
+        OnlineEndpoint Connect(bool guest)
         {
             var endpoint = client.Add(fixture.Server());
             Run(() => fixture.ConnectAsync(client, endpoint, guest ? null : "don"));
@@ -159,7 +159,7 @@ namespace OurTaiko.Tests
                 ["id"] = "mine", ["title"] = "Mine", ["genre"] = "GAME", ["kind"] = "owned", ["owner"] = "", ["chartIds"] = new JArray(first.Id),
                 ["songListCoverPath"] = path, ["songListCoverSha256"] = hash, ["songListCoverSize"] = size,
             };
-            fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray(Playlist(FanmadeFixture.Sha(picture), picture.Length));
+            fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray(Playlist(OnlineFixture.Sha(picture), picture.Length));
             Run(() => client.LoadCatalogAsync(client.Endpoints[0]));
             Assert.That(client.Playlists[0].Cover.ContentType, Is.EqualTo("image/webp"));
             Assert.That(served, Is.Zero, "Connecting does not download pictures.");
@@ -168,25 +168,25 @@ namespace OurTaiko.Tests
             Assert.That(served, Is.EqualTo(1));
             fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray(Playlist(new string('0', 64), picture.Length));
             Run(() => client.LoadCatalogAsync(client.Endpoints[0]));
-            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PlaylistCoverAsync(client.Playlists[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
+            Assert.That(Assert.Throws<OnlineException>(() => Run(() => client.PlaylistCoverAsync(client.Playlists[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
             // No path (or an empty one): no cover.
-            var bare = Playlist(FanmadeFixture.Sha(picture), 5); bare.Remove("songListCoverPath");
+            var bare = Playlist(OnlineFixture.Sha(picture), 5); bare.Remove("songListCoverPath");
             fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray(bare);
             Run(() => client.LoadCatalogAsync(client.Endpoints[0]));
             Assert.That(client.Playlists[0].Cover, Is.Null);
             foreach (var (bad, code) in new[]
             {
-                (Playlist("xyz", 5), "RESOURCE_METADATA_INVALID"), (Playlist(FanmadeFixture.Sha(picture), 0), "RESOURCE_METADATA_INVALID"),
-                (Playlist(FanmadeFixture.Sha(picture), FanmadePlaylist.MaxCoverBytes + 1), "RESOURCE_METADATA_INVALID"),
+                (Playlist("xyz", 5), "RESOURCE_METADATA_INVALID"), (Playlist(OnlineFixture.Sha(picture), 0), "RESOURCE_METADATA_INVALID"),
+                (Playlist(OnlineFixture.Sha(picture), OnlinePlaylist.MaxCoverBytes + 1), "RESOURCE_METADATA_INVALID"),
                 // A path is under the root: never an address, a query or a way out of it.
-                (Playlist(FanmadeFixture.Sha(picture), 5, "http://example.com/cover.webp"), "RESOURCE_PATH_INVALID"),
-                (Playlist(FanmadeFixture.Sha(picture), 5, "/fanmade/cover.webp"), "RESOURCE_PATH_INVALID"),
-                (Playlist(FanmadeFixture.Sha(picture), 5, "fanmade/../cover.webp"), "RESOURCE_PATH_INVALID"),
-                (Playlist(FanmadeFixture.Sha(picture), 5, "fanmade/cover.webp?v=1"), "RESOURCE_PATH_INVALID"),
+                (Playlist(OnlineFixture.Sha(picture), 5, "http://example.com/cover.webp"), "RESOURCE_PATH_INVALID"),
+                (Playlist(OnlineFixture.Sha(picture), 5, "/fanmade/cover.webp"), "RESOURCE_PATH_INVALID"),
+                (Playlist(OnlineFixture.Sha(picture), 5, "fanmade/../cover.webp"), "RESOURCE_PATH_INVALID"),
+                (Playlist(OnlineFixture.Sha(picture), 5, "fanmade/cover.webp?v=1"), "RESOURCE_PATH_INVALID"),
             })
             {
                 fixture.ChangeBootstrap = reply => reply["playlists"] = new JArray(bad);
-                Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(client.Endpoints[0]))).Message, Is.EqualTo(code));
+                Assert.That(Assert.Throws<OnlineException>(() => Run(() => client.LoadCatalogAsync(client.Endpoints[0]))).Message, Is.EqualTo(code));
             }
 
             foreach (var broken in new JToken[]
@@ -197,7 +197,7 @@ namespace OurTaiko.Tests
             })
             {
                 fixture.ChangeBootstrap = reply => reply["playlists"] = broken;
-                var error = Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(client.Endpoints[0])));
+                var error = Assert.Throws<OnlineException>(() => Run(() => client.LoadCatalogAsync(client.Endpoints[0])));
                 Assert.That(error.Message, Is.EqualTo("API_PLAYLIST_INVALID"));
             }
         }
@@ -206,7 +206,7 @@ namespace OurTaiko.Tests
         public void LargeCatalogStillUsesOneRequestWithoutDownloadingResources()
         {
             for (int i = 0; i < 3000; i++)
-                fixture.Charts.Add(new FanmadeFixture.Chart { Categories = new[] { "game", "pop" } });
+                fixture.Charts.Add(new OnlineFixture.Chart { Categories = new[] { "game", "pop" } });
             Connect(guest: true);
             Assert.That(client.Charts.Count, Is.EqualTo(3002));
             Assert.That(client.Categories[0].ChartIds.Count, Is.EqualTo(3001));
@@ -239,7 +239,7 @@ namespace OurTaiko.Tests
                 }
             };
             var endpoint = client.Add(fixture.Server());
-            var error = Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(endpoint)));
+            var error = Assert.Throws<OnlineException>(() => Run(() => client.LoadCatalogAsync(endpoint)));
             Assert.That(error.Message, Is.EqualTo(code));
             Assert.That(endpoint.IsConnected, Is.False);
             Assert.That(client.Charts, Is.Empty);
@@ -258,7 +258,7 @@ namespace OurTaiko.Tests
             var chart = client.Charts[0];
             Assert.That(client.Best(chart, (int)Difficulty.Oni).ClearStatus, Is.EqualTo(clearStatus));
             Assert.That(client.Submit(chart, (int)Difficulty.Oni,
-                new FanmadeScore { Score = 800000, Good = 100, Bad = 10, ClearStatus = clearStatus }), Is.True);
+                new OnlineScore { Score = 800000, Good = 100, Bad = 10, ClearStatus = clearStatus }), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
             Assert.That(body["ClearStatus"]?.Type, Is.EqualTo(JTokenType.Integer));
@@ -272,13 +272,13 @@ namespace OurTaiko.Tests
         {
             Connect(guest: false);
             var chart = client.Charts[0];
-            Assert.That(client.Submit(chart, (int)Difficulty.Oni, new FanmadeScore { Score = 1000, Good = 10 }), Is.True);
+            Assert.That(client.Submit(chart, (int)Difficulty.Oni, new OnlineScore { Score = 1000, Good = 10 }), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(fixture.AcceptedScores.TryDequeue(out var plain), Is.True);
             Assert.That(plain.ContainsKey("adlib") || plain.ContainsKey("mines"), Is.False);
 
             Assert.That(client.Submit(chart, (int)Difficulty.Oni,
-                new FanmadeScore { Score = 900000, Good = 10, AdLibGood = 3, AdLibOk = 1, Mines = 2 }), Is.True);
+                new OnlineScore { Score = 900000, Good = 10, AdLibGood = 3, AdLibOk = 1, Mines = 2 }), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
             Assert.That(body["adlib"].ToObject<long[]>(), Is.EqualTo(new long[] { 3, 1 }));
@@ -291,10 +291,10 @@ namespace OurTaiko.Tests
         public void AnUnreachableServerReportsANetworkCode()
         {
             var endpoint = client.Add(new ServerConfig { name = "Down", baseUrl = "http://127.0.0.1:9" });
-            var error = Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(endpoint)));
+            var error = Assert.Throws<OnlineException>(() => Run(() => client.LoadCatalogAsync(endpoint)));
             Assert.That(error.Message, Does.StartWith("NETWORK_"));
             var invalid = client.Add(new ServerConfig { name = "Bad", baseUrl = "ftp://example.com" });
-            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(invalid))).Message, Is.EqualTo("SERVER_URL_INVALID"));
+            Assert.That(Assert.Throws<OnlineException>(() => Run(() => client.LoadCatalogAsync(invalid))).Message, Is.EqualTo("SERVER_URL_INVALID"));
         }
 
         [Test]
@@ -315,7 +315,7 @@ namespace OurTaiko.Tests
 
             // Objects are keyed by content hash alone, with short paths (Windows' MAX_PATH), and
             // the playable TJA never reaches the disk.
-            string hash = FanmadeFixture.Sha(first.Audio);
+            string hash = OnlineFixture.Sha(first.Audio);
             Assert.That(audio, Is.EqualTo(Path.Combine(Path.GetFullPath(cache), "objects", hash.Substring(0, 2), hash)));
             Assert.That(Directory.GetFiles(cache, "*", SearchOption.AllDirectories).Select(f => f.Substring(cache.Length)).Max(f => f.Length), Is.LessThanOrEqualTo(80));
             Assert.That(Directory.GetFiles(Path.Combine(cache, "objects"), "*", SearchOption.AllDirectories), Has.Length.EqualTo(2));
@@ -329,7 +329,7 @@ namespace OurTaiko.Tests
             Assert.That(File.ReadAllBytes(audio), Is.EqualTo(first.Audio));
 
             // Another client of the same server reuses the verified objects.
-            using var other = new FanmadeClient(cache, Path.Combine(cache, "other.sqlite3"));
+            using var other = new OnlineClient(cache, Path.Combine(cache, "other.sqlite3"));
             var guest = other.Add(fixture.Server());
             Run(() => other.LoadCatalogAsync(guest));
             Assert.That(Run(() => other.PrepareAsync(other.Charts[0])).AudioPath, Is.EqualTo(audio));
@@ -341,7 +341,7 @@ namespace OurTaiko.Tests
         [TestCase(0.0)]
         public void PrepareUsesLatestApiOffsetWithoutChangingCachedFiles(double offset)
         {
-            first.Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja().Replace("OFFSET:0", "OFFSET:1.25"));
+            first.Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja().Replace("OFFSET:0", "OFFSET:1.25"));
             first.Offset = 0.125;
             Connect(guest: true);
             var listed = client.Charts[0];
@@ -356,7 +356,7 @@ namespace OurTaiko.Tests
             Assert.That(parsed.Offset, Is.EqualTo(offset));
             Assert.That(parsed.Notes[0].Time, Is.EqualTo(-offset).Within(1e-9));
             Assert.That(fixture.Downloads, Is.EqualTo(2), "Metadata changes must reuse verified file objects.");
-            string hash = FanmadeFixture.Sha(first.Tja);
+            string hash = OnlineFixture.Sha(first.Tja);
             string original = Path.Combine(cache, "objects", hash.Substring(0, 2), hash);
             Assert.That(File.ReadAllBytes(original), Is.EqualTo(first.Tja), "The hash-verified TJA stays intact.");
         }
@@ -365,11 +365,11 @@ namespace OurTaiko.Tests
         [TestCase(true)]
         public void ApiOffsetOverridesGlobalAndCourseHeadersForEveryPlayer(bool paired)
         {
-            var value = new FanmadeFixture.Chart { Offset = -0.375 };
+            var value = new OnlineFixture.Chart { Offset = -0.375 };
             value.Difficulties = paired
                 ? new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") }
                 : new System.Collections.Generic.List<(string, int, string)> { ("Hard", 4, ""), ("Oni", 9, "") };
-            var chart = FanmadeChart.From(value.ToJson(), "server");
+            var chart = OnlineChart.From(value.ToJson(), "server");
             string original = paired
                 ? "BPM:150\nOFFSET:2\nCOURSE:Oni\noffset:3\n#START P1\n1,\n#END\nOFFSET:4\n#START P2\n2,\n#END\n"
                 : "BPM:150\nOFFSET:2\nCOURSE:Hard\noffset:3\n#START\n1,\n#END\nCOURSE:Oni\nOFFSET:4\n#START\n2,\n#END\n";
@@ -398,10 +398,10 @@ namespace OurTaiko.Tests
                 new JValue(double.NaN), new JValue(double.PositiveInfinity), new JValue(double.NegativeInfinity) })
             {
                 value["offset"] = invalid;
-                Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(value, "server")).Message, Is.EqualTo("API_METADATA_INVALID"));
+                Assert.That(Assert.Throws<OnlineException>(() => OnlineChart.From(value, "server")).Message, Is.EqualTo("API_METADATA_INVALID"));
             }
             value.Remove("offset");
-            Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(value, "server")).Message, Is.EqualTo("API_METADATA_INVALID"));
+            Assert.That(Assert.Throws<OnlineException>(() => OnlineChart.From(value, "server")).Message, Is.EqualTo("API_METADATA_INVALID"));
         }
 
         [Test]
@@ -409,7 +409,7 @@ namespace OurTaiko.Tests
         {
             Connect(guest: true);
             var listed = client.Charts[0];
-            first.Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Oni", 2));
+            first.Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja("Oni", 2));
             first.Title = "First v2";
             DownloadProgress last = null;
             int updates = 0;
@@ -441,7 +441,7 @@ namespace OurTaiko.Tests
             fixture.ScoreFailures.Enqueue(503);
             var record = new PlayRecord { AudioOffsetMs = 12, VisualOffsetMs = -3 };
             record.Inputs.Add((100.5, 1)); record.Inputs.Add((100.5, 3)); record.Inputs.Add((-20, 0));
-            Assert.That(client.Submit(chart, (int)Difficulty.Oni, new FanmadeScore { Good = 3, Score = 3000, MaxCombo = 3, ClearStatus = 3 }, record), Is.True);
+            Assert.That(client.Submit(chart, (int)Difficulty.Oni, new OnlineScore { Good = 3, Score = 3000, MaxCombo = 3, ClearStatus = 3 }, record), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(client.PendingCount(endpoint), Is.EqualTo(1), "A temporary failure keeps the queued request.");
             string queued = client.UploadQueue.Pending(endpoint.AccountId)[0].Body;
@@ -467,7 +467,7 @@ namespace OurTaiko.Tests
         {
             var endpoint = Connect(guest: false);
             fixture.ScoreFailures.Enqueue(409);
-            client.Submit(client.Charts[0], (int)Difficulty.Oni, new FanmadeScore { Score = 1 });
+            client.Submit(client.Charts[0], (int)Difficulty.Oni, new OnlineScore { Score = 1 });
             Run(() => client.WaitForUploadsAsync());
             Assert.That(client.PendingCount(endpoint), Is.Zero);
             Assert.That(client.UploadQueue.RejectedCount(endpoint.AccountId), Is.EqualTo(1));
@@ -477,7 +477,7 @@ namespace OurTaiko.Tests
         public void GuestsNeverQueueAndScoresNameTheBlockThatWasPlayed()
         {
             Connect(guest: true);
-            Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new FanmadeScore()), Is.False, "Guests never queue scores.");
+            Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new OnlineScore()), Is.False, "Guests never queue scores.");
 
             client.Reset();
             first.Difficulties[0] = ("Oni", 8, "P1");
@@ -485,7 +485,7 @@ namespace OurTaiko.Tests
             first.Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P1\n1,\n#END\n#START P2\n2,\n#END\n");
             Connect(guest: false);
             // Single play of a course without a single block reads its 1P block.
-            Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new FanmadeScore { Score = 5 }), Is.True);
+            Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new OnlineScore { Score = 5 }), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
             Assert.That((long)body["difficultyId"], Is.EqualTo(first.BlockId("Oni", "P1")));
@@ -525,7 +525,7 @@ namespace OurTaiko.Tests
         {
             fixture.Protocol.Remove(capability);
             var endpoint = client.Add(fixture.Server());
-            var error = Assert.Throws<FanmadeException>(() => Run(() => client.LoadCatalogAsync(endpoint)));
+            var error = Assert.Throws<OnlineException>(() => Run(() => client.LoadCatalogAsync(endpoint)));
             Assert.That(error.Message, Is.EqualTo("SERVER_PROTOCOL_UNSUPPORTED"));
             Assert.That(endpoint.IsConnected, Is.False);
             Assert.That(client.Charts, Is.Empty);
@@ -534,7 +534,7 @@ namespace OurTaiko.Tests
         [Test]
         public void PlayableTjaKeepsTheApiCourses()
         {
-            var chart = FanmadeChart.From(new FanmadeFixture.Chart
+            var chart = OnlineChart.From(new OnlineFixture.Chart
             {
                 Title = "Blocks", AudioName = "x.MP3",
                 Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Hard", 4, ""), ("Oni", 9, "") },
@@ -546,9 +546,9 @@ namespace OurTaiko.Tests
             Assert.That(play, Does.Not.Contain("COURSE:Easy"));
             Assert.That(play, Does.Contain("COURSE:Hard\nLEVEL:4\nBPM:150\nSCOREINIT:1000\n#START\n2,\n#END\n"));
             Assert.That(play, Does.Contain("COURSE:Oni\nLEVEL:9\nBPM:150\n#START\n3,\n#END\n"));
-            Assert.Throws<FanmadeException>(() => PlayableTja.Build("COURSE:Hard\n#START\n1,\n#END\n", chart), "TJA_BLOCK_MISMATCH");
+            Assert.Throws<OnlineException>(() => PlayableTja.Build("COURSE:Hard\n#START\n1,\n#END\n", chart), "TJA_BLOCK_MISMATCH");
 
-            var pair = FanmadeChart.From(new FanmadeFixture.Chart
+            var pair = OnlineChart.From(new OnlineFixture.Chart
             {
                 Title = "Pair", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") },
             }.ToJson(), "server");
@@ -562,7 +562,7 @@ namespace OurTaiko.Tests
             Assert.That(TjaParser.Parse(play, "Oni", "p2").Notes[0].Kind, Is.EqualTo(NoteKind.BigKa));
 
             // All three sides of a course in one file, as official charts have them.
-            var mixed = FanmadeChart.From(new FanmadeFixture.Chart
+            var mixed = OnlineChart.From(new OnlineFixture.Chart
             {
                 Title = "Mixed", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2"), ("Oni", 7, "") },
             }.ToJson(), "server");
@@ -581,11 +581,11 @@ namespace OurTaiko.Tests
                 Assert.That(SongInfo.Read(play).Course(Difficulty.Oni, seat, together).Level, Is.EqualTo(level));
             }
             Assert.That(mixed.Difficulties[3].Side, Is.EqualTo("single"), "the list shows what 1P plays alone");
-            Assert.Throws<FanmadeException>(() => PlayableTja.Build(pairTja, mixed), "TJA_BLOCK_MISMATCH");
+            Assert.Throws<OnlineException>(() => PlayableTja.Build(pairTja, mixed), "TJA_BLOCK_MISMATCH");
 
             // A course with only a single block is what both seats read; a 2P-only one is not for the 1P seat.
             Assert.That(chart.Block(3, "p1"), Is.SameAs(chart.Difficulties[3])); Assert.That(chart.Block(3, "p2"), Is.SameAs(chart.Difficulties[3]));
-            var only2P = FanmadeChart.From(new FanmadeFixture.Chart
+            var only2P = OnlineChart.From(new OnlineFixture.Chart
             {
                 Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 8, "P2") },
             }.ToJson(), "server");
@@ -595,37 +595,37 @@ namespace OurTaiko.Tests
         [Test]
         public void SongInfoComesStraightFromTheApiMetadata()
         {
-            var json = new FanmadeFixture.Chart
+            var json = new OnlineFixture.Chart
             {
                 Title = "Meta", Subtitle = "--Sub", Bpm = 180, DemoStart = 12.5,
                 Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Hard", 4, ""), ("Edit", 10, "") },
             }.ToJson();
             json["subtitleTranslations"] = new JObject { ["ja"] = "++副題" };
             json["difficulties"][1]["branching"] = true;
-            var info = FanmadeChart.From(json, "server").ToSongInfo("ja");
+            var info = OnlineChart.From(json, "server").ToSongInfo("ja");
             Assert.That((info.Title, info.Subtitle, info.Bpm, info.DemoStart), Is.EqualTo(("Meta JA", "副題", 180.0, 12.5)));
             Assert.That(info.Courses().Select(c => (c.Difficulty, c.Course, c.Level)),
                 Is.EqualTo(new[] { (Difficulty.Hard, "Hard", 4), (Difficulty.Ura, "Edit", 10) }));
             Assert.That(info.Courses().Select(c => c.IsBranching), Is.EqualTo(new[] { false, true }));
             ((JObject)json["difficulties"][0]).Remove("branching");
-            Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(json, "server")).Message, Is.EqualTo("API_DIFFICULTY_INVALID"), "branching is required.");
+            Assert.That(Assert.Throws<OnlineException>(() => OnlineChart.From(json, "server")).Message, Is.EqualTo("API_DIFFICULTY_INVALID"), "branching is required.");
             json["difficulties"][0]["branching"] = false;
-            Assert.That(FanmadeChart.From(json, "server").ToSongInfo("ko").Title, Is.EqualTo("Meta"), "Missing translations show the original.");
+            Assert.That(OnlineChart.From(json, "server").ToSongInfo("ko").Title, Is.EqualTo("Meta"), "Missing translations show the original.");
 
-            var keyed = new FanmadeFixture.Chart
+            var keyed = new OnlineFixture.Chart
             {
                 Title = "Double", Difficulties = new System.Collections.Generic.List<(string, int, string)> { ("Oni", 9, "P1"), ("Oni", 8, "P2") },
             }.ToJson();
             // One song whatever its sides: single play lists the 1P block of a course without a single one.
-            var sided = FanmadeChart.From(keyed, "server");
+            var sided = OnlineChart.From(keyed, "server");
             Assert.That(sided.ToSongInfo("en").Title, Is.EqualTo("Double"));
             Assert.That(sided.ToSongInfo("en").Courses().Select(c => (c.Difficulty, c.Course, c.Level, c.IsBranching)), Is.EqualTo(new[] { (Difficulty.Oni, "Oni", 9, false) }));
             ((JObject)keyed["difficulties"][1])["side"] = "p3";
-            Assert.That(Assert.Throws<FanmadeException>(() => FanmadeChart.From(keyed, "server")).Message, Is.EqualTo("API_DIFFICULTY_INVALID"));
+            Assert.That(Assert.Throws<OnlineException>(() => OnlineChart.From(keyed, "server")).Message, Is.EqualTo("API_DIFFICULTY_INVALID"));
 
             // Blocks without a side and id (a server from before chart slots) are refused.
             keyed["difficulties"] = new JArray(new JObject { ["course"] = "Oni_1p", ["level"] = 9, ["maker"] = "", ["branching"] = false });
-            Assert.Throws<FanmadeException>(() => FanmadeChart.From(keyed, "server"));
+            Assert.Throws<OnlineException>(() => OnlineChart.From(keyed, "server"));
         }
 
         [Test]
@@ -636,7 +636,7 @@ namespace OurTaiko.Tests
                 new byte[] { 0xff }, new byte[] { 0xe3, 0x81 },
                 new byte[] { 0x83, 0x65, 0x83, 0x58, 0x83, 0x67 } })
             {
-                var error = Assert.Throws<FanmadeException>(() => PlayableTja.ToUtf8(bytes));
+                var error = Assert.Throws<OnlineException>(() => PlayableTja.ToUtf8(bytes));
                 Assert.That(error.Message, Is.EqualTo("TJA_ENCODING_INVALID"));
             }
         }
@@ -664,14 +664,14 @@ namespace OurTaiko.Tests
             Assert.That(endpoint.HasValidUrl(), Is.True);
             Assert.That(endpoint.Config.Address("/api/v2/game/search?q=a"), Is.EqualTo(fixture.BaseUrl + "/api/v2/sources/fanmade/game/search?q=a"));
             Assert.That(endpoint.Config.ApiRoot, Is.EqualTo(fixture.BaseUrl + "/api/v2/sources/fanmade"));
-            string old = FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes("https://old.example\n"));
+            string old = OnlineEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes("https://old.example\n"));
             Assert.That(endpoint.Id, Is.EqualTo(old));
             Assert.That(endpoint.AccountId, Is.EqualTo(old), "Signed out, a seat is the server itself.");
 
             Run(() => fixture.ConnectAsync(client, endpoint, "don"));
             Assert.That(endpoint.IsConnected, Is.True);
             Assert.That(endpoint.IsAuthenticated, Is.True);
-            Assert.That(endpoint.AccountId, Is.EqualTo(FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes("https://old.example\nsso:" + endpoint.Seats[0].UserId))));
+            Assert.That(endpoint.AccountId, Is.EqualTo(OnlineEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes("https://old.example\nsso:" + endpoint.Seats[0].UserId))));
             var asked = fixture.Requests.Where(r => !r.Contains("/game/account/") && !r.EndsWith(" /api/v1/game/tokens")).ToArray();
             Assert.That(asked, Is.Not.Empty);
             Assert.That(asked, Has.All.Contains(" /api/v2/sources/fanmade/"), "Every request to the server goes under its API address.");
@@ -703,11 +703,11 @@ namespace OurTaiko.Tests
             {
                 Assert.That(e.IsConnected, Is.True);
                 Assert.That(e.ChartCount, Is.GreaterThan(0));
-                Assert.That(e.SsoService, Is.EqualTo(FanmadeFixture.Service));
+                Assert.That(e.SsoService, Is.EqualTo(OnlineFixture.Service));
                 Assert.That(e.IsAuthenticated, Is.False);
             }
             Assert.That(client.Charts.Select(c => c.Server).Distinct(), Is.EquivalentTo(new[] { fanmade.Id, official.Id }), "Each source's songs are its own.");
-            Assert.That(fanmade.Id, Is.EqualTo(FanmadeEndpoint.Sha256Hex(Encoding.UTF8.GetBytes("https://fanmade.example\n"))));
+            Assert.That(fanmade.Id, Is.EqualTo(OnlineEndpoint.Sha256Hex(Encoding.UTF8.GetBytes("https://fanmade.example\n"))));
 
             using var center = new AccountCenter(fixture.BaseUrl);
             var account = Run(() => center.LoginAsync("don", "katsu", "Test"));
@@ -806,9 +806,9 @@ namespace OurTaiko.Tests
             v1["owners"] = new JArray(new JObject { ["id"] = "x", ["nickname"] = "Don", ["avatarUrl"] = "https://distrib.ourtaiko.org/sso/avatars/a/b.webp" });
             v1["audioPreview"] = new JObject { ["url"] = "https://distrib.ourtaiko.org/fanmade/" + new string('d', 64) + ".ogg", ["sha256"] = new string('d', 64), ["size"] = 5 };
             v1["previewPath"] = "fanmade/preview.webp";
-            var a = FanmadeChart.From(v2, "server");
-            var b = FanmadeChart.From(v1, "server");
-            Assert.That((a.Id, a.Title, a.AudioHash, a.BlocksKey, a.Maker), Is.EqualTo((first.Id, "First", FanmadeFixture.Sha(first.Audio), b.BlocksKey, "Tester")));
+            var a = OnlineChart.From(v2, "server");
+            var b = OnlineChart.From(v1, "server");
+            Assert.That((a.Id, a.Title, a.AudioHash, a.BlocksKey, a.Maker), Is.EqualTo((first.Id, "First", OnlineFixture.Sha(first.Audio), b.BlocksKey, "Tester")));
             Assert.That((b.Id, b.Title, b.AudioHash, b.Maker, b.IsPlayable), Is.EqualTo((a.Id, a.Title, a.AudioHash, a.Maker, true)));
 
             // A chart the offline store kept in version 1's shape still reads back.
@@ -823,12 +823,12 @@ namespace OurTaiko.Tests
         [Test]
         public void AServersFolderWearsTheBoardItsCatalogNames()
         {
-            Assert.That(FanmadeClient.ReadGenreFrame(new JValue(10)), Is.EqualTo(10));
-            Assert.That(FanmadeClient.ReadGenreFrame(new JValue(4)), Is.EqualTo(4));
-            Assert.That(FanmadeClient.ReadGenreFrame(null), Is.EqualTo(0), "A server that names none keeps the default yellow.");
-            Assert.That(FanmadeClient.ReadGenreFrame(new JValue(13)), Is.EqualTo(0), "Past the last board.");
-            Assert.That(FanmadeClient.ReadGenreFrame(new JValue(-1)), Is.EqualTo(0));
-            Assert.That(FanmadeClient.ReadGenreFrame(new JValue("10")), Is.EqualTo(0), "Only a whole number.");
+            Assert.That(OnlineClient.ReadGenreFrame(new JValue(10)), Is.EqualTo(10));
+            Assert.That(OnlineClient.ReadGenreFrame(new JValue(4)), Is.EqualTo(4));
+            Assert.That(OnlineClient.ReadGenreFrame(null), Is.EqualTo(0), "A server that names none keeps the default yellow.");
+            Assert.That(OnlineClient.ReadGenreFrame(new JValue(13)), Is.EqualTo(0), "Past the last board.");
+            Assert.That(OnlineClient.ReadGenreFrame(new JValue(-1)), Is.EqualTo(0));
+            Assert.That(OnlineClient.ReadGenreFrame(new JValue("10")), Is.EqualTo(0), "Only a whole number.");
             // The song-select strips stop at 9: Fanmade's 10 takes the blue strip, Database's 4 its own.
             Assert.That(SongSelectScene.BackgroundFrame(10, 10), Is.EqualTo(1));
             Assert.That(SongSelectScene.BackgroundFrame(4, 10), Is.EqualTo(4));

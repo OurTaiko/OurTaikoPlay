@@ -20,14 +20,14 @@ namespace OurTaiko.Tests
     // over it, take its keys while up, and are marked seen when closed.
     public sealed class RewardOverlayFlowTests
     {
-        FanmadeFixture fixture;
+        OnlineFixture fixture;
         string language;
 
         [SetUp]
         public void SetUp()
         {
             language = L10n.Language;
-            fixture = new FanmadeFixture { RewardsOn = true };
+            fixture = new OnlineFixture { RewardsOn = true };
         }
 
         [UnityTearDown]
@@ -136,9 +136,9 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator OnAResultItWaitsUntilTheResultHasComeIn()
         {
-            var chart = new FanmadeFixture.Chart
+            var chart = new OnlineFixture.Chart
             {
-                Title = "Reward Song", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Oni", 1, 240)),
+                Title = "Reward Song", Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja("Oni", 1, 240)),
                 Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),
             };
             fixture.Charts.Add(chart);

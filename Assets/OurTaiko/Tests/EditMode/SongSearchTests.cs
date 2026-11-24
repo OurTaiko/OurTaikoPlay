@@ -40,11 +40,11 @@ namespace OurTaiko.Tests
         [Test]
         public void SearchQueriesEveryServerKeepsDuplicateIdsAcrossServersAndReportsPartialFailure()
         {
-            using var a = new FanmadeFixture(); using var b = new FanmadeFixture();
+            using var a = new OnlineFixture(); using var b = new OnlineFixture();
             string cache = Path.Combine(Path.GetTempPath(), "ourtaiko-search-" + Guid.NewGuid().ToString("N"));
-            using var client = new FanmadeClient(cache);
-            var first = new FanmadeFixture.Chart { Title = "夜 & ? song" };
-            a.Charts.Add(first); b.Charts.Add(new FanmadeFixture.Chart { Id = first.Id, Title = first.Title });
+            using var client = new OnlineClient(cache);
+            var first = new OnlineFixture.Chart { Title = "夜 & ? song" };
+            a.Charts.Add(first); b.Charts.Add(new OnlineFixture.Chart { Id = first.Id, Title = first.Title });
             try
             {
                 Task.Run(async () =>
@@ -67,10 +67,10 @@ namespace OurTaiko.Tests
         [Test]
         public void DifficultySearchCoversEverySideAndUsesAnyQualifyingScore()
         {
-            using var fixture = new FanmadeFixture();
+            using var fixture = new OnlineFixture();
             string cache = Path.Combine(Path.GetTempPath(), "ourtaiko-search-" + Guid.NewGuid().ToString("N"));
-            using var client = new FanmadeClient(cache);
-            var chart = new FanmadeFixture.Chart { Title = "Double", Difficulties = { } };
+            using var client = new OnlineClient(cache);
+            var chart = new OnlineFixture.Chart { Title = "Double", Difficulties = { } };
             chart.Difficulties.Clear(); chart.Difficulties.Add(("Oni", 8, "P1")); chart.Difficulties.Add(("Hard", 6, "P2"));
             fixture.Charts.Add(chart);
             fixture.AddAccountScore("don", chart, "Oni", 1000, 2, "P1");

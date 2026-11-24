@@ -11,10 +11,10 @@ namespace OurTaiko.Tests
 {
     public sealed class ResourceDownloadTests
     {
-        FanmadeFixture api, origin;
-        FanmadeFixture.Chart chart;
-        FanmadeClient client;
-        FanmadeEndpoint endpoint;
+        OnlineFixture api, origin;
+        OnlineFixture.Chart chart;
+        OnlineClient client;
+        OnlineEndpoint endpoint;
         string cache;
         int manifests, tjaGets, audioGets, movieGets, mirrorGets, forbidden;
         // What the mirror root answers instead of the file (0: the file), and whether it sends other bytes.
@@ -33,21 +33,21 @@ namespace OurTaiko.Tests
             corruptMirror = false;
             movie = null; movieType = "video/mp4";
             corrupt = mismatch = corruptMovie = false;
-            api = new FanmadeFixture();
-            origin = new FanmadeFixture();
-            chart = new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3 } };
+            api = new OnlineFixture();
+            origin = new OnlineFixture();
+            chart = new OnlineFixture.Chart { Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3 } };
             api.Charts.Add(chart);
             api.Manifest = c =>
             {
                 manifests++;
                 JObject Resource(string kind, byte[] bytes, string type) => new JObject
                 {
-                    ["path"] = kind, ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
+                    ["path"] = kind, ["sha256"] = OnlineFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
                 };
                 var resources = new JObject { ["tja"] = Resource("tja", c.Tja, "application/octet-stream"),
                     ["audio"] = Resource("audio", mismatch ? new byte[] { 9 } : c.Audio, "audio/ogg") };
                 if (movie != null) resources["movie"] = Resource("movie", movie, movieType);
-                return new JObject { ["chartId"] = FanmadeFixture.IdToken(c.Id), ["resources"] = resources };
+                return new JObject { ["chartId"] = OnlineFixture.IdToken(c.Id), ["resources"] = resources };
             };
             origin.CustomRequest = context =>
             {
@@ -70,7 +70,7 @@ namespace OurTaiko.Tests
             // The files are the origin fixture's; the API's site names it as the root.
             api.FilesRoot = api.CanonicalRoot = origin.BaseUrl + "/";
             cache = Path.Combine(Path.GetTempPath(), "ourtaiko-resources-" + Guid.NewGuid().ToString("N"));
-            client = new FanmadeClient(cache);
+            client = new OnlineClient(cache);
             endpoint = client.Add(api.Server());
             Run(() => api.ConnectAsync(client, endpoint, "don"));
         }
@@ -79,7 +79,7 @@ namespace OurTaiko.Tests
         public void Utf8DownloadIgnoresEncodingMetadataAndAcceptsBom(string encoding)
         {
             chart.Encoding = encoding;
-            chart.Tja = Encoding.UTF8.GetBytes("\uFEFF" + FanmadeFixture.SimpleTja());
+            chart.Tja = Encoding.UTF8.GetBytes("\uFEFF" + OnlineFixture.SimpleTja());
             Run(() => client.LoadCatalogAsync(endpoint));
             var prepared = Run(() => client.PrepareAsync(client.Charts[0]));
             Assert.That(prepared.Tja, Does.Contain("TITLE:" + chart.Title));
@@ -103,7 +103,7 @@ namespace OurTaiko.Tests
                 else tja[field] = "bad";
                 return v;
             };
-            Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0])));
+            Assert.Throws<OnlineException>(() => Run(() => client.PrepareAsync(client.Charts[0])));
             Assert.That(tjaGets + audioGets, Is.Zero);
         }
         [Test] public void First403RefreshCanRecoverWithoutChangingAccount()
@@ -163,8 +163,8 @@ namespace OurTaiko.Tests
         [Test] public void DifferentServersShareBytesButKeepTheirOwnMetadata()
         {
             var first = Run(() => client.PrepareAsync(client.Charts[0]));
-            using var otherApi = new FanmadeFixture();
-            otherApi.Charts.Add(new FanmadeFixture.Chart { Tja = chart.Tja, Audio = chart.Audio, Title = "Other server" });
+            using var otherApi = new OnlineFixture();
+            otherApi.Charts.Add(new OnlineFixture.Chart { Tja = chart.Tja, Audio = chart.Audio, Title = "Other server" });
             var other = client.Add(otherApi.Server());
             Run(() => client.LoadCatalogAsync(other));
             var second = Run(() => client.PrepareAsync(client.Charts.Single(c => c.Server == other.Id)));
@@ -192,8 +192,8 @@ namespace OurTaiko.Tests
                 var first = Run(() => client.PrepareAsync(client.Charts[0]));
                 File.WriteAllBytes(first.AudioPath, new byte[] { 9, 9, 9 });
             }
-            using var otherApi = new FanmadeFixture();
-            otherApi.Charts.Add(new FanmadeFixture.Chart { Tja = chart.Tja, Audio = chart.Audio });
+            using var otherApi = new OnlineFixture();
+            otherApi.Charts.Add(new OnlineFixture.Chart { Tja = chart.Tja, Audio = chart.Audio });
             var other = client.Add(otherApi.Server());
             Run(() => client.LoadCatalogAsync(other));
             var selected = client.Charts.ToArray();
@@ -227,14 +227,14 @@ namespace OurTaiko.Tests
         [Test] public void HashMismatchNeverPublishesPlayablePair()
         {
             corrupt = true;
-            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
+            Assert.That(Assert.Throws<OnlineException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
             string objects = Path.Combine(cache, "objects");
             Assert.That(Directory.Exists(objects) ? Directory.GetFiles(objects, "*", SearchOption.AllDirectories) : new string[0], Is.Empty);
         }
         [Test] public void DetailManifestRaceIsBounded()
         {
             mismatch = true;
-            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("CHART_UPDATING"));
+            Assert.That(Assert.Throws<OnlineException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("CHART_UPDATING"));
             Assert.That(manifests, Is.EqualTo(2)); Assert.That(tjaGets + audioGets, Is.Zero);
         }
         [Test] public void NumericChartIdsDownloadAndUploadLikeHexOnes()
@@ -244,17 +244,17 @@ namespace OurTaiko.Tests
             Assert.That(client.Charts.Single().Id, Is.EqualTo("1617"));
             var result = Run(() => client.PrepareAsync(client.Charts.Single()));
             Assert.That(TjaParser.Parse(result.Tja, "Oni").Level, Is.EqualTo(8));
-            client.Submit(result.Chart, 3, new FanmadeScore { Score = 7 }); Run(() => client.WaitForUploadsAsync());
+            client.Submit(result.Chart, 3, new OnlineScore { Score = 7 }); Run(() => client.WaitForUploadsAsync());
             Assert.That(api.AcceptedScores.TryDequeue(out var body), Is.True);
             Assert.That((long)body["difficultyId"], Is.EqualTo(chart.BlockId("Oni")));
             Assert.That(client.Best(client.Charts.Single(), 3).Score, Is.EqualTo(7));
-            foreach (string id in new[] { "1617", "1", new string('a', 32) }) Assert.That(FanmadeChart.ValidId(id), Is.True, id);
-            foreach (string id in new[] { "0", "012", "-5", "1e3", "abc", "", new string('9', 19) }) Assert.That(FanmadeChart.ValidId(id), Is.False, id);
+            foreach (string id in new[] { "1617", "1", new string('a', 32) }) Assert.That(OnlineChart.ValidId(id), Is.True, id);
+            foreach (string id in new[] { "0", "012", "-5", "1e3", "abc", "", new string('9', 19) }) Assert.That(OnlineChart.ValidId(id), Is.False, id);
         }
         [Test] public void ChangedFilesStopOldUploads()
         {
             var c = client.Charts[0]; api.ScoreFailures.Enqueue(503);
-            client.Submit(c, 3, new FanmadeScore { Score = 99, ClearStatus = 1 }); Run(() => client.WaitForUploadsAsync());
+            client.Submit(c, 3, new OnlineScore { Score = 99, ClearStatus = 1 }); Run(() => client.WaitForUploadsAsync());
             var queued = client.UploadQueue.Pending(endpoint.AccountId).Single();
             Assert.That(JObject.Parse(queued.Body).ContainsKey("versionId"), Is.False);
             Assert.That(queued.ChartHash, Is.EqualTo(c.Difficulties[3].ChartHash));
@@ -287,7 +287,7 @@ namespace OurTaiko.Tests
             Assert.That(TjaParser.Parse(text, "Oni", "p1").Level, Is.EqualTo(8));
             Assert.That(text, Does.Contain("LEVEL:8\nBPM:120\n#START P1\n1,\n#END")); Assert.That(text, Does.Contain("LEVEL:9\nBPM:120\n#START P2\n2,\n#END"));
             Assert.That(TjaParser.Parse(text, "Oni", "p2").Level, Is.EqualTo(9));
-            client.Submit(result.Chart, 3, new FanmadeScore { Score = 123 }); Run(() => client.WaitForUploadsAsync());
+            client.Submit(result.Chart, 3, new OnlineScore { Score = 123 }); Run(() => client.WaitForUploadsAsync());
             Assert.That(api.AcceptedScores.TryDequeue(out var body), Is.True);
             Assert.That((long)body["difficultyId"], Is.EqualTo(chart.BlockId("Oni", "P1"))); Assert.That(body.ContainsKey("versionId"), Is.False);
         }
@@ -369,7 +369,7 @@ namespace OurTaiko.Tests
         {
             UseMirror();
             corruptMirror = true; corrupt = true;
-            Assert.That(Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
+            Assert.That(Assert.Throws<OnlineException>(() => Run(() => client.PrepareAsync(client.Charts[0]))).Message, Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED"));
             Assert.That((mirrorGets, tjaGets), Is.EqualTo((1, 2)), "The canonical root is tried once, not again and again.");
             string objects = Path.Combine(cache, "objects");
             Assert.That(Directory.Exists(objects) ? Directory.GetFiles(objects, "*", SearchOption.AllDirectories) : new string[0], Is.Empty);

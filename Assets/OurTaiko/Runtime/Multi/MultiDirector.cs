@@ -157,8 +157,8 @@ namespace OurTaiko.Multi
         {
             var endpoint = MultiSession.EndpointOf(roomSong.Source) ?? throw new MultiException("SOURCE_UNKNOWN");
             var online = OnlineManager.EnsureInstance();
-            FanmadeChart chart;
-            if (roomSong.ChartJson.Length > 0) chart = FanmadeChart.From(Json.Parse(roomSong.ChartJson.ToStringUtf8()), endpoint.Id);
+            OnlineChart chart;
+            if (roomSong.ChartJson.Length > 0) chart = OnlineChart.From(Json.Parse(roomSong.ChartJson.ToStringUtf8()), endpoint.Id);
             else chart = online.Client?.Chart(endpoint.Id, roomSong.ChartId);
             if (chart == null || chart.Id != roomSong.ChartId || !chart.IsPlayable) throw new MultiException("CHART_NOT_FOUND");
             return online.SearchSong(chart) ?? throw new MultiException("CHART_NOT_FOUND");

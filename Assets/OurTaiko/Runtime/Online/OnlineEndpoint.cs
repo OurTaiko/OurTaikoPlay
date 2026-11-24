@@ -20,7 +20,7 @@ namespace OurTaiko.Online
     // A player signed in to one server: 1P (seat 0) or 2P (seat 1). The bearer token lives only in
     // memory: a game session traded for the seat's account at the OurTaiko account center (Renew
     // trades again when it expires).
-    public sealed class FanmadeSeat
+    public sealed class OnlineSeat
     {
         internal volatile string Token = "";
         public bool IsAuthenticated { get; internal set; }
@@ -29,13 +29,13 @@ namespace OurTaiko.Online
         public string UserId { get; internal set; } = "";
         internal Func<CancellationToken, Task<string>> Renew;
         // Account scores from GET /game/scores, kept only while signed in.
-        internal readonly List<FanmadeScore> Scores = new List<FanmadeScore>();
-        internal readonly Dictionary<string, FanmadeScore> Best = new Dictionary<string, FanmadeScore>();
+        internal readonly List<OnlineScore> Scores = new List<OnlineScore>();
+        internal readonly Dictionary<string, OnlineScore> Best = new Dictionary<string, OnlineScore>();
         public int ScoreCount => Scores.Count;
 
-        internal void IndexScore(FanmadeScore score)
+        internal void IndexScore(OnlineScore score)
         {
-            var key = FanmadeEndpoint.ScoreKey(score.Song, score.Difficulty);
+            var key = OnlineEndpoint.ScoreKey(score.Song, score.Difficulty);
             // A score of the song's current files comes before any score of replaced ones.
             if (!Best.TryGetValue(key, out var best) || (score.IsLatest && !best.IsLatest)
                 || (score.IsLatest == best.IsLatest && score.Score > best.Score)) Best[key] = score;
@@ -51,7 +51,7 @@ namespace OurTaiko.Online
     // One server (fanmade.cpp Endpoint + request/authorized), on System.Net.Http as in MajdataPlay,
     // with a seat per player. Redirects are refused, TLS is verified and no proxy is used, the
     // environment's included.
-    public sealed partial class FanmadeEndpoint : IDisposable
+    public sealed partial class OnlineEndpoint : IDisposable
     {
         public const long DefaultLimit = 64L * 1024 * 1024;
         public const int SeatCount = 2;
@@ -68,7 +68,7 @@ namespace OurTaiko.Online
         // The bar_genre frame (0-12) the catalog names for this server's own song-select folder
         // ("genreFrame"); 0, the default yellow, when it names none.
         public int GenreFrame { get; internal set; }
-        public readonly FanmadeSeat[] Seats = { new FanmadeSeat(), new FanmadeSeat() };
+        public readonly OnlineSeat[] Seats = { new OnlineSeat(), new OnlineSeat() };
         // The account center the catalog names ("sso"), and this service's name there; empty when
         // the catalog names none, and nobody can sign in.
         public string SsoIssuer { get; internal set; } = "";
@@ -86,7 +86,7 @@ namespace OurTaiko.Online
             return Sha256Hex(Encoding.UTF8.GetBytes(Config.baseUrl + "\n" + (user.Length > 0 ? "sso:" + user : "")));
         }
 
-        public FanmadeEndpoint(ServerConfig config)
+        public OnlineEndpoint(ServerConfig config)
         {
             Config = new ServerConfig { name = config.name ?? "", baseUrl = (config.baseUrl ?? "").TrimEnd('/'), api = (config.api ?? "").TrimEnd('/'),
                 site = (config.site ?? "").TrimEnd('/') };
@@ -121,7 +121,7 @@ namespace OurTaiko.Online
         // nickname from the account center); renew trades again when the session expires.
         internal void UseAccount(int seat, string token, string userId, string nickname, Func<CancellationToken, Task<string>> renew)
         {
-            if (!Json.HexId(token ?? "", 64)) throw new FanmadeException("API_TOKEN_INVALID");
+            if (!Json.HexId(token ?? "", 64)) throw new OnlineException("API_TOKEN_INVALID");
             var s = Seats[seat];
             if (s.UserId != userId) { s.Scores.Clear(); s.Best.Clear(); }
             s.Token = token; s.UserId = userId ?? ""; s.Nickname = nickname ?? ""; s.Renew = renew; s.IsAuthenticated = true;
@@ -137,7 +137,7 @@ namespace OurTaiko.Online
             catch (HttpStatusException error) when (error.Status == 401 && s.IsAuthenticated && s.Renew != null)
             {
                 string renewed = await s.Renew(cancel);
-                if (!Json.HexId(renewed ?? "", 64)) throw new FanmadeException("API_TOKEN_INVALID");
+                if (!Json.HexId(renewed ?? "", 64)) throw new OnlineException("API_TOKEN_INVALID");
                 s.Token = renewed;
                 return await RequestAsync(path, body, key, cancel: cancel, bearer: s.Token, method: method);
             }
@@ -165,7 +165,7 @@ namespace OurTaiko.Online
         // An answer said how many rewards a seat's player has not seen: the endpoint, the seat and
         // the number. Raised for every answer that carries PendingRewardsHeader, on whatever thread
         // the answer came in on; what to do about it is the listener's (RewardInbox).
-        public static event Action<FanmadeEndpoint, int, int> PendingRewardsHeard;
+        public static event Action<OnlineEndpoint, int, int> PendingRewardsHeard;
 
         void HearPendingRewards(HttpResponseMessage response, string token)
         {
@@ -186,7 +186,7 @@ namespace OurTaiko.Online
             CancellationToken cancel, Action<long, long> progress, string bearer, int seconds = 15, HttpMethod method = null)
         {
             string token = bearer ?? Seats[0].Token;
-            if (cancel.IsCancellationRequested) throw new FanmadeException("DOWNLOAD_CANCELLED");
+            if (cancel.IsCancellationRequested) throw new OnlineException("DOWNLOAD_CANCELLED");
             // Files come from the distribution root (ResourceBytesAsync); API calls are small.
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(seconds));
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
@@ -206,7 +206,7 @@ namespace OurTaiko.Online
                 HearPendingRewards(response, token);
                 if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 long total = response.Content.Headers.ContentLength ?? 0;
-                if (total > limit) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");
+                if (total > limit) throw new OnlineException("RESPONSE_SIZE_LIMIT_EXCEEDED");
                 bool gzip = response.Content.Headers.ContentEncoding.Contains("gzip");
                 // The packed length says nothing of the unpacked one; the limit still bounds it below.
                 if (gzip) total = 0;
@@ -219,16 +219,16 @@ namespace OurTaiko.Online
                 {
                     int read = await stream.ReadAsync(buffer, 0, buffer.Length, linked.Token);
                     if (read == 0) break;
-                    if (read > limit - output.Length) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");
+                    if (read > limit - output.Length) throw new OnlineException("RESPONSE_SIZE_LIMIT_EXCEEDED");
                     output.Write(buffer, 0, read);
                     progress?.Invoke(output.Length, total);
                 }
                 return output.ToArray();
             }
-            catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw new FanmadeException("DOWNLOAD_CANCELLED"); }
-            catch (OperationCanceledException error) { throw new FanmadeException("NETWORK_TIMEOUT", error); }
-            catch (HttpRequestException error) { throw new FanmadeException(NetworkCode(error), error); }
-            catch (IOException error) { throw new FanmadeException(NetworkCode(error), error); }
+            catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw new OnlineException("DOWNLOAD_CANCELLED"); }
+            catch (OperationCanceledException error) { throw new OnlineException("NETWORK_TIMEOUT", error); }
+            catch (HttpRequestException error) { throw new OnlineException(NetworkCode(error), error); }
+            catch (IOException error) { throw new OnlineException(NetworkCode(error), error); }
         }
 
         // The distinct DNS / connect / TLS codes OurTaikoPlayer shows instead of one network error.
@@ -259,11 +259,11 @@ namespace OurTaiko.Online
         }
 
         // 1P's account scores.
-        internal List<FanmadeScore> Scores => Seats[0].Scores;
-        internal Dictionary<string, FanmadeScore> Best => Seats[0].Best;
+        internal List<OnlineScore> Scores => Seats[0].Scores;
+        internal Dictionary<string, OnlineScore> Best => Seats[0].Best;
         // The catalog sent chartSlotVersion 1: blocks have ids, a course covers all its sides.
         internal static string ScoreKey(string song, string difficulty) => song + "/" + difficulty;
 
-        internal void IndexScore(FanmadeScore score) => Seats[0].IndexScore(score);
+        internal void IndexScore(OnlineScore score) => Seats[0].IndexScore(score);
     }
 }

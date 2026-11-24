@@ -21,7 +21,7 @@ namespace OurTaiko.Tests
     public sealed class StageDownloadsTests
     {
         const string Art = "Assets/OurTaiko/Resources/Stage/";
-        FanmadeFixture site;
+        OnlineFixture site;
         string folder, fetched;
         byte[] header, scene, newer, catalogJson;
         static byte[] builtHeader, builtScene, builtNewer;
@@ -92,7 +92,7 @@ namespace OurTaiko.Tests
             indexJson = Index(header);
             served = 0;
             down = corrupt = false;
-            site = new FanmadeFixture();
+            site = new OnlineFixture();
             site.CustomRequest = context =>
             {
                 string path = context.Request.Url.AbsolutePath;

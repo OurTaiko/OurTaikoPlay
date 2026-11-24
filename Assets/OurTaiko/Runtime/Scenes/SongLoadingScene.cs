@@ -226,7 +226,7 @@ namespace OurTaiko
             {
                 var error = task.Exception?.GetBaseException();
                 Log.Warn("Loading", "Online chart download failed: " + error?.Message);
-                Error = error is FanmadeException ? error.Message : "DOWNLOAD_FAILED";
+                Error = error is OnlineException ? error.Message : "DOWNLOAD_FAILED";
                 yield break;
             }
             var (text, audio, chart) = task.Result;

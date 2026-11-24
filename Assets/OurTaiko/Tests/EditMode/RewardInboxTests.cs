@@ -31,7 +31,7 @@ namespace OurTaiko.Tests
             public Task<string> FetchAsync(CancellationToken cancel)
             {
                 Fetches++;
-                if (Fail) return Task.FromException<string>(new FanmadeException("NETWORK_ERROR"));
+                if (Fail) return Task.FromException<string>(new OnlineException("NETWORK_ERROR"));
                 return Task.FromResult(new JObject { ["rewards"] = new JArray(Waiting.Select(r => r.DeepClone())) }.ToString());
             }
 

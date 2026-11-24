@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OurTaiko.Online
 {
-    public sealed partial class FanmadeClient
+    public sealed partial class OnlineClient
     {
         readonly Dictionary<string, (Task<int[]> Task, DateTime RetryAt)> rankThresholds =
             new Dictionary<string, (Task<int[]>, DateTime)>();
@@ -15,7 +15,7 @@ namespace OurTaiko.Online
 
         // Polling from song select never blocks on disk, parsing, or the network. The blocks
         // and their content hashes are the cache identity.
-        public int? RankThreshold(FanmadeChart chart, int difficulty)
+        public int? RankThreshold(OnlineChart chart, int difficulty)
         {
             if (chart == null || difficulty < 0 || difficulty >= chart.Difficulties.Length || chart.Difficulties[difficulty] == null) return null;
             string key = chart.Server + "/" + chart.Id + "/" + chart.BlocksKey + "/"
@@ -44,9 +44,9 @@ namespace OurTaiko.Online
 
         // Fetch only the verified TJA. Reuse the same content-addressed cache and playable
         // course mapping as SongLoadingScene; never download a song's audio just for rank.
-        public async Task<int[]> PrepareRankThresholdsAsync(FanmadeChart selected, CancellationToken cancel = default)
+        public async Task<int[]> PrepareRankThresholdsAsync(OnlineChart selected, CancellationToken cancel = default)
         {
-            var endpoint = ConnectedEndpoint(selected.Server) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
+            var endpoint = ConnectedEndpoint(selected.Server) ?? throw new OnlineException("SERVER_NOT_CONNECTED");
             await endpoint.Transport.WaitAsync(cancel);
             try
             {
@@ -54,8 +54,8 @@ namespace OurTaiko.Online
                 {
                     // The chart must still be the one the catalog showed (same blocks, same content)
                     // before anything is downloaded.
-                    var current = FanmadeChart.From(Json.Parse(await endpoint.AuthorizedAsync("/api/v2/charts/" + selected.Id + "?by=id", cancel: cancel)), endpoint.Id);
-                    if (current.Id != selected.Id || current.BlocksKey != selected.BlocksKey) throw new FanmadeException("CHART_UPDATING");
+                    var current = OnlineChart.From(Json.Parse(await endpoint.AuthorizedAsync("/api/v2/charts/" + selected.Id + "?by=id", cancel: cancel)), endpoint.Id);
+                    if (current.Id != selected.Id || current.BlocksKey != selected.BlocksKey) throw new OnlineException("CHART_UPDATING");
                     var manifest = await endpoint.ResourcesAsync(selected.Id, cancel);
                     var resource = manifest.Tja;
                     try
@@ -75,7 +75,7 @@ namespace OurTaiko.Online
                 }
             }
             finally { endpoint.Transport.Release(); }
-            throw new FanmadeException("RESOURCE_UNAVAILABLE");
+            throw new OnlineException("RESOURCE_UNAVAILABLE");
         }
     }
 }

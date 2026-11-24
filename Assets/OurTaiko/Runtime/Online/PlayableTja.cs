@@ -9,16 +9,16 @@ namespace OurTaiko.Online
     // check; the playable copy is UTF-8 and takes its titles and offset from the API. Every block the
     // API lists must be in the file (matched by COURSE and the #START player: plain single, P1, P2);
     // the copy keeps exactly those blocks with their #START player, so TjaParser and SongInfo pick
-    // the seat's block by the same ChartSide rule FanmadeChart.Block gives the score's block id by.
+    // the seat's block by the same ChartSide rule OnlineChart.Block gives the score's block id by.
     public static class PlayableTja
     {
         public static string ToUtf8(byte[] bytes)
         {
             try { return new UTF8Encoding(false, true).GetString(bytes); }
-            catch (DecoderFallbackException error) { throw new FanmadeException("TJA_ENCODING_INVALID", error); }
+            catch (DecoderFallbackException error) { throw new OnlineException("TJA_ENCODING_INVALID", error); }
         }
 
-        public static string Build(string utf8, FanmadeChart chart)
+        public static string Build(string utf8, OnlineChart chart)
         {
             var output = new StringBuilder(chart.TitleHeaders() + "WAVE:" + chart.CachedAudioName + "\n");
             output.Append("OFFSET:").Append(chart.Offset.ToString("R", CultureInfo.InvariantCulture)).Append('\n');
@@ -28,7 +28,7 @@ namespace OurTaiko.Online
             bool inBlock = false, seenCourse = false;
             int block = -1;
             string course = "Oni";
-            var wanted = new SortedDictionary<int, FanmadeDifficulty>();
+            var wanted = new SortedDictionary<int, OnlineDifficulty>();
             var found = new HashSet<int>();
             foreach (var tja in TjaLines.Read(utf8))
             {
@@ -40,7 +40,7 @@ namespace OurTaiko.Online
                     var d = chart.Blocks.Find(x => x.Course == course && x.Side == side);
                     if (d != null)
                     {
-                        if (wanted.ContainsValue(d)) throw new FanmadeException("TJA_BLOCK_MISMATCH");
+                        if (wanted.ContainsValue(d)) throw new OnlineException("TJA_BLOCK_MISMATCH");
                         wanted[block] = d;
                     }
                     continue;
@@ -67,7 +67,7 @@ namespace OurTaiko.Online
                 }
                 (seenCourse ? headers : globals).Add(line);
             }
-            if (found.Count != chart.Blocks.Count || inBlock) throw new FanmadeException("TJA_BLOCK_MISMATCH");
+            if (found.Count != chart.Blocks.Count || inBlock) throw new OnlineException("TJA_BLOCK_MISMATCH");
             return output.ToString();
         }
 

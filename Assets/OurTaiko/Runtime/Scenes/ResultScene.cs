@@ -170,7 +170,7 @@ namespace OurTaiko
             int difficulty = (int)result.Difficulty;
             var best = online.Client.Best(chart, difficulty, seat, result.Side);
             if (best != null) result.PreviousBest = (int)Math.Min(int.MaxValue, Math.Max(result.PreviousBest, best.Score));
-            var score = new Online.FanmadeScore
+            var score = new Online.OnlineScore
             {
                 Good = result.Good, Ok = result.Ok, Bad = result.Bad, Score = result.Score,
                 Drumroll = result.Rolls, MaxCombo = result.MaxCombo, ClearStatus = (int)result.StoredCrown,

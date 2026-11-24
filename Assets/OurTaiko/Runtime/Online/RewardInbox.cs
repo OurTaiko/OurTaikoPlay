@@ -82,10 +82,10 @@ namespace OurTaiko.Online
     sealed class EndpointRewardSite : IRewardSite
     {
         public const string Path = "/api/v2/game/rewards";
-        readonly FanmadeEndpoint endpoint;
+        readonly OnlineEndpoint endpoint;
         readonly int seat;
         readonly string user;
-        public EndpointRewardSite(FanmadeEndpoint endpoint, int seat)
+        public EndpointRewardSite(OnlineEndpoint endpoint, int seat)
         {
             this.endpoint = endpoint; this.seat = seat; user = endpoint.Seats[seat].UserId;
         }
@@ -103,7 +103,7 @@ namespace OurTaiko.Online
     }
 
     // What the players at this game were given and have not been shown yet. Every answer of a site
-    // says how many each player has waiting (FanmadeEndpoint.PendingRewardsHeard); the inbox fetches
+    // says how many each player has waiting (OnlineEndpoint.PendingRewardsHeard); the inbox fetches
     // a player's when there are some and none of theirs are queued already, keeps them for whoever
     // shows them (RewardOverlay), and marks them seen when that one says they were shown.
     //
@@ -118,14 +118,14 @@ namespace OurTaiko.Online
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
-            FanmadeEndpoint.PendingRewardsHeard -= Listen;
+            OnlineEndpoint.PendingRewardsHeard -= Listen;
             Shared = new RewardInbox();
-            FanmadeEndpoint.PendingRewardsHeard += Listen;
+            OnlineEndpoint.PendingRewardsHeard += Listen;
         }
 
         // A site's player is one owner however many of the site's servers (sources) told of them; a
         // server without a site is a place of its own.
-        static void Listen(FanmadeEndpoint endpoint, int seat, int count)
+        static void Listen(OnlineEndpoint endpoint, int seat, int count)
         {
             string place = endpoint.Config.site.Length > 0 ? endpoint.Config.site : endpoint.Config.baseUrl;
             string user = endpoint.Seats[seat].UserId;

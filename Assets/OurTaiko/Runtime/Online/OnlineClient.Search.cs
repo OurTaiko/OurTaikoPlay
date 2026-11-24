@@ -7,23 +7,23 @@ using Newtonsoft.Json.Linq;
 
 namespace OurTaiko.Online
 {
-    public sealed class FanmadeSearchResult
+    public sealed class OnlineSearchResult
     {
-        public FanmadeEndpoint Endpoint;
-        public readonly List<FanmadeChart> Charts = new List<FanmadeChart>();
+        public OnlineEndpoint Endpoint;
+        public readonly List<OnlineChart> Charts = new List<OnlineChart>();
         public string Error;
     }
 
-    public sealed partial class FanmadeClient
+    public sealed partial class OnlineClient
     {
         // Endpoints run concurrently; one failure never discards the other servers' results. With
         // `server`, only that endpoint is searched.
-        public Task<FanmadeSearchResult[]> SearchAsync(SongSearchQuery query, CancellationToken cancel = default, string server = null)
+        public Task<OnlineSearchResult[]> SearchAsync(SongSearchQuery query, CancellationToken cancel = default, string server = null)
             => Task.WhenAll(Endpoints.Where(e => e.IsConnected && (server == null || e.Id == server)).Select(e => SearchEndpointAsync(e, query, cancel)));
 
-        async Task<FanmadeSearchResult> SearchEndpointAsync(FanmadeEndpoint endpoint, SongSearchQuery query, CancellationToken cancel)
+        async Task<OnlineSearchResult> SearchEndpointAsync(OnlineEndpoint endpoint, SongSearchQuery query, CancellationToken cancel)
         {
-            var result = new FanmadeSearchResult { Endpoint = endpoint };
+            var result = new OnlineSearchResult { Endpoint = endpoint };
             await endpoint.Transport.WaitAsync(cancel);
             try
             {
@@ -33,11 +33,11 @@ namespace OurTaiko.Online
                 if (query.Level > 0) path += "&level=" + query.Level;
                 var reply = Json.Parse(await endpoint.AuthorizedAsync(path, cancel: cancel, seat: query.Seat));
                 if (!(reply["items"] is JArray items) || Json.Number(reply, "total") != items.Count)
-                    throw new FanmadeException("API_SEARCH_INVALID");
+                    throw new OnlineException("API_SEARCH_INVALID");
                 var seen = new HashSet<string>();
                 foreach (var value in items)
                 {
-                    var chart = FanmadeChart.From(value, endpoint.Id);
+                    var chart = OnlineChart.From(value, endpoint.Id);
                     if (!chart.IsPlayable || !seen.Add(chart.Id)) continue;
                     var known = Chart(endpoint.Id, chart.Id);
                     chart.Category = known?.Category ?? ""; chart.Genre = known?.Genre ?? "";
@@ -52,7 +52,7 @@ namespace OurTaiko.Online
 
         // Any qualifying play counts, even when a higher-scoring non-FC is the displayed best. The plays
         // are those of the account of the side that searched (query.Seat).
-        public bool SearchNeedsClear(FanmadeChart chart, SongSearchQuery query)
+        public bool SearchNeedsClear(OnlineChart chart, SongSearchQuery query)
         {
             if (query.Order == SongSearchOrder.Default) return false;
             lock (sync)

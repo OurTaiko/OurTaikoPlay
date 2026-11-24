@@ -44,7 +44,7 @@ namespace OurTaiko.Tests
         // The fixtures stand in for the built-in servers (none: no server at all), over a fresh
         // temporary cache and with nobody signed in. The first fixture is also the account center
         // and OurTaikoProfile. Nothing is requested until Connect.
-        public static void UseServers(params FanmadeFixture[] fixtures)
+        public static void UseServers(params OnlineFixture[] fixtures)
         {
             var manager = OnlineManager.EnsureInstance();
             // A plate an account gave 1P goes with the account.

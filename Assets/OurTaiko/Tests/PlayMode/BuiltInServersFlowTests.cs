@@ -36,9 +36,9 @@ namespace OurTaiko.Tests
 
         static string[] Urls(OnlineManager online) => online.BuiltInServers.Select(server => server.baseUrl).ToArray();
 
-        static FanmadeFixture.Chart Song() => new FanmadeFixture.Chart
+        static OnlineFixture.Chart Song() => new OnlineFixture.Chart
         {
-            Title = "First", Tja = System.Text.Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3, 4 }, Categories = new[] { "game" },
+            Title = "First", Tja = System.Text.Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3, 4 }, Categories = new[] { "game" },
         };
 
         // The built-in servers are song sources of one site. The game asks the site for both song
@@ -47,7 +47,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator TheSourcesOfOneSiteAreLoadedAndSignedInToTogether()
         {
-            using var fixture = new FanmadeFixture { SiteSources = new[] { "fanmade", "official" } };
+            using var fixture = new OnlineFixture { SiteSources = new[] { "fanmade", "official" } };
             fixture.Charts.Add(Song());
             fixture.AddAccountScore("don", fixture.Charts[0], "Oni", 700000);
             TestData.UseServers();
@@ -84,7 +84,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator ASiteThatCannotAnswerForItsSourcesFailsAsAWhole()
         {
-            using var fixture = new FanmadeFixture();
+            using var fixture = new OnlineFixture();
             fixture.Charts.Add(Song());
             TestData.UseServers();
             var online = OnlineManager.Instance;
@@ -107,7 +107,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator TheGameNeitherCreatesNorReadsServersJson()
         {
-            using var fixture = new FanmadeFixture();
+            using var fixture = new OnlineFixture();
             folder = Path.Combine(Application.temporaryCachePath, "built-in-servers-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(folder);
             string file = Path.Combine(folder, "servers.json");

@@ -27,7 +27,7 @@ namespace OurTaiko.Tests
             ("danTextGold", "dan_text_gold.png", 360, 200), ("badge1p", "1p.png", 88, 88), ("badge2p", "2p.png", 88, 88),
         };
 
-        FanmadeFixture site;
+        OnlineFixture site;
         string cache;
         readonly Dictionary<string, byte[]> served = new Dictionary<string, byte[]>();
         JObject catalog;
@@ -72,7 +72,7 @@ namespace OurTaiko.Tests
                 files[key] = new JObject { ["path"] = file, ["size"] = png.Length, ["sha256"] = Sha(png) };
             }
             catalog = new JObject { ["version"] = 1, ["files"] = files };
-            site = new FanmadeFixture();
+            site = new OnlineFixture();
             site.CustomRequest = context =>
             {
                 string path = context.Request.Url.AbsolutePath;
