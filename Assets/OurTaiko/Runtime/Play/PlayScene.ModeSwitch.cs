@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 
 namespace OurTaiko
 {
@@ -13,13 +12,12 @@ namespace OurTaiko
         bool switchingMode;
 
         // After the chart loaded. Two players never switch, as the switch would drop 2P (Entry keeps 2P
-        // out of practice for the same reason), nor does a ghost battle, which would drop its recording.
-        // A chart missing #E/#M only plays on a fixed route, so practice does not offer normal play for
-        // it (PlaySession would refuse).
+        // out of practice for the same reason), nor where the mode does not offer it
+        // (PlayMode.OffersModeSwitch: a replay, a ghost battle, practice on a chart missing #E/#M).
         // Where it is not offered the button stays greyed and has no action.
         void AddModeSwitch()
         {
-            if (IsReplay || switcher.Seated.Count == 2 || IsGhost || IsPractice && !Session.Chart.Branches.All(b => b.HasAllRoutes)) return;
+            if (switcher.Seated.Count == 2 || !mode.OffersModeSwitch) return;
             pauseMenu.modeSwitch.onClick.AddListener(SwitchMode);
             pauseMenu.OfferModeSwitch(IsPractice);
         }

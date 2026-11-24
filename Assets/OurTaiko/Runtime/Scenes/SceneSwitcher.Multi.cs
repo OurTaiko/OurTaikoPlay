@@ -1,7 +1,7 @@
 namespace OurTaiko
 {
     // One round of マルチ演奏: the room's song on the course this player took, played alone in
-    // Play.Single with the others' scores beside the lane (PlayScene.Multi.cs).
+    // Play.Single with the others' scores beside the lane (MultiMode).
     public sealed class MultiMatch
     {
         // The room's round, so the play knows which start signal is its own.

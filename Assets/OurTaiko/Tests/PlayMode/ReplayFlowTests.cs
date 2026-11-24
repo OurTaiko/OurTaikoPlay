@@ -53,7 +53,7 @@ namespace OurTaiko.Tests
             var play = Object.FindAnyObjectByType<PlayScene>();
             yield return Waits.Until(() => play.Practice?.Progress != null && play.IsPaused);
             yield return null;
-            Assert.That(play.IsReplay, Is.True);
+            Assert.That(play.Practice, Is.InstanceOf<ReplayMode>());
             Assert.That(play.Session.Chart.Notes.Select(n => n.IsKa), Is.EqualTo(notes.Select(n => !n.IsKa)), "The record's options rebuilt the chart.");
             Assert.That(play.Session.ForcedBranch, Is.Null);
             Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Measure));

@@ -98,7 +98,7 @@ namespace OurTaiko
         public string SelectedSide { get; private set; } = "single";
         public string SelectedSide2P { get; private set; } = "p2";
         public string SideOf(int seat) => seat == 1 ? SelectedSide2P : SelectedSide;
-        // A recorded play for the practice scene to show instead of a play (PlayScene.Replay.cs). Set
+        // A recorded play for the practice scene to show instead of a play (ReplayMode). Set
         // after Select, which clears it; it stays for restarts of that song.
         public Online.PlayRecord Replay { get; set; }
         public bool AutoPlayOf(int seat) => seat == 1 ? AutoPlay2P : AutoPlay;

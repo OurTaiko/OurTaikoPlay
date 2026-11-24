@@ -205,18 +205,18 @@ namespace OurTaiko.Tests
 
             yield return Race(list);
             var play = Object.FindAnyObjectByType<PlayScene>();
-            Assert.That(play.IsGhost, Is.True);
+            Assert.That(play.Ghost, Is.Not.Null);
             Assert.That(play.Lane1.Views, Is.SameAs(play.firstLane), "1P races in the upper lane.");
-            Assert.That(play.GhostLane.Views, Is.SameAs(play.secondLane));
-            Assert.That(play.GhostLane.Replay, Is.Not.Null);
+            Assert.That(play.Ghost.Lane.Views, Is.SameAs(play.secondLane));
+            Assert.That(play.Ghost.Lane.Replay, Is.Not.Null);
             Assert.That(play.Lane1.Replay, Is.Null);
-            Assert.That(play.Lane1.AutoPlay || play.GhostLane.AutoPlay, Is.False);
+            Assert.That(play.Lane1.AutoPlay || play.Ghost.Lane.AutoPlay, Is.False);
             // Both lanes play the recording's block with its options, not the player's ×3.0.
             Assert.That(play.Lane1.Options.speed, Is.EqualTo(15));
-            Assert.That(play.GhostLane.Options.speed, Is.EqualTo(15));
-            Assert.That(play.GhostLane.Options.neiro, Is.EqualTo(PlayOptions.Mute), "The recording's drum is silent.");
+            Assert.That(play.Ghost.Lane.Options.speed, Is.EqualTo(15));
+            Assert.That(play.Ghost.Lane.Options.neiro, Is.EqualTo(PlayOptions.Mute), "The recording's drum is silent.");
             Assert.That(play.Lane1.Session.Chart.Notes.Count, Is.EqualTo(8));
-            Assert.That(play.GhostLane.Session.Chart.Notes.Count, Is.EqualTo(8));
+            Assert.That(play.Ghost.Lane.Session.Chart.Notes.Count, Is.EqualTo(8));
             // The player's offsets are their own (7 ms + the 30 ms judgment offset), not the recording's.
             Assert.That(play.Lane1.Record.AudioOffsetMs, Is.EqualTo(37));
             Assert.That(play.Lane1.Record.Speed, Is.EqualTo(15));
@@ -301,7 +301,7 @@ namespace OurTaiko.Tests
             yield return Race(list);
             var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Lane1.Views, Is.SameAs(play.secondLane), "A lone 2P races in the lower lane.");
-            Assert.That(play.GhostLane.Views, Is.SameAs(play.firstLane));
+            Assert.That(play.Ghost.Lane.Views, Is.SameAs(play.firstLane));
             var plates = Object.FindObjectsByType<NameplateView>(FindObjectsInactive.Include).Where(p => p.gameObject.scene == play.gameObject.scene).ToList();
             Assert.That(plates.Single(p => p.seat == 0).Info.name, Is.EqualTo("Rival"));
 
