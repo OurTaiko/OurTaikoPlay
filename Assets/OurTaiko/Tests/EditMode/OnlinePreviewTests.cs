@@ -12,8 +12,8 @@ namespace OurTaiko.Tests
 {
     public sealed class OnlinePreviewTests
     {
-        FanmadeFixture api, origin;
-        FanmadeClient client;
+        OnlineFixture api, origin;
+        OnlineClient client;
         byte[] preview;
         string cache;
         int gets, forbidden, failures, manifests;
@@ -21,13 +21,13 @@ namespace OurTaiko.Tests
         [SetUp] public void Setup()
         {
             gets = forbidden = failures = manifests = 0; missing = corrupt = false;
-            api = new FanmadeFixture();
-            origin = new FanmadeFixture();
+            api = new OnlineFixture();
+            origin = new OnlineFixture();
             preview = Enumerable.Range(0, 4096).Select(i => (byte)(i % 251)).ToArray();
-            api.Charts.Add(new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[10000] });
+            api.Charts.Add(new OnlineFixture.Chart { Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja()), Audio = new byte[10000] });
             api.Manifest = c => {
                 manifests++;
-                JObject R(byte[] bytes, string type) => new JObject { ["path"] = "preview", ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
+                JObject R(byte[] bytes, string type) => new JObject { ["path"] = "preview", ["sha256"] = OnlineFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
                 var resources = new JObject { ["tja"] = R(c.Tja,"application/octet-stream"), ["audio"] = R(c.Audio,"audio/ogg") };
                 if (!missing) resources["preview"] = R(preview,"audio/ogg");
                 return new JObject { ["chartId"] = c.Id, ["resources"] = resources };
@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
             };
             api.FilesRoot = api.CanonicalRoot = origin.BaseUrl + "/";
             cache = Path.Combine(Path.GetTempPath(), "preview-test-" + Guid.NewGuid().ToString("N"));
-            client = new FanmadeClient(cache);
+            client = new OnlineClient(cache);
             var endpoint = client.Add(api.Server());
             Run(() => api.ConnectAsync(client, endpoint, "don"));
         }
@@ -58,10 +58,10 @@ namespace OurTaiko.Tests
             Assert.That(current,Is.Not.EqualTo(old)); Assert.That(gets,Is.EqualTo(2));
         }
         [Test] public void CorruptCacheIsDownloadedAgain() { string path=Download(); File.WriteAllBytes(path,new byte[preview.Length]); Download(); Assert.That(gets,Is.EqualTo(2)); }
-        [Test] public void CorruptDownloadNeverEntersCache() { corrupt=true; Assert.That(Assert.Throws<FanmadeException>(()=>Download()).Message,Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED")); string objects = Path.Combine(cache, "objects"); Assert.That(Directory.Exists(objects) ? Directory.GetFiles(objects,"*",SearchOption.AllDirectories).Length : 0,Is.Zero); }
+        [Test] public void CorruptDownloadNeverEntersCache() { corrupt=true; Assert.That(Assert.Throws<OnlineException>(()=>Download()).Message,Is.EqualTo("DOWNLOAD_INTEGRITY_FAILED")); string objects = Path.Combine(cache, "objects"); Assert.That(Directory.Exists(objects) ? Directory.GetFiles(objects,"*",SearchOption.AllDirectories).Length : 0,Is.Zero); }
         [Test] public void FirstForbiddenRefreshesOnce() { failures=1; Download(); Assert.That(manifests,Is.EqualTo(2)); Assert.That(gets,Is.EqualTo(2)); }
         [Test] public void RepeatedForbiddenDoesNotDownloadFullSong() { failures=10; Assert.Throws<HttpStatusException>(()=>Download()); Assert.That(gets,Is.EqualTo(2)); }
-        [Test] public void MissingPreviewDoesNotDownloadFullSong() { missing=true; Assert.That(Assert.Throws<FanmadeException>(()=>Download()).Message,Is.EqualTo("PREVIEW_UNAVAILABLE")); Assert.That(gets,Is.Zero); }
+        [Test] public void MissingPreviewDoesNotDownloadFullSong() { missing=true; Assert.That(Assert.Throws<OnlineException>(()=>Download()).Message,Is.EqualTo("PREVIEW_UNAVAILABLE")); Assert.That(gets,Is.Zero); }
         [Test] public void CancellationStartsNoDownload() { using var c=new CancellationTokenSource(); c.Cancel(); Assert.Catch<OperationCanceledException>(()=>Run(()=>client.PreparePreviewAsync(client.Charts[0],c.Token))); Assert.That(gets,Is.Zero); }
     }
 }

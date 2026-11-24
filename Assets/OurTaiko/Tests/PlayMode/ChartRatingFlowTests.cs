@@ -15,18 +15,18 @@ namespace OurTaiko.Tests
     // ゴーストバトル's and マルチ演奏's results ask it in their own flow tests.
     public sealed class ChartRatingFlowTests
     {
-        FanmadeFixture fixture;
-        FanmadeFixture.Chart chart;
+        OnlineFixture fixture;
+        OnlineFixture.Chart chart;
         string language;
 
         [SetUp]
         public void SetUp()
         {
             language = L10n.Language;
-            fixture = new FanmadeFixture { Votes = true };
-            chart = new FanmadeFixture.Chart
+            fixture = new OnlineFixture { Votes = true };
+            chart = new OnlineFixture.Chart
             {
-                Title = "Rated Song", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Oni", 1, 240)),
+                Title = "Rated Song", Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja("Oni", 1, 240)),
                 Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),
             };
             fixture.Charts.Add(chart);

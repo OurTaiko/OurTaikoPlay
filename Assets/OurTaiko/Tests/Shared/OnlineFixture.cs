@@ -21,7 +21,7 @@ namespace OurTaiko.Tests
     // itself (GET /api/v2/distribution/source) and idempotent score submission. Version 1's routes
     // are not served: the game must not ask them. It is also the account center its catalog names
     // (OurTaikoSSO's /api/v1/game/account/* and /api/v1/game/tokens, which stay version 1).
-    public sealed class FanmadeFixture : IDisposable
+    public sealed class OnlineFixture : IDisposable
     {
         public sealed class Chart
         {
@@ -106,7 +106,7 @@ namespace OurTaiko.Tests
         string deviceCode;
         public string ApprovedDeviceUser;
         // The account center's user id of a fixture user.
-        public static string UserId(string username) => FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(username)).Substring(0, 32);
+        public static string UserId(string username) => OnlineEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(username)).Substring(0, 32);
         public Func<Chart, JObject> Manifest;
         public Action<JObject> ChangeBootstrap;
         public Func<HttpListenerContext, bool> CustomRequest;
@@ -164,13 +164,13 @@ namespace OurTaiko.Tests
         readonly Thread thread;
         volatile bool stopped;
 
-        public FanmadeFixture()
+        public OnlineFixture()
         {
             int port = FreePort();
             BaseUrl = "http://127.0.0.1:" + port;
             listener.Prefixes.Add(BaseUrl + "/");
             listener.Start();
-            thread = new Thread(Serve) { IsBackground = true, Name = "FanmadeFixture" };
+            thread = new Thread(Serve) { IsBackground = true, Name = "OnlineFixture" };
             thread.Start();
             Manifest = DefaultManifest;
             FilesRoot = CanonicalRoot = BaseUrl + "/";
@@ -207,10 +207,10 @@ namespace OurTaiko.Tests
 
         AccountCenter center;
 
-        // The server's song list on a FanmadeClient of its own and, with a user, that user signed
+        // The server's song list on a OnlineClient of its own and, with a user, that user signed
         // in to the seat as the game does: once at the account center (this fixture), then a
         // session of this server traded for the sign-in.
-        public async Task ConnectAsync(FanmadeClient client, FanmadeEndpoint e, string user = null, string password = "katsu", int seat = 0)
+        public async Task ConnectAsync(OnlineClient client, OnlineEndpoint e, string user = null, string password = "katsu", int seat = 0)
         {
             await client.LoadCatalogAsync(e);
             if (user == null) return;

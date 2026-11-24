@@ -11,20 +11,20 @@ namespace OurTaiko.Tests
 {
     public sealed class OnlineScoreRankTests
     {
-        FanmadeFixture api;
-        FanmadeClient client;
-        FanmadeChart selected;
+        OnlineFixture api;
+        OnlineClient client;
+        OnlineChart selected;
         string cache;
 
         [SetUp] public void Setup()
         {
-            api = new FanmadeFixture();
-            var chart = new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(
+            api = new OnlineFixture();
+            var chart = new OnlineFixture.Chart { Tja = Encoding.UTF8.GetBytes(
                 "BPM:120\nCOURSE:Easy\n#START\n1111,\n#END\nCOURSE:Oni\n#START\n1110,\n#END"), Audio = new byte[100] };
             chart.Difficulties.Add(("Easy", 1, ""));
             api.Charts.Add(chart);
             cache = Path.Combine(Path.GetTempPath(), "rank-test-" + Guid.NewGuid().ToString("N"));
-            client = new FanmadeClient(cache);
+            client = new OnlineClient(cache);
             var endpoint = client.Add(api.Server());
             Task.Run(() => client.LoadCatalogAsync(endpoint)).GetAwaiter().GetResult();
             selected = client.Charts[0];
@@ -36,7 +36,7 @@ namespace OurTaiko.Tests
             if (Directory.Exists(cache)) Directory.Delete(cache, true);
         }
 
-        int[] Load(FanmadeChart chart) => Task.Run(() => client.PrepareRankThresholdsAsync(chart)).GetAwaiter().GetResult();
+        int[] Load(OnlineChart chart) => Task.Run(() => client.PrepareRankThresholdsAsync(chart)).GetAwaiter().GetResult();
 
         [Test] public void LoadsEveryCourseUsingOnlyVerifiedChartAndReusesDiskCache()
         {
@@ -51,7 +51,7 @@ namespace OurTaiko.Tests
 
         [Test] public void PollingDeduplicatesRequestsAndChangedHashInvalidatesTheRules()
         {
-            int Wait(FanmadeChart chart) => Task.Run(async () =>
+            int Wait(OnlineChart chart) => Task.Run(async () =>
             {
                 var deadline = DateTime.UtcNow.AddSeconds(10);
                 int? value;
@@ -66,7 +66,7 @@ namespace OurTaiko.Tests
             Assert.That(Wait(selected), Is.EqualTo(1000020));
             Assert.That(api.Downloads, Is.EqualTo(1));
             api.Charts[0].Tja = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(api.Charts[0].Tja).Replace("1110", "1111"));
-            var updated = FanmadeChart.From(api.Charts[0].ToJson(), selected.Server);
+            var updated = OnlineChart.From(api.Charts[0].ToJson(), selected.Server);
             Assert.That(Wait(updated), Is.EqualTo(1000000));
             Assert.That(api.Downloads, Is.EqualTo(2));
         }
@@ -74,14 +74,14 @@ namespace OurTaiko.Tests
         [Test] public void StaleCatalogHashDoesNotProduceAnIncorrectRank()
         {
             api.Charts[0].Tja = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(api.Charts[0].Tja).Replace("1110", "1111"));
-            Assert.That(Assert.Throws<FanmadeException>(() => Load(selected)).Message, Is.EqualTo("CHART_UPDATING"));
+            Assert.That(Assert.Throws<OnlineException>(() => Load(selected)).Message, Is.EqualTo("CHART_UPDATING"));
             Assert.That(api.Downloads, Is.Zero);
         }
 
         [Test] public void CorruptedCachedChartIsVerifiedAndDownloadedAgain()
         {
             Load(selected);
-            string tjaHash = FanmadeFixture.Sha(api.Charts[0].Tja);
+            string tjaHash = OnlineFixture.Sha(api.Charts[0].Tja);
             string path = Path.Combine(cache, "objects", tjaHash.Substring(0, 2), tjaHash);
             var bytes = File.ReadAllBytes(path); bytes[0] ^= 1; File.WriteAllBytes(path, bytes);
             Assert.That(Load(selected)[3], Is.EqualTo(1000020));
@@ -94,14 +94,14 @@ namespace OurTaiko.Tests
             api.Charts[0].Difficulties.Clear();
             api.Charts[0].Difficulties.Add(("Oni", 8, "P1")); api.Charts[0].Difficulties.Add(("Oni", 8, "P2"));
             api.Charts[0].Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\nSTYLE:Double\n#START P1\n1110,\n#END\n#START P2\n1111,\n#END");
-            Assert.That(Load(FanmadeChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000020), "The 1P block.");
+            Assert.That(Load(OnlineChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000020), "The 1P block.");
             api.Charts[0].Difficulties.Add(("Oni", 8, ""));
             api.Charts[0].Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P1\n1110,\n#END\n#START P2\n1110,\n#END\n#START\n1111,\n#END");
-            Assert.That(Load(FanmadeChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000000), "Alone, the single block before the 1P one.");
+            Assert.That(Load(OnlineChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000000), "Alone, the single block before the 1P one.");
             api.Charts[0].Difficulties.Clear();
             api.Charts[0].Difficulties.Add(("Oni", 8, "P2")); api.Charts[0].Difficulties.Add(("Oni", 8, ""));
             api.Charts[0].Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P2\n1110,\n#END\n#START\n1111,\n#END");
-            Assert.That(Load(FanmadeChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000000), "Without a 1P block, the single one.");
+            Assert.That(Load(OnlineChart.From(api.Charts[0].ToJson(), selected.Server))[3], Is.EqualTo(1000000), "Without a 1P block, the single one.");
         }
     }
 }

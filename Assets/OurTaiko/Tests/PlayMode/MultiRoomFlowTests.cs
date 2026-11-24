@@ -101,8 +101,8 @@ namespace OurTaiko.Tests
 
         const string Tja = "TITLE:Room\nBPM:240\nOFFSET:0\nCOURSE:Normal\nLEVEL:4\n#START\n1010,\n1010,\n#END\nCOURSE:Oni\nLEVEL:8\n#START\n1111,\n1111,\n#END\n";
 
-        FanmadeFixture fixture;
-        FanmadeFixture.Chart chart;
+        OnlineFixture fixture;
+        OnlineFixture.Chart chart;
         FakeRoomServer server;
         string avatar;
         GameSettings saved;
@@ -114,8 +114,8 @@ namespace OurTaiko.Tests
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture { SiteSources = new[] { "fanmade", "official" }, Votes = true };
-            chart = new FanmadeFixture.Chart
+            fixture = new OnlineFixture { SiteSources = new[] { "fanmade", "official" }, Votes = true };
+            chart = new OnlineFixture.Chart
             {
                 Title = "Room Song", Subtitle = "Together", AudioName = "song.ogg",
                 Tja = Encoding.UTF8.GetBytes(Tja), Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),

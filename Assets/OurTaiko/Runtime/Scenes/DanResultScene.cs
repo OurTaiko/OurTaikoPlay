@@ -42,7 +42,7 @@ namespace OurTaiko
         bool donCentred;
         static readonly Vector2 CelebrationDon = new Vector2(927, 923);
         public bool Congratulates { get; private set; }
-        // The upload of a server course's attempt (FanmadeClient queue key), null for none.
+        // The upload of a server course's attempt (OnlineClient queue key), null for none.
         public string DanUpload { get; private set; }
 
         bool awardAnswered;

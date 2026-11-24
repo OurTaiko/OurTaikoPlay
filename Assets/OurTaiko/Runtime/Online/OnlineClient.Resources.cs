@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 
 namespace OurTaiko.Online
 {
-    public sealed partial class FanmadeClient
+    public sealed partial class OnlineClient
     {
         // Refreshes the chart's details (the author may have replaced its files), then makes sure
         // the TJA and audio from the resource URLs are cached with matching size and
@@ -16,14 +16,14 @@ namespace OurTaiko.Online
         // the chart still plays when that fails. `progress` runs on worker threads.
         // A chart whose server is not connected plays from the offline cache when it was prepared
         // before (PrepareOfflineAsync); otherwise SERVER_NOT_CONNECTED.
-        public async Task<(string Tja, string AudioPath, FanmadeChart Chart)> PrepareAsync(FanmadeChart selected, CancellationToken cancel = default,
+        public async Task<(string Tja, string AudioPath, OnlineChart Chart)> PrepareAsync(OnlineChart selected, CancellationToken cancel = default,
             Action<DownloadProgress> progress = null, bool movie = false)
         {
             var e = ConnectedEndpoint(selected.Server);
             if (e == null)
             {
                 var cached = Offline.Get(selected.Server, selected.Id);
-                if (cached == null) throw new FanmadeException("SERVER_NOT_CONNECTED");
+                if (cached == null) throw new OnlineException("SERVER_NOT_CONNECTED");
                 return await PrepareOfflineAsync(selected, cached, cancel, progress, movie);
             }
             var state = new DownloadProgress();
@@ -37,15 +37,15 @@ namespace OurTaiko.Online
                 {
                     cancel.ThrowIfCancellationRequested();
                     string described = await e.AuthorizedAsync("/api/v2/charts/" + selected.Id + "?by=id", cancel: cancel);
-                    var c = FanmadeChart.From(Json.Parse(described), e.Id);
-                    if (c.Id != selected.Id) throw new FanmadeException("RESOURCE_CHART_MISMATCH");
+                    var c = OnlineChart.From(Json.Parse(described), e.Id);
+                    if (c.Id != selected.Id) throw new OnlineException("RESOURCE_CHART_MISMATCH");
                     c.Category = selected.Category; c.Genre = selected.Genre;
                     var manifest = await e.ResourcesAsync(c.Id, cancel);
                     // The server's current chart is prepared (the catalog entry follows it); the
                     // manifest must name that chart's audio, and the TJA is checked on download.
                     if (c.AudioHash != manifest.Audio.Hash)
-                    { if (attempt == 0) continue; throw new FanmadeException("CHART_UPDATING"); }
-                    if (!c.IsPlayable) throw new FanmadeException("CHART_NO_PLAYABLE_COURSE");
+                    { if (attempt == 0) continue; throw new OnlineException("CHART_UPDATING"); }
+                    if (!c.IsPlayable) throw new OnlineException("CHART_NO_PLAYABLE_COURSE");
                     c.AudioName = manifest.Audio.ContentType == "audio/ogg" ? "audio.ogg" : "audio.mp3";
                     try
                     {
@@ -79,16 +79,16 @@ namespace OurTaiko.Online
                         return (text, audio, c);
                     }
                     catch (HttpStatusException error) when (attempt == 0 && (error.Status == 403 || error.Status == 404 || error.Status >= 500)) { }
-                    catch (FanmadeException error) when (attempt == 0 && error.Message == "NETWORK_TIMEOUT") { }
+                    catch (OnlineException error) when (attempt == 0 && error.Message == "NETWORK_TIMEOUT") { }
                 }
-                throw new FanmadeException("RESOURCE_UNAVAILABLE");
+                throw new OnlineException("RESOURCE_UNAVAILABLE");
             }
             finally { e.Transport.Release(); }
         }
 
         // Records a prepared chart in the offline store with the categories the catalog lists it
         // under (none for a chart found by search only). A failure here never stops the play.
-        void Remember(FanmadeEndpoint e, FanmadeChart c, string described, FanmadeResources manifest)
+        void Remember(OnlineEndpoint e, OnlineChart c, string described, OnlineResources manifest)
         {
             try
             {
@@ -116,16 +116,16 @@ namespace OurTaiko.Online
         // The offline counterpart of PrepareAsync: the chart as the server last described it, its
         // TJA and audio from the object cache, each checked against its recorded size and SHA-256 as
         // a download would be. The server is never contacted; a damaged or missing file refuses the play.
-        async Task<(string Tja, string AudioPath, FanmadeChart Chart)> PrepareOfflineAsync(FanmadeChart selected, CachedChart cached,
+        async Task<(string Tja, string AudioPath, OnlineChart Chart)> PrepareOfflineAsync(OnlineChart selected, CachedChart cached,
             CancellationToken cancel, Action<DownloadProgress> progress, bool movie)
         {
             var state = new DownloadProgress();
             void Publish() { cancel.ThrowIfCancellationRequested(); progress?.Invoke(state.Clone()); }
             Publish();
             var c = cached.ToChart();
-            if (c.Id != selected.Id) throw new FanmadeException("RESOURCE_CHART_MISMATCH");
+            if (c.Id != selected.Id) throw new OnlineException("RESOURCE_CHART_MISMATCH");
             c.Category = selected.Category; c.Genre = selected.Genre;
-            if (!c.IsPlayable) throw new FanmadeException("CHART_NO_PLAYABLE_COURSE");
+            if (!c.IsPlayable) throw new OnlineException("CHART_NO_PLAYABLE_COURSE");
             state.Step = DownloadProgress.Stage.Files; Publish();
             string original = await CachedObjectAsync(cached.TjaHash, cached.TjaSize, cancel, state.Chart, Publish);
             string audio = await CachedObjectAsync(cached.AudioHash, cached.AudioSize, cancel, state.Audio, Publish);
@@ -149,11 +149,11 @@ namespace OurTaiko.Online
         // A cached object that still matches the size and hash recorded for it; CACHE_FILE_MISSING otherwise.
         async Task<string> CachedObjectAsync(string hash, long size, CancellationToken cancel, FileProgress transfer, Action publish)
         {
-            if (!Json.HexId(hash ?? "", 64)) throw new FanmadeException("CACHE_FILE_MISSING");
+            if (!Json.HexId(hash ?? "", 64)) throw new OnlineException("CACHE_FILE_MISSING");
             string file = ObjectPath(hash);
             transfer.Status = FileProgress.State.Verifying; publish();
-            var resource = new FanmadeResource { Hash = hash, Size = size };
-            if (!await CacheWork(() => Matches(file, resource), cancel)) throw new FanmadeException("CACHE_FILE_MISSING");
+            var resource = new OnlineResource { Hash = hash, Size = size };
+            if (!await CacheWork(() => Matches(file, resource), cancel)) throw new OnlineException("CACHE_FILE_MISSING");
             transfer.Received = transfer.Total = size;
             transfer.Status = FileProgress.State.Cached; publish();
             return file;
@@ -161,10 +161,10 @@ namespace OurTaiko.Online
 
         // A playlist's folder cover from the object cache, downloading it first when it is not
         // cached with the announced size and SHA-256.
-        public async Task<byte[]> PlaylistCoverAsync(FanmadePlaylist playlist, CancellationToken cancel = default)
+        public async Task<byte[]> PlaylistCoverAsync(OnlinePlaylist playlist, CancellationToken cancel = default)
         {
-            var e = Endpoint(playlist.Server) ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
-            var resource = playlist.Cover ?? throw new FanmadeException("RESOURCE_MISSING");
+            var e = Endpoint(playlist.Server) ?? throw new OnlineException("SERVER_NOT_CONNECTED");
+            var resource = playlist.Cover ?? throw new OnlineException("RESOURCE_MISSING");
             string file = await EnsureObjectAsync(e, resource, cancel);
             return await CacheWork(() => File.ReadAllBytes(file), cancel);
         }

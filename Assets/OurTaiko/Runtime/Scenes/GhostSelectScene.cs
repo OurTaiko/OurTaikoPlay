@@ -48,7 +48,7 @@ namespace OurTaiko
         {
             // A catalog category's id; null for すべて.
             public string Id, Title = "", Server = "";
-            public readonly List<FanmadeReplay> Rows = new List<FanmadeReplay>();
+            public readonly List<OnlineReplay> Rows = new List<OnlineReplay>();
             public int Total { get; internal set; }
             public bool Started { get; internal set; }
             public bool IsLoading => Loading != null && !Loading.IsCompleted;
@@ -76,7 +76,7 @@ namespace OurTaiko
         public IReadOnlyList<Server> Servers => servers;
         public Server CurrentServer { get; private set; }
         public Category CurrentCategory { get; private set; }
-        public IReadOnlyList<FanmadeReplay> Rows => CurrentCategory?.Rows ?? (IReadOnlyList<FanmadeReplay>)Array.Empty<FanmadeReplay>();
+        public IReadOnlyList<OnlineReplay> Rows => CurrentCategory?.Rows ?? (IReadOnlyList<OnlineReplay>)Array.Empty<OnlineReplay>();
         public Outcome LastOutcome { get; private set; }
         // What the screen says under its list: progress, an empty list, or why a pick failed.
         public string Status { get; private set; } = "";
@@ -299,7 +299,7 @@ namespace OurTaiko
             dirty = true;
         }
 
-        public async void Pick(FanmadeReplay row)
+        public async void Pick(OnlineReplay row)
         {
             if (row == null || HasLeft || IsStarting || switcher.IsInputBlocked) return;
             IsStarting = true;
@@ -333,14 +333,14 @@ namespace OurTaiko
         string pickMessage = "", startingName = "";
 
         // The listed play's song (registered as an online song) and its recording.
-        public static async Task<(SongDefinition Song, GhostMatch Ghost)> PrepareAsync(FanmadeReplay row, CancellationToken cancel)
+        public static async Task<(SongDefinition Song, GhostMatch Ghost)> PrepareAsync(OnlineReplay row, CancellationToken cancel)
         {
             var online = OnlineManager.EnsureInstance();
-            var client = online.Client ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
-            var chart = await client.ReplayChartAsync(row, cancel) ?? throw new FanmadeException("CHART_NOT_FOUND");
-            if (!chart.Blocks.Any(b => b.Course == row.Course && b.Side == row.Side)) throw new FanmadeException("REPLAY_OUTDATED");
+            var client = online.Client ?? throw new OnlineException("SERVER_NOT_CONNECTED");
+            var chart = await client.ReplayChartAsync(row, cancel) ?? throw new OnlineException("CHART_NOT_FOUND");
+            if (!chart.Blocks.Any(b => b.Course == row.Course && b.Side == row.Side)) throw new OnlineException("REPLAY_OUTDATED");
             var record = await client.ReplayRecordAsync(row, cancel);
-            var song = online.SearchSong(chart) ?? throw new FanmadeException("CHART_NOT_FOUND");
+            var song = online.SearchSong(chart) ?? throw new OnlineException("CHART_NOT_FOUND");
             return (song, new GhostMatch
             {
                 Record = record, Course = row.Course, Side = row.Side, Nickname = row.Nickname,
@@ -406,7 +406,7 @@ namespace OurTaiko
             var client = OnlineManager.EnsureInstance().Client;
             if (client == null || !category.NextPage.HasValue) return;
             int page = category.NextPage.Value;
-            FanmadeReplayPage[] replies;
+            OnlineReplayPage[] replies;
             try { replies = await client.ReplaysAsync(page, "recent", cancel.Token, category.Server, category.Id); }
             catch (OperationCanceledException) { return; }
             if (cancel.IsCancellationRequested) return;

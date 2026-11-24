@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 namespace OurTaiko.Online
 {
     // Reading the JSON a server answers with: every value is checked, and a wrong one throws
-    // FanmadeException with the API_* code the screens show.
+    // OnlineException with the API_* code the screens show.
     public static class Json
     {
         public static JObject Parse(string text)
@@ -13,9 +13,9 @@ namespace OurTaiko.Online
             {
                 using var reader = new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(text))
                     { DateParseHandling = Newtonsoft.Json.DateParseHandling.None };
-                return JToken.ReadFrom(reader) as JObject ?? throw new FanmadeException("API_JSON_INVALID");
+                return JToken.ReadFrom(reader) as JObject ?? throw new OnlineException("API_JSON_INVALID");
             }
-            catch (Newtonsoft.Json.JsonException error) { throw new FanmadeException("API_JSON_INVALID", error); }
+            catch (Newtonsoft.Json.JsonException error) { throw new OnlineException("API_JSON_INVALID", error); }
         }
 
         // A string a server may leave out (one older than the field): "" then, and for anything else than a string.
@@ -28,14 +28,14 @@ namespace OurTaiko.Online
         public static string Str(JToken v, string key)
         {
             var value = v is JObject o ? o[key] : null;
-            if (value == null || value.Type != JTokenType.String) throw new FanmadeException("API_STRING_INVALID");
+            if (value == null || value.Type != JTokenType.String) throw new OnlineException("API_STRING_INVALID");
             return (string)value;
         }
 
         public static long Number(JToken v, string key)
         {
             var value = v is JObject o ? o[key] : null;
-            if (value == null || value.Type != JTokenType.Integer || (long)value < 0) throw new FanmadeException("API_NUMBER_INVALID");
+            if (value == null || value.Type != JTokenType.Integer || (long)value < 0) throw new OnlineException("API_NUMBER_INVALID");
             return (long)value;
         }
 

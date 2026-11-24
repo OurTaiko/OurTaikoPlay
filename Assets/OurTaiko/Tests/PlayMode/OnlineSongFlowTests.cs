@@ -16,18 +16,18 @@ namespace OurTaiko.Tests
     // server.
     public sealed class OnlineSongFlowTests
     {
-        FanmadeFixture fixture;
-        FanmadeFixture.Chart chart;
+        OnlineFixture fixture;
+        OnlineFixture.Chart chart;
 
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture();
+            fixture = new OnlineFixture();
             // A one-measure chart and a short real OGG, so the song ends quickly.
-            chart = new FanmadeFixture.Chart
+            chart = new OnlineFixture.Chart
             {
                 Title = "Fixture Song", Subtitle = "Online", AudioName = "song.ogg",
-                Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Oni", 1, 240)),
+                Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja("Oni", 1, 240)),
                 Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),
             };
             chart.Branching.Add("Oni");
@@ -257,7 +257,7 @@ namespace OurTaiko.Tests
             {
                 // Contradictory counters ensure the explicit status, not inferred judgments, wins.
                 Assert.That(online.Client.Submit(online.ChartOf(song), (int)Difficulty.Oni,
-                    new FanmadeScore { Score = score += 10000, Good = 100, Bad = 10, ClearStatus = status }), Is.True);
+                    new OnlineScore { Score = score += 10000, Good = 100, Bad = 10, ClearStatus = status }), Is.True);
                 var upload = online.Client.WaitForUploadsAsync();
                 yield return WaitUntil(() => upload.IsCompleted, 10);
                 upload.GetAwaiter().GetResult();
@@ -435,7 +435,7 @@ namespace OurTaiko.Tests
             {
                 new JObject { ["id"] = "mine", ["title"] = "Festival Set", ["genre"] = "VOCALOID", ["kind"] = "owned", ["owner"] = "DON",
                     ["chartIds"] = new JArray(chart.Id),
-                    ["songListCoverPath"] = "files/playlist-cover", ["songListCoverSha256"] = FanmadeFixture.Sha(cover), ["songListCoverSize"] = cover.Length },
+                    ["songListCoverPath"] = "files/playlist-cover", ["songListCoverSha256"] = OnlineFixture.Sha(cover), ["songListCoverSize"] = cover.Length },
                 new JObject { ["id"] = "daily", ["title"] = "Daily Challenge", ["genre"] = "VARIETY", ["kind"] = "system", ["owner"] = "", ["chartIds"] = new JArray(chart.Id) },
             };
             TestData.UseServers(fixture);
@@ -492,7 +492,7 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             for (int i = 0; i < 3000; i++)
-                fixture.Charts.Add(new FanmadeFixture.Chart { Title = "Bulk " + i, Tja = chart.Tja, Audio = chart.Audio, Categories = new[] { i % 2 == 0 ? "game" : "pop" } });
+                fixture.Charts.Add(new OnlineFixture.Chart { Title = "Bulk " + i, Tja = chart.Tja, Audio = chart.Audio, Categories = new[] { i % 2 == 0 ? "game" : "pop" } });
             TestData.UseServers(fixture);
             yield return TestData.Connect();
             Assert.That(OnlineManager.Instance.Songs.Count, Is.EqualTo(3001));

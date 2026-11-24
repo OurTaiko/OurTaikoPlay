@@ -26,7 +26,7 @@ namespace OurTaiko
         public float visualOffsetMs;
         [Tooltip("Song-select board colour: the Nijiiro genre frame (0 default ... 9).")]
         [Range(0, 9)] public int genre;
-        [System.NonSerialized] public Online.FanmadeChart onlineChart;
+        [System.NonSerialized] public Online.OnlineChart onlineChart;
         TextAsset rankChart;
         readonly System.Collections.Generic.Dictionary<string, int> rankThresholds = new System.Collections.Generic.Dictionary<string, int>();
 

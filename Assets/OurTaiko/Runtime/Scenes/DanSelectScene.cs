@@ -440,7 +440,7 @@ namespace OurTaiko
             }
             DanCourseEntry entry;
             try { entry = resolver.Resolve(DanCourse.From(Online.Json.Parse(task.Result), pages[Page].Server), pages[Page].Server + "/api/v2/game/dans/" + lookupCode); }
-            catch (Exception error) when (error is FormatException || error is Online.FanmadeException)
+            catch (Exception error) when (error is FormatException || error is Online.OnlineException)
             {
                 codeEntry.Say(L10n.Format("Dan", "code.failed", error.Message));
                 return;

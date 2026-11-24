@@ -12,21 +12,21 @@ namespace OurTaiko.Tests
     // store remembers it with its categories and the hashes of its cached files.
     public sealed class OfflineCacheTests
     {
-        FanmadeFixture fixture;
-        FanmadeClient client;
+        OnlineFixture fixture;
+        OnlineClient client;
         string cache;
-        FanmadeFixture.Chart first, second;
+        OnlineFixture.Chart first, second;
 
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture();
-            first = new FanmadeFixture.Chart { Title = "First", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3, 4 }, Categories = new[] { "game", "pop" } };
-            second = new FanmadeFixture.Chart { Title = "Second", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Hard")), Audio = new byte[] { 5, 6 }, Categories = new[] { "pop" } };
+            fixture = new OnlineFixture();
+            first = new OnlineFixture.Chart { Title = "First", Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3, 4 }, Categories = new[] { "game", "pop" } };
+            second = new OnlineFixture.Chart { Title = "Second", Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja("Hard")), Audio = new byte[] { 5, 6 }, Categories = new[] { "pop" } };
             second.Difficulties[0] = ("Hard", 5, "");
             fixture.Charts.Add(first); fixture.Charts.Add(second);
             cache = Path.Combine(Path.GetTempPath(), "ourtaiko-offline-" + Guid.NewGuid().ToString("N"));
-            client = new FanmadeClient(cache);
+            client = new OnlineClient(cache);
         }
 
         [TearDown]
@@ -40,7 +40,7 @@ namespace OurTaiko.Tests
         static void Run(Func<Task> body) => Task.Run(body).GetAwaiter().GetResult();
         static T Run<T>(Func<Task<T>> body) => Task.Run(body).GetAwaiter().GetResult();
 
-        FanmadeEndpoint Connect()
+        OnlineEndpoint Connect()
         {
             var endpoint = client.Add(fixture.Server());
             Run(() => fixture.ConnectAsync(client, endpoint, "don"));
@@ -59,8 +59,8 @@ namespace OurTaiko.Tests
             Assert.That(entry.ServerName, Is.EqualTo("Fixture"));
             Assert.That(entry.CategoryList().Select(c => c.Id), Is.EqualTo(new[] { "game", "pop" }));
             Assert.That(entry.CategoryList().Select(c => c.Title), Is.EqualTo(new[] { "Game", "Pop" }));
-            Assert.That(entry.TjaHash, Is.EqualTo(FanmadeFixture.Sha(first.Tja)));
-            Assert.That(entry.AudioHash, Is.EqualTo(FanmadeFixture.Sha(first.Audio)));
+            Assert.That(entry.TjaHash, Is.EqualTo(OnlineFixture.Sha(first.Tja)));
+            Assert.That(entry.AudioHash, Is.EqualTo(OnlineFixture.Sha(first.Audio)));
             var chart = entry.ToChart();
             Assert.That(chart.Title, Is.EqualTo("First"));
             Assert.That(chart.Server, Is.EqualTo(endpoint.Id));
@@ -91,8 +91,8 @@ namespace OurTaiko.Tests
             Assert.That(fixture.Requests.Count, Is.EqualTo(requests), "The server is not contacted offline.");
             Assert.That(client.Status, Does.Contain("offline cache"));
 
-            var never = new FanmadeChart { Server = endpoint.Id, Id = second.Id };
-            var error = Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(never)));
+            var never = new OnlineChart { Server = endpoint.Id, Id = second.Id };
+            var error = Assert.Throws<OnlineException>(() => Run(() => client.PrepareAsync(never)));
             Assert.That(error.Message, Is.EqualTo("SERVER_NOT_CONNECTED"), "A chart never prepared has no cache to play from.");
         }
 
@@ -115,9 +115,9 @@ namespace OurTaiko.Tests
             var prepared = Run(() => client.PrepareAsync(cached));
             Assert.That(File.ReadAllBytes(prepared.AudioPath), Is.EqualTo(first.Audio));
             Assert.That(client.Status, Does.Contain("offline cache"));
-            var preview = Assert.Throws<FanmadeException>(() => Run(() => client.PreparePreviewAsync(cached)));
+            var preview = Assert.Throws<OnlineException>(() => Run(() => client.PreparePreviewAsync(cached)));
             Assert.That(preview.Message, Is.EqualTo("PREVIEW_UNAVAILABLE"), "The preview reads the cache too (this one cached no excerpt).");
-            var rank = Assert.Throws<FanmadeException>(() => Run(() => client.PrepareRankThresholdsAsync(cached)));
+            var rank = Assert.Throws<OnlineException>(() => Run(() => client.PrepareRankThresholdsAsync(cached)));
             Assert.That(rank.Message, Is.EqualTo("SERVER_NOT_CONNECTED"));
             Assert.That(fixture.Requests.Count, Is.EqualTo(requests), "Nothing tries the unreachable server.");
         }
@@ -150,7 +150,7 @@ namespace OurTaiko.Tests
             string audio = Path.Combine(cache, "objects", entry.AudioHash.Substring(0, 2), entry.AudioHash);
             // Same size, other bytes: the hash check refuses it.
             File.WriteAllBytes(audio, new byte[] { 9, 9, 9, 9 });
-            var error = Assert.Throws<FanmadeException>(() => Run(() => client.PrepareAsync(entry.ToChart())));
+            var error = Assert.Throws<OnlineException>(() => Run(() => client.PrepareAsync(entry.ToChart())));
             Assert.That(error.Message, Is.EqualTo("CACHE_FILE_MISSING"));
             Assert.That(client.Offline.Scan(cache).Select(e => e.ChartId), Is.EqualTo(new[] { first.Id }), "A file of the right size is only checked when played.");
             File.Delete(audio);
@@ -166,10 +166,10 @@ namespace OurTaiko.Tests
             Run(() => client.PrepareAsync(client.Charts.First(c => c.Id == first.Id)));
             client.Reset();
             var cached = client.Offline.Get(endpoint.Id, first.Id).ToChart();
-            Assert.That(client.Submit(cached, (int)Difficulty.Oni, new FanmadeScore { Score = 4321 }), Is.False, "Without an account to queue under, nothing is queued.");
-            Assert.That(client.Submit(new FanmadeChart { Server = endpoint.Id, Id = second.Id }, (int)Difficulty.Oni, new FanmadeScore(), offlineAccount: account), Is.False,
+            Assert.That(client.Submit(cached, (int)Difficulty.Oni, new OnlineScore { Score = 4321 }), Is.False, "Without an account to queue under, nothing is queued.");
+            Assert.That(client.Submit(new OnlineChart { Server = endpoint.Id, Id = second.Id }, (int)Difficulty.Oni, new OnlineScore(), offlineAccount: account), Is.False,
                 "A chart that is not cached is not queued either.");
-            Assert.That(client.Submit(cached, (int)Difficulty.Oni, new FanmadeScore { Score = 4321 }, offlineAccount: account), Is.True);
+            Assert.That(client.Submit(cached, (int)Difficulty.Oni, new OnlineScore { Score = 4321 }, offlineAccount: account), Is.True);
             Assert.That(client.UploadQueue.Pending(account).Length, Is.EqualTo(1));
             Assert.That(fixture.AcceptedScores, Is.Empty);
 
@@ -192,7 +192,7 @@ namespace OurTaiko.Tests
             Run(() => client.PrepareAsync(client.Charts.First(c => c.Id == first.Id)));
             var entry = client.Offline.Get(endpoint.Id, first.Id);
             Assert.That(entry.ToChart().Title, Is.EqualTo("Renamed"));
-            Assert.That(entry.AudioHash, Is.EqualTo(FanmadeFixture.Sha(first.Audio)));
+            Assert.That(entry.AudioHash, Is.EqualTo(OnlineFixture.Sha(first.Audio)));
             Assert.That(client.Offline.All().Length, Is.EqualTo(1));
         }
     }

@@ -21,8 +21,8 @@ namespace OurTaiko.Tests
     // drum and account.
     public sealed class GhostBattleFlowTests
     {
-        FanmadeFixture fixture;
-        FanmadeFixture.Chart chart;
+        OnlineFixture fixture;
+        OnlineFixture.Chart chart;
         GameSettings saved;
         PlayOptions originalFirst, originalSecond;
         Keyboard keyboard;
@@ -34,9 +34,9 @@ namespace OurTaiko.Tests
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture { Votes = true };
+            fixture = new OnlineFixture { Votes = true };
             fixture.Users["ka"] = "katsu";
-            chart = new FanmadeFixture.Chart
+            chart = new OnlineFixture.Chart
             {
                 Title = "Ghost Song", Subtitle = "Recorded", AudioName = "song.ogg",
                 Tja = Encoding.UTF8.GetBytes(Tja), Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),

@@ -12,22 +12,22 @@ namespace OurTaiko.Tests
     // center (the fixture plays it) and per-seat scores and uploads.
     public sealed class OurTaikoAccountTests
     {
-        FanmadeFixture fixture;
-        FanmadeClient client;
+        OnlineFixture fixture;
+        OnlineClient client;
         AccountCenter center;
         string cache;
-        FanmadeFixture.Chart chart;
+        OnlineFixture.Chart chart;
 
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture();
+            fixture = new OnlineFixture();
             fixture.Users["ka"] = "don";
-            chart = new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3 } };
+            chart = new OnlineFixture.Chart { Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja()), Audio = new byte[] { 1, 2, 3 } };
             chart.Difficulties.Add(("Oni", 8, "P2"));
             fixture.Charts.Add(chart);
             cache = Path.Combine(Path.GetTempPath(), "ourtaiko-accounts-" + Guid.NewGuid().ToString("N"));
-            client = new FanmadeClient(cache);
+            client = new OnlineClient(cache);
             center = new AccountCenter(fixture.BaseUrl);
         }
 
@@ -68,7 +68,7 @@ namespace OurTaiko.Tests
                 fixture.Reply(context, status, new Newtonsoft.Json.Linq.JObject { ["code"] = expected });
                 return true;
             };
-            var error = Assert.Throws<FanmadeException>(() => Run(() => center.BrowserLoginAsync("1P", (_, _) => {}, default)));
+            var error = Assert.Throws<OnlineException>(() => Run(() => center.BrowserLoginAsync("1P", (_, _) => {}, default)));
             Assert.That(error.Message, Is.EqualTo(expected));
         }
 
@@ -125,14 +125,14 @@ namespace OurTaiko.Tests
         }
 
         // A built-in style server: the catalog first, then the seat signed in with a traded session.
-        FanmadeEndpoint Catalog()
+        OnlineEndpoint Catalog()
         {
             var e = client.Add(new ServerConfig { name = "Built-in", baseUrl = fixture.BaseUrl });
             Run(() => client.LoadCatalogAsync(e));
             return e;
         }
 
-        OurTaikoAccount SignIn(FanmadeEndpoint e, int seat, string user, string password)
+        OurTaikoAccount SignIn(OnlineEndpoint e, int seat, string user, string password)
         {
             var account = Run(() => center.LoginAsync(user, password, "Test"));
             string session = Run(() => center.TradeAsync(account.Token, e.SsoService));
@@ -164,7 +164,7 @@ namespace OurTaiko.Tests
             again.Load();
             Assert.That(again.Seats[0].IsSignedIn, Is.False);
             Assert.That(again.Seats[1].Token, Is.EqualTo(account.Token));
-            Assert.That(again.Seats[1].UserId, Is.EqualTo(FanmadeFixture.UserId("don")));
+            Assert.That(again.Seats[1].UserId, Is.EqualTo(OnlineFixture.UserId("don")));
             Assert.That(again.Seats[1].Nickname, Is.EqualTo("DON"));
 
             var elsewhere = new AccountStore(path, "device-b");
@@ -183,7 +183,7 @@ namespace OurTaiko.Tests
         {
             var e = Catalog();
             Assert.That(e.SsoIssuer, Is.EqualTo(fixture.BaseUrl));
-            Assert.That(e.SsoService, Is.EqualTo(FanmadeFixture.Service));
+            Assert.That(e.SsoService, Is.EqualTo(OnlineFixture.Service));
             foreach (var issuer in new[] { "http://example.org", "ftp://127.0.0.1", "https://user@example.org", "nonsense" })
             {
                 fixture.ChangeBootstrap = reply => reply["sso"]["issuer"] = issuer;
@@ -209,8 +209,8 @@ namespace OurTaiko.Tests
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(900000));
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(800000), "2P reads its own account's p2 block.");
 
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1000000, Good = 4, MaxCombo = 4 }, seat: 1, side: "p2"), Is.True);
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 950000, Good = 4, MaxCombo = 4 }, seat: 0, side: "single"), Is.True);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 1000000, Good = 4, MaxCombo = 4 }, seat: 1, side: "p2"), Is.True);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 950000, Good = 4, MaxCombo = 4 }, seat: 0, side: "single"), Is.True);
             Drain();
             Assert.That(fixture.AcceptedUsers.ToArray(), Is.EquivalentTo(new[] { "don", "ka" }));
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2")?.Score, Is.EqualTo(1000000));
@@ -218,9 +218,9 @@ namespace OurTaiko.Tests
 
             client.SignOut(e, 1);
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 1, "p2"), Is.Null);
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, seat: 1, side: "p2"), Is.False, "A guest seat uploads nothing.");
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 1 }, seat: 1, side: "p2"), Is.False, "A guest seat uploads nothing.");
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single")?.Score, Is.EqualTo(950000), "1P is untouched.");
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1 }, seat: 0, side: "p1"), Is.False, "No block on the side played: nothing uploads.");
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 1 }, seat: 0, side: "p1"), Is.False, "No block on the side played: nothing uploads.");
         }
 
         [Test]
@@ -230,7 +230,7 @@ namespace OurTaiko.Tests
             SignIn(e, 0, "don", "katsu");
             fixture.ExpireSessions();
             var listed = client.Chart(e.Id, chart.Id);
-            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 1000, Good = 1, MaxCombo = 1 }), Is.True);
+            Assert.That(client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 1000, Good = 1, MaxCombo = 1 }), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(fixture.AcceptedUsers.ToArray(), Is.EqualTo(new[] { "don" }));
             Assert.That(fixture.Requests.Count(r => r == "POST /api/v1/game/tokens"), Is.EqualTo(2));
@@ -245,8 +245,8 @@ namespace OurTaiko.Tests
             SignIn(e, 1, "don", "katsu");
             Assert.That(e.AccountIdOf(0), Is.EqualTo(e.AccountIdOf(1)));
             var listed = client.Chart(e.Id, chart.Id);
-            client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 10, Good = 1, MaxCombo = 1 }, seat: 0, side: "single");
-            client.Submit(listed, (int)Difficulty.Oni, new FanmadeScore { Score = 20, Good = 1, MaxCombo = 1 }, seat: 1, side: "p2");
+            client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 10, Good = 1, MaxCombo = 1 }, seat: 0, side: "single");
+            client.Submit(listed, (int)Difficulty.Oni, new OnlineScore { Score = 20, Good = 1, MaxCombo = 1 }, seat: 1, side: "p2");
             Drain();
             Assert.That(fixture.AcceptedScores.Select(s => (long)s["score"]), Is.EquivalentTo(new[] { 10L, 20L }));
             // Each seat played its own block (2P the P2 one); both seats see both plays.
@@ -259,7 +259,7 @@ namespace OurTaiko.Tests
         [Test]
         public void ProfileNameplatesMapToTheGamesBandsAndLanguages()
         {
-            string id = FanmadeFixture.UserId("don");
+            string id = OnlineFixture.UserId("don");
             fixture.Nameplates[id] = Newtonsoft.Json.Linq.JObject.Parse(
                 "{\"title\":{\"name\":\"太鼓の達人\",\"nameTranslations\":{\"en\":\"Taiko Master\",\"zh-Hans\":\"太鼓达人\"},\"style\":\"purple\"},\"dan\":{\"index\":11,\"gold\":false}}");
             using var profiles = new ProfileCenter(fixture.BaseUrl);
@@ -270,7 +270,7 @@ namespace OurTaiko.Tests
             Assert.That(english.Gold, Is.False);
             Assert.That(Run(() => profiles.NameplateAsync(id, "zh")).Title, Is.EqualTo("太鼓达人"));
             Assert.That(Run(() => profiles.NameplateAsync(id, "ko")).Title, Is.EqualTo("太鼓の達人"), "No translation: the title's own name.");
-            var plain = Run(() => profiles.NameplateAsync(FanmadeFixture.UserId("ka"), "en"));
+            var plain = Run(() => profiles.NameplateAsync(OnlineFixture.UserId("ka"), "en"));
             Assert.That(plain.Title, Is.Empty);
             Assert.That(plain.Dan, Is.EqualTo(-1));
             Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"rainbow\"},\"dan\":{\"index\":99}}"), "en").Rainbow, Is.True);
@@ -288,13 +288,13 @@ namespace OurTaiko.Tests
             var record = new PlayRecord { Speed = 20 };
             record.Inputs.Add((10, 1));
             // The score is not queued on its own: it is part of the attempt, with what it was played on.
-            var score = client.DanAttemptScore(fixture.BaseUrl, listed, (int)Difficulty.Oni, new FanmadeScore { Score = 500000, Good = 4, MaxCombo = 4, ClearStatus = 1 }, record, "single");
+            var score = client.DanAttemptScore(fixture.BaseUrl, listed, (int)Difficulty.Oni, new OnlineScore { Score = 500000, Good = 4, MaxCombo = 4, ClearStatus = 1 }, record, "single");
             Assert.That(client.UploadQueue.Pending(e.AccountIdOf(0)), Is.Empty);
             Assert.That((long)score["difficultyId"], Is.EqualTo(chart.BlockId("Oni")));
             Assert.That((string)score["audioHash"], Is.EqualTo(listed.AudioHash));
             Assert.That((string)score["chartHash"], Is.Not.Empty);
             Assert.That((int)score["replay_data"]["options"]["speed"], Is.EqualTo(20));
-            Assert.That(client.DanAttemptScore("https://elsewhere.example", listed, (int)Difficulty.Oni, new FanmadeScore(), null, "single"), Is.Null, "Another server's attempt does not take it.");
+            Assert.That(client.DanAttemptScore("https://elsewhere.example", listed, (int)Difficulty.Oni, new OnlineScore(), null, "single"), Is.Null, "Another server's attempt does not take it.");
             Assert.That(client.Best(listed, (int)Difficulty.Oni, 0, "single"), Is.Null);
             client.SubmitDanAttempt(fixture.BaseUrl, "7", 2, 2, new[] { score, null });
             Drain();
@@ -392,7 +392,7 @@ namespace OurTaiko.Tests
             Assert.That(account.Username, Is.EqualTo("don"));
             Run(() => center.LogoutAsync(account.Token));
             Assert.That(Assert.Catch<HttpStatusException>(() => Run(() => center.RefreshAsync(account))).Status, Is.EqualTo(401));
-            Assert.That(Assert.Catch<HttpStatusException>(() => Run(() => center.TradeAsync(account.Token, FanmadeFixture.Service))).Status, Is.EqualTo(401));
+            Assert.That(Assert.Catch<HttpStatusException>(() => Run(() => center.TradeAsync(account.Token, OnlineFixture.Service))).Status, Is.EqualTo(401));
         }
     }
 }

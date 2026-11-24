@@ -14,11 +14,11 @@ namespace OurTaiko.Tests
     // once, joined to the paths the API gives, and the canonical root to fall back on.
     public sealed class DistributionTests
     {
-        FanmadeFixture site;
+        OnlineFixture site;
 
         static T Run<T>(Func<Task<T>> body) => Task.Run(body).GetAwaiter().GetResult();
 
-        [SetUp] public void SetUp() => site = new FanmadeFixture();
+        [SetUp] public void SetUp() => site = new OnlineFixture();
 
         [TearDown]
         public void TearDown()
@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
             Assert.That(address.Fallback, Is.EqualTo(site.BaseUrl + "/fanmade/" + new string('a', 64) + ".ogg"));
             Assert.That(Distribution.CanonicalRoot.Locate("3dchara/cos/0.glb").Url, Is.EqualTo("https://distrib.ourtaiko.org/3dchara/cos/0.glb"));
             Assert.That(Distribution.CanonicalRoot.Locate("3dchara/cos/0.glb").Fallback, Is.Null, "Nothing else to try.");
-            Assert.That(Assert.Throws<FanmadeException>(() => root.Locate("../x")).Message, Is.EqualTo("RESOURCE_PATH_INVALID"));
+            Assert.That(Assert.Throws<OnlineException>(() => root.Locate("../x")).Message, Is.EqualTo("RESOURCE_PATH_INVALID"));
         }
 
         [Test]
@@ -94,7 +94,7 @@ namespace OurTaiko.Tests
             Task<string> Fetch(string url)
             {
                 lock (tried) tried.Add(url);
-                if (url.StartsWith("https://mirror.example/", StringComparison.Ordinal)) throw new FanmadeException("DOWNLOAD_INTEGRITY_FAILED");
+                if (url.StartsWith("https://mirror.example/", StringComparison.Ordinal)) throw new OnlineException("DOWNLOAD_INTEGRITY_FAILED");
                 return Task.FromResult("bytes of " + url);
             }
             var root = new FileRoot("https://mirror.example/", Distribution.CanonicalBase, true);
@@ -104,14 +104,14 @@ namespace OurTaiko.Tests
             // The canonical root's own failure is the answer: there is nothing else to try.
             tried.Clear();
             var gone = new FileRoot("https://mirror.example/", "https://mirror.example/");
-            Assert.Throws<FanmadeException>(() => Run(() => Distribution.FetchAsync(gone.Locate("a/b"), Fetch)));
+            Assert.Throws<OnlineException>(() => Run(() => Distribution.FetchAsync(gone.Locate("a/b"), Fetch)));
             Assert.That(tried, Has.Count.EqualTo(1));
 
             // A cancelled download is not tried again.
             tried.Clear();
             using var cancel = new CancellationTokenSource();
             cancel.Cancel();
-            Assert.Throws<FanmadeException>(() => Run(() => Distribution.FetchAsync(root.Locate("a/b"), Fetch, cancel.Token)));
+            Assert.Throws<OnlineException>(() => Run(() => Distribution.FetchAsync(root.Locate("a/b"), Fetch, cancel.Token)));
             Assert.That(tried, Has.Count.EqualTo(1));
         }
 

@@ -18,7 +18,7 @@ namespace OurTaiko.Online
     // content hash (TJA, audio or preview), shared by every server, account and chart. Paths stay
     // short enough for Windows' 260-character limit. The playable TJA is never written to disk.
     // Pending uploads live in the separate PendingScoreUploads SQLite table.
-    public sealed partial class FanmadeClient : IDisposable
+    public sealed partial class OnlineClient : IDisposable
     {
         public static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(30);
         // How long a 段位 attempt the server kept, but could not get OurTaikoProfile's answer for, is sent again.
@@ -30,14 +30,14 @@ namespace OurTaiko.Online
         public bool IsUploading => uploads != null && !uploads.IsCompleted;
 
         readonly object sync = new object();
-        readonly List<FanmadeEndpoint> endpoints = new List<FanmadeEndpoint>();
-        readonly Dictionary<string, List<FanmadeChart>> charts = new Dictionary<string, List<FanmadeChart>>();
-        readonly Dictionary<string, List<FanmadeCategory>> categoryLists = new Dictionary<string, List<FanmadeCategory>>();
-        readonly Dictionary<string, List<FanmadePlaylist>> playlistLists = new Dictionary<string, List<FanmadePlaylist>>();
+        readonly List<OnlineEndpoint> endpoints = new List<OnlineEndpoint>();
+        readonly Dictionary<string, List<OnlineChart>> charts = new Dictionary<string, List<OnlineChart>>();
+        readonly Dictionary<string, List<OnlineCategory>> categoryLists = new Dictionary<string, List<OnlineCategory>>();
+        readonly Dictionary<string, List<OnlinePlaylist>> playlistLists = new Dictionary<string, List<OnlinePlaylist>>();
         // The signed-in account's own playlists: as received at login, and read against the catalog
         // once both are there (either may arrive first).
         readonly Dictionary<string, JToken> personalPlaylists = new Dictionary<string, JToken>();
-        readonly Dictionary<string, List<FanmadePlaylist>> personalLists = new Dictionary<string, List<FanmadePlaylist>>();
+        readonly Dictionary<string, List<OnlinePlaylist>> personalLists = new Dictionary<string, List<OnlinePlaylist>>();
         // Each server's 段位 courses (GET /game/dans), as it sent them.
         readonly Dictionary<string, JArray> danLists = new Dictionary<string, JArray>();
         // What each uploaded 段位 attempt (by its queue key) got back: OurTaikoProfile's reply, or why it has none.
@@ -55,7 +55,7 @@ namespace OurTaiko.Online
         public OfflineChartStore Offline { get; }
         // What each played song's full audio measured, for its preview to sound the same.
         public AudioLevelStore AudioLevels { get; }
-        public FanmadeClient(string cacheRoot, string databasePath = null)
+        public OnlineClient(string cacheRoot, string databasePath = null)
         {
             CacheRoot = Path.GetFullPath(cacheRoot);
             var database = new GameDatabase(databasePath ?? Path.Combine(CacheRoot, GameDatabase.FileName));
@@ -83,10 +83,10 @@ namespace OurTaiko.Online
             }
         }
 
-        public IReadOnlyList<FanmadeEndpoint> Endpoints { get { lock (sync) return endpoints.ToArray(); } }
+        public IReadOnlyList<OnlineEndpoint> Endpoints { get { lock (sync) return endpoints.ToArray(); } }
 
         // Every chart of every connected server, in server then category order, one entry per chart id.
-        public IReadOnlyList<FanmadeChart> Charts
+        public IReadOnlyList<OnlineChart> Charts
         {
             get
             {
@@ -96,7 +96,7 @@ namespace OurTaiko.Online
         }
 
         // Every category of every connected server, in server then catalog order (empty ones included).
-        public IReadOnlyList<FanmadeCategory> Categories
+        public IReadOnlyList<OnlineCategory> Categories
         {
             get
             {
@@ -108,7 +108,7 @@ namespace OurTaiko.Online
         // Every playlist of every connected server: per server the account's own (owned, favorite,
         // personal system ones) and then the catalog's, each in the server's order. Servers without
         // playlists have none; a playlist without a playable catalog chart is left out.
-        public IReadOnlyList<FanmadePlaylist> Playlists
+        public IReadOnlyList<OnlinePlaylist> Playlists
         {
             get
             {
@@ -118,17 +118,17 @@ namespace OurTaiko.Online
             }
         }
 
-        public FanmadeChart Chart(string server, string id)
+        public OnlineChart Chart(string server, string id)
         {
             lock (sync) return charts.TryGetValue(server, out var list) ? list.Find(c => c.Id == id) : null;
         }
 
-        public FanmadeEndpoint Endpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id); }
+        public OnlineEndpoint Endpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id); }
 
         // The endpoint of a server whose catalog is loaded now; null otherwise. A server that is
         // listed but not connected (unreachable at start-up, start-up skipped) has
         // no catalog to play from, so its charts play from the offline cache as if it were absent.
-        FanmadeEndpoint ConnectedEndpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id && e.IsConnected); }
+        OnlineEndpoint ConnectedEndpoint(string id) { lock (sync) return endpoints.Find(e => e.Id == id && e.IsConnected); }
 
         void SetStatus(string text) { lock (sync) status = text; }
 
@@ -149,9 +149,9 @@ namespace OurTaiko.Online
         }
 
         // A second entry for a connected server is reused.
-        public FanmadeEndpoint Add(ServerConfig config)
+        public OnlineEndpoint Add(ServerConfig config)
         {
-            var endpoint = new FanmadeEndpoint(config);
+            var endpoint = new OnlineEndpoint(config);
             lock (sync)
             {
                 int existing = endpoints.FindIndex(e => e.Id == endpoint.Id);
@@ -164,7 +164,7 @@ namespace OurTaiko.Online
         }
 
         // Drops the matching servers and their catalogs (uploads finish first); the others stay connected.
-        public void Remove(Predicate<FanmadeEndpoint> match)
+        public void Remove(Predicate<OnlineEndpoint> match)
         {
             try { uploads?.Wait(); } catch (AggregateException) { }
             uploads = null;
@@ -183,9 +183,9 @@ namespace OurTaiko.Online
 
         // GET /game/scores (and, for 1P, GET /game/playlists) of a signed-in seat, with the caller
         // holding the endpoint's transport. 2P's own playlists are not shown: the folders are 1P's.
-        async Task LoadAccountDataAsync(FanmadeEndpoint e, int seat, CancellationToken cancel)
+        async Task LoadAccountDataAsync(OnlineEndpoint e, int seat, CancellationToken cancel)
         {
-            var scores = new List<FanmadeScore>();
+            var scores = new List<OnlineScore>();
             JToken playlists = null;
             try
             {
@@ -205,34 +205,34 @@ namespace OurTaiko.Online
         }
 
         // The scores of an answer of GET /game/scores.
-        static List<FanmadeScore> ReadScores(JToken reply)
+        static List<OnlineScore> ReadScores(JToken reply)
         {
-            if (!(reply?["scores"] is JArray scoreList)) throw new FanmadeException("API_SCORES_INVALID");
-            var scores = new List<FanmadeScore>();
-            foreach (var v in scoreList) scores.Add(FanmadeScore.From(v));
+            if (!(reply?["scores"] is JArray scoreList)) throw new OnlineException("API_SCORES_INVALID");
+            var scores = new List<OnlineScore>();
+            foreach (var v in scoreList) scores.Add(OnlineScore.From(v));
             return scores;
         }
 
         // The servers that are sources of one site are loaded together: one request to the site
         // answers for all of them what each would answer by itself (GET /api/v2/game/sources).
         // The part of `answer` for an endpoint, by the name the site knows the source by.
-        static JToken SourceOf(JToken answer, FanmadeEndpoint e)
+        static JToken SourceOf(JToken answer, OnlineEndpoint e)
         {
             if (answer?["sources"] is JArray sources)
                 foreach (var source in sources)
                     if (Json.Str(source, "id") == e.Config.SourceId) return source;
-            throw new FanmadeException("API_SOURCES_INVALID");
+            throw new OnlineException("API_SOURCES_INVALID");
         }
 
         // Loads the song lists and 段位 courses of every endpoint of a site in one request;
         // accounts and scores are untouched. The request failing fails them all and keeps what
         // each had; otherwise each endpoint's own failure is reported in the result (null: loaded).
-        public async Task<Exception[]> LoadSiteAsync(IReadOnlyList<FanmadeEndpoint> site, CancellationToken cancel = default)
+        public async Task<Exception[]> LoadSiteAsync(IReadOnlyList<OnlineEndpoint> site, CancellationToken cancel = default)
         {
             if (site.Count == 0) return Array.Empty<Exception>();
-            foreach (var e in site) if (!e.HasValidUrl()) throw new FanmadeException("SERVER_URL_INVALID");
+            foreach (var e in site) if (!e.HasValidUrl()) throw new OnlineException("SERVER_URL_INVALID");
             var failures = new Exception[site.Count];
-            var held = new List<FanmadeEndpoint>();
+            var held = new List<OnlineEndpoint>();
             try
             {
                 foreach (var e in site) { await e.Transport.WaitAsync(cancel); held.Add(e); }
@@ -253,14 +253,14 @@ namespace OurTaiko.Online
                     try
                     {
                         var source = SourceOf(answer, e);
-                        bool dans = ApplyCatalog(e, source["catalog"] as JObject ?? throw new FanmadeException("API_SOURCES_INVALID"), cancel);
+                        bool dans = ApplyCatalog(e, source["catalog"] as JObject ?? throw new OnlineException("API_SOURCES_INVALID"), cancel);
                         // As when loaded alone: courses that cannot be read keep the ones loaded before.
                         try
                         {
                             if (dans) ApplyDans(e, source["dans"]);
                             else lock (sync) danLists.Remove(e.Id);
                         }
-                        catch (FanmadeException error) { SetStatus(e.Config.DisplayName + ": 段位 courses unavailable (" + error.Message + ")"); }
+                        catch (OnlineException error) { SetStatus(e.Config.DisplayName + ": 段位 courses unavailable (" + error.Message + ")"); }
                     }
                     catch (Exception error) when (!(error is OperationCanceledException))
                     {
@@ -277,11 +277,11 @@ namespace OurTaiko.Online
         // Signs a seat in to every endpoint of a site with one game session, and loads its scores
         // (and 1P's playlists) on all of them in one request. A session the site refuses is
         // traded for once more, like any request with a seat's session.
-        public async Task UseAccountAsync(IReadOnlyList<FanmadeEndpoint> site, int seat, string token, string userId, string nickname,
+        public async Task UseAccountAsync(IReadOnlyList<OnlineEndpoint> site, int seat, string token, string userId, string nickname,
             Func<CancellationToken, Task<string>> renew, CancellationToken cancel = default)
         {
             if (site.Count == 0) return;
-            var held = new List<FanmadeEndpoint>();
+            var held = new List<OnlineEndpoint>();
             try
             {
                 foreach (var e in site) { await e.Transport.WaitAsync(cancel); held.Add(e); }
@@ -300,7 +300,7 @@ namespace OurTaiko.Online
                     catch (HttpStatusException error) when (error.Status == 401 && renew != null)
                     {
                         string renewed = await renew(cancel);
-                        if (!Json.HexId(renewed ?? "", 64)) throw new FanmadeException("API_TOKEN_INVALID");
+                        if (!Json.HexId(renewed ?? "", 64)) throw new OnlineException("API_TOKEN_INVALID");
                         lock (sync) foreach (var e in site) e.Seats[seat].Token = renewed;
                         reply = await site[0].SiteRequestAsync(path, cancel, renewed);
                     }
@@ -326,7 +326,7 @@ namespace OurTaiko.Online
 
         // Signs a seat in with a game session traded for its OurTaiko account and loads its scores
         // (and 1P's playlists). renew trades again when the session expires.
-        public async Task UseAccountAsync(FanmadeEndpoint e, int seat, string token, string userId, string nickname,
+        public async Task UseAccountAsync(OnlineEndpoint e, int seat, string token, string userId, string nickname,
             Func<CancellationToken, Task<string>> renew, CancellationToken cancel = default)
         {
             await e.Transport.WaitAsync(cancel);
@@ -345,7 +345,7 @@ namespace OurTaiko.Online
         }
 
         // A seat back to a guest: its scores (and 1P's playlists) are dropped. Pending scores stay queued.
-        public void SignOut(FanmadeEndpoint e, int seat)
+        public void SignOut(OnlineEndpoint e, int seat)
         {
             lock (sync)
             {
@@ -355,7 +355,7 @@ namespace OurTaiko.Online
             Interlocked.Increment(ref revision);
         }
 
-        void SetAccountData(FanmadeEndpoint e, int seat, List<FanmadeScore> scores, JToken playlists)
+        void SetAccountData(OnlineEndpoint e, int seat, List<OnlineScore> scores, JToken playlists)
         {
             lock (sync)
             {
@@ -374,19 +374,19 @@ namespace OurTaiko.Online
 
         // Called with `sync` held, whenever the account's playlists or the catalog changed. Playlists
         // the client cannot read are left out; the catalog and the login are not affected.
-        void ReadPersonalPlaylists(FanmadeEndpoint e)
+        void ReadPersonalPlaylists(OnlineEndpoint e)
         {
             personalLists.Remove(e.Id);
             if (!personalPlaylists.TryGetValue(e.Id, out var received) || !charts.TryGetValue(e.Id, out var catalog)) return;
             try { personalLists[e.Id] = ReadPlaylists(received, e, new HashSet<string>(catalog.Select(c => c.Id))); }
-            catch (FanmadeException error) { status = e.Config.DisplayName + ": " + error.Message; }
+            catch (OnlineException error) { status = e.Config.DisplayName + ": " + error.Message; }
         }
 
         // Loads the complete catalog; the account and its scores are untouched. A failure keeps the
         // catalog loaded before.
-        public async Task LoadCatalogAsync(FanmadeEndpoint e, CancellationToken cancel = default)
+        public async Task LoadCatalogAsync(OnlineEndpoint e, CancellationToken cancel = default)
         {
-            if (!e.HasValidUrl()) throw new FanmadeException("SERVER_URL_INVALID");
+            if (!e.HasValidUrl()) throw new OnlineException("SERVER_URL_INVALID");
             await e.Transport.WaitAsync(cancel);
             try { await BootstrapAsync(e, cancel); }
             finally { e.Transport.Release(); }
@@ -395,16 +395,16 @@ namespace OurTaiko.Online
 
         // The playlists of a catalog or of GET /game/playlists that have a chart of `catalog`, in
         // their order. The field is optional: servers without playlists omit it.
-        static List<FanmadePlaylist> ReadPlaylists(JToken value, FanmadeEndpoint e, ICollection<string> catalog)
+        static List<OnlinePlaylist> ReadPlaylists(JToken value, OnlineEndpoint e, ICollection<string> catalog)
         {
-            var playlists = new List<FanmadePlaylist>();
+            var playlists = new List<OnlinePlaylist>();
             if (value == null || value.Type == JTokenType.Null) return playlists;
-            if (!(value is JArray list)) throw new FanmadeException("API_PLAYLIST_INVALID");
+            if (!(value is JArray list)) throw new OnlineException("API_PLAYLIST_INVALID");
             var ids = new HashSet<string>();
             foreach (var item in list)
             {
-                var playlist = FanmadePlaylist.From(item, e.Id, e.Config.DisplayName, catalog);
-                if (!ids.Add(playlist.Id)) throw new FanmadeException("API_PLAYLIST_INVALID");
+                var playlist = OnlinePlaylist.From(item, e.Id, e.Config.DisplayName, catalog);
+                if (!ids.Add(playlist.Id)) throw new OnlineException("API_PLAYLIST_INVALID");
                 if (playlist.ChartIds.Count > 0) playlists.Add(playlist);
             }
             return playlists;
@@ -412,7 +412,7 @@ namespace OurTaiko.Online
 
         // One GET /game/catalog (the public song list, the same signed in or not), with the caller
         // holding the endpoint's transport.
-        async Task BootstrapAsync(FanmadeEndpoint e, CancellationToken cancel)
+        async Task BootstrapAsync(OnlineEndpoint e, CancellationToken cancel)
         {
             try
             {
@@ -430,51 +430,51 @@ namespace OurTaiko.Online
 
         // Takes a catalog (the answer of GET /game/catalog) as the endpoint's song list. True when
         // the server has 段位 courses to load as well.
-        bool ApplyCatalog(FanmadeEndpoint e, JObject snapshot, CancellationToken cancel)
+        bool ApplyCatalog(OnlineEndpoint e, JObject snapshot, CancellationToken cancel)
         {
             {
-                if (!SupportsProtocol(snapshot)) throw new FanmadeException("SERVER_PROTOCOL_UNSUPPORTED");
+                if (!SupportsProtocol(snapshot)) throw new OnlineException("SERVER_PROTOCOL_UNSUPPORTED");
                 if (!(snapshot["categories"] is JArray categoryList)
                     || !(snapshot["charts"] is JArray chartList) || Json.Number(snapshot, "chartCount") != chartList.Count)
-                    throw new FanmadeException("API_BOOTSTRAP_INVALID");
-                var folders = new List<FanmadeCategory>();
-                var byCategory = new Dictionary<string, FanmadeCategory>();
+                    throw new OnlineException("API_BOOTSTRAP_INVALID");
+                var folders = new List<OnlineCategory>();
+                var byCategory = new Dictionary<string, OnlineCategory>();
                 var expectedCounts = new Dictionary<string, long>();
                 var actualCounts = new Dictionary<string, long>();
                 foreach (var v in categoryList)
                 {
                     string id = Json.Str(v, "id");
-                    if (!ValidCategory(id) || byCategory.ContainsKey(id)) throw new FanmadeException("API_CATEGORY_INVALID");
-                    var folder = new FanmadeCategory { Server = e.Id, ServerName = e.Config.DisplayName,
+                    if (!ValidCategory(id) || byCategory.ContainsKey(id)) throw new OnlineException("API_CATEGORY_INVALID");
+                    var folder = new OnlineCategory { Server = e.Id, ServerName = e.Config.DisplayName,
                         Id = id, Title = Json.Str(v, "title"), Genre = Json.Str(v, "genre"), ScenePreset = Json.Optional(v, "scenePreset") };
                     folders.Add(folder);
                     byCategory.Add(id, folder);
                     expectedCounts.Add(id, Json.Number(v, "chartCount"));
                     actualCounts.Add(id, 0);
                 }
-                var byId = new Dictionary<string, FanmadeChart>();
+                var byId = new Dictionary<string, OnlineChart>();
                 foreach (var value in chartList)
                 {
                     cancel.ThrowIfCancellationRequested();
-                    var chart = FanmadeChart.From(value, e.Id);
-                    if (byId.ContainsKey(chart.Id)) throw new FanmadeException("API_BOOTSTRAP_INVALID");
+                    var chart = OnlineChart.From(value, e.Id);
+                    if (byId.ContainsKey(chart.Id)) throw new OnlineException("API_BOOTSTRAP_INVALID");
                     byId.Add(chart.Id, chart);
                     if (!(value["categoryIds"] is JArray memberships))
-                        throw new FanmadeException("API_CATEGORY_INVALID");
+                        throw new OnlineException("API_CATEGORY_INVALID");
                     var seenCategories = new HashSet<string>();
                     foreach (var membership in memberships)
                     {
                         if (membership.Type != JTokenType.String || !byCategory.TryGetValue((string)membership, out var folder)
-                            || !seenCategories.Add((string)membership)) throw new FanmadeException("API_CATEGORY_INVALID");
+                            || !seenCategories.Add((string)membership)) throw new OnlineException("API_CATEGORY_INVALID");
                         actualCounts[folder.Id]++;
                         if (chart.IsPlayable) folder.ChartIds.Add(chart.Id);
                     }
                 }
-                var list = new List<FanmadeChart>();
+                var list = new List<OnlineChart>();
                 var seen = new HashSet<string>();
                 foreach (var folder in folders)
                 {
-                    if (actualCounts[folder.Id] != expectedCounts[folder.Id]) throw new FanmadeException("API_CATEGORY_INVALID");
+                    if (actualCounts[folder.Id] != expectedCounts[folder.Id]) throw new OnlineException("API_CATEGORY_INVALID");
                     foreach (var id in folder.ChartIds)
                     {
                         if (!seen.Add(id)) continue;
@@ -504,7 +504,7 @@ namespace OurTaiko.Online
         }
 
         // The server's 段位 courses; a failure keeps the ones loaded before and the catalog.
-        async Task LoadDansAsync(FanmadeEndpoint e, CancellationToken cancel)
+        async Task LoadDansAsync(OnlineEndpoint e, CancellationToken cancel)
         {
             try
             {
@@ -517,17 +517,17 @@ namespace OurTaiko.Online
         }
 
         // Takes the answer of GET /game/dans as the endpoint's 段位 courses.
-        void ApplyDans(FanmadeEndpoint e, JToken reply)
+        void ApplyDans(OnlineEndpoint e, JToken reply)
         {
-            if (!(reply?["dans"] is JArray dans)) throw new FanmadeException("API_DANS_INVALID");
+            if (!(reply?["dans"] is JArray dans)) throw new OnlineException("API_DANS_INVALID");
             lock (sync) danLists[e.Id] = dans;
             Interlocked.Increment(ref revision);
         }
 
         // The endpoint the seat (1P, or a lone 2P's 2P) is signed in to at `server`, or null.
-        FanmadeEndpoint DanEndpoint(string server, int seat = 0)
+        OnlineEndpoint DanEndpoint(string server, int seat = 0)
         {
-            FanmadeEndpoint e;
+            OnlineEndpoint e;
             lock (sync) e = endpoints.Find(x => string.Equals(x.Config.baseUrl, server.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) && x.IsConnected);
             return e != null && HasAccount(e, seat) ? e : null;
         }
@@ -536,7 +536,7 @@ namespace OurTaiko.Online
         // is uploaded alone, with the hashes of the block and audio that were played, which the
         // server checks as the game does for a score of its own. null when 1P is not signed in there
         // or the chart is another server's: the score then goes up alone.
-        public JObject DanAttemptScore(string server, FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay, string side, int seat = 0)
+        public JObject DanAttemptScore(string server, OnlineChart chart, int difficulty, OnlineScore score, PlayRecord replay, string side, int seat = 0)
         {
             var e = DanEndpoint(server, seat);
             if (e == null || Endpoint(chart.Server) != e) return null;
@@ -604,22 +604,22 @@ namespace OurTaiko.Online
             && id.All(c => (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-');
 
         // The block of this course on the side played; without one, what the song list shows (1P alone).
-        static FanmadeDifficulty SideBlock(FanmadeChart chart, int difficulty, string side)
+        static OnlineDifficulty SideBlock(OnlineChart chart, int difficulty, string side)
             => chart == null || difficulty < 0 || difficulty >= 5 ? null
                 : side == null ? chart.Difficulties[difficulty] : chart.BlockOn(difficulty, side);
 
         // Each seat has its own account (2P signs in through the account center only).
-        static bool HasAccount(FanmadeEndpoint e, int seat) => seat >= 0 && seat < FanmadeEndpoint.SeatCount && e.Seats[seat].IsAuthenticated;
+        static bool HasAccount(OnlineEndpoint e, int seat) => seat >= 0 && seat < OnlineEndpoint.SeatCount && e.Seats[seat].IsAuthenticated;
 
         // The seat's account's best on this chart and course; null for a guest.
-        public FanmadeScore Best(FanmadeChart chart, int difficulty, int seat = 0, string side = null)
+        public OnlineScore Best(OnlineChart chart, int difficulty, int seat = 0, string side = null)
         {
             var block = SideBlock(chart, difficulty, side);
             if (block == null) return null;
             lock (sync)
             {
                 var e = endpoints.Find(x => x.Id == chart.Server);
-                return e != null && HasAccount(e, seat) && e.Seats[seat].Best.TryGetValue(FanmadeEndpoint.ScoreKey(chart.Id, block.Name), out var best) ? best : null;
+                return e != null && HasAccount(e, seat) && e.Seats[seat].Best.TryGetValue(OnlineEndpoint.ScoreKey(chart.Id, block.Name), out var best) ? best : null;
             }
         }
 
@@ -628,9 +628,9 @@ namespace OurTaiko.Online
         // when queued, so retries never create a second score.
         // side is the block played (decided before the play), seat the account it belongs to.
         // A play of a cached chart while its server is not connected is queued under
-        // `offlineAccount` (the queue key the seat's account has there, FanmadeEndpoint.AccountIdOf)
+        // `offlineAccount` (the queue key the seat's account has there, OnlineEndpoint.AccountIdOf)
         // and sent once that account is signed in to the server again; null queues nothing offline.
-        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null,
+        public bool Submit(OnlineChart chart, int difficulty, OnlineScore score, PlayRecord replay = null, int seat = 0, string side = null,
             string offlineAccount = null)
         {
             var block = SideBlock(chart, difficulty, side);
@@ -657,7 +657,7 @@ namespace OurTaiko.Online
         }
 
         // A score as POST /game/scores takes it.
-        static JObject ScoreBody(FanmadeDifficulty block, FanmadeScore score, PlayRecord replay)
+        static JObject ScoreBody(OnlineDifficulty block, OnlineScore score, PlayRecord replay)
         {
             // The block that was played names the song and course.
             var body = new JObject { ["difficultyId"] = block.Id };
@@ -707,7 +707,7 @@ namespace OurTaiko.Online
         async Task DrainScoresAsync()
         {
             foreach (var e in Endpoints)
-            for (int seat = 0; seat < FanmadeEndpoint.SeatCount; seat++)
+            for (int seat = 0; seat < OnlineEndpoint.SeatCount; seat++)
             {
                 if (!e.IsConnected || !e.Seats[seat].IsAuthenticated) continue;
                 // Both seats may be the same account: its scores go up once.
@@ -717,7 +717,7 @@ namespace OurTaiko.Online
                 {
                     try
                     {
-                        FanmadeScore score;
+                        OnlineScore score;
                         await e.Transport.WaitAsync();
                         try
                         {
@@ -725,13 +725,13 @@ namespace OurTaiko.Online
                             // changed since, keep it aside.
                             if (string.IsNullOrEmpty(queued.ChartHash) || !Json.HexId(queued.AudioHash ?? "", 64))
                             { UploadQueue.Reject(queued.Key); continue; }
-                            var current = FanmadeChart.From(Json.Parse(await e.AuthorizedAsync("/api/v2/charts/" + (queued.Song ?? Json.Str(Json.Parse(queued.Body), "songId")) + "?by=id")), e.Id);
+                            var current = OnlineChart.From(Json.Parse(await e.AuthorizedAsync("/api/v2/charts/" + (queued.Song ?? Json.Str(Json.Parse(queued.Body), "songId")) + "?by=id")), e.Id);
                             var manifest = await e.ResourcesAsync(current.Id);
                             if (manifest.Audio.Hash != current.AudioHash)
-                                throw new FanmadeException("CHART_UPDATING");
+                                throw new OnlineException("CHART_UPDATING");
                             if (!current.Blocks.Any(b => b.ChartHash == queued.ChartHash) || current.AudioHash != queued.AudioHash)
                             { UploadQueue.Reject(queued.Key); continue; }
-                            score = FanmadeScore.From(Json.Parse(await e.AuthorizedAsync("/api/v2/game/scores", queued.Body, queued.Key, seat: seat)));
+                            score = OnlineScore.From(Json.Parse(await e.AuthorizedAsync("/api/v2/game/scores", queued.Body, queued.Key, seat: seat)));
                         }
                         finally { e.Transport.Release(); }
                         lock (sync)
@@ -766,14 +766,14 @@ namespace OurTaiko.Online
             }
         }
 
-        public int PendingCount(FanmadeEndpoint e) => UploadQueue.Pending(e.AccountId).Length;
+        public int PendingCount(OnlineEndpoint e) => UploadQueue.Pending(e.AccountId).Length;
 
         // Each signed-in seat's queued 段位 attempts on a connected server, after its scores (2P's
         // come from a lone 2P; a seat signed in to the same account as 1P shares 1P's queue).
-        async Task DrainDansAsync(FanmadeEndpoint e)
+        async Task DrainDansAsync(OnlineEndpoint e)
         {
             if (!e.IsConnected) return;
-            for (int seat = 0; seat < FanmadeEndpoint.SeatCount; seat++)
+            for (int seat = 0; seat < OnlineEndpoint.SeatCount; seat++)
             {
                 if (!HasAccount(e, seat) || seat > 0 && HasAccount(e, 0) && e.AccountIdOf(seat) == e.AccountIdOf(0)) continue;
                 if (!await DrainDansAsync(e, seat)) return;
@@ -781,7 +781,7 @@ namespace OurTaiko.Online
         }
 
         // False when the server should be tried again later.
-        async Task<bool> DrainDansAsync(FanmadeEndpoint e, int account)
+        async Task<bool> DrainDansAsync(OnlineEndpoint e, int account)
         {
             foreach (var queued in DanQueue.Pending(e.AccountIdOf(account)))
             {
@@ -801,7 +801,7 @@ namespace OurTaiko.Online
                             foreach (var item in saved)
                             {
                                 if (!(item is JObject)) continue;
-                                var score = FanmadeScore.From(item);
+                                var score = OnlineScore.From(item);
                                 foreach (var seat in e.Seats)
                                 {
                                     if (!seat.IsAuthenticated || e.AccountIdOf(Array.IndexOf(e.Seats, seat)) != e.AccountIdOf(account)) continue;
@@ -842,7 +842,7 @@ namespace OurTaiko.Online
         {
             var bytes = new byte[32];
             using (var random = RandomNumberGenerator.Create()) random.GetBytes(bytes);
-            return FanmadeEndpoint.Sha256Hex(bytes);
+            return OnlineEndpoint.Sha256Hex(bytes);
         }
 
         static Task<T> CacheWork<T>(Func<T> work, CancellationToken cancel)
@@ -856,7 +856,7 @@ namespace OurTaiko.Online
 
         // The cached file of a resource, downloaded and verified (size and SHA-256) first when the
         // cache does not hold it. `transfer` and `publish` report the steps to a progress display.
-        async Task<string> EnsureObjectAsync(FanmadeEndpoint e, FanmadeResource resource, CancellationToken cancel,
+        async Task<string> EnsureObjectAsync(OnlineEndpoint e, OnlineResource resource, CancellationToken cancel,
             FileProgress transfer = null, Action publish = null)
         {
             string file = ObjectPath(resource.Hash);
@@ -884,7 +884,7 @@ namespace OurTaiko.Online
             return file;
         }
 
-        static bool Matches(string path, FanmadeResource resource)
+        static bool Matches(string path, OnlineResource resource)
         {
             if (!File.Exists(path) || new FileInfo(path).Length != resource.Size) return false;
             using var stream = File.OpenRead(path);
@@ -895,7 +895,7 @@ namespace OurTaiko.Online
         // Publishes verified bytes atomically. Two downloads of the same object can race (a preview
         // requested again before the first finished, or one file on two servers): when the other
         // one already published a matching file, or holds it open, that file is kept.
-        static void StoreObject(string path, byte[] bytes, FanmadeResource resource)
+        static void StoreObject(string path, byte[] bytes, OnlineResource resource)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             string temporary = path + "." + Guid.NewGuid().ToString("N").Substring(0, 8) + ".part";

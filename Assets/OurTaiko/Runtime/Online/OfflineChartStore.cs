@@ -62,7 +62,7 @@ namespace OurTaiko.Online
             if (!Json.HexId(hash ?? "", 64)) return false;
             try
             {
-                var file = new FileInfo(FanmadeClient.ObjectPath(cacheRoot, hash));
+                var file = new FileInfo(OnlineClient.ObjectPath(cacheRoot, hash));
                 return file.Exists && file.Length == size;
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is System.Security.SecurityException)

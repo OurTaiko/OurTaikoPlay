@@ -130,7 +130,7 @@ namespace OurTaiko
         }
 
         // One recorded play: who, what song, which course, the score and the judgments.
-        void PlayRow(FanmadeReplay row, float y)
+        void PlayRow(OnlineReplay row, float y)
         {
             var plate = ui.Button("play:" + row.ScoreId, ui.Content, 1700, 110, 960, y, Paper, () => Pick(row), !IsStarting);
             // The plate's face ends a little above its rectangle (its shadow lies below).

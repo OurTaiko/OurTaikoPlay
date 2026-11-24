@@ -16,7 +16,7 @@ namespace OurTaiko.Tests
 {
     public sealed class OnlinePreviewFlowTests
     {
-        FanmadeFixture api, origin;
+        OnlineFixture api, origin;
         long downloaded;
         int requests, wrongMethod, delayMs;
         byte[] audio, previewAudio;
@@ -24,15 +24,15 @@ namespace OurTaiko.Tests
         [SetUp] public void Setup()
         {
             downloaded = requests = wrongMethod = delayMs = 0; failDownload = false;
-            api = new FanmadeFixture();
-            origin = new FanmadeFixture();
+            api = new OnlineFixture();
+            origin = new OnlineFixture();
             audio = previewAudio = File.ReadAllBytes("Assets/OurTaiko/Audio/song_select/bgm.ogg");
-            api.Charts.Add(new FanmadeFixture.Chart { Title = "Streaming preview", Audio = audio, DemoStart = 15,
-                Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()) });
+            api.Charts.Add(new OnlineFixture.Chart { Title = "Streaming preview", Audio = audio, DemoStart = 15,
+                Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja()) });
             api.Manifest = c =>
             {
                 JObject R(byte[] bytes, string type) => new JObject { ["path"] = "audio",
-                    ["sha256"] = FanmadeFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
+                    ["sha256"] = OnlineFixture.Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type };
                 return new JObject { ["chartId"] = c.Id,
                     ["resources"] = new JObject { ["tja"] = R(c.Tja, "application/octet-stream"), ["audio"] = R(c.Audio, "audio/ogg"), ["preview"] = R(previewAudio, "audio/ogg") } };
             };

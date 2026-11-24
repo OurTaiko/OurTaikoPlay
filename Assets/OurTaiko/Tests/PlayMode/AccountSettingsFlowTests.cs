@@ -17,8 +17,8 @@ namespace OurTaiko.Tests
     public sealed class AccountSettingsFlowTests
     {
         string directory;
-        FanmadeFixture fixture;
-        FanmadeFixture.Chart chart;
+        OnlineFixture fixture;
+        OnlineFixture.Chart chart;
         OnlineManager online;
 
         [SetUp]
@@ -29,9 +29,9 @@ namespace OurTaiko.Tests
             Directory.CreateDirectory(directory);
             File.WriteAllText(Path.Combine(directory, "settings.json"), "{\"general\":{\"language\":\"en\"}}");
             SettingManager.EnsureInstance().Load(Path.Combine(directory, "settings.json"));
-            fixture = new FanmadeFixture();
+            fixture = new OnlineFixture();
             fixture.Users["ka"] = "don";
-            chart = new FanmadeFixture.Chart { Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja()) };
+            chart = new OnlineFixture.Chart { Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja()) };
             fixture.Charts.Add(chart);
             fixture.AddAccountScore("don", chart, "Oni", 1002540, 1);
             fixture.AccountPlaylists = new Newtonsoft.Json.Linq.JArray
@@ -42,12 +42,12 @@ namespace OurTaiko.Tests
             online = OnlineManager.EnsureInstance();
             fixture.Name = "Built-in";
             TestData.UseServers(fixture);
-            fixture.Nameplates[FanmadeFixture.UserId("don")] = new Newtonsoft.Json.Linq.JObject
+            fixture.Nameplates[OnlineFixture.UserId("don")] = new Newtonsoft.Json.Linq.JObject
             {
                 ["title"] = new Newtonsoft.Json.Linq.JObject { ["id"] = "master", ["name"] = "太鼓の達人", ["nameTranslations"] = new Newtonsoft.Json.Linq.JObject { ["en"] = "Taiko Master" }, ["style"] = "gold" },
                 ["dan"] = new Newtonsoft.Json.Linq.JObject { ["index"] = 20, ["verdict"] = 5, ["gold"] = true },
             };
-            fixture.Nameplates[FanmadeFixture.UserId("ka")] = new Newtonsoft.Json.Linq.JObject
+            fixture.Nameplates[OnlineFixture.UserId("ka")] = new Newtonsoft.Json.Linq.JObject
             {
                 ["title"] = new Newtonsoft.Json.Linq.JObject { ["id"] = "rainbow", ["name"] = "虹", ["nameTranslations"] = new Newtonsoft.Json.Linq.JObject(), ["style"] = "rainbow" },
                 ["dan"] = null,
