@@ -63,7 +63,7 @@ namespace OurTaiko.Tests
         [Test]
         public void AWidenedTexturesPartsAreStillTheSamePixels()
         {
-            var imported = UnityEditor.AssetDatabase.LoadAssetAtPath<OtanimAsset>("Assets/OurTaiko/Tests/EditMode/Stage/screen.otanim");
+            var imported = UnityEditor.AssetDatabase.LoadAssetAtPath<OtanimAsset>("Assets/OurTaiko/Tests/Finished/EditMode/Stage/screen.otanim");
             var plain = Otanim.Parse(imported.bytes);
             var asset = ScriptableObject.CreateInstance<OtanimAsset>();
             try

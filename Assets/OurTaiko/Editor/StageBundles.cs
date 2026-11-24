@@ -11,7 +11,7 @@ namespace OurTaiko.Editor
     // Builds the published play backdrops' asset bundles: every backdrop file imported for a
     // platform, one bundle each, as StageDownloads fetches them. Written as they lie under the
     // distribution root's stage/ folder:
-    //   stage/catalog.json                              the published catalog (Tools/stage-publish/catalog.json)
+    //   stage/bundle/<version>/catalog.json             the published catalog (Tools/stage-publish/catalog.json)
     //   stage/bundle/<version>/<platform>/index.json    each bundle's name ("header/miku"), file, size and SHA-256
     //   stage/bundle/<version>/<platform>/<part>-<name>.<hash>
     // A published file is never replaced (the distribution's mirror keeps the first copy it reads,
@@ -174,8 +174,9 @@ namespace OurTaiko.Editor
         {
             var missing = Missing();
             if (missing.Count > 0) throw new InvalidOperationException("The published catalog lists sets the project has no file for: " + string.Join(", ", missing));
-            Directory.CreateDirectory(Path.Combine(dir, "stage"));
-            File.Copy(Catalog, Path.Combine(dir, "stage", "catalog.json"), true);
+            string versioned = Path.Combine(dir, "stage", "bundle", Version);
+            Directory.CreateDirectory(versioned);
+            File.Copy(Catalog, Path.Combine(versioned, StageLibrary.CatalogFile), true);
             return Build(dir, target);
         }
 

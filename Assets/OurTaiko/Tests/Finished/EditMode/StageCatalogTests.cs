@@ -229,6 +229,42 @@ namespace OurTaiko.Tests
             Assert.That(catalog.Troupe(catalog.Pack("YOKAI_MATSURI").troupe).LeaveAt(3), Is.EqualTo(400));
         }
 
+        // Every drumroll set is made for the layer it is drawn on, the whole play area, and each of
+        // its hits is on screen for a good part of its run. TOHO's were made for a header: placed at
+        // its right edge, falling out of it in a third of a second, they were not seen at all.
+        [TestCase(false)]
+        [TestCase(true)]
+        public void EveryDrumrollHitIsSeenOnThePlayArea(bool published)
+        {
+            if (published && !System.IO.Directory.Exists(Sources)) Assert.Ignore("The published sets' sources are not in this project.");
+            var catalog = StageCatalogFile.Read(published ? System.IO.File.ReadAllText(PublishedCatalog) : Resources.Load<TextAsset>(StageLibrary.BuiltInCatalog).text, warning => Assert.Fail(warning));
+            var screen = new Rect(0, 0, 1920, 1080);
+            foreach (var set in catalog.rendas)
+            {
+                var file = File(StageCatalog.RendaFolder, set.name);
+                Assert.That(file.View, Is.EqualTo(screen), $"renda {set.name} is not made for the play area");
+                foreach (var clip in file.Clips)
+                {
+                    int seen = clip.Frames.Count(frame => frame.Draws.Any(draw => draw.Color.a > 0 && Bounds(file, clip, draw).Overlaps(screen)));
+                    Assert.That(seen, Is.GreaterThanOrEqualTo(clip.Frames.Length / 4), $"renda {set.name} {clip.Name} is on screen in {seen} of its {clip.Frames.Length} frames");
+                }
+            }
+            Object.DestroyImmediate(catalog);
+        }
+
+        static Rect Bounds(Otanim file, Otanim.Clip clip, Otanim.Draw draw)
+        {
+            int count = file.Parts[draw.Part].UVs.Length;
+            float left = float.MaxValue, bottom = float.MaxValue, right = float.MinValue, top = float.MinValue;
+            for (int i = 0; i < count; i++)
+            {
+                float x = clip.Positions[draw.Offset + 2 * i], y = clip.Positions[draw.Offset + 2 * i + 1];
+                left = Mathf.Min(left, x); right = Mathf.Max(right, x);
+                bottom = Mathf.Min(bottom, y); top = Mathf.Max(top, y);
+            }
+            return Rect.MinMaxRect(left, bottom, right, top);
+        }
+
         [Test]
         public void EveryDrumrollHitPlaysOneClipOnce()
         {
@@ -236,7 +272,6 @@ namespace OurTaiko.Tests
             try
             {
                 var view = root.GetComponent<StageRendaView>();
-                view.most = 3;
                 view.Hit(0, 0);
                 Assert.That(view.Out, Is.Zero, "No set, nothing thrown.");
                 // Any file will do for the mechanics: the dojo's header, whose first clip is 1280 frames at 60.
@@ -250,7 +285,13 @@ namespace OurTaiko.Tests
                 view.Show(10 + length + 0.01);
                 Assert.That(view.Out, Is.EqualTo(1), "The first has played through and is gone.");
                 view.Hit(12, 1); view.Hit(12, 1); view.Hit(12, 1); view.Hit(12, 1);
-                Assert.That(view.Out, Is.EqualTo(3), "No more than `most` at a time.");
+                Assert.That(view.Out, Is.EqualTo(5), "However many are out, each plays to its end: the cabinet has no limit.");
+                int made = root.GetComponentsInChildren<OtanimView>().Length;
+                // Long after every clip of the file has played through.
+                double longest = file.File.Clips.Max(c => c.Frames.Length / (double)c.Fps);
+                view.Show(12 + longest + 0.01);
+                view.Hit(13 + longest, 2);
+                Assert.That((view.Out, root.GetComponentsInChildren<OtanimView>().Length), Is.EqualTo((1, made)), "One that has played through is used again.");
                 view.Use(null);
                 Assert.That(view.Out, Is.Zero);
                 Assert.That(root.GetComponentsInChildren<UnityEngine.UI.MaskableGraphic>(), Is.Empty);

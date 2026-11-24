@@ -7,7 +7,7 @@ namespace OurTaiko
     // Refined judgement counter (user design after the arcade's): a translucent orange panel beside
     // the lane's Don with 良 / 可 / 不可 / 連打数 bars (labels cut from result/score/max_combo_ja) and
     // each count right-aligned in the score counter's score_number digits, under an optional 良率 row:
-    // (良 + 可) / (良 + 可 + 不可) to a tenth, the tenths and % smaller on the whole part's baseline.
+    // (良 + 可 / 2) / (良 + 可 + 不可) to a tenth, the tenths and % smaller on the whole part's baseline.
     // Replaces the original's percentage JudgeCounter, which Nijiiro does not skin. Everything but
     // the digits is saved in the scene; the digits hang from each row's `counts` rect (and `rate`),
     // right edge on its right edge.
@@ -53,12 +53,14 @@ namespace OurTaiko
             if (rate != null) ShowRate(RateTenths(good, ok, bad));
         }
 
-        // (良 + 可) / (良 + 可 + 不可) in tenths of a percent, cut rather than rounded so that one 不可
+        // (良 + 可 / 2) / (良 + 可 + 不可) in tenths of a percent, cut rather than rounded so that one 可 or 不可
         // never reads 100.0; nothing judged yet is 100.0.
         public static int RateTenths(int good, int ok, int bad)
         {
-            long hit = Mathf.Max(0, good) + (long)Mathf.Max(0, ok), total = hit + Mathf.Max(0, bad);
-            return total == 0 ? 1000 : (int)(hit * 1000 / total);
+            long goodCount = Mathf.Max(0, good), okCount = Mathf.Max(0, ok);
+            long total = goodCount + okCount + Mathf.Max(0, bad);
+            // Count half-points before dividing so an odd number of 可 keeps its half credit.
+            return total == 0 ? 1000 : (int)((goodCount * 2 + okCount) * 500 / total);
         }
 
         public static string RateString(int tenths) => tenths / 10 + "." + tenths % 10;

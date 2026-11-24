@@ -5,7 +5,8 @@
 ## 分发根上的布局
 
 ```
-stage/catalog.json                                    目录表：所有套装和 preset（来源是本目录的 catalog.json）
+stage/catalog.json                                    bundle 版本 1 的目录表，已发布的旧版游戏在读，不再更新
+stage/bundle/<版本>/catalog.json                       该版本的目录表：所有套装和 preset（来源是本目录的 catalog.json）
 stage/otanim/index.json                               原始文件的清单（名字、文件、大小、SHA-256）
 stage/otanim/<部件>/<名字>.<hash16>.otanim              原始文件，网站预览和 CI 打包用
 stage/bundle/<版本>/<平台>/index.json                  该平台 bundle 的清单
@@ -34,7 +35,7 @@ stage/bundle/<版本>/<平台>/<部件>-<名字>.<hash16>        一个文件一
 
    `build.py` 只写 `stage/otanim/`，目录表列出的套装缺文件时什么都不写。`publish.sh` 只上传 `otanim/`：先文件、后 `index.json`，再让 CDN 上的 `index.json` 失效；不删除任何东西。
 4. 提交 `catalog.json` 的改动并合并。
-5. 在 GitHub 上手动运行 **Stage bundles** 工作流（`folder` 默认 `stage`）：它从分发根取原始文件，五个平台各打一份 bundle 上传，全部成功后上传这个提交里的 `catalog.json`，并让 CDN 上的 JSON 失效。
+5. 在 GitHub 上手动运行 **Stage bundles** 工作流（`folder` 默认 `stage`）：它从分发根取原始文件，五个平台各打一份 bundle 上传，全部成功后把这个提交里的 `catalog.json` 上传为 `bundle/<版本>/catalog.json`（版本取 `StageLibrary.BundleVersion`），并让 CDN 上的 JSON 失效。
 
 ## 工作流需要的 AWS 角色
 

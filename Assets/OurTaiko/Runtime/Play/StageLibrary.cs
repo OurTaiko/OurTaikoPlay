@@ -22,9 +22,10 @@ namespace OurTaiko
         public const string FolderName = "Stage", CatalogFile = "catalog.json", ReadMeFile = "README.txt";
         // Names the bundle format in the published files' addresses (Editor.StageBundles builds
         // them). A game reads only its own version's bundles: raise it whenever bundles built from
-        // now on could not be read by a game already out (another Unity version's format, a change
-        // to OtanimAsset), and keep the old ones published.
-        public const string BundleVersion = "1";
+        // now on could not be read, or would be drawn wrong, by a game already out (another Unity
+        // version's format, a change to OtanimAsset, a part made for another place on the screen),
+        // and keep the old ones published. 2: the drumroll effects cover the play area, not the header.
+        public const string BundleVersion = "2";
         // The game's own catalog, a TextAsset: Resources/Stage/catalog.json.
         public const string BuiltInCatalog = StageCatalog.Root + "catalog";
 
@@ -200,7 +201,7 @@ namespace OurTaiko
             "  dancers  <name>_0 to <name>_4, or one file <name> for a whole troupe\n" +
             "  footer   the stand in front of the dancers\n" +
             "  crowd    the crowd of a full gauge\n" +
-            "  renda    what a drumroll hit throws\n" +
+            "  renda    what a drumroll hit throws, 1920x1080 (the whole screen; hits start in the lower half)\n" +
             "  chibi    the characters hits bring out\n\n" +
             "A file with the name of one the game has is drawn in its place.\n\n" +
             "To add sets and presets of your own, write a catalog.json here. The game adds it to its own;\n" +

@@ -36,8 +36,11 @@ namespace OurTaiko.Tests
             var manager = SettingManager.EnsureInstance();
             if (originalFile != null) manager.Load(originalFile);
             else manager.UseUnsaved(originalSettings);
-            // Finish any scan before removing the temporary library.
+            // Finish any scan before removing the temporary library. Changing the configured paths
+            // (or a new library object) dropped the test songs folder TestData set up; later tests
+            // in this assembly read it again.
             _ = LocalSongLibrary.EnsureInstance().Songs;
+            LocalSongLibrary.Instance.UseRoot(TestSongs.Root);
             ScoreStore.Shared = originalScores;
             Directory.Delete(directory, true);
         }

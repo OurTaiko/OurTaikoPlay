@@ -28,7 +28,7 @@ namespace OurTaiko
         [Tooltip("The scene below the lane, the stand in front of the dancers and the crowd of a full gauge. Play.Double has none of them.")]
         public StageBandView scene, footer, crowd;
         public DancerTroupeView dancers;
-        [Tooltip("The drumroll effect over each player's header.")]
+        [Tooltip("Each player's drumroll effect: over the whole play area in a single play, over the player's own half in Play.Double.")]
         public StageRendaView[] renda;
 
         StageRendaView characters;

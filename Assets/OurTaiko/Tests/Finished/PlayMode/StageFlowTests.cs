@@ -177,7 +177,8 @@ namespace OurTaiko.Tests
             finally
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
-                LocalSongLibrary.EnsureInstance().UseRoot(LocalSongLibrary.DefaultRoot);
+                // Back to the test songs TestData set up, not the player's own Songs folder.
+                LocalSongLibrary.EnsureInstance().UseRoot(TestSongs.Root);
                 System.IO.Directory.Delete(root, true);
             }
         }

@@ -17,7 +17,7 @@ AI 编程助手（AI Agent）除本文外还要遵守 [AGENTS.md](AGENTS.md)，�
 | `Runtime/Online`、`Runtime/Multi` | 与 net.ourtaiko.org 的接口、マルチ演奏（gRPC） |
 | `Runtime/Scenes`、`Runtime/Settings`、`Runtime/Chara` | 各画面、设置、角色 |
 | `Editor` | 构建（`PlayerBuilds`）与编辑器工具 |
-| `Tests` | EditMode／PlayMode 测试；`Finished/` 是稳定的回归套件 |
+| `Tests` | EditMode／PlayMode 测试；`Finished/` 是开 PR 前必过的回归套件，`PlayMode/` 只放还不能必过的 PlayMode 测试 |
 
 **如果你是 AI Agent，推荐使用 AOCI。** 仓库根目录的 `aoci.txt`（及它引用的分卷）是为模型准备的仓库认知索引，覆盖每个受管文件的职责、关系、对外契约与不显然的约束。它能让你在改代码前就知道一个文件的上下游，避免只看局部就下手。用法见 [AGENTS.md](AGENTS.md) 中的「AOCI Repository Cognition」一节：
 
@@ -61,7 +61,7 @@ PR 上只有 `Test` 工作流自动跑 EditMode 的 `OurTaiko.FinishedTests`（�
 |---|---|
 | `Runtime/`、`Editor/` 的 C# 代码 | EditMode 测试，至少 `OurTaiko.FinishedTests` |
 | 场景、预制体、画面流程、音频、输入 | 以上之外，PlayMode 测试，至少 `OurTaiko.FinishedPlayModeTests` |
-| 正在开发、还没并入 `Finished/` 的功能 | 对应的 `OurTaiko.Tests`／`OurTaiko.PlayModeTests` 中相关的测试 |
+| 留在 `OurTaiko.PlayModeTests` 里的测试覆盖到的部分 | 其中相关的测试 |
 | 构建脚本、`Packages/`、`ProjectSettings/`、插件、平台相关代码 | 以上之外，至少在本机构建一个受影响的平台（菜单 **OurTaiko → Build**） |
 | 画面上可见的改动 | 以上之外，在 Editor 里实际打开相关画面确认 |
 
@@ -74,6 +74,16 @@ Unity -batchmode -projectPath . -runTests -testPlatform EditMode \
 ```
 
 PlayMode 把 `-testPlatform` 换成 `PlayMode`、程序集换成 `OurTaiko.FinishedPlayModeTests`（不要加 `-quit`）。分类 `AudioDevice` 的测试需要真实的音频设备，只能在本机跑。batchmode 结束后执行 `git checkout -- Assets/OurTaiko/Resources/UiFonts`，它会清空动态字体图集。也可以在 GitHub 上手动运行 `Test` 工作流，选择套件和模式；同一 PR 推了新的提交时，PR 上还在跑的那次会被取消，手动运行不受影响。
+
+两个必过套件在本机（Apple Silicon，batchmode）的规模：`OurTaiko.FinishedTests` 约 1000 条、1.5 分钟，`OurTaiko.FinishedPlayModeTests` 约 240 条、20 分钟。
+
+新测试直接写进 `Finished/`。EditMode 没有「未完成」的程序集；PlayMode 的 `OurTaiko.PlayModeTests` 只留下面这些，每个类开头写着原因，原因消除后搬进 `Finished/PlayMode`（连同 `.meta`）：
+
+| 测试类 | 为什么不必过 |
+|---|---|
+| `DonFlowTests` | `DrawingOnlyTheDonsPartOfItsAreaGivesTheSamePicture` 在 macOS 的 batchmode 下差 2 个像素（允许 1），在 Editor 里通过；`EachLaneOfTwoPlayersHasItsDon` 有一次超过了 180 秒的测试时限 |
+| `LinuxAlsaAudioTests` | 只在 Linux 上运行，独占输出那条还要用 `OURTAIKO_TEST_ALSA_DEVICE` 指定空闲的 ALSA 硬件 |
+| `MultiLiveServerTests` | 要本地的房间服务器（`OURTAIKO_MULTIPLAY_URL`、`OURTAIKO_MULTIPLAY_TOKEN`），没有时跳过 |
 
 - 修 bug 时先写一个能复现它的测试，确认它在修复前失败、修复后通过。
 - 新增行为要有对应的测试；不要为了让测试通过而修改或删除原有测试的断言，除非那条断言描述的行为本身就是这次要改的，并在 PR 里说明。
