@@ -120,7 +120,7 @@ namespace OurTaiko.Tests
         {
             var chart = TjaParser.Parse("BPM:120\nCOURSE:Oni\nLEVEL:10\n#START\n1000,\n0000,\n0000,\n"
                 + "#BRANCHSTART p,101,102\n#N\n1111,\n#E\n1111,\n#M\n11111111,\n#BRANCHEND\n1000,\n#END");
-            var statistics = new ChartStatistics(chart);
+            var statistics = ShinuchiScoring.Of(chart);
             Assert.That(statistics.RouteNotes, Is.EqualTo(new[] { 6, 6, 10 }));
             var session = new PlaySession(chart);
             session.Advance(20, true);

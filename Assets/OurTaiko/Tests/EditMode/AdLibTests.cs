@@ -30,12 +30,12 @@ namespace OurTaiko.Tests
 
         [Test] public void ItScoresOnTopOfTheNotes()
         {
-            var plain = new ChartStatistics(Chart("1000,"));
-            var stats = new ChartStatistics(Chart("1F00,"));
+            var plain = ShinuchiScoring.Of(Chart("1000,"));
+            var stats = ShinuchiScoring.Of(Chart("1F00,"));
             Assert.That(stats.JudgeableNotes, Is.EqualTo(1));
             var session = Session("1F00,");
-            Assert.That(session.BaseScore, Is.EqualTo(new ShinuchiScore(plain).BaseScore));
-            Assert.That(session.KiwamiThreshold, Is.EqualTo(new ShinuchiScore(plain).CeilingScore));
+            Assert.That(session.BaseScore, Is.EqualTo(plain.GoodPoints));
+            Assert.That(session.KiwamiThreshold, Is.EqualTo(plain.KiwamiThreshold));
             Assert.That(session.Hit(false, 0), Is.EqualTo(Judgment.Good));
             Assert.That(session.Hit(true, 0.5), Is.EqualTo(Judgment.Good));
             Assert.That(session.Score, Is.EqualTo(2 * session.BaseScore));
@@ -100,7 +100,7 @@ namespace OurTaiko.Tests
         [Test] public void AutoplayHitsIt()
         {
             var session = Session("1F2F,");
-            Assert.That(new ChartStatistics(session.Chart).JudgeableNotes, Is.EqualTo(2));
+            Assert.That(ShinuchiScoring.Of(session.Chart).JudgeableNotes, Is.EqualTo(2));
             session.Advance(2, true);
             Assert.That(session.Good, Is.EqualTo(2));
             Assert.That(session.AdLibGood, Is.EqualTo(2));

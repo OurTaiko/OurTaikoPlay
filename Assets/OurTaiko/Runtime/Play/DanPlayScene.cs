@@ -122,7 +122,7 @@ namespace OurTaiko
             try
             {
                 for (int i = 0; i < Run.Count; i++) Run.Charts[i] ??= PlayScene.PrepareChart(Run.Resolved(i));
-                var statistics = Run.Charts.Select(c => new ChartStatistics(c)).ToList();
+                var statistics = Run.Charts.Select(ShinuchiScoring.Of).ToList();
                 Progress = new DanProgress(Run.Entry.Course, statistics.Select(s => s.JudgeableNotes).ToList());
                 var routeNotes = Enumerable.Range(0, 3).Select(r => statistics.Sum(s => s.RouteNotes[r])).ToList();
                 Gauge = SoulGauge.Dan(Run.Entry.Songs.Select(s => (s.GaugeCourse, s.Level)).ToList(), routeNotes);

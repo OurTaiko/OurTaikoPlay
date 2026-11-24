@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 
@@ -59,7 +60,7 @@ namespace OurTaiko.Tests
         {
             var chart = Parse(body, "OFFSET:0.5");
             var roll = chart.Notes.Single();
-            Assert.That(new ChartStatistics(chart).DrumrollMilliseconds, Is.EqualTo(duration * 1000).Within(1e-9));
+            Assert.That(ShinuchiScoring.Of(chart).RollMicroseconds, Is.EqualTo((TjaFraction)(int)Math.Round(duration * 1000000)));
             Assert.That(roll.EndTime, Is.EqualTo(duration - 0.5).Within(1e-9));
             Assert.That(NoteScroll.RollLength(roll, 1302), Is.EqualTo(duration * 120 / 240 * 1302).Within(1e-9));
         }
@@ -79,10 +80,10 @@ namespace OurTaiko.Tests
         public void CommonAndMasterTotalsStayFixedWhenNormalIsSelected()
         {
             var chart = Parse("1000,\n0000,\n0000,\n#BRANCHSTART p,101,102\n#N\n1111,\n#E\n7008,\n#M\n1100,\n6000,\n0080,\n7008,\n#BRANCHEND\n1000,", "BALLOONMAS:3");
-            var statistics = new ChartStatistics(chart);
+            var statistics = ShinuchiScoring.Of(chart);
             Assert.That(statistics.JudgeableNotes, Is.EqualTo(4));
-            Assert.That(statistics.BalloonHitBudget, Is.EqualTo(3));
-            Assert.That(statistics.DrumrollMilliseconds, Is.EqualTo(3000));
+            Assert.That(statistics.BalloonHits, Is.EqualTo(3));
+            Assert.That(statistics.RollMicroseconds, Is.EqualTo((TjaFraction)3000000));
             var session = new PlaySession(chart);
             Assert.That(session.BaseScore, Is.EqualTo(248650));
             session.Advance(20, true);
@@ -112,7 +113,7 @@ namespace OurTaiko.Tests
         {
             var chart = Parse("1FC0,\n5008,");
             var session = new PlaySession(chart);
-            Assert.That(new ChartStatistics(chart).JudgeableNotes, Is.EqualTo(1));
+            Assert.That(ShinuchiScoring.Of(chart).JudgeableNotes, Is.EqualTo(1));
             Assert.That(session.BaseScore, Is.EqualTo(997500));
             session.Hit(false, 0);
             double gauge = session.GaugePoints;

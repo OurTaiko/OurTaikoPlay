@@ -58,7 +58,7 @@ namespace OurTaiko.Tests
         {
             JudgeOffset = judgeOffset;
             Chart = chart; Resolved = new bool[chart.Notes.Count]; Missed = new bool[chart.Notes.Count]; LongHits = new int[chart.Notes.Count];
-            var statistics = new ChartStatistics(chart);
+            var statistics = ShinuchiScoring.Of(chart);
             scoring = new ShinuchiScore(statistics);
             gauge = new SoulGauge(statistics.RouteNotes, chart.Course, chart.Level);
             bool easy = chart.Course == "Easy" || chart.Course == "Normal";

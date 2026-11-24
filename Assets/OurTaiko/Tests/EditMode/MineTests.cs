@@ -62,11 +62,11 @@ namespace OurTaiko.Tests
 
         [Test] public void ItIsNotANote()
         {
-            var plain = new ChartStatistics(Chart("1000,"));
-            var stats = new ChartStatistics(Chart("1C00,"));
+            var plain = ShinuchiScoring.Of(Chart("1000,"));
+            var stats = ShinuchiScoring.Of(Chart("1C00,"));
             Assert.That(stats.JudgeableNotes, Is.EqualTo(1));
             Assert.That(stats.RouteNotes, Is.EqualTo(plain.RouteNotes));
-            Assert.That(Session("1C00,").BaseScore, Is.EqualTo(new ShinuchiScore(plain).BaseScore));
+            Assert.That(Session("1C00,").BaseScore, Is.EqualTo(plain.GoodPoints));
         }
 
         [Test] public void LeftAloneItCostsNothing()

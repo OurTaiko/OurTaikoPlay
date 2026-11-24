@@ -9,7 +9,7 @@ namespace OurTaiko
         public const int Count = 7;
         static readonly int[] Thresholds = { 500000, 600000, 700000, 800000, 900000, 950000 };
 
-        public static int KiwamiThreshold(TaikoChart chart) => new ShinuchiScore(new ChartStatistics(chart)).CeilingScore;
+        public static int KiwamiThreshold(TaikoChart chart) => ShinuchiScoring.Of(chart).KiwamiThreshold;
 
         // While an online chart is loading, hide an unresolved million-plus rank
         // rather than briefly showing a wrong icon. Lower ranks need no chart data.
