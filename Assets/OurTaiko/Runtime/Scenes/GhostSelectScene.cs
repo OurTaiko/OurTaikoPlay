@@ -10,7 +10,7 @@ using UnityEngine;
 namespace OurTaiko
 {
     // ゴーストバトル's screen (issue #53), reached from Entry's board: the player picks someone's
-    // recorded play and plays against it (SceneSwitcher.PlayGhost) on its own song and block, which
+    // recorded play and plays against it (PlayRequest.GhostBattle) on its own song and block, which
     // the song loading scene downloads like any online song. It looks and works like マルチ演奏's
     // room (PlateUi): one view at a time, drawn in code and drawn again when what it shows changes.
     //
@@ -150,14 +150,16 @@ namespace OurTaiko
         // Back from the result boards of a battle: the two results, for the Result view.
         void TakeOutcome()
         {
-            var ghost = switcher.Ghost;
-            if (switcher.FromScene != SceneSwitcher.ResultScene || ghost == null || switcher.LastResult == null || switcher.LastResult2P == null) { resume = null; return; }
-            bool below = ghost.PlayerLane == 1;
+            var ghost = switcher.Request?.Ghost;
+            var above = switcher.ResultOf(0);
+            var below = switcher.ResultOf(1);
+            if (switcher.FromScene != SceneSwitcher.ResultScene || ghost == null || above == null || below == null) { resume = null; return; }
+            bool playerBelow = ghost.PlayerLane == 1;
             var info = PlayerInfoController.EnsureInstance();
             LastOutcome = new Outcome
             {
-                Player = below ? switcher.LastResult2P : switcher.LastResult, Ghost = below ? switcher.LastResult : switcher.LastResult2P,
-                Title = switcher.LastResult.Title,
+                Player = playerBelow ? below : above, Ghost = playerBelow ? above : below,
+                Title = above.Title,
                 PlayerName = (switcher.Lead == Side.P1 ? info.Info : info.SecondInfo).name,
                 GhostName = string.IsNullOrEmpty(ghost.Nickname) ? L10n.Get("Play", "ghost.defaultName") : ghost.Nickname,
             };
@@ -309,7 +311,7 @@ namespace OurTaiko
                 if (cancel.IsCancellationRequested) return;
                 var category = CurrentCategory;
                 resume = (row.Server, category?.Id, category?.Page ?? 0, row.ScoreId);
-                if (!switcher.PlayGhost(match.Song, match.Ghost)) { resume = null; Fail(L10n.Get("Play", "ghostSelect.startFailed")); return; }
+                if (!switcher.Play(PlayRequest.GhostBattle(match.Song, match.Ghost))) { resume = null; Fail(L10n.Get("Play", "ghostSelect.startFailed")); return; }
                 HasLeft = true;
             }
             catch (OperationCanceledException) { }

@@ -18,7 +18,7 @@ namespace OurTaiko.Tests
             foreach (string c in new[] { "Easy", "Normal", "Hard", "Oni", "Edit" })
                 chart.Append("COURSE:" + c + "\nLEVEL:5\n#START\n1000,\n#END\n");
             song.chart = new TextAsset(chart.ToString());
-            SceneSwitcher.EnsureInstance().Select(song, course, false);
+            SceneSwitcher.EnsureInstance().Select(new PlayRequest(song, course, false));
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.GameScene);
             yield return null;
             var play = Object.FindAnyObjectByType<PlayScene>();

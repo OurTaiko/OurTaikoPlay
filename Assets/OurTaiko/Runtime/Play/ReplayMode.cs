@@ -1,6 +1,6 @@
 namespace OurTaiko
 {
-    // Watching a recorded play (SceneSwitcher.Replay) in the practice scene: practice's measure and
+    // Watching a recorded play (PlayRequest.Replay) in the practice scene: practice's measure and
     // speed menu (PracticeMode), with the drum struck by the record instead of the player or オート.
     // The chart is rebuilt with the record's options, branches are evaluated as in the real play, and
     // every start or pause judges the record up to that point again, so the score, combo, gauge and
@@ -11,9 +11,9 @@ namespace OurTaiko
     {
         public ReplayFeed Feed { get; }
 
-        internal ReplayMode(PlayScene scene, PracticeView view, SceneSwitcher switcher) : base(scene, view, switcher)
+        internal ReplayMode(PlayScene scene, PracticeView view, SceneSwitcher switcher, Online.PlayRecord record) : base(scene, view, switcher)
         {
-            Feed = new ReplayFeed(switcher.Replay);
+            Feed = new ReplayFeed(record);
         }
 
         internal override bool StandardRules => true;

@@ -104,7 +104,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
             yield return null;
             var switcher = SceneSwitcher.Instance;
-            switcher.LastDifficulty = switcher.LastDifficulty2P = -1;
+            switcher.LastDifficulty[0] = switcher.LastDifficulty[1] = -1;
             switcher.SwitchScene(SceneSwitcher.SongSelectScene);
             float deadline = Time.realtimeSinceStartup + 20;
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
@@ -169,11 +169,11 @@ namespace OurTaiko.Tests
             Assert.That(manager.Phase, Is.EqualTo(SongSelectManager.State.Decided));
             deadline = Time.realtimeSinceStartup + 20;
             do { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
-            while (switcher.SelectedSong == null || SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene);
-            Assert.That(SongInfo.DifficultyOf(switcher.SelectedCourse), Is.EqualTo(Difficulty.Easy));
-            Assert.That(SongInfo.DifficultyOf(switcher.SelectedCourse2P), Is.EqualTo(Difficulty.Hard));
-            Assert.That(switcher.AutoPlay2P, Is.True);
-            Assert.That(switcher.AutoPlay, Is.False);
+            while (switcher.Request?.Song == null || SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene);
+            Assert.That(SongInfo.DifficultyOf(switcher.Request.Seats[0].Course), Is.EqualTo(Difficulty.Easy));
+            Assert.That(SongInfo.DifficultyOf(switcher.Request.Seats[1].Course), Is.EqualTo(Difficulty.Hard));
+            Assert.That(switcher.Request.Seats[1].AutoPlay, Is.True);
+            Assert.That(switcher.Request.Seats[0].AutoPlay, Is.False);
             Assert.That(switcher.SelectedPlayScene, Is.EqualTo(SceneSwitcher.DoublePlayScene));
         }
 

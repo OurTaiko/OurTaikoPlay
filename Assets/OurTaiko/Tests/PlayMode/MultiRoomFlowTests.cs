@@ -357,7 +357,7 @@ namespace OurTaiko.Tests
             var picked = select.Manager.FocusedSong;
             string source = MultiSession.SourceOf(OnlineManager.Instance.ChartOf(picked).Server);
             Assert.That(source, Is.EqualTo("fanmade").Or.EqualTo("official"));
-            SceneSwitcher.Instance.LastDifficulty = (int)Difficulty.Oni;
+            SceneSwitcher.Instance.LastDifficulty[0] = (int)Difficulty.Oni;
             select.Manager.Confirm();
             yield return Waits.Until(() => select.CourseFade >= 1, seconds: 5);
             yield return null;
@@ -412,7 +412,7 @@ namespace OurTaiko.Tests
             yield return WaitForScene(SceneSwitcher.GameScene, 40);
             var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Multi, Is.Not.Null);
-            Assert.That(SceneSwitcher.Instance.SelectedCourse, Is.EqualTo("Normal"));
+            Assert.That(SceneSwitcher.Instance.Request.Seats[0].Course, Is.EqualTo("Normal"));
             Assert.That(play.Session.Chart.Notes.Count, Is.EqualTo(4), "Normal's block, not the Oni the player first asked for.");
             Assert.That(play.Lane1.AutoPlay, Is.False);
             // Loaded, it waits for the room: nothing moves until every player is ready.

@@ -147,10 +147,10 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => SceneSwitcher.Instance != null && !SceneSwitcher.Instance.IsInputBlocked);
             var online = OnlineManager.Instance;
             var song = online.Songs.Single(x => online.ChartOf(x).Id == chart.Id);
-            SceneSwitcher.Instance.ShowResult(new PlayResult
+            SceneSwitcher.Instance.ShowResult(song, new SeatResult(new PlayResult
             {
                 Title = "Reward Song", Course = "Oni", Difficulty = Difficulty.Oni, Level = 8, Score = 876540, Good = 3, Ok = 1, MaxCombo = 4, GaugePoints = 9000,
-            }, song, null, null);
+            }, null));
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.ResultScene && !SceneSwitcher.Instance.IsSwitching);
             var result = Object.FindAnyObjectByType<ResultScene>();
 

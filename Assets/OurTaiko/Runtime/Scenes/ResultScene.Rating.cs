@@ -24,7 +24,7 @@ namespace OurTaiko
         void PrepareRating(SongDefinition song, PlayResult result2P)
         {
             if (song == null || (result2P != null && !switcher.PlaysGhost)) return;
-            var own = switcher.PlaysGhost && switcher.Ghost.PlayerLane == 1 ? switcher.LastResult2P : Result;
+            var own = switcher.PlaysGhost && switcher.Request.Ghost.PlayerLane == 1 ? switcher.ResultOf(1) : Result;
             var online = OnlineManager.Instance;
             var chart = online != null ? online.ChartOf(song) : null;
             if (own == null || !own.IsRecordable || chart == null) return;

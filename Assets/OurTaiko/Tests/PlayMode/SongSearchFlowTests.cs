@@ -123,7 +123,7 @@ namespace OurTaiko.Tests
             Assert.That(selected.onlineChart.Server, Is.EqualTo(firstId));
             manager.Confirm(); Assert.That(manager.Phase, Is.EqualTo(SongSelectManager.State.CourseSelect));
             // A scene reload represents returning from play and keeps the result selection.
-            SceneSwitcher.Instance.Select(selected);
+            SceneSwitcher.Instance.Select(new PlayRequest(selected));
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene); yield return null;
             scene = Object.FindAnyObjectByType<SongSelectScene>(); manager = scene.Manager; view = scene.view.search;
             Assert.That(manager.SearchActive, Is.True); Assert.That(manager.FocusedSong, Is.SameAs(selected));
@@ -205,7 +205,7 @@ namespace OurTaiko.Tests
             foreach (bool practice in new[] { true, false })
             {
                 manager.SelectItem(manager.Items.Single(i => i.Song == selected));
-                switcher.Play(selected, "Oni", false);
+                switcher.Play(new PlayRequest(selected, "Oni", false));
                 yield return Waits.Until(() => !switcher.IsInputBlocked && Object.FindAnyObjectByType<PlayScene>()?.Session != null);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.IsPractice, Is.EqualTo(!practice));

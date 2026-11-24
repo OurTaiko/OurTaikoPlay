@@ -65,7 +65,7 @@ namespace OurTaiko.Tests
                 Assert.That(play.IsFinished && !play.resultPanel.activeSelf, Is.True);
                 yield return WaitForScene(SceneSwitcher.ResultScene);
                 var result = Object.FindAnyObjectByType<ResultScene>().Result;
-                Assert.That(result, Is.SameAs(SceneSwitcher.Instance.LastResult));
+                Assert.That(result, Is.SameAs(SceneSwitcher.Instance.ResultOf(0)));
                 Assert.That(result.Score, Is.EqualTo(990200));
                 Assert.That((result.Good, result.Ok, result.Bad), Is.EqualTo((session.Good, session.Ok, 1)));
                 Assert.That(result.GaugeState, Is.EqualTo(GaugeState.Full));

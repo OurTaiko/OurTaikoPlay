@@ -92,7 +92,7 @@ namespace OurTaiko.Tests
             yield return null;
             var menu = Object.FindAnyObjectByType<SongSelectScene>();
             var song = menu.Manager.Songs.Single(s => s.name == TestSongs.BranchTraining);
-            SceneSwitcher.Instance.Play(song, expected == BranchRoute.Master);
+            SceneSwitcher.Instance.Play(new PlayRequest(song, autoPlay: expected == BranchRoute.Master));
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindAnyObjectByType<PlayScene>();
             float deadline = Time.realtimeSinceStartup + 40;
@@ -151,8 +151,8 @@ namespace OurTaiko.Tests
                 Assert.That(play.Session.Bad, Is.Zero);
                 Assert.That(play.Session.Good, Is.EqualTo(play.Session.Chart.Notes.Count(n => !n.IsLong && play.Session.IsActive(n))));
                 yield return WaitForScene(SceneSwitcher.ResultScene);
-                Assert.That(SceneSwitcher.Instance.LastResult.AutoPlay && SceneSwitcher.Instance.LastResult.Bad == 0, Is.True);
-                Assert.That(Object.FindAnyObjectByType<ResultScene>().Result, Is.SameAs(SceneSwitcher.Instance.LastResult));
+                Assert.That(SceneSwitcher.Instance.ResultOf(0).AutoPlay && SceneSwitcher.Instance.ResultOf(0).Bad == 0, Is.True);
+                Assert.That(Object.FindAnyObjectByType<ResultScene>().Result, Is.SameAs(SceneSwitcher.Instance.ResultOf(0)));
             }
             SceneSwitcher.Instance.Restart(); yield return WaitForScene(SceneSwitcher.GameScene);
             var restarted = Object.FindAnyObjectByType<PlayScene>();
@@ -223,7 +223,7 @@ namespace OurTaiko.Tests
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
             var menu = Object.FindAnyObjectByType<SongSelectScene>();
-            SceneSwitcher.Instance.Play(menu.Manager.Songs.Single(s => s.name == TestSongs.BranchTraining), true);
+            SceneSwitcher.Instance.Play(new PlayRequest(menu.Manager.Songs.Single(s => s.name == TestSongs.BranchTraining), autoPlay: true));
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindAnyObjectByType<PlayScene>();
             if (!play.IsPaused) play.TogglePause();
@@ -476,7 +476,7 @@ namespace OurTaiko.Tests
                 play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.firstLane.balloonCounter.IsVisible, Is.False);
                 Assert.That(play.Session.LongHits[0], Is.Zero);
-                SceneSwitcher.Instance.Play(song, true); yield return WaitForScene(SceneSwitcher.GameScene);
+                SceneSwitcher.Instance.Play(new PlayRequest(song, autoPlay: true)); yield return WaitForScene(SceneSwitcher.GameScene);
                 play = Object.FindAnyObjectByType<PlayScene>();
                 yield return Reach(0.1);
                 Assert.That(play.firstLane.balloonCounter.Remaining, Is.EqualTo(12 - play.Session.LongHits[0]));
@@ -624,7 +624,7 @@ namespace OurTaiko.Tests
             yield return null;
             var menu = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(menu, Is.Not.Null, "SongSelect is the menu scene.");
-            SceneSwitcher.Instance.Play(menu.Manager.Songs[0], true);
+            SceneSwitcher.Instance.Play(new PlayRequest(menu.Manager.Songs[0], autoPlay: true));
             yield return WaitForScene(SceneSwitcher.GameScene);
             var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Session.Chart.Notes.Count, Is.GreaterThan(50));

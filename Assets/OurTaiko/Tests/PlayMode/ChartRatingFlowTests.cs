@@ -59,11 +59,11 @@ namespace OurTaiko.Tests
         IEnumerator Result(SongDefinition song, bool autoPlay = false, PlayResult second = null)
         {
             yield return Waits.Until(() => !SceneSwitcher.Instance.IsInputBlocked);
-            SceneSwitcher.Instance.ShowResult(new PlayResult
+            SceneSwitcher.Instance.ShowResult(song, new SeatResult(new PlayResult
             {
                 Title = "Rated Song", Course = "Oni", Difficulty = Difficulty.Oni, Level = 8, Score = 876540, Good = 3, Ok = 1, MaxCombo = 4,
                 GaugePoints = 9000, AutoPlay = autoPlay,
-            }, song, null, second);
+            }, null), new SeatResult(second, null));
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.ResultScene && !SceneSwitcher.Instance.IsSwitching);
             yield return null;
         }

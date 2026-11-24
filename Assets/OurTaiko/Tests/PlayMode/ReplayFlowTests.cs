@@ -8,7 +8,7 @@ using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
 {
-    // The practice scene shows a recorded play (SceneSwitcher.Replay): the record strikes the drum, and
+    // The practice scene shows a recorded play (PlayRequest.Replay): the record strikes the drum, and
     // opening it at a later measure starts with what the play had by then.
     public sealed class ReplayFlowTests
     {
@@ -47,8 +47,7 @@ namespace OurTaiko.Tests
             yield return null;
             var switcher = SceneSwitcher.Instance;
             switcher.PracticeMode = true;
-            switcher.Play(song, "Oni", false);
-            switcher.Replay = record;
+            switcher.Play(PlayRequest.Watch(song, "Oni", record));
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked, seconds: 40);
             var play = Object.FindAnyObjectByType<PlayScene>();
             yield return Waits.Until(() => play.Practice?.Progress != null && play.IsPaused);

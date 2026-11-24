@@ -22,7 +22,7 @@ namespace OurTaiko.Tests
                 yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
                 yield return null;
                 var switcher = SceneSwitcher.Instance;
-                switcher.Play(song, "Oni", false);
+                switcher.Play(new PlayRequest(song, "Oni", false));
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 play.TogglePause();
@@ -33,7 +33,7 @@ namespace OurTaiko.Tests
                 Assert.That(ScoreStore.Shared.Get(song.ScoreKey, Difficulty.Oni), Is.Null,
                     "Finishing gameplay must not write a score while ResultScene is still loading.");
                 yield return WaitForScene(SceneSwitcher.ResultScene);
-                var result = switcher.LastResult;
+                var result = switcher.ResultOf(0);
                 Assert.That(result.ChartKey, Is.EqualTo(song.ScoreKey));
                 Assert.That(ScoreStore.Shared.Get(song.ScoreKey, Difficulty.Oni).score, Is.EqualTo(result.Score));
                 Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null, "Entry names no longer key disk-chart scores.");
@@ -45,8 +45,8 @@ namespace OurTaiko.Tests
                 Assert.That(ScoreStore.Shared.Revision, Is.EqualTo(revision));
                 Assert.That(result.PreviousBest, Is.Zero, "Reopening must not replace the pre-play best with this run.");
 
-                switcher.ShowResult(new PlayResult { ChartKey = song.ScoreKey, Difficulty = Difficulty.Oni,
-                    Score = result.Score + 1, AutoPlay = true }, song);
+                switcher.ShowResult(song, new SeatResult(new PlayResult { ChartKey = song.ScoreKey, Difficulty = Difficulty.Oni,
+                    Score = result.Score + 1, AutoPlay = true }, null));
                 yield return WaitForScene(SceneSwitcher.ResultScene);
                 Assert.That(ScoreStore.Shared.Revision, Is.EqualTo(revision), "Auto play remains unsaved.");
             }

@@ -75,7 +75,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 while (SceneSwitcher.Instance.IsInputBlocked) yield return null;
                 SceneSwitcher.Instance.SetSeats(Side.P1, Side.P2);
-                yield return TestPlay.Open(song, "Oni", true, "Oni", false);
+                yield return TestPlay.Open(song, new SeatPlay("Oni", true), new SeatPlay("Oni", false));
                 yield return WaitForScene(SceneSwitcher.DoublePlayScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.stage.headers.Select(b => (b.name, b.player, b.Layers[0].clip)), Is.EqualTo(new[] { ("StageUpper", 0, "normal"), ("StageUpper2P", 1, "normal") }),
@@ -164,12 +164,12 @@ namespace OurTaiko.Tests
                 var third = boards.First(b => b.Info.ScenePreset == "no such backdrop");
                 var switcher = SceneSwitcher.Instance;
                 while (switcher.IsInputBlocked) yield return null;
-                switcher.Select(third.Song, null, true, null, false, manager.ScenePresetsOf(third));
-                Assert.That(switcher.ScenePresets(third.Info.ScenePreset), Is.EqualTo(new[] { "no such backdrop", "TOHO", "MIKU" }), "The chart's own counts most.");
+                switcher.Select(new PlayRequest(third.Song, new[] { new SeatPlay(null, true), new SeatPlay(null, false) }, manager.ScenePresetsOf(third)));
+                Assert.That(switcher.Request.ScenePresets(third.Info.ScenePreset), Is.EqualTo(new[] { "no such backdrop", "TOHO", "MIKU" }), "The chart's own counts most.");
                 yield return SceneManager.LoadSceneAsync(switcher.SelectedPlayScene);
                 yield return WaitForScene(SceneSwitcher.GameScene);
                 // A play that is not opened from a folder has only the chart's.
-                Assert.That(switcher.ScenePresets("GUMI"), Has.Length.EqualTo(3));
+                Assert.That(switcher.Request.ScenePresets("GUMI"), Has.Length.EqualTo(3));
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That((play.stage.Choice.Preset, play.stage.Choice.Header), Is.EqualTo(("TOHO", "toho")),
                     "The chart names a backdrop the game does not have, so its nearest folder's is the one.");
