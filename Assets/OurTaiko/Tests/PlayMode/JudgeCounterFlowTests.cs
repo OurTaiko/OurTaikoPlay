@@ -56,13 +56,13 @@ namespace OurTaiko.Tests
                     Is.EqualTo(-counter.pitch * counter.counts[0].rect.height).Within(0.01f));
                 Assert.That(last.sizeDelta.y, Is.EqualTo(counter.counts[0].rect.height));
 
-                // 良率 on top: (10 + 1) / 12 = 91.66…%, cut to 91.6, the tenth and % smaller on the same baseline.
-                Assert.That(counter.RateText, Is.EqualTo("91.6"));
+                // 良率 on top: (10 + 0.5) / 12 = 87.5%, the tenth and % smaller on the same baseline.
+                Assert.That(counter.RateText, Is.EqualTo("87.5"));
                 Assert.That(counter.rate.parent.GetSiblingIndex(), Is.LessThan(counter.counts[0].parent.GetSiblingIndex()));
                 Assert.That(counter.RateGlyph(0).gameObject.activeSelf, Is.False, "Two whole digits use the two right slots.");
                 Assert.That(new[] { counter.RateGlyph(1).sprite, counter.RateGlyph(2).sprite, counter.RateGlyph(3).sprite,
                     counter.RateGlyph(4).sprite, counter.RateGlyph(5).sprite },
-                    Is.EqualTo(new[] { counter.digits[9], counter.digits[1], counter.rateDot, counter.digits[6], counter.ratePercent }));
+                    Is.EqualTo(new[] { counter.digits[8], counter.digits[7], counter.rateDot, counter.digits[5], counter.ratePercent }));
                 var whole = counter.RateGlyph(2).rectTransform; var tenth = counter.RateGlyph(4).rectTransform;
                 Assert.That(whole.sizeDelta.y, Is.EqualTo(counter.rateHeight).Within(0.01f));
                 Assert.That(tenth.sizeDelta.y, Is.EqualTo(counter.rateHeight * counter.rateSmall).Within(0.01f));
