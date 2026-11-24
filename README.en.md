@@ -4,7 +4,7 @@
 
 [![Project Status: Active Development](https://img.shields.io/badge/Project%20Status-Active%20Development-brightgreen.svg)](https://github.com/OurTaiko/OurTaikoPlay)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
-[![Unity: 6000.3](https://img.shields.io/badge/Unity-6000.3-black.svg?logo=unity)](https://unity.com/)
+[![Unity: 6000.6](https://img.shields.io/badge/Unity-6000.6-black.svg?logo=unity)](https://unity.com/)
 
 [简体中文](README.md) · **English** · [日本語](README.ja.md)
 
@@ -43,7 +43,7 @@ OurTaikoPlay is an open-source Taiko rhythm game built from scratch in Unity (C#
 
 ### Prerequisites
 
-- **Unity 6000.3.25f1** or compatible 6000.3 version
+- **Unity 6000.6.8f1** or compatible 6000.6 version
 - Unity Hub and Git
 
 ### Clone the Repository
