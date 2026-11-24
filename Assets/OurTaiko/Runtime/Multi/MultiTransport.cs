@@ -30,8 +30,8 @@ namespace OurTaiko.Multi
     // call, ourtaiko.multiplay.v1.MultiEnso/Connect (the proto is OurTaikoNet's
     // proto/ourtaiko/multiplay/v1/multiplay.proto; Proto/Multiplay.cs is generated from it and there
     // is no generated client, the method is declared here). gRPC needs HTTP/2, which Unity's own
-    // HttpClient does not speak, so the handler is YetAnotherHttpHandler (native, every platform the
-    // game builds for).
+    // HttpClient (and so OurTaikoHttpClient) does not speak, so the handler is YetAnotherHttpHandler
+    // (native, every platform the game builds for), under the game's User-Agent.
     public static class MultiTransport
     {
         // Opens a stream to the server at an address, signed in with a game session. Tests put a
@@ -61,7 +61,7 @@ namespace OurTaiko.Multi
             };
             var channel = GrpcChannel.ForAddress(uri, new GrpcChannelOptions
             {
-                HttpHandler = handler,
+                HttpHandler = new Online.OurTaikoHttpClient.UserAgentHandler(handler),
                 DisposeHttpClient = true,
                 MaxReceiveMessageSize = 1024 * 1024,
                 MaxSendMessageSize = 64 * 1024,

@@ -26,7 +26,7 @@ namespace OurTaiko.Online
             byte[] bytes;
             try
             {
-                using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token);
+                using var response = await OurTaikoHttpClient.Shared.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token);
                 Log.Debug("Online", $"GET {request.RequestUri.Host}{request.RequestUri.AbsolutePath}: {(int)response.StatusCode}");
                 if ((int)response.StatusCode != 200) throw new HttpStatusException((int)response.StatusCode);
                 long? length = response.Content.Headers.ContentLength;

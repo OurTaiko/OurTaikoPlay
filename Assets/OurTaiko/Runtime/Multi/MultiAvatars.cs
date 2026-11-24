@@ -31,7 +31,6 @@ namespace OurTaiko.Multi
         static readonly List<string> order = new List<string>();
         // Asked for, and either still coming or not to be had.
         static readonly HashSet<string> asked = new HashSet<string>();
-        static HttpClient http;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
@@ -105,8 +104,7 @@ namespace OurTaiko.Multi
 
         static async Task<byte[]> ReadAsync(string url, CancellationToken cancel)
         {
-            http ??= new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false }) { Timeout = TimeSpan.FromSeconds(15) };
-            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel);
+            using var response = await Online.OurTaikoHttpClient.GetAsync(url, TimeSpan.FromSeconds(15), cancel, HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode) throw new IOException("HTTP " + (int)response.StatusCode);
             if ((response.Content.Headers.ContentLength ?? 0) > ByteLimit) throw new IOException("too large");
             using var stream = await response.Content.ReadAsStreamAsync();

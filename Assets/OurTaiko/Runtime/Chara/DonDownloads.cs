@@ -44,7 +44,6 @@ namespace OurTaiko.Chara
             Expected = 0;
         }
         static readonly object gate = new object();
-        static HttpClient http;
 
         // A seat's look changed (signed in, signed out, downloaded): its Dons redress.
         public static event Action<int> Changed;
@@ -79,8 +78,8 @@ namespace OurTaiko.Chara
             JObject answer = null;
             try
             {
-                http ??= new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-                using var response = await http.GetAsync(siteBase.TrimEnd('/') + "/api/v2/users/" + Uri.EscapeDataString(userId) + "/don", cancel);
+                using var response = await Online.OurTaikoHttpClient.GetAsync(siteBase.TrimEnd('/') + "/api/v2/users/" + Uri.EscapeDataString(userId) + "/don",
+                    TimeSpan.FromSeconds(30), cancel);
                 if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode);
                 answer = JObject.Parse(await response.Content.ReadAsStringAsync());
             }
@@ -163,7 +162,7 @@ namespace OurTaiko.Chara
                 foreach (var (address, size, hash) in missing)
                 {
                     long before = Received;
-                    var data = await Online.Distribution.FetchAsync(address, url => Online.ObjectCache.FetchAsync(http, url, size, hash, got => Received = before + got, cancel), cancel);
+                    var data = await Online.Distribution.FetchAsync(address, url => Online.ObjectCache.FetchAsync(url, size, hash, got => Received = before + got, cancel), cancel);
                     await Task.Run(() => Online.ObjectCache.Store(Online.ObjectCache.PathOf(cacheRoot, hash), data), cancel);
                     Received = before + size;
                 }

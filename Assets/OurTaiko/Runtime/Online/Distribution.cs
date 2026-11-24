@@ -52,7 +52,6 @@ namespace OurTaiko.Online
 
         static readonly object gate = new object();
         static readonly Dictionary<string, Task<FileRoot>> roots = new Dictionary<string, Task<FileRoot>>(StringComparer.OrdinalIgnoreCase);
-        static HttpClient http;
 
         // Each Play session asks again, as a launch does (the Editor keeps statics between them).
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -153,10 +152,9 @@ namespace OurTaiko.Online
         {
             try
             {
-                http ??= new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false }) { Timeout = TimeSpan.FromSeconds(10) };
                 using var request = new HttpRequestMessage(HttpMethod.Get, site + SourcePath);
                 request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-                using var response = await http.SendAsync(request).ConfigureAwait(false);
+                using var response = await OurTaikoHttpClient.SendAsync(request, TimeSpan.FromSeconds(10)).ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode);
                 string text = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 if (text.Length > 16 * 1024) throw new OnlineException("RESPONSE_SIZE_LIMIT_EXCEEDED");

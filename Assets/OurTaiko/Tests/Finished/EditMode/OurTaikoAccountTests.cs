@@ -35,7 +35,6 @@ namespace OurTaiko.Tests
         [TearDown]
         public void TearDown()
         {
-            center.Dispose();
             client.Dispose();
             fixture.Dispose();
             if (Directory.Exists(cache)) Directory.Delete(cache, true);
@@ -264,7 +263,7 @@ namespace OurTaiko.Tests
             string id = OnlineFixture.UserId("don");
             fixture.Nameplates[id] = Newtonsoft.Json.Linq.JObject.Parse(
                 "{\"title\":{\"name\":\"太鼓の達人\",\"nameTranslations\":{\"en\":\"Taiko Master\",\"zh-Hans\":\"太鼓达人\"},\"style\":\"purple\"},\"dan\":{\"index\":11,\"gold\":false}}");
-            using var profiles = new ProfileCenter(fixture.BaseUrl);
+            var profiles = new ProfileCenter(fixture.BaseUrl);
             var english = Run(() => profiles.NameplateAsync(id, "en"));
             Assert.That(english.Title, Is.EqualTo("Taiko Master"));
             Assert.That(english.TitleBackground, Is.EqualTo(3));
