@@ -30,7 +30,7 @@ namespace OurTaiko
         public PlayOptions Options { get; }
         // Every judged drum press of this play, sent with an online score (scoreReplayVersion 1).
         public Online.PlayRecord Record { get; }
-        // A recorded play striking this drum instead of the seat's input (PlayScene.Replay.cs).
+        // A recorded play striking this drum instead of the seat's input (PlayMode.ReplayOf: a replay, a ghost battle's recording).
         public ReplayFeed Replay { get; set; }
         public PlayResult Result { get; internal set; }
         // Drum sounds started so far.

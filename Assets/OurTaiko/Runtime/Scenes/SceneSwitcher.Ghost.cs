@@ -2,7 +2,7 @@ namespace OurTaiko
 {
     // ゴーストバトル (issue #53): the player against someone's recorded play of the same block. It
     // plays in Play.Double: the player in the lane of their side (SceneSwitcher.Lead: 1P above, a lone 2P
-    // below) and the recording striking the other lane (PlayScene.Ghost.cs).
+    // below) and the recording striking the other lane (GhostMode).
     public sealed class GhostMatch
     {
         public Online.PlayRecord Record;
@@ -24,7 +24,7 @@ namespace OurTaiko
         public bool PlaysGhost => Ghost != null && !PracticeMode;
 
         // Plays `song` against the recorded play: both seats on its block, the player's own drum
-        // and offsets, the recording's options (PlayScene.Ghost.cs). Not 2P's course selection.
+        // and offsets, the recording's options (GhostMode). Not 2P's course selection.
         public bool PlayGhost(SongDefinition song, GhostMatch match)
         {
             if (IsInputBlocked || song == null || match?.Record == null) return false;

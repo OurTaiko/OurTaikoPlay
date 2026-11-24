@@ -66,8 +66,8 @@ namespace OurTaiko
                 // A ghost battle's lanes both read the recording's block with its options.
                 if (switcher.PlaysGhost)
                 {
-                    switcher.SetPreparedChart(song, course, PlayScene.PrepareGhostChart(song, switcher.Ghost));
-                    switcher.SetPreparedChart(song, switcher.SelectedCourse2P, PlayScene.PrepareGhostChart(song, switcher.Ghost), 1);
+                    switcher.SetPreparedChart(song, course, GhostMode.PrepareChart(song, switcher.Ghost));
+                    switcher.SetPreparedChart(song, switcher.SelectedCourse2P, GhostMode.PrepareChart(song, switcher.Ghost), 1);
                 }
                 else switcher.SetPreparedChart(song, course, PlayScene.PrepareChart(song, course, switcher.SideOf(0), switcher.Lead.Index()));
                 // 2P reads its own block of its own course with its own options.

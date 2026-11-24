@@ -7,11 +7,11 @@ namespace OurTaiko
     // The play opens paused on its menu: route (charts with branches), measure, then speed. Confirming
     // scrolls the lane back to a two-second lead-in and plays from there at the chosen speed; a pause or
     // the song's end stops the attempt and reopens the menu at that point or the first measure. The
-    // pause menu is a layer above it. Practice is single-player, and a replay (PlayScene.Replay) is
-    // watched in it too.
-    public sealed class PracticeMode : PlayMode
+    // pause menu is a layer above it. Practice is single-player, and a replay is watched in it too
+    // (ReplayMode, which plays the record instead of the player).
+    public class PracticeMode : PlayMode
     {
-        readonly PlayScene scene;
+        private protected readonly PlayScene scene;
         public PracticeView View { get; }
         // Created when the countdown starts; the menu's cursor, bar list and speed.
         public PracticeProgress Progress { get; private set; }
@@ -30,12 +30,13 @@ namespace OurTaiko
         // snaps to it once.
         double? entryPosition;
 
-        // A replay takes the routes the play took, so it has no route to choose.
-        PracticeStage FirstStage => scene.Session.Chart.Branches.Count > 0 && !scene.IsReplay ? PracticeStage.Branch : PracticeStage.Measure;
+        // Whether the menu opens on the route page: a chart with branches.
+        private protected virtual bool ChoosesRoute => scene.Session.Chart.Branches.Count > 0;
+        PracticeStage FirstStage => ChoosesRoute ? PracticeStage.Branch : PracticeStage.Measure;
         // The offsets in chart seconds at the chosen speed. The clock runs at it whenever it plays, so
         // these agree with chart time; a seek to a new speed must use them, not the clock's old rate.
         double AudioOffset => scene.ConfiguredAudioOffset * Progress.Speed;
-        double VisualOffset => scene.ConfiguredVisualOffset * Progress.Speed;
+        private protected double VisualOffset => scene.ConfiguredVisualOffset * Progress.Speed;
         double JudgeOffset => scene.ConfiguredJudgeOffset * Progress.Speed;
 
         // Before the lanes are made: the route and position a normal play passed into this practice.
@@ -50,8 +51,11 @@ namespace OurTaiko
             }
         }
 
-        // The route practice forces on every branch; a replay forces none.
-        internal override BranchRoute? ForcedBranch => scene.IsReplay ? null : Branch;
+        // The route practice forces on every branch.
+        internal override BranchRoute? ForcedBranch => Branch;
+        // A chart missing #E/#M only plays on a fixed route, so practice does not offer normal play for
+        // it (PlaySession would refuse).
+        internal override bool OffersModeSwitch => scene.Session.Chart.Branches.All(b => b.HasAllRoutes);
         // Restarting is the pause menu's, and starts the attempt over.
         internal override bool RestartKey => false;
         // A paused practice previews its routes; while it plays (or rewinds) it hides what the
@@ -173,10 +177,9 @@ namespace OurTaiko
             return position;
         }
 
-        // A replay is judged again from its first press up to here, at the speed it was played.
-        PlaySession SessionAt(double position) => scene.IsReplay
-            ? scene.Replay.SessionAt(scene.Session.Chart, position + VisualOffset)
-            : PlaySession.PracticeAt(scene.Session.Chart, position + VisualOffset, scene.Session, Branch, Progress.Speed);
+        // The session the lane plays (or previews) from here: the attempt at the chosen speed and route.
+        private protected virtual PlaySession SessionAt(double position) =>
+            PlaySession.PracticeAt(scene.Session.Chart, position + VisualOffset, scene.Session, Branch, Progress.Speed);
         // The paused lane browses on a session of its own: the stopped attempt stays the lane's
         // Session, and on the HUD, until the next one replaces it.
         void Preview(double position)
@@ -245,12 +248,14 @@ namespace OurTaiko
             rewinding = false;
             scene.music.pitch = (float)Progress.Speed;
             scene.Clock.Seek(Progress.PlaybackStart(AudioOffset, VisualOffset, JudgeOffset), Progress.Speed);
-            // A replay plays its lead-in too: the record is judged up to where playback starts.
-            if (scene.IsReplay) { scene.Session = scene.Replay.SessionAt(scene.Session.Chart, scene.ChartTimeNow); scene.Lane1.ResetAttempt(); }
+            PlaybackStarting();
             // The preparation lead-in may start in a different section than the practice target.
             scene.Lane1.ResetBranchLane(scene.ChartTimeNow);
             scene.ResumePlayback();
         }
+
+        // The clock stands where playback starts, before it runs.
+        private protected virtual void PlaybackStarting() { }
 
         // A new route changes the notes and bar lines ahead, so the preview and the bar list are rebuilt
         // at the same position.
