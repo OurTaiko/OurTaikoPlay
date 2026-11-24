@@ -23,6 +23,8 @@ namespace OurTaiko
             [Column("adLibGood")] public int adLibGood { get; set; }
             [Column("adLibOk")] public int adLibOk { get; set; }
             [Column("mines")] public int mines { get; set; }
+            // An online best's rank as its server gave it (OnlineScore.ScoreRank); not stored.
+            [Ignore] public ScoreRank? serverRank { get; set; }
         }
 
         static ScoreStore shared;

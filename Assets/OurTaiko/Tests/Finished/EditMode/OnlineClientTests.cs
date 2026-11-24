@@ -287,6 +287,54 @@ namespace OurTaiko.Tests
             Assert.That((best.AdLibGood, best.AdLibOk, best.Mines), Is.EqualTo((3L, 1L, 2L)));
         }
 
+        // The game sends the counts and no score: the server works the score out by the block's
+        // scoring (its "score" field is deprecated) and answers with it and its rank.
+        [Test]
+        public void AnUploadCarriesNoScoreAndTheServersScoreAndRankComeBack()
+        {
+            Connect(guest: false);
+            var chart = client.Charts[0];
+            Assert.That(client.Submit(chart, (int)Difficulty.Oni,
+                new OnlineScore { Score = 999999, Good = 2, Ok = 1, Drumroll = 3, MaxCombo = 3 }), Is.True);
+            Run(() => client.WaitForUploadsAsync());
+            Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
+            Assert.That(body.ContainsKey("score"), Is.False, "The play's own score is not sent.");
+            Assert.That(((long)body["good"], (long)body["ok"], (long)body["drumroll"]), Is.EqualTo((2L, 1L, 3L)));
+            var best = client.Best(chart, (int)Difficulty.Oni);
+            // Four notes: 良 250000, 可 125000, a long-note hit 100; the kiwami line is 1000000.
+            Assert.That(best.Score, Is.EqualTo(2 * 250000 + 125000 + 3 * 100));
+            Assert.That(best.ScoreRank, Is.EqualTo(ScoreRank.BronzeSui), "62.53% of the line.");
+        }
+
+        // A score as the servers answer with it, with "scoreRank" as given (null: left out).
+        static OnlineScore WithRank(string rank)
+        {
+            var score = JObject.Parse("{\"id\":\"s\",\"songId\":\"song\",\"course\":\"Oni\",\"side\":\"single\",\"good\":1,\"ok\":0,\"bad\":0,"
+                + "\"score\":1000,\"drumroll\":0,\"max_combo\":1,\"ClearStatus\":0}");
+            if (rank != null) score["scoreRank"] = JToken.Parse(rank);
+            return OnlineScore.From(score);
+        }
+
+        [TestCase("0", ScoreRank.None)]
+        [TestCase("1", ScoreRank.WhiteSui)]
+        [TestCase("6", ScoreRank.PurpleMiyabi)]
+        [TestCase("7", ScoreRank.Kiwami)]
+        public void AScoresRankIsTheServers(string rank, ScoreRank expected)
+            => Assert.That(WithRank(rank).ScoreRank, Is.EqualTo(expected));
+
+        // No rank (a server from before ranks, or a chart replaced since) or one that is not a
+        // rank: none, never a guess.
+        [TestCase(null)]
+        [TestCase("null")]
+        [TestCase("8")]
+        [TestCase("-1")]
+        [TestCase("2.5")]
+        [TestCase("\"3\"")]
+        [TestCase("true")]
+        [TestCase("99999999999999999999")]
+        public void AMissingOrInvalidRankIsNone(string rank)
+            => Assert.That(WithRank(rank).ScoreRank, Is.Null);
+
         [Test]
         public void AnUnreachableServerReportsANetworkCode()
         {
@@ -441,7 +489,7 @@ namespace OurTaiko.Tests
             fixture.ScoreFailures.Enqueue(503);
             var record = new PlayRecord { AudioOffsetMs = 12, VisualOffsetMs = -3 };
             record.Inputs.Add((100.5, 1)); record.Inputs.Add((100.5, 3)); record.Inputs.Add((-20, 0));
-            Assert.That(client.Submit(chart, (int)Difficulty.Oni, new OnlineScore { Good = 3, Score = 3000, MaxCombo = 3, ClearStatus = 3 }, record), Is.True);
+            Assert.That(client.Submit(chart, (int)Difficulty.Oni, new OnlineScore { Good = 3, MaxCombo = 3, ClearStatus = 3 }, record), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(client.PendingCount(endpoint), Is.EqualTo(1), "A temporary failure keeps the queued request.");
             string queued = client.UploadQueue.Pending(endpoint.AccountId)[0].Body;
@@ -459,7 +507,8 @@ namespace OurTaiko.Tests
             Assert.That((int)replay["version"], Is.EqualTo(2));
             Assert.That((int)replay["audio_offset_ms"], Is.EqualTo(12));
             Assert.That(replay["inputs"].ToString(Newtonsoft.Json.Formatting.None), Is.EqualTo("[[100.5,1],[100.5,3],[-20.0,0]]"));
-            Assert.That(client.Best(chart, (int)Difficulty.Oni).Score, Is.EqualTo(3000));
+            // Three 良 of four notes, as the server scored them.
+            Assert.That(client.Best(chart, (int)Difficulty.Oni).Score, Is.EqualTo(750000));
         }
 
         [Test]
@@ -485,11 +534,12 @@ namespace OurTaiko.Tests
             first.Tja = Encoding.UTF8.GetBytes("BPM:120\nCOURSE:Oni\n#START P1\n1,\n#END\n#START P2\n2,\n#END\n");
             Connect(guest: false);
             // Single play of a course without a single block reads its 1P block.
-            Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new OnlineScore { Score = 5 }), Is.True);
+            Assert.That(client.Submit(client.Charts[0], (int)Difficulty.Oni, new OnlineScore { Good = 1, MaxCombo = 1 }), Is.True);
             Run(() => client.WaitForUploadsAsync());
             Assert.That(fixture.AcceptedScores.TryDequeue(out var body), Is.True);
             Assert.That((long)body["difficultyId"], Is.EqualTo(first.BlockId("Oni", "P1")));
-            Assert.That(client.Best(client.Charts[0], (int)Difficulty.Oni).Score, Is.EqualTo(5));
+            // The 1P block's one note, scored by the server: a 良 is the whole million.
+            Assert.That(client.Best(client.Charts[0], (int)Difficulty.Oni).Score, Is.EqualTo(1000000));
             Assert.That(body["replay_data"].Type, Is.EqualTo(JTokenType.Null), "Every score carries replay_data.");
             Assert.That(body.ContainsKey("versionId"), Is.False);
         }

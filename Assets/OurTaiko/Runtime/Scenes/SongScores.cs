@@ -23,14 +23,20 @@ namespace OurTaiko
             return new ScoreStore.Record { key = ScoreStore.Key(song.name, difficulty), score = Clamp(best.Score),
                 good = Clamp(best.Good), ok = Clamp(best.Ok), bad = Clamp(best.Bad), maxCombo = Clamp(best.MaxCombo),
                 rolls = Clamp(best.Drumroll), crown = crown,
-                adLibGood = Clamp(best.AdLibGood), adLibOk = Clamp(best.AdLibOk), mines = Clamp(best.Mines) };
+                adLibGood = Clamp(best.AdLibGood), adLibOk = Clamp(best.AdLibOk), mines = Clamp(best.Mines),
+                serverRank = best.ScoreRank };
         }
 
         static int Clamp(long value) => (int)Math.Clamp(value, 0, int.MaxValue);
 
         public static ScoreRank Rank(SongDefinition song, Difficulty difficulty)
         {
-            int score = Get(song, difficulty)?.score ?? 0;
+            var record = Get(song, difficulty);
+            // An online best comes with the rank its server gave it: no need to read the chart.
+            // Without one (a server from before ranks, or a score it did not rank) it is worked
+            // out against the chart's line, as a local best's is.
+            if (record?.serverRank is ScoreRank given) return given;
+            int score = record?.score ?? 0;
             // No score has no rank, whatever the chart: no need to read it.
             if (score <= 0) return ScoreRank.None;
             int? threshold = song.RankThreshold(difficulty);
