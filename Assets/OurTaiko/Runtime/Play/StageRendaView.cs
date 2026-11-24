@@ -5,17 +5,16 @@ using UnityEngine;
 namespace OurTaiko
 {
     // What a player's drumroll throws across the play area (Nijiiro renda): every hit plays one of
-    // the set's clips once, on the wall clock, and several can be out at a time. The files are
-    // 1920x1080 and a hit starts in their lower half; Play.Double shifts each player's layer so that
-    // band falls on the player's header and clips it to the player's half. The hit characters
+    // the set's clips once, on the wall clock, to its end, however many are out (the cabinet has no
+    // limit; at most one a frame, as the skin counts them). The files are 1920x1080 and a hit starts
+    // in their lower half; Play.Double shifts each player's layer so that band falls on the
+    // player's header and clips it to the player's half. The hit characters
     // (UseCharacters) are a header-sized one on the header itself.
     [RequireComponent(typeof(RectTransform))]
     public sealed class StageRendaView : MonoBehaviour
     {
         [Tooltip("Whose drumroll this follows: 0 for 1P, 1 for 2P.")]
         public int player;
-        [Tooltip("The most out at once; a hit past that takes over the oldest.")]
-        public int most = 10;
 
         // How many are out now.
         public int Out { get; private set; }
@@ -26,7 +25,6 @@ namespace OurTaiko
         readonly List<Otanim.Clip> playing = new List<Otanim.Clip>();
         readonly List<double> rates = new List<double>();
         int[] good, bad;
-        int next;
         int lastHitFrame = -1;
         Vector2[] spread;
 
@@ -35,7 +33,6 @@ namespace OurTaiko
         {
             file = set;
             spread = hitSpread;
-            next = 0;
             good = bad = null;
             lastHitFrame = -1;
             for (int i = 0; i < views.Count; i++) { playing[i] = null; views[i].Show(null, 0); }
@@ -78,9 +75,12 @@ namespace OurTaiko
         // pick says which of the file's clips this hit plays.
         public void Hit(double now, int pick, double rate = 1)
         {
-            if (file == null || file.File.Clips.Length == 0 || most <= 0) return;
-            while (views.Count < most)
+            if (file == null || file.File.Clips.Length == 0) return;
+            // The first that is free, else one more.
+            int slot = playing.FindIndex(clip => clip == null);
+            if (slot < 0)
             {
+                slot = views.Count;
                 var child = new GameObject("Hit" + views.Count, typeof(RectTransform)) { hideFlags = HideFlags.DontSave };
                 var rect = (RectTransform)child.transform;
                 rect.SetParent(transform, false);
@@ -92,9 +92,6 @@ namespace OurTaiko
                 rates.Add(1);
                 playing.Add(null);
             }
-            // The first that is free, else the oldest: they are started in turn.
-            int slot = playing.FindIndex(clip => clip == null);
-            if (slot < 0) { slot = next; next = (next + 1) % views.Count; }
             var clips = file.File.Clips;
             views[slot].Use(file, null);
             int index = pick % clips.Length;

@@ -10,7 +10,7 @@ python3 Tools/nijiiro-stage/export.py ~/Repos/YataiDON/Skins/YataiDONNijiiro /tm
 
 输入版本为 YataiDON 的 `a3b8a037`。同一 checkout 的 `PyTaikoGreen` 提供段位、练习和四个单人联动所继承的素材。输出按 `Resources/Stage` 的子目录排列。文件名由 `names.py` 决定，同一套在每个目录里用同一个名字：谁都可能抽到的套装叫 `common_<n>`（皮肤里的 `a_01`、`bg_0`、`bg_fever_0`、`footer0`、`renda_0`、`dancer_0`、观众 `0`），`#SCENEPRESET` 才用的叫联动自己的名字（`b_001` 是 `miku`，皮肤加的 `_n`、`_f`、`_dai`、`_d` 去掉，由目录表示）。游戏自己的 SimpleStyle 和原段位头带继续由原工程制作。Unity 的 GUID、导入压缩设置、随机池权重和预设对应关系由游戏仓库管理。
 
-连打特效（`renda`）画在整个 1920×1080 的演奏画面上（`StageRendaView`），文件也是这个大小：皮肤让碎片在下半屏（y 540–1020）出生、飞过或落过大半个画面。每段都从 y 780 出生，横向由 `backgrounds.py` 的 `renda_spawn` 按碎片平均的最终位移决定：平均飞出半屏以上的从它来的那一边进场，其余（散开的弹幕、往下落的）从正中开始；皮肤自带的 `dx` 只是最后一片的位移，不能用。四个继承的单人联动按皮肤自己的出生范围取中点。游戏再按目录表的 `spread` 在出生点周围随机偏移。
+连打特效（`renda`）画在整个 1920×1080 的演奏画面上（`StageRendaView`），文件也是这个大小，效果照 YataiDON：每段从 y 780 出生；联动（`backgrounds.py`）横向按 YataiDON `RendaClip` 的规则取 `dx`：往左飞的从右边缘、往右飞的从左边缘、不动的在中间（`renda_spawn`）；三套通用连打（`other.py`）在皮肤出生范围 x 6–1100 的中点；四个继承的单人联动按 PyTaikoGreen 的出生范围取中点。游戏再按目录表的 `spread`（各出生范围的半宽）随机偏移，同时出现几个不设上限。素材大小按 1080 自适配：TOHO 的数据和图是街机 1280×720 的（和 PyTaikoGreen 的 720p 手写版逐个相等），其他各套都已是 1080 的，所以 `RENDA_720P` 让它绕出生点整体放大 1.5 倍；它的 `dx` 也不表示方向（扇形向两边散），所以不用上面的规则，从 PyTaikoGreen 记下的街机出生范围中点 (960, 465)（舞者上方）出生，`spread` 是 `[360, 15]`。
 
 舞者的 `rig` 每拍 40 帧，各成员有自己的入场、舞蹈循环和离场位置。头带和下方舞台中周期不同的图层可以各自循环。观众的 `full` 包含出场和循环，失去满魂时播放 `release`。普通曲目关闭击中小人，四个继承预设的 `chibi` 文件提供 `good_*` 和 `bad_*`。
 

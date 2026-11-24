@@ -10,7 +10,8 @@ namespace OurTaiko.Online
 {
     // The play backdrops the game does not carry, from the distribution root (Tools/stage-publish
     // says how they get there):
-    //   stage/catalog.json                              every set and preset (StageCatalogFile)
+    //   stage/bundle/<version>/catalog.json             every set and preset (StageCatalogFile), as the
+    //                                                   bundles of that version are drawn
     //   stage/bundle/<version>/<platform>/index.json    this platform's files: each one's name
     //                                                   ("header/miku"), where it is, its size and SHA-256
     //   stage/bundle/<version>/<platform>/<file>        one asset bundle a backdrop file
@@ -71,6 +72,9 @@ namespace OurTaiko.Online
         static HttpClient Http => http ??= new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         // This platform's bundles of the version this game reads.
         static string BundleFolder => Folder + "/bundle/" + StageLibrary.BundleVersion + "/" + StageLibrary.Platform + "/";
+        // The catalog that goes with this version's bundles: how their files are placed (a drumroll
+        // set's spread) changes with them. stage/catalog.json is version 1's, which games out read.
+        static string CatalogPath => Folder + "/bundle/" + StageLibrary.BundleVersion + "/" + StageLibrary.CatalogFile;
 
         // Reads the catalog and the index from the root and keeps the catalog beside the fetched
         // files, where StageLibrary reads it. Never throws but for cancellation: when the root cannot
@@ -81,7 +85,7 @@ namespace OurTaiko.Online
             try
             {
                 var root = await Distribution.RootAsync(site, cancel);
-                string catalogText = await Distribution.FetchAsync(root.Locate(Folder + "/catalog.json"), url => TextAsync(url, cancel), cancel);
+                string catalogText = await Distribution.FetchAsync(root.Locate(CatalogPath), url => TextAsync(url, cancel), cancel);
                 string indexText = await Distribution.FetchAsync(root.Locate(BundleFolder + IndexFile), url => TextAsync(url, cancel), cancel);
                 // Both or neither: a catalog whose files cannot be found names sets nobody can draw.
                 var entries = Read(indexText, checkPaths: true);

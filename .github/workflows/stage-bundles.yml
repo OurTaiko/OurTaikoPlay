@@ -6,7 +6,9 @@ run-name: Stage bundles to ${{ inputs.folder }}
 # Tools/stage-publish/README.md). The sets' .otanim files are not in this repository: whoever makes
 # them uploads them (Tools/stage-publish/build.py, then publish.sh), and this workflow fetches them
 # from there, has Unity build each platform's bundles and uploads those, then the catalog
-# (Tools/stage-publish/catalog.json at the ref it runs on).
+# (Tools/stage-publish/catalog.json at the ref it runs on) beside them, as bundle/<version>/catalog.json:
+# the catalog says how the bundles of its version are placed. The old stage/catalog.json is left as
+# it is for the games that read bundle version 1.
 # Run it by hand after new originals are uploaded, or after the catalog, the importer or the
 # bundle version changes. Nothing is ever deleted or replaced: every bundle's name carries its
 # hash, and only the JSON beside them says which ones are current.
@@ -109,7 +111,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: Tools/stage-publish
+          sparse-checkout: |
+            Tools/stage-publish
+            Assets/OurTaiko/Runtime/Play/StageLibrary.cs
+          sparse-checkout-cone-mode: false
           lfs: false
       - name: Check the catalog is JSON
         run: |
@@ -120,9 +125,11 @@ jobs:
           aws-region: ${{ vars.STAGE_PUBLISH_REGION || 'ap-northeast-1' }}
       - name: Upload the catalog
         run: |
-          aws s3 cp Tools/stage-publish/catalog.json "$BUCKET/$FOLDER/catalog.json" \
+          version=$(sed -n 's/.*const string BundleVersion = "\([^"]*\)".*/\1/p' Assets/OurTaiko/Runtime/Play/StageLibrary.cs)
+          [ -n "$version" ] || { echo "no BundleVersion in StageLibrary.cs" >&2; exit 1; }
+          aws s3 cp Tools/stage-publish/catalog.json "$BUCKET/$FOLDER/bundle/$version/catalog.json" \
             --content-type application/json --cache-control 'public, max-age=300'
           # CloudFront takes a wildcard only at the end of a path; the bundles it also covers never change.
           aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION" \
-            --paths "/$FOLDER/catalog.json" "/$FOLDER/bundle/*" \
+            --paths "/$FOLDER/bundle/*" \
             --query 'Invalidation.{Id:Id,Status:Status}' --output text

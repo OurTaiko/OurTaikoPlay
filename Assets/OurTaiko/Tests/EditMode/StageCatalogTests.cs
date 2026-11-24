@@ -272,7 +272,6 @@ namespace OurTaiko.Tests
             try
             {
                 var view = root.GetComponent<StageRendaView>();
-                view.most = 3;
                 view.Hit(0, 0);
                 Assert.That(view.Out, Is.Zero, "No set, nothing thrown.");
                 // Any file will do for the mechanics: the dojo's header, whose first clip is 1280 frames at 60.
@@ -286,7 +285,13 @@ namespace OurTaiko.Tests
                 view.Show(10 + length + 0.01);
                 Assert.That(view.Out, Is.EqualTo(1), "The first has played through and is gone.");
                 view.Hit(12, 1); view.Hit(12, 1); view.Hit(12, 1); view.Hit(12, 1);
-                Assert.That(view.Out, Is.EqualTo(3), "No more than `most` at a time.");
+                Assert.That(view.Out, Is.EqualTo(5), "However many are out, each plays to its end: the cabinet has no limit.");
+                int made = root.GetComponentsInChildren<OtanimView>().Length;
+                // Long after every clip of the file has played through.
+                double longest = file.File.Clips.Max(c => c.Frames.Length / (double)c.Fps);
+                view.Show(12 + longest + 0.01);
+                view.Hit(13 + longest, 2);
+                Assert.That((view.Out, root.GetComponentsInChildren<OtanimView>().Length), Is.EqualTo((1, made)), "One that has played through is used again.");
                 view.Use(null);
                 Assert.That(view.Out, Is.Zero);
                 Assert.That(root.GetComponentsInChildren<UnityEngine.UI.MaskableGraphic>(), Is.Empty);

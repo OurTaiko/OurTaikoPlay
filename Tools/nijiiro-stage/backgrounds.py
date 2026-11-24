@@ -20,14 +20,23 @@ def channel(v):
     return values
 
 
-def renda_spawn(rows):
-    """Where a collab drumroll clip starts across the screen: a clip whose pieces end up more
-    than half the screen away on average flies across it and enters from the side it comes
-    from; any other (a burst, a drop) starts in the middle. The skin's own `dx` is only its
-    last piece's travel, which for a burst spreading both ways says nothing of where it goes."""
-    last = next((row for row in reversed(rows) if row), [])
-    travel = sum(e[1] for e in last) / len(last) if last else 0
-    return 1900 if travel <= -960 else 20 if travel >= 960 else 960
+def renda_spawn(dx):
+    """Where a collab drumroll clip starts across the screen, as the skin's RendaClip.add_renda
+    picks it: a part that travels left enters from the right edge (1700..2100), one that travels
+    right from the left (-180..220), one that stays put anywhere between (200..1720). The middle
+    of each range; the catalog's spread for the set is its half width."""
+    return 1900 if dx < -1 else 20 if dx > 1 else 960
+
+
+# Collab drumrolls whose numbers and pictures are the 1280x720 cabinet's rather than 1920x1080,
+# with where their pieces start. Every other renda_anim file is 1.5 times PyTaikoGreen's 720p port
+# of it (miku's -2060 across is -3090 here, lovelive's 1560/-1648 is 2340/-2472); TOHO's equals it
+# number for number (rings -40 down and +-160/+-320 across, a fan of nine spraying ~1000), and its
+# pictures are the 720p ones too (the ring is 128 px in both), so the cabinet draws it half as big
+# again as the file says. Its `dx` is no direction either (the fan spreads both ways), so its hits
+# start where the cabinet starts them, as PyTaikoGreen's port keeps it: x 400..880, y 300..320 of
+# 720, above the dancers.
+RENDA_720P = {"b_002": (960, 465)}
 
 
 def shape(t, k):
@@ -156,7 +165,7 @@ def export(src):
         b = Bake(540 if crowd else RENDA_HEIGHT)
         directory = graphics / (("fevera_" if crowd else "rendaa_") + name)
 
-        def frames(rows, x, y):
+        def frames(rows, x, y, k=1):
             for row in rows:
                 ds = []
                 for i, (pic, dx, dy, sx, sy, rot, a, *mir) in enumerate(row):
@@ -167,12 +176,12 @@ def export(src):
                         b.draw(
                             directory / f"s{pic}.png",
                             i,
-                            x + dx,
-                            y + dy,
+                            x + dx * k,
+                            y + dy * k,
                             s[2],
                             s[3],
-                            sx,
-                            sy,
+                            sx * k,
+                            sy * k,
                             rot,
                             a,
                             bool(mir and mir[0]),
@@ -189,14 +198,10 @@ def export(src):
             if end < t["nframes"]:
                 b.clip("release", 40, False, 0, frames(t["frames"][end:], 0, 0))
         else:
+            spawn = RENDA_720P.get(key)
             for i, p in enumerate(t["parts"]):
-                b.clip(
-                    "hit_" + str(i),
-                    60,
-                    False,
-                    0,
-                    frames(p["frames"], renda_spawn(p["frames"]), RENDA_SPAWN_Y),
-                )
+                x, y = spawn or (renda_spawn(p["dx"]), RENDA_SPAWN_Y)
+                b.clip("hit_" + str(i), 60, False, 0, frames(p["frames"], x, y, 1.5 if spawn else 1))
     path = out / folder / (name + ".otanim")
     b.save(path)
     print(path, flush=True)

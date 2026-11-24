@@ -196,7 +196,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.StageRendaView
   player: 0
-  most: 10
 --- !u!1 &87008131
 GameObject:
   m_ObjectHideFlags: 0
@@ -533,7 +532,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: OurTaiko.Runtime::OurTaiko.StageRendaView
   player: 1
-  most: 10
 --- !u!114 &167910061
 MonoBehaviour:
   m_ObjectHideFlags: 0
