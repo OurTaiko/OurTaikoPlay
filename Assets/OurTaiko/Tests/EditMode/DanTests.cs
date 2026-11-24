@@ -347,8 +347,8 @@ namespace OurTaiko.Tests
         {
             var song = Song("Online", "");
             song.chart = null;
-            song.onlineChart = new Online.FanmadeChart { Server = "endpoint", Id = "42" };
-            var oni = new Online.FanmadeDifficulty { Course = "Oni", Level = 9, Id = 7, ChartHash = "v1:" + Hash1 };
+            song.onlineChart = new Online.OnlineChart { Server = "endpoint", Id = "42" };
+            var oni = new Online.OnlineDifficulty { Course = "Oni", Level = 9, Id = 7, ChartHash = "v1:" + Hash1 };
             song.onlineChart.Difficulties[(int)Difficulty.Oni] = oni;
             song.onlineChart.Blocks.Add(oni);
             var asked = new List<(string, string)>();
@@ -374,9 +374,9 @@ namespace OurTaiko.Tests
         public void ACoursePinsAServerSongsSideAndTheRunParsesThatBlock()
         {
             var song = Song("Online", "");
-            song.onlineChart = new Online.FanmadeChart { Server = "endpoint", Id = "42" };
-            var p1 = new Online.FanmadeDifficulty { Course = "Oni", Side = "p1", Level = 7, Id = 7, ChartHash = "v1:" + Hash1 };
-            var p2 = new Online.FanmadeDifficulty { Course = "Oni", Side = "p2", Level = 8, Id = 8, ChartHash = "v1:" + Hash2 };
+            song.onlineChart = new Online.OnlineChart { Server = "endpoint", Id = "42" };
+            var p1 = new Online.OnlineDifficulty { Course = "Oni", Side = "p1", Level = 7, Id = 7, ChartHash = "v1:" + Hash1 };
+            var p2 = new Online.OnlineDifficulty { Course = "Oni", Side = "p2", Level = 8, Id = 8, ChartHash = "v1:" + Hash2 };
             song.onlineChart.Blocks.Add(p1); song.onlineChart.Blocks.Add(p2);
             song.onlineChart.Difficulties[(int)Difficulty.Oni] = song.onlineChart.Block((int)Difficulty.Oni);
             // The downloaded file, as SongLoadingScene leaves it before the chart is parsed.

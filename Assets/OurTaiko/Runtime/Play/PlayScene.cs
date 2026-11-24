@@ -25,6 +25,16 @@ namespace OurTaiko
         [Tooltip("The chart's background movie behind the lanes; practice moves it with the measure.")]
         public BackgroundMovieView movie;
         double movieOffset;
+        [Tooltip("Play.Practice's menu. A scene with one plays PracticeMode; empty in every other play scene.")]
+        public PracticeView practiceView;
+        public bool IsPractice => practiceView != null;
+        // The practice menu and its attempts (a ReplayMode when it watches a record); null outside practice.
+        public PracticeMode Practice { get; private set; }
+        // A ghost battle in Play.Double, a room's round in Play.Single; null otherwise.
+        public GhostMode Ghost { get; private set; }
+        public MultiMode Multi { get; private set; }
+        // How this play differs from a normal one (PlayMode); chosen once, in ChooseMode.
+        PlayMode mode = PlayMode.Normal;
 
         // One lane per seat: 1P, then 2P in Play.Double.
         public IReadOnlyList<PlayerLane> Lanes => lanes;
@@ -33,7 +43,7 @@ namespace OurTaiko
         public PlaySession Session
         {
             get => Lane1?.Session;
-            private set => Lane1.Replace(value);
+            internal set => Lane1.Replace(value);
         }
         // A drum press still waiting out the input delay must not land on the other side of a pause.
         public bool IsPaused
@@ -80,6 +90,8 @@ namespace OurTaiko
         float subtitleShownAt;
         bool autoPlay;
         SceneSwitcher switcher;
+        // What this scene plays (SceneSwitcher.Request); null for a direct run without a song.
+        PlayRequest request;
         readonly List<DrumPad> pausedPads = new List<DrumPad>();
         bool closingPauseMenu;
         bool resuming, resumeLostFocus;
@@ -96,10 +108,10 @@ namespace OurTaiko
         {
             switcher = SceneSwitcher.EnsureInstance();
             PlayfieldMask.Cover(this);
-            // Direct Editor runs must return to the same mode after Back and another song.
-            switcher.PracticeMode = IsPractice;
+            request = switcher.Request;
+            ChooseMode();
             switcher.SceneChanging += PrepareToLeave;
-            song = switcher.SelectedSong;
+            song = request?.Song;
             // Play scenes start from the song list; a direct run without a song goes back to Entry.
             if (song == null)
             {
@@ -107,16 +119,15 @@ namespace OurTaiko
                 switcher.SwitchScene(SceneSwitcher.MenuScene);
                 yield break;
             }
-            autoPlay = switcher.AutoPlay;
+            autoPlay = request.Seats[0].AutoPlay;
             var playSettings = SettingManager.EnsureInstance().Settings.play;
             playedAudioOffsetMs = playSettings.audioOffsetMs;
             audioOffset = (song.audioOffsetMs + (double)playSettings.audioOffsetMs) / 1000.0;
             visualOffset = song.visualOffsetMs / 1000.0;
-            judgeOffset = autoPlay ? 0 : playSettings.judgeOffsetMs / 1000.0;
-            judgeWindows = playSettings.CustomJudgeWindows;
-            TakeReplay();
-            TakeGhost();
-            TakeMulti();
+            judgeOffset = autoPlay || !mode.KeepsJudgeOffset ? 0 : playSettings.judgeOffsetMs / 1000.0;
+            // A record or a room's round is played by the standard rules: standard windows, no オート.
+            judgeWindows = mode.StandardRules ? null : playSettings.CustomJudgeWindows;
+            if (mode.StandardRules) autoPlay = false;
             InputManager.DrumDelay = Math.Min(Math.Max(0, playSettings.inputDelayMs), PlaySettings.InputDelayMaxMs) / 1000.0;
             pauseButton.onClick.AddListener(TogglePause);
             resumeButton.onClick.AddListener(Resume);
@@ -129,20 +140,15 @@ namespace OurTaiko
             // and pause/resume only re-enables the pads it disabled itself.
             // The touch drum is a single-player setting; two players use the keyboard. A ghost battle
             // has one player, whose side the touch drum strikes (InputManager.Lead).
-            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad && switcher.Seated.Count < 2 && !IsReplay);
+            if (drumPad != null) drumPad.gameObject.SetActive(SettingManager.EnsureInstance().Settings.play.singlePlayerDrumPad && switcher.Seated.Count < 2 && mode.TouchDrum);
             try
             {
-                // Practice plays a fixed route, chosen only in its menu; a normal play evaluates branches.
-                practiceBranch = BranchRoute.Normal;
-                TakeModeSwitchEntry();
                 if (kusudama != null) kusudama.ResetDisplay();
-                var sessions = new List<PlaySession> { AddLane(0, IsGhost ? GhostViews(0) : firstLane) };
-                if (secondLane != null) sessions.Add(AddLane(1, IsGhost ? GhostViews(1) : secondLane));
+                var sessions = new List<PlaySession> { AddLane(0, mode.Views(0, firstLane)) };
+                if (secondLane != null) sessions.Add(AddLane(1, mode.Views(1, secondLane)));
                 // Both seats' kusudama at the same time are one ball; a lone one is a balloon.
                 if (sessions.Count > 1) Kusudama.Share(sessions[0], sessions[1]);
-                if (IsPractice) AddPracticeAddOns();
-                if (IsGhost) ShowGhostPlates();
-                if (IsMulti) AddMultiHud();
+                mode.Attach();
                 for (int i = 0; i < lanes.Count; i++) lanes[i].Prepare(sessions[i]);
                 // The single-player scenes' don/ka are 1P's neiro (tests read them).
                 don = Lane1.Don; ka = Lane1.Ka;
@@ -155,7 +161,7 @@ namespace OurTaiko
                     // way gets one out of what is here.
                     var prepared = switcher.PreparedStage(song);
                     if (prepared.HasValue) stage.Use(prepared.Value);
-                    else stage.Setup(song.ScenePresets(displayInfo.ScenePreset));
+                    else stage.Setup(request.ScenePresets(displayInfo.ScenePreset));
                 }
                 music.SetAudioSong(song);
                 hitAudio.PrepareAudioEffects(balloonPop, kusudamaPop, adLibHit, mineHit);
@@ -168,41 +174,54 @@ namespace OurTaiko
                 IsFinished = true; resultPanel.SetActive(true);
                 resultText.text = L10n.Get("Play", "play.chartLoadFailed") + "\n<size=22>" + error.Message + "</size>";
             }
-            // A room's player whose chart cannot be read sits the round out, back in the room.
-            if (IsFinished && IsMulti) { resultPanel.SetActive(false); FailMulti("CHART_LOAD_FAILED"); }
-            if (IsFinished) yield break;
+            if (IsFinished) { mode.LoadFailed(); yield break; }
             AddModeSwitch();
             while (switcher.IsInputBlocked) yield return null;
-            // A room's round starts for every player at once, on the room's signal.
-            if (IsMulti)
+            // The mode may hold the countdown (a room's round starts for every player at once).
+            var ready = mode.Ready();
+            if (ready != null)
             {
-                yield return WaitForMultiStart();
-                if (MultiAborted) yield break;
+                yield return ready;
+                if (mode.Abandoned) yield break;
             }
             // The full countdown starts only after the global cover has opened. Both seats play the same
             // file, so one OFFSET leads the song in.
             songClock.Start(GameTimeline.AudioNow, Math.Max(2, Session.Chart.Offset + 2 - audioOffset - Math.Min(0, judgeOffset)));
-            if (IsPractice) InitializePractice();
-            else StartDueMusic();
+            if (!mode.Begin()) StartDueMusic();
+        }
+
+        // The one place a play mode is registered, each with its data from the request. A direct Editor
+        // run must return to the same mode after Back and another song; PracticeMode reads
+        // SceneSwitcher.PracticeMode as it takes the mode switch's hand-over, and PlaysGhost and
+        // PlaysMulti read it, so that is written first. A replay is watched in the practice scene; a
+        // ghost battle needs two lanes, a room's round one.
+        void ChooseMode()
+        {
+            switcher.PracticeMode = IsPractice;
+            if (IsPractice) mode = Practice = request?.Replay != null
+                ? new ReplayMode(this, practiceView, switcher, request.Replay)
+                : new PracticeMode(this, practiceView, switcher);
+            else if (secondLane != null && switcher.PlaysGhost) mode = Ghost = new GhostMode(this, switcher, request.Ghost);
+            else if (secondLane == null && switcher.PlaysMulti) mode = Multi = new MultiMode(this, switcher, request.Multi);
         }
 
         // SongLoadingScene parsed each seat's chart behind the curtain; restarts and direct runs parse
-        // here. Each seat reads the block of the side decided before the play, with its own options. The lane is
+        // here. Each seat reads the block of the side decided before the play, with its own options
+        // (a replay or a ghost battle: its record's, PlayMode.Options and Chart). The lane is
         // prepared with the returned session once every seat has one.
         PlaySession AddLane(int seat, LaneViews views)
         {
-            string course = switcher.CourseOf(seat);
+            var part = request.Seats[seat];
+            string course = part.Course;
             // The first lane is played on the leading side (SceneSwitcher.Lead) unless two play.
             int side = seat == 0 ? switcher.Lead.Index() : seat;
-            var options = IsReplay ? ReplayOptions() : IsGhost ? GhostOptions(seat) : PlayOptions.ForSeat(side);
-            // The loading scene prepared the chart with the seat's own options; a replay or a ghost
-            // battle has its record's.
-            var chart = switcher.TakePreparedChart(song, course, seat);
-            if (IsReplay) chart = PrepareReplayChart(course, switcher.SideOf(seat));
-            if (IsGhost) chart ??= PrepareGhostChart(song, ghost);
-            chart ??= PrepareChart(song, course, switcher.SideOf(seat), side);
-            bool recorded = IsGhost && seat == 1;
-            var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : !recorded && switcher.AutoPlayOf(seat), new Online.PlayRecord
+            var options = mode.Options(seat, side);
+            var chart = mode.Chart(song, course, part.Side, switcher.TakePreparedChart(song, course, seat))
+                ?? PrepareChart(song, course, part.Side, side);
+            // A record striking the drum instead of the seat's input.
+            var recording = mode.ReplayOf(seat);
+            bool recorded = recording != null;
+            var lane = new PlayerLane(this, seat, views, options, seat == 0 ? autoPlay : !recorded && part.AutoPlay, new Online.PlayRecord
             {
                 // Replay v1 stores already corrected judgment time. Keep its two-offset convention:
                 // visual time = recorded judgment time - VisualOffsetMs (B cancels here).
@@ -210,11 +229,11 @@ namespace OurTaiko
                 VisualOffsetMs = (int)Math.Round((visualOffset - judgeOffset) * 1000),
             });
             lane.Record.SetOptions(options, chart);
-            lane.Replay = recorded ? new ReplayFeed(ghost.Record) : replay;
+            lane.Replay = recording;
             lane.DrumSeat = side;
             lanes.Add(lane);
             // The recording's times are judged as played, without the player's offset.
-            var session = new PlaySession(chart, recorded ? 0 : judgeOffset, IsPractice ? ForcedBranch : null, 1, judgeWindows);
+            var session = new PlaySession(chart, recorded ? 0 : judgeOffset, mode.ForcedBranch, 1, judgeWindows);
             foreach (string warning in session.Chart.Warnings) Log.Warn("Play", "Ignored TJA command: " + warning);
             return session;
         }
@@ -267,19 +286,17 @@ namespace OurTaiko
         void Update()
         {
             RotateSubtitle();
-            if (IsMulti) UpdateMulti();
+            mode.Update();
             if (switcher == null || switcher.IsInputBlocked || !songClock.Started) return;
             if (IsFinished) { UpdateEnding(); return; }
             TickSong();
             if (closingPauseMenu || Time.frameCount == resumeFrame || Time.frameCount == pauseOpenedFrame) return;
-            // A room's round runs for everyone: it has no pause and no restart (Back: UpdateMulti).
-            if (!IsMulti && (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause)))
+            if (mode.Pauses && (InputManager.GetKeyDown(InputKey.Back) || InputManager.GetKeyDown(InputKey.Pause)))
             { TogglePause(); return; }
-            if (!IsPractice && !IsMulti && InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
+            if (mode.RestartKey && InputManager.GetKeyDown(InputKey.Restart)) { Restart(); return; }
             if (IsPaused)
             {
-                if (IsPractice && !pausePanel.activeSelf) UpdatePracticePause();
-                else pauseMenu.HandleInput();
+                if (!mode.UpdatePaused()) pauseMenu.HandleInput();
                 return;
             }
             if (Session == null || IsFinished) return;
@@ -306,7 +323,7 @@ namespace OurTaiko
         // Presentation can keep running after the result is captured, without advancing judgment.
         void UpdatePlayVisuals(double time)
         {
-            bool preview = IsPractice && IsPaused, hideSkipped = IsPractice && (!IsPaused || practiceRewinding);
+            var (preview, hideSkipped) = mode.Notes(IsPaused);
             foreach (var lane in lanes) lane.ShowVisuals(time, time - visualOffset * songClock.Rate, preview, hideSkipped);
             if (kusudama != null) kusudama.ShowTime(time);
             SampleStage(time);
@@ -317,23 +334,18 @@ namespace OurTaiko
 
         public void TogglePause()
         {
-            if (IsFinished || Session == null || !songClock.Started || switcher.IsInputBlocked || closingPauseMenu || IsMulti) return;
-            if (IsPractice) { TogglePracticePause(); return; }
+            if (IsFinished || Session == null || !songClock.Started || switcher.IsInputBlocked || closingPauseMenu || !mode.Pauses) return;
+            if (mode.TogglePause()) return;
             // The pause key chooses Resume like the menu's own button, so it sounds the same don.
             if (IsPaused) { resumeButton.onClick.Invoke(); return; }
-            songClock.Pause();
-            IsPaused = true;
-            pauseOpenedFrame = Time.frameCount;
-            music.StopAudio(); hitAudio.StopAudio();
-            DisableDrumPads();
-            pauseButton.interactable = false;
-            pauseMenu.Show();
+            HaltPlayback();
+            OpenPauseMenu();
         }
 
         public void Resume()
         {
             if (!IsPaused || closingPauseMenu || switcher.IsInputBlocked || IsFinished) return;
-            if (IsPractice) { ClosePracticeMenu(); return; }
+            if (mode.Resume()) return;
             resuming = true;
             resumeLostFocus = false;
             StartCoroutine(ClosePauseMenu(() =>
@@ -345,13 +357,8 @@ namespace OurTaiko
                     pauseMenu.Show();
                     return;
                 }
-                songClock.Resume(GameTimeline.AudioNow);
-                IsPaused = false;
-                resumeFrame = Time.frameCount;
-                StartDueMusic();
-                foreach (var pad in pausedPads) if (pad != null) pad.enabled = true;
-                pausedPads.Clear();
-                pauseButton.interactable = true;
+                ResumePlayback();
+                RestorePads();
             }));
         }
 
@@ -378,25 +385,25 @@ namespace OurTaiko
             if (resuming) resumeLostFocus = true;
             if (Session != null && !IsPaused && !IsFinished) TogglePause();
         }
-        // The play's end (SongEnd): practice loops here. A play (OpenTaiko Game_EndChart) captures the
-        // result and stops input, and each lane plays its own ending (Player::spawn_ending_anim) over
-        // its lane while the music fades out; ResultScene (which persists the result) follows.
+        // The play's end (SongEnd), unless the mode takes it (practice loops). A play (OpenTaiko
+        // Game_EndChart) captures the result and stops input, and each lane plays its own ending
+        // (Player::spawn_ending_anim) over its lane while the music fades out; ResultScene (which
+        // persists the result) follows.
         void Finish()
         {
-            // Practice loops back to the first measure; the attempt it just completed stopped there.
-            if (IsPractice) { PracticeAttemptStopped?.Invoke(Session); PausePractice(true); return; }
+            if (mode.Finish()) return;
             if (IsFinished) return;
             IsFinished = true;
             foreach (var lane in lanes)
             {
                 lane.Result = PlayResult.From(lane.Session, song.ScoreKey, lane.AutoPlay, playedAudioOffsetMs);
-                lane.Result.Side = switcher.SideOf(lane.Seat);
+                lane.Result.Side = request.Seats[lane.Seat].Side;
                 lane.Result.Title = displayInfo.Title;
                 lane.Result.Subtitle = displayInfo.Subtitle;
             }
             DisableDrumPads();
             pauseButton.interactable = false;
-            if (IsMulti) FinishMulti();
+            mode.Finished();
             endings = lanes.Where(lane => lane.Views.ending != null).ToList();
             foreach (var lane in endings) lane.Views.ending.Begin(lane.Result);
             foreach (var lane in lanes) lane.DonChara?.OnEnding(lane.Result.IsClear, lane.Result.Bad);
@@ -421,38 +428,22 @@ namespace OurTaiko
             music.SetAudioFade(SongEnd.Fade(elapsed, endingDuration));
             if (elapsed < endingDuration) return;
             resultShown = true;
-            if (IsGhost)
-            {
-                // Each result in its lane's place; only the player's play is kept (ResultScene).
-                var (above, below) = GhostResultLanes();
-                switcher.ShowResult(above.Result, song, above == Lane1 ? Record : null, below.Result, below == Lane1 ? Record : null);
-                return;
-            }
-            var second = lanes.Count > 1 ? lanes[1] : null;
-            switcher.ShowResult(Result, song, Record, second?.Result, second?.Record);
+            if (mode.ShowResult()) return;
+            switcher.ShowResult(song, lanes.Select(lane => new SeatResult(lane.Result, lane.Record)).ToArray());
         }
         public void Restart()
         {
-            if (IsPractice && !IsFinished)
-            {
-                if (pausePanel.activeSelf && !closingPauseMenu)
-                    StartCoroutine(ClosePauseMenu(() => { RestorePracticePads(); RestartPractice(); }));
-                return;
-            }
-            if (IsMulti) return;
+            if (mode.Restart()) return;
             LeavePlay(() => SceneSwitcher.EnsureInstance().Restart());
         }
         public void Back()
         {
-            if (IsPractice && !pausePanel.activeSelf && !IsFinished) return;
-            // A ghost battle goes back to its list.
-            if (IsGhost) { LeavePlay(() => SceneSwitcher.EnsureInstance().ReturnToMenu()); return; }
-            // A room's round goes back to the room.
-            if (IsMulti) { LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.MultiRoomScene)); return; }
+            if (mode.Back()) return;
             LeavePlay(() => SceneSwitcher.EnsureInstance().SwitchScene(SceneSwitcher.SongSelectScene));
         }
 
-        void LeavePlay(Action action)
+        // Closes the pause menu, if open, before leaving the play.
+        internal void LeavePlay(Action action)
         {
             if (closingPauseMenu || switcher.IsInputBlocked) return;
             if (IsPaused && !IsFinished) StartCoroutine(ClosePauseMenu(action));
@@ -460,8 +451,7 @@ namespace OurTaiko
         }
         void PrepareToLeave(string scene)
         {
-            songClock.Pause(); IsPaused = true;
-            music.StopAudio(); hitAudio.StopAudio();
+            HaltPlayback();
             InputManager.DropDelayed();
             DisableDrumPads();
         }
@@ -469,22 +459,62 @@ namespace OurTaiko
         {
             InputManager.DrumDelay = 0;
             if (switcher != null) switcher.SceneChanging -= PrepareToLeave;
-            ReleaseMulti();
+            mode.Release();
             foreach (var lane in lanes) lane.Release();
-        }
-
-        // A paused practice previews its routes; while it plays (or rewinds) it hides what the
-        // attempt skipped, and browsing measures keeps past notes.
-        void RenderNotes(double time)
-        {
-            bool preview = IsPractice && IsPaused;
-            bool hideSkipped = IsPractice && (!IsPaused || practiceRewinding);
-            foreach (var lane in lanes) lane.RenderNotes(time, preview, hideSkipped);
         }
 
         public const int SoulGaugeOrder = -20;
 
-        void SampleStage(double time)
+        // What a PlayMode drives the scene with. The offsets are the configured ones, in real seconds.
+        internal SongClock Clock => songClock;
+        internal SongDefinition Song => song;
+        internal double ConfiguredAudioOffset => audioOffset;
+        internal double ConfiguredVisualOffset => visualOffset;
+        internal double ConfiguredJudgeOffset => judgeOffset;
+        internal bool InputBlocked => switcher.IsInputBlocked;
+        internal bool PauseMenuOpen => pausePanel.activeSelf;
+        internal bool ClosingPauseMenu => closingPauseMenu;
+        // Input this frame belongs to whatever just opened; nothing else may act on it.
+        internal void HoldPauseInput() => pauseOpenedFrame = Time.frameCount;
+        internal bool PauseInputHeld => pauseOpenedFrame == Time.frameCount;
+
+        // Stops the clock and every sound where they are.
+        internal void HaltPlayback()
+        {
+            songClock.Pause(); IsPaused = true;
+            music.StopAudio(); hitAudio.StopAudio();
+        }
+        // Runs the clock on from where it stands; the music starts once the clock reaches it.
+        internal void ResumePlayback()
+        {
+            songClock.Resume(GameTimeline.AudioNow);
+            IsPaused = false;
+            resumeFrame = Time.frameCount;
+            StartDueMusic();
+        }
+        internal void OpenPauseMenu()
+        {
+            HoldPauseInput();
+            DisableDrumPads();
+            pauseButton.interactable = false;
+            pauseMenu.Show();
+        }
+        // The pads the pause menu disabled, and the pause button.
+        internal void RestorePads()
+        {
+            foreach (var pad in pausedPads) if (pad != null) pad.enabled = true;
+            pausedPads.Clear();
+            pauseButton.interactable = true;
+        }
+        internal void CloseMenuThen(Action completed) => StartCoroutine(ClosePauseMenu(completed));
+
+        internal void RenderNotes(double time)
+        {
+            var (preview, hideSkipped) = mode.Notes(IsPaused);
+            foreach (var lane in lanes) lane.RenderNotes(time, preview, hideSkipped);
+        }
+
+        internal void SampleStage(double time)
         {
             if (stage != null) stage.Show(time, lanes);
         }

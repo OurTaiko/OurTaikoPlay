@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using SQLite;
 using UnityEngine;
 
@@ -20,40 +19,40 @@ namespace OurTaiko
             [Column("maxCombo")] public int maxCombo { get; set; }
             [Column("rolls")] public int rolls { get; set; }
             [Column("crown")] public Crown crown { get; set; }
-            // Added later: sqlite-net's CreateTable adds the columns to an older file, rows reading 0.
+            // Added later: GameDatabase's first step (sqlite-net's CreateTable) adds the columns to an older file, rows reading 0.
             [Column("adLibGood")] public int adLibGood { get; set; }
             [Column("adLibOk")] public int adLibOk { get; set; }
             [Column("mines")] public int mines { get; set; }
         }
 
         static ScoreStore shared;
-        readonly string path;
+        readonly GameDatabase database;
         readonly Dictionary<string, Record> records = new Dictionary<string, Record>();
         public int Revision { get; private set; }
         public static ScoreStore Shared
         {
-            get => shared ??= new ScoreStore(Path.Combine(GamePaths.Root, "scores.sqlite3"));
+            get => shared ??= new ScoreStore(GameDatabase.DefaultPath);
             set => shared = value;
         }
 
-        public ScoreStore(string path)
+        public ScoreStore(string path) : this(new GameDatabase(path)) { }
+
+        public ScoreStore(GameDatabase database)
         {
-            this.path = path;
-            string directory = Path.GetDirectoryName(path);
-            if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
-            using var db = Open();
-            db.CreateTable<Record>();
+            this.database = database;
+            using var db = database.Open();
             foreach (var record in db.Table<Record>()) records[record.key] = record;
         }
 
-        SQLiteConnection Open() => new SQLiteConnection(path) { BusyTimeout = TimeSpan.FromSeconds(5) };
+        // A server song's key (OnlineManager.SongKey): its bests are the server's, never stored here.
+        public static bool IsOnlineKey(string key) => key != null && key.StartsWith("fanmade/", StringComparison.Ordinal);
         public static string Key(string chartKey, Difficulty difficulty) => chartKey + "/" + SongInfo.CourseName(difficulty);
         public Record Get(string chartKey, Difficulty difficulty)
-            => !SongScores.IsOnlineKey(chartKey) && records.TryGetValue(Key(chartKey, difficulty), out var record) ? record : null;
+            => !IsOnlineKey(chartKey) && records.TryGetValue(Key(chartKey, difficulty), out var record) ? record : null;
 
         public void Save(PlayResult result)
         {
-            if (!result.IsRecordable || SongScores.IsOnlineKey(result.ChartKey)) return;
+            if (!result.IsRecordable || IsOnlineKey(result.ChartKey)) return;
             string key = Key(result.ChartKey, result.Difficulty);
             records.TryGetValue(key, out var best);
             result.PreviousBest = best?.score ?? 0;
@@ -67,7 +66,7 @@ namespace OurTaiko
                 mines = higher ? result.Mines : best.mines,
                 crown = (Crown)Math.Max((int)(best?.crown ?? Crown.None), (int)result.StoredCrown),
             };
-            using (var db = Open()) db.InsertOrReplace(next);
+            using (var db = database.Open()) db.InsertOrReplace(next);
             records[key] = next;
             Revision++;
         }

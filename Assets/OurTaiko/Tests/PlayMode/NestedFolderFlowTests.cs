@@ -142,7 +142,7 @@ namespace OurTaiko.Tests
             manager.OpenFolderAt(0);
             manager.OpenFolderAt(2);
             manager.OpenFolderAt(2);
-            SceneSwitcher.EnsureInstance().Select(subSong);
+            SceneSwitcher.EnsureInstance().Select(new PlayRequest(subSong));
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
             yield return null;
             manager = Object.FindAnyObjectByType<SongSelectScene>().Manager;

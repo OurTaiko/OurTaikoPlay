@@ -144,7 +144,7 @@ namespace OurTaiko
             var standIns = DanCourseLoader.LoadServerTest(Path.Combine(GamePaths.Root, DanCourseLoader.ServerTestFolder), resolver);
             pages.Clear();
             pages.AddRange(DanSelectPages.Build(DanCourseLoader.LoadLocal(library.Roots, resolver), servers, standIns,
-                Online.ServerConfig.BuiltIn[0].Url, Online.ServerConfig.BuiltIn[1].Url));
+                Online.ServerConfig.BuiltIn[0].Url, Online.ServerConfig.BuiltIn[1].Url, DanText.LocalPageTitle, DanText.GaidenTitle));
             foreach (var entry in pages.SelectMany(p => p.Courses).Concat(servers).Distinct())
             {
                 if (entry.Error != null) Log.Warn("Dan", $"Dan course {entry.Path}: {entry.Error}");
@@ -440,7 +440,7 @@ namespace OurTaiko
             }
             DanCourseEntry entry;
             try { entry = resolver.Resolve(DanCourse.From(Online.Json.Parse(task.Result), pages[Page].Server), pages[Page].Server + "/api/v2/game/dans/" + lookupCode); }
-            catch (Exception error) when (error is FormatException || error is Online.FanmadeException)
+            catch (Exception error) when (error is FormatException || error is Online.OnlineException)
             {
                 codeEntry.Say(L10n.Format("Dan", "code.failed", error.Message));
                 return;
@@ -546,9 +546,9 @@ namespace OurTaiko
         // the course's own name (a local or unranked course). The plate carries the full name.
         public string ChipLabel(DanCourseEntry entry)
         {
-            if (entry.IsGaiden) return DanSelectPages.GaidenTitle;
+            if (entry.IsGaiden) return DanText.GaidenTitle;
             int rank = entry.Course.DanIndex;
-            return rank >= 0 ? DanResultFlow.RankName(rank) : entry.Course.Title(language);
+            return rank >= 0 ? DanText.RankName(rank) : entry.Course.Title(language);
         }
 
         // The yellow board opens like the song wheel's (animations 13–18); its contents fade in last.

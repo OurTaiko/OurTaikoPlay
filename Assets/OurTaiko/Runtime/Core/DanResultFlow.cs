@@ -274,8 +274,9 @@ namespace OurTaiko
             "rank.kuroto", "rank.meijin", "rank.chojin", "rank.tatsujin",
         };
 
-        // A 段位's name (0 初級 .. 24 達人), as OurTaikoProfile and the websites number them.
-        public static string RankName(int danIndex) => danIndex >= 0 && danIndex < RankKeys.Length ? L10n.Get("Dan", RankKeys[danIndex]) : "";
+        // The Dan table key of a 段位's name (0 初級 .. 24 達人, as OurTaikoProfile and the websites
+        // number them); null outside that range. DanText.RankName looks it up.
+        public static string RankKey(int danIndex) => danIndex >= 0 && danIndex < RankKeys.Length ? RankKeys[danIndex] : null;
 
         // YataiDON odai_result as the result and the course select name it.
         public static string VerdictName(int verdict) => verdict switch

@@ -17,7 +17,7 @@ namespace OurTaiko.Tests
     // hash, remembered for when the site cannot be reached, and the plain Don for a seat without one.
     public sealed class DonDownloadsTests
     {
-        FanmadeFixture site;
+        OnlineFixture site;
         string cache;
         byte[] model;
         string hash;
@@ -37,7 +37,7 @@ namespace OurTaiko.Tests
             model = File.ReadAllBytes(Chara3DTests.CopyOfPlainDon("download-source"));
             hash = Sha(model);
             cache = Path.Combine(Path.GetTempPath(), "OurTaikoDonDownloads", Guid.NewGuid().ToString("N"));
-            site = new FanmadeFixture();
+            site = new OnlineFixture();
             look = JObject.Parse("{\"costume\":true,\"cos\":77,\"head\":0,\"body\":0,\"puchi\":0,\"colors\":[\"#112233\",\"#445566\",\"#778899\"]}");
             site.CustomRequest = context =>
             {

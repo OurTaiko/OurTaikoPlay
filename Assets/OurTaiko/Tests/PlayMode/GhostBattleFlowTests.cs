@@ -21,8 +21,8 @@ namespace OurTaiko.Tests
     // drum and account.
     public sealed class GhostBattleFlowTests
     {
-        FanmadeFixture fixture;
-        FanmadeFixture.Chart chart;
+        OnlineFixture fixture;
+        OnlineFixture.Chart chart;
         GameSettings saved;
         PlayOptions originalFirst, originalSecond;
         Keyboard keyboard;
@@ -34,9 +34,9 @@ namespace OurTaiko.Tests
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture { Votes = true };
+            fixture = new OnlineFixture { Votes = true };
             fixture.Users["ka"] = "katsu";
-            chart = new FanmadeFixture.Chart
+            chart = new OnlineFixture.Chart
             {
                 Title = "Ghost Song", Subtitle = "Recorded", AudioName = "song.ogg",
                 Tja = Encoding.UTF8.GetBytes(Tja), Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),
@@ -205,18 +205,18 @@ namespace OurTaiko.Tests
 
             yield return Race(list);
             var play = Object.FindAnyObjectByType<PlayScene>();
-            Assert.That(play.IsGhost, Is.True);
+            Assert.That(play.Ghost, Is.Not.Null);
             Assert.That(play.Lane1.Views, Is.SameAs(play.firstLane), "1P races in the upper lane.");
-            Assert.That(play.GhostLane.Views, Is.SameAs(play.secondLane));
-            Assert.That(play.GhostLane.Replay, Is.Not.Null);
+            Assert.That(play.Ghost.Lane.Views, Is.SameAs(play.secondLane));
+            Assert.That(play.Ghost.Lane.Replay, Is.Not.Null);
             Assert.That(play.Lane1.Replay, Is.Null);
-            Assert.That(play.Lane1.AutoPlay || play.GhostLane.AutoPlay, Is.False);
+            Assert.That(play.Lane1.AutoPlay || play.Ghost.Lane.AutoPlay, Is.False);
             // Both lanes play the recording's block with its options, not the player's ×3.0.
             Assert.That(play.Lane1.Options.speed, Is.EqualTo(15));
-            Assert.That(play.GhostLane.Options.speed, Is.EqualTo(15));
-            Assert.That(play.GhostLane.Options.neiro, Is.EqualTo(PlayOptions.Mute), "The recording's drum is silent.");
+            Assert.That(play.Ghost.Lane.Options.speed, Is.EqualTo(15));
+            Assert.That(play.Ghost.Lane.Options.neiro, Is.EqualTo(PlayOptions.Mute), "The recording's drum is silent.");
             Assert.That(play.Lane1.Session.Chart.Notes.Count, Is.EqualTo(8));
-            Assert.That(play.GhostLane.Session.Chart.Notes.Count, Is.EqualTo(8));
+            Assert.That(play.Ghost.Lane.Session.Chart.Notes.Count, Is.EqualTo(8));
             // The player's offsets are their own (7 ms + the 30 ms judgment offset), not the recording's.
             Assert.That(play.Lane1.Record.AudioOffsetMs, Is.EqualTo(37));
             Assert.That(play.Lane1.Record.Speed, Is.EqualTo(15));
@@ -229,8 +229,8 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.ResultScene, seconds: 40);
             var switcher = SceneSwitcher.Instance;
             // The player struck nothing; the recording hit all but the fourth.
-            Assert.That((switcher.LastResult.Good, switcher.LastResult.Bad), Is.EqualTo((0, 8)));
-            Assert.That((switcher.LastResult2P.Good, switcher.LastResult2P.Ok, switcher.LastResult2P.Bad), Is.EqualTo((7, 0, 1)));
+            Assert.That((switcher.ResultOf(0).Good, switcher.ResultOf(0).Bad), Is.EqualTo((0, 8)));
+            Assert.That((switcher.ResultOf(1).Good, switcher.ResultOf(1).Ok, switcher.ResultOf(1).Bad), Is.EqualTo((7, 0, 1)));
             yield return null;
             var result = Object.FindAnyObjectByType<ResultScene>();
             Assert.That(result.Boards.Count, Is.EqualTo(2));
@@ -301,7 +301,7 @@ namespace OurTaiko.Tests
             yield return Race(list);
             var play = Object.FindAnyObjectByType<PlayScene>();
             Assert.That(play.Lane1.Views, Is.SameAs(play.secondLane), "A lone 2P races in the lower lane.");
-            Assert.That(play.GhostLane.Views, Is.SameAs(play.firstLane));
+            Assert.That(play.Ghost.Lane.Views, Is.SameAs(play.firstLane));
             var plates = Object.FindObjectsByType<NameplateView>(FindObjectsInactive.Include).Where(p => p.gameObject.scene == play.gameObject.scene).ToList();
             Assert.That(plates.Single(p => p.seat == 0).Info.name, Is.EqualTo("Rival"));
 
@@ -322,12 +322,12 @@ namespace OurTaiko.Tests
 
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.ResultScene, seconds: 40);
             var switcher = SceneSwitcher.Instance;
-            Assert.That((switcher.LastResult.Good, switcher.LastResult.Bad), Is.EqualTo((7, 1)), "The recording's result is above.");
-            Assert.That(switcher.LastResult2P.Good + switcher.LastResult2P.Ok + switcher.LastResult2P.Bad, Is.EqualTo(8));
+            Assert.That((switcher.ResultOf(0).Good, switcher.ResultOf(0).Bad), Is.EqualTo((7, 1)), "The recording's result is above.");
+            Assert.That(switcher.ResultOf(1).Good + switcher.ResultOf(1).Ok + switcher.ResultOf(1).Bad, Is.EqualTo(8));
             yield return Waits.Until(() => fixture.AcceptedScores.Count == 1, seconds: 10);
             Assert.That(fixture.AcceptedUsers.Single(), Is.EqualTo("ka"), "The lone 2P's play is 2P's account's.");
             // The best a lone 2P sees is their own account's; 1P is a guest and has none.
-            var played = switcher.SelectedSong;
+            var played = switcher.Request.Song;
             yield return Waits.Until(() => SongScores.Get(played, Difficulty.Oni) != null, seconds: 10);
             Assert.That(SongScores.Get(played, Difficulty.Oni, 0), Is.Null);
             var result = Object.FindAnyObjectByType<ResultScene>();

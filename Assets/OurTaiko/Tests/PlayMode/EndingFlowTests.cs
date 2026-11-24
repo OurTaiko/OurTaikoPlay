@@ -63,7 +63,7 @@ namespace OurTaiko.Tests
                 yield return new WaitForSecondsRealtime(3.05f);
                 TestCapture.Capture("EndingNatural-Donderful.png");
                 yield return WaitForScene(SceneSwitcher.ResultScene);
-                Assert.That(switcher.LastResult.Good, Is.EqualTo(4));
+                Assert.That(switcher.ResultOf(0).Good, Is.EqualTo(4));
             }
             finally
             {
@@ -128,7 +128,7 @@ namespace OurTaiko.Tests
                 }
                 TestCapture.Capture("EndingFinal-" + kind + ".png");
                 yield return WaitForScene(SceneSwitcher.ResultScene);
-                Assert.That(switcher.LastResult, Is.SameAs(result));
+                Assert.That(switcher.ResultOf(0), Is.SameAs(result));
                 Assert.That(Object.FindAnyObjectByType<ResultScene>().Result, Is.SameAs(result));
                 switcher.Restart();
                 yield return WaitForScene(SceneSwitcher.GameScene);

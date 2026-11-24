@@ -115,7 +115,7 @@ namespace OurTaiko
         {
             var online = OnlineManager.Instance;
             if (online == null) return;
-            var seats = Enumerable.Range(0, FanmadeEndpoint.SeatCount).Where(online.TakeExpired).Select(s => (s + 1) + "P").ToArray();
+            var seats = Enumerable.Range(0, OnlineEndpoint.SeatCount).Where(online.TakeExpired).Select(s => (s + 1) + "P").ToArray();
             if (seats.Length == 0) return;
             string who = seats.Length == 1 ? seats[0] : L10n.Format("Menu", "entry.seatsAnd", seats[0], seats[1]);
             AccountNotice = L10n.Format("Menu", "entry.accountExpired", who);

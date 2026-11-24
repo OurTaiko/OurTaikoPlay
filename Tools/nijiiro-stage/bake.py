@@ -158,8 +158,14 @@ class Bake:
             width = (width + 11) // 12 * 12
             height = (height + 11) // 12 * 12
         atlas = Image.new("RGBA", (width, height))
-        for p, pt in positions.items():
-            atlas.paste(self.images[p][0], pt)
+        for p, (x, y) in positions.items():
+            im = self.images[p][0]
+            # The pixel of room around each picture repeats its edge. Left clear, it would be
+            # blended into the edge wherever a picture is drawn larger than it is or the atlas
+            # is compressed in blocks, and pictures laid side by side (a scrolling strip's
+            # tiles) would show a line where they meet.
+            for dx, dy in ((-1, -1), (1, -1), (-1, 1), (1, 1), (-1, 0), (1, 0), (0, -1), (0, 1), (0, 0)):
+                atlas.paste(im, (x + dx, y + dy))
         png = io.BytesIO()
         atlas.save(png, format="PNG", compress_level=2)
         parts = bytearray()

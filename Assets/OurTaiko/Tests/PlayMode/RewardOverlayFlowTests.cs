@@ -20,14 +20,14 @@ namespace OurTaiko.Tests
     // over it, take its keys while up, and are marked seen when closed.
     public sealed class RewardOverlayFlowTests
     {
-        FanmadeFixture fixture;
+        OnlineFixture fixture;
         string language;
 
         [SetUp]
         public void SetUp()
         {
             language = L10n.Language;
-            fixture = new FanmadeFixture { RewardsOn = true };
+            fixture = new OnlineFixture { RewardsOn = true };
         }
 
         [UnityTearDown]
@@ -99,7 +99,7 @@ namespace OurTaiko.Tests
             Assert.That((Overlay.Index, Overlay.Current.Id, Overlay.IsReady), Is.EqualTo((1, dan, false)));
             Overlay.Don();
             Assert.That(Overlay.IsReady, Is.True, "A hit while it comes in shows it at once.");
-            Assert.That(Overlay.AllText, Does.Contain(L10n.Get("Online", "rewards.dan")).And.Contain(DanResultFlow.RankName(22))
+            Assert.That(Overlay.AllText, Does.Contain(L10n.Get("Online", "rewards.dan")).And.Contain(DanText.RankName(22))
                 .And.Contain(L10n.Get("Online", "rewards.close")));
             yield return null;
             TestCapture.Capture("RewardDan.png", canvas: TestCapture.SceneCanvas(), over: Overlay.Canvas);
@@ -136,9 +136,9 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator OnAResultItWaitsUntilTheResultHasComeIn()
         {
-            var chart = new FanmadeFixture.Chart
+            var chart = new OnlineFixture.Chart
             {
-                Title = "Reward Song", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Oni", 1, 240)),
+                Title = "Reward Song", Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja("Oni", 1, 240)),
                 Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),
             };
             fixture.Charts.Add(chart);
@@ -147,10 +147,10 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => SceneSwitcher.Instance != null && !SceneSwitcher.Instance.IsInputBlocked);
             var online = OnlineManager.Instance;
             var song = online.Songs.Single(x => online.ChartOf(x).Id == chart.Id);
-            SceneSwitcher.Instance.ShowResult(new PlayResult
+            SceneSwitcher.Instance.ShowResult(song, new SeatResult(new PlayResult
             {
                 Title = "Reward Song", Course = "Oni", Difficulty = Difficulty.Oni, Level = 8, Score = 876540, Good = 3, Ok = 1, MaxCombo = 4, GaugePoints = 9000,
-            }, song, null, null);
+            }, null));
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.ResultScene && !SceneSwitcher.Instance.IsSwitching);
             var result = Object.FindAnyObjectByType<ResultScene>();
 

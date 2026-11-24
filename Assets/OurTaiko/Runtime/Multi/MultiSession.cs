@@ -116,16 +116,16 @@ namespace OurTaiko.Multi
         }
 
         // The built-in servers that are sources of the site: the site's sign-in is theirs.
-        static List<FanmadeEndpoint> SiteEndpoints()
+        static List<OnlineEndpoint> SiteEndpoints()
         {
             var client = OnlineManager.Instance != null ? OnlineManager.Instance.Client : null;
-            return client == null ? new List<FanmadeEndpoint>() : client.Endpoints.Where(e => e.Config.site.Length > 0).ToList();
+            return client == null ? new List<OnlineEndpoint>() : client.Endpoints.Where(e => e.Config.site.Length > 0).ToList();
         }
 
         // The site's source a server is ("fanmade", "official"), and the server of a source.
         public static string SourceOf(string server)
             => SiteEndpoints().FirstOrDefault(e => e.Id == server)?.Config.SourceId ?? "";
-        public static FanmadeEndpoint EndpointOf(string source)
+        public static OnlineEndpoint EndpointOf(string source)
             => string.IsNullOrEmpty(source) ? null : SiteEndpoints().FirstOrDefault(e => e.Config.SourceId == source);
 
         // Whether the leading player is signed in to the site (rooms need an account).
@@ -169,7 +169,7 @@ namespace OurTaiko.Multi
             try { reply = Json.Parse(await endpoint.SiteRequestAsync("/api/v2/game/multiplay", cancel)); }
             catch (HttpStatusException error) when (error.Status == 404) { throw new MultiException("NOT_AVAILABLE", error); }
             catch (OperationCanceledException) { throw; }
-            catch (FanmadeException error) { throw new MultiException("SERVER_UNREACHABLE", error); }
+            catch (OnlineException error) { throw new MultiException("SERVER_UNREACHABLE", error); }
             string url = reply["url"]?.Type == Newtonsoft.Json.Linq.JTokenType.String ? ((string)reply["url"]).Trim().TrimEnd('/') : "";
             if (url.Length == 0) throw new MultiException("NOT_AVAILABLE");
             // protocol is the oldest version a game may speak, maxProtocol the newest the server

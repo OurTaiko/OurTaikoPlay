@@ -101,8 +101,8 @@ namespace OurTaiko.Tests
 
         const string Tja = "TITLE:Room\nBPM:240\nOFFSET:0\nCOURSE:Normal\nLEVEL:4\n#START\n1010,\n1010,\n#END\nCOURSE:Oni\nLEVEL:8\n#START\n1111,\n1111,\n#END\n";
 
-        FanmadeFixture fixture;
-        FanmadeFixture.Chart chart;
+        OnlineFixture fixture;
+        OnlineFixture.Chart chart;
         FakeRoomServer server;
         string avatar;
         GameSettings saved;
@@ -114,8 +114,8 @@ namespace OurTaiko.Tests
         [SetUp]
         public void SetUp()
         {
-            fixture = new FanmadeFixture { SiteSources = new[] { "fanmade", "official" }, Votes = true };
-            chart = new FanmadeFixture.Chart
+            fixture = new OnlineFixture { SiteSources = new[] { "fanmade", "official" }, Votes = true };
+            chart = new OnlineFixture.Chart
             {
                 Title = "Room Song", Subtitle = "Together", AudioName = "song.ogg",
                 Tja = Encoding.UTF8.GetBytes(Tja), Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),
@@ -357,7 +357,7 @@ namespace OurTaiko.Tests
             var picked = select.Manager.FocusedSong;
             string source = MultiSession.SourceOf(OnlineManager.Instance.ChartOf(picked).Server);
             Assert.That(source, Is.EqualTo("fanmade").Or.EqualTo("official"));
-            SceneSwitcher.Instance.LastDifficulty = (int)Difficulty.Oni;
+            SceneSwitcher.Instance.LastDifficulty[0] = (int)Difficulty.Oni;
             select.Manager.Confirm();
             yield return Waits.Until(() => select.CourseFade >= 1, seconds: 5);
             yield return null;
@@ -411,16 +411,16 @@ namespace OurTaiko.Tests
             server.Snapshot(90);
             yield return WaitForScene(SceneSwitcher.GameScene, 40);
             var play = Object.FindAnyObjectByType<PlayScene>();
-            Assert.That(play.IsMulti, Is.True);
-            Assert.That(SceneSwitcher.Instance.SelectedCourse, Is.EqualTo("Normal"));
+            Assert.That(play.Multi, Is.Not.Null);
+            Assert.That(SceneSwitcher.Instance.Request.Seats[0].Course, Is.EqualTo("Normal"));
             Assert.That(play.Session.Chart.Notes.Count, Is.EqualTo(4), "Normal's block, not the Oni the player first asked for.");
             Assert.That(play.Lane1.AutoPlay, Is.False);
             // Loaded, it waits for the room: nothing moves until every player is ready.
-            yield return Waits.Until(() => play.IsWaitingForMulti, seconds: 10);
+            yield return Waits.Until(() => play.Multi.IsWaiting, seconds: 10);
             Assert.That(server.Got(m => m.Loaded).Single().Ok, Is.True);
-            Assert.That(play.MultiHud.IsWaiting, Is.True);
-            Assert.That(play.MultiHud.CardCount, Is.EqualTo(2));
-            Assert.That(play.MultiHud.CardOf(FakeRoomServer.Rival).Rank, Is.EqualTo("1"), "Equal scores share a place.");
+            Assert.That(play.Multi.Hud.IsWaiting, Is.True);
+            Assert.That(play.Multi.Hud.CardCount, Is.EqualTo(2));
+            Assert.That(play.Multi.Hud.CardOf(FakeRoomServer.Rival).Rank, Is.EqualTo("1"), "Equal scores share a place.");
             Assert.That(play.pauseButton.gameObject.activeSelf, Is.False, "A round cannot be paused.");
             yield return new WaitForSecondsRealtime(.5f);
             Assert.That(server.Got(m => m.Status), Is.Empty, "The song has not started.");
@@ -433,19 +433,19 @@ namespace OurTaiko.Tests
             server.Room.Phase = Phase.Playing;
             server.Snapshot();
             server.Push(new ServerMessage { StartPlay = new StartPlay { Round = 1 } });
-            yield return Waits.Until(() => !play.IsWaitingForMulti, seconds: 5);
-            Assert.That(play.MultiHud.IsWaiting, Is.False);
+            yield return Waits.Until(() => !play.Multi.IsWaiting, seconds: 5);
+            Assert.That(play.Multi.Hud.IsWaiting, Is.False);
             var statuses = new PlayStatuses();
             statuses.Members.Add(new MemberStatus { UserId = FakeRoomServer.Rival, Connected = true, Status = new PlayerStatus { Score = 123450, Combo = 42, Gauge = 8600 } });
             server.Push(new ServerMessage { Statuses = statuses });
-            yield return Waits.Until(() => play.MultiHud.CardOf(FakeRoomServer.Rival).Score == "123,450", seconds: 5);
-            Assert.That(play.MultiHud.CardOf(FakeRoomServer.Rival), Is.EqualTo(("1", "Katsu", "123,450")));
-            Assert.That(play.MultiHud.CardOf(FakeRoomServer.Me).Rank, Is.EqualTo("2"));
-            Assert.That(play.MultiHud.CardOf(FakeRoomServer.Me).Name, Is.EqualTo("Don"));
+            yield return Waits.Until(() => play.Multi.Hud.CardOf(FakeRoomServer.Rival).Score == "123,450", seconds: 5);
+            Assert.That(play.Multi.Hud.CardOf(FakeRoomServer.Rival), Is.EqualTo(("1", "Katsu", "123,450")));
+            Assert.That(play.Multi.Hud.CardOf(FakeRoomServer.Me).Rank, Is.EqualTo("2"));
+            Assert.That(play.Multi.Hud.CardOf(FakeRoomServer.Me).Name, Is.EqualTo("Don"));
             // A player's account picture lies behind their card, whole; a card without one stays plain.
-            Assert.That(play.MultiHud.PhotoOf(FakeRoomServer.Rival), Is.SameAs(MultiAvatars.GetSquare(avatar)).And.Not.Null);
+            Assert.That(play.Multi.Hud.PhotoOf(FakeRoomServer.Rival), Is.SameAs(MultiAvatars.GetSquare(avatar)).And.Not.Null);
             Assert.That(MultiAvatars.GetSquare(avatar).rect.size, Is.EqualTo(new Vector2(MultiAvatars.SquareSize, MultiAvatars.SquareSize)));
-            Assert.That(play.MultiHud.PhotoOf(FakeRoomServer.Me), Is.Null);
+            Assert.That(play.Multi.Hud.PhotoOf(FakeRoomServer.Me), Is.Null);
             // No pause, no restart.
             play.TogglePause();
             Assert.That(play.IsPaused, Is.False);

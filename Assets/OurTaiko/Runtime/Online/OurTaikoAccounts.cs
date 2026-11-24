@@ -39,7 +39,7 @@ namespace OurTaiko.Online
         internal void SetUser(JToken user)
         {
             UserId = Json.Str(user, "id");
-            if (!Json.HexId(UserId, 32)) throw new FanmadeException("API_USER_INVALID");
+            if (!Json.HexId(UserId, 32)) throw new OnlineException("API_USER_INVALID");
             Username = Json.Str(user, "username");
             Nickname = user["nickname"]?.Type == JTokenType.String ? (string)user["nickname"] : "";
             AvatarUrl = user["avatarUrl"]?.Type == JTokenType.String ? (string)user["avatarUrl"] : "";
@@ -107,13 +107,13 @@ namespace OurTaiko.Online
 
         string Decrypt(byte[] data)
         {
-            if (data.Length < 16 + 16 + 32) throw new FanmadeException("ACCOUNT_FILE_INVALID");
+            if (data.Length < 16 + 16 + 32) throw new OnlineException("ACCOUNT_FILE_INVALID");
             byte[] body = data.Take(data.Length - 32).ToArray(), mac = data.Skip(data.Length - 32).ToArray();
             using var hmac = new HMACSHA256(macKey);
             byte[] expected = hmac.ComputeHash(body);
             int difference = 0;
             for (int i = 0; i < 32; i++) difference |= expected[i] ^ mac[i];
-            if (difference != 0) throw new FanmadeException("ACCOUNT_FILE_INVALID");
+            if (difference != 0) throw new OnlineException("ACCOUNT_FILE_INVALID");
             using var aes = Aes.Create();
             aes.Key = encryptionKey; aes.IV = body.Take(16).ToArray();
             using var decryptor = aes.CreateDecryptor();
@@ -161,13 +161,13 @@ namespace OurTaiko.Online
             }
             catch (HttpStatusException error) when (error.Status == 404)
             {
-                throw new FanmadeException("DEVICE_UNAVAILABLE", error);
+                throw new OnlineException("DEVICE_UNAVAILABLE", error);
             }
             string secret = Json.Str(grant, "deviceCode"), code = Json.Str(grant, "userCode");
             if (!Json.HexId(secret, 64) || code.Length != 8 || !code.All(ch => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".Contains(ch)))
-                throw new FanmadeException("API_TOKEN_INVALID");
+                throw new OnlineException("API_TOKEN_INVALID");
             int seconds = (int?)grant["expiresIn"] ?? 0, interval = (int?)grant["interval"] ?? 0;
-            if (seconds < 1 || seconds > 600 || interval < 1 || interval > seconds) throw new FanmadeException("API_TOKEN_INVALID");
+            if (seconds < 1 || seconds > 600 || interval < 1 || interval > seconds) throw new OnlineException("API_TOKEN_INVALID");
             using var expires = CancellationTokenSource.CreateLinkedTokenSource(cancel);
             expires.CancelAfter(TimeSpan.FromSeconds(seconds));
             cancel.ThrowIfCancellationRequested();
@@ -185,17 +185,17 @@ namespace OurTaiko.Online
                     }
                     catch (HttpStatusException error) when (error.Status == 410)
                     {
-                        throw new FanmadeException("DEVICE_EXPIRED", error);
+                        throw new OnlineException("DEVICE_EXPIRED", error);
                     }
                     catch (HttpStatusException error) when (error.Status == 403 && error.ErrorCode == "DEVICE_DENIED")
                     {
-                        throw new FanmadeException("DEVICE_DENIED", error);
+                        throw new OnlineException("DEVICE_DENIED", error);
                     }
                     catch (HttpStatusException error) when (error.Status == 429)
                     {
                         interval = Math.Min(seconds, Math.Max(interval + 5, error.RetryAfterSeconds));
                     }
-                    catch (FanmadeException error) when (error.Message is "NETWORK_ERROR" or "NETWORK_TIMEOUT")
+                    catch (OnlineException error) when (error.Message is "NETWORK_ERROR" or "NETWORK_TIMEOUT")
                     {
                         interval = (int)Math.Min((long)interval * 2, seconds);
                     }
@@ -203,14 +203,14 @@ namespace OurTaiko.Online
             }
             catch (Exception) when (!cancel.IsCancellationRequested && expires.IsCancellationRequested)
             {
-                throw new FanmadeException("DEVICE_EXPIRED");
+                throw new OnlineException("DEVICE_EXPIRED");
             }
         }
 
         static OurTaikoAccount ReadAccount(JObject reply)
         {
             var account = new OurTaikoAccount { Token = Json.Str(reply, "token") };
-            if (!Json.HexId(account.Token, 64)) throw new FanmadeException("API_TOKEN_INVALID");
+            if (!Json.HexId(account.Token, 64)) throw new OnlineException("API_TOKEN_INVALID");
             account.SetUser(reply["user"]);
             return account;
         }
@@ -233,7 +233,7 @@ namespace OurTaiko.Online
         {
             var reply = await SendAsync(HttpMethod.Post, "/api/v1/game/tokens", token, new JObject { ["service"] = service }, cancel);
             string session = Json.Str(reply, "accessToken");
-            if (!Json.HexId(session, 64)) throw new FanmadeException("API_TOKEN_INVALID");
+            if (!Json.HexId(session, 64)) throw new OnlineException("API_TOKEN_INVALID");
             return session;
         }
 
@@ -267,13 +267,13 @@ namespace OurTaiko.Online
                     }
                     throw new HttpStatusException(status, (int)Math.Clamp(Math.Ceiling(delay), 0, int.MaxValue), code);
                 }
-                if (text.Length > 64 * 1024) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");
+                if (text.Length > 64 * 1024) throw new OnlineException("RESPONSE_SIZE_LIMIT_EXCEEDED");
                 return Json.Parse(text);
             }
-            catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw new FanmadeException("DOWNLOAD_CANCELLED"); }
-            catch (OperationCanceledException error) { throw new FanmadeException("NETWORK_TIMEOUT", error); }
-            catch (HttpRequestException error) { throw new FanmadeException("NETWORK_ERROR", error); }
-            catch (IOException error) { throw new FanmadeException("NETWORK_ERROR", error); }
+            catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw new OnlineException("DOWNLOAD_CANCELLED"); }
+            catch (OperationCanceledException error) { throw new OnlineException("NETWORK_TIMEOUT", error); }
+            catch (HttpRequestException error) { throw new OnlineException("NETWORK_ERROR", error); }
+            catch (IOException error) { throw new OnlineException("NETWORK_ERROR", error); }
         }
     }
 
@@ -337,19 +337,19 @@ namespace OurTaiko.Online
 
         public async Task<ProfileNameplate> NameplateAsync(string userId, string language, CancellationToken cancel = default)
         {
-            if (!Json.HexId(userId ?? "", 32)) throw new FanmadeException("API_USER_INVALID");
+            if (!Json.HexId(userId ?? "", 32)) throw new OnlineException("API_USER_INVALID");
             try
             {
                 using var response = await http.GetAsync(Base + "/api/v2/users/" + userId + "/nameplate", cancel);
                 int status = (int)response.StatusCode;
                 if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 string text = await response.Content.ReadAsStringAsync();
-                if (text.Length > 64 * 1024) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");
+                if (text.Length > 64 * 1024) throw new OnlineException("RESPONSE_SIZE_LIMIT_EXCEEDED");
                 return ProfileNameplate.From(Json.Parse(text), language);
             }
-            catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw new FanmadeException("DOWNLOAD_CANCELLED"); }
-            catch (OperationCanceledException error) { throw new FanmadeException("NETWORK_TIMEOUT", error); }
-            catch (HttpRequestException error) { throw new FanmadeException("NETWORK_ERROR", error); }
+            catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw new OnlineException("DOWNLOAD_CANCELLED"); }
+            catch (OperationCanceledException error) { throw new OnlineException("NETWORK_TIMEOUT", error); }
+            catch (HttpRequestException error) { throw new OnlineException("NETWORK_ERROR", error); }
         }
     }
 }

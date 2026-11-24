@@ -1,6 +1,6 @@
 {
   "name": "OurTaiko.FinishedTests",
-  "references": ["OurTaiko.Runtime", "OurTaiko.TjaParser", "Unity.TextMeshPro", "Unity.ugui"],
+  "references": ["OurTaiko.Runtime", "OurTaiko.Core", "OurTaiko.TjaParser", "Unity.TextMeshPro", "Unity.ugui"],
   "includePlatforms": ["Editor"],
   "optionalUnityReferences": ["TestAssemblies"]
 }

@@ -10,7 +10,7 @@ using UnityEngine;
 namespace OurTaiko
 {
     // ゴーストバトル's screen (issue #53), reached from Entry's board: the player picks someone's
-    // recorded play and plays against it (SceneSwitcher.PlayGhost) on its own song and block, which
+    // recorded play and plays against it (PlayRequest.GhostBattle) on its own song and block, which
     // the song loading scene downloads like any online song. It looks and works like マルチ演奏's
     // room (PlateUi): one view at a time, drawn in code and drawn again when what it shows changes.
     //
@@ -48,7 +48,7 @@ namespace OurTaiko
         {
             // A catalog category's id; null for すべて.
             public string Id, Title = "", Server = "";
-            public readonly List<FanmadeReplay> Rows = new List<FanmadeReplay>();
+            public readonly List<OnlineReplay> Rows = new List<OnlineReplay>();
             public int Total { get; internal set; }
             public bool Started { get; internal set; }
             public bool IsLoading => Loading != null && !Loading.IsCompleted;
@@ -76,7 +76,7 @@ namespace OurTaiko
         public IReadOnlyList<Server> Servers => servers;
         public Server CurrentServer { get; private set; }
         public Category CurrentCategory { get; private set; }
-        public IReadOnlyList<FanmadeReplay> Rows => CurrentCategory?.Rows ?? (IReadOnlyList<FanmadeReplay>)Array.Empty<FanmadeReplay>();
+        public IReadOnlyList<OnlineReplay> Rows => CurrentCategory?.Rows ?? (IReadOnlyList<OnlineReplay>)Array.Empty<OnlineReplay>();
         public Outcome LastOutcome { get; private set; }
         // What the screen says under its list: progress, an empty list, or why a pick failed.
         public string Status { get; private set; } = "";
@@ -150,14 +150,16 @@ namespace OurTaiko
         // Back from the result boards of a battle: the two results, for the Result view.
         void TakeOutcome()
         {
-            var ghost = switcher.Ghost;
-            if (switcher.FromScene != SceneSwitcher.ResultScene || ghost == null || switcher.LastResult == null || switcher.LastResult2P == null) { resume = null; return; }
-            bool below = ghost.PlayerLane == 1;
+            var ghost = switcher.Request?.Ghost;
+            var above = switcher.ResultOf(0);
+            var below = switcher.ResultOf(1);
+            if (switcher.FromScene != SceneSwitcher.ResultScene || ghost == null || above == null || below == null) { resume = null; return; }
+            bool playerBelow = ghost.PlayerLane == 1;
             var info = PlayerInfoController.EnsureInstance();
             LastOutcome = new Outcome
             {
-                Player = below ? switcher.LastResult2P : switcher.LastResult, Ghost = below ? switcher.LastResult : switcher.LastResult2P,
-                Title = switcher.LastResult.Title,
+                Player = playerBelow ? below : above, Ghost = playerBelow ? above : below,
+                Title = above.Title,
                 PlayerName = (switcher.Lead == Side.P1 ? info.Info : info.SecondInfo).name,
                 GhostName = string.IsNullOrEmpty(ghost.Nickname) ? L10n.Get("Play", "ghost.defaultName") : ghost.Nickname,
             };
@@ -297,7 +299,7 @@ namespace OurTaiko
             dirty = true;
         }
 
-        public async void Pick(FanmadeReplay row)
+        public async void Pick(OnlineReplay row)
         {
             if (row == null || HasLeft || IsStarting || switcher.IsInputBlocked) return;
             IsStarting = true;
@@ -309,7 +311,7 @@ namespace OurTaiko
                 if (cancel.IsCancellationRequested) return;
                 var category = CurrentCategory;
                 resume = (row.Server, category?.Id, category?.Page ?? 0, row.ScoreId);
-                if (!switcher.PlayGhost(match.Song, match.Ghost)) { resume = null; Fail(L10n.Get("Play", "ghostSelect.startFailed")); return; }
+                if (!switcher.Play(PlayRequest.GhostBattle(match.Song, match.Ghost))) { resume = null; Fail(L10n.Get("Play", "ghostSelect.startFailed")); return; }
                 HasLeft = true;
             }
             catch (OperationCanceledException) { }
@@ -331,14 +333,14 @@ namespace OurTaiko
         string pickMessage = "", startingName = "";
 
         // The listed play's song (registered as an online song) and its recording.
-        public static async Task<(SongDefinition Song, GhostMatch Ghost)> PrepareAsync(FanmadeReplay row, CancellationToken cancel)
+        public static async Task<(SongDefinition Song, GhostMatch Ghost)> PrepareAsync(OnlineReplay row, CancellationToken cancel)
         {
             var online = OnlineManager.EnsureInstance();
-            var client = online.Client ?? throw new FanmadeException("SERVER_NOT_CONNECTED");
-            var chart = await client.ReplayChartAsync(row, cancel) ?? throw new FanmadeException("CHART_NOT_FOUND");
-            if (!chart.Blocks.Any(b => b.Course == row.Course && b.Side == row.Side)) throw new FanmadeException("REPLAY_OUTDATED");
+            var client = online.Client ?? throw new OnlineException("SERVER_NOT_CONNECTED");
+            var chart = await client.ReplayChartAsync(row, cancel) ?? throw new OnlineException("CHART_NOT_FOUND");
+            if (!chart.Blocks.Any(b => b.Course == row.Course && b.Side == row.Side)) throw new OnlineException("REPLAY_OUTDATED");
             var record = await client.ReplayRecordAsync(row, cancel);
-            var song = online.SearchSong(chart) ?? throw new FanmadeException("CHART_NOT_FOUND");
+            var song = online.SearchSong(chart) ?? throw new OnlineException("CHART_NOT_FOUND");
             return (song, new GhostMatch
             {
                 Record = record, Course = row.Course, Side = row.Side, Nickname = row.Nickname,
@@ -404,7 +406,7 @@ namespace OurTaiko
             var client = OnlineManager.EnsureInstance().Client;
             if (client == null || !category.NextPage.HasValue) return;
             int page = category.NextPage.Value;
-            FanmadeReplayPage[] replies;
+            OnlineReplayPage[] replies;
             try { replies = await client.ReplaysAsync(page, "recent", cancel.Token, category.Server, category.Id); }
             catch (OperationCanceledException) { return; }
             if (cancel.IsCancellationRequested) return;

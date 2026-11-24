@@ -1,0 +1,684 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using OurTaiko.Online;
+
+namespace OurTaiko.Tests
+{
+    // A local stand-in for the site's game API, version 2 (OurTaikoNet /api/v2/; first written
+    // after the Fanmade backend, as tests/fanmade/fixture.py is for OurTaikoPlayer): bootstrap,
+    // category lists, chart details, resource manifests naming files by their path under the
+    // distribution root (served by the fixture itself unless a test replaces Manifest), the root
+    // itself (GET /api/v2/distribution/source) and idempotent score submission. Version 1's routes
+    // are not served: the game must not ask them. It is also the account center its catalog names
+    // (OurTaikoSSO's /api/v1/game/account/* and /api/v1/game/tokens, which stay version 1).
+    public sealed class OnlineFixture : IDisposable
+    {
+        public sealed class Chart
+        {
+            public string Id = Hex(32), Title = "Fixture Song", Subtitle = "", Maker = "Tester";
+            public string Encoding, AudioName = "song.ogg";
+            public byte[] Tja = new byte[0], Audio = new byte[0];
+            public string[] Categories = { "game" };
+            // Base course, level and #START player ("" for the single block, "P1" or "P2").
+            public List<(string Course, int Level, string Player)> Difficulties =
+                new List<(string, int, string)> { ("Oni", 8, "") };
+            static long nextBlock;
+            readonly long firstBlock = Interlocked.Add(ref nextBlock, 100);
+            // The id the API gives a block, as scores name it.
+            public long BlockId(string course, string player = "") => firstBlock + Difficulties.FindIndex(d => d.Course == course && d.Player == player);
+            public static string Side(string player) => player == "P1" ? "p1" : player == "P2" ? "p2" : "single";
+            public double Bpm = 120, DemoStart, Offset;
+            // MOVIEOFFSET; left out of the JSON when null, as a server without movies does.
+            public double? MovieOffset;
+            // Blocks (Oni, or Oni_1p / Oni_2p for a side) reported with "branching": true; the rest are false.
+            public readonly HashSet<string> Branching = new HashSet<string>();
+
+            // A block's content hash as a server would report it: "v1:" + 64 hex, changing with the TJA.
+            public string ChartHash(string course, string player)
+                => "v1:" + Sha(System.Text.Encoding.UTF8.GetBytes(System.Text.Encoding.UTF8.GetString(Tja) + "\n" + course + "/" + player));
+
+            public JObject ToJson()
+            {
+                var value = new JObject
+                {
+                    ["id"] = IdToken(Id), ["title"] = Title, ["subtitle"] = Subtitle, ["maker"] = Maker,
+                    ["categoryIds"] = new JArray(Categories),
+                    ["audioHash"] = Sha(Audio), ["audioName"] = AudioName,
+                    ["titleTranslations"] = new JObject { ["ja"] = Title + " JA" }, ["subtitleTranslations"] = new JObject(),
+                    ["bpm"] = Bpm, ["demoStart"] = DemoStart, ["offset"] = Offset,
+                    ["difficulties"] = new JArray(Difficulties.Select(d => new JObject
+                    {
+                        ["id"] = BlockId(d.Course, d.Player), ["course"] = d.Course, ["side"] = Side(d.Player), ["level"] = d.Level, ["maker"] = Maker,
+                        ["branching"] = Branching.Contains(d.Course + (d.Player == "P1" ? "_1p" : d.Player == "P2" ? "_2p" : "")),
+                        // The server's content hash of the block: here one that follows the TJA bytes.
+                        ["chartHash"] = ChartHash(d.Course, d.Player),
+                    })),
+                };
+                if (Encoding != null) value["encoding"] = Encoding;
+                if (MovieOffset.HasValue) value["movieOffset"] = MovieOffset.Value;
+                return value;
+            }
+        }
+
+        // A chart ID of digits only goes out as a JSON number, as OurTaiko Database sends it.
+        public static JToken IdToken(string id) => long.TryParse(id, out long n) ? (JToken)n : id;
+
+        public readonly string BaseUrl;
+        public readonly Dictionary<string, string> Users = new Dictionary<string, string> { ["don"] = "katsu" };
+        public readonly List<(string Id, string Title, string Genre)> Categories = new List<(string, string, string)>
+        {
+            ("game", "Game", "GAME"), ("pop", "Pop", "J-POP"),
+        };
+        public readonly List<Chart> Charts = new List<Chart>();
+        // Bootstrap capability fields; a test drops one to play an outdated server.
+        public readonly JObject Protocol = new JObject
+        {
+            ["chartSlotVersion"] = 1, ["resourceDownloadVersion"] = 1,
+            ["scoreReplayVersion"] = 1, ["audioPreviewVersion"] = 1,
+        };
+        // The catalog's "sso": this fixture is the account center and "fixture" the service. False:
+        // a server that names no account center.
+        public bool AccountCenter = true;
+        public const string Service = "fixture";
+        // GET /game/dans; null: a server without 段位 courses (no danVersion in the catalog).
+        public JArray Dans;
+        // POST /game/dan-results (and the deprecated /game/dan-attempts): what was sent (body and user), and OurTaikoProfile's reply the
+        // server passes back (null: Profile unreachable).
+        // The address each attempt came to.
+        public readonly ConcurrentQueue<string> DanAttemptPaths = new ConcurrentQueue<string>();
+        public readonly ConcurrentQueue<(string User, JObject Body)> DanAttempts = new ConcurrentQueue<(string, JObject)>();
+        public JObject DanProfileReply = JObject.Parse("{\"granted\":{\"dan\":null,\"titles\":[]},\"nameplate\":{}}");
+        // OurTaikoProfile's public nameplates by user id (GET /api/v2/users/{id}/nameplate); a user
+        // without one has the plain plate.
+        public readonly ConcurrentDictionary<string, JObject> Nameplates = new ConcurrentDictionary<string, JObject>();
+        // Account sign-ins issued by /api/v1/game/account/login and still valid.
+        public readonly ConcurrentDictionary<string, string> AccountTokens = new ConcurrentDictionary<string, string>();
+        string deviceCode;
+        public string ApprovedDeviceUser;
+        // The account center's user id of a fixture user.
+        public static string UserId(string username) => OnlineEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(username)).Substring(0, 32);
+        public Func<Chart, JObject> Manifest;
+        public Action<JObject> ChangeBootstrap;
+        public Func<HttpListenerContext, bool> CustomRequest;
+        // The sources this fixture is a site of (GET /api/v2/game/sources answers for all of them
+        // at once); null: a server of the kind that is loaded by itself, and has no such route.
+        public string[] SiteSources;
+        // A server that is one source of this fixture as a site: known by `known`, asked under the
+        // source's name.
+        public ServerConfig Source(string id, string known) => new ServerConfig { name = id, baseUrl = known, api = BaseUrl + "/api/v2/sources/" + id, site = BaseUrl };
+        // Status codes returned (and consumed) before the next score submissions succeed.
+        public readonly ConcurrentQueue<int> ScoreFailures = new ConcurrentQueue<int>();
+        public readonly ConcurrentQueue<JObject> AcceptedScores = new ConcurrentQueue<JObject>();
+        // Who sent each accepted score, in the same order.
+        public readonly ConcurrentQueue<string> AcceptedUsers = new ConcurrentQueue<string>();
+        public readonly ConcurrentDictionary<string, JObject> Idempotent = new ConcurrentDictionary<string, JObject>();
+        public readonly ConcurrentBag<string> Requests = new ConcurrentBag<string>();
+        // The players' votes on charts (GET and PUT /api/v2/game/charts/{id}/vote), by "user/chart".
+        // Off, the fixture is a server without the call: it answers 404.
+        public bool Votes;
+        public readonly ConcurrentDictionary<string, int> ChartVotes = new ConcurrentDictionary<string, int>();
+        public readonly List<JObject> AccountScores = new List<JObject>();
+        // GET /api/v2/replays (newest first, one page) and GET /api/v2/scores/{id}/replay: the listed
+        // plays and their recordings by score id.
+        public readonly List<JObject> Replays = new List<JObject>();
+        // How many of the next replay list requests fail with a 500.
+        public int FailReplays;
+        public readonly ConcurrentDictionary<string, JToken> ReplayRecords = new ConcurrentDictionary<string, JToken>();
+
+        // A recorded play of `chart`'s block on the replay list; isLatest false is a play of files
+        // replaced since (the list itself never has one, but the recording says so).
+        public JObject AddReplay(Chart chart, string course, PlayRecord record, string nickname, long score, string player = "", bool isLatest = true)
+        {
+            var row = new JObject
+            {
+                ["id"] = Hex(32), ["userId"] = UserId(nickname), ["songId"] = chart.Id, ["difficultyId"] = chart.BlockId(course, player),
+                ["course"] = course, ["side"] = Chart.Side(player), ["good"] = 0, ["ok"] = 0, ["bad"] = 0, ["score"] = score,
+                ["drumroll"] = 0, ["max_combo"] = 0, ["ClearStatus"] = 0, ["isLatest"] = isLatest,
+                ["submittedAt"] = DateTime.UtcNow.AddMinutes(-Replays.Count).ToString("o"), ["adlib"] = new JArray(0, 0), ["mines"] = 0,
+                ["hasReplay"] = true, ["title"] = chart.Title, ["titleTranslations"] = new JObject(), ["subtitle"] = chart.Subtitle,
+                ["level"] = chart.Difficulties.Find(d => d.Course == course && d.Player == player).Level, ["nickname"] = nickname, ["avatarPath"] = "",
+            };
+            lock (Replays) Replays.Add(row);
+            ReplayRecords[(string)row["id"]] = record.ToJson();
+            return row;
+        }
+
+        // GET /game/playlists for any signed-in account.
+        public JArray AccountPlaylists = new JArray();
+        public int Downloads;
+        // Paths answered with this status instead of their normal reply.
+        public readonly ConcurrentDictionary<string, int> Fail = new ConcurrentDictionary<string, int>();
+
+        readonly HttpListener listener = new HttpListener();
+        readonly ConcurrentDictionary<string, string> tokens = new ConcurrentDictionary<string, string>();
+        readonly Thread thread;
+        volatile bool stopped;
+
+        public OnlineFixture()
+        {
+            int port = FreePort();
+            BaseUrl = "http://127.0.0.1:" + port;
+            listener.Prefixes.Add(BaseUrl + "/");
+            listener.Start();
+            thread = new Thread(Serve) { IsBackground = true, Name = "OnlineFixture" };
+            thread.Start();
+            Manifest = DefaultManifest;
+            FilesRoot = CanonicalRoot = BaseUrl + "/";
+            // A port may come back in a later test: what the game was told of an earlier fixture
+            // there is not this one's.
+            Distribution.Forget();
+        }
+
+        // GET /api/v2/distribution/source: the root the site names for this player's files and
+        // the canonical one. Both are the fixture itself unless a test names others (a mirror
+        // that fails, say). A null FilesRoot answers 404, as a site that cannot say.
+        public string FilesRoot, CanonicalRoot;
+        public bool Mirror;
+
+        // Paths of the fixture's own files/<chart>/<kind> (under FilesRoot).
+        JObject DefaultManifest(Chart chart)
+        {
+            JObject Resource(string kind, byte[] bytes, string type) => new JObject
+            {
+                ["path"] = "files/" + chart.Id + "/" + kind, ["sha256"] = Sha(bytes), ["size"] = bytes.Length, ["contentType"] = type,
+            };
+            string audioType = chart.AudioName.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase) ? "audio/mpeg" : "audio/ogg";
+            return new JObject
+            {
+                ["chartId"] = IdToken(chart.Id),
+                ["resources"] = new JObject { ["tja"] = Resource("tja", chart.Tja, "application/octet-stream"), ["audio"] = Resource("audio", chart.Audio, audioType) },
+            };
+        }
+
+        // What the game calls this server when it stands in for a built-in one.
+        public string Name = "Fixture";
+
+        public ServerConfig Server() => new ServerConfig { name = Name, baseUrl = BaseUrl };
+
+        AccountCenter center;
+
+        // The server's song list on a OnlineClient of its own and, with a user, that user signed
+        // in to the seat as the game does: once at the account center (this fixture), then a
+        // session of this server traded for the sign-in.
+        public async Task ConnectAsync(OnlineClient client, OnlineEndpoint e, string user = null, string password = "katsu", int seat = 0)
+        {
+            await client.LoadCatalogAsync(e);
+            if (user == null) return;
+            center ??= new AccountCenter(BaseUrl);
+            var account = await center.LoginAsync(user, password, "Test");
+            string service = e.SsoService;
+            string session = await center.TradeAsync(account.Token, service);
+            await client.UseAccountAsync(e, seat, session, account.UserId, account.Nickname, c => center.TradeAsync(account.Token, service, c));
+        }
+
+        // A playable chart: `measures` 4/4 measures of don at the given BPM.
+        public static string SimpleTja(string course = "Oni", int measures = 1, double bpm = 240)
+            => $"TITLE:Original Title\nSUBTITLE:--old\nWAVE:old.ogg\nBPM:{bpm}\nOFFSET:0\nCOURSE:{course}\nLEVEL:3\n#START\n"
+               + string.Concat(Enumerable.Repeat("1111,\n", measures)) + "#END\n";
+
+        public void Dispose()
+        {
+            stopped = true;
+            center?.Dispose();
+            try { listener.Stop(); listener.Close(); } catch (ObjectDisposedException) { }
+        }
+
+        static int FreePort()
+        {
+            var socket = new TcpListener(IPAddress.Loopback, 0);
+            socket.Start();
+            int port = ((IPEndPoint)socket.LocalEndpoint).Port;
+            socket.Stop();
+            return port;
+        }
+
+        void Serve()
+        {
+            while (!stopped)
+            {
+                HttpListenerContext context;
+                try { context = listener.GetContext(); }
+                catch (Exception) { return; }
+                ThreadPool.QueueUserWorkItem(_ => Handle(context));
+            }
+        }
+
+        void Handle(HttpListenerContext context)
+        {
+            var request = context.Request;
+            string path = request.Url.AbsolutePath;
+            Requests.Add(request.HttpMethod + " " + path);
+            // A server that is one song source of a site has its API under the source's name
+            // (ServerConfig.api); what it answers is the same.
+            const string sources = "/api/v2/sources/";
+            if (path.StartsWith(sources, StringComparison.Ordinal))
+            {
+                int end = path.IndexOf('/', sources.Length);
+                if (end > 0) path = "/api/v2" + path.Substring(end);
+            }
+            try
+            {
+                if (CustomRequest?.Invoke(context) == true) return;
+                if (Fail.TryGetValue(path, out int failure)) { Reply(context, failure, new JObject { ["error"] = "FIXTURE" }); return; }
+                string body = new StreamReader(request.InputStream, Encoding.UTF8).ReadToEnd();
+                string auth = request.Headers["Authorization"] ?? "";
+                if (path.StartsWith("/api/v1/game/account/", StringComparison.Ordinal) || path == "/api/v1/game/tokens")
+                { Account(context, path, auth, body); return; }
+                // The site's own version 1 is for released games only.
+                if (path.StartsWith("/api/v1/", StringComparison.Ordinal)) { Reply(context, 404, new JObject { ["code"] = "VERSION_1" }); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v2/distribution/source")
+                {
+                    if (FilesRoot == null) Reply(context, 404, new JObject());
+                    else Reply(context, 200, new JObject { ["mirror"] = Mirror, ["baseUrl"] = FilesRoot, ["canonicalBaseUrl"] = CanonicalRoot });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && path.StartsWith("/api/v2/users/", StringComparison.Ordinal) && path.EndsWith("/nameplate", StringComparison.Ordinal))
+                {
+                    string id = path.Substring("/api/v2/users/".Length, path.Length - "/api/v2/users/".Length - "/nameplate".Length);
+                    Reply(context, 200, Nameplates.TryGetValue(id, out var plate) ? plate
+                        : new JObject { ["userId"] = id, ["nickname"] = "", ["title"] = null, ["dan"] = null, ["showDan"] = true });
+                    return;
+                }
+                string user = null;
+                if (auth.StartsWith("Bearer ", StringComparison.Ordinal) && !tokens.TryGetValue(auth.Substring(7), out user))
+                { Reply(context, 401, new JObject { ["error"] = "SESSION" }); return; }
+                if (Rewards(context, path, user, body)) return;
+                var parts = path.Trim('/').Split('/');
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/catalog") { Bootstrap(context); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/sources" && SiteSources != null) { Sources(context, user); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/search")
+                {
+                    var q = new SongSearchQuery(request.QueryString["q"]);
+                    string course = request.QueryString["course"];
+                    int.TryParse(request.QueryString["level"], out int level);
+                    var matches = Charts.Where(c => (q.MatchesText(c.Title) || q.MatchesText(c.Title + " JA") || q.MatchesText(c.Subtitle) || q.MatchesText(c.Maker))
+                        && c.Difficulties.Any(d => (string.IsNullOrEmpty(course) || d.Course == course) && (level == 0 || d.Level == level)))
+                        .Select(c => c.ToJson()).ToArray();
+                    Reply(context, 200, new JObject { ["items"] = new JArray(matches), ["total"] = matches.Length }); return;
+                }
+                if (request.HttpMethod == "GET" && parts.Length == 6 && parts[3] == "categories" && parts[5] == "charts")
+                {
+                    var charts = Charts.Where(c => c.Categories.Contains(parts[4])).Select(c => c.ToJson());
+                    Reply(context, 200, new JObject { ["categoryId"] = parts[4], ["charts"] = new JArray(charts) });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && parts.Length == 4 && parts[2] == "charts")
+                {
+                    var chart = Charts.Find(c => c.Id == parts[3]);
+                    if (chart == null) Reply(context, 404, new JObject());
+                    else Reply(context, 200, chart.ToJson());
+                    return;
+                }
+                if (request.HttpMethod == "GET" && parts.Length == 5 && parts[2] == "charts")
+                {
+                    var chart = Charts.Find(c => c.Id == parts[3]);
+                    if (chart == null) { Reply(context, 404, new JObject()); return; }
+                    if (parts[4] == "resources") { Reply(context, 200, Manifest(chart)); return; }
+                }
+                if (request.HttpMethod == "GET" && parts.Length == 3 && parts[0] == "files" && (parts[2] == "tja" || parts[2] == "audio"))
+                {
+                    // Signed links carry no API credentials.
+                    if (!string.IsNullOrEmpty(auth)) { Reply(context, 400, new JObject()); return; }
+                    var chart = Charts.Find(c => c.Id == parts[1]);
+                    if (chart == null) { Reply(context, 404, new JObject()); return; }
+                    Interlocked.Increment(ref Downloads);
+                    Bytes(context, parts[2] == "tja" ? chart.Tja : chart.Audio);
+                    return;
+                }
+                if (Votes && parts.Length == 6 && parts[2] == "game" && parts[3] == "charts" && parts[5] == "vote"
+                    && (request.HttpMethod == "GET" || request.HttpMethod == "PUT"))
+                {
+                    if (user == null) { Reply(context, 401, new JObject()); return; }
+                    if (Charts.Find(c => c.Id == parts[4]) == null) { Reply(context, 404, new JObject()); return; }
+                    string vote = user + "/" + parts[4];
+                    if (request.HttpMethod == "PUT")
+                    {
+                        int value = (int)JObject.Parse(body)["value"];
+                        if (value == 0) ChartVotes.TryRemove(vote, out _); else ChartVotes[vote] = value;
+                    }
+                    Reply(context, 200, new JObject { ["myVote"] = ChartVotes.TryGetValue(vote, out int mine) ? mine : 0 });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/scores")
+                {
+                    if (user == null) { Reply(context, 401, new JObject()); return; }
+                    lock (AccountScores) Reply(context, 200, new JObject { ["scores"] = new JArray(AccountScores.Where(s => (string)s["user"] == user)) });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/playlists")
+                {
+                    if (user == null) { Reply(context, 401, new JObject()); return; }
+                    Reply(context, 200, new JObject { ["playlists"] = AccountPlaylists, ["playlistVersion"] = 1 });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && path == "/api/v2/replays")
+                {
+                    if (FailReplays > 0) { FailReplays--; Reply(context, 500, new JObject { ["code"] = "INTERNAL" }); return; }
+                    // categoryId: the songs of one catalog category; an unknown one is 400.
+                    string category = request.QueryString["categoryId"];
+                    if (!string.IsNullOrEmpty(category) && !Categories.Any(c => c.Id == category)) { Reply(context, 400, new JObject { ["code"] = "QUERY_INVALID" }); return; }
+                    JArray items;
+                    lock (Replays) items = new JArray(Replays.Where(r => (bool)r["isLatest"]
+                        && (string.IsNullOrEmpty(category) || Charts.Any(c => c.Id == (string)r["songId"] && c.Categories.Contains(category)))).Select(r => r.DeepClone()));
+                    int page = int.TryParse(request.QueryString["page"], out int p) ? p : 1;
+                    Reply(context, 200, new JObject
+                    {
+                        ["items"] = page == 1 ? items : new JArray(), ["total"] = items.Count, ["page"] = page, ["pageSize"] = 20,
+                        ["sort"] = request.QueryString["sort"] ?? "recent",
+                    });
+                    return;
+                }
+                if (request.HttpMethod == "GET" && parts.Length == 5 && parts[2] == "scores" && parts[4] == "replay")
+                {
+                    JObject row;
+                    lock (Replays) row = Replays.Find(r => (string)r["id"] == parts[3]);
+                    if (row == null || !ReplayRecords.TryGetValue(parts[3], out var recording)) { Reply(context, 404, new JObject { ["code"] = "REPLAY_NOT_FOUND" }); return; }
+                    var score = (JObject)row.DeepClone();
+                    foreach (var key in new[] { "title", "titleTranslations", "subtitle", "level", "nickname", "avatarPath" }) score.Remove(key);
+                    Reply(context, 200, new JObject { ["score"] = score, ["nickname"] = row["nickname"], ["avatarPath"] = "", ["replay"] = recording });
+                    return;
+                }
+                if (request.HttpMethod == "POST" && path == "/api/v2/game/scores") { Score(context, user, request.Headers["Idempotency-Key"], JObject.Parse(body)); return; }
+                if (request.HttpMethod == "GET" && path == "/api/v2/game/dans")
+                {
+                    if (Dans == null) Reply(context, 404, new JObject());
+                    else Reply(context, 200, new JObject { ["dans"] = Dans, ["danVersion"] = 1 });
+                    return;
+                }
+                if (request.HttpMethod == "POST" && (path == "/api/v2/game/dan-attempts" || path == "/api/v2/game/dan-results"))
+                {
+                    DanAttemptPaths.Enqueue(path);
+                    if (user == null) { Reply(context, 401, new JObject()); return; }
+                    if (string.IsNullOrEmpty(request.Headers["Idempotency-Key"])) { Reply(context, 400, new JObject()); return; }
+                    var attempt = JObject.Parse(body);
+                    DanAttempts.Enqueue((user, attempt));
+                    // The scores sent with the attempt, saved: null for one that names no block here.
+                    JArray saved = null;
+                    if (attempt["scores"] is JArray sent)
+                    {
+                        saved = new JArray();
+                        foreach (var item in sent)
+                        {
+                            var chart = item is JObject o && o["difficultyId"]?.Type == JTokenType.Integer
+                                ? Charts.Find(c => c.Difficulties.Any(d => c.BlockId(d.Course, d.Player) == (long)o["difficultyId"])) : null;
+                            if (chart == null) { saved.Add(JValue.CreateNull()); continue; }
+                            saved.Add(Saved(chart, chart.Difficulties.Find(d => chart.BlockId(d.Course, d.Player) == (long)item["difficultyId"]), (JObject)item));
+                        }
+                    }
+                    Reply(context, 200, new JObject
+                    {
+                        ["scores"] = saved,
+                        ["attempt"] = new JObject { ["id"] = Hex(32), ["courseId"] = attempt["courseId"], ["verdict"] = attempt["verdict"] },
+                        ["profile"] = DanProfileReply ?? (JToken)JValue.CreateNull(),
+                        ["profileError"] = DanProfileReply == null ? "OurTaikoProfile unreachable" : null,
+                    });
+                    return;
+                }
+                Reply(context, 404, new JObject());
+            }
+            catch (Exception error) { Reply(context, 500, new JObject { ["error"] = error.Message }); }
+        }
+
+        // The account center: sign in once, check, sign out, and trade the sign-in for a session here.
+        void Account(HttpListenerContext context, string path, string auth, string body)
+        {
+            string bearer = auth.StartsWith("Bearer ", StringComparison.Ordinal) ? auth.Substring(7) : "";
+            AccountTokens.TryGetValue(bearer, out string username);
+            JObject User(string name) => new JObject
+            {
+                ["id"] = UserId(name), ["username"] = name, ["nickname"] = name.ToUpperInvariant(), ["avatarUrl"] = "", ["preferredLanguage"] = "en",
+            };
+            switch (path)
+            {
+                case "/api/v1/game/account/device":
+                    deviceCode = Hex(64);
+                    Reply(context, 200, new JObject { ["deviceCode"] = deviceCode, ["userCode"] = "TESTABCD", ["interval"] = 1, ["expiresIn"] = 10 });
+                    return;
+                case "/api/v1/game/account/device/token":
+                    if (deviceCode == null || (string)JObject.Parse(body)["deviceCode"] != deviceCode) { Reply(context, 410, new JObject()); return; }
+                    if (ApprovedDeviceUser == null) { Reply(context, 202, new JObject { ["pending"] = true }); return; }
+                    deviceCode = null;
+                    string grantedToken = Hex(64);
+                    AccountTokens[grantedToken] = ApprovedDeviceUser;
+                    Reply(context, 200, new JObject { ["token"] = grantedToken, ["user"] = User(ApprovedDeviceUser) });
+                    return;
+                case "/api/v1/game/account/login":
+                {
+                    var request = JObject.Parse(body);
+                    string name = (string)request["username"], password = (string)request["password"];
+                    if (!Users.TryGetValue(name ?? "", out var expected) || expected != password)
+                    { Reply(context, 401, new JObject { ["code"] = "LOGIN_INVALID" }); return; }
+                    string token = Hex(64);
+                    AccountTokens[token] = name;
+                    Reply(context, 200, new JObject { ["token"] = token, ["expiresAt"] = "2099-01-01T00:00:00+00:00", ["user"] = User(name) });
+                    return;
+                }
+                case "/api/v1/game/account/session":
+                    if (username == null) Reply(context, 401, new JObject { ["code"] = "UNAUTHORIZED" });
+                    else Reply(context, 200, new JObject { ["expiresAt"] = "2099-01-01T00:00:00+00:00", ["user"] = User(username) });
+                    return;
+                case "/api/v1/game/account/logout":
+                    AccountTokens.TryRemove(bearer, out _);
+                    Reply(context, 200, new JObject { ["ok"] = true });
+                    return;
+                default:
+                {
+                    if (username == null) { Reply(context, 401, new JObject { ["code"] = "UNAUTHORIZED" }); return; }
+                    if ((string)JObject.Parse(body)["service"] != Service) { Reply(context, 403, new JObject { ["code"] = "SERVICE_FORBIDDEN" }); return; }
+                    string token = Hex(64);
+                    tokens[token] = username;
+                    Reply(context, 200, new JObject { ["user"] = User(username), ["accessToken"] = token, ["expiresIn"] = 3600 });
+                    return;
+                }
+            }
+        }
+
+        // Every game session ends, as when they expire: the next request is 401.
+        public void ExpireSessions() => tokens.Clear();
+        // The user a game session was traded for (null: no such session).
+        public string SessionUser(string session) => session != null && tokens.TryGetValue(session, out string user) ? user : null;
+
+        // GET /game/catalog: public, the same for every caller.
+        void Bootstrap(HttpListenerContext context) => Reply(context, 200, Catalog());
+
+        JObject Catalog()
+        {
+            var categories = new JArray(Categories.Select(c => new JObject
+            {
+                ["id"] = c.Id, ["title"] = c.Title, ["genre"] = c.Genre, ["chartCount"] = Charts.Count(x => x.Categories.Contains(c.Id)),
+            }));
+            var reply = new JObject
+            {
+                ["categories"] = categories, ["chartCount"] = Charts.Count,
+                ["charts"] = new JArray(Charts.Select(c => c.ToJson())),
+            };
+            reply.Merge(Protocol);
+            if (AccountCenter) reply["sso"] = new JObject { ["issuer"] = BaseUrl, ["service"] = Service };
+            if (Dans != null) reply["danVersion"] = 1;
+            ChangeBootstrap?.Invoke(reply);
+            return reply;
+        }
+
+        // GET /api/v2/game/sources: this fixture as a site whose sources (SiteSources) all hold
+        // what it holds, each part being what the source's own route answers.
+        void Sources(HttpListenerContext context, string user)
+        {
+            string named = context.Request.QueryString["parts"];
+            var parts = named != null ? named.Split(',') : user != null ? new[] { "catalog", "dans", "scores", "playlists" } : new[] { "catalog", "dans" };
+            if ((parts.Contains("scores") || parts.Contains("playlists")) && user == null) { Reply(context, 401, new JObject()); return; }
+            var sources = new JArray();
+            foreach (string id in SiteSources)
+            {
+                var source = new JObject { ["id"] = id, ["name"] = id };
+                if (parts.Contains("catalog")) source["catalog"] = Catalog();
+                if (parts.Contains("dans") && Dans != null) source["dans"] = new JObject { ["dans"] = Dans, ["danVersion"] = 1 };
+                if (parts.Contains("scores")) lock (AccountScores) source["scores"] = new JObject { ["scores"] = new JArray(AccountScores.Where(s => (string)s["user"] == user)) };
+                if (parts.Contains("playlists")) source["playlists"] = new JObject { ["playlists"] = AccountPlaylists.DeepClone(), ["playlistVersion"] = 1 };
+                sources.Add(source);
+            }
+            Reply(context, 200, new JObject { ["sources"] = sources });
+        }
+
+        // A score as the servers answer with it.
+        JObject Saved(Chart chart, (string Course, int Level, string Player) block, JObject body)
+        {
+            return new JObject
+            {
+                ["id"] = Hex(32), ["songId"] = IdToken(chart.Id), ["difficultyId"] = body["difficultyId"],
+                ["course"] = block.Course, ["side"] = Chart.Side(block.Player), ["isLatest"] = true,
+                ["good"] = body["good"], ["ok"] = body["ok"], ["bad"] = body["bad"], ["score"] = body["score"],
+                ["drumroll"] = body["drumroll"], ["max_combo"] = body["max_combo"],
+                ["ClearStatus"] = body["ClearStatus"] ?? new JValue(0),
+                // As the servers: always present, zero when the play sent none.
+                ["adlib"] = body["adlib"] ?? new JArray(0, 0), ["mines"] = body["mines"] ?? new JValue(0),
+            };
+        }
+
+        void Score(HttpListenerContext context, string user, string key, JObject body)
+        {
+            if (user == null) { Reply(context, 401, new JObject()); return; }
+            if (string.IsNullOrEmpty(key)) { Reply(context, 400, new JObject()); return; }
+            if (Idempotent.TryGetValue(key, out var existing)) { Reply(context, 200, existing); return; }
+            if (ScoreFailures.TryDequeue(out int status)) { Reply(context, status, new JObject()); return; }
+            if (body.ContainsKey("versionId")) { Reply(context, 400, new JObject()); return; }
+            if (body["max_combo"]?.Type != JTokenType.Integer) { Reply(context, 400, new JObject()); return; }
+            if (body["difficultyId"]?.Type != JTokenType.Integer) { Reply(context, 400, new JObject()); return; }
+            var chart = Charts.Find(c => c.Difficulties.Any(d => c.BlockId(d.Course, d.Player) == (long)body["difficultyId"]));
+            if (chart == null) { Reply(context, 404, new JObject()); return; }
+            var block = chart.Difficulties.Find(d => chart.BlockId(d.Course, d.Player) == (long)body["difficultyId"]);
+            var score = Saved(chart, block, body);
+            Idempotent[key] = score;
+            AcceptedUsers.Enqueue(user);
+            AcceptedScores.Enqueue(body);
+            Reply(context, 200, score);
+        }
+
+        // A stored play of the chart's block: a course's single one, or "P1" / "P2".
+        public void AddAccountScore(string user, Chart chart, string course, long score, int clearStatus = 0, string player = "", bool latest = true)
+        {
+            lock (AccountScores)
+                AccountScores.Add(new JObject
+                {
+                    ["user"] = user, ["id"] = Hex(32), ["songId"] = IdToken(chart.Id), ["difficultyId"] = chart.BlockId(course, player),
+                    ["course"] = course, ["side"] = Chart.Side(player), ["isLatest"] = latest,
+                    ["good"] = 1, ["ok"] = 0, ["bad"] = 0, ["score"] = score, ["drumroll"] = 0, ["max_combo"] = 1,
+                    ["ClearStatus"] = clearStatus,
+                });
+        }
+
+        // OurTaikoNet's rewards (internal/rewards), when on: what each user (by username) was given
+        // and has not seen. Every reply to a signed-in request then says how many
+        // (X-Pending-Rewards); GET /api/v2/game/rewards gives them, POST /api/v2/game/rewards/seen
+        // {"ids"} marks them. SeenRewards is every id marked, in order.
+        public bool RewardsOn;
+        public readonly ConcurrentQueue<long> SeenRewards = new ConcurrentQueue<long>();
+        readonly Dictionary<string, List<JObject>> rewards = new Dictionary<string, List<JObject>>();
+        long nextReward;
+
+        public long GiveReward(string user, string kind, JObject data)
+        {
+            lock (rewards)
+            {
+                if (!rewards.TryGetValue(user, out var list)) rewards[user] = list = new List<JObject>();
+                long id = ++nextReward;
+                list.Add(new JObject { ["id"] = id, ["kind"] = kind, ["data"] = data, ["createdAt"] = DateTime.UtcNow.ToString("o") });
+                return id;
+            }
+        }
+
+        public int PendingRewards(string user)
+        {
+            lock (rewards) return rewards.TryGetValue(user, out var list) ? list.Count : 0;
+        }
+
+        // The rewards' routes; false for any other request.
+        bool Rewards(HttpListenerContext context, string path, string user, string body)
+        {
+            if (!RewardsOn || !path.StartsWith("/api/v2/game/rewards", StringComparison.Ordinal)) return false;
+            if (user == null) { Reply(context, 401, new JObject()); return true; }
+            if (context.Request.HttpMethod == "GET" && path == "/api/v2/game/rewards")
+            {
+                JArray list;
+                lock (rewards) list = new JArray(rewards.TryGetValue(user, out var mine) ? mine.Select(r => r.DeepClone()) : Enumerable.Empty<JToken>());
+                Reply(context, 200, new JObject { ["rewards"] = list });
+                return true;
+            }
+            if (context.Request.HttpMethod == "POST" && path == "/api/v2/game/rewards/seen")
+            {
+                var ids = (JObject.Parse(body)["ids"] as JArray ?? new JArray()).Select(id => (long)id).ToList();
+                int marked = 0;
+                lock (rewards)
+                    if (rewards.TryGetValue(user, out var mine))
+                        marked = mine.RemoveAll(r => ids.Contains((long)r["id"]));
+                foreach (long id in ids) SeenRewards.Enqueue(id);
+                Reply(context, 200, new JObject { ["marked"] = marked });
+                return true;
+            }
+            Reply(context, 404, new JObject());
+            return true;
+        }
+
+        // Gzip packs JSON replies for a client that asks for it, as OurTaiko Database does.
+        public bool Gzip;
+        public int GzippedReplies;
+
+        public void Reply(HttpListenerContext context, int status, JToken body)
+        {
+            context.Response.StatusCode = status;
+            context.Response.ContentType = "application/json";
+            // As the site does on every answer to a signed-in request.
+            string auth = context.Request.Headers["Authorization"] ?? "";
+            if (RewardsOn && auth.StartsWith("Bearer ", StringComparison.Ordinal) && tokens.TryGetValue(auth.Substring(7), out string asker))
+                context.Response.AddHeader("X-Pending-Rewards", PendingRewards(asker).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            byte[] bytes = Encoding.UTF8.GetBytes(body.ToString(Newtonsoft.Json.Formatting.None));
+            if (Gzip && (context.Request.Headers["Accept-Encoding"] ?? "").Contains("gzip"))
+            {
+                using var packed = new MemoryStream();
+                using (var zip = new System.IO.Compression.GZipStream(packed, System.IO.Compression.CompressionLevel.Optimal, true)) zip.Write(bytes, 0, bytes.Length);
+                bytes = packed.ToArray();
+                context.Response.AddHeader("Content-Encoding", "gzip");
+                Interlocked.Increment(ref GzippedReplies);
+            }
+            Bytes(context, bytes, status);
+        }
+
+        static void Bytes(HttpListenerContext context, byte[] bytes, int status = 200)
+        {
+            try
+            {
+                context.Response.StatusCode = status;
+                context.Response.ContentLength64 = bytes.Length;
+                context.Response.OutputStream.Write(bytes, 0, bytes.Length);
+                context.Response.OutputStream.Close();
+            }
+            catch (Exception) { }
+        }
+
+        // A block's content hash as a server would report it: "v1:" + 64 hex, changing with the TJA.
+
+
+
+        public static string Sha(byte[] bytes)
+        {
+            using var sha = SHA256.Create();
+            return string.Concat(sha.ComputeHash(bytes).Select(b => b.ToString("x2")));
+        }
+
+        static string Hex(int length)
+        {
+            var bytes = new byte[length / 2];
+            using (var random = RandomNumberGenerator.Create()) random.GetBytes(bytes);
+            return string.Concat(bytes.Select(b => b.ToString("x2")));
+        }
+    }
+}

@@ -11,7 +11,7 @@ namespace OurTaiko
 {
     // Port of TeamMajdata's BassHelper, BassSimpleAudioSample and BassAudioSample.
     // Owns the encoded file, never an AudioClip-derived PCM copy.
-    public sealed class NativeAudioSample : IDisposable
+    public sealed class NativeAudioSample : IPreparedAudio
     {
         static readonly HashSet<NativeAudioSample> samples = new();
         public bool IsDisposed { get; private set; }

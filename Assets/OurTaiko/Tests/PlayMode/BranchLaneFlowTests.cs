@@ -33,12 +33,12 @@ namespace OurTaiko.Tests
                 }
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 yield return null;
-                play.MovePractice(1); play.MovePractice(1);
-                play.ConfirmPractice(); yield return null;
-                for (int i = 0; i < targetMeasure; i++) play.MovePractice(1);
-                Assert.That(play.Practice.Target, Is.EqualTo(targetMeasure).Within(1e-6));
-                play.ConfirmPractice(); yield return null;
-                play.ConfirmPractice();
+                play.Practice.Move(1); play.Practice.Move(1);
+                play.Practice.Confirm(); yield return null;
+                for (int i = 0; i < targetMeasure; i++) play.Practice.Move(1);
+                Assert.That(play.Practice.Progress.Target, Is.EqualTo(targetMeasure).Within(1e-6));
+                play.Practice.Confirm(); yield return null;
+                play.Practice.Confirm();
                 while (play.IsPaused) yield return null;
                 Assert.That(play.SongTime, Is.EqualTo(targetMeasure - 2).Within(.01));
                 var lane = play.firstLane.branchLane;
@@ -107,15 +107,15 @@ namespace OurTaiko.Tests
                 if (practice)
                 {
                     yield return null;
-                    play.MovePractice(1); play.MovePractice(1); // Fix the route to Master.
+                    play.Practice.Move(1); play.Practice.Move(1); // Fix the route to Master.
                     Check(BranchRoute.Normal);
-                    play.ConfirmPractice(); yield return null;
-                    play.MovePractice(1); Check(BranchRoute.Master);
-                    play.MovePractice(1); Check(BranchRoute.Normal);
-                    play.MovePractice(-1); Check(BranchRoute.Master);
-                    play.MovePractice(-1); Check(BranchRoute.Normal);
-                    play.ConfirmPractice(); yield return null;
-                    play.ConfirmPractice();
+                    play.Practice.Confirm(); yield return null;
+                    play.Practice.Move(1); Check(BranchRoute.Master);
+                    play.Practice.Move(1); Check(BranchRoute.Normal);
+                    play.Practice.Move(-1); Check(BranchRoute.Master);
+                    play.Practice.Move(-1); Check(BranchRoute.Normal);
+                    play.Practice.Confirm(); yield return null;
+                    play.Practice.Confirm();
                     while (play.IsPaused) yield return null;
                 }
                 double[] checkpoints = { .1, 1.1, 2.1, 3.9, 4.1, 5.1 };

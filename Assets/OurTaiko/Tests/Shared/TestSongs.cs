@@ -41,7 +41,7 @@ namespace OurTaiko.Tests
         public static SongDefinition Select(string key = TestPulse, string course = null, bool autoPlay = false)
         {
             var song = Load(key);
-            SceneSwitcher.EnsureInstance().Select(song, course, autoPlay);
+            SceneSwitcher.EnsureInstance().Select(new PlayRequest(song, course, autoPlay));
             return song;
         }
     }

@@ -1,0 +1,269 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+
+namespace OurTaiko.Online
+{
+    // A player signed in to one server: 1P (seat 0) or 2P (seat 1). The bearer token lives only in
+    // memory: a game session traded for the seat's account at the OurTaiko account center (Renew
+    // trades again when it expires).
+    public sealed class OnlineSeat
+    {
+        internal volatile string Token = "";
+        public bool IsAuthenticated { get; internal set; }
+        public string Nickname { get; internal set; } = "";
+        // The account center's user id.
+        public string UserId { get; internal set; } = "";
+        internal Func<CancellationToken, Task<string>> Renew;
+        // Account scores from GET /game/scores, kept only while signed in.
+        internal readonly List<OnlineScore> Scores = new List<OnlineScore>();
+        internal readonly Dictionary<string, OnlineScore> Best = new Dictionary<string, OnlineScore>();
+        public int ScoreCount => Scores.Count;
+
+        internal void IndexScore(OnlineScore score)
+        {
+            var key = OnlineEndpoint.ScoreKey(score.Song, score.Difficulty);
+            // A score of the song's current files comes before any score of replaced ones.
+            if (!Best.TryGetValue(key, out var best) || (score.IsLatest && !best.IsLatest)
+                || (score.IsLatest == best.IsLatest && score.Score > best.Score)) Best[key] = score;
+        }
+
+        internal void SignOut()
+        {
+            Token = ""; IsAuthenticated = false; Nickname = ""; UserId = ""; Renew = null;
+            Scores.Clear(); Best.Clear();
+        }
+    }
+
+    // One server (fanmade.cpp Endpoint + request/authorized), on System.Net.Http as in MajdataPlay,
+    // with a seat per player. Redirects are refused, TLS is verified and no proxy is used, the
+    // environment's included.
+    public sealed partial class OnlineEndpoint : IDisposable
+    {
+        public const long DefaultLimit = 64L * 1024 * 1024;
+        public const int SeatCount = 2;
+        public readonly ServerConfig Config;
+        // sha256(base_url + "\n"): what the server's charts and offline cache are kept under. Of the
+        // address the server is known by, not of where its API is (ServerConfig.BuiltIn).
+        public readonly string Id;
+        // What 1P's pending scores are queued under (AccountIdOf(0)).
+        public string AccountId => AccountIdOf(0);
+        public bool IsConnected { get; internal set; }
+        // 1P's seat.
+        public bool IsAuthenticated => Seats[0].IsAuthenticated;
+        public int ChartCount { get; internal set; } = -1;
+        // The bar_genre frame (0-12) the catalog names for this server's own song-select folder
+        // ("genreFrame"); 0, the default yellow, when it names none.
+        public int GenreFrame { get; internal set; }
+        public readonly OnlineSeat[] Seats = { new OnlineSeat(), new OnlineSeat() };
+        // The account center the catalog names ("sso"), and this service's name there; empty when
+        // the catalog names none, and nobody can sign in.
+        public string SsoIssuer { get; internal set; } = "";
+        public string SsoService { get; internal set; } = "";
+        // Serializes HTTP per endpoint, like the C++ http_mutex.
+        internal readonly SemaphoreSlim Transport = new SemaphoreSlim(1, 1);
+
+        readonly HttpClient http;
+
+        // The key a seat's pending scores are queued under: its account center user on this server
+        // (the server's Id for a seat that is not signed in, which queues nothing).
+        public string AccountIdOf(int seat)
+        {
+            string user = Seats[seat].UserId;
+            return Sha256Hex(Encoding.UTF8.GetBytes(Config.baseUrl + "\n" + (user.Length > 0 ? "sso:" + user : "")));
+        }
+
+        public OnlineEndpoint(ServerConfig config)
+        {
+            Config = new ServerConfig { name = config.name ?? "", baseUrl = (config.baseUrl ?? "").TrimEnd('/'), api = (config.api ?? "").TrimEnd('/'),
+                site = (config.site ?? "").TrimEnd('/') };
+            Id = Sha256Hex(Encoding.UTF8.GetBytes(Config.baseUrl + "\n"));
+            var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false };
+            // Per-request timeouts below; the client-wide one only bounds pathological cases.
+            http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
+        }
+
+        public void Dispose()
+        {
+            http.Dispose();
+        }
+
+        public static string Sha256Hex(byte[] bytes)
+        {
+            using var sha = SHA256.Create();
+            var hash = sha.ComputeHash(bytes);
+            var hex = new StringBuilder(hash.Length * 2);
+            foreach (byte b in hash) hex.Append(b.ToString("x2"));
+            return hex.ToString();
+        }
+
+        public bool HasValidUrl()
+        {
+            return Valid(Config.baseUrl) && (Config.api.Length == 0 || Valid(Config.api)) && (Config.site.Length == 0 || Valid(Config.site));
+            static bool Valid(string url) => (url.StartsWith("http://", StringComparison.Ordinal) || url.StartsWith("https://", StringComparison.Ordinal))
+                && url.IndexOfAny(new[] { '?', '#', '@', ' ', '\r', '\n' }) < 0 && Uri.IsWellFormedUriString(url, UriKind.Absolute);
+        }
+
+        // A seat signed in with a game session traded for its OurTaiko account (user id and
+        // nickname from the account center); renew trades again when the session expires.
+        internal void UseAccount(int seat, string token, string userId, string nickname, Func<CancellationToken, Task<string>> renew)
+        {
+            if (!Json.HexId(token ?? "", 64)) throw new OnlineException("API_TOKEN_INVALID");
+            var s = Seats[seat];
+            if (s.UserId != userId) { s.Scores.Clear(); s.Best.Clear(); }
+            s.Token = token; s.UserId = userId ?? ""; s.Nickname = nickname ?? ""; s.Renew = renew; s.IsAuthenticated = true;
+        }
+
+        // A request with a seat's token. An expired token is traded for once more and the request
+        // repeated. method: null is GET, or POST with a body.
+        public async Task<string> AuthorizedAsync(string path, string body = "", string key = "", CancellationToken cancel = default, int seat = 0,
+            HttpMethod method = null)
+        {
+            var s = Seats[seat];
+            try { return await RequestAsync(path, body, key, cancel: cancel, bearer: s.Token, method: method); }
+            catch (HttpStatusException error) when (error.Status == 401 && s.IsAuthenticated && s.Renew != null)
+            {
+                string renewed = await s.Renew(cancel);
+                if (!Json.HexId(renewed ?? "", 64)) throw new OnlineException("API_TOKEN_INVALID");
+                s.Token = renewed;
+                return await RequestAsync(path, body, key, cancel: cancel, bearer: s.Token, method: method);
+            }
+        }
+
+        // bearer null: 1P's token (anonymous requests are unaffected by it).
+        public async Task<string> RequestAsync(string path, string body = "", string key = "", long limit = DefaultLimit,
+            CancellationToken cancel = default, Action<long, long> progress = null, string bearer = null, HttpMethod method = null)
+        {
+            var bytes = await RequestBytesAsync(path, body, key, limit, cancel, progress, bearer, method);
+            return new UTF8Encoding(false).GetString(bytes);
+        }
+
+        // A request to the site this server is a source of, not to the server: path is the site's
+        // own ("/api/v2/game/sources"). Anonymous unless a session is given. The answer holds what
+        // every source would answer by itself, so it is given as long as those would take together.
+        // body: a POST with this JSON instead of a GET.
+        public async Task<string> SiteRequestAsync(string path, CancellationToken cancel = default, string bearer = "", string body = "")
+            => new UTF8Encoding(false).GetString(await SendAsync(Config.site + path, path, body ?? "", "", DefaultLimit, cancel, null, bearer ?? "", 60));
+
+        // The header of a site's every answer to a signed-in request: how many rewards that player
+        // has not seen (OurTaikoNet's internal/rewards). See PendingRewardsHeard.
+        public const string PendingRewardsHeader = "X-Pending-Rewards";
+
+        // An answer said how many rewards a seat's player has not seen: the endpoint, the seat and
+        // the number. Raised for every answer that carries PendingRewardsHeader, on whatever thread
+        // the answer came in on; what to do about it is the listener's (RewardInbox).
+        public static event Action<OnlineEndpoint, int, int> PendingRewardsHeard;
+
+        void HearPendingRewards(HttpResponseMessage response, string token)
+        {
+            if (string.IsNullOrEmpty(token) || PendingRewardsHeard == null) return;
+            if (!response.Headers.TryGetValues(PendingRewardsHeader, out var values)) return;
+            if (!int.TryParse(values.FirstOrDefault(), NumberStyles.None, CultureInfo.InvariantCulture, out int count)) return;
+            int seat = Array.FindIndex(Seats, s => s.IsAuthenticated && s.Token == token);
+            if (seat < 0) return;
+            try { PendingRewardsHeard(this, seat, count); }
+            catch (Exception error) { Log.Warn("Rewards", "A listener failed: " + error.Message); }
+        }
+
+        public Task<byte[]> RequestBytesAsync(string path, string body = "", string key = "", long limit = DefaultLimit,
+            CancellationToken cancel = default, Action<long, long> progress = null, string bearer = null, HttpMethod method = null)
+            => SendAsync(Config.Address(path), path, body, key, limit, cancel, progress, bearer, method: method);
+
+        async Task<byte[]> SendAsync(string address, string path, string body, string key, long limit,
+            CancellationToken cancel, Action<long, long> progress, string bearer, int seconds = 15, HttpMethod method = null)
+        {
+            string token = bearer ?? Seats[0].Token;
+            if (cancel.IsCancellationRequested) throw new OnlineException("DOWNLOAD_CANCELLED");
+            // Files come from the distribution root (ResourceBytesAsync); API calls are small.
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(seconds));
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeout.Token);
+            using var request = new HttpRequestMessage(method ?? (string.IsNullOrEmpty(body) ? HttpMethod.Get : HttpMethod.Post), address);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            // API replies may come gzipped (an OurTaiko Database catalog is 4 MB, 0.8 MB packed). Only
+            // here: resource downloads keep the exact bytes and sizes their manifest names.
+            request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+            if (!string.IsNullOrEmpty(token)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            if (!string.IsNullOrEmpty(key)) request.Headers.TryAddWithoutValidation("Idempotency-Key", key);
+            if (!string.IsNullOrEmpty(body)) request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+            try
+            {
+                using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token);
+                int status = (int)response.StatusCode;
+                Log.Debug("Online", $"{request.Method} {Config.DisplayName} {path.Split('?')[0]}: {status}");
+                HearPendingRewards(response, token);
+                if (status < 200 || status >= 300) throw new HttpStatusException(status);
+                long total = response.Content.Headers.ContentLength ?? 0;
+                if (total > limit) throw new OnlineException("RESPONSE_SIZE_LIMIT_EXCEEDED");
+                bool gzip = response.Content.Headers.ContentEncoding.Contains("gzip");
+                // The packed length says nothing of the unpacked one; the limit still bounds it below.
+                if (gzip) total = 0;
+                using var raw = await response.Content.ReadAsStreamAsync();
+                using var stream = gzip ? new GZipStream(raw, CompressionMode.Decompress) : raw;
+                var buffer = new byte[81920];
+                var output = new MemoryStream(total > 0 ? (int)Math.Min(total, int.MaxValue) : 0);
+                progress?.Invoke(0, total);
+                while (true)
+                {
+                    int read = await stream.ReadAsync(buffer, 0, buffer.Length, linked.Token);
+                    if (read == 0) break;
+                    if (read > limit - output.Length) throw new OnlineException("RESPONSE_SIZE_LIMIT_EXCEEDED");
+                    output.Write(buffer, 0, read);
+                    progress?.Invoke(output.Length, total);
+                }
+                return output.ToArray();
+            }
+            catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw new OnlineException("DOWNLOAD_CANCELLED"); }
+            catch (OperationCanceledException error) { throw new OnlineException("NETWORK_TIMEOUT", error); }
+            catch (HttpRequestException error) { throw new OnlineException(NetworkCode(error), error); }
+            catch (IOException error) { throw new OnlineException(NetworkCode(error), error); }
+        }
+
+        // The distinct DNS / connect / TLS codes OurTaikoPlayer shows instead of one network error.
+        static string NetworkCode(Exception error)
+        {
+            for (var e = error; e != null; e = e.InnerException)
+            {
+                if (e is AuthenticationException) return "TLS_CERTIFICATE_VERIFY_FAILED";
+                if (e is SocketException socket)
+                    switch (socket.SocketErrorCode)
+                    {
+                        case SocketError.HostNotFound: case SocketError.NoData: case SocketError.TryAgain: return "NETWORK_DNS_ERROR";
+                        case SocketError.ConnectionRefused: case SocketError.NetworkUnreachable: case SocketError.HostUnreachable: return "NETWORK_CONNECT_ERROR";
+                        case SocketError.TimedOut: return "NETWORK_TIMEOUT";
+                    }
+                if (e is WebException web)
+                    switch (web.Status)
+                    {
+                        case WebExceptionStatus.NameResolutionFailure: return "NETWORK_DNS_ERROR";
+                        case WebExceptionStatus.ProxyNameResolutionFailure: return "NETWORK_PROXY_DNS_ERROR";
+                        case WebExceptionStatus.ConnectFailure: return "NETWORK_CONNECT_ERROR";
+                        case WebExceptionStatus.Timeout: return "NETWORK_TIMEOUT";
+                        case WebExceptionStatus.TrustFailure: return "TLS_CERTIFICATE_VERIFY_FAILED";
+                        case WebExceptionStatus.SecureChannelFailure: return "TLS_HANDSHAKE_FAILED";
+                    }
+            }
+            return "NETWORK_ERROR";
+        }
+
+        // 1P's account scores.
+        internal List<OnlineScore> Scores => Seats[0].Scores;
+        internal Dictionary<string, OnlineScore> Best => Seats[0].Best;
+        // The catalog sent chartSlotVersion 1: blocks have ids, a course covers all its sides.
+        internal static string ScoreKey(string song, string difficulty) => song + "/" + difficulty;
+
+        internal void IndexScore(OnlineScore score) => Seats[0].IndexScore(score);
+    }
+}

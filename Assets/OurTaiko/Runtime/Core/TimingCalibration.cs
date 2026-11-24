@@ -31,12 +31,14 @@ namespace OurTaiko
             && CorrectionMs.HasValue && CorrectionMs.Value != 0 && Matches(current)
             && (audio ? RecommendedAudioMs : RecommendedJudgeMs).HasValue;
 
-        public bool TryApply(GameSettings current, bool audio, Action<GameSettings> save)
+        // save gets a changed copy of current (the live settings are not touched) and keeps it; the
+        // whole settings file's overload is GameSettingsCalibration.TryApply.
+        public bool TryApply(PlaySettings current, bool audio, Action<PlaySettings> save)
         {
-            if (!CanApply(current.play, audio)) return false;
+            if (!CanApply(current, audio)) return false;
             var updated = current.Clone();
-            if (audio) updated.play.audioOffsetMs = RecommendedAudioMs.Value;
-            else updated.play.judgeOffsetMs = RecommendedJudgeMs.Value;
+            if (audio) updated.audioOffsetMs = RecommendedAudioMs.Value;
+            else updated.judgeOffsetMs = RecommendedJudgeMs.Value;
             save(updated);
             // Only consume this run's recommendation after the settings have been saved.
             if (audio) AudioApplied = true; else JudgeApplied = true;

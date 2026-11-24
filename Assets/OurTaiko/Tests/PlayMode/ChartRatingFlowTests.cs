@@ -15,18 +15,18 @@ namespace OurTaiko.Tests
     // ゴーストバトル's and マルチ演奏's results ask it in their own flow tests.
     public sealed class ChartRatingFlowTests
     {
-        FanmadeFixture fixture;
-        FanmadeFixture.Chart chart;
+        OnlineFixture fixture;
+        OnlineFixture.Chart chart;
         string language;
 
         [SetUp]
         public void SetUp()
         {
             language = L10n.Language;
-            fixture = new FanmadeFixture { Votes = true };
-            chart = new FanmadeFixture.Chart
+            fixture = new OnlineFixture { Votes = true };
+            chart = new OnlineFixture.Chart
             {
-                Title = "Rated Song", Tja = Encoding.UTF8.GetBytes(FanmadeFixture.SimpleTja("Oni", 1, 240)),
+                Title = "Rated Song", Tja = Encoding.UTF8.GetBytes(OnlineFixture.SimpleTja("Oni", 1, 240)),
                 Audio = File.ReadAllBytes("Assets/OurTaiko/Audio/don.ogg"),
             };
             fixture.Charts.Add(chart);
@@ -59,11 +59,11 @@ namespace OurTaiko.Tests
         IEnumerator Result(SongDefinition song, bool autoPlay = false, PlayResult second = null)
         {
             yield return Waits.Until(() => !SceneSwitcher.Instance.IsInputBlocked);
-            SceneSwitcher.Instance.ShowResult(new PlayResult
+            SceneSwitcher.Instance.ShowResult(song, new SeatResult(new PlayResult
             {
                 Title = "Rated Song", Course = "Oni", Difficulty = Difficulty.Oni, Level = 8, Score = 876540, Good = 3, Ok = 1, MaxCombo = 4,
                 GaugePoints = 9000, AutoPlay = autoPlay,
-            }, song, null, second);
+            }, null), new SeatResult(second, null));
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.ResultScene && !SceneSwitcher.Instance.IsSwitching);
             yield return null;
         }

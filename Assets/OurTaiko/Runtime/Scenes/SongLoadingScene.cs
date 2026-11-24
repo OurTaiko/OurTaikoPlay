@@ -27,14 +27,15 @@ namespace OurTaiko
         {
             var switcher = SceneSwitcher.EnsureInstance();
             if (switcher.TakeDanLoad() is DanRun dan) { yield return LoadDan(switcher, dan); yield break; }
-            var song = switcher.SelectedSong;
-            string course = switcher.SelectedCourse;
+            var request = switcher.Request;
+            var song = request?.Song;
             if (song == null)
             {
                 Log.Warn("Loading", "No song is selected; returning to Entry.", this);
                 switcher.SwitchScene(SceneSwitcher.MenuScene);
                 yield break;
             }
+            string course = request.Seats[0].Course;
             if (!switcher.IsCovered)
             {
                 // Entered directly (Play mode on this scene): show the parked curtain at once.
@@ -66,16 +67,17 @@ namespace OurTaiko
                 // A ghost battle's lanes both read the recording's block with its options.
                 if (switcher.PlaysGhost)
                 {
-                    switcher.SetPreparedChart(song, course, PlayScene.PrepareGhostChart(song, switcher.Ghost));
-                    switcher.SetPreparedChart(song, switcher.SelectedCourse2P, PlayScene.PrepareGhostChart(song, switcher.Ghost), 1);
+                    switcher.SetPreparedChart(song, course, GhostMode.PrepareChart(song, request.Ghost));
+                    switcher.SetPreparedChart(song, request.Seats[1].Course, GhostMode.PrepareChart(song, request.Ghost), 1);
                 }
-                else switcher.SetPreparedChart(song, course, PlayScene.PrepareChart(song, course, switcher.SideOf(0), switcher.Lead.Index()));
+                else switcher.SetPreparedChart(song, course, PlayScene.PrepareChart(song, course, request.Seats[0].Side, switcher.Lead.Index()));
                 // 2P reads its own block of its own course with its own options.
+                var second = request.Seats[1];
                 if (switcher.Seated.Count == 2)
-                    switcher.SetPreparedChart(song, switcher.SelectedCourse2P, PlayScene.PrepareChart(song, switcher.SelectedCourse2P, switcher.SideOf(1), 1), 1);
+                    switcher.SetPreparedChart(song, second.Course, PlayScene.PrepareChart(song, second.Course, second.Side, 1), 1);
             }
             catch (Exception error) { Log.Exception("Loading", error, this); }  // The play scene parses again and shows it.
-            yield return PrepareStage(switcher, online, song);
+            yield return PrepareStage(switcher, online, request);
             yield return DecodeAudio(song);
             if (Error != null)
             {
@@ -99,10 +101,11 @@ namespace OurTaiko
         // Chooses the play's backdrop (the chart's SCENEPRESET, then its folders') and downloads the
         // files the game does not carry. Never an error: a backdrop that cannot be had in time is
         // passed over, and the play scene draws one out of what is here.
-        IEnumerator PrepareStage(SceneSwitcher switcher, OnlineManager online, SongDefinition song)
+        IEnumerator PrepareStage(SceneSwitcher switcher, OnlineManager online, PlayRequest request)
         {
+            var song = request.Song;
             string[] presets;
-            try { presets = song.ScenePresets(song.ReadDisplayInfo().ScenePreset); }
+            try { presets = request.ScenePresets(song.ReadDisplayInfo().ScenePreset); }
             catch (Exception error) { Log.Warn("Loading", "The chart's backdrop could not be read: " + error.Message); yield break; }
             using var cancel = new CancellationTokenSource();
             var task = StageDownloads.ResolveAsync(presets, switcher.SelectedStageMode, Math.Max(1, switcher.Seated.Count), new System.Random(),
@@ -178,7 +181,7 @@ namespace OurTaiko
                 catch (Exception error) { Error = "CHART_LOAD_FAILED"; Log.Exception("Loading", error, this); break; }
                 // Each entry keeps its own decoded audio, so a song played twice starts at once both times.
                 yield return DecodeAudio(song);
-                dan.Audio[i] = song.TakePreparedAudio();
+                dan.Audio[i] = (NativeAudioSample)song.TakePreparedAudio();
             }
             if (Error != null)
             {
@@ -223,7 +226,7 @@ namespace OurTaiko
             {
                 var error = task.Exception?.GetBaseException();
                 Log.Warn("Loading", "Online chart download failed: " + error?.Message);
-                Error = error is FanmadeException ? error.Message : "DOWNLOAD_FAILED";
+                Error = error is OnlineException ? error.Message : "DOWNLOAD_FAILED";
                 yield break;
             }
             var (text, audio, chart) = task.Result;

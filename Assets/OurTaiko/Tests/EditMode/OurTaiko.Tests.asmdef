@@ -1,6 +1,6 @@
 {
   "name": "OurTaiko.Tests",
-  "references": ["OurTaiko.Runtime", "OurTaiko.TjaParser", "OurTaiko.TestSupport", "Unity.InputSystem", "OurTaiko.Editor"],
+  "references": ["OurTaiko.Runtime", "OurTaiko.Core", "OurTaiko.TjaParser", "OurTaiko.TestSupport", "Unity.InputSystem", "OurTaiko.Editor", "Gilzoide.SqliteNet"],
   "includePlatforms": ["Editor"],
   "overrideReferences": true,
   "precompiledReferences": ["nunit.framework.dll", "Newtonsoft.Json.dll"],

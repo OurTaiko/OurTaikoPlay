@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using ItemKind = OurTaiko.SongSelectManager.ItemKind;
 
 namespace OurTaiko.Tests
 {
@@ -74,7 +75,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 while (SceneSwitcher.Instance.IsInputBlocked) yield return null;
                 SceneSwitcher.Instance.SetSeats(Side.P1, Side.P2);
-                yield return TestPlay.Open(song, "Oni", true, "Oni", false);
+                yield return TestPlay.Open(song, new SeatPlay("Oni", true), new SeatPlay("Oni", false));
                 yield return WaitForScene(SceneSwitcher.DoublePlayScene);
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That(play.stage.headers.Select(b => (b.name, b.player, b.Layers[0].clip)), Is.EqualTo(new[] { ("StageUpper", 0, "normal"), ("StageUpper2P", 1, "normal") }),
@@ -122,9 +123,9 @@ namespace OurTaiko.Tests
         }
 
         // A local song in a box.def folder that names a backdrop plays on it; its own SCENEPRESET
-        // would come first.
+        // comes first.
         [UnityTest]
-        public IEnumerator AFoldersScenePresetIsForTheSongsInIt()
+        public IEnumerator AFoldersScenePresetIsForTheSongsOpenedFromIt()
         {
             string root = System.IO.Path.Combine(Application.temporaryCachePath, "stage-songs-" + System.Guid.NewGuid().ToString("N"));
             void Write(string relative, string text)
@@ -143,17 +144,32 @@ namespace OurTaiko.Tests
                 TestStage.Require("TOHO");
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 yield return null;
-                var library = LocalSongLibrary.EnsureInstance();
-                library.UseRoot(root);
-                var songs = library.Folders[0].Folders[0].Songs;
-                Assert.That(songs.Select(s => s.ScenePresets(s.ReadDisplayInfo().ScenePreset)), Is.EqualTo(new[]
-                {
-                    new[] { "TOHO", "MIKU" }, new[] { "GUMI", "TOHO", "MIKU" }, new[] { "no such backdrop", "TOHO", "MIKU" },
-                }));
-                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                TestData.UseServers();
+                LocalSongLibrary.EnsureInstance().UseRoot(root);
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.SongSelectScene);
                 yield return null;
-                yield return TestPlay.Open(songs[2], autoPlay: true);
+                var manager = Object.FindAnyObjectByType<SongSelectScene>().Manager;
+                int Board(string title) => Enumerable.Range(0, manager.Items.Count)
+                    .First(i => manager.Items[i].Kind == ItemKind.Folder && manager.Folders[manager.Items[i].Folder].Title == title);
+                // Local, then Outer inside it, then Inner inside that.
+                foreach (string title in new[] { SongSelectManager.LocalTitle, "Outer", "Inner" })
+                {
+                    manager.OpenFolderAt(Board(title));
+                    yield return null;
+                }
+                var boards = manager.Items.Where(i => i.Kind == ItemKind.Song).ToArray();
+                Assert.That(boards.Length, Is.EqualTo(3));
+                Assert.That(boards.Select(manager.ScenePresetsOf), Has.All.EqualTo(new[] { "TOHO", "MIKU" }),
+                    "The folders a song was opened from, the nearest first; Local names none.");
+                var third = boards.First(b => b.Info.ScenePreset == "no such backdrop");
+                var switcher = SceneSwitcher.Instance;
+                while (switcher.IsInputBlocked) yield return null;
+                switcher.Select(new PlayRequest(third.Song, new[] { new SeatPlay(null, true), new SeatPlay(null, false) }, manager.ScenePresetsOf(third)));
+                Assert.That(switcher.Request.ScenePresets(third.Info.ScenePreset), Is.EqualTo(new[] { "no such backdrop", "TOHO", "MIKU" }), "The chart's own counts most.");
+                yield return SceneManager.LoadSceneAsync(switcher.SelectedPlayScene);
                 yield return WaitForScene(SceneSwitcher.GameScene);
+                // A play that is not opened from a folder has only the chart's.
+                Assert.That(switcher.Request.ScenePresets("GUMI"), Has.Length.EqualTo(3));
                 var play = Object.FindAnyObjectByType<PlayScene>();
                 Assert.That((play.stage.Choice.Preset, play.stage.Choice.Header), Is.EqualTo(("TOHO", "toho")),
                     "The chart names a backdrop the game does not have, so its nearest folder's is the one.");

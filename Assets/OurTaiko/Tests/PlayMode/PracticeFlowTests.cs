@@ -56,11 +56,11 @@ namespace OurTaiko.Tests
             yield return Press(Key.F);
             Assert.That(play.Session.Good + play.Session.Ok, Is.GreaterThan(0), "The note at the very first bar must be hittable.");
             play.TogglePause(); yield return null;
-            play.MovePractice(1); yield return new WaitForSecondsRealtime(0.25f);
-            double target = play.Practice.Target;
+            play.Practice.Move(1); yield return new WaitForSecondsRealtime(0.25f);
+            double target = play.Practice.Progress.Target;
             yield return Click(play.practiceView.confirm);
             yield return Press(Key.D); yield return Press(Key.D);
-            Assert.That(play.Practice.Speed, Is.EqualTo(0.8));
+            Assert.That(play.Practice.Progress.Speed, Is.EqualTo(0.8));
             yield return Click(play.practiceView.confirm);
             yield return Waits.Until(() => !play.IsPaused);
             Assert.That(play.SongTime, Is.LessThan(target - 1.4));
@@ -80,22 +80,22 @@ namespace OurTaiko.Tests
             yield return Press(Key.D);
             Assert.That(menuAudio.EffectPlays, Is.Zero, "The first-measure boundary is silent.");
             yield return Press(Key.K);
-            Assert.That(play.Practice.Measure, Is.EqualTo(1));
+            Assert.That(play.Practice.Progress.Measure, Is.EqualTo(1));
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "One keyboard move plays one ka.");
             yield return Click(play.practiceView.previous);
-            Assert.That(play.Practice.Measure, Is.Zero);
+            Assert.That(play.Practice.Progress.Measure, Is.Zero);
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(2), "One mouse move plays one ka.");
             yield return Tap(play.practiceView.next);
-            Assert.That(play.Practice.Measure, Is.EqualTo(1));
+            Assert.That(play.Practice.Progress.Measure, Is.EqualTo(1));
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "One touch move plays one ka.");
-            play.MovePractice(1);
+            play.Practice.Move(1);
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(4));
-            play.MovePractice(1);
+            play.Practice.Move(1);
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(4), "The last-measure boundary is silent.");
-            double bar = play.Practice.Target;
-            play.Practice.PauseAt(bar + .5, GameTimeline.FrameTime);
-            play.MovePractice(-1);
-            Assert.That(play.Practice.Target, Is.EqualTo(bar));
+            double bar = play.Practice.Progress.Target;
+            play.Practice.Progress.PauseAt(bar + .5, GameTimeline.FrameTime);
+            play.Practice.Move(-1);
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(bar));
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(5), "Returning from mid-measure to its bar also plays ka.");
             Assert.That(play.hitAudio.IsAudioPlaying(), Is.False, "Browsing must not use the gameplay drum bus.");
             play.TogglePause();
@@ -103,11 +103,11 @@ namespace OurTaiko.Tests
             Assert.That(play.pauseMenu.Sfx.GetComponent<AudioBus>(), Is.SameAs(menuAudio),
                 "Activating the pause menu must reuse its already prepared sound bus.");
             int before = menuAudio.EffectPlays;
-            play.MovePractice(-1); play.ConfirmPractice();
+            play.Practice.Move(-1); play.Practice.Confirm();
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(before), "The pause menu blocks practice sounds.");
             play.TogglePause();
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(before + 1), "The pause key chooses Resume and plays don once.");
-            play.MovePractice(-1); play.ConfirmPractice();
+            play.Practice.Move(-1); play.Practice.Confirm();
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(before + 1), "Closing the pause menu still blocks practice sounds.");
             yield return new WaitForSecondsRealtime(PauseMenuView.FadeDuration + .05f);
             Assert.That(play.pausePanel.activeSelf, Is.False);
@@ -120,10 +120,10 @@ namespace OurTaiko.Tests
             yield return StartPractice(AudioBackend.BassSimple, false, Branched);
             var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
             yield return Press(Key.F);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Measure));
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Keyboard branch confirmation plays one don.");
             yield return Click(play.practiceView.confirm);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Speed));
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(2), "Mouse measure confirmation plays one don.");
             yield return Tap(play.practiceView.confirm);
             Assert.That(play.practiceView.panel.activeSelf, Is.False);
@@ -131,13 +131,13 @@ namespace OurTaiko.Tests
             Assert.That(play.pauseMenu.Sfx.gameObject.activeInHierarchy, Is.True);
             Assert.That(play.pauseMenu.Sfx.transform.IsChildOf(play.practiceView.panel.transform), Is.False,
                 "Practice controls must not own the sound host that keeps don ringing after they hide.");
-            play.MovePractice(1); play.ConfirmPractice();
+            play.Practice.Move(1); play.Practice.Confirm();
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "Rewinding ignores practice actions without sound.");
             yield return Waits.Until(() => !play.IsPaused);
-            play.MovePractice(1); play.ConfirmPractice();
+            play.Practice.Move(1); play.Practice.Confirm();
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "Playback ignores practice actions without sound.");
             play.TogglePause();
-            play.ConfirmPractice();
+            play.Practice.Confirm();
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(3), "The opening-frame input lock is silent.");
         }
 
@@ -146,34 +146,34 @@ namespace OurTaiko.Tests
         {
             yield return StartPractice(AudioBackend.BassSimple, false, Branched);
             var menuAudio = play.pauseMenu.Sfx.GetComponent<AudioBus>();
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Branch));
             yield return Press(Key.D);
             Assert.That(menuAudio.EffectPlays, Is.Zero, "The 普通 end of the route list is silent.");
             yield return Press(Key.K);
-            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
+            Assert.That(play.Practice.Branch, Is.EqualTo(BranchRoute.Expert));
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(1), "Changing the route plays one ka.");
             yield return Press(Key.F); yield return Press(Key.F);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Speed));
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(3));
             yield return Press(Key.D);
-            Assert.That(play.Practice.SpeedTenths, Is.EqualTo(9));
+            Assert.That(play.Practice.Progress.SpeedTenths, Is.EqualTo(9));
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(4), "Changing the speed plays one ka.");
-            for (int i = 0; i < 8; i++) play.MovePractice(-1);
-            Assert.That(play.Practice.SpeedTenths, Is.EqualTo(1));
+            for (int i = 0; i < 8; i++) play.Practice.Move(-1);
+            Assert.That(play.Practice.Progress.SpeedTenths, Is.EqualTo(1));
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(12));
-            play.MovePractice(-1);
+            play.Practice.Move(-1);
             Assert.That(menuAudio.EffectPlays, Is.EqualTo(12), "The slowest speed is silent.");
         }
 
         IEnumerator ExercisePlayback(AudioBackend backend)
         {
             yield return StartPractice(backend, true, throughEntry: true);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure), "A chart without branches has no branch page.");
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Measure), "A chart without branches has no branch page.");
             Assert.That(play.practiceView.heading.text, Is.EqualTo(L10n.Get("Play", "practice.measure.heading")));
             Assert.That(play.BarRoot(0).anchoredPosition.x, Is.EqualTo(120).Within(0.1));
             double before = play.RenderedTime;
             yield return Press(Key.K);
-            Assert.That(play.Practice.Target, Is.EqualTo(2));
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(2));
             Assert.That(play.RenderedTime, Is.InRange(before, 1.99), "Measure skip must animate, not teleport.");
             yield return new WaitForSecondsRealtime(0.25f);
             Assert.That(play.BarRoot(1).anchoredPosition.x, Is.EqualTo(120).Within(0.1));
@@ -182,22 +182,22 @@ namespace OurTaiko.Tests
             TestCapture.Capture("PracticeMeasures720-" + backend + ".png", 1280, 720);
             yield return Click(play.practiceView.previous);
             yield return new WaitForSecondsRealtime(0.25f);
-            Assert.That(play.Practice.Target, Is.EqualTo(0));
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(0));
             Assert.That(play.BarRoot(0).anchoredPosition.x, Is.EqualTo(120).Within(0.1));
             yield return Click(play.practiceView.next);
             yield return new WaitForSecondsRealtime(0.25f);
-            Assert.That(play.Practice.Target, Is.EqualTo(2));
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(2));
             yield return Press(Key.F);
-            Assert.That(play.ChoosingPracticeSpeed, Is.True);
+            Assert.That(play.Practice.ChoosingSpeed, Is.True);
             yield return Press(Key.D); yield return Press(Key.D);
-            Assert.That(play.Practice.Speed, Is.EqualTo(0.8));
+            Assert.That(play.Practice.Progress.Speed, Is.EqualTo(0.8));
             TestCapture.Capture("PracticeSpeed-" + backend + ".png");
             yield return Press(Key.J);
             Assert.That(play.practiceView.panel.activeSelf, Is.False);
             Assert.That(play.IsPaused, Is.True, "The lane scrolls back to the preparation start before playback.");
             Assert.That(play.RenderedTime, Is.InRange(0.4, 2), "Starting must animate like a measure skip, not teleport.");
-            play.MovePractice(-1); play.ConfirmPractice();
-            Assert.That(play.Practice.Target, Is.EqualTo(2), "The scroll back accepts no menu input.");
+            play.Practice.Move(-1); play.Practice.Confirm();
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(2), "The scroll back accepts no menu input.");
             yield return Waits.Until(() => !play.IsPaused);
             Assert.That(play.RenderedTime, Is.EqualTo(0.4).Within(0.05));
             yield return null;
@@ -218,9 +218,9 @@ namespace OurTaiko.Tests
             Assert.That(play.Lane1.Shown.Good + play.Lane1.Shown.Ok + play.Lane1.Shown.Bad + play.Lane1.Shown.Rolls, Is.Zero);
             Assert.That(play.music.IsAudioPlaying(), Is.False);
             yield return Click(play.practiceView.confirm);
-            Assert.That(play.ChoosingPracticeSpeed, Is.True, "The click on the confirm button must open the speed page.");
+            Assert.That(play.Practice.ChoosingSpeed, Is.True, "The click on the confirm button must open the speed page.");
             for (int i = 0; i < 4; i++) yield return Press(Key.K);
-            Assert.That(play.Practice.Speed, Is.EqualTo(1.2));
+            Assert.That(play.Practice.Progress.Speed, Is.EqualTo(1.2));
             yield return Click(play.practiceView.confirm);
             yield return new WaitForSecondsRealtime(2.3f);
             songStart = play.SongTime; audioStart = play.music.AudioPosition(); realStart = GameTimeline.AudioNow;
@@ -245,31 +245,31 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.55f);
             play.restartButton.onClick.Invoke();
             yield return new WaitForSecondsRealtime(0.55f);
-            Assert.That(play.Practice.Target, Is.EqualTo(0));
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(0));
             Assert.That(play.IsPaused, Is.True);
             play.pauseButton.onClick.Invoke();
             yield return new WaitForSecondsRealtime(0.55f);
             play.backButton.onClick.Invoke();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True, "Another song must still enter practice.");
-            Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
+            Assert.That(SceneSwitcher.Instance.ResultOf(0), Is.Null);
         }
         [UnityTest]
         public IEnumerator FinishReturnsToFirstMeasureWithoutResultAndEntryHasIndependentRoute()
         {
             yield return StartPractice(AudioBackend.BassSimple, false, throughEntry: true);
             // Jump near the end, then run the complete end-of-chart path.
-            play.MovePractice(1); yield return null; play.MovePractice(1);
+            play.Practice.Move(1); yield return null; play.Practice.Move(1);
             yield return new WaitForSecondsRealtime(0.25f);
-            play.ConfirmPractice(); yield return null;
-            play.ConfirmPractice();
+            play.Practice.Confirm(); yield return null;
+            play.Practice.Confirm();
             yield return Waits.Until(() => !play.IsPaused);
             yield return Waits.Until(() => play.IsPaused);
-            Assert.That(play.Practice.Target, Is.EqualTo(0));
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(0));
             Assert.That(play.IsFinished, Is.False);
-            Assert.That(play.ChoosingPracticeSpeed, Is.False);
+            Assert.That(play.Practice.ChoosingSpeed, Is.False);
             Assert.That(play.Lane1.Shown.Good + play.Lane1.Shown.Bad, Is.Zero);
-            Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
+            Assert.That(SceneSwitcher.Instance.ResultOf(0), Is.Null);
             Assert.That(SceneSwitcher.Instance.SongsPlayed, Is.Zero);
             Assert.That(ScoreStore.Shared.Get(song.name, Difficulty.Oni), Is.Null);
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(SceneSwitcher.PracticeScene));
@@ -288,12 +288,12 @@ namespace OurTaiko.Tests
             settingsManager.Set(settings);
             // Let the remaining notes miss and exercise Finish(), rather than manually pausing.
             yield return Waits.Until(() => play.IsPaused);
-            Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First));
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(play.Practice.Progress.First));
             Assert.That(play.Session, Is.SameAs(completed), "The completed attempt stays until the next one starts.");
             Assert.That(play.Lane1.Shown.HitTimings, Is.Empty, "The browsing session must not inherit judgments.");
             Assert.That(play.firstLane.judgeCounter.Text(0), Is.EqualTo(completed.Good.ToString()),
                 "Song end must keep the completed attempt's counts on the HUD.");
-            Assert.That(SceneSwitcher.Instance.LastResult, Is.Null);
+            Assert.That(SceneSwitcher.Instance.ResultOf(0), Is.Null);
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Any(t => t.name == "PracticeTiming" && t.gameObject.activeInHierarchy), Is.False);
             settings.play.practiceTimingReview = true;
@@ -327,7 +327,7 @@ namespace OurTaiko.Tests
             TestSongs.Select();
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.PracticeScene);
             play = Object.FindAnyObjectByType<PlayScene>();
-            yield return Waits.Until(() => play.Practice != null && play.IsPaused);
+            yield return Waits.Until(() => play.Practice?.Progress != null && play.IsPaused);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
             Assert.That(SceneSwitcher.Instance.SelectedPlayScene, Is.EqualTo(SceneSwitcher.PracticeScene));
         }
@@ -338,9 +338,9 @@ namespace OurTaiko.Tests
             yield return StartPractice(AudioBackend.BassSimple, false, throughEntry: true);
             var switcher = SceneSwitcher.Instance;
             int songsPlayed = switcher.SongsPlayed;
-            play.ConfirmPractice(); yield return null;
-            for (int i = 0; i < 4; i++) play.MovePractice(-1);
-            Assert.That(play.Practice.Speed, Is.EqualTo(.6));
+            play.Practice.Confirm(); yield return null;
+            for (int i = 0; i < 4; i++) play.Practice.Move(-1);
+            Assert.That(play.Practice.Progress.Speed, Is.EqualTo(.6));
             play.Session.Hit(false, 0);
             play.Record.Inputs.Add((0, Online.PlayRecord.TypeOf(false, false)));
             play.TogglePause();
@@ -366,8 +366,8 @@ namespace OurTaiko.Tests
             Assert.That(play.music.pitch, Is.EqualTo(1));
             Assert.That(play.Session.Score + play.Session.Bad + play.Session.Rolls, Is.Zero);
             Assert.That(play.Record.Inputs, Is.Empty);
-            Assert.That(switcher.SelectedSong, Is.SameAs(song));
-            Assert.That(switcher.SelectedCourse, Is.EqualTo("Oni"));
+            Assert.That(switcher.Request.Song, Is.SameAs(song));
+            Assert.That(switcher.Request.Seats[0].Course, Is.EqualTo("Oni"));
 
             yield return Waits.Until(() => play.SongTime >= 2.2);
             play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
@@ -377,8 +377,8 @@ namespace OurTaiko.Tests
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked
                 && Object.FindAnyObjectByType<PlayScene>()?.IsPaused == true);
             play = Object.FindAnyObjectByType<PlayScene>();
-            Assert.That(play.Practice.Target, Is.EqualTo(2).Within(.001), "Normal play enters practice at its current measure.");
-            Assert.That(play.Practice.Speed, Is.EqualTo(1), "The old practice speed must not survive a round trip.");
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(2).Within(.001), "Normal play enters practice at its current measure.");
+            Assert.That(play.Practice.Progress.Speed, Is.EqualTo(1), "The old practice speed must not survive a round trip.");
             Assert.That(play.Session.Score + play.Session.Bad + play.Session.Rolls, Is.Zero);
             Assert.That(play.Record.Inputs, Is.Empty);
             Assert.That(switcher.TakePracticeEntry(out _, out _), Is.False, "The entry position is consumed only once.");
@@ -390,11 +390,11 @@ namespace OurTaiko.Tests
             var select = Object.FindAnyObjectByType<SongSelectScene>();
             Assert.That(select.view.ModeLabel.text, Is.EqualTo(L10n.Get("Menu", "select.practiceMode")));
             TestCapture.Capture("PracticeModeSongSelect.png");
-            switcher.Play(song, "Oni", false);
+            switcher.Play(new PlayRequest(song, "Oni", false));
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !switcher.IsInputBlocked
                 && Object.FindAnyObjectByType<PlayScene>()?.IsPaused == true);
             play = Object.FindAnyObjectByType<PlayScene>();
-            Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First), "A later song must not reuse the mode-switch position.");
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(play.Practice.Progress.First), "A later song must not reuse the mode-switch position.");
             play.TogglePause(); yield return new WaitForSecondsRealtime(.55f);
             play.pauseMenu.modeSwitch.onClick.Invoke();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.GameScene && !switcher.IsInputBlocked
@@ -429,7 +429,7 @@ namespace OurTaiko.Tests
             Assert.That(play.Lane1.Shown.HitTimings.Count, Is.Zero, "Review must not carry judgments into the browsing session.");
             // The synthetic judgments were seeded during preparation; browse to their measure.
             var browsingSession = play.Lane1.Shown;
-            play.MovePractice(1);
+            play.Practice.Move(1);
             yield return new WaitForSecondsRealtime(.3f);
             Canvas.ForceUpdateCanvases();
             Assert.That(play.Lane1.Shown, Is.SameAs(browsingSession), "Measure browsing must not rebuild chart-sized judgment state.");
@@ -457,8 +457,8 @@ namespace OurTaiko.Tests
             TestCapture.Capture("PracticeTimingReview.png");
             yield return new WaitForSecondsRealtime(.6f);
             Assert.That(labels.All(t => t.gameObject.activeInHierarchy), Is.True, "Review does not fade like live hit feedback.");
-            play.MovePractice(1); yield return new WaitForSecondsRealtime(.25f);
-            play.MovePractice(-1); yield return new WaitForSecondsRealtime(.25f);
+            play.Practice.Move(1); yield return new WaitForSecondsRealtime(.25f);
+            play.Practice.Move(-1); yield return new WaitForSecondsRealtime(.25f);
             Assert.That(play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>().text, Is.EqualTo("+12"),
                 "Browsing measures must preserve the last attempt's review.");
             Assert.That(play.NoteRoot(0).Find("PracticeTiming").GetComponent<TMP_Text>().rectTransform.anchoredPosition.y,
@@ -487,7 +487,7 @@ namespace OurTaiko.Tests
             string[] expected = { "-8", "-0", "+0", "+0", "+12", "-8" };
             for (int i = 0; i < offsets.Length; i++) attempt.Hit(false, attempt.Chart.Notes[i].Time + offsets[i]);
             yield return Press(Key.Escape);
-            play.MovePractice(1);
+            play.Practice.Move(1);
             yield return new WaitForSecondsRealtime(.3f);
             for (int i = 0; i < offsets.Length; i++)
             {
@@ -532,7 +532,7 @@ namespace OurTaiko.Tests
             AssertAttemptShown();
 
             yield return null;
-            play.MovePractice(1);
+            play.Practice.Move(1);
             yield return null;
             AssertAttemptShown();
 
@@ -566,7 +566,7 @@ namespace OurTaiko.Tests
             int score = attempt.Score, timings = attempt.HitTimings.Count, bad = attempt.Bad;
             yield return Press(Key.Escape);
             var browsing = play.Lane1.Shown;
-            double target = play.Practice.Target;
+            double target = play.Practice.Progress.Target;
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Any(t => t.name == "PracticeTiming"), Is.False,
                 "Starting with review disabled must not create timing text components.");
@@ -593,14 +593,14 @@ namespace OurTaiko.Tests
             yield return null; yield return null;
             Assert.That(hit.gameObject.activeInHierarchy && missed.gameObject.activeInHierarchy, Is.True);
             Assert.That(play.Lane1.Shown, Is.SameAs(browsing));
-            Assert.That(play.Practice.Target, Is.EqualTo(target));
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(target));
             Assert.That((attempt.Score, attempt.HitTimings.Count, attempt.Bad), Is.EqualTo((score, timings, bad)),
                 "Toggling review only changes visibility, not the recorded attempt.");
             play.TogglePause();
             yield return new WaitForSecondsRealtime(PauseMenuView.FadeDuration + .05f);
             play.Restart();
             yield return Waits.Until(() => play.Lane1.Shown != browsing && !play.pausePanel.activeSelf);
-            Assert.That(play.Practice.Target, Is.EqualTo(play.Practice.First));
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(play.Practice.Progress.First));
             Assert.That(play.firstLane.noteLayer.GetComponentsInChildren<TMP_Text>(true)
                 .Where(t => t.name == "PracticeTiming").All(t => !t.gameObject.activeInHierarchy), Is.True,
                 "A manual restart must discard the old timing offsets and missed-note marks.");
@@ -613,29 +613,29 @@ namespace OurTaiko.Tests
         public IEnumerator BranchPageComesFirstAndFixesTheRoute()
         {
             yield return StartPractice(AudioBackend.BassSimple, false, Branched);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Branch));
             Assert.That(play.practiceView.heading.text, Is.EqualTo(L10n.Get("Play", "practice.branch.heading")));
             Assert.That(play.practiceView.value.text, Is.EqualTo(L10n.Get("Play", "practice.branch.normal")));
-            int bars = play.Practice.Count;
+            int bars = play.Practice.Progress.Count;
             yield return Press(Key.D);
-            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Normal), "The route list stops at 普通.");
+            Assert.That(play.Practice.Branch, Is.EqualTo(BranchRoute.Normal), "The route list stops at 普通.");
             yield return Press(Key.K); yield return Press(Key.K); yield return Press(Key.K);
-            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Master), "The route list stops at 達人.");
+            Assert.That(play.Practice.Branch, Is.EqualTo(BranchRoute.Master), "The route list stops at 達人.");
             Assert.That(play.practiceView.value.text, Is.EqualTo(L10n.Get("Play", "practice.branch.master")));
-            Assert.That(play.Practice.Count, Is.EqualTo(bars + 1), "達人's two half measures replace one bar line list entry.");
+            Assert.That(play.Practice.Progress.Count, Is.EqualTo(bars + 1), "達人's two half measures replace one bar line list entry.");
             yield return Click(play.practiceView.previous);
-            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
-            Assert.That(play.Practice.Count, Is.EqualTo(bars));
+            Assert.That(play.Practice.Branch, Is.EqualTo(BranchRoute.Expert));
+            Assert.That(play.Practice.Progress.Count, Is.EqualTo(bars));
             var notes = play.Session.Chart.Notes;
             Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Lane1.Shown.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True);
             yield return Press(Key.F);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Measure));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Measure));
             Assert.That(play.practiceView.heading.text, Is.EqualTo(L10n.Get("Play", "practice.measure.heading")));
             yield return Press(Key.K);
-            Assert.That(play.Practice.Target, Is.EqualTo(1));
+            Assert.That(play.Practice.Progress.Target, Is.EqualTo(1));
             yield return new WaitForSecondsRealtime(0.25f);
             yield return Press(Key.F);
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Speed));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Speed));
             yield return Press(Key.F);
             yield return Waits.Until(() => !play.IsPaused);
             yield return Waits.Until(() => play.Session.BranchHistory.Count == 2);
@@ -643,8 +643,8 @@ namespace OurTaiko.Tests
             Assert.That(play.Session.CurrentBranch, Is.EqualTo(BranchRoute.Expert));
             // A new pause starts again on the branch page and keeps the chosen route.
             play.TogglePause(); yield return null;
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
-            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Expert));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Branch));
+            Assert.That(play.Practice.Branch, Is.EqualTo(BranchRoute.Expert));
         }
         // A normal play refuses an s branch and an omitted #M; practice plays them on the menu's route.
         [UnityTest]
@@ -652,10 +652,10 @@ namespace OurTaiko.Tests
         {
             yield return StartPractice(AudioBackend.BassSimple, false,
                 "TITLE:Practice Test\nBPM:240\nCOURSE:Oni\nLEVEL:1\n#START\n1111,\n#BRANCHSTART s,100,200\n#N\n1111,\n#E\n2222,\n#BRANCHEND\n1111,\n#END");
-            Assert.That(play.PracticeStage, Is.EqualTo(PracticeStage.Branch));
+            Assert.That(play.Practice.Stage, Is.EqualTo(PracticeStage.Branch));
             Assert.That(play.pauseMenu.modeSwitch.interactable, Is.False, "A practice-only chart must not offer normal play.");
             yield return Press(Key.K); yield return Press(Key.K);
-            Assert.That(play.PracticeBranch, Is.EqualTo(BranchRoute.Master));
+            Assert.That(play.Practice.Branch, Is.EqualTo(BranchRoute.Master));
             var notes = play.Session.Chart.Notes;
             Assert.That(notes.Where(n => n.BranchId >= 0).All(n => play.Lane1.Shown.IsPracticePreviewActive(n) == (n.Route == BranchRoute.Expert)), Is.True,
                 "達人 falls back to the authored 玄人 notes.");
@@ -684,7 +684,7 @@ namespace OurTaiko.Tests
             if (throughEntry) yield return EnterThroughEntry();
             else { SceneSwitcher.Instance.PracticeMode = true; yield return TestPlay.Open(song, "Oni", false); }
             play = Object.FindAnyObjectByType<PlayScene>();
-            yield return Waits.Until(() => play.Practice != null && play.IsPaused);
+            yield return Waits.Until(() => play.Practice?.Progress != null && play.IsPaused);
             yield return null;
         }
         IEnumerator EnterThroughEntry()
@@ -698,7 +698,7 @@ namespace OurTaiko.Tests
             entry.Ka(2); yield return new WaitForSecondsRealtime(0.3f); entry.Don();
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.SongSelectScene && !SceneSwitcher.Instance.IsInputBlocked);
             Assert.That(SceneSwitcher.Instance.PracticeMode, Is.True);
-            SceneSwitcher.Instance.Play(song, "Oni", false);
+            SceneSwitcher.Instance.Play(new PlayRequest(song, "Oni", false));
             yield return Waits.Until(() => SceneManager.GetActiveScene().name == SceneSwitcher.PracticeScene && !SceneSwitcher.Instance.IsInputBlocked);
         }
         IEnumerator Click(UnityEngine.UI.Button button)

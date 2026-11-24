@@ -4,7 +4,7 @@
 
 [![Project Status: Active Development](https://img.shields.io/badge/Project%20Status-Active%20Development-brightgreen.svg)](https://github.com/OurTaiko/OurTaikoPlay)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
-[![Unity: 6000.3](https://img.shields.io/badge/Unity-6000.3-black.svg?logo=unity)](https://unity.com/)
+[![Unity: 6000.6](https://img.shields.io/badge/Unity-6000.6-black.svg?logo=unity)](https://unity.com/)
 
 **简体中文** · [English](README.en.md) · [日本語](README.ja.md)
 
@@ -64,7 +64,7 @@ A = 100 × (B + H)
 
 ### 环境要求
 
-- **Unity 6000.3.25f1** 或更高 6000.3 系列
+- **Unity 6000.6.8f1** 或更高 6000.6 系列
 - Unity Hub 与 Git
 
 ### 获取代码

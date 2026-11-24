@@ -392,15 +392,15 @@ namespace OurTaiko
                         else await online.SignInAsync(seat, username, text, cancel.Token);
                         status = T("status.signedInAs", seat + 1, online.Accounts.Seats[seat].Nickname, online.LoginSummary);
                     }
-                    catch (FanmadeException error) when (error.Message == "DEVICE_UNAVAILABLE")
+                    catch (OnlineException error) when (error.Message == "DEVICE_UNAVAILABLE")
                     {
                         status = T("accounts.browserUnavailable");
                     }
-                    catch (FanmadeException error) when (error.Message == "DEVICE_EXPIRED")
+                    catch (OnlineException error) when (error.Message == "DEVICE_EXPIRED")
                     {
                         status = T("accounts.browserExpired");
                     }
-                    catch (FanmadeException error) when (error.Message == "DEVICE_DENIED")
+                    catch (OnlineException error) when (error.Message == "DEVICE_DENIED")
                     {
                         status = T("accounts.browserDenied");
                     }

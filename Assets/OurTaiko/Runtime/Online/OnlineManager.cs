@@ -11,14 +11,14 @@ namespace OurTaiko.Online
     // A server category as a song-select folder: its songs in API order (shared SongDefinitions).
     // Global holder of the online servers, created before the first scene and kept across loads
     // (like SettingManager). It signs in to the built-in servers and loads their
-    // song lists (at startup from the Presented scene, later from the settings), owns the FanmadeClient, pumps its score
+    // song lists (at startup from the Presented scene, later from the settings), owns the OnlineClient, pumps its score
     // uploads every frame and turns the connected catalog into SongDefinitions and category
     // folders for song select.
     public sealed class OnlineManager : MonoBehaviour
     {
         public static OnlineManager Instance { get; private set; }
 
-        public FanmadeClient Client { get; private set; }
+        public OnlineClient Client { get; private set; }
         // The connected catalog as playable songs; the same instance for a chart until Reset.
         public IReadOnlyList<SongDefinition> Songs => songs;
         // One folder per server category, in server then catalog order.
@@ -37,11 +37,11 @@ namespace OurTaiko.Online
         // The names of the servers OfflineFolders stand in for, by endpoint id.
         readonly Dictionary<string, string> offlineServerNames = new Dictionary<string, string>();
         // The offline store as last scanned (OfflineChartStore.Scan on a worker, like the songs folder).
-        OfflineChartStore.Entry[] cached = Array.Empty<OfflineChartStore.Entry>();
-        Task<OfflineChartStore.Entry[]> cacheScan;
+        CachedChart[] cached = Array.Empty<CachedChart>();
+        Task<CachedChart[]> cacheScan;
         bool cacheScanned;
-        readonly Dictionary<string, (SongDefinition Song, FanmadeChart Chart)> byKey = new Dictionary<string, (SongDefinition, FanmadeChart)>();
-        readonly Dictionary<SongDefinition, FanmadeChart> charts = new Dictionary<SongDefinition, FanmadeChart>();
+        readonly Dictionary<string, (SongDefinition Song, OnlineChart Chart)> byKey = new Dictionary<string, (SongDefinition, OnlineChart)>();
+        readonly Dictionary<SongDefinition, OnlineChart> charts = new Dictionary<SongDefinition, OnlineChart>();
         readonly List<UnityEngine.Object> owned = new List<UnityEngine.Object>();
         // Decoded playlist covers by content hash.
         readonly Dictionary<string, Sprite> covers = new Dictionary<string, Sprite>();
@@ -70,8 +70,7 @@ namespace OurTaiko.Online
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            UseCache(Path.Combine(GamePaths.Root, "cache", "fanmade"),
-                Path.Combine(GamePaths.Root, "scores.sqlite3"));
+            UseCache(Path.Combine(GamePaths.Root, "cache", "fanmade"), GameDatabase.DefaultPath);
             UseAccounts(new AccountStore(Path.Combine(GamePaths.Root, AccountStore.FileName), DeviceSecret()), new AccountCenter());
             UseProfiles(new ProfileCenter());
         }
@@ -104,7 +103,7 @@ namespace OurTaiko.Online
         public ProfileCenter Profiles { get; private set; }
         // Seats whose sign-in the account center refused (expired, signed out elsewhere, password
         // changed) since Entry last said so.
-        readonly bool[] expired = new bool[FanmadeEndpoint.SeatCount];
+        readonly bool[] expired = new bool[OnlineEndpoint.SeatCount];
 
         // What the running sign-in or song list request is doing, for the screen that started it,
         // and how the last one of each ended.
@@ -113,7 +112,7 @@ namespace OurTaiko.Online
         public string SongListSummary { get; private set; } = "";
         public bool IsBusy { get; private set; }
         // The built-in servers' connections.
-        readonly List<FanmadeEndpoint> builtInEndpoints = new List<FanmadeEndpoint>();
+        readonly List<OnlineEndpoint> builtInEndpoints = new List<OnlineEndpoint>();
 
         // Startup: load every built-in song list, then sign the accounts in (which loads their
         // scores). Cancelling stops at the current request and keeps what has arrived.
@@ -280,7 +279,7 @@ namespace OurTaiko.Online
                             results.Add(Item(who + " " + name, cancel.IsCancellationRequested ? L10n.Get("Online", "summary.cancelled") : Describe(error)));
                         }
                     }
-                    else together = Array.Empty<FanmadeEndpoint>();
+                    else together = Array.Empty<OnlineEndpoint>();
                     foreach (var e in endpoints.Except(together))
                     {
                         string name = e.Config.DisplayName;
@@ -325,7 +324,7 @@ namespace OurTaiko.Online
             return any;
         }
 
-        void Expire(int seat, IEnumerable<FanmadeEndpoint> endpoints)
+        void Expire(int seat, IEnumerable<OnlineEndpoint> endpoints)
         {
             Accounts.Seats[seat] = new OurTaikoAccount();
             SaveAccounts();
@@ -425,7 +424,7 @@ namespace OurTaiko.Online
                         results.Add(Item(site, cancel.IsCancellationRequested ? L10n.Get("Online", "summary.cancelled") : Describe(error)));
                     }
                 }
-                else together = Array.Empty<FanmadeEndpoint>();
+                else together = Array.Empty<OnlineEndpoint>();
                 var endpoints = all.Except(together).ToArray();
                 int done = together.Length > 0 ? 1 : 0;
                 for (int i = 0; i < endpoints.Length; i++)
@@ -462,18 +461,18 @@ namespace OurTaiko.Online
         // The built-in servers that are sources of one site, which loads and signs in to them
         // together; none when there are not at least two of one site. They are never asked one
         // by one instead: a site that cannot answer for them fails as a whole.
-        static FanmadeEndpoint[] Together(IReadOnlyList<FanmadeEndpoint> endpoints)
+        static OnlineEndpoint[] Together(IReadOnlyList<OnlineEndpoint> endpoints)
         {
             var sites = endpoints.Where(e => e.Config.site.Length > 0 && e.Config.SourceId.Length > 0).GroupBy(e => e.Config.site).ToArray();
             var site = sites.FirstOrDefault(g => g.Count() > 1);
-            return site == null ? Array.Empty<FanmadeEndpoint>() : site.ToArray();
+            return site == null ? Array.Empty<OnlineEndpoint>() : site.ToArray();
         }
 
         // What a site is called: the built-in one by its name, another by its address.
-        static string SiteName(FanmadeEndpoint e) => e.Config.site == ServerConfig.Site ? ServerConfig.SiteName : e.Config.site;
+        static string SiteName(OnlineEndpoint e) => e.Config.site == ServerConfig.Site ? ServerConfig.SiteName : e.Config.site;
 
         // One connection per built-in server, created signed out; the accounts are set when signing in.
-        IReadOnlyList<FanmadeEndpoint> BuiltInEndpoints()
+        IReadOnlyList<OnlineEndpoint> BuiltInEndpoints()
         {
             var current = Client.Endpoints;
             if (builtInEndpoints.Count != builtIn.Length || builtInEndpoints.Any(e => !current.Contains(e)))
@@ -556,8 +555,8 @@ namespace OurTaiko.Online
             Client?.Dispose();
             ClearSongs();
             builtInEndpoints.Clear();
-            Client = new FanmadeClient(root, databasePath);
-            cached = Array.Empty<OfflineChartStore.Entry>();
+            Client = new OnlineClient(root, databasePath);
+            cached = Array.Empty<CachedChart>();
             cacheScan = null; cacheScanned = false;
         }
 
@@ -616,7 +615,7 @@ namespace OurTaiko.Online
                 folders.Add(new SongFolder
                 {
                     Key = category.Server + "/" + category.Id, Title = category.Title, ServerName = category.ServerName, Server = category.Server,
-                    Genre = GenreFrame(category.Genre), Songs = SongsOf(category.Server, category.ChartIds),
+                    Genre = GenreFrame(category.Genre), ScenePreset = category.ScenePreset, Songs = SongsOf(category.Server, category.ChartIds),
                 });
             // Playlists follow the categories as further folders, drawn in their own genre.
             foreach (var playlist in Client.Playlists)
@@ -624,7 +623,7 @@ namespace OurTaiko.Online
                 var folder = new SongFolder
                 {
                     Key = playlist.Server + "/playlist/" + playlist.Id, Title = playlist.Title, ServerName = playlist.ServerName, Server = playlist.Server,
-                    Genre = GenreFrame(playlist.Genre), Songs = SongsOf(playlist.Server, playlist.ChartIds),
+                    Genre = GenreFrame(playlist.Genre), ScenePreset = playlist.ScenePreset, Songs = SongsOf(playlist.Server, playlist.ChartIds),
                 };
                 folders.Add(folder);
                 if (playlist.Cover != null) LoadCover(folder, playlist);
@@ -636,7 +635,7 @@ namespace OurTaiko.Online
 
         // Fills folder.Cover once the picture (WebP) is cached and decoded; the folder shows without it
         // until then, and for good when the download or the image is bad.
-        async void LoadCover(SongFolder folder, FanmadePlaylist playlist)
+        async void LoadCover(SongFolder folder, OnlinePlaylist playlist)
         {
             string hash = playlist.Cover.Hash;
             if (covers.TryGetValue(hash, out var known)) { folder.Cover = known; return; }
@@ -650,7 +649,7 @@ namespace OurTaiko.Online
                 {
                     // The server keeps covers up to 1600 px on a side; the open board needs far
                     // fewer, so a bigger one is scaled down to CoverSide as it is decoded.
-                    var texture = Pictures.Decode(bytes, 2048, CoverSide, readable: false) ?? throw new FanmadeException("PLAYLIST_COVER_INVALID");
+                    var texture = Pictures.Decode(bytes, 2048, CoverSide, readable: false) ?? throw new OnlineException("PLAYLIST_COVER_INVALID");
                     texture.name = "PlaylistCover " + hash; texture.hideFlags = HideFlags.DontSave; texture.wrapMode = TextureWrapMode.Clamp;
                     owned.Add(texture);
                     sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect);
@@ -665,12 +664,12 @@ namespace OurTaiko.Online
 
         // Search can discover songs not present in any category. Register them for preview,
         // download and score lookup without rebuilding or replacing the browsing catalog.
-        public SongDefinition SearchSong(FanmadeChart chart) => Register(chart, null);
+        public SongDefinition SearchSong(OnlineChart chart) => Register(chart, null);
 
         // The song of a chart (the same instance for a chart until Reset), listed by its metadata
         // until SongLoadingScene prepares it: a copy downloaded earlier may be an older version,
         // so loading always prepares the chart again. `keep` collects the keys a rebuild retains.
-        SongDefinition Register(FanmadeChart chart, HashSet<string> keep)
+        SongDefinition Register(OnlineChart chart, HashSet<string> keep)
         {
             string key = SongKey(chart);
             keep?.Add(key);
@@ -710,9 +709,9 @@ namespace OurTaiko.Online
                 int count = 0;
                 foreach (var entry in server.OrderBy(x => x.ChartId, StringComparer.Ordinal))
                 {
-                    FanmadeChart chart;
+                    OnlineChart chart;
                     try { chart = entry.ToChart(); }
-                    catch (FanmadeException error) { Log.Warn("Online", "Skipping cached chart " + entry.Key + ": " + error.Message); continue; }
+                    catch (OnlineException error) { Log.Warn("Online", "Skipping cached chart " + entry.Key + ": " + error.Message); continue; }
                     if (!chart.IsPlayable) continue;
                     var song = Register(chart, keep);
                     offlineSongs.Add(song);
@@ -746,11 +745,11 @@ namespace OurTaiko.Online
         // on an unreachable one under the account the seat would sign in with (OfflineAccountId),
         // sent once that server connects again. False when nothing is queued (a guest, or a server
         // the game does not connect to).
-        public bool Submit(FanmadeChart chart, int difficulty, FanmadeScore score, PlayRecord replay = null, int seat = 0, string side = null)
+        public bool Submit(OnlineChart chart, int difficulty, OnlineScore score, PlayRecord replay = null, int seat = 0, string side = null)
             => Client.Submit(chart, difficulty, score, replay, seat, side, OfflineAccountId(chart.Server, seat));
 
         // The queue key a seat's scores have on a server that is not connected (what
-        // FanmadeEndpoint.AccountIdOf gives once it is): the seat's remembered OurTaiko account on
+        // OnlineEndpoint.AccountIdOf gives once it is): the seat's remembered OurTaiko account on
         // a built-in server. null without one, and for the cache of any other server.
         public string OfflineAccountId(string server, int seat)
         {
@@ -760,7 +759,7 @@ namespace OurTaiko.Online
             if (!builtIn.Any(b => string.Equals(Url(b.Url), url, StringComparison.OrdinalIgnoreCase))) return null;
             var account = Accounts.Seats[seat];
             if (!account.IsSignedIn || account.UserId.Length == 0) return null;
-            return FanmadeEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(url + "\n" + "sso:" + account.UserId));
+            return OnlineEndpoint.Sha256Hex(System.Text.Encoding.UTF8.GetBytes(url + "\n" + "sso:" + account.UserId));
         }
 
         // The display name of a server by endpoint id: a connected one's, else the name its
@@ -785,13 +784,13 @@ namespace OurTaiko.Online
         public static string OfflineLabel => L10n.Get("Online", "label.offlineCache");
         static string OtherLabel => L10n.Get("Online", "label.other");
 
-        public static string SongKey(FanmadeChart chart) => "fanmade/" + chart.Server + "/" + chart.Id;
+        public static string SongKey(OnlineChart chart) => "fanmade/" + chart.Server + "/" + chart.Id;
 
         public bool IsOnline(SongDefinition song) => song != null && charts.ContainsKey(song);
-        public FanmadeChart ChartOf(SongDefinition song) => song != null && charts.TryGetValue(song, out var chart) ? chart : null;
+        public OnlineChart ChartOf(SongDefinition song) => song != null && charts.TryGetValue(song, out var chart) ? chart : null;
 
         // After a download: the song plays the verified copy (the chart may be a newer version).
-        public void SetPrepared(SongDefinition song, FanmadeChart chart, string playableTja, AudioClip music)
+        public void SetPrepared(SongDefinition song, OnlineChart chart, string playableTja, AudioClip music)
         {
             charts[song] = chart;
             song.onlineChart = chart;

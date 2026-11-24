@@ -32,7 +32,7 @@ namespace OurTaiko.Tests
                 if (next.name == SceneSwitcher.SongLoadingScene) parkedAt = Time.realtimeSinceStartup;
             }
             SceneManager.activeSceneChanged += OnActiveScene;
-            switcher.Play(song);
+            switcher.Play(new PlayRequest(song));
             Assert.That(switcher.IsSwitching && curtain.IsVisible && !curtain.IsClosed, Is.True);
             Assert.That(curtain.title.text, Is.EqualTo("TEST PULSE"));
             foreach (var text in new[] { curtain.title, curtain.subtitle })

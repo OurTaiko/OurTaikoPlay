@@ -10,10 +10,10 @@ namespace OurTaiko.Online
         public const string SiteName = "OurTaikoNET";
 
         // Url is the address each had as a site of its own. A server's charts, offline cache,
-        // queued scores and saved lists are kept under it (FanmadeEndpoint.Id), so it stays what
+        // queued scores and saved lists are kept under it (OnlineEndpoint.Id), so it stays what
         // it was and nothing a player has moves. Api is where its API is now, and Site the site it
         // is a source of: the servers of one site are loaded and signed in to together
-        // (GET <site>/api/v2/game/sources, FanmadeClient.LoadSiteAsync). The game speaks version 2
+        // (GET <site>/api/v2/game/sources, OnlineClient.LoadSiteAsync). The game speaks version 2
         // of the site's API, which names public files by their path (Distribution); version 1
         // stays as it was for the games released before.
         public static readonly (string Name, string Url, string Api, string Site)[] BuiltIn =

@@ -19,7 +19,7 @@ AOCI 的 MCP 在各人机器上配置（推荐用户级的全局配置，从工�
 ## 1. 修改代码时做最佳实践，不打补丁
 
 - 先找到并说明根因，在产生问题的地方修，不在症状处绕过。
-- 改在负责它的那一层：玩法与判定在 `Assets/OurTaiko/Runtime/Play`、`Core`，音频在 `Audio`，输入在 `Input`，联网在 `Online`，联机在 `Multi`，画面逻辑在 `Scenes`；编辑器与构建工具只放 `Assets/OurTaiko/Editor`。不把一层的逻辑塞进另一层。
+- 改在负责它的那一层：玩法与判定在 `Assets/OurTaiko/Runtime/Play`、`Core`，音频在 `Audio`，输入在 `Input`，联网在 `Online`，联机在 `Multi`，画面逻辑在 `Scenes`；编辑器与构建工具只放 `Assets/OurTaiko/Editor`。不把一层的逻辑塞进另一层。`Core` 是单独的程序集 `OurTaiko.Core`，不能引用上层：它需要的东西由调用方传入，不要为了绕过编译错误把上层的服务塞回 `Core`。
 - 不写针对某首歌、某张谱、某台设备的特例分支；不靠吞异常、硬编码、`WaitForSeconds`／延时、重试或关掉警告来让问题消失。平台差异用现有的条件编译（`#if UNITY_IOS` 等）收在负责它的类里。
 - 复用已有代码，不复制粘贴；与 OurTaikoNet 共享的契约（`/api/` 回答、Multi-Enso 的 `multiplay.proto`、`.otanim` 格式）两边一起改并保持兼容，已发布的游戏版本还在用旧接口。
 - Unity 资源与它的 `.meta` 一起提交，不手改 GUID；改场景、预制体只动需要的物体，提交前用 `git diff` 确认没有夹带无关的序列化变动。
@@ -32,7 +32,7 @@ PR 描述中必须写明本次工作所使用的 AI 模型名称（尽量写到�
 
 ## 3. 开 PR 之前完成回归测试
 
-CI 不在 PR 上运行，`Test` 工作流只能手动触发，构建也不等测试，所以本地测试是合并前唯一的关口。开 PR 之前按改动范围运行并通过（命令见 CONTRIBUTING.md「开 PR 前完成回归测试」）：
+PR 上只有 `Test` 工作流自动跑 EditMode 的 `OurTaiko.FinishedTests`（排除 `AudioDevice` 类别），而且只对本仓库的分支：fork 来的 PR 拿不到 Unity 许可，这项检查会被跳过；只改文档或 AOCI 索引的 PR 也不跑。它只是 PR 页面上的信号，不是合并的必要条件，构建也不等测试；PlayMode 和其他套件仍只能手动触发。所以本地测试仍是合并前的关口，PlayMode 也要在本地跑。开 PR 之前按改动范围运行并通过（命令见 CONTRIBUTING.md「开 PR 前完成回归测试」）：
 
 - 改了 `Runtime/` 或 `Editor/` 的代码：EditMode 测试，至少 `OurTaiko.FinishedTests` 全部通过；
 - 改了场景、预制体、画面流程、音频或输入：再加 PlayMode 测试，至少 `OurTaiko.FinishedPlayModeTests`；

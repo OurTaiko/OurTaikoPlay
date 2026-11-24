@@ -127,7 +127,7 @@ namespace OurTaiko.Tests
                 yield return null;
                 while (SceneSwitcher.Instance.IsInputBlocked) yield return null;
                 SceneSwitcher.Instance.SetSeats(Side.P1, Side.P2);
-                yield return TestPlay.Open(song, "Oni", true, "Oni", true);
+                yield return TestPlay.Open(song, new SeatPlay("Oni", true), new SeatPlay("Oni", true));
                 float deadline = Time.realtimeSinceStartup + 20;
                 while (SceneSwitcher.Instance.IsSwitching || SceneManager.GetActiveScene().name != SceneSwitcher.DoublePlayScene)
                 { yield return null; Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline)); }
@@ -158,12 +158,12 @@ namespace OurTaiko.Tests
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             var manager = SettingManager.EnsureInstance();
-            var site = new FanmadeFixture();
+            var site = new OnlineFixture();
             var model = Resources.Load<GlbAsset>(DonLibrary.Root + "cos/0").bytes;
             string hash;
             using (var sha = System.Security.Cryptography.SHA256.Create())
                 hash = System.BitConverter.ToString(sha.ComputeHash(model)).Replace("-", "").ToLowerInvariant();
-            string user = FanmadeFixture.UserId("don");
+            string user = OnlineFixture.UserId("don");
             site.CustomRequest = context =>
             {
                 string path = context.Request.Url.AbsolutePath;

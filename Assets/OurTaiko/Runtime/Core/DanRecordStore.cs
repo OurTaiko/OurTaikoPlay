@@ -1,7 +1,6 @@
 using System;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -40,23 +39,15 @@ namespace OurTaiko
         }
 
         static DanRecordStore shared;
-        readonly string path;
+        readonly GameDatabase database;
         public static DanRecordStore Shared
         {
-            get => shared ??= new DanRecordStore(Path.Combine(GamePaths.Root, "scores.sqlite3"));
+            get => shared ??= new DanRecordStore(GameDatabase.DefaultPath);
             set => shared = value;
         }
 
-        public DanRecordStore(string path)
-        {
-            this.path = path;
-            string directory = Path.GetDirectoryName(path);
-            if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
-            using var db = Open();
-            db.CreateTable<Attempt>();
-        }
-
-        SQLiteConnection Open() => new SQLiteConnection(path) { BusyTimeout = TimeSpan.FromSeconds(5) };
+        public DanRecordStore(string path) : this(new GameDatabase(path)) { }
+        public DanRecordStore(GameDatabase database) => this.database = database;
 
         public static string Key(DanCourseEntry entry)
         {
@@ -78,7 +69,7 @@ namespace OurTaiko
 
         public Best? Get(string courseKey)
         {
-            using var db = Open();
+            using var db = database.Open();
             var rows = db.Table<Attempt>().Where(a => a.courseKey == courseKey).ToList();
             if (rows.Count == 0) return null;
             return new Best(rows.Max(a => a.verdict), rows.Max(a => a.score), rows.Max(a => a.arrival), rows.Count);
@@ -90,7 +81,7 @@ namespace OurTaiko
             IReadOnlyList<DanSongStats> songs = null, int gaugePercent = 0)
         {
             var before = Get(courseKey);
-            using var db = Open();
+            using var db = database.Open();
             db.Insert(new Attempt
             {
                 courseKey = courseKey, title = title, verdict = verdict, score = score, maxCombo = maxCombo,
@@ -138,7 +129,7 @@ namespace OurTaiko
         {
             var bests = new int?[course.Exams.Count][];
             for (int i = 0; i < bests.Length; i++) bests[i] = new int?[course.Exams[i].PerSong ? course.Songs.Count : 1];
-            using var db = Open();
+            using var db = database.Open();
             foreach (var row in db.Table<Attempt>().Where(a => a.courseKey == courseKey).ToList())
             {
                 if (row.songStats == null) continue;

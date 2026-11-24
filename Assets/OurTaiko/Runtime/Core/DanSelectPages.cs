@@ -19,23 +19,22 @@ namespace OurTaiko
 
     public static class DanSelectPages
     {
-        public const string FanmadeTitle = "Fanmade", DatabaseTitle = "Database";
+        public const string OnlineTitle = "Fanmade", DatabaseTitle = "Database";
         public const string GaidenId = "gaiden";
-        public static string LocalTitle => L10n.Get("Dan", "select.pageLocal");
-        public static string GaidenTitle => L10n.Get("Dan", "select.gaiden");
         // box/folder 6: the green plaque.
         public const int GaidenColor = 6;
 
         // local: the courses of the song library roots. servers: every connected server's courses
         // (their Course.Server names the server). standIns: the DanServerTest stand-in courses,
         // listed unfiltered on the page of their server (Fanmade when it is none of the two).
+        // localTitle and gaidenTitle are in the player's language (DanText.LocalPageTitle, GaidenTitle).
         public static List<DanSelectPage> Build(IEnumerable<DanCourseEntry> local, IEnumerable<DanCourseEntry> servers,
-            IEnumerable<DanCourseEntry> standIns, string fanmadeUrl, string databaseUrl)
+            IEnumerable<DanCourseEntry> standIns, string fanmadeUrl, string databaseUrl, string localTitle, string gaidenTitle)
         {
             var pages = new List<DanSelectPage>
             {
-                new DanSelectPage { Title = LocalTitle },
-                new DanSelectPage { Title = FanmadeTitle, Server = Trim(fanmadeUrl) },
+                new DanSelectPage { Title = localTitle },
+                new DanSelectPage { Title = OnlineTitle, Server = Trim(fanmadeUrl) },
                 new DanSelectPage { Title = DatabaseTitle, Server = Trim(databaseUrl) },
             };
             pages[0].Courses.AddRange(local);
@@ -44,7 +43,7 @@ namespace OurTaiko
             foreach (var entry in servers)
                 if (entry.IsPlayable ? entry.Course.Official : false) PageOf(pages, entry.Course.Server).Courses.Add(entry);
             foreach (var entry in standIns) PageOf(pages, entry.Course.Server).Courses.Add(entry);
-            for (int i = 1; i < pages.Count; i++) pages[i].Courses.Add(Gaiden(pages[i].Server));
+            for (int i = 1; i < pages.Count; i++) pages[i].Courses.Add(Gaiden(pages[i].Server, gaidenTitle));
             return pages;
         }
 
@@ -56,10 +55,10 @@ namespace OurTaiko
 
         static string Trim(string url) => (url ?? "").Trim().TrimEnd('/');
 
-        public static DanCourseEntry Gaiden(string server)
+        public static DanCourseEntry Gaiden(string server, string title)
         {
             var course = new DanCourse { Id = GaidenId, Server = Trim(server), Color = GaidenColor };
-            course.Titles[""] = GaidenTitle;
+            course.Titles[""] = title;
             return new DanCourseEntry { Course = course, Path = Trim(server) + "/api/v2/game/dans/{code}", IsGaiden = true };
         }
 

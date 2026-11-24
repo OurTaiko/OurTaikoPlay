@@ -12,26 +12,13 @@ namespace OurTaiko
         // online one. null when the chart has none.
         [System.NonSerialized] public string moviePath;
         [System.NonSerialized] public string localChartSha256;
-        // The #SCENEPRESET of the folders the song is listed in, the nearest first; null when
-        // none names one.
-        [System.NonSerialized] public string[] folderScenePresets;
-
-        // The play backdrops asked for this song, the one that counts most first: the chart's
-        // own SCENEPRESET (`own`), then its folders' from the nearest outwards.
-        public string[] ScenePresets(string own)
-        {
-            var asked = new System.Collections.Generic.List<string>();
-            if (!string.IsNullOrWhiteSpace(own)) asked.Add(own);
-            if (folderScenePresets != null) asked.AddRange(folderScenePresets);
-            return asked.ToArray();
-        }
         // Online charts and authored assets keep their existing identity. Disk charts
         // use their raw file hash; name remains the entry identity for navigation/audio.
         public string ScoreKey => string.IsNullOrEmpty(localChartSha256) ? name : localChartSha256;
-        NativeAudioSample preparedAudio;
+        IPreparedAudio preparedAudio;
         public bool HasPreparedAudio => preparedAudio != null && !preparedAudio.IsDisposed;
-        public void SetPreparedAudio(NativeAudioSample audio) { preparedAudio?.Dispose(); preparedAudio = audio; }
-        public NativeAudioSample TakePreparedAudio() { var audio = preparedAudio; preparedAudio = null; return audio?.IsDisposed == true ? null : audio; }
+        public void SetPreparedAudio(IPreparedAudio audio) { preparedAudio?.Dispose(); preparedAudio = audio; }
+        public IPreparedAudio TakePreparedAudio() { var audio = preparedAudio; preparedAudio = null; return audio?.IsDisposed == true ? null : audio; }
         void OnDisable() { preparedAudio?.Dispose(); preparedAudio = null; }
         public string course = "Oni";
         [Tooltip("Positive values delay judgments relative to the music, in milliseconds.")]
@@ -39,7 +26,7 @@ namespace OurTaiko
         public float visualOffsetMs;
         [Tooltip("Song-select board colour: the Nijiiro genre frame (0 default ... 9).")]
         [Range(0, 9)] public int genre;
-        [System.NonSerialized] public Online.FanmadeChart onlineChart;
+        [System.NonSerialized] public Online.OnlineChart onlineChart;
         TextAsset rankChart;
         readonly System.Collections.Generic.Dictionary<string, int> rankThresholds = new System.Collections.Generic.Dictionary<string, int>();
 
@@ -97,10 +84,9 @@ namespace OurTaiko
         public double MovieOffset() => onlineChart != null ? onlineChart.MovieOffset : chart != null ? ReadInfo().MovieOffset : 0;
         // Display metadata is separate from the parsed chart and score identity. Online songs take it
         // from the server's metadata: their chart is only set once SongLoadingScene downloads it.
-        public SongInfo ReadDisplayInfo()
-        {
-            string language = SettingManager.Instance != null ? SettingManager.Instance.Settings.general.Language : "en";
-            return onlineChart != null ? onlineChart.ToSongInfo(language) : SongInfo.Read(chart.text, language);
-        }
+        // language picks the titles (GeneralSettings.Language); the screens call the overload
+        // without one, which reads the player's (SongDisplay.ReadDisplayInfo).
+        public SongInfo ReadDisplayInfo(string language)
+            => onlineChart != null ? onlineChart.ToSongInfo(language) : SongInfo.Read(chart.text, language);
     }
 }

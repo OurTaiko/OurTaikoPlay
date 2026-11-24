@@ -4,7 +4,7 @@
 
 [![Project Status: Active Development](https://img.shields.io/badge/Project%20Status-Active%20Development-brightgreen.svg)](https://github.com/OurTaiko/OurTaikoPlay)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
-[![Unity: 6000.3](https://img.shields.io/badge/Unity-6000.3-black.svg?logo=unity)](https://unity.com/)
+[![Unity: 6000.6](https://img.shields.io/badge/Unity-6000.6-black.svg?logo=unity)](https://unity.com/)
 
 [简体中文](README.md) · [English](README.en.md) · **日本語**
 
@@ -43,7 +43,7 @@ OurTaikoPlay は、Unity（C#）でゼロから開発されているオープン
 
 ### 必要環境
 
-- **Unity 6000.3.25f1** または互換性のある 6000.3 系
+- **Unity 6000.6.8f1** または互換性のある 6000.6 系
 - Unity Hub および Git
 
 ### リポジトリのクローン

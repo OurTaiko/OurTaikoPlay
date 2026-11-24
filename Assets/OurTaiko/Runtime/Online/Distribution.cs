@@ -32,7 +32,7 @@ namespace OurTaiko.Online
         // (Distribution.ValidPath) is RESOURCE_PATH_INVALID.
         public FileAddress Locate(string path)
         {
-            if (!Distribution.ValidPath(path)) throw new FanmadeException("RESOURCE_PATH_INVALID");
+            if (!Distribution.ValidPath(path)) throw new OnlineException("RESOURCE_PATH_INVALID");
             return new FileAddress(Base + path, Canonical + path);
         }
     }
@@ -159,7 +159,7 @@ namespace OurTaiko.Online
                 using var response = await http.SendAsync(request).ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode);
                 string text = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                if (text.Length > 16 * 1024) throw new FanmadeException("RESPONSE_SIZE_LIMIT_EXCEEDED");
+                if (text.Length > 16 * 1024) throw new OnlineException("RESPONSE_SIZE_LIMIT_EXCEEDED");
                 var root = Read(Json.Parse(text), site);
                 Log.Info("Online", "Public files come from " + Host(root.Base) + (root.Mirror ? " (mirror)" : ""));
                 return root;

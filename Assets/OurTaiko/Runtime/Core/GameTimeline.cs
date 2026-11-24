@@ -39,7 +39,9 @@ namespace OurTaiko
             frameTime = 0;
         }
 
-        internal static void UpdateFrame()
+        // Samples this frame's time once; later calls in the same frame change nothing. GameLoop
+        // calls it first thing every frame, before input is collected.
+        public static void UpdateFrame()
         {
             if (sampledFrame == Time.frameCount) return;
             sampledFrame = Time.frameCount;

@@ -91,9 +91,9 @@ namespace OurTaiko
         void Awake()
         {
             switcher = SceneSwitcher.EnsureInstance();
-            Result = switcher.LastResult ?? Placeholder();
+            Result = switcher.ResultOf(0) ?? Placeholder();
             // A two-player result needs 2P's board in the scene; without it only 1P's is shown.
-            var result2P = view.secondBoard != null ? switcher.LastResult2P : null;
+            var result2P = view.secondBoard != null ? switcher.ResultOf(1) : null;
             var played = SaveScores();
             PrepareRating(played, result2P);
             bgClip = Clip(backgroundTimeline); SuccessClip = Clip(successTimeline); CrownClip = Clip(crownTimeline);
@@ -105,7 +105,7 @@ namespace OurTaiko
             boards.Add(new ResultBoard(this, 0, view, Result, result2P != null));
             if (view.secondBoard != null) view.secondBoard.gameObject.SetActive(result2P != null);
             if (result2P != null) boards.Add(new ResultBoard(this, 1, view.secondBoard, result2P, true));
-            if (result2P != null && switcher.PlaysGhost) ShowGhostPlates(switcher.Ghost);
+            if (result2P != null && switcher.PlaysGhost) ShowGhostPlates(switcher.Request.Ghost);
             if (view.secondAnalysis != null)
             {
                 view.secondAnalysis.gameObject.SetActive(result2P != null);
@@ -132,19 +132,20 @@ namespace OurTaiko
         // The song of the play this entry committed; null when there was none to commit.
         SongDefinition SaveScores()
         {
-            if (!switcher.TakeCompletedPlay(out var song, out var record, out var record2P)) return null;
+            if (!switcher.TakeCompletedPlay(out var song, out var records)) return null;
+            Online.PlayRecord RecordOf(int seat) => seat < records.Count ? records[seat] : null;
             // A ghost battle keeps the player's play only, as the player's own (SceneSwitcher.Lead); the
             // recording's result is shown and never saved.
             if (switcher.PlaysGhost)
             {
-                bool below = switcher.Ghost.PlayerLane == 1;
-                var played = below ? switcher.LastResult2P : Result;
-                if (played != null) SaveScore(song, played, below ? record2P : record, switcher.Lead.Index());
+                bool below = switcher.Request.Ghost.PlayerLane == 1;
+                var played = below ? switcher.ResultOf(1) : Result;
+                if (played != null) SaveScore(song, played, RecordOf(below ? 1 : 0), switcher.Lead.Index());
                 return song;
             }
             // A lone player's score is their side's account's (SceneSwitcher.Lead; 1P's with two players).
-            SaveScore(song, Result, record, switcher.Lead.Index());
-            if (switcher.LastResult2P != null) SaveScore(song, switcher.LastResult2P, record2P, 1);
+            SaveScore(song, Result, RecordOf(0), switcher.Lead.Index());
+            if (switcher.ResultOf(1) != null) SaveScore(song, switcher.ResultOf(1), RecordOf(1), 1);
             return song;
         }
 
@@ -169,7 +170,7 @@ namespace OurTaiko
             int difficulty = (int)result.Difficulty;
             var best = online.Client.Best(chart, difficulty, seat, result.Side);
             if (best != null) result.PreviousBest = (int)Math.Min(int.MaxValue, Math.Max(result.PreviousBest, best.Score));
-            var score = new Online.FanmadeScore
+            var score = new Online.OnlineScore
             {
                 Good = result.Good, Ok = result.Ok, Bad = result.Bad, Score = result.Score,
                 Drumroll = result.Rolls, MaxCombo = result.MaxCombo, ClearStatus = (int)result.StoredCrown,
@@ -264,7 +265,7 @@ namespace OurTaiko
                 foreach (var press in InputManager.Players[switcher.Lead.Index()].PressesThisFrame)
                 {
                     if (press.Key.IsKa()) for (int board = 0; board < boards.Count; board++) ChangePage(board, press.Key.IsRight() ? 1 : -1);
-                    else Don(switcher.Ghost.PlayerLane);
+                    else Don(switcher.Request.Ghost.PlayerLane);
                     break;
                 }
                 return;

@@ -74,7 +74,8 @@ namespace OurTaiko
         {
             ReleaseMain(); song = value; source.clip = value.music; fade = 1; SetGroup(AudioGroup.Track);
             if (!engine.Available) return;
-            main = value.TakePreparedAudio();
+            // Only this layer prepares a song's audio, so what the song holds is a NativeAudioSample.
+            main = (NativeAudioSample)value.TakePreparedAudio();
             if (main == null)
             {
                 byte[] bytes = !string.IsNullOrEmpty(value.audioPath) ? File.ReadAllBytes(value.audioPath)

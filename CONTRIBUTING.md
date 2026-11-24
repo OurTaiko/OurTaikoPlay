@@ -10,7 +10,7 @@ AI 编程助手（AI Agent）除本文外还要遵守 [AGENTS.md](AGENTS.md)，�
 
 | 目录 | 职责 |
 |---|---|
-| `Runtime/Core` | 谱面、曲库、存档、段位等不依赖画面的核心数据与逻辑 |
+| `Runtime/Core` | 谱面、曲库、存档、段位等不依赖画面的核心数据与逻辑；单独的程序集 `OurTaiko.Core`，只被上层引用，自己不引用 Runtime 的其他部分（用到上层的类型会编译失败） |
 | `Runtime/Play` | 演奏：音符、判定、魂槽、连打、分歧 |
 | `Runtime/Audio` | BASS 音频引擎与各平台输出（WASAPI、ASIO、ALSA 等） |
 | `Runtime/Input` | 键盘、太鼓控制器与触屏输入 |
@@ -55,7 +55,7 @@ AI 编程助手（AI Agent）除本文外还要遵守 [AGENTS.md](AGENTS.md)，�
 
 ## 3. 开 PR 前完成回归测试
 
-CI 不在 PR 上运行，`Test` 工作流只能手动触发，构建也不等测试。因此**本地回归测试是合并前唯一的关口**。开 PR 之前，按改动范围跑完下面的检查并全部通过；**如果你是 AI Agent，开 PR 之前必须完成必要的回归测试**，不能把测试留给审批者。
+PR 上只有 `Test` 工作流自动跑 EditMode 的 `OurTaiko.FinishedTests`（排除 `AudioDevice` 类别），而且只对本仓库的分支：fork 来的 PR 拿不到 Unity 许可，这项检查会被跳过；只改文档或 AOCI 索引的 PR 也不跑。它只是 PR 页面上的信号，不是合并的必要条件，构建也不等测试；PlayMode 和其他套件仍只能手动触发。因此**本地回归测试仍是合并前的关口**，PlayMode 也要在本地跑，不能拿 PR 上的检查代替。开 PR 之前，按改动范围跑完下面的检查并全部通过；**如果你是 AI Agent，开 PR 之前必须完成必要的回归测试**，不能把测试留给审批者。
 
 | 改动范围 | 必须运行 |
 |---|---|
@@ -73,7 +73,7 @@ Unity -batchmode -projectPath . -runTests -testPlatform EditMode \
   -testResults TestResults/editmode.xml -logFile TestResults/editmode.log
 ```
 
-PlayMode 把 `-testPlatform` 换成 `PlayMode`、程序集换成 `OurTaiko.FinishedPlayModeTests`（不要加 `-quit`）。分类 `AudioDevice` 的测试需要真实的音频设备，只能在本机跑。batchmode 结束后执行 `git checkout -- Assets/OurTaiko/Resources/UiFonts`，它会清空动态字体图集。也可以在 GitHub 上手动运行 `Test` 工作流。
+PlayMode 把 `-testPlatform` 换成 `PlayMode`、程序集换成 `OurTaiko.FinishedPlayModeTests`（不要加 `-quit`）。分类 `AudioDevice` 的测试需要真实的音频设备，只能在本机跑。batchmode 结束后执行 `git checkout -- Assets/OurTaiko/Resources/UiFonts`，它会清空动态字体图集。也可以在 GitHub 上手动运行 `Test` 工作流，选择套件和模式；同一 PR 推了新的提交时，PR 上还在跑的那次会被取消，手动运行不受影响。
 
 - 修 bug 时先写一个能复现它的测试，确认它在修复前失败、修复后通过。
 - 新增行为要有对应的测试；不要为了让测试通过而修改或删除原有测试的断言，除非那条断言描述的行为本身就是这次要改的，并在 PR 里说明。
