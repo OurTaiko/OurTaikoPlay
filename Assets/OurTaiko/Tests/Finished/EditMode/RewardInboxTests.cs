@@ -72,6 +72,10 @@ namespace OurTaiko.Tests
             Assert.That(title.TitleName("ja"), Is.EqualTo("はじめまして"));
             Assert.That(title.TitleName("zh"), Is.EqualTo("はじめまして（中文）"), "The song language zh is the title's zh-Hans.");
             Assert.That(title.TitleStyle, Is.EqualTo("gold"));
+            Assert.That(title.TitleLayers, Is.Null, "Given before titles had layers: it looks as its style.");
+            var layered = new Reward { Kind = Reward.TitleKind, Data = Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"gold\",\"layers\":{\"band\":\"band/lumen-title-gold\",\"effect\":\"effect/lumen-title-gold\",\"icon\":null}}}") };
+            Assert.That(layered.TitleLayers, Is.EqualTo(new TitleParts("band/lumen-title-gold", "effect/lumen-title-gold", null)));
             Assert.That(title.Service, Is.EqualTo("rule"));
             var dan = inbox.Queue[1];
             Assert.That((dan.DanIndex, dan.DanGold, dan.DanCombo), Is.EqualTo((20, true, 1)));

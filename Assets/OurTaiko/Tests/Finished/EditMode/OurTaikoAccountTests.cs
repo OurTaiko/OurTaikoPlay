@@ -266,7 +266,7 @@ namespace OurTaiko.Tests
             var profiles = new ProfileCenter(fixture.BaseUrl);
             var english = Run(() => profiles.NameplateAsync(id, "en"));
             Assert.That(english.Title, Is.EqualTo("Taiko Master"));
-            Assert.That(english.TitleBackground, Is.EqualTo(3));
+            Assert.That(english.BandStyle, Is.EqualTo("purple"));
             Assert.That(english.Dan, Is.EqualTo(11));
             Assert.That(english.Gold, Is.False);
             Assert.That(Run(() => profiles.NameplateAsync(id, "zh")).Title, Is.EqualTo("太鼓达人"));
@@ -274,8 +274,20 @@ namespace OurTaiko.Tests
             var plain = Run(() => profiles.NameplateAsync(OnlineFixture.UserId("ka"), "en"));
             Assert.That(plain.Title, Is.Empty);
             Assert.That(plain.Dan, Is.EqualTo(-1));
-            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"rainbow\"},\"dan\":{\"index\":99}}"), "en").Rainbow, Is.True);
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"rainbow\"},\"dan\":{\"index\":99}}"), "en").BandStyle, Is.EqualTo("rainbow"));
             Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"dan\":{\"index\":99}}"), "en").Dan, Is.EqualTo(-1));
+
+            // The title's layers, each an item of its own slot; anything else is none, and the title
+            // is drawn as its style.
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"wood\",\"layers\":{\"band\":\"band/lumen-title-toho_y22\",\"effect\":null,\"icon\":\"icon/lumen-title-crown_gold\"}}}"), "en").Layers,
+                Is.EqualTo(new TitleParts("band/lumen-title-toho_y22", null, "icon/lumen-title-crown_gold")));
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"gold\",\"layers\":{\"band\":\"icon/lumen-title-crown_gold\"}}}"), "en").Layers, Is.Null);
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"gold\",\"layers\":{\"band\":\"band/lumen-title-gold\",\"icon\":\"band/lumen-title-gold\"}}}"), "en").Layers,
+                Is.EqualTo(new TitleParts("band/lumen-title-gold", null, null)), "An item out of its slot is none.");
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"gold\"}}"), "en").Layers, Is.Null);
         }
 
         [Test]

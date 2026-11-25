@@ -3,6 +3,7 @@
 # Refreshed 2026-10-29 for BackgroundMovie (practice plays the movie too).
 # Refreshed 2026-11-22: the judge counter has a 良率 row, and the drumroll counter draws over the HUD (Player::draw_overlays).
 # Refreshed 2026-11-22: the backdrop (header, scene, dancers, the dojo's band) is .otanim, whose graphics are made as it plays; its saved pictures are gone.
+# Refreshed 2026-11-25: the nameplate is built at run time (the complete Lumen composition), so its saved graphics are gone.
 Viewport1920x1080/Backdrop
 Viewport1920x1080/BackgroundMovie/Blackout
 Viewport1920x1080/BackgroundMovie/Screen
@@ -46,16 +47,6 @@ Viewport1920x1080/NoteLane/Combo/Glimmer/Row2/Rise/Gleam0
 Viewport1920x1080/NoteLane/Combo/Glimmer/Row2/Rise/Gleam1
 Viewport1920x1080/NoteLane/Combo/Glimmer/Row2/Rise/Gleam2
 Viewport1920x1080/NoteLane/Judgment
-Viewport1920x1080/NoteLane/Nameplate/Shadow
-Viewport1920x1080/NoteLane/Nameplate/BandUnder
-Viewport1920x1080/NoteLane/Nameplate/Band
-Viewport1920x1080/NoteLane/Nameplate/Outline
-Viewport1920x1080/NoteLane/Nameplate/DanBackground
-Viewport1920x1080/NoteLane/Nameplate/DanRing
-Viewport1920x1080/NoteLane/Nameplate/Dan
-Viewport1920x1080/NoteLane/Nameplate/Badge
-Viewport1920x1080/NoteLane/Nameplate/Title
-Viewport1920x1080/NoteLane/Nameplate/Name
 Viewport1920x1080/NoteLane/ScoreCounter/Cover
 Viewport1920x1080/SoulGauge/Border
 Viewport1920x1080/SoulGauge/Empty

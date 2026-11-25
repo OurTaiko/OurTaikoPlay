@@ -75,6 +75,8 @@ Unity -batchmode -projectPath . -runTests -testPlatform EditMode \
 
 PlayMode 把 `-testPlatform` 换成 `PlayMode`、程序集换成 `OurTaiko.FinishedPlayModeTests`（不要加 `-quit`）。分类 `AudioDevice` 的测试需要真实的音频设备，只能在本机跑。batchmode 结束后执行 `git checkout -- Assets/OurTaiko/Resources/UiFonts`，它会清空动态字体图集。也可以在 GitHub 上手动运行 `Test` 工作流，选择套件和模式；同一 PR 推了新的提交时，PR 上还在跑的那次会被取消，手动运行不受影响。
 
+名牌的素材 `Tools/nameplate-samples/lumen/set` 不在仓库里。没有它时，要看名牌图的测试会被忽略（Ignored），不算通过；改到名牌时先取线上的那套（`python3 -I Tools/nameplate-samples/lumen/fetch.py Tools/nameplate-samples/lumen/set`，见该目录的 README）。PR 上的 `Test` 工作流会先取这套再跑。
+
 两个必过套件在本机（Apple Silicon，batchmode）的规模：`OurTaiko.FinishedTests` 约 1000 条、1.5 分钟，`OurTaiko.FinishedPlayModeTests` 约 240 条、20 分钟。
 
 新测试直接写进 `Finished/`。EditMode 没有「未完成」的程序集；PlayMode 的 `OurTaiko.PlayModeTests` 只留下面这些，每个类开头写着原因，原因消除后搬进 `Finished/PlayMode`（连同 `.meta`）：

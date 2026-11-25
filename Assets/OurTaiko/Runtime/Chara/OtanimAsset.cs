@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 
 namespace OurTaiko.Chara
@@ -16,6 +17,29 @@ namespace OurTaiko.Chara
         Otanim file;
 
         public Otanim File => file ??= Read();
+
+        // A file from outside the game (a player's, or one fetched as it is), its picture decoded
+        // into a texture of its own; whoever reads it destroys both. Throws when it is not an
+        // .otanim with a PNG picture (FormatException, InvalidDataException and the like).
+        public static OtanimAsset FromBytes(byte[] bytes, string name)
+        {
+            var read = Otanim.Parse(bytes);
+            var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false) { name = name, hideFlags = HideFlags.DontSave };
+            if (read.Texture == null || !texture.LoadImage(read.Texture, true))
+            {
+                if (Application.isPlaying) Destroy(texture); else DestroyImmediate(texture);
+                throw new InvalidDataException("its picture is not a PNG");
+            }
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.filterMode = FilterMode.Bilinear;
+            var asset = CreateInstance<OtanimAsset>();
+            asset.name = name;
+            asset.hideFlags = HideFlags.DontSave;
+            asset.bytes = Otanim.WithoutTexture(bytes);
+            asset.texture = texture;
+            asset.file = read;
+            return asset;
+        }
 
         Otanim Read()
         {

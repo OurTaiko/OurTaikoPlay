@@ -12,7 +12,19 @@ namespace OurTaiko
         // nameplate.lua puts the title at y 34.5 and the name at 67.5 / 53, but TMP's line box sits
         // the glyphs lower than the original's text, so the rows are raised to centre the glyphs in
         // the band and the name box (measured on NameplatePlay.png, 2026-10-22).
-        public const float TitleX = 226.5f, TitleY = 32, TitleFontSize = 22;
+        public const float TitleFontSize = 22;
+        const float NameFontSize = 24, LargeNameFontSize = 30;
+        const float TitleLift = 2.5f, NameLift = 3, LargeNameLift = 7;
+        public const float TitleX = 226.5f, TitleY = 34.5f - TitleLift;
+
+        // Apply the same TMP baseline correction at a layout's own text anchor.
+        public static float TextLift(float fontSize) => fontSize switch
+        {
+            TitleFontSize => TitleLift,
+            NameFontSize => NameLift,
+            LargeNameFontSize => LargeNameLift,
+            _ => 0
+        };
         // White fill, black border 3 (OutlinedText thickness 2 x screen_scale 1.5).
         public const float NameOutline = 3;
         public const float BadgeX = 36, BadgeY = 4, DanBackgroundX = 44, DanBackgroundY = 44, DanX = 106, DanY = 44;
@@ -26,8 +38,8 @@ namespace OurTaiko
         // Nameplate:name_box for a plate with a badge: 1p_coin, 1p / 1p_shougou or *_dani.
         public static TextBox NameBox(PlayerInfo info)
         {
-            if (info.IsCoin) return new TextBox(226, 46, 30);
-            return info.HasDan ? new TextBox(261, 64.5f, 24) : new TextBox(226, 64.5f, 24);
+            if (info.IsCoin) return new TextBox(226, 53 - LargeNameLift, LargeNameFontSize);
+            return new TextBox(info.HasDan ? 261 : 226, 67.5f - NameLift, NameFontSize);
         }
     }
 

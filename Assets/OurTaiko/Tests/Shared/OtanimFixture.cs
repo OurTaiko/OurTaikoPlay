@@ -27,7 +27,10 @@ namespace OurTaiko.Tests
         public static Clip Make(string name, bool loop, float fps, params float[] lefts) =>
             new Clip { Name = name, Loop = loop, Fps = fps, Lefts = lefts, Alpha = 255 };
 
-        public static byte[] Build(params Clip[] clips)
+        public static byte[] Build(params Clip[] clips) => Build(Rect.MinMaxRect(-10, -10, 210, 110), clips);
+
+        // The same square, in a file whose view (units, y up) is `view`.
+        public static byte[] Build(Rect view, params Clip[] clips)
         {
             var texture = new Texture2D(4, 4, TextureFormat.RGBA32, false);
             var pixels = new Color32[16];
@@ -43,7 +46,7 @@ namespace OurTaiko.Tests
             w.Write((ushort)0);
 
             var info = new BinaryWriter(new MemoryStream());
-            foreach (float v in new[] { -10f, -10f, 210f, 110f }) info.Write(v);
+            foreach (float v in new[] { view.xMin, view.yMin, view.xMax, view.yMax }) info.Write(v);
             info.Write(Unit);
             info.Write((ushort)1);
             info.Write((ushort)clips.Length);

@@ -64,13 +64,16 @@ namespace OurTaiko.Online
 
         void Awake() => Initialize();
 
+        // Where the online files are kept (the object cache, the remembered catalogs).
+        public static string DefaultCacheRoot => Path.Combine(GamePaths.Root, "cache", "fanmade");
+
         void Initialize()
         {
             if (Instance == this) return;
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            UseCache(Path.Combine(GamePaths.Root, "cache", "fanmade"), GameDatabase.DefaultPath);
+            UseCache(DefaultCacheRoot, GameDatabase.DefaultPath);
             UseAccounts(new AccountStore(Path.Combine(GamePaths.Root, AccountStore.FileName), DeviceSecret()), new AccountCenter());
             UseProfiles(new ProfileCenter());
         }
@@ -312,7 +315,7 @@ namespace OurTaiko.Online
                 }
                 // The account's own playlists are folders too.
                 if (this != null && refresh) RefreshSongs();
-                await FetchNameplateArtAsync(cancel);
+                await FetchNameplatesAsync(cancel);
                 await FetchStageCatalogAsync(cancel);
                 await FetchDonsAsync(cancel);
             }
@@ -330,18 +333,19 @@ namespace OurTaiko.Online
             Chara.DonDownloads.Forget(seat);
         }
 
-        // The nameplate's art, which the game does not carry (NameplateArt): read in every sign-in
-        // check, guest or not, so Presented waits for it like the Dons.
-        async Task FetchNameplateArtAsync(CancellationToken cancel)
+        // The nameplate set, which the game does not carry (NameplateDownloads): read in every
+        // sign-in check, guest or not, so Presented waits for it like the Dons and the first screen
+        // draws whole plates.
+        async Task FetchNameplatesAsync(CancellationToken cancel)
         {
-            if (cancel.IsCancellationRequested) return;
+            if (cancel.IsCancellationRequested) { NameplateDownloads.UseKept(Client.CacheRoot); return; }
             Activity = L10n.Get("Online", "activity.nameplateArt");
-            try { await NameplateArt.FetchAsync(Client.CacheRoot, cancel); }
+            try { await NameplateDownloads.RefreshAsync(Client.CacheRoot, ServerConfig.Site, cancel); }
             catch (OperationCanceledException) { }
         }
 
         // The play backdrops' catalog and index (StageDownloads), read with every sign-in check like
-        // the nameplate's art; a backdrop's own files come when a play that uses it is loaded.
+        // the nameplate set; a backdrop's own files come when a play that uses it is loaded.
         async Task FetchStageCatalogAsync(CancellationToken cancel)
         {
             if (cancel.IsCancellationRequested) return;
@@ -515,7 +519,8 @@ namespace OurTaiko.Online
                 if (plate != null)
                 {
                     info.title = plate.Title.Length > 0 ? plate.Title : PlayerInfo.DefaultTitle;
-                    info.titleBackground = plate.TitleBackground; info.rainbow = plate.Rainbow;
+                    info.profileBand = plate.BandStyle;
+                    info.SetProfileLayers(plate.Layers);
                     info.dan = plate.Dan; info.gold = plate.Gold; info.danCombo = plate.Combo;
                 }
             }

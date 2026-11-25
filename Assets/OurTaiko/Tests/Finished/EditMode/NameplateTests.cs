@@ -8,7 +8,7 @@ namespace OurTaiko.Tests
         public void DefaultPlayerIsTheSeededCoinPlate()
         {
             var info = new PlayerInfo();
-            Assert.That((info.name, info.title, info.titleBackground, info.dan), Is.EqualTo(("Don-chan", "Donder Debut!", 0, -1)));
+            Assert.That((info.name, info.title, info.plateState, info.dan), Is.EqualTo(("Don-chan", "Donder Debut!", "auto", -1)));
             Assert.That(info.HasTitle, Is.False, "The seeded title counts as no title.");
             Assert.That(info.HasDan, Is.False);
             Assert.That(info.IsCoin, Is.True);
@@ -25,14 +25,6 @@ namespace OurTaiko.Tests
             // Out-of-range dan is no dan (the dan = 69 case nameplate.lua guards against).
             Assert.That(new PlayerInfo { dan = 25 }.HasDan, Is.False);
             Assert.That(new PlayerInfo { dan = 69 }.IsCoin, Is.True);
-        }
-
-        [Test]
-        public void TitleBackgroundOutsideTheFiveFramesFallsBackToZero()
-        {
-            Assert.That(new PlayerInfo { titleBackground = 4 }.TitleFrame, Is.EqualTo(4));
-            Assert.That(new PlayerInfo { titleBackground = 5 }.TitleFrame, Is.Zero);
-            Assert.That(new PlayerInfo { titleBackground = -1 }.TitleFrame, Is.Zero);
         }
 
         [Test]
@@ -53,13 +45,23 @@ namespace OurTaiko.Tests
         [Test]
         public void PlayerInfoJsonRoundTripsAndKeepsDefaults()
         {
-            var info = new PlayerInfo { name = "どんちゃん", title = "Taiko Master", titleBackground = 3, dan = 24, gold = true, rainbow = true };
+            var info = new PlayerInfo { name = "どんちゃん", title = "Taiko Master", plateTitle = "purple", dan = 24, gold = true };
             var copy = PlayerInfo.FromJson(info.ToJson());
-            Assert.That((copy.name, copy.title, copy.titleBackground, copy.dan, copy.gold, copy.rainbow),
-                Is.EqualTo(("どんちゃん", "Taiko Master", 3, 24, true, true)));
+            Assert.That((copy.name, copy.title, copy.plateTitle, copy.dan, copy.gold),
+                Is.EqualTo(("どんちゃん", "Taiko Master", "purple", 24, true)));
             var partial = PlayerInfo.FromJson("{\"name\":\"Katsu\"}");
             Assert.That((partial.name, partial.title, partial.dan), Is.EqualTo(("Katsu", "Donder Debut!", -1)));
             Assert.That(PlayerInfo.FromJson("").name, Is.EqualTo("Don-chan"));
+        }
+
+        [Test]
+        public void UnversionedSavedPlateIsRecreatedOnce()
+        {
+            var info = PlayerInfo.ReadSaved("{\"name\":\"previous\",\"plateState\":\"\"}", out bool reset);
+            Assert.That(reset && info.name == PlayerInfo.DefaultName && info.plateState == "auto");
+            info.plateTitle = "aprilfool2025_01";
+            Assert.That(PlayerInfo.ReadSaved(info.ToJson(), out reset).plateTitle, Is.EqualTo(info.plateTitle));
+            Assert.That(reset, Is.False);
         }
 
         [Test]

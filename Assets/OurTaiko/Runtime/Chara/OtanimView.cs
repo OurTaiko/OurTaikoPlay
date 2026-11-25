@@ -25,9 +25,12 @@ namespace OurTaiko.Chara
         // A child graphic drawing one run of the frame's parts.
         sealed class Run : MaskableGraphic
         {
-            public Texture picture;
-            public List<UIVertex> vertices = new List<UIVertex>();
-            public List<int> indices = new List<int>();
+            // The frame last shown, not saved: a copy of the view (Instantiate) would otherwise get
+            // the indices without the vertices (UIVertex is not serialized) and a mesh that cannot
+            // be built. A copy draws nothing until it is shown.
+            [System.NonSerialized] public Texture picture;
+            [System.NonSerialized] public List<UIVertex> vertices = new List<UIVertex>();
+            [System.NonSerialized] public List<int> indices = new List<int>();
 
             public override Texture mainTexture => picture != null ? picture : s_WhiteTexture;
 
@@ -64,7 +67,6 @@ namespace OurTaiko.Chara
                 shade = Mathf.Clamp01(shade);
                 var tint = new Color(shade, shade, shade, Mathf.Clamp01(alpha));
                 var draws = Otanim.DrawsAt(which, seconds);
-                var box = ((RectTransform)transform).rect;
                 for (int first = 0; first < draws.Length;)
                 {
                     bool asScreen = file.Parts[draws[first].Part].Blend == Otanim.Blend.Screen;
@@ -73,7 +75,9 @@ namespace OurTaiko.Chara
                     var run = RunAt(used++);
                     run.vertices.Clear();
                     run.indices.Clear();
-                    file.Sample(which, seconds, box, false, tint, run.vertices, run.indices, first, end - first);
+                    // In the run's own space: it covers this rect, but its pivot is its middle
+                    // whatever this one's is.
+                    file.Sample(which, seconds, run.rectTransform.rect, false, tint, run.vertices, run.indices, first, end - first);
                     run.material = MaterialFor(asScreen, file);
                     run.picture = asset.texture;
                     run.SetVerticesDirty();
@@ -91,6 +95,7 @@ namespace OurTaiko.Chara
             while (runs.Count <= index)
             {
                 var child = new GameObject("Run" + runs.Count, typeof(RectTransform), typeof(CanvasRenderer)) { hideFlags = HideFlags.DontSave };
+                child.layer = gameObject.layer;
                 var rect = (RectTransform)child.transform;
                 rect.SetParent(transform, false);
                 rect.anchorMin = Vector2.zero;

@@ -18,6 +18,9 @@ TestResults/
 # The play backdrops the game does not carry: published, not in the repository (Tools/stage-publish).
 /Assets/OurTaiko/StageSource/
 /Assets/OurTaiko/StageSource.meta
+# The nameplate set the game does not carry either: baked from the arcade nameplate or fetched from
+# the distribution root, not in the repository (Tools/nameplate-samples/lumen).
+/Tools/nameplate-samples/lumen/set/
 /Assets/OurTaikoNativeAudioBuild/
 /Assets/OurTaikoNativeAudioBuild.meta
 .vscode

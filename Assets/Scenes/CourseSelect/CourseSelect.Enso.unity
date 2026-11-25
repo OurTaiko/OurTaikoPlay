@@ -5694,10 +5694,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1860933926}
     m_Modifications:
-    - target: {fileID: 1358557477638948676, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
-      propertyPath: m_TextStyleHashCode
-      value: -1183493901
-      objectReference: {fileID: 0}
     - target: {fileID: 3217039868506801135, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -5777,10 +5773,6 @@ PrefabInstance:
     - target: {fileID: 3217039868506801135, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5888656627343498799, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
-      propertyPath: m_TextStyleHashCode
-      value: -1183493901
       objectReference: {fileID: 0}
     - target: {fileID: 7052526075703801799, guid: 8581b4ca39d13425089dbc82ebbdcdb5, type: 3}
       propertyPath: m_Name

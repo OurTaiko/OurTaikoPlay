@@ -77,8 +77,7 @@ namespace OurTaiko
         RectTransform stage, content;
         Image shade;
         Piece banner, item, from, prompt;
-        RectTransform shine;
-        Image[] rainbow;
+        readonly List<OurTaiko.Chara.OtanimView> rewardArts = new List<OurTaiko.Chara.OtanimView>();
         Func<bool> isUp;
 
         double Elapsed => Time.realtimeSinceStartupAsDouble - shownAt;
@@ -236,7 +235,7 @@ namespace OurTaiko
         void Clear()
         {
             if (content != null) Destroy(content.gameObject);
-            content = null; banner = item = from = prompt = null; shine = null; rainbow = null;
+            content = null; banner = item = from = prompt = null; rewardArts.Clear();
             shade.color = new Color(0, 0, 0, 0);
         }
 
@@ -287,46 +286,23 @@ namespace OurTaiko
             Animate();
         }
 
+        // The title on the player's own nameplate: the game's Nameplate prefab with their name and
+        // 段位, wearing the title with its layers (or its style's, given before titles had them).
         void DrawTitle(Reward reward, string language)
         {
-            const float width = 408 * Scale, height = 56 * Scale;
+            const float width = NameplateLayout.Width * Scale, height = NameplateLayout.Height * Scale;
             var holder = SkinUi.Rect("Title", content, width, height);
             item = Place(holder, 960, 560);
-            bool art = NameplateArt.Ready && NameplateArt.Bands.Length >= PlayerInfo.TitleBackgroundCount;
-            // The band's opaque part, where the light runs (x 46..362, y 14..48 of 408x56).
-            var window = SkinUi.Rect("Window", holder, 316 * Scale, 34 * Scale);
-            window.Center(204 * Scale, 31 * Scale);
-            window.gameObject.AddComponent<RectMask2D>();
-            string style = reward.TitleStyle;
-            if (art)
-            {
-                if (style == "rainbow" && NameplateArt.Rainbow.Length > 0)
-                {
-                    var under = SkinUi.Image("BandUnder", holder, NameplateArt.Rainbow[0], width, height);
-                    under.rectTransform.TopLeft(0, 0);
-                    var band = SkinUi.Image("Band", holder, NameplateArt.Rainbow[0], width, height);
-                    band.rectTransform.TopLeft(0, 0);
-                    rainbow = new[] { band, under };
-                }
-                else
-                {
-                    int frame = Math.Max(0, Array.IndexOf(new[] { "wood", "teal", "wood2", "purple", "gold" }, style));
-                    SkinUi.Image("Band", holder, NameplateArt.Bands[frame], width, height).rectTransform.TopLeft(0, 0);
-                }
-                window.SetAsLastSibling();
-            }
-            else
-            {
-                // Without the nameplate art (never downloaded): a plain plate of the band's colour.
-                var plate = SkinUi.Image("Band", window, MultiArt.Load().plate, 316 * Scale, 34 * Scale);
-                plate.rectTransform.Center(158 * Scale, 17 * Scale);
-                plate.color = style == "purple" ? PlateUi.Violet : style == "gold" || style == "rainbow" ? PlateUi.Gold : style == "teal" ? PlateUi.Teal : PlateUi.Orange;
-            }
-            shine = SkinUi.Image("Light", window, null, 60, 34 * Scale * 1.6f).rectTransform;
-            shine.GetComponent<Image>().color = new Color(1, 1, 1, 0.55f);
-            shine.localRotation = Quaternion.Euler(0, 0, -20);
-            var name = Text(window, reward.TitleName(language), 22 * Scale, 158 * Scale, 17 * Scale, PlateUi.Ink, dark: true);
-            name.Squeeze(300 * Scale);
+            var plate = Instantiate(Resources.Load<NameplateView>(NameplateView.Resource), holder, false);
+            plate.Place(0, 0);
+            plate.RectTransform.localScale = new Vector3(Scale, Scale, 1);
+            var players = PlayerInfoController.EnsureInstance();
+            var info = (reward.Seat == 1 ? players.SecondInfo : players.Info).Clone();
+            info.title = reward.TitleName(language);
+            info.plateState = info.plateTitle = "auto";
+            info.profileBand = reward.TitleStyle;
+            info.SetProfileLayers(reward.TitleLayers);
+            plate.Pin(info, reward.Seat);
         }
 
         // A part of the 3D Don: its picture on a plate (the path the site described it with),
@@ -380,13 +356,24 @@ namespace OurTaiko
             var holder = SkinUi.Rect("Dan", content, width, height);
             item = Place(holder, 960, 560);
             int dan = reward.DanIndex;
-            if (NameplateArt.Ready && NameplateArt.DanRings.Length == 3 && NameplateArt.DanTexts.Length > dan)
+            var info = new PlayerInfo { dan = dan, danCombo = reward.DanCombo, gold = reward.DanGold };
+            if (info.HasDan)
             {
-                SkinUi.Image("Ring", holder, NameplateArt.DanRings[reward.DanCombo], width, height).rectTransform.Center(width / 2, height / 2);
-                SkinUi.Image("Rank", holder, (reward.DanGold ? NameplateArt.GoldDanTexts : NameplateArt.DanTexts)[dan], width, height).rectTransform.Center(width / 2, height / 2);
+                var asset = PlateComposition.RankAsset(info, out string clip);
+                ShowRewardArt(holder, asset, clip, 4, new Vector2(-NameplateLayout.DanX * 4, NameplateLayout.DanY * 4));
             }
-            // Without the emblem art (never downloaded) its name stands in for it.
             else Text(holder, DanText.RankName(dan), 96, width / 2, height / 2, reward.DanGold ? PlateUi.Gold : Color.white);
+        }
+
+        void ShowRewardArt(RectTransform holder, OurTaiko.Chara.OtanimAsset asset, string clip, float scale, Vector2 offset)
+        {
+            var art = PlateComposition.CreatePicture("Reward art", holder);
+            rewardArts.Add(art);
+            var rect = (RectTransform)art.transform;
+            rect.anchoredPosition = offset;
+            rect.localScale = new Vector3(scale, scale, 1);
+            art.Use(asset, clip);
+            art.Show(0);
         }
 
         TextMeshProUGUI Text(Transform parent, string text, float size, float x, float y, Color? color = null, bool dark = false)
@@ -450,19 +437,8 @@ namespace OurTaiko
             }
             else item.Rect.anchoredPosition = item.Home + new Vector2((float)((1 - BackOut(i, 1.2)) * 1600), 0);
 
-            if (shine != null)
-            {
-                double l = Phase(t, ShineAt, ShineSeconds);
-                shine.gameObject.SetActive(l > 0 && l < 1);
-                shine.anchoredPosition = new Vector2((float)(-60 + l * (316 * Scale + 120)), -17 * Scale);
-            }
-            if (rainbow != null)
-            {
-                var frames = NameplateArt.Rainbow;
-                int frame = (int)(t / NameplateView.RainbowFrameSeconds) % frames.Length;
-                rainbow[0].sprite = frames[frame];
-                rainbow[1].sprite = frames[(frame + frames.Length - 1) % frames.Length];
-            }
+            foreach (var art in rewardArts)
+                if (art.Clip?.Frames.Length > 1) art.Show(t);
 
             from.Group.alpha = (float)Phase(t, FromAt, FromSeconds);
             // "don: next" blinks once a second after it shows.

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using NUnit.Framework;
 using OurTaiko.Online;
 using UnityEngine;
 
@@ -28,9 +29,30 @@ namespace OurTaiko.Tests
                 bass?.GetProperty(volume)?.SetValue(null, 0);
         }
 
+        // Plates are drawn from the baked set, as a player's are from the one a sign-in check
+        // downloads (the game carries none). Without one in the project (it is not in the
+        // repository) plates are their text alone, as a player's before the first download, and a
+        // test that looks at the set's pictures is ignored (RequireBakedNameplates). A test that uses
+        // another set, or none, puts this one back.
+        public static void UseBakedNameplates()
+        {
+#if UNITY_EDITOR
+            NameplateItems.Use(NameplateSet.Baked());
+#endif
+        }
+
+        public static void RequireBakedNameplates()
+        {
+#if UNITY_EDITOR
+            if (NameplateSet.Baked() == null)
+                Assert.Ignore("No nameplate set at " + NameplateSet.BakedFolder + ": bake it or fetch the published one (Tools/nameplate-samples/lumen/fetch.py).");
+#endif
+        }
+
         public static void Use()
         {
             MuteIfAsked();
+            UseBakedNameplates();
             if (File.Exists(ScorePath)) File.Delete(ScorePath);
             ScoreStore.Shared = new ScoreStore(ScorePath);
             DanRecordStore.Shared = new DanRecordStore(ScorePath);
@@ -43,7 +65,10 @@ namespace OurTaiko.Tests
 
         // The fixtures stand in for the built-in servers (none: no server at all), over a fresh
         // temporary cache and with nobody signed in. The first fixture is also the account center
-        // and OurTaikoProfile. Nothing is requested until Connect.
+        // and OurTaikoProfile, and the site's root of public files (none: an address nothing
+        // answers), so a sign-in check reads no nameplate set or backdrops from the real root:
+        // plates keep the baked set, and nothing is fetched into the cache the next test deletes.
+        // Nothing is requested until Connect.
         public static void UseServers(params OnlineFixture[] fixtures)
         {
             var manager = OnlineManager.EnsureInstance();
@@ -53,6 +78,8 @@ namespace OurTaiko.Tests
             SongSelectManager.EnsureInstance().Reset();
             if (Directory.Exists(OnlineCache)) Directory.Delete(OnlineCache, true);
             manager.UseUnsaved(OnlineCache, fixtures.Select(fixture => (fixture.Name, fixture.BaseUrl)).ToArray());
+            string files = (fixtures.Length > 0 ? fixtures[0].BaseUrl : "http://127.0.0.1:9") + "/";
+            Distribution.Use(ServerConfig.Site, new FileRoot(files, files));
             if (fixtures.Length > 0)
             {
                 manager.UseAccounts(new AccountStore(null, "test"), new AccountCenter(fixtures[0].BaseUrl));
@@ -89,6 +116,7 @@ namespace OurTaiko.Tests
             TestSongs.Uninstall();
             if (File.Exists(ScorePath)) File.Delete(ScorePath);
             if (Directory.Exists(OnlineCache)) Directory.Delete(OnlineCache, true);
+            Distribution.Forget();
         }
     }
 }

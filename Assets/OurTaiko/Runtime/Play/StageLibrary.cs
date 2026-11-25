@@ -270,26 +270,13 @@ namespace OurTaiko
         // A player's file as the asset an imported one is: its animation, and its picture decoded.
         static OtanimAsset Read(string path)
         {
-            Texture2D texture = null;
             try
             {
-                byte[] bytes = File.ReadAllBytes(path);
-                var file = Otanim.Parse(bytes);
-                texture = new Texture2D(2, 2, TextureFormat.RGBA32, false) { name = Path.GetFileName(path), hideFlags = HideFlags.DontSave };
-                if (file.Texture == null || !texture.LoadImage(file.Texture, true)) throw new InvalidDataException("its picture is not a PNG");
-                texture.wrapMode = TextureWrapMode.Clamp;
-                texture.filterMode = FilterMode.Bilinear;
-                var asset = ScriptableObject.CreateInstance<OtanimAsset>();
-                asset.name = Path.GetFileNameWithoutExtension(path);
-                asset.hideFlags = HideFlags.DontSave;
-                asset.bytes = Otanim.WithoutTexture(bytes);
-                asset.texture = texture;
-                return asset;
+                return OtanimAsset.FromBytes(File.ReadAllBytes(path), Path.GetFileNameWithoutExtension(path));
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is FormatException || error is InvalidDataException
                 || error is ArgumentException || error is IndexOutOfRangeException || error is OverflowException)
             {
-                Destroy(texture);
                 Log.Warn("Stage", $"The backdrop {path} is not used: {error.Message}.");
                 return null;
             }
