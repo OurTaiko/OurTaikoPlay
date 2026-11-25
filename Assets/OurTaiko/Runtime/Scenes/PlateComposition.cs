@@ -132,12 +132,10 @@ namespace OurTaiko
                     case "rankup_instance":
                         rankup = Picture(NameplateItems.Load(NameplateSlot.Icon, "icon/lumen-rankup"), running ?? "idle"); break;
                     case "text_title":
-                        Text(row, info.HasTitle ? info.title : "", info.plateState == "auto"
-                            ? new Vector2(NameplateLayout.TitleX, NameplateLayout.TitleY) : null);
+                        Text(row, info.HasTitle ? info.title : "");
                         break;
                     case "text_name":
-                        var box = NameplateLayout.NameBox(info);
-                        Text(row, info.name ?? "", info.plateState == "auto" ? new Vector2(box.X, box.Y) : null);
+                        Text(row, info.name ?? "");
                         break;
                 }
             }
@@ -177,7 +175,7 @@ namespace OurTaiko
             return view;
         }
 
-        void Text(JToken row, string value, Vector2? center)
+        void Text(JToken row, string value)
         {
             if (textCount == texts.Count)
             {
@@ -193,8 +191,7 @@ namespace OurTaiko
             text.fontSize = (float)row["size"];
             text.characterSpacing = NameplateLayout.TextSpacing * 100 / text.fontSize;
             text.rectTransform.sizeDelta = new Vector2((float)row["width"], text.fontSize * 1.6f);
-            var position = center ?? new Vector2((float)row["x"], (float)row["y"]);
-            text.rectTransform.Center(position.x, position.y);
+            text.rectTransform.Center((float)row["x"], (float)row["y"] - NameplateLayout.TextLift(text.fontSize));
             text.text = value;
             UiFonts.Use(text, outlined: (float)row["stroke"] > 0);
             text.Squeeze((float)row["width"]);

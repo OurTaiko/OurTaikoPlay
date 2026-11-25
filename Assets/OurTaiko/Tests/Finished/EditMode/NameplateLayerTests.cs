@@ -284,6 +284,15 @@ namespace OurTaiko.Tests
                 Assert.That(group.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Length, Is.GreaterThan(0), state.Name);
                 foreach (var view in group.GetComponentsInChildren<OurTaiko.Chara.OtanimView>())
                     Assert.That(view.Clip, Is.Not.Null, state.Name);
+                var labels = group.GetComponentsInChildren<TMPro.TMP_Text>();
+                foreach (var row in state.Value)
+                {
+                    string role = (string)row["role"];
+                    if (role != "text_title" && role != "text_name") continue;
+                    var label = System.Array.Find(labels, t => t.text == (role == "text_title" ? info.title : info.name));
+                    float y = role == "text_title" ? 32 : (float)row["size"] == 30 ? 46 : 64.5f;
+                    Assert.That(label.rectTransform.anchoredPosition, Is.EqualTo(new Vector2((float)row["x"], -y)), state.Name);
+                }
                 preview.Seek(0.55);
             }
             info.plateState = "auto";
