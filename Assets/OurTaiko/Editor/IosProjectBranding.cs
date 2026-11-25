@@ -13,21 +13,18 @@ namespace OurTaiko.Editor
 {
     public static class IosProjectBranding
     {
-        const string UnityName = "Unity-iPhone";
+        const string UnityName = IosExportScope.UnityName;
         const string AppName = PlayerBranding.ProductName;
 
         // Unity's incremental exporter expects its original project, target and resource paths.
         // Restore these just for export, then brand again after all other build callbacks.
-        public static bool PrepareForExport(string root)
-        {
-            string branded = Path.Combine(root, AppName + ".xcodeproj");
-            string original = Path.Combine(root, UnityName + ".xcodeproj");
-            if (!Directory.Exists(branded)) return false;
-            if (Directory.Exists(original))
-                throw new BuildFailedException("Both OurTaikoPlay.xcodeproj and Unity-iPhone.xcodeproj exist. Export to a new folder to avoid overwriting project edits.");
-            Rename(root, AppName, UnityName);
-            return true;
-        }
+        // Dispose the scope after the build so a failed build leaves the export branded too.
+        public static IosExportScope Export(string root) =>
+            new IosExportScope(root, (from, to) => Rename(root, from, to), () => BuildPipeline.BuildCanBeAppended(BuildTarget.iOS, root));
+
+        // For builds started elsewhere (BuildPipeline callers other than ours), which only reach the preprocess callback.
+        public static bool PrepareForExport(string root) =>
+            IosExportScope.Prepare(root, (from, to) => Rename(root, from, to), () => BuildPipeline.BuildCanBeAppended(BuildTarget.iOS, root));
 
         [PostProcessBuild(999)]
         public static void OnPostprocessBuild(BuildTarget target, string root)

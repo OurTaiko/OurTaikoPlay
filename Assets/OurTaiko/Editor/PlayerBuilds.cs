@@ -174,8 +174,8 @@ namespace OurTaiko.Editor
                 if (buildNumber != null) PlayerSettings.iOS.buildNumber = buildNumber;
                 var options = BuildOptions.CompressWithLz4HC;
 #if UNITY_IOS
-                if (target == BuildTarget.iOS && IosProjectBranding.PrepareForExport(output))
-                    options |= BuildOptions.AcceptExternalModificationsToPlayer;
+                using var export = target == BuildTarget.iOS ? IosProjectBranding.Export(output) : null;
+                if (export?.Appending == true) options |= BuildOptions.AcceptExternalModificationsToPlayer;
 #endif
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
