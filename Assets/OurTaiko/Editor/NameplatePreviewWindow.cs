@@ -9,8 +9,8 @@ using UnityEngine;
 namespace OurTaiko.Editor
 {
     // Menu OurTaiko/Nameplate Preview: a nameplate running over the plate states a player can be
-    // in, wearing a built-in title (its band, effect and icon) or the layers picked here (built-in
-    // parts and the player's Nameplate/<slot>/<name>.otanim files), with what each worn layer is,
+    // in, wearing a title of the set (its band, effect and icon) or the layers picked here (the
+    // set's parts and the player's Nameplate/<slot>/<name>.otanim files), with what each worn layer is,
     // which titles it comes from, and switches to look at each layer on its own. "Wear as 1P"
     // writes the picks into player.json.
     public sealed class NameplatePreviewWindow : EditorWindow
@@ -189,7 +189,13 @@ namespace OurTaiko.Editor
                     foreach (var slot in NameplateSlots.All) Directory.CreateDirectory(Path.Combine(NameplateItems.Folder, NameplateSlots.Folder(slot)));
                     EditorUtility.RevealInFinder(Path.Combine(NameplateItems.Folder, NameplateSlots.Folder(NameplateSlot.Band)));
                 }
-                if (GUILayout.Button("Read again")) { NameplateItems.Forget(); menus.Clear(); layersChanged = true; }
+                if (GUILayout.Button(new GUIContent("Read again", "The items folder and the baked set (" + NameplateSet.BakedFolder + ")")))
+                {
+                    NameplateItems.Forget();
+                    NameplatePreview.UseBakedSet(again: true);
+                    menus.Clear();
+                    layersChanged = true;
+                }
             }
 
             EditorGUILayout.Space();
@@ -372,7 +378,7 @@ namespace OurTaiko.Editor
             return Picker(label, value, menu.ids, menu.options);
         }
 
-        // A slot's items: none, the built-in ones by the title family they come from, and the items
+        // A slot's items: none, the set's by the title family they come from, and the items
         // folder's own; one worn but gone from the folder is kept, and said.
         string ItemPicker(PlateComposition.Catalog catalog, NameplateSlot slot, string id)
         {
@@ -384,9 +390,9 @@ namespace OurTaiko.Editor
                 {
                     string item = NameplateSlots.Id(slot, name);
                     ids.Add(item);
-                    if (!NameplatePreview.IsBuiltIn(catalog, slot, item)) { options.Add(new GUIContent("Items folder/" + name)); continue; }
+                    if (!NameplatePreview.InSet(catalog, slot, item)) { options.Add(new GUIContent("Items folder/" + name)); continue; }
                     var titles = NameplatePreview.UsedBy(catalog, slot, item);
-                    options.Add(new GUIContent(titles.Count == 0 ? "Built-in/" + name : "Built-in/" + NameplatePreview.Series(titles[0].Replace("AI ", "")) + "/" + name));
+                    options.Add(new GUIContent(titles.Count == 0 ? "Set/" + name : "Set/" + NameplatePreview.Series(titles[0].Replace("AI ", "")) + "/" + name));
                 }
                 return (ids, options.ToArray());
             });
@@ -423,7 +429,7 @@ namespace OurTaiko.Editor
             }
             var notes = new List<string>();
             string tip = id;
-            if (NameplatePreview.IsBuiltIn(catalog, slot, id))
+            if (NameplatePreview.InSet(catalog, slot, id))
             {
                 var titles = NameplatePreview.UsedBy(catalog, slot, id);
                 if (titles.Count > 0)
@@ -579,10 +585,10 @@ namespace OurTaiko.Editor
                 var clip = NameplateItems.ClipOf(file);
                 string length = clip == null ? "-" : clip.Frames.Length == 1 ? "still" : clip.Loop ? (clip.Frames.Length / clip.Fps).ToString("0.##") + " s, loops" : clip.Duration.ToString("0.##") + " s, once";
                 text.AppendLine($"{name}: {id}");
-                if (NameplatePreview.IsBuiltIn(catalog, slot, id))
+                if (NameplatePreview.InSet(catalog, slot, id))
                 {
                     var titles = NameplatePreview.UsedBy(catalog, slot, id);
-                    text.AppendLine("  built in" + (titles.Count > 0 ? ", part of " + string.Join(", ", titles) : ""));
+                    text.AppendLine("  in the set" + (titles.Count > 0 ? ", part of " + string.Join(", ", titles) : ""));
                 }
                 else text.AppendLine("  from the items folder" + (slot == NameplateSlot.Band ? ", cut to the band" : ""));
                 if (slot == NameplateSlot.Effect) text.AppendLine(catalog.ClipsEffect(id) ? "  cut to the band" : "  runs outside the band");

@@ -315,6 +315,7 @@ namespace OurTaiko.Online
                 }
                 // The account's own playlists are folders too.
                 if (this != null && refresh) RefreshSongs();
+                await FetchNameplatesAsync(cancel);
                 await FetchStageCatalogAsync(cancel);
                 await FetchDonsAsync(cancel);
             }
@@ -332,6 +333,19 @@ namespace OurTaiko.Online
             Chara.DonDownloads.Forget(seat);
         }
 
+        // The nameplate set, which the game does not carry (NameplateDownloads): read in every
+        // sign-in check, guest or not, so Presented waits for it like the Dons and the first screen
+        // draws whole plates.
+        async Task FetchNameplatesAsync(CancellationToken cancel)
+        {
+            if (cancel.IsCancellationRequested) { NameplateDownloads.UseKept(Client.CacheRoot); return; }
+            Activity = L10n.Get("Online", "activity.nameplateArt");
+            try { await NameplateDownloads.RefreshAsync(Client.CacheRoot, ServerConfig.Site, cancel); }
+            catch (OperationCanceledException) { }
+        }
+
+        // The play backdrops' catalog and index (StageDownloads), read with every sign-in check like
+        // the nameplate set; a backdrop's own files come when a play that uses it is loaded.
         async Task FetchStageCatalogAsync(CancellationToken cancel)
         {
             if (cancel.IsCancellationRequested) return;

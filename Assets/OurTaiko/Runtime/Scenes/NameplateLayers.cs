@@ -6,11 +6,15 @@ namespace OurTaiko
 {
     // The layers a NameplateView wears: the band, effect and icon of a title (TitleParts) or the
     // player's own pick (PlayerInfo's items, NameplateItems' files). A player's loose band and
-    // effect are cut to the built-in band shape. The built-in ones know their shape: a band draws
-    // on the full plate canvas over its source backing, and an effect is cut to the band only if
-    // the catalog says it stays inside (otherwise it is a burst that runs outside it).
+    // effect are cut to the set's plain band (BandShape). The set's own know their shape: a band
+    // draws on the full plate canvas over its source backing, and an effect is cut to the band only
+    // if the catalog says it stays inside (otherwise it is a burst that runs outside it). Without
+    // a set there is no shape to cut to, and the plate wears no layers.
     public sealed class NameplateLayers
     {
+        // The band whose shape the mask is: the plain one, which every band covers.
+        public const string BandShape = "band/lumen-title-wood";
+
         readonly RectTransform plate;
         RectTransform maskCanvas;
         Transform iconAnchor;
@@ -33,14 +37,16 @@ namespace OurTaiko
 
         public NameplateLayers(RectTransform plate) => this.plate = plate;
 
-        public void Apply(TitleParts worn)
+        // Wears `worn`; `catalog` (the set's) says which items are the set's own and which effects
+        // stay inside the band. Null: no set, no layers.
+        public void Apply(PlateComposition.Catalog catalog, TitleParts worn)
         {
-            var catalog = PlateComposition.ReadCatalog();
+            if (catalog == null) worn = default;
             var band = NameplateItems.Load(NameplateSlot.Band, worn.Band);
             var effect = NameplateItems.Load(NameplateSlot.Effect, worn.Effect);
             var icon = NameplateItems.Load(NameplateSlot.Icon, worn.Icon);
             if (band == null && effect == null && icon == null && mask == null) return;
-            Make();
+            if (!Make()) return;
             bool loose = band != null && !catalog.Contains(NameplateSlot.Band, worn.Band);
             bool clipped = effect != null && catalog.ClipsEffect(worn.Effect);
             Parent(bandView, loose ? mask : plate);
@@ -94,12 +100,15 @@ namespace OurTaiko
             return true;
         }
 
-        void Make()
+        // False when the set has no band shape to make the mask of.
+        bool Make()
         {
-            if (mask != null) return;
+            if (mask != null) return true;
+            var shape = NameplateItems.Load(NameplateSlot.Band, BandShape);
+            if (shape == null) return false;
             // Use the neutral band geometry itself as the stencil. Its idle frame is a single UI graphic.
             var stencil = PlateComposition.CreatePicture("Layer mask", plate);
-            stencil.Use(Resources.Load<OtanimAsset>("Nameplate/band/lumen-title-wood"), "idle");
+            stencil.Use(shape, "idle");
             stencil.Show(0);
             maskCanvas = (RectTransform)stencil.transform;
             mask = stencil.GetComponentInChildren<MaskableGraphic>().rectTransform;
@@ -110,6 +119,7 @@ namespace OurTaiko
             FillPlate(bandView);
             FillPlate(effectView);
             FillPlate(iconView);
+            return true;
         }
 
         public void PlaceBand()

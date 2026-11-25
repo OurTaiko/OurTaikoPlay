@@ -6,9 +6,11 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // The layers a nameplate can wear (NameplateSlots): .otanim files in the player's Nameplate
-    // folder beside their songs, Nameplate/<slot>/<name>.otanim, read when a plate first wears one
-    // and again when the file changes. Each draws on the whole plate canvas: its view must be
+    // The layers a nameplate can wear (NameplateSlots) and the plate's own pictures: the items of
+    // the set in use (NameplateSet: the titles' parts and the plate's composition) and the
+    // player's own .otanim files in the Nameplate folder beside their songs,
+    // Nameplate/<slot>/<name>.otanim. Each is read when a plate first wears it, and a player's
+    // file again when it changes. An item draws on the whole plate canvas: its view must be
     // 0, 0, Width, Height (NameplateLayout), y up, and it plays its "idle" clip (else its first)
     // over and over. A file that cannot be read, or is drawn for another box, is said in the log
     // and not worn: the plate is drawn as if the slot were empty.
@@ -17,17 +19,34 @@ namespace OurTaiko
         public const string FolderName = "Nameplate", Extension = ".otanim", ClipName = "idle";
 
         static string folder;
-        // The files read, by path, with the time each was written (null: it could not be used).
+        static NameplateSet set;
+        static PlateComposition.Catalog catalog;
+        // The player's files read, by path, with the time each was written (null: it could not be used).
         static readonly Dictionary<string, (OtanimAsset asset, DateTime stamp)> loaded = new Dictionary<string, (OtanimAsset, DateTime)>();
-        // Earlier reads of files that changed: plates on screen may still draw them until they are
-        // shown again, so they are freed with the rest.
+        // The set's files read, by path. Kept while the game runs, as Resources kept assets: plates
+        // draw them (the layers' mask is cut from one), and a downloaded file's path is its
+        // contents' hash, so a later set naming it names the same picture.
+        static readonly Dictionary<string, (OtanimAsset asset, DateTime stamp)> fromSet = new Dictionary<string, (OtanimAsset, DateTime)>();
+        // Earlier reads of the player's files that changed: plates on screen may still draw them
+        // until they are shown again, so they are freed with the rest.
         static readonly List<OtanimAsset> replaced = new List<OtanimAsset>();
 
+        // The set the plates are drawn from and its catalog; null until one is used (a first
+        // launch that has not downloaded it yet): a plate is then its text alone.
+        public static NameplateSet Set => set;
+        public static PlateComposition.Catalog Catalog => catalog;
+        // Another set is used: plates on screen are drawn again from it.
+        public static event Action SetChanged;
+
+        // The set and what was read of it stay from one Editor Play session to the next (domain
+        // reload is off): they hold no scene objects, and a launch starts from the set last
+        // downloaded too.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
             Forget();
             folder = null;
+            SetChanged = null;
         }
 
         public static string Folder => folder ??= Path.Combine(GamePaths.Root, FolderName);
@@ -39,12 +58,29 @@ namespace OurTaiko
             folder = path;
         }
 
-        // Frees what was read; the next use reads the files again.
+        // Plates are drawn from `next` from now on (null: none). Throws InvalidDataException when its
+        // catalog cannot be read; the set in use then stays.
+        public static void Use(NameplateSet next)
+        {
+            PlateComposition.Catalog read = null;
+            if (next != null)
+            {
+                try { read = new PlateComposition.Catalog(next.Catalog); }
+                catch (Exception error) when (error is Newtonsoft.Json.JsonException || error is ArgumentException || error is InvalidCastException || error is FormatException)
+                {
+                    throw new InvalidDataException("the nameplate catalog cannot be read: " + error.Message, error);
+                }
+            }
+            set = next;
+            catalog = read;
+            SetChanged?.Invoke();
+        }
+
+        // Frees what was read of the player's files; the next use reads them again.
         public static void Forget()
         {
             foreach (var entry in loaded.Values) Release(entry.asset);
             loaded.Clear();
-            PlateComposition.ForgetCatalog();
             foreach (var asset in replaced) Release(asset);
             replaced.Clear();
         }
@@ -56,9 +92,12 @@ namespace OurTaiko
         {
             var names = new List<string>();
             string dir = Path.Combine(Folder, NameplateSlots.Folder(slot));
-            foreach (var id in PlateComposition.ReadCatalog().Ids(slot))
-                if (NameplateSlots.TryParse(id, out _, out string name)) names.Add(name);
-            if (slot == NameplateSlot.Icon && NameplateSlots.TryParse(PlateComposition.RankUpItem, out _, out string rankUp)) names.Add(rankUp);
+            if (catalog != null)
+            {
+                foreach (var id in catalog.Ids(slot))
+                    if (NameplateSlots.TryParse(id, out _, out string name)) names.Add(name);
+                if (slot == NameplateSlot.Icon && NameplateSlots.TryParse(PlateComposition.RankUpItem, out _, out string rankUp)) names.Add(rankUp);
+            }
             try
             {
                 foreach (string path in Directory.Exists(dir) ? Directory.GetFiles(dir, "*" + Extension) : Array.Empty<string>())
@@ -75,19 +114,22 @@ namespace OurTaiko
             return names;
         }
 
-        // The item an id names, if it is in the slot it is worn in and can be drawn; else null.
+        // The item an id names, if it is in the slot it is worn in and can be drawn: the set's, else
+        // the player's file of that name; else null.
         public static OtanimAsset Load(NameplateSlot slot, string id)
         {
             if (!NameplateSlots.TryParse(id, out var named, out string name) || named != slot) return null;
-            string path = PathOf(slot, name);
-            return Resources.Load<OtanimAsset>(FolderName + "/" + id) ?? LoadPath(path);
+            return LoadPath(set?.PathOf(id), name, fromSet) ?? LoadPath(PathOf(slot, name), name, loaded);
         }
 
-        internal static OtanimAsset CompositionPart(string name) =>
-            NameplateSlots.IsName(name) ? Resources.Load<OtanimAsset>(FolderName + "/composition/" + name) : null;
+        // One of the plate's own pictures (composition/<name>: plates, badges, blank, dan-*).
+        public static OtanimAsset CompositionPart(string name) =>
+            NameplateSlots.IsName(name) ? LoadPath(set?.PathOf("composition/" + name), name, fromSet) : null;
 
-        static OtanimAsset LoadPath(string path)
+        // `name` names what is read (a downloaded file's own name is its hash).
+        static OtanimAsset LoadPath(string path, string name, Dictionary<string, (OtanimAsset asset, DateTime stamp)> read)
         {
+            if (path == null) return null;
             DateTime stamp;
             try
             {
@@ -95,14 +137,15 @@ namespace OurTaiko
                 stamp = File.GetLastWriteTimeUtc(path);
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException) { return null; }
-            if (loaded.TryGetValue(path, out var known))
+            if (read.TryGetValue(path, out var known))
             {
                 if (known.stamp == stamp) return known.asset;
-                if (known.asset != null) replaced.Add(known.asset);
-                loaded.Remove(path);
+                // A set's file written again (the baked folder, baked anew) is left to whoever draws it.
+                if (known.asset != null && read == loaded) replaced.Add(known.asset);
+                read.Remove(path);
             }
-            var asset = Read(path);
-            loaded[path] = (asset, stamp);
+            var asset = Read(path, name);
+            read[path] = (asset, stamp);
             return asset;
         }
 
@@ -121,12 +164,12 @@ namespace OurTaiko
                 && Mathf.Abs(v.width - View.width) < slack && Mathf.Abs(v.height - View.height) < slack;
         }
 
-        static OtanimAsset Read(string path)
+        static OtanimAsset Read(string path, string name)
         {
             OtanimAsset asset = null;
             try
             {
-                asset = OtanimAsset.FromBytes(File.ReadAllBytes(path), Path.GetFileNameWithoutExtension(path));
+                asset = OtanimAsset.FromBytes(File.ReadAllBytes(path), name);
                 var file = asset.File;
                 if (!Fits(file))
                     throw new InvalidDataException($"its view is {file.View.xMin} {file.View.yMin} {file.View.xMax} {file.View.yMax}, not the plate's 0 0 {View.width} {View.height}");

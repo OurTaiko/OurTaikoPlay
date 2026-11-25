@@ -3,7 +3,9 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // All scenes present the same built-in composition on a 408 x 96 canvas.
+    // All scenes present the same composition on a 408 x 96 canvas, drawn from the nameplate set
+    // in use (NameplateItems.Set) and again when another one comes (a sign-in check downloads it);
+    // before there is one, the plate is its text alone.
     [RequireComponent(typeof(RectTransform))]
     public sealed class NameplateView : MonoBehaviour
     {
@@ -37,6 +39,7 @@ namespace OurTaiko
             controller = PlayerInfoController.EnsureInstance();
             controller.Changed += ShowFirst;
             controller.SecondChanged += ShowSecond;
+            NameplateItems.SetChanged += ApplyShown;
             animationStart = GameTimeline.FrameTime;
             renderedCanvasScale = float.NaN;
             Canvas.willRenderCanvases += RefreshCanvasScale;
@@ -63,6 +66,7 @@ namespace OurTaiko
         void OnDisable()
         {
             if (controller != null) { controller.Changed -= ShowFirst; controller.SecondChanged -= ShowSecond; }
+            NameplateItems.SetChanged -= ApplyShown;
             Canvas.willRenderCanvases -= RefreshCanvasScale;
         }
 
@@ -117,7 +121,8 @@ namespace OurTaiko
             Info = info = info ?? new PlayerInfo();
             var catalog = PlateComposition.ReadCatalog();
             composition ??= new PlateComposition(RectTransform);
-            composition.Apply(catalog, (Newtonsoft.Json.Linq.JArray)catalog.States[PlateComposition.StateFor(info, Shown)], info, Shown);
+            var rows = catalog != null ? (Newtonsoft.Json.Linq.JArray)catalog.States[PlateComposition.StateFor(info, Shown)] : PlateComposition.TextOnly(info);
+            composition.Apply(catalog, rows, info, Shown);
         }
     }
 }

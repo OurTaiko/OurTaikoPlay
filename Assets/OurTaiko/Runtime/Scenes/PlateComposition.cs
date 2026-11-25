@@ -10,7 +10,8 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // A complete nameplate is an ordered list of ordinary otanim views and live text.
+    // A complete nameplate is an ordered list of ordinary otanim views and live text: a layout of
+    // the catalog of the set in use (NameplateItems.Set), or before there is one the text alone.
     // All artwork, including local masks and colour offsets, is baked into portable v1 clips.
     public sealed class PlateComposition
     {
@@ -46,7 +47,7 @@ namespace OurTaiko
                 return parts;
             }
 
-            // The built-in items of a slot: those the titles are made of.
+            // The set's items of a slot: those the titles are made of.
             public IEnumerable<string> Ids(NameplateSlot slot) => items[(int)slot];
             public bool Contains(NameplateSlot slot, string id) => id != null && items[(int)slot].Contains(id);
 
@@ -59,14 +60,11 @@ namespace OurTaiko
                 options.TryGetValue(choice ?? "", out var parts) ? parts : options["wood"];
         }
 
-        // The object a plate's whole composition is drawn under, and the built-in rank-up effect.
+        // The object a plate's whole composition is drawn under, and the set's rank-up effect.
         public const string RootName = "Complete nameplate", RankUpItem = "icon/lumen-rankup";
 
-        static Catalog catalog;
-        public static void ForgetCatalog() => catalog = null;
-
-        public static Catalog ReadCatalog() => catalog ??= new Catalog(JObject.Parse(
-            Resources.Load<TextAsset>(NameplateItems.FolderName + "/composition/catalog").text));
+        // The catalog of the set in use; null when there is none yet.
+        public static Catalog ReadCatalog() => NameplateItems.Catalog;
 
         readonly RectTransform root;
         readonly List<OtanimView> pictures = new List<OtanimView>();
@@ -93,10 +91,29 @@ namespace OurTaiko
         public static string StateFor(PlayerInfo info, int side)
         {
             if (!string.IsNullOrEmpty(info.plateState) && info.plateState != "auto" && info.plateState != "custom"
-                && ReadCatalog().States[info.plateState] != null) return info.plateState;
+                && ReadCatalog()?.States[info.plateState] != null) return info.plateState;
             string prefix = side == 1 ? "2p" : "1p";
             if (info.IsCoin) return prefix + "_coin";
             return prefix + (info.HasTitle || info.plateState == "custom" ? "_shougou" : "") + (info.HasDan ? "_dani" : "");
+        }
+
+        // The rows of a plate drawn before any set is here (a first launch that could not download
+        // it): the title and the name where the layouts of its kind put them, nothing else. With no
+        // band under it the title is white and outlined, as the name is.
+        public static JArray TextOnly(PlayerInfo info)
+        {
+            var rows = new JArray();
+            JObject Row(string role, float x, float y, float width, float size, float stroke, float shade) => new JObject
+            {
+                ["role"] = role, ["x"] = x, ["y"] = y, ["width"] = width, ["size"] = size, ["stroke"] = stroke,
+                ["rgba"] = new JArray(shade, shade, shade, 1f),
+            };
+            if (info.HasTitle && !info.IsCoin)
+                rows.Add(Row("text_title", NameplateLayout.TitleX, NameplateLayout.TitleY + NameplateLayout.TextLift(NameplateLayout.TitleFontSize),
+                    NameplateLayout.TitleBoxWidth, NameplateLayout.TitleFontSize, NameplateLayout.NameOutline, 1));
+            var name = NameplateLayout.NameBox(info);
+            rows.Add(Row("text_name", name.X, name.Y + NameplateLayout.TextLift(name.FontSize), NameplateLayout.NameBoxWidth, name.FontSize, NameplateLayout.NameOutline, 1));
+            return rows;
         }
 
         public static string RankLabel(int rank)
@@ -146,6 +163,7 @@ namespace OurTaiko
             return new TitleParts(string.IsNullOrEmpty(info.bandItem) ? title.Band : info.bandItem, info.effectItem, info.iconItem);
         }
 
+        // Draws a layout's rows (source null: TextOnly's, with no set to draw pictures from).
         public void Apply(Catalog source, JArray rows, PlayerInfo info, int side)
         {
             string running = rankup?.clip;
@@ -154,7 +172,7 @@ namespace OurTaiko
             pictureCount = textCount = 0;
             rankup = null;
             Title = PlayerName = null;
-            Layers.Apply(Worn(source, rows, info));
+            Layers.Apply(source, source == null ? default : Worn(source, rows, info));
             bool badge = rows.Any(row => (string)row["role"] == "plate_player_no");
             foreach (var row in rows)
             {

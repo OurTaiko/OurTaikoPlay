@@ -208,6 +208,38 @@ namespace OurTaiko.Tests
                 Assert.That(System.Array.Find(labels, text => text.text == title).rectTransform.anchoredPosition, Is.EqualTo(titleCenter));
         }
 
+        // Before a set is here (a first launch that could not download it) a plate is its name and
+        // title where the layouts put them; with one, the same plate is drawn whole.
+        [Test]
+        public void WithoutASetAPlateIsItsTextAlone()
+        {
+            var canvas = new GameObject("Canvas", typeof(Canvas));
+            try
+            {
+                NameplateItems.Use(null);
+                var plate = Object.Instantiate(Resources.Load<NameplateView>(NameplateView.Resource), canvas.transform);
+                var info = new PlayerInfo { name = "Player", title = "Taiko Master", plateTitle = "gold", dan = 10 };
+                plate.Pin(info, 0);
+                Assert.That(plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Where(v => v.RunCount > 0), Is.Empty, "No pictures without a set.");
+                Assert.That(plate.playerName.text, Is.EqualTo("Player"));
+                Assert.That(plate.playerName.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(261, -64.5f)), "The name box of a plate with a 段位.");
+                Assert.That(plate.title.text, Is.EqualTo("Taiko Master"));
+                Assert.That(plate.title.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(226.5f, -32)));
+                Assert.That(plate.title.color, Is.EqualTo(Color.white), "No band under it: white, as the name.");
+
+                TestData.UseBakedNameplates();
+                plate.Pin(info, 0);
+                Assert.That(plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Any(v => v.clip == "1kyuu_red"), Is.True);
+                Assert.That(plate.Layers.BandView.asset, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, "band/lumen-title-gold")));
+                Assert.That(plate.title.color, Is.Not.EqualTo(Color.white));
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvas);
+                TestData.UseBakedNameplates();
+            }
+        }
+
         [TestCase(6, 0, false)]
         [TestCase(10, 1, false)]
         [TestCase(24, 2, true)]
@@ -218,7 +250,7 @@ namespace OurTaiko.Tests
             preview.Show(info, 0);
             var plate = preview.Plate;
             var expectedClip = PlateComposition.RankLabel(rank) + (gold ? "_gold" : "_red");
-            var expected = Resources.Load<OurTaiko.Chara.OtanimAsset>("Nameplate/composition/dan-" + new[] { "clear", "full", "donfull" }[combo]);
+            var expected = NameplateItems.CompositionPart("dan-" + new[] { "clear", "full", "donfull" }[combo]);
             foreach (string state in new[] { "auto", "custom" })
             {
                 info.plateState = state;
@@ -371,8 +403,8 @@ namespace OurTaiko.Tests
                 Is.EqualTo(new[] { "toho_y22_1", "toho_y22_2", "toho_y22_3", "toho_y22_4", "toho_y22_5" }));
             Assert.That(NameplatePreview.UsedBy(catalog, NameplateSlot.Band, "band/lumen-ai-title-wood"), Is.EqualTo(new[] { "AI wood" }));
             Assert.That(NameplatePreview.UsedBy(catalog, NameplateSlot.Band, "band/loose"), Is.Empty);
-            Assert.That(NameplatePreview.IsBuiltIn(catalog, NameplateSlot.Icon, PlateComposition.RankUpItem));
-            Assert.That(NameplatePreview.IsBuiltIn(catalog, NameplateSlot.Band, "band/loose"), Is.False);
+            Assert.That(NameplatePreview.InSet(catalog, NameplateSlot.Icon, PlateComposition.RankUpItem));
+            Assert.That(NameplatePreview.InSet(catalog, NameplateSlot.Band, "band/loose"), Is.False);
             Assert.That((NameplatePreview.Series("toho_y22_3"), NameplatePreview.Series("crown_gold_ura"), NameplatePreview.Series("pjsekai")),
                 Is.EqualTo(("toho", "crown", "pjsekai")));
         }

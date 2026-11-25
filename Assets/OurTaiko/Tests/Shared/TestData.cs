@@ -28,9 +28,20 @@ namespace OurTaiko.Tests
                 bass?.GetProperty(volume)?.SetValue(null, 0);
         }
 
+        // Plates are drawn from the set baked into the repository, as a player's are from the one
+        // a sign-in check downloads (the game carries none). A test that uses another set, or none,
+        // puts this one back.
+        public static void UseBakedNameplates()
+        {
+#if UNITY_EDITOR
+            NameplateItems.Use(NameplateSet.FromFolder(NameplateSet.BakedFolder));
+#endif
+        }
+
         public static void Use()
         {
             MuteIfAsked();
+            UseBakedNameplates();
             if (File.Exists(ScorePath)) File.Delete(ScorePath);
             ScoreStore.Shared = new ScoreStore(ScorePath);
             DanRecordStore.Shared = new DanRecordStore(ScorePath);

@@ -55,7 +55,7 @@ namespace OurTaiko.Tests
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:Plate\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#START\n1111,\n1111,\n#END");
-            // Exercise the built-in art independently of collections installed on this device.
+            // Exercise the set's art independently of the items in this device's Nameplate folder.
             NameplateItems.UseFolder(Path.Combine(Path.GetTempPath(), System.Guid.NewGuid().ToString("N")));
             Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", plateTitle = "purple", dan = 24, gold = true, danCombo = 2 });
             try
@@ -148,6 +148,38 @@ namespace OurTaiko.Tests
                 NameplateItems.UseFolder(null);
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 Object.Destroy(song.chart); Object.Destroy(song);
+            }
+        }
+
+        // A plate on screen is drawn whole when the set comes (a sign-in check downloads it); until
+        // then it is its text alone.
+        [UnityTest]
+        public IEnumerator APlateOnScreenIsDrawnWhenTheSetComes()
+        {
+            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", plateTitle = "gold", dan = 10 });
+            try
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                yield return null;
+                NameplateItems.Use(null);
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                yield return null;
+                SceneSwitcher.Instance.SwitchScene(SceneSwitcher.SongSelectScene);
+                yield return WaitForScene(SceneSwitcher.SongSelectScene);
+                var plate = Object.FindAnyObjectByType<SongSelectScene>().view.nameplate;
+                Assert.That(plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Where(v => v.RunCount > 0), Is.Empty);
+                Assert.That(plate.playerName.text, Is.EqualTo("Don-chan"));
+                Assert.That(plate.title.text, Is.EqualTo("Taiko Master"));
+
+                TestData.UseBakedNameplates();
+                Assert.That(plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Any(v => v.clip == "1kyuu_red"), Is.True);
+                Assert.That(plate.Layers.BandView.asset, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, "band/lumen-title-gold")));
+                Assert.That(plate.playerName.text, Is.EqualTo("Don-chan"));
+            }
+            finally
+            {
+                TestData.UseBakedNameplates();
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             }
         }
 

@@ -4,12 +4,12 @@
 
 ## 在 Unity 里查看
 
-1. 打开 **OurTaiko → Nameplate Preview**。游戏和预览直接从 `Assets/OurTaiko/Resources/Nameplate` 加载整套内置素材，首次离线启动也可使用。
+1. 打开 **OurTaiko → Nameplate Preview**。预览读仓库里烘焙好的这套（`Tools/nameplate-samples/lumen/set`，发布出去的也是它）。游戏不带这套素材：每次登录检查时从分发根读 `nameplate/lumen.json`，缺的文件按哈希下载进对象缓存，之后离线也能用；一次也没下载成功时，名牌只有名字和称号文字。
 2. **Layout** 选 `auto` 时，座位、称号和段位决定主布局。例如 2P 同时有称号和段位时使用 `2p_shougou_dani`。也可以直接选择 36 种源布局中的任意一种，包括 AI、新玩家、角色联动、Boss 和愚人节。选 **custom** 可在相同的组合布局上分别装备 Band、Effect 和 Icon（见第 3 条）。
 3. **Layers** 随布局显示可替换的部件。**Badge** 可跟随布局，也可单独指定 1P 或 2P。**Title** 提供 88 种普通称号，**AI title** 提供 8 种 AI 称号，按系列分子菜单（`toho ▸ toho_y22_3`），◀ ▶ 逐个切换。下面三行列出名牌为这个称号戴的底条、特效和角标，以及每个部件还出现在哪些称号里、特效是否裁在带内；**Customize** 切到 custom 布局并把这三个部件填进三个槽，方便只换其中一个。**Blank** 有 `off`、`on`、`on_ai` 三个状态。姓名和称号可直接编辑，**Load source text** 可读入当前布局的源占位文字。文字使用游戏自己的 UI 字体。
-   custom 布局里 Band、Effect、Icon 的菜单分 **Built-in**（按部件来自的称号系列分组）和 **Items folder**（自己放进文件夹的文件），◀ ▶ 逐个切换，下方注明出处；**From title** 加 **Wear** 一次填满三个槽。
+   custom 布局里 Band、Effect、Icon 的菜单分 **Set**（这套的部件，按来自的称号系列分组）和 **Items folder**（自己放进文件夹的文件），◀ ▶ 逐个切换，下方注明出处；**From title** 加 **Wear** 一次填满三个槽。
 4. 在段位布局用 **段位**、**Ring**、**Gold pass** 切换 19 个段位、三种底和两种文字颜色。播放区的 **init / start / wait / end** 控制当前段位的升段动画。Pause 后可用 ±1 frame 检查遮罩边缘与阶段衔接。**Show** 的 Band、Effect、Icon、Plate 四个开关只影响画面（也影响 **Save picture…**），名牌照常戴着、照常播放：关掉 Plate 只看三个图层，关掉其中两层就能单独看一个部件。
-5. **Wear as 1P** 将当前外观保存到玩家配置。游戏在段位结算进入庆祝时触发开始片段，离开庆祝时触发结束片段。装备目录收录的底条时使用原始衬底，保留伸出称号带的装饰。所有布局共用内置段位图形、缩放和文字基线校正。三个槽的素材都来自这套称号，可以任意搭配，也可以加 `icon/lumen-rankup`。**Render all…** 出几张表：`titles.png`（全部 96 个称号按玩家戴的样子画，称号栏写着称号名）、`items.png`（每个部件单独戴，称号栏写着 id，各取 6 个时刻）、`layouts.png`（36 种布局）、`combinations.png`（只组合 Items folder 里自己的文件，最多 64 种；文件夹没有文件就不出）。桌面和移动端均内置全部 155 份资源。旧版 player.json 在首次加载时用新版默认名牌配置替换。
+5. **Wear as 1P** 将当前外观保存到玩家配置。游戏在段位结算进入庆祝时触发开始片段，离开庆祝时触发结束片段。装备目录收录的底条时使用原始衬底，保留伸出称号带的装饰。所有布局共用这套的段位图形、缩放和文字基线校正。三个槽的素材都来自这套称号，可以任意搭配，也可以加 `icon/lumen-rankup`。**Render all…** 出几张表：`titles.png`（全部 96 个称号按玩家戴的样子画，称号栏写着称号名）、`items.png`（每个部件单独戴，称号栏写着 id，各取 6 个时刻）、`layouts.png`（36 种布局）、`combinations.png`（只组合 Items folder 里自己的文件，最多 64 种；文件夹没有文件就不出）。全部 155 份文件约 2.3 MB，各平台都不内置，第一次登录检查时下载，以后只下载新发布的。旧版 player.json 在首次加载时用新版默认名牌配置替换。
 
 ## 数据与制作方法
 
@@ -46,8 +46,18 @@
 需要 Python 3、Pillow、Go，以及与 OurTaikoPlay 同级的 otanim 仓库。从 OurTaikoPlay 根目录执行以下命令。将输出指向空目录即可与仓库内的成品做逐文件比对。
 
 ```sh
-python3 Tools/nameplate-samples/lumen/bake.py ~/Downloads/name_plate_decoded Assets/OurTaiko/Resources/Nameplate
+python3 Tools/nameplate-samples/lumen/bake.py ~/Downloads/name_plate_decoded Tools/nameplate-samples/lumen/set
 (cd Tools/nameplate-samples && go test ./...)
 ```
 
 Go 测试用参考解码器和软件渲染器检查全部称号的部件（各在自己的文件夹、没有闲置的文件、底条不出带、角标在右端、`unclipped` 与几何一致）、布局引用、扫光裁剪、段位组合及升段片段衔接。Unity 的 `NameplateLayerTests` 另外通过实际预览入口检查布局切换、片段触发，以及恢复普通名牌。
+
+## 发布
+
+游戏读的是分发根上的这套，改了 `set/` 要发布才会到玩家手里。在 OurTaikoNet 仓库执行（需要 `aws login`，有 `ourtaiko-public` 桶和 CloudFront 分配 `E29SNWDH0GYCHC` 的写权限）：
+
+```sh
+tools/nameplate/publish-lumen.sh <OurTaikoPlay>/Tools/nameplate-samples/lumen/set
+```
+
+它把每个文件按 `lumen/<文件夹>/<名字>-<哈希前 12 位>.otanim` 上传（已发布的文件从不替换），最后上传 `nameplate/lumen.json` 并让 CDN 上的它失效。游戏在下一次登录检查时只下载新出现的文件。`set/` 新增的部件或称号，不发新版游戏也能用；目录表格式变了才需要发新版。

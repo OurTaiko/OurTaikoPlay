@@ -9,7 +9,8 @@ import (
 	"ourtaiko.org/otanim/render"
 )
 
-const collection = "../../../Assets/OurTaiko/Resources/Nameplate/"
+// The set the bake writes and the game downloads (published from here).
+const collection = "set/"
 
 func example(t *testing.T, path string) (*otanim.File, *render.Renderer) {
 	t.Helper()

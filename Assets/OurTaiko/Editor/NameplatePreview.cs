@@ -13,7 +13,9 @@ namespace OurTaiko.Editor
 {
     // A nameplate outside play: the game's own Nameplate prefab in a preview scene of its own,
     // wearing what it is given (a PlayerInfo: its layout and title, or its own band, effect and icon
-    // items) at a time the caller moves on, drawn to a texture. NameplatePreviewWindow shows it;
+    // items) at a time the caller moves on, drawn to a texture. It draws the set baked into the
+    // repository (NameplateSet.BakedFolder), which is what is published, rather than the one a
+    // play downloaded. NameplatePreviewWindow shows it;
     // batch: -executeMethod OurTaiko.Editor.NameplatePreview.RenderBatch with NAMEPLATE_PREVIEW_DIR
     // set (and NAMEPLATE_ITEMS_DIR for another items folder) writes the sheets RenderAll makes.
     public sealed class NameplatePreview : IDisposable
@@ -54,6 +56,7 @@ namespace OurTaiko.Editor
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath)
                 ?? throw new InvalidOperationException("No nameplate prefab at " + PrefabPath);
+            UseBakedSet();
             scene = EditorSceneManager.NewPreviewScene();
             try
             {
@@ -89,8 +92,20 @@ namespace OurTaiko.Editor
             }
         }
 
+        // The baked set, read again when `again` or when another set has been used since (a play).
+        // During a play the game's own set stays.
+        public static void UseBakedSet(bool again = false)
+        {
+            if (Application.isPlaying || (!again && baked != null && NameplateItems.Set == baked)) return;
+            baked = NameplateSet.FromFolder(NameplateSet.BakedFolder);
+            NameplateItems.Use(baked);
+        }
+
+        static NameplateSet baked;
+
         public void Show(PlayerInfo info, int side)
         {
+            UseBakedSet();
             Info = info.Clone();
             Side = side;
             Seconds = 0;
@@ -199,7 +214,7 @@ namespace OurTaiko.Editor
         // A sheet writes what each picture is in its title text.
         public static PlayerInfo SampleInfo(string title = "Nameplate layers") => new PlayerInfo { plateState = "custom", name = "OurTaiko", title = title, dan = 10, danCombo = 1 };
 
-        // A built-in title as a player's plate wears it, its label in the title text. An AI title
+        // A title of the set as a player's plate wears it, its label in the title text. An AI title
         // is shown on the AI plate that wears one.
         public static PlayerInfo TitleInfo(string label, bool ai) => ai
             ? new PlayerInfo { plateState = "ai_data_shougou", plateAiTitle = label, name = "OurTaiko", title = "AI " + label }
@@ -245,7 +260,7 @@ namespace OurTaiko.Editor
         // When a title sheet catches its titles: late enough for the first glints.
         public const double TitleMoment = 1;
 
-        // titles.png: every built-in title (88, then the 8 AI ones) as a plate wears it, its label
+        // titles.png: every title of the set (88, then the 8 AI ones) as a plate wears it, its label
         // in its title text; items.png: a row an item, worn alone and named in the title text, at
         // Frames moments of its clip; layouts.png: every layout; combinations.png: every band,
         // effect and icon of the items folder worn together (none among them), each half a second
@@ -336,7 +351,7 @@ namespace OurTaiko.Editor
                 }
                 FinishGrid("layouts");
 
-                // The built-in items come in titles, so what is combined is the folder's own.
+                // The set's items come in titles, so what is combined is the folder's own.
                 var band = Choices(NameplateSlot.Band, catalog);
                 var effect = Choices(NameplateSlot.Effect, catalog);
                 var icon = Choices(NameplateSlot.Icon, catalog);
@@ -366,20 +381,20 @@ namespace OurTaiko.Editor
             }
         }
 
-        // The slot's items in the items folder (not built in), and "" for none.
+        // The slot's items in the items folder (not the set's), and "" for none.
         static List<string> Choices(NameplateSlot slot, PlateComposition.Catalog catalog)
         {
             var list = new List<string> { "" };
             foreach (string name in NameplateItems.Names(slot))
             {
                 string id = NameplateSlots.Id(slot, name);
-                if (!IsBuiltIn(catalog, slot, id)) list.Add(id);
+                if (!InSet(catalog, slot, id)) list.Add(id);
             }
             return list;
         }
 
-        // An item the game carries (a part of a title, or the rank-up effect), not a file of the items folder.
-        public static bool IsBuiltIn(PlateComposition.Catalog catalog, NameplateSlot slot, string id) =>
+        // An item of the set (a part of a title, or the rank-up effect), not a file of the items folder.
+        public static bool InSet(PlateComposition.Catalog catalog, NameplateSlot slot, string id) =>
             catalog.Contains(slot, id) || id == PlateComposition.RankUpItem;
 
         // Rows of same-sized pictures, the first at the top.
