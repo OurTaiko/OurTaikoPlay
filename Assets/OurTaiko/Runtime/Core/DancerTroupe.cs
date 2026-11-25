@@ -14,17 +14,19 @@ namespace OurTaiko
     // advances BeatFrames per beat, and every dancer's dance is a pure function of it, so dancers
     // in the same state are on the same frame. Slots are in spawn order: centre, left, right,
     // far left, far right.
-    // The hop in is the arcade's, not the script's: it takes InSeconds whatever the tempo (measured
-    // on the arcade) and lands on a phrase, where the dance begins. The troupe that opens the play
+    // The ways in and out are the arcade's, not the script's: each takes MoveSeconds whatever the
+    // tempo (the way in measured on the arcade, the way out made to match). The way in lands on a
+    // phrase, where the dance begins; the way out starts on one. The troupe that opens the play
     // starts hopping in at once, so the playhead starts that far short of the dance.
     public sealed class DancerTroupe
     {
         public const int BeatFrames = 40, Phrase = 80, MinDancers = 3;
-        public const double InSeconds = 0.5;
+        public const double MoveSeconds = 0.5;
 
         enum State { Idle, In, Dance, Out }
-        // Start is the troupe clock's time the hop in starts; Join, Exit are playhead frames. NaN Join: one of
-        // the troupe that opens the play, placed when the first time comes.
+        // Start is the troupe clock's time the way in or out starts (NaN: the way out's phrase has
+        // not come yet); Join, Exit are playhead frames. NaN Join: one of the troupe that opens the
+        // play, placed when the first time comes.
         struct Dancer { public State State; public double Start, Join, Exit; }
 
         readonly DancerRig[] rigs;
@@ -66,7 +68,7 @@ namespace OurTaiko
             if (double.IsNaN(now))
             {
                 now = time;
-                // The opening troupe lands on the first phrase, InSeconds from now.
+                // The opening troupe lands on the first phrase, MoveSeconds from now.
                 if (rigs.Length > 0) Frame = rigs[0].Dance - InFrames(rigs[0]);
                 for (int i = 0; i < dancers.Length; i++)
                     if (dancers[i].State == State.In)
@@ -83,7 +85,12 @@ namespace OurTaiko
             {
                 ref var dancer = ref dancers[i];
                 if (dancer.State == State.In && Frame >= dancer.Join) dancer.State = State.Dance;
-                else if (dancer.State == State.Out && Frame >= dancer.Exit + (rigs[i].Frames - rigs[i].Out)) dancer.State = State.Idle;
+                else if (dancer.State == State.Out && Frame >= dancer.Exit)
+                {
+                    // Timed from the moment the playhead crossed its phrase.
+                    if (double.IsNaN(dancer.Start)) dancer.Start = clock - (Frame - dancer.Exit) / rate;
+                    if (clock - dancer.Start >= MoveSeconds) dancer.State = State.Idle;
+                }
             }
         }
 
@@ -105,11 +112,12 @@ namespace OurTaiko
                 case State.Idle: return -1;
                 // Earned and still waiting for its phrase, or a rig with no way in.
                 case State.In when double.IsNaN(now) || clock < dancer.Start || rig.Dance == 0: return -1;
-                // The way in, rig frames 0 to Dance, played over InSeconds; it holds its last
+                // The way in, rig frames 0 to Dance, played over MoveSeconds; it holds its last
                 // frame if a slower tempo puts the phrase further off.
-                case State.In: return Math.Min(rig.Dance - 1, (int)Math.Floor(rig.Dance * (clock - dancer.Start) / InSeconds));
-                case State.Out when Frame >= dancer.Exit:
-                    int frame = rig.Out + (int)Math.Floor(Frame - dancer.Exit);
+                case State.In: return Math.Min(rig.Dance - 1, Progress(rig.Dance, dancer.Start));
+                // The way out, rig frames Out to the end, played over MoveSeconds from its phrase.
+                case State.Out when !double.IsNaN(dancer.Start):
+                    int frame = rig.Out + Progress(rig.Frames - rig.Out, dancer.Start);
                     return frame >= rig.Frames ? -1 : frame;
                 default:
                     double looped = (Frame - rig.Dance) % (rig.Out - rig.Dance);
@@ -125,11 +133,14 @@ namespace OurTaiko
             if (double.IsNaN(now)) { dancer.Join = double.NaN; return; }
             // The first phrase it can still hop in for whole, the hop timed at the current tempo.
             dancer.Join = PhraseAtOrAfter(Frame + InFrames(rigs[slot]), rigs[slot].Dance);
-            dancer.Start = clock + (dancer.Join - Frame) / rate - (rigs[slot].Dance > 0 ? InSeconds : 0);
+            dancer.Start = clock + (dancer.Join - Frame) / rate - (rigs[slot].Dance > 0 ? MoveSeconds : 0);
         }
 
         // How far the playhead runs during the way in at the current tempo; a rig with no way in has none.
-        double InFrames(DancerRig rig) => rig.Dance > 0 ? InSeconds * rate : 0;
+        double InFrames(DancerRig rig) => rig.Dance > 0 ? MoveSeconds * rate : 0;
+
+        // Which of a way's `frames` frames shows, MoveSeconds for the whole way, from `start` on the troupe clock.
+        int Progress(int frames, double start) => (int)Math.Floor(frames * (clock - start) / MoveSeconds);
 
         void Leave(int slot)
         {
@@ -138,6 +149,7 @@ namespace OurTaiko
             // Earned and lost again before it ever landed: it simply never arrives.
             if (dancer.State == State.In && !(Frame >= dancer.Join)) { dancer.State = State.Idle; return; }
             dancer.Exit = PhraseAtOrAfter(Frame, rigs[slot].Dance);
+            dancer.Start = double.NaN;
             dancer.State = State.Out;
         }
 

@@ -63,6 +63,33 @@ namespace OurTaiko.Tests
             Assert.That(troupe.Frame, Is.EqualTo(80 + 0.001 * bpm / 60 * DancerTroupe.BeatFrames).Within(1e-6), "The dance starts on its phrase.");
         }
 
+        // The way out mirrors the way in: it starts on a phrase and takes half a second at any tempo.
+        [TestCase(75.0)]
+        [TestCase(150.0)]
+        [TestCase(300.0)]
+        public void TheWayOutStartsOnAPhraseAndTakesHalfASecond(double bpm)
+        {
+            var troupe = new DancerTroupe(Enumerable.Repeat(new DancerRig(800, 80, 720), 5).ToArray(), leadFirst: true);
+            troupe.SetCount(2);
+            troupe.Advance(0, bpm);
+            double time = 1;
+            troupe.Advance(time, bpm);
+            Assert.That(troupe.FrameOf(1), Is.GreaterThanOrEqualTo(80), "Both have landed.");
+            troupe.SetCount(1);
+            const double step = 0.001;
+            while (troupe.FrameOf(1) < 720) troupe.Advance(time += step, bpm);
+            Assert.That(troupe.FrameOf(1), Is.EqualTo(720));
+            double rate = bpm / 60 * DancerTroupe.BeatFrames;
+            Assert.That((troupe.Frame - 80) % DancerTroupe.Phrase, Is.LessThanOrEqualTo(step * rate + 1e-6), "It set off on a phrase.");
+            troupe.Advance(time + 0.25, bpm);
+            Assert.That(troupe.FrameOf(1), Is.EqualTo(760));
+            troupe.Advance(time + 0.498, bpm);
+            Assert.That(troupe.FrameOf(1), Is.EqualTo(799));
+            troupe.Advance(time + 0.501, bpm);
+            Assert.That(troupe.FrameOf(1), Is.EqualTo(-1));
+            Assert.That(troupe.FrameOf(0), Is.GreaterThanOrEqualTo(80), "The lead stays.");
+        }
+
         // A rig whose dance starts at 0 has no way in: the opening troupe is dancing from the start.
         [Test]
         public void ARigWithNoWayInDancesFromTheStart()
@@ -107,12 +134,12 @@ namespace OurTaiko.Tests
             troupe.Advance(time + 2.195, 150);
             Assert.That(troupe.FrameOf(3), Is.EqualTo(319));
             troupe.Advance(time + 2.305, 150);
-            Assert.That(troupe.FrameOf(3), Is.EqualTo(730));
-            troupe.Advance(time + 2.995, 150);
+            Assert.That(troupe.FrameOf(3), Is.EqualTo(736), "The way out starts on the phrase at 320, half a second for its 80 frames.");
+            troupe.Advance(time + 2.695, 150);
             Assert.That(troupe.FrameOf(3), Is.EqualTo(799));
-            troupe.Advance(time + 3.005, 150);
+            troupe.Advance(time + 2.705, 150);
             Assert.That(troupe.FrameOf(3), Is.EqualTo(-1));
-            Assert.That(troupe.FrameOf(0), Is.EqualTo(400));
+            Assert.That(troupe.FrameOf(0), Is.EqualTo(370));
         }
 
         [Test]
