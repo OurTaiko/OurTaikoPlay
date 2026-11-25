@@ -90,6 +90,29 @@ namespace OurTaiko.Tests
             Assert.That(troupe.FrameOf(0), Is.GreaterThanOrEqualTo(80), "The lead stays.");
         }
 
+        // A play never goes below the fewest; Assemble does, so the ones who always stay can be seen
+        // leaving and coming back by their own ways.
+        [Test]
+        public void AssembleTakesEvenTheOnesWhoAlwaysStayOffAndBack()
+        {
+            var troupe = TroupeAt(100, out double time);
+            troupe.SetCount(0);
+            Assert.That(troupe.Active, Is.EqualTo(3));
+            troupe.Assemble(0);
+            Assert.That(troupe.Active, Is.EqualTo(0));
+            troupe.Advance(time + 0.705, 150);
+            Assert.That(Frames(troupe), Is.EqualTo(new[] { 736, 736, 736, -1, -1 }), "They set off on the phrase at 160.");
+            troupe.Advance(time + 1.105, 150);
+            Assert.That(Frames(troupe), Is.All.EqualTo(-1));
+            // At 210.5, so half a second on is 260.5: they land on the phrase at 320, setting off at 270.
+            troupe.Assemble(5);
+            Assert.That(troupe.Active, Is.EqualTo(5));
+            troupe.Advance(time + 2.0, 150);
+            Assert.That(Frames(troupe), Is.All.EqualTo(48), "All five hop in together.");
+            troupe.Advance(time + 2.205, 150);
+            Assert.That(Frames(troupe), Is.All.EqualTo(320), "Landed on it, on the shared frame.");
+        }
+
         // A rig whose dance starts at 0 has no way in: the opening troupe is dancing from the start.
         [Test]
         public void ARigWithNoWayInDancesFromTheStart()

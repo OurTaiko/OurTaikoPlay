@@ -94,10 +94,14 @@ namespace OurTaiko
             }
         }
 
-        // Grows and shrinks slot by slot, from the centre outwards.
-        public void SetCount(int count)
+        // Grows and shrinks slot by slot, from the centre outwards, never below the fewest on stage.
+        public void SetCount(int count) => Assemble(Math.Max(Math.Min(least, rigs.Length), count));
+
+        // Any number from none to every slot, by the same ways in and out. A play never goes below
+        // the fewest; the stage preview does, to show the ways in and out of the ones who always stay.
+        public void Assemble(int count)
         {
-            count = Math.Max(Math.Min(least, rigs.Length), Math.Min(rigs.Length, count));
+            count = Math.Max(0, Math.Min(rigs.Length, count));
             while (Active < count) Enter(Active++);
             while (Active > count) Leave(--Active);
         }

@@ -18,7 +18,13 @@ namespace OurTaiko
         // Null until the stage gives a troupe.
         public DancerTroupe Troupe { get; private set; }
         public bool IsMovie { get; private set; }
+        // The stage preview's: how many stand on stage whatever the gauge (null: the gauge says),
+        // and one rig frame every dancer shows in place of the troupe's (null: the troupe's).
+        public int? Pinned { get; set; }
+        public int? PinnedFrame { get; set; }
         bool leadFirst;
+        StageTroupe given;
+        int members;
         double shownTime = double.NaN;
 
         void Awake()
@@ -29,35 +35,50 @@ namespace OurTaiko
         // The troupe's members in the order they come, and its rig's frames; no members clears the stage.
         public void Use(IReadOnlyList<OtanimAsset> members, StageTroupe troupe)
         {
-            int count = Math.Min(members?.Count ?? 0, dancers.Length);
-            for (int i = 0; i < dancers.Length; i++) dancers[i].Use(i < count ? members[i] : null);
+            this.members = Math.Min(members?.Count ?? 0, dancers.Length);
+            for (int i = 0; i < dancers.Length; i++) dancers[i].Use(i < this.members ? members[i] : null);
+            given = troupe;
+            Restart();
+        }
+
+        // The same troupe from the start of a play: the opening ones hop in at the next time shown,
+        // all that Pinned asks for when it is set.
+        public void Restart()
+        {
             shownTime = double.NaN;
             IsMovie = false;
             Troupe = null;
-            if (count == 0) return;
-            IsMovie = troupe.movie;
-            leadFirst = troupe.leadFirst;
-            var rigs = new DancerRig[IsMovie ? 1 : count];
+            if (members == 0) return;
+            IsMovie = given.movie;
+            leadFirst = given.leadFirst;
+            var rigs = new DancerRig[IsMovie ? 1 : members];
             // A movie has no way in or out: the whole clip is its dance.
             for (int i = 0; i < rigs.Length; i++)
-                rigs[i] = IsMovie ? new DancerRig(dancers[i].Frames, 0, dancers[i].Frames) : new DancerRig(dancers[i].Frames, troupe.dance, troupe.LeaveAt(i));
+                rigs[i] = IsMovie ? new DancerRig(dancers[i].Frames, 0, dancers[i].Frames) : new DancerRig(dancers[i].Frames, given.dance, given.LeaveAt(i));
             Troupe = new DancerTroupe(rigs, leadFirst);
+            if (Pinned.HasValue && !IsMovie) Troupe.Assemble(Pinned.Value);
         }
 
-        // gauge is the soul gauge's fill relative to its difficulty's clear line. A time already shown (a still pause) is left as it is.
+        // gauge is the soul gauge's fill relative to its difficulty's clear line. A time already
+        // shown (a still pause) does not move the troupe on, but what it shows still follows Pinned and PinnedFrame.
         public void ShowTime(double time, double bpm, double gauge, bool clear)
         {
-            if (Troupe == null || time == shownTime) return;
-            shownTime = time;
-            Troupe.Advance(time, bpm);
+            if (Troupe == null) return;
+            if (time != shownTime)
+            {
+                shownTime = time;
+                Troupe.Advance(time, bpm);
+            }
             if (IsMovie)
             {
                 int frames = dancers[0].Frames;
-                dancers[0].Show(frames > 0 ? (int)(Troupe.Frame % frames) : -1);
+                dancers[0].Show(frames <= 0 ? -1 : PinnedFrame.HasValue ? Math.Min(PinnedFrame.Value, frames - 1) : (int)(Troupe.Frame % frames));
                 return;
             }
-            Troupe.SetCount(DancerTroupe.CountFor(gauge, clear, leadFirst));
-            for (int i = 0; i < Troupe.Slots; i++) dancers[i].Show(Troupe.FrameOf(i));
+            if (Pinned.HasValue) Troupe.Assemble(Pinned.Value);
+            else Troupe.SetCount(DancerTroupe.CountFor(gauge, clear, leadFirst));
+            for (int i = 0; i < Troupe.Slots; i++)
+                dancers[i].Show(PinnedFrame.HasValue ? Math.Min(PinnedFrame.Value, dancers[i].Frames - 1) : Troupe.FrameOf(i));
         }
     }
 }

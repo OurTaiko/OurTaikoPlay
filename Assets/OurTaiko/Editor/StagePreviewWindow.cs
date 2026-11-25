@@ -25,6 +25,9 @@ namespace OurTaiko.Editor
         [SerializeField] double bpm = 120;
         [SerializeField] float speed = 1;
         [SerializeField] bool paused, showLane = true;
+        // The dancers: as the gauge says, or pinned to a number on stage; and a rig frame held for all of them.
+        [SerializeField] bool followGauge = true, holdFrame;
+        [SerializeField] int onStage = 5, rigFrame;
         [SerializeField] Vector2 scroll;
 
         StagePreview preview;
@@ -108,6 +111,12 @@ namespace OurTaiko.Editor
 
         void Draw(double step)
         {
+            var dancers = preview.Stage.dancers;
+            if (dancers != null)
+            {
+                dancers.Pinned = followGauge ? null : onStage;
+                dancers.PinnedFrame = holdFrame ? rigFrame : null;
+            }
             preview.Step(step, bpm, gauges, missing);
             shown = preview.Render(1920, 1080);
         }
@@ -195,6 +204,7 @@ namespace OurTaiko.Editor
                 if (GUILayout.Button("Miss")) preview.Judged(true, bpm);
             }
             bpm = EditorGUILayout.DoubleField("BPM", bpm);
+            DancerControls();
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Playback", EditorStyles.boldLabel);
@@ -217,6 +227,53 @@ namespace OurTaiko.Editor
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Contents", EditorStyles.boldLabel);
             EditorGUILayout.SelectableLabel(contents, EditorStyles.wordWrappedMiniLabel, GUILayout.Height(EditorStyles.wordWrappedMiniLabel.CalcHeight(new GUIContent(contents), Side - 30)));
+        }
+
+        // Each way in and out on its own: a number on stage in place of the gauge's, every dancer
+        // hopping in or leaving at once, and one rig frame held to step through.
+        void DancerControls()
+        {
+            var dancers = preview.Stage.dancers;
+            var troupe = dancers != null ? dancers.Troupe : null;
+            if (troupe == null) return;
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Dancers", EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            using (new EditorGUI.DisabledScope(dancers.IsMovie))
+            {
+                followGauge = EditorGUILayout.Toggle(new GUIContent("Follow gauge", "As in a play: the gauge says how many, never fewer than the ones who always stay."), followGauge);
+                using (new EditorGUI.DisabledScope(followGauge))
+                    onStage = EditorGUILayout.IntSlider(new GUIContent("On stage", "Each one comes or goes by its way in or out, on the phrase, as in a play; none at all is the preview's own."), onStage, 0, troupe.Slots);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button(new GUIContent("Way in", "Every dancer hops in together from off stage, as the opening ones do.")))
+                    {
+                        (followGauge, holdFrame, onStage) = (false, false, troupe.Slots);
+                        dancers.Pinned = onStage;
+                        dancers.Restart();
+                    }
+                    if (GUILayout.Button(new GUIContent("Way out", "Every dancer on stage leaves at the next phrase, the ones who always stay as well.")))
+                        (followGauge, holdFrame, onStage) = (false, false, 0);
+                }
+            }
+            int frames = dancers.dancers.Take(troupe.Slots).Max(d => d.Frames);
+            holdFrame = EditorGUILayout.Toggle(new GUIContent("Hold rig frame", "Every dancer shows this frame of its rig. Pause to step through it."), holdFrame);
+            using (new EditorGUI.DisabledScope(!holdFrame))
+                rigFrame = EditorGUILayout.IntSlider("Rig frame", rigFrame, 0, Math.Max(0, frames - 1));
+            var given = preview.Catalog.Troupe(choice.Troupe);
+            if (given != null) EditorGUILayout.LabelField(Segments(given, dancers.dancers[0].Frames, holdFrame ? rigFrame : -1), EditorStyles.wordWrappedMiniLabel);
+            if (EditorGUI.EndChangeCheck()) Draw(0);
+        }
+
+        // Where the lead's rig changes from the way in to the dance and to the way out; `at` (or -1) is the frame held.
+        static string Segments(StageTroupe troupe, int frames, int at)
+        {
+            if (troupe.movie) return $"One clip of {frames} frames, all of it the dance.";
+            int leave = troupe.LeaveAt(0);
+            string part = at < 0 ? "" : at < troupe.dance ? " · held: way in" : at < leave ? " · held: dance" : " · held: way out";
+            string ways = troupe.dance > 0 ? $"way in 0–{troupe.dance - 1} · " : "no way in · ";
+            string each = troupe.memberLeave != null && troupe.memberLeave.Length > 0 ? " (the lead's; each member has its own way out)" : "";
+            return $"{ways}dance {troupe.dance}–{leave - 1} · way out {leave}–{frames - 1}{each}{part}. Each way takes {DancerTroupe.MoveSeconds} s.";
         }
 
         void Step(string[] presets, int by)
