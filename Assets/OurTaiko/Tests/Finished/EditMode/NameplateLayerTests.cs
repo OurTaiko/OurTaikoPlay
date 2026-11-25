@@ -210,6 +210,27 @@ namespace OurTaiko.Tests
             Assert.That(preview.Plate.transform.Find("BandBacking").gameObject.activeSelf, Is.False);
         }
 
+        [TestCase("Title", 10, 0)]
+        [TestCase("Title", -1, 1)]
+        [TestCase("", 10, 1)]
+        [TestCase("", -1, 0)]
+        public void AutoUsesStandardTextPositions(string title, int dan, int side)
+        {
+            NameplatePreviewWindow.InstallCollection();
+            using var preview = new NameplatePreview();
+            var info = new PlayerInfo { name = "Player", title = title, dan = dan };
+            preview.Show(info, side);
+            var nameCenter = preview.Plate.playerName.rectTransform.anchoredPosition;
+            var titleCenter = preview.Plate.title.rectTransform.anchoredPosition;
+
+            info.plateState = "auto";
+            preview.Show(info, side);
+            var labels = preview.Plate.transform.Find("Complete nameplate").GetComponentsInChildren<TMPro.TMP_Text>();
+            Assert.That(System.Array.Find(labels, text => text.text == "Player").rectTransform.anchoredPosition, Is.EqualTo(nameCenter));
+            if (info.HasTitle)
+                Assert.That(System.Array.Find(labels, text => text.text == title).rectTransform.anchoredPosition, Is.EqualTo(titleCenter));
+        }
+
         [Test]
         public void FullCollectionSupportsEveryLayoutAndReturnsToStandard()
         {
