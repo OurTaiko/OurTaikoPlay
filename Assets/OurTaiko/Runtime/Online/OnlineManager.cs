@@ -64,13 +64,16 @@ namespace OurTaiko.Online
 
         void Awake() => Initialize();
 
+        // Where the online files are kept (the object cache, the remembered catalogs).
+        public static string DefaultCacheRoot => Path.Combine(GamePaths.Root, "cache", "fanmade");
+
         void Initialize()
         {
             if (Instance == this) return;
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            UseCache(Path.Combine(GamePaths.Root, "cache", "fanmade"), GameDatabase.DefaultPath);
+            UseCache(DefaultCacheRoot, GameDatabase.DefaultPath);
             UseAccounts(new AccountStore(Path.Combine(GamePaths.Root, AccountStore.FileName), DeviceSecret()), new AccountCenter());
             UseProfiles(new ProfileCenter());
         }

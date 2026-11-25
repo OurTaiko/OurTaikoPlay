@@ -1,4 +1,5 @@
 using System.Collections;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using TMPro;
@@ -214,6 +215,56 @@ namespace OurTaiko.Tests
             finally
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            }
+        }
+
+        // The layers a player wears (NameplateItems' files) on a play's plate: the band item in the
+        // band's place, the icon over the outline, and gone again with an info that wears none.
+        [UnityTest, Category("SpriteRendering")]
+        public IEnumerator APlayPlateWearsThePlayersLayers()
+        {
+            string folder = Path.Combine(Path.GetTempPath(), "OurTaikoNameplateFlow", System.Guid.NewGuid().ToString("N"));
+            NameplateItems.UseFolder(folder);
+            var view = new Rect(0, 0, NameplateLayout.Width, NameplateLayout.Height);
+            foreach (var (slot, name, left) in new[] { (NameplateSlot.Band, "moving", 0f), (NameplateSlot.Icon, "still", 250f) })
+            {
+                string path = NameplateItems.PathOf(slot, name);
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllBytes(path, OtanimFixture.Build(view, OtanimFixture.Make(NameplateItems.ClipName, true, 1, left, left + 100)));
+            }
+            var song = ScriptableObject.CreateInstance<SongDefinition>();
+            song.chart = new TextAsset("TITLE:Plate\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#START\n1111,\n1111,\n#END");
+            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Layers", bandItem = "band/moving", iconItem = "icon/still" });
+            try
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                yield return null;
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);
+                yield return null;
+                yield return TestPlay.Open(song, autoPlay: true);
+                yield return WaitForScene(SceneSwitcher.GameScene);
+                yield return null;
+                var play = Object.FindAnyObjectByType<PlayScene>();
+                var plate = ((RectTransform)play.firstLane.scoreCounter.transform.parent).GetComponentInChildren<NameplateView>();
+                var layers = plate.Layers;
+                Assert.That(layers?.Mask, Is.Not.Null);
+                Assert.That(plate.band.enabled, Is.False, "The worn band is drawn instead of the plate's own.");
+                Assert.That(layers.BandView.gameObject.activeInHierarchy && layers.IconView.gameObject.activeInHierarchy && !layers.EffectView.gameObject.activeSelf);
+                Assert.That((layers.BandView.RunCount, layers.IconView.RunCount), Is.EqualTo((1, 1)), "The plate draws them by itself every frame.");
+                Assert.That(layers.Mask.GetSiblingIndex(), Is.EqualTo(plate.band.transform.GetSiblingIndex() + 1));
+                Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.EqualTo(plate.outline.transform.GetSiblingIndex() + 1));
+                Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.LessThan(plate.badge.transform.GetSiblingIndex()));
+
+                Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Layers" });
+                Assert.That(plate.band.enabled, "Wearing none brings the plate's own band back.");
+                Assert.That(layers.Mask.gameObject.activeSelf || layers.IconView.gameObject.activeSelf, Is.False);
+            }
+            finally
+            {
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+                Object.Destroy(song.chart); Object.Destroy(song);
+                NameplateItems.UseFolder(null);
+                if (Directory.Exists(folder)) Directory.Delete(folder, true);
             }
         }
 

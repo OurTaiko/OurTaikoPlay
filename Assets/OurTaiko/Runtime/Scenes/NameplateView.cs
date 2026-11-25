@@ -6,7 +6,8 @@ namespace OurTaiko
 {
     // Nijiiro Scripts/global/nameplate.lua on the 408x96 plate canvas. The children are drawn in the
     // original's order: plate, title band, band outline, dan chip (its ring, then its text), 1P/2P
-    // badge, title, name. The 1P
+    // badge, title, name. The layers the player wears (NameplateLayers) go in among them: the band
+    // and effect items over the title band, the icon over the outline. The 1P
     // plate follows PlayerInfoController, so an info change updates every plate on screen; the 2P
     // plate follows its SecondInfo (2P's account, else the "2P" guest plate) with the 2p badge.
     // The art is not in the game: NameplateArt fetches it at sign-in. Without it a plate is its text.
@@ -30,9 +31,12 @@ namespace OurTaiko
 
         public PlayerInfo Info { get; private set; }
         public int RainbowFrame { get; private set; }
+        // The worn layers; null until the plate first wears one.
+        public NameplateLayers Layers => layers;
         public RectTransform RectTransform => (RectTransform)transform;
 
         PlayerInfoController controller;
+        NameplateLayers layers;
         double rainbowStart;
         float renderedCanvasScale;
 
@@ -54,7 +58,7 @@ namespace OurTaiko
         {
             applied = Shown;
             Apply(pinned ?? (applied == 0 ? controller.Info : controller.SecondInfo));
-            ShowRainbow(GameTimeline.FrameTime - rainbowStart);
+            ShowAt(GameTimeline.FrameTime - rainbowStart);
         }
 
         // Shows `info` with the badge of `side` (0 1P, 1 2P) from now on, whoever sits at the seat.
@@ -89,7 +93,15 @@ namespace OurTaiko
         {
             // The players sat down (SceneSwitcher.Seated) after this plate was shown.
             if (applied != Shown) ApplyShown();
-            ShowRainbow(GameTimeline.FrameTime - rainbowStart);
+            ShowAt(GameTimeline.FrameTime - rainbowStart);
+        }
+
+        // The rainbow band and the worn layers `seconds` after the plate was shown (the Editor's
+        // preview drives a plate outside play with this).
+        public void ShowAt(double seconds)
+        {
+            ShowRainbow(seconds);
+            layers?.Show(seconds);
         }
 
         // Top-left of the plate canvas, in its stage-anchored parent's skin pixels.
@@ -104,7 +116,7 @@ namespace OurTaiko
         public void Show(PlayerInfo info)
         {
             Apply(info);
-            ShowRainbow(GameTimeline.FrameTime - rainbowStart);
+            ShowAt(GameTimeline.FrameTime - rainbowStart);
         }
 
         void Apply(PlayerInfo info)
@@ -132,6 +144,9 @@ namespace OurTaiko
                 }
                 badge.sprite = Shown == 1 ? NameplateArt.Badge2P : NameplateArt.Badge1P;
             }
+            layers ??= new NameplateLayers(RectTransform, band, outline.transform);
+            layers.Apply(info, hasBand && art);
+            if (layers.CoversBand) band.enabled = bandUnder.enabled = false;
 
             // Np_coin clears the title outright.
             title.gameObject.SetActive(hasBand && info.HasTitle);
@@ -153,7 +168,7 @@ namespace OurTaiko
 
         void ShowRainbow(double elapsed)
         {
-            if (Info == null || !Info.rainbow || Info.IsCoin || !NameplateArt.Ready) return;
+            if (Info == null || !Info.rainbow || Info.IsCoin || !NameplateArt.Ready || (layers != null && layers.CoversBand)) return;
             var frames = NameplateArt.Rainbow;
             double t = System.Math.Max(0, elapsed) % (frames.Length * RainbowFrameSeconds);
             RainbowFrame = System.Math.Min(frames.Length - 1, (int)(t / RainbowFrameSeconds));

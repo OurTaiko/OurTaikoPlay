@@ -64,7 +64,6 @@ namespace OurTaiko.Chara
                 shade = Mathf.Clamp01(shade);
                 var tint = new Color(shade, shade, shade, Mathf.Clamp01(alpha));
                 var draws = Otanim.DrawsAt(which, seconds);
-                var box = ((RectTransform)transform).rect;
                 for (int first = 0; first < draws.Length;)
                 {
                     bool asScreen = file.Parts[draws[first].Part].Blend == Otanim.Blend.Screen;
@@ -73,7 +72,9 @@ namespace OurTaiko.Chara
                     var run = RunAt(used++);
                     run.vertices.Clear();
                     run.indices.Clear();
-                    file.Sample(which, seconds, box, false, tint, run.vertices, run.indices, first, end - first);
+                    // In the run's own space: it covers this rect, but its pivot is its middle
+                    // whatever this one's is.
+                    file.Sample(which, seconds, run.rectTransform.rect, false, tint, run.vertices, run.indices, first, end - first);
                     run.material = MaterialFor(asScreen, file);
                     run.picture = asset.texture;
                     run.SetVerticesDirty();

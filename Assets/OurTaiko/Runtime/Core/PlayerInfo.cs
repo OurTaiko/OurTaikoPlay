@@ -4,7 +4,8 @@ using UnityEngine;
 namespace OurTaiko
 {
     // The local player's nameplate data (scores.h PlayerData username / title / title_bg / dan / gold /
-    // rainbow, plus danCombo), stored as player.json by PlayerInfoController.
+    // rainbow, plus danCombo and the layers worn over the plate), stored as player.json by
+    // PlayerInfoController.
     [Serializable]
     public sealed class PlayerInfo
     {
@@ -21,6 +22,8 @@ namespace OurTaiko
         public bool gold;         // 金合格: gold emblem text (red pass has white text)
         public int danCombo;      // the emblem's ring, as a song's crown: 0 銀粋, 1 金粋 (full combo), 2 虹粋 (all 良)
         public bool rainbow;      // rainbow title band
+        // The layers worn over the plate (NameplateSlots ids, "band/<name>"…); empty wears none.
+        public string bandItem = "", effectItem = "", iconItem = "";
 
         public bool HasTitle => !string.IsNullOrEmpty(title) && title != DefaultTitle;
         // An out-of-range dan is "no dan", as nameplate.lua's clamp does.
@@ -32,6 +35,21 @@ namespace OurTaiko
 
         public PlayerInfo Clone() => (PlayerInfo)MemberwiseClone();
 
+        public string ItemIn(NameplateSlot slot) => slot switch
+        {
+            NameplateSlot.Band => bandItem,
+            NameplateSlot.Effect => effectItem,
+            _ => iconItem,
+        };
+
+        public void Wear(NameplateSlot slot, string id)
+        {
+            id ??= "";
+            if (slot == NameplateSlot.Band) bandItem = id;
+            else if (slot == NameplateSlot.Effect) effectItem = id;
+            else iconItem = id;
+        }
+
         // 2P has no account or player file yet (user decision, 2026-10-20): named 2P with the default
         // title, so it wears the plain coin plate like a fresh 1P.
         public static PlayerInfo SecondPlayer => new PlayerInfo { name = "2P" };
@@ -42,6 +60,9 @@ namespace OurTaiko
             if (!string.IsNullOrWhiteSpace(json)) JsonUtility.FromJsonOverwrite(json, info);
             info.name ??= "";
             info.title ??= "";
+            info.bandItem ??= "";
+            info.effectItem ??= "";
+            info.iconItem ??= "";
             return info;
         }
 

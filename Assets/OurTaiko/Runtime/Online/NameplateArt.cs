@@ -36,6 +36,9 @@ namespace OurTaiko
             ("badge1p", 88, 88), ("badge2p", 88, 88),
         };
 
+        // The files Use takes, by catalog key, with their sizes.
+        public static IReadOnlyList<(string key, int width, int height)> Files => files;
+
         public static bool Ready { get; private set; }
         public static Sprite Shadow { get; private set; }
         public static Sprite Outline { get; private set; }
@@ -122,17 +125,27 @@ namespace OurTaiko
             catch (OperationCanceledException) when (cancel.IsCancellationRequested) { throw; }
             catch (Exception error) { Log.Warn("Nameplate", "Could not fetch the nameplate art: " + error.Message); }
 
-            if (Ready) return;
+            if (!Ready) UseCached(cacheRoot);
+        }
+
+        // Uses the art last fetched into the cache, when all of it is there; never throws.
+        public static bool UseCached(string cacheRoot)
+        {
             try
             {
                 string state = Path.Combine(cacheRoot, StateFile);
-                if (!File.Exists(state)) return;
+                if (!File.Exists(state)) return false;
                 var entries = Entries(JObject.Parse(File.ReadAllText(state)));
                 foreach (var (_, _, size, hash) in entries.Values)
-                    if (!Matches(ObjectPath(cacheRoot, hash), size, hash)) return;
+                    if (!Matches(ObjectPath(cacheRoot, hash), size, hash)) return false;
                 Load(entries, cacheRoot);
+                return Ready;
             }
-            catch (Exception error) { Log.Warn("Nameplate", "The cached nameplate art is unusable: " + error.Message); }
+            catch (Exception error)
+            {
+                Log.Warn("Nameplate", "The cached nameplate art is unusable: " + error.Message);
+                return false;
+            }
         }
 
         // Every file the game needs, from {"files": {key: {path, size, sha256}}}; each path is
