@@ -25,9 +25,12 @@ namespace OurTaiko.Chara
         // A child graphic drawing one run of the frame's parts.
         sealed class Run : MaskableGraphic
         {
-            public Texture picture;
-            public List<UIVertex> vertices = new List<UIVertex>();
-            public List<int> indices = new List<int>();
+            // The frame last shown, not saved: a copy of the view (Instantiate) would otherwise get
+            // the indices without the vertices (UIVertex is not serialized) and a mesh that cannot
+            // be built. A copy draws nothing until it is shown.
+            [System.NonSerialized] public Texture picture;
+            [System.NonSerialized] public List<UIVertex> vertices = new List<UIVertex>();
+            [System.NonSerialized] public List<int> indices = new List<int>();
 
             public override Texture mainTexture => picture != null ? picture : s_WhiteTexture;
 

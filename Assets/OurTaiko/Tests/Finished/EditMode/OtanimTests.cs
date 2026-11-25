@@ -36,6 +36,38 @@ namespace OurTaiko.Tests
             Assert.That(file.Find("gogo").Duration, Is.EqualTo(0.25f).Within(1e-6));
         }
 
+        // SongSelectSavedLayoutTests copies a scene whose plates are drawn: the copy of a shown view
+        // must still build its meshes (it logged "Failed setting triangles" when the indices were
+        // copied without their vertices).
+        [Test]
+        public void ACopyOfAShownViewDrawsNothingUntilItIsShown()
+        {
+            var canvas = new GameObject("Canvas", typeof(Canvas));
+            OtanimAsset asset = null;
+            try
+            {
+                asset = OtanimAsset.FromBytes(OtanimFixture.Build(OtanimFixture.Make("idle", true, 10, 0, 50)), "fixture");
+                var go = new GameObject("View", typeof(RectTransform), typeof(OtanimView));
+                go.transform.SetParent(canvas.transform, false);
+                var view = go.GetComponent<OtanimView>();
+                view.Use(asset, "idle");
+                view.Show(0);
+                Canvas.ForceUpdateCanvases();
+
+                // An error logged while the copy's meshes are built fails the test.
+                var copy = Object.Instantiate(go, canvas.transform);
+                Canvas.ForceUpdateCanvases();
+                copy.GetComponent<OtanimView>().Show(0);
+                Canvas.ForceUpdateCanvases();
+                Assert.That(copy.GetComponent<OtanimView>().RunCount, Is.EqualTo(1));
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvas);
+                if (asset != null) { Object.DestroyImmediate(asset.texture); Object.DestroyImmediate(asset); }
+            }
+        }
+
         [Test]
         public void SomethingElseIsNotAnOtanim()
         {
