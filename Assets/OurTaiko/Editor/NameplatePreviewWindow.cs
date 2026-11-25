@@ -207,12 +207,18 @@ namespace OurTaiko.Editor
             }
             playerName = EditorGUILayout.TextField("Name", playerName);
             title = EditorGUILayout.TextField(new GUIContent("Title", "Empty, with no 段位 either, is the coin plate."), title);
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("PlayerBadge", EditorStyles.boldLabel);
             side = EditorGUILayout.Popup("Player side", side, new[] { "1P", "2P" });
 
-            EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel);
             var rows = catalog?.States[PlateComposition.StateFor(Info(), side) ?? ""];
             bool standard = rows == null;
             bool Has(string role) => rows != null && rows.Any(row => (string)row["role"] == role);
+            if (Has("plate_player_no"))
+                plateBadge = Select("Badge", plateBadge, new[] { "auto", "1p", "2p" });
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel);
             if (standard)
             {
                 bandItem = Slot("Band", NameplateSlot.Band, bandItem);
@@ -225,8 +231,6 @@ namespace OurTaiko.Editor
                     plateTitle = Select("Title band", plateTitle, catalog.Titles.Properties().Select(p => p.Name));
                 if (Has("ai_title_instance"))
                     plateAiTitle = Select("AI title band", plateAiTitle, catalog.AiTitles.Properties().Select(p => p.Name));
-                if (Has("plate_player_no"))
-                    plateBadge = Select("Badge", plateBadge, new[] { "auto", "1p", "2p" });
                 if (Has("blank_instance"))
                     plateBlank = Select("Blank", plateBlank, catalog.Blank);
                 if ((Has("text_name") || Has("text_title")) && GUILayout.Button("Load source text"))
