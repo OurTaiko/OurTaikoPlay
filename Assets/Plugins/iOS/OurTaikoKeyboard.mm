@@ -29,8 +29,10 @@ namespace
     GCKeyboardInput *attached = nil;
     dispatch_queue_t handlers = nil;
     bool started = false;
+    int32_t attachments = 0;
 
-    // Main thread: the connect notifications and Start arrive there.
+    // Puts the handler on the keyboard input the system has now, if it is not the one that has it.
+    // Main thread: the connect notifications, Start and Connected arrive there.
     void Attach()
     {
         GCKeyboard *keyboard = GCKeyboard.coalescedKeyboard;
@@ -39,6 +41,7 @@ namespace
         if (attached != nil) attached.keyChangedHandler = nil;
         attached = input;
         if (input == nil) return;
+        attachments++;
         // Off the main thread, so a change is stamped when it arrives, not when a frame lets the run loop run.
         keyboard.handlerQueue = handlers;
         input.keyChangedHandler = ^(GCKeyboardInput *source, GCControllerButtonInput *key, GCKeyCode code, BOOL pressed)
@@ -71,9 +74,20 @@ extern "C"
         return attached != nil ? 1 : 0;
     }
 
+    // Whether a hardware keyboard is connected and has the handler. Asked every frame, and looks
+    // at the system's keyboard input each time: the handler must be on that one, and the connect
+    // notifications alone are not relied on to say when it has become another.
     int32_t OurTaikoKeyboard_Connected(void)
     {
-        return attached != nil && GCKeyboard.coalescedKeyboard != nil ? 1 : 0;
+        if (!started) return 0;
+        Attach();
+        return attached != nil ? 1 : 0;
+    }
+
+    // How many times the handler has been put on a keyboard input, for the log.
+    int32_t OurTaikoKeyboard_Attachments(void)
+    {
+        return attachments;
     }
 
     double OurTaikoKeyboard_Now(void)
