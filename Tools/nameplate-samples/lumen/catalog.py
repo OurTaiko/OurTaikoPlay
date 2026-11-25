@@ -2,7 +2,8 @@
 
 import json
 from xml.etree import ElementTree
-import math
+
+import titles
 
 
 def export_catalog(layout, output, encoder, Item, compose):
@@ -73,36 +74,36 @@ def export_catalog(layout, output, encoder, Item, compose):
                 rows.append(dict(role="base", clip=clip))
     save(base, "composition/plates")
 
+    # Each title is a band, an effect over it and an emblem on its end; the plate wears them
+    # as layers, so a title is the three that make it up. Equal pictures share one file.
+    registry = titles.Registry()
+    wearing = []
+    stencil = None
     for role, bucket in [
         ("title_instance", "titles"),
         ("ai_title_instance", "aiTitles"),
     ]:
         sprite, mat = instances[role]
+        band = titles.band_rect(layout, sprite, mat)
+        # The plate cuts a worn effect to the ordinary title's band.
+        stencil = stencil or band
         for label, frame in layout.labels(sprite).items():
-            period = math.lcm(
-                1,
-                *(
-                    layout.period(o["child"])
-                    for o in layout.states(sprite)[frame].values()
-                    if o["color"][3]
-                ),
-            )
-            item = Item(layout)
-            item.clip(
-                "idle",
-                (
-                    layout.draw(sprite, frame, mat, {sprite: frame}, age=t)
-                    for t in range(period)
-                ),
-                loop=period > 1,
-            )
-            path = (
-                "band/lumen-"
-                + ("ai-title-" if bucket == "aiTitles" else "title-")
-                + label
-            )
-            catalog[bucket][label] = path
-            save(item, path)
+            frames = [
+                list(layout.draw(sprite, frame, mat, {sprite: frame}, age=t))
+                for t in range(titles.lcm_period(layout, sprite, frame))
+            ]
+            parts, clipped = titles.split(label, frames, band, stencil)
+            wearing.append((bucket, label, registry.add(label, bucket == "aiTitles", parts, clipped)))
+    catalog["unclipped"] = []
+    for path, slot, entry in registry.named():
+        entry["id"] = path
+        item = Item(layout)
+        item.clip("idle", entry["frames"], loop=len(entry["frames"]) > 1)
+        save(item, path)
+        if slot == "effect" and not entry["clip"]:
+            catalog["unclipped"].append(path)
+    for bucket, label, parts in wearing:
+        catalog[bucket][label] = {slot: entry["id"] for slot, entry in parts.items()}
 
     for role, bucket, path in [
         ("plate_player_no", "badges", "badges"),

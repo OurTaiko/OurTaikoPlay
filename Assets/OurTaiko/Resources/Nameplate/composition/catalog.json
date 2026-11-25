@@ -1974,104 +1974,405 @@
   ]
  },
  "titles": {
-  "wood": "band/lumen-title-wood",
-  "rainbow": "band/lumen-title-rainbow",
-  "gold": "band/lumen-title-gold",
-  "purple": "band/lumen-title-purple",
-  "ai_1": "band/lumen-title-ai_1",
-  "ai_2": "band/lumen-title-ai_2",
-  "ai_3": "band/lumen-title-ai_3",
-  "ai_4": "band/lumen-title-ai_4",
-  "onp_1": "band/lumen-title-onp_1",
-  "toho_y22_qr": "band/lumen-title-toho_y22_qr",
-  "toho_y22_1": "band/lumen-title-toho_y22_1",
-  "toho_y22_2": "band/lumen-title-toho_y22_2",
-  "toho_y22_3": "band/lumen-title-toho_y22_3",
-  "toho_y22_4": "band/lumen-title-toho_y22_4",
-  "toho_y22_5": "band/lumen-title-toho_y22_5",
-  "aprilfool_1": "band/lumen-title-aprilfool_1",
-  "aprilfool_2": "band/lumen-title-aprilfool_2",
-  "aprilfool_3": "band/lumen-title-aprilfool_3",
-  "aprilfool_4": "band/lumen-title-aprilfool_4",
-  "aprilfool_5": "band/lumen-title-aprilfool_5",
-  "aprilfool_6": "band/lumen-title-aprilfool_6",
-  "million_y23_1": "band/lumen-title-million_y23_1",
-  "million_y23_2": "band/lumen-title-million_y23_2",
-  "million_y23_3": "band/lumen-title-million_y23_3",
-  "shiny_y23_1": "band/lumen-title-shiny_y23_1",
-  "shiny_y23_2": "band/lumen-title-shiny_y23_2",
-  "shiny_y23_3": "band/lumen-title-shiny_y23_3",
-  "toho_y23_1": "band/lumen-title-toho_y23_1",
-  "toho_y23_2": "band/lumen-title-toho_y23_2",
-  "toho_y23_3": "band/lumen-title-toho_y23_3",
-  "toho_y23_4": "band/lumen-title-toho_y23_4",
-  "toho_y23_5": "band/lumen-title-toho_y23_5",
-  "sekaitaikai_01": "band/lumen-title-sekaitaikai_01",
-  "sekaitaikai_02": "band/lumen-title-sekaitaikai_02",
-  "sekaitaikai_03": "band/lumen-title-sekaitaikai_03",
-  "sekaitaikai_04": "band/lumen-title-sekaitaikai_04",
-  "sekaitaikai_05": "band/lumen-title-sekaitaikai_05",
-  "sekaitaikai_06": "band/lumen-title-sekaitaikai_06",
-  "sekaitaikai_07": "band/lumen-title-sekaitaikai_07",
-  "sekaitaikai_08": "band/lumen-title-sekaitaikai_08",
-  "aprilfool2024": "band/lumen-title-aprilfool2024",
-  "dani_red_01": "band/lumen-title-dani_red_01",
-  "dani_red_02": "band/lumen-title-dani_red_02",
-  "dani_red_03": "band/lumen-title-dani_red_03",
-  "dani_gold_01": "band/lumen-title-dani_gold_01",
-  "dani_gold_02": "band/lumen-title-dani_gold_02",
-  "dani_gold_03": "band/lumen-title-dani_gold_03",
-  "crown_silver": "band/lumen-title-crown_silver",
-  "crown_gold": "band/lumen-title-crown_gold",
-  "crown_niji": "band/lumen-title-crown_niji",
-  "onp_y24": "band/lumen-title-onp_y24",
-  "toho_y24_1": "band/lumen-title-toho_y24_1",
-  "toho_y24_2": "band/lumen-title-toho_y24_2",
-  "toho_y24_3": "band/lumen-title-toho_y24_3",
-  "toho_y24_4": "band/lumen-title-toho_y24_4",
-  "toho_y24_5": "band/lumen-title-toho_y24_5",
-  "aprilfool2025_01": "band/lumen-title-aprilfool2025_01",
-  "aprilfool2025_02": "band/lumen-title-aprilfool2025_02",
-  "aprilfool2025_03": "band/lumen-title-aprilfool2025_03",
-  "crown_silver_ura": "band/lumen-title-crown_silver_ura",
-  "crown_gold_ura": "band/lumen-title-crown_gold_ura",
-  "crown_niji_ura": "band/lumen-title-crown_niji_ura",
-  "karapichi2025": "band/lumen-title-karapichi2025",
-  "wec_01": "band/lumen-title-wec_01",
-  "wec_02": "band/lumen-title-wec_02",
-  "wec_03": "band/lumen-title-wec_03",
-  "wec_04": "band/lumen-title-wec_04",
-  "wec_05": "band/lumen-title-wec_05",
-  "wec_06": "band/lumen-title-wec_06",
-  "toho_y25_1": "band/lumen-title-toho_y25_1",
-  "toho_y25_2": "band/lumen-title-toho_y25_2",
-  "toho_y25_3": "band/lumen-title-toho_y25_3",
-  "toho_y25_4": "band/lumen-title-toho_y25_4",
-  "toho_y25_5": "band/lumen-title-toho_y25_5",
-  "twso25_1": "band/lumen-title-twso25_1",
-  "twso25_2": "band/lumen-title-twso25_2",
-  "twso25_3": "band/lumen-title-twso25_3",
-  "twso25_4": "band/lumen-title-twso25_4",
-  "twso25_5": "band/lumen-title-twso25_5",
-  "twso25_6": "band/lumen-title-twso25_6",
-  "twso25_7": "band/lumen-title-twso25_7",
-  "twso25_8": "band/lumen-title-twso25_8",
-  "twso25_r_1": "band/lumen-title-twso25_r_1",
-  "twso25_r_2": "band/lumen-title-twso25_r_2",
-  "twso25_r_3": "band/lumen-title-twso25_r_3",
-  "twso25_r_4": "band/lumen-title-twso25_r_4",
-  "twso25_r_5": "band/lumen-title-twso25_r_5",
-  "pjsekai": "band/lumen-title-pjsekai"
+  "wood": {
+   "band": "band/lumen-title-wood"
+  },
+  "rainbow": {
+   "band": "band/lumen-title-rainbow"
+  },
+  "gold": {
+   "band": "band/lumen-title-gold",
+   "effect": "effect/lumen-title-gold"
+  },
+  "purple": {
+   "band": "band/lumen-title-purple",
+   "effect": "effect/lumen-title-purple"
+  },
+  "ai_1": {
+   "band": "band/lumen-title-ai_1"
+  },
+  "ai_2": {
+   "band": "band/lumen-title-ai_2",
+   "effect": "effect/lumen-title-ai_2"
+  },
+  "ai_3": {
+   "band": "band/lumen-title-ai_3",
+   "effect": "effect/lumen-title-ai_3"
+  },
+  "ai_4": {
+   "band": "band/lumen-title-ai_4",
+   "effect": "effect/lumen-title-ai_4"
+  },
+  "onp_1": {
+   "band": "band/lumen-title-onp_1"
+  },
+  "toho_y22_qr": {
+   "band": "band/lumen-title-rainbow",
+   "icon": "icon/lumen-title-toho_y22_qr"
+  },
+  "toho_y22_1": {
+   "band": "band/lumen-title-toho_y22",
+   "icon": "icon/lumen-title-toho_y22_qr"
+  },
+  "toho_y22_2": {
+   "band": "band/lumen-title-toho_y22",
+   "icon": "icon/lumen-title-toho_y22_2"
+  },
+  "toho_y22_3": {
+   "band": "band/lumen-title-toho_y22",
+   "icon": "icon/lumen-title-toho_y22_3"
+  },
+  "toho_y22_4": {
+   "band": "band/lumen-title-toho_y22",
+   "icon": "icon/lumen-title-toho_y22_4"
+  },
+  "toho_y22_5": {
+   "band": "band/lumen-title-toho_y22",
+   "icon": "icon/lumen-title-toho_y22_5"
+  },
+  "aprilfool_1": {
+   "band": "band/lumen-title-aprilfool",
+   "icon": "icon/lumen-title-aprilfool_1"
+  },
+  "aprilfool_2": {
+   "band": "band/lumen-title-aprilfool",
+   "icon": "icon/lumen-title-aprilfool_2"
+  },
+  "aprilfool_3": {
+   "band": "band/lumen-title-aprilfool",
+   "icon": "icon/lumen-title-aprilfool_3"
+  },
+  "aprilfool_4": {
+   "band": "band/lumen-title-aprilfool",
+   "icon": "icon/lumen-title-aprilfool_4"
+  },
+  "aprilfool_5": {
+   "band": "band/lumen-title-aprilfool",
+   "icon": "icon/lumen-title-aprilfool_5"
+  },
+  "aprilfool_6": {
+   "band": "band/lumen-title-aprilfool_6",
+   "icon": "icon/lumen-title-aprilfool_6"
+  },
+  "million_y23_1": {
+   "band": "band/lumen-title-million_y23_1",
+   "icon": "icon/lumen-title-million_y23_1"
+  },
+  "million_y23_2": {
+   "band": "band/lumen-title-million_y23_2",
+   "icon": "icon/lumen-title-million_y23_2"
+  },
+  "million_y23_3": {
+   "band": "band/lumen-title-million_y23_3",
+   "icon": "icon/lumen-title-million_y23_3"
+  },
+  "shiny_y23_1": {
+   "band": "band/lumen-title-shiny_y23_1",
+   "icon": "icon/lumen-title-shiny_y23_1"
+  },
+  "shiny_y23_2": {
+   "band": "band/lumen-title-shiny_y23_2",
+   "icon": "icon/lumen-title-shiny_y23_2"
+  },
+  "shiny_y23_3": {
+   "band": "band/lumen-title-shiny_y23_3",
+   "icon": "icon/lumen-title-shiny_y23_3"
+  },
+  "toho_y23_1": {
+   "band": "band/lumen-title-toho_y23",
+   "icon": "icon/lumen-title-toho_y23_1"
+  },
+  "toho_y23_2": {
+   "band": "band/lumen-title-toho_y23",
+   "icon": "icon/lumen-title-toho_y23_2"
+  },
+  "toho_y23_3": {
+   "band": "band/lumen-title-toho_y23",
+   "icon": "icon/lumen-title-toho_y23_3"
+  },
+  "toho_y23_4": {
+   "band": "band/lumen-title-toho_y23",
+   "icon": "icon/lumen-title-toho_y23_4"
+  },
+  "toho_y23_5": {
+   "band": "band/lumen-title-toho_y23",
+   "icon": "icon/lumen-title-toho_y23_5"
+  },
+  "sekaitaikai_01": {
+   "band": "band/lumen-title-sekaitaikai_01",
+   "icon": "icon/lumen-title-sekaitaikai_01"
+  },
+  "sekaitaikai_02": {
+   "band": "band/lumen-title-sekaitaikai_02",
+   "icon": "icon/lumen-title-sekaitaikai_02"
+  },
+  "sekaitaikai_03": {
+   "band": "band/lumen-title-sekaitaikai_03",
+   "effect": "effect/lumen-title-sekaitaikai_03",
+   "icon": "icon/lumen-title-sekaitaikai_03"
+  },
+  "sekaitaikai_04": {
+   "band": "band/lumen-title-sekaitaikai_04",
+   "effect": "effect/lumen-title-sekaitaikai",
+   "icon": "icon/lumen-title-sekaitaikai_04"
+  },
+  "sekaitaikai_05": {
+   "band": "band/lumen-title-sekaitaikai",
+   "effect": "effect/lumen-title-sekaitaikai",
+   "icon": "icon/lumen-title-sekaitaikai_05"
+  },
+  "sekaitaikai_06": {
+   "band": "band/lumen-title-sekaitaikai",
+   "effect": "effect/lumen-title-sekaitaikai_06",
+   "icon": "icon/lumen-title-sekaitaikai_06"
+  },
+  "sekaitaikai_07": {
+   "band": "band/lumen-title-sekaitaikai",
+   "effect": "effect/lumen-title-sekaitaikai_07",
+   "icon": "icon/lumen-title-sekaitaikai_07"
+  },
+  "sekaitaikai_08": {
+   "band": "band/lumen-title-sekaitaikai",
+   "effect": "effect/lumen-title-sekaitaikai_08",
+   "icon": "icon/lumen-title-sekaitaikai_08"
+  },
+  "aprilfool2024": {
+   "band": "band/lumen-title-aprilfool2024",
+   "effect": "effect/lumen-title-aprilfool2024"
+  },
+  "dani_red_01": {
+   "band": "band/lumen-title-dani_red_01",
+   "effect": "effect/lumen-title-dani_red_01",
+   "icon": "icon/lumen-title-dani_red_01"
+  },
+  "dani_red_02": {
+   "band": "band/lumen-title-dani_red_02",
+   "effect": "effect/lumen-title-dani_red_02",
+   "icon": "icon/lumen-title-dani_red_02"
+  },
+  "dani_red_03": {
+   "band": "band/lumen-title-dani_red_02",
+   "effect": "effect/lumen-title-dani_red_03",
+   "icon": "icon/lumen-title-dani_red_03"
+  },
+  "dani_gold_01": {
+   "band": "band/lumen-title-dani_red_02",
+   "effect": "effect/lumen-title-dani_gold_01",
+   "icon": "icon/lumen-title-dani_gold_01"
+  },
+  "dani_gold_02": {
+   "band": "band/lumen-title-dani_red_02",
+   "effect": "effect/lumen-title-dani_red_02",
+   "icon": "icon/lumen-title-dani_gold_02"
+  },
+  "dani_gold_03": {
+   "band": "band/lumen-title-dani_red_02",
+   "effect": "effect/lumen-title-dani_red_03",
+   "icon": "icon/lumen-title-dani_gold_03"
+  },
+  "crown_silver": {
+   "band": "band/lumen-title-crown_silver",
+   "icon": "icon/lumen-title-crown_silver"
+  },
+  "crown_gold": {
+   "band": "band/lumen-title-crown_gold",
+   "icon": "icon/lumen-title-crown_gold"
+  },
+  "crown_niji": {
+   "band": "band/lumen-title-crown_niji",
+   "icon": "icon/lumen-title-crown_niji"
+  },
+  "onp_y24": {
+   "band": "band/lumen-title-onp_y24"
+  },
+  "toho_y24_1": {
+   "band": "band/lumen-title-toho_y24",
+   "icon": "icon/lumen-title-toho_y24_1"
+  },
+  "toho_y24_2": {
+   "band": "band/lumen-title-toho_y24",
+   "icon": "icon/lumen-title-toho_y24_2"
+  },
+  "toho_y24_3": {
+   "band": "band/lumen-title-toho_y24",
+   "icon": "icon/lumen-title-toho_y24_3"
+  },
+  "toho_y24_4": {
+   "band": "band/lumen-title-toho_y24",
+   "icon": "icon/lumen-title-toho_y24_4"
+  },
+  "toho_y24_5": {
+   "band": "band/lumen-title-toho_y24",
+   "icon": "icon/lumen-title-toho_y24_5"
+  },
+  "aprilfool2025_01": {
+   "band": "band/lumen-title-aprilfool2025",
+   "icon": "icon/lumen-title-aprilfool2025_01"
+  },
+  "aprilfool2025_02": {
+   "band": "band/lumen-title-aprilfool2025",
+   "icon": "icon/lumen-title-aprilfool2025_02"
+  },
+  "aprilfool2025_03": {
+   "band": "band/lumen-title-aprilfool2025",
+   "icon": "icon/lumen-title-aprilfool2025_03"
+  },
+  "crown_silver_ura": {
+   "band": "band/lumen-title-crown_silver",
+   "icon": "icon/lumen-title-crown_silver_ura"
+  },
+  "crown_gold_ura": {
+   "band": "band/lumen-title-crown_gold",
+   "icon": "icon/lumen-title-crown_gold_ura"
+  },
+  "crown_niji_ura": {
+   "band": "band/lumen-title-crown_niji",
+   "icon": "icon/lumen-title-crown_niji_ura"
+  },
+  "karapichi2025": {
+   "band": "band/lumen-title-karapichi2025"
+  },
+  "wec_01": {
+   "band": "band/lumen-title-wec",
+   "icon": "icon/lumen-title-wec"
+  },
+  "wec_02": {
+   "band": "band/lumen-title-wec",
+   "icon": "icon/lumen-title-wec"
+  },
+  "wec_03": {
+   "band": "band/lumen-title-wec",
+   "icon": "icon/lumen-title-wec"
+  },
+  "wec_04": {
+   "band": "band/lumen-title-wec",
+   "icon": "icon/lumen-title-wec-2"
+  },
+  "wec_05": {
+   "band": "band/lumen-title-wec_05",
+   "icon": "icon/lumen-title-wec-2"
+  },
+  "wec_06": {
+   "band": "band/lumen-title-wec_06",
+   "icon": "icon/lumen-title-wec_06"
+  },
+  "toho_y25_1": {
+   "band": "band/lumen-title-toho_y25",
+   "icon": "icon/lumen-title-toho_y25_1"
+  },
+  "toho_y25_2": {
+   "band": "band/lumen-title-toho_y25",
+   "icon": "icon/lumen-title-toho_y25_2"
+  },
+  "toho_y25_3": {
+   "band": "band/lumen-title-toho_y25",
+   "icon": "icon/lumen-title-toho_y25_3"
+  },
+  "toho_y25_4": {
+   "band": "band/lumen-title-toho_y25",
+   "icon": "icon/lumen-title-toho_y25_4"
+  },
+  "toho_y25_5": {
+   "band": "band/lumen-title-toho_y25",
+   "icon": "icon/lumen-title-toho_y25_5"
+  },
+  "twso25_1": {
+   "band": "band/lumen-title-twso25",
+   "effect": "effect/lumen-title-twso25_1",
+   "icon": "icon/lumen-title-twso25_1"
+  },
+  "twso25_2": {
+   "band": "band/lumen-title-twso25",
+   "effect": "effect/lumen-title-twso25_2",
+   "icon": "icon/lumen-title-twso25_2"
+  },
+  "twso25_3": {
+   "band": "band/lumen-title-twso25",
+   "effect": "effect/lumen-title-twso25_3",
+   "icon": "icon/lumen-title-twso25_3"
+  },
+  "twso25_4": {
+   "band": "band/lumen-title-twso25",
+   "effect": "effect/lumen-title-twso25_4",
+   "icon": "icon/lumen-title-twso25_4"
+  },
+  "twso25_5": {
+   "band": "band/lumen-title-twso25_5",
+   "effect": "effect/lumen-title-twso25_5",
+   "icon": "icon/lumen-title-twso25_5"
+  },
+  "twso25_6": {
+   "band": "band/lumen-title-twso25_6",
+   "effect": "effect/lumen-title-twso25_6",
+   "icon": "icon/lumen-title-twso25_6"
+  },
+  "twso25_7": {
+   "band": "band/lumen-title-twso25_7",
+   "icon": "icon/lumen-title-twso25"
+  },
+  "twso25_8": {
+   "band": "band/lumen-title-twso25_8",
+   "icon": "icon/lumen-title-twso25"
+  },
+  "twso25_r_1": {
+   "band": "band/lumen-title-twso25_6",
+   "effect": "effect/lumen-title-twso25_r",
+   "icon": "icon/lumen-title-twso25_r_1"
+  },
+  "twso25_r_2": {
+   "band": "band/lumen-title-twso25_6",
+   "effect": "effect/lumen-title-twso25_r",
+   "icon": "icon/lumen-title-twso25_r_2"
+  },
+  "twso25_r_3": {
+   "band": "band/lumen-title-twso25_6",
+   "effect": "effect/lumen-title-twso25_r",
+   "icon": "icon/lumen-title-twso25_r_3"
+  },
+  "twso25_r_4": {
+   "band": "band/lumen-title-twso25_6",
+   "effect": "effect/lumen-title-twso25_6",
+   "icon": "icon/lumen-title-twso25_r_4"
+  },
+  "twso25_r_5": {
+   "band": "band/lumen-title-twso25_6",
+   "effect": "effect/lumen-title-twso25_6",
+   "icon": "icon/lumen-title-twso25_6"
+  },
+  "pjsekai": {
+   "band": "band/lumen-title-rainbow"
+  }
  },
  "aiTitles": {
-  "wood": "band/lumen-ai-title-wood",
-  "rainbow": "band/lumen-ai-title-rainbow",
-  "gold": "band/lumen-ai-title-gold",
-  "purple": "band/lumen-ai-title-purple",
-  "ai_1": "band/lumen-ai-title-ai_1",
-  "ai_2": "band/lumen-ai-title-ai_2",
-  "ai_3": "band/lumen-ai-title-ai_3",
-  "ai_4": "band/lumen-ai-title-ai_4"
+  "wood": {
+   "band": "band/lumen-ai-title-wood"
+  },
+  "rainbow": {
+   "band": "band/lumen-ai-title-rainbow"
+  },
+  "gold": {
+   "band": "band/lumen-ai-title-gold",
+   "effect": "effect/lumen-ai-title-gold"
+  },
+  "purple": {
+   "band": "band/lumen-ai-title-purple",
+   "effect": "effect/lumen-ai-title-purple"
+  },
+  "ai_1": {
+   "band": "band/lumen-ai-title-ai_1"
+  },
+  "ai_2": {
+   "band": "band/lumen-ai-title-ai_2",
+   "effect": "effect/lumen-ai-title-ai_2"
+  },
+  "ai_3": {
+   "band": "band/lumen-ai-title-ai_3",
+   "effect": "effect/lumen-ai-title-ai_3"
+  },
+  "ai_4": {
+   "band": "band/lumen-ai-title-ai_4",
+   "effect": "effect/lumen-ai-title-ai_4"
+  }
  },
  "blank": [
   "off",
@@ -2198,5 +2499,25 @@
   "donfull/13dan_gold",
   "donfull/14dan_gold"
  ],
- "bandBackingClip": "1p_shougou/4"
+ "bandBackingClip": "1p_shougou/4",
+ "unclipped": [
+  "effect/lumen-title-gold",
+  "effect/lumen-title-purple",
+  "effect/lumen-title-sekaitaikai_03",
+  "effect/lumen-title-sekaitaikai",
+  "effect/lumen-title-sekaitaikai_06",
+  "effect/lumen-title-sekaitaikai_07",
+  "effect/lumen-title-sekaitaikai_08",
+  "effect/lumen-title-aprilfool2024",
+  "effect/lumen-title-twso25_1",
+  "effect/lumen-title-twso25_2",
+  "effect/lumen-title-twso25_3",
+  "effect/lumen-title-twso25_4",
+  "effect/lumen-title-twso25_5",
+  "effect/lumen-title-twso25_6",
+  "effect/lumen-title-twso25_r",
+  "effect/lumen-ai-title-gold",
+  "effect/lumen-ai-title-purple",
+  "effect/lumen-ai-title-ai_4"
+ ]
 }

@@ -4,9 +4,11 @@ using UnityEngine.UI;
 
 namespace OurTaiko
 {
-    // The layers a NameplateView wears (PlayerInfo's band, effect and icon items, NameplateItems'
-    // files). Loose bands and effects use the built-in band mask. Catalog bands contain
-    // their own clipping and draw over their source backing on the full plate canvas.
+    // The layers a NameplateView wears: the band, effect and icon of a title (TitleParts) or the
+    // player's own pick (PlayerInfo's items, NameplateItems' files). A player's loose band and
+    // effect are cut to the built-in band shape. The built-in ones know their shape: a band draws
+    // on the full plate canvas over its source backing, and an effect is cut to the band only if
+    // the catalog says it stays inside (otherwise it is a burst that runs outside it).
     public sealed class NameplateLayers
     {
         readonly RectTransform plate;
@@ -17,35 +19,37 @@ namespace OurTaiko
         RectTransform mask;
         OtanimView bandView, effectView, iconView;
 
-        // A band item is worn, so the plate's own band is not drawn.
-        public bool CoversBand { get; private set; }
         public OtanimView BandView => bandView;
         public OtanimView EffectView => effectView;
         public OtanimView IconView => iconView;
+        // The view a slot is drawn by; null until the plate first wears a layer.
+        public OtanimView View(NameplateSlot slot) => slot switch
+        {
+            NameplateSlot.Band => bandView,
+            NameplateSlot.Effect => effectView,
+            _ => iconView,
+        };
         public RectTransform Mask => mask;
 
         public NameplateLayers(RectTransform plate) => this.plate = plate;
 
-        public void Apply(PlayerInfo info, bool shown)
+        public void Apply(TitleParts worn)
         {
-            var band = shown ? NameplateItems.Load(NameplateSlot.Band, info.bandItem) : null;
-            var effect = shown ? NameplateItems.Load(NameplateSlot.Effect, info.effectItem) : null;
-            var icon = shown ? NameplateItems.Load(NameplateSlot.Icon, info.iconItem) : null;
-            CoversBand = band != null;
+            var catalog = PlateComposition.ReadCatalog();
+            var band = NameplateItems.Load(NameplateSlot.Band, worn.Band);
+            var effect = NameplateItems.Load(NameplateSlot.Effect, worn.Effect);
+            var icon = NameplateItems.Load(NameplateSlot.Icon, worn.Icon);
             if (band == null && effect == null && icon == null && mask == null) return;
             Make();
-            bool loose = band != null && !PlateComposition.ReadCatalog().ContainsBand(info.bandItem);
-            var parent = loose ? mask : plate;
-            if (bandView.transform.parent != parent)
-            {
-                bandView.transform.SetParent(parent, false);
-                FillPlate(bandView);
-            }
+            bool loose = band != null && !catalog.Contains(NameplateSlot.Band, worn.Band);
+            bool clipped = effect != null && catalog.ClipsEffect(worn.Effect);
+            Parent(bandView, loose ? mask : plate);
             if (loose) bandView.transform.SetAsFirstSibling();
+            Parent(effectView, clipped ? mask : plate);
             Use(bandView, band, NameplateSlot.Band);
             Use(effectView, effect, NameplateSlot.Effect);
             Use(iconView, icon, NameplateSlot.Icon);
-            maskCanvas.gameObject.SetActive(loose || effect != null);
+            maskCanvas.gameObject.SetActive(loose || clipped);
         }
 
         // The layers `seconds` into their clips.
@@ -76,7 +80,7 @@ namespace OurTaiko
         // Restart a named clip on one worn item at the caller's plate time.
         public bool Play(NameplateSlot slot, string clip, double seconds, bool foreground = false)
         {
-            var view = slot switch { NameplateSlot.Band => bandView, NameplateSlot.Effect => effectView, NameplateSlot.Icon => iconView, _ => null };
+            var view = View(slot);
             if (view == null || view.File?.Find(clip) == null) return false;
             view.Use(view.asset, clip);
             started[(int)slot] = seconds;
@@ -113,6 +117,7 @@ namespace OurTaiko
             if (mask == null) return;
             if (bandView.transform.parent == plate) bandView.transform.SetAsLastSibling();
             maskCanvas.SetAsLastSibling();
+            if (effectView.transform.parent == plate) effectView.transform.SetAsLastSibling();
         }
 
         public void PlaceIcon()
@@ -125,6 +130,13 @@ namespace OurTaiko
         public void FinishOrder()
         {
             if (foregroundIcon && iconView != null) iconView.transform.SetAsLastSibling();
+        }
+
+        static void Parent(OtanimView view, Transform parent)
+        {
+            if (view.transform.parent == parent) return;
+            view.transform.SetParent(parent, false);
+            FillPlate(view);
         }
 
         static void FillPlate(OtanimView view)

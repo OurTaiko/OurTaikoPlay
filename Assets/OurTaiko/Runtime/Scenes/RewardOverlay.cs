@@ -78,7 +78,7 @@ namespace OurTaiko
         Image shade;
         Piece banner, item, from, prompt;
         RectTransform shine;
-        OurTaiko.Chara.OtanimView rewardArt;
+        readonly List<OurTaiko.Chara.OtanimView> rewardArts = new List<OurTaiko.Chara.OtanimView>();
         Func<bool> isUp;
 
         double Elapsed => Time.realtimeSinceStartupAsDouble - shownAt;
@@ -236,7 +236,7 @@ namespace OurTaiko
         void Clear()
         {
             if (content != null) Destroy(content.gameObject);
-            content = null; banner = item = from = prompt = null; shine = null; rewardArt = null;
+            content = null; banner = item = from = prompt = null; shine = null; rewardArts.Clear();
             shade.color = new Color(0, 0, 0, 0);
         }
 
@@ -292,9 +292,13 @@ namespace OurTaiko
             const float width = 408 * Scale, height = 56 * Scale;
             var holder = SkinUi.Rect("Title", content, width, height);
             item = Place(holder, 960, 560);
-            var catalog = PlateComposition.ReadCatalog();
-            var band = NameplateItems.Load(NameplateSlot.Band, (string)(catalog.Titles[reward.TitleStyle] ?? catalog.Titles["wood"]));
-            ShowRewardArt(holder, band, "idle", Scale, Vector2.zero);
+            // The title as the plate draws it: its band, the effect over it and its icon.
+            var parts = PlateComposition.ReadCatalog().Title(reward.TitleStyle);
+            foreach (var slot in NameplateSlots.All)
+            {
+                var layer = NameplateItems.Load(slot, parts.In(slot));
+                if (layer != null) ShowRewardArt(holder, layer, NameplateItems.ClipOf(layer.File).Name, Scale, Vector2.zero);
+            }
             var window = SkinUi.Rect("Window", holder, 316 * Scale, 34 * Scale);
             window.Center(204 * Scale, 31 * Scale);
             window.gameObject.AddComponent<RectMask2D>();
@@ -367,12 +371,13 @@ namespace OurTaiko
 
         void ShowRewardArt(RectTransform holder, OurTaiko.Chara.OtanimAsset asset, string clip, float scale, Vector2 offset)
         {
-            rewardArt = PlateComposition.CreatePicture("Reward art", holder);
-            var rect = (RectTransform)rewardArt.transform;
+            var art = PlateComposition.CreatePicture("Reward art", holder);
+            rewardArts.Add(art);
+            var rect = (RectTransform)art.transform;
             rect.anchoredPosition = offset;
             rect.localScale = new Vector3(scale, scale, 1);
-            rewardArt.Use(asset, clip);
-            rewardArt.Show(0);
+            art.Use(asset, clip);
+            art.Show(0);
         }
 
         TextMeshProUGUI Text(Transform parent, string text, float size, float x, float y, Color? color = null, bool dark = false)
@@ -442,7 +447,8 @@ namespace OurTaiko
                 shine.gameObject.SetActive(l > 0 && l < 1);
                 shine.anchoredPosition = new Vector2((float)(-60 + l * (316 * Scale + 120)), -17 * Scale);
             }
-            if (rewardArt?.Clip?.Frames.Length > 1) rewardArt.Show(t);
+            foreach (var art in rewardArts)
+                if (art.Clip?.Frames.Length > 1) art.Show(t);
 
             from.Group.alpha = (float)Phase(t, FromAt, FromSeconds);
             // "don: next" blinks once a second after it shows.

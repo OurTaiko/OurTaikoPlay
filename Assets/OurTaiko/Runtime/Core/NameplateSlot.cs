@@ -6,6 +6,27 @@ namespace OurTaiko
     // outline. An item's id is "<slot folder>/<name>", the path of its file under the items folder.
     public enum NameplateSlot { Band, Effect, Icon }
 
+    // What a title is made of: the id of the item it wears in each slot, null where it wears none.
+    // A title is these layers and nothing more, so a plate can wear any slot of it on its own.
+    public readonly struct TitleParts
+    {
+        public readonly string Band, Effect, Icon;
+
+        public TitleParts(string band, string effect, string icon)
+        {
+            Band = band;
+            Effect = effect;
+            Icon = icon;
+        }
+
+        public string In(NameplateSlot slot) => slot switch
+        {
+            NameplateSlot.Band => Band,
+            NameplateSlot.Effect => Effect,
+            _ => Icon,
+        };
+    }
+
     public static class NameplateSlots
     {
         public static readonly NameplateSlot[] All = { NameplateSlot.Band, NameplateSlot.Effect, NameplateSlot.Icon };

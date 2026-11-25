@@ -77,9 +77,11 @@ namespace OurTaiko
         public bool PlayLayerClip(NameplateSlot slot, string clip, bool foreground = false) =>
             PlayLayerClipAt(slot, clip, GameTimeline.FrameTime - animationStart, foreground);
 
+        // The rank-up effect answers to the icon slot first: a title that wears an icon has "idle"
+        // too, and "idle" is how the rank-up is put back.
         public bool PlayLayerClipAt(NameplateSlot slot, string clip, double seconds, bool foreground = false) =>
-            Layers?.Play(slot, clip, seconds, foreground) == true ||
-            (slot == NameplateSlot.Icon && composition?.PlayRank(clip, seconds) == true);
+            (slot == NameplateSlot.Icon && composition?.PlayRank(clip, seconds) == true) ||
+            Layers?.Play(slot, clip, seconds, foreground) == true;
 
         // Nameplate animations continue while gameplay is paused.
         void Update()

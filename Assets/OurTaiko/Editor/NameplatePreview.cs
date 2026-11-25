@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using OurTaiko.Chara;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -11,10 +12,10 @@ using UnityEngine.UI;
 namespace OurTaiko.Editor
 {
     // A nameplate outside play: the game's own Nameplate prefab in a preview scene of its own,
-    // wearing what it is given (a PlayerInfo with its band, effect and icon items, NameplateItems'
-    // files) at a time the caller moves on, drawn to a texture. NameplatePreviewWindow shows it;
+    // wearing what it is given (a PlayerInfo: its layout and title, or its own band, effect and icon
+    // items) at a time the caller moves on, drawn to a texture. NameplatePreviewWindow shows it;
     // batch: -executeMethod OurTaiko.Editor.NameplatePreview.RenderBatch with NAMEPLATE_PREVIEW_DIR
-    // set (and NAMEPLATE_ITEMS_DIR for another items folder) writes every item and combination.
+    // set (and NAMEPLATE_ITEMS_DIR for another items folder) writes the sheets RenderAll makes.
     public sealed class NameplatePreview : IDisposable
     {
         public const string PrefabPath = "Assets/OurTaiko/Generated/Nameplate.prefab";
@@ -36,6 +37,12 @@ namespace OurTaiko.Editor
         readonly Canvas canvas;
         readonly CanvasScaler scaler;
         RenderTexture target;
+
+        // Slots left out of the picture, and whether the rest of the plate (base, badge, rank and
+        // text) is too: to look at a title's layers one by one. Only the picture changes; the
+        // plate wears the same, so its clips run on.
+        public readonly HashSet<NameplateSlot> Hidden = new HashSet<NameplateSlot>();
+        public bool LayersOnly { get; set; }
 
         public Color Background
         {
@@ -119,9 +126,46 @@ namespace OurTaiko.Editor
             camera.targetTexture = target;
             scaler.scaleFactor = scale;
             scaler.SendMessage("Handle");
-            Canvas.ForceUpdateCanvases();
-            camera.Render();
+            var hidden = HideForPicture();
+            try
+            {
+                Canvas.ForceUpdateCanvases();
+                camera.Render();
+            }
+            finally
+            {
+                foreach (var shown in hidden) shown.SetActive(true);
+            }
             return target;
+        }
+
+        // Turns off what the picture leaves out, and says what to turn on again.
+        List<GameObject> HideForPicture()
+        {
+            var hidden = new List<GameObject>();
+            void Hide(Component part)
+            {
+                if (part == null || !part.gameObject.activeSelf) return;
+                part.gameObject.SetActive(false);
+                hidden.Add(part.gameObject);
+            }
+            var layers = Plate.Layers;
+            if (layers != null)
+                foreach (var slot in Hidden) Hide(layers.View(slot));
+            if (LayersOnly)
+            {
+                var keep = new HashSet<Transform>();
+                if (layers?.Mask != null)
+                {
+                    keep.Add(layers.Mask.parent);
+                    foreach (var slot in NameplateSlots.All) keep.Add(layers.View(slot).transform);
+                }
+                var root = Plate.transform.Find(PlateComposition.RootName);
+                if (root != null)
+                    foreach (Transform part in root)
+                        if (!keep.Contains(part)) Hide(part);
+            }
+            return hidden;
         }
 
         public Texture2D Capture(int scale)
@@ -152,7 +196,33 @@ namespace OurTaiko.Editor
         }
 
         // The plate every rendered sheet wears: a title and a 段位, so the band and the chip show.
-        public static PlayerInfo SampleInfo() => new PlayerInfo { plateState = "custom", name = "OurTaiko", title = "Nameplate layers", dan = 10, danCombo = 1 };
+        // A sheet writes what each picture is in its title text.
+        public static PlayerInfo SampleInfo(string title = "Nameplate layers") => new PlayerInfo { plateState = "custom", name = "OurTaiko", title = title, dan = 10, danCombo = 1 };
+
+        // A built-in title as a player's plate wears it, its label in the title text. An AI title
+        // is shown on the AI plate that wears one.
+        public static PlayerInfo TitleInfo(string label, bool ai) => ai
+            ? new PlayerInfo { plateState = "ai_data_shougou", plateAiTitle = label, name = "OurTaiko", title = "AI " + label }
+            : new PlayerInfo { plateTitle = label, name = "OurTaiko", title = label, dan = 10, danCombo = 1 };
+
+        // The titles made with an item ("AI " before an AI title's label), in the catalog's order.
+        public static List<string> UsedBy(PlateComposition.Catalog catalog, NameplateSlot slot, string id)
+        {
+            var titles = new List<string>();
+            foreach (var title in catalog.Titles)
+                if (title.Value.In(slot) == id) titles.Add(title.Key);
+            foreach (var title in catalog.AiTitles)
+                if (title.Value.In(slot) == id) titles.Add("AI " + title.Key);
+            return titles;
+        }
+
+        // The family a title belongs to, for grouping long lists: what comes before its first "_"
+        // ("toho_y22_3" is a toho title), or the label itself.
+        public static string Series(string label)
+        {
+            int cut = label.IndexOf('_');
+            return cut > 0 ? label.Substring(0, cut) : label;
+        }
 
         // How long an item's clip takes to come round (its loop, or a one-shot's length).
         public static double Length(Otanim file)
@@ -172,9 +242,14 @@ namespace OurTaiko.Editor
         }
 
         public const int Frames = 6, MostCombinations = 64;
+        // When a title sheet catches its titles: late enough for the first glints.
+        public const double TitleMoment = 1;
 
-        // items.png: a row an item, worn alone, at Frames moments of its clip; combinations.png:
-        // every band, effect and icon worn together (none among them), each half a second in.
+        // titles.png: every built-in title (88, then the 8 AI ones) as a plate wears it, its label
+        // in its title text; items.png: a row an item, worn alone and named in the title text, at
+        // Frames moments of its clip; layouts.png: every layout; combinations.png: every band,
+        // effect and icon of the items folder worn together (none among them), each half a second
+        // in. A sheet too big for one picture goes on in name-2.png and so on.
         public static void RenderAll(string dir, int scale = 1)
         {
             scale = Math.Max(1, scale);
@@ -184,6 +259,7 @@ namespace OurTaiko.Editor
             try
             {
                 preview = new NameplatePreview();
+                var catalog = PlateComposition.ReadCatalog();
                 var rows = new List<Texture2D[]>();
                 int itemCount = 0, page = 0;
                 // Keep the sheet and its captures bounded even with the full title catalog.
@@ -198,30 +274,6 @@ namespace OurTaiko.Editor
                     pictures.Clear();
                     rows.Clear();
                 }
-                foreach (var slot in NameplateSlots.All)
-                    foreach (string name in NameplateItems.Names(slot))
-                    {
-                        string id = NameplateSlots.Id(slot, name);
-                        var item = NameplateItems.Load(slot, id);
-                        if (item == null) continue;
-                        var info = SampleInfo();
-                        info.Wear(slot, id);
-                        preview.Show(info, 0);
-                        double length = Length(item.File);
-                        var row = new Texture2D[Frames];
-                        for (int f = 0; f < Frames; f++)
-                        {
-                            preview.Seek(length * f / Frames);
-                            row[f] = preview.Capture(scale);
-                            pictures.Add(row[f]);
-                        }
-                        rows.Add(row);
-                        itemCount++;
-                        if (rows.Count == maxRows) SavePage("items");
-                    }
-                SavePage("items");
-
-                page = 0;
                 var currentRow = new List<Texture2D>();
                 void CaptureGridCell(string name)
                 {
@@ -241,39 +293,71 @@ namespace OurTaiko.Editor
                     page = 0;
                 }
 
-                var catalog = PlateComposition.ReadCatalog();
-                if (catalog != null)
-                {
-                    foreach (var state in catalog.States.Properties())
+                foreach (var (titles, ai) in new[] { (catalog.Titles, false), (catalog.AiTitles, true) })
+                    foreach (string label in titles.Keys)
                     {
-                        var info = SampleInfo();
-                        info.plateState = state.Name;
-                        preview.Show(info, 0);
-                        preview.Seek(0.5);
-                        CaptureGridCell("layouts");
+                        preview.Show(TitleInfo(label, ai), 0);
+                        preview.Seek(TitleMoment);
+                        CaptureGridCell("titles");
                     }
-                    FinishGrid("layouts");
-                }
+                FinishGrid("titles");
 
-                var band = Choices(NameplateSlot.Band);
-                var effect = Choices(NameplateSlot.Effect);
-                var icon = Choices(NameplateSlot.Icon);
-                int made = 0;
-                foreach (string b in band)
-                    foreach (string e in effect)
-                        foreach (string i in icon)
+                foreach (var slot in NameplateSlots.All)
+                    foreach (string name in NameplateItems.Names(slot))
+                    {
+                        string id = NameplateSlots.Id(slot, name);
+                        var item = NameplateItems.Load(slot, id);
+                        if (item == null) continue;
+                        var info = SampleInfo(id);
+                        info.Wear(slot, id);
+                        preview.Show(info, 0);
+                        double length = Length(item.File);
+                        var row = new Texture2D[Frames];
+                        for (int f = 0; f < Frames; f++)
                         {
-                            if (made++ >= MostCombinations) break;
-                            var info = SampleInfo();
-                            info.bandItem = b;
-                            info.effectItem = e;
-                            info.iconItem = i;
-                            preview.Show(info, 0);
-                            preview.Seek(0.5);
-                            CaptureGridCell("combinations");
+                            preview.Seek(length * f / Frames);
+                            row[f] = preview.Capture(scale);
+                            pictures.Add(row[f]);
                         }
+                        rows.Add(row);
+                        itemCount++;
+                        if (rows.Count == maxRows) SavePage("items");
+                    }
+                SavePage("items");
+                page = 0;
+
+                foreach (var state in catalog.States.Properties())
+                {
+                    var info = SampleInfo(state.Name);
+                    info.plateState = state.Name;
+                    preview.Show(info, 0);
+                    preview.Seek(0.5);
+                    CaptureGridCell("layouts");
+                }
+                FinishGrid("layouts");
+
+                // The built-in items come in titles, so what is combined is the folder's own.
+                var band = Choices(NameplateSlot.Band, catalog);
+                var effect = Choices(NameplateSlot.Effect, catalog);
+                var icon = Choices(NameplateSlot.Icon, catalog);
+                int made = 0;
+                if (band.Count + effect.Count + icon.Count > 3)
+                    foreach (string b in band)
+                        foreach (string e in effect)
+                            foreach (string i in icon)
+                            {
+                                if (made >= MostCombinations || b + e + i == "") continue;
+                                made++;
+                                var info = SampleInfo(string.Join(" + ", new[] { b, e, i }.Where(id => id != "")));
+                                info.bandItem = b;
+                                info.effectItem = e;
+                                info.iconItem = i;
+                                preview.Show(info, 0);
+                                preview.Seek(0.5);
+                                CaptureGridCell("combinations");
+                            }
                 FinishGrid("combinations");
-                Debug.Log($"Nameplate layers written to {dir}: {itemCount} items, {Math.Min(made, MostCombinations)} combinations");
+                Debug.Log($"Nameplate sheets written to {dir}: {catalog.Titles.Count + catalog.AiTitles.Count} titles, {itemCount} items, {made} combinations of the items folder");
             }
             finally
             {
@@ -282,13 +366,21 @@ namespace OurTaiko.Editor
             }
         }
 
-        // The slot's items, and "" for none.
-        static List<string> Choices(NameplateSlot slot)
+        // The slot's items in the items folder (not built in), and "" for none.
+        static List<string> Choices(NameplateSlot slot, PlateComposition.Catalog catalog)
         {
             var list = new List<string> { "" };
-            foreach (string name in NameplateItems.Names(slot)) list.Add(NameplateSlots.Id(slot, name));
+            foreach (string name in NameplateItems.Names(slot))
+            {
+                string id = NameplateSlots.Id(slot, name);
+                if (!IsBuiltIn(catalog, slot, id)) list.Add(id);
+            }
             return list;
         }
+
+        // An item the game carries (a part of a title, or the rank-up effect), not a file of the items folder.
+        public static bool IsBuiltIn(PlateComposition.Catalog catalog, NameplateSlot slot, string id) =>
+            catalog.Contains(slot, id) || id == PlateComposition.RankUpItem;
 
         // Rows of same-sized pictures, the first at the top.
         static void Sheet(List<Texture2D[]> rows, string path)

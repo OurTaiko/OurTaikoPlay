@@ -388,27 +388,6 @@ def bake(decoded, output, encoder):
     main = layout.instance(layout.root, "main")["child"]
     # Centre of the source plate in the existing 408 x 96 nameplate canvas (y down).
     plate = (1, 0, 0, 1, 204, 48)
-    title = layout.instance(main, "title_instance")
-    start = layout.labels(title["child"])["ai_3"]
-    (child,) = layout.states(title["child"])[start].values()
-    matrix = compose(compose(plate, title["matrix"]), child["matrix"])
-    band = Item(layout)
-    band.clip(
-        "idle",
-        (
-            layout.draw(
-                child["child"],
-                t % len(layout.states(child["child"])),
-                matrix,
-                {},
-                age=t,
-            )
-            for t in range(layout.period(child["child"]))
-        ),
-        loop=True,
-    )
-    band.save(output / "band/lumen-ai-3.otanim", encoder)
-
     rankup = layout.instance(main, "rankup_instance")
     sprite = rankup["child"]
     rank = layout.instance(sprite, "dani_rankup_efc_02_instance")["child"]

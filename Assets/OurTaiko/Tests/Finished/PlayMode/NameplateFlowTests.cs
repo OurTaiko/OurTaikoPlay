@@ -230,12 +230,12 @@ namespace OurTaiko.Tests
                 var plate = ((RectTransform)play.firstLane.scoreCounter.transform.parent).GetComponentInChildren<NameplateView>();
                 var layers = plate.Layers;
                 Assert.That(layers?.Mask, Is.Not.Null);
-                Assert.That(layers.CoversBand, Is.True, "The worn band is drawn instead of the plate's own.");
+                Assert.That(layers.BandView.asset, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, "band/moving")), "The worn band is drawn instead of the title's.");
                 Assert.That(layers.BandView.gameObject.activeInHierarchy && layers.IconView.gameObject.activeInHierarchy && !layers.EffectView.gameObject.activeSelf);
                 Assert.That((layers.BandView.RunCount, layers.IconView.RunCount), Is.EqualTo((1, 1)), "The plate draws them by itself every frame.");
 
                 Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Layers" });
-                Assert.That(!layers.CoversBand, "Wearing none brings the plate's own band back.");
+                Assert.That(layers.BandView.asset, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, "band/lumen-title-wood")), "Wearing none brings the title's own band back.");
                 Assert.That(layers.Mask.gameObject.activeInHierarchy || layers.IconView.gameObject.activeSelf, Is.False);
             }
             finally

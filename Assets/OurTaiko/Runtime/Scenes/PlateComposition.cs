@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OurTaiko.Chara;
@@ -15,21 +16,51 @@ namespace OurTaiko
     {
         public sealed class Catalog
         {
-            public readonly JObject States, Titles, AiTitles;
+            public readonly JObject States;
+            // Each title is the items it wears (TitleParts); the plate draws no title any other way.
+            public readonly IReadOnlyDictionary<string, TitleParts> Titles, AiTitles;
             public readonly string[] Blank;
-            readonly HashSet<string> bandItems = new HashSet<string>(StringComparer.Ordinal);
-            public IEnumerable<string> BandIds => bandItems;
-            public bool ContainsBand(string id) => bandItems.Contains(id) || id == "band/lumen-ai-3";
+            readonly HashSet<string>[] items = { new HashSet<string>(StringComparer.Ordinal), new HashSet<string>(StringComparer.Ordinal), new HashSet<string>(StringComparer.Ordinal) };
+            readonly HashSet<string> unclipped;
+
             internal Catalog(JObject data)
             {
                 States = data["states"] as JObject ?? throw new InvalidDataException("Missing states");
-                Titles = data["titles"] as JObject ?? throw new InvalidDataException("Missing titles");
-                AiTitles = data["aiTitles"] as JObject ?? throw new InvalidDataException("Missing AI titles");
-                foreach (var option in Titles.Properties()) bandItems.Add((string)option.Value);
-                foreach (var option in AiTitles.Properties()) bandItems.Add((string)option.Value);
+                Titles = Parts(data["titles"] as JObject ?? throw new InvalidDataException("Missing titles"));
+                AiTitles = Parts(data["aiTitles"] as JObject ?? throw new InvalidDataException("Missing AI titles"));
+                unclipped = new HashSet<string>(data["unclipped"]?.ToObject<string[]>() ?? throw new InvalidDataException("Missing unclipped effects"), StringComparer.Ordinal);
                 Blank = data["blank"]?.ToObject<string[]>() ?? throw new InvalidDataException("Missing blank labels");
             }
+
+            IReadOnlyDictionary<string, TitleParts> Parts(JObject options)
+            {
+                var parts = new Dictionary<string, TitleParts>(StringComparer.Ordinal);
+                foreach (var option in options.Properties())
+                {
+                    var layers = option.Value as JObject ?? throw new InvalidDataException("Missing layers of " + option.Name);
+                    var title = new TitleParts((string)layers["band"] ?? throw new InvalidDataException("Missing band of " + option.Name), (string)layers["effect"], (string)layers["icon"]);
+                    parts.Add(option.Name, title);
+                    foreach (var slot in NameplateSlots.All)
+                        if (title.In(slot) != null) items[(int)slot].Add(title.In(slot));
+                }
+                return parts;
+            }
+
+            // The built-in items of a slot: those the titles are made of.
+            public IEnumerable<string> Ids(NameplateSlot slot) => items[(int)slot];
+            public bool Contains(NameplateSlot slot, string id) => id != null && items[(int)slot].Contains(id);
+
+            // An effect is cut to the band unless the title's own art lets it run outside it (a burst of sparkles).
+            public bool ClipsEffect(string id) => id == null || !unclipped.Contains(id);
+
+            public TitleParts Title(string choice) => Pick(Titles, choice);
+            public TitleParts AiTitle(string choice) => Pick(AiTitles, choice);
+            static TitleParts Pick(IReadOnlyDictionary<string, TitleParts> options, string choice) =>
+                options.TryGetValue(choice ?? "", out var parts) ? parts : options["wood"];
         }
+
+        // The object a plate's whole composition is drawn under, and the built-in rank-up effect.
+        public const string RootName = "Complete nameplate", RankUpItem = "icon/lumen-rankup";
 
         static Catalog catalog;
         public static void ForgetCatalog() => catalog = null;
@@ -51,7 +82,7 @@ namespace OurTaiko
 
         public PlateComposition(RectTransform plate)
         {
-            root = SkinUi.Rect("Complete nameplate", plate, NameplateLayout.Width, NameplateLayout.Height);
+            root = SkinUi.Rect(RootName, plate, NameplateLayout.Width, NameplateLayout.Height);
             root.pivot = new Vector2(0, 1);
             root.anchoredPosition = Vector2.zero;
             root.gameObject.layer = plate.gameObject.layer;
@@ -83,6 +114,33 @@ namespace OurTaiko
             return NameplateItems.CompositionPart("dan-" + ring);
         }
 
+        // The title a plate of these rows shows, as the catalog names it (an unknown choice is wood),
+        // and whether it is an AI title; null when the plate shows no title.
+        public static string TitleOf(Catalog source, JArray rows, PlayerInfo info, out bool ai)
+        {
+            ai = false;
+            foreach (var row in rows)
+            {
+                string role = (string)row["role"];
+                if (role == "title_instance") return Known(source.Titles, info.plateTitle == "auto" ? info.profileBand : info.plateTitle);
+                if (role == "ai_title_instance") { ai = true; return Known(source.AiTitles, info.plateAiTitle); }
+            }
+            return null;
+        }
+
+        static string Known(IReadOnlyDictionary<string, TitleParts> options, string choice) =>
+            choice != null && options.ContainsKey(choice) ? choice : "wood";
+
+        // The layers a plate wears: a custom plate wears the player's own pick of each slot, any other the
+        // items its title is made of. A custom plate whose band slot is empty keeps its title's band.
+        public static TitleParts Worn(Catalog source, JArray rows, PlayerInfo info)
+        {
+            string label = TitleOf(source, rows, info, out bool ai);
+            var title = label == null ? default : ai ? source.AiTitle(label) : source.Title(label);
+            if (info.plateState != "custom" || info.IsCoin) return title;
+            return new TitleParts(string.IsNullOrEmpty(info.bandItem) ? title.Band : info.bandItem, info.effectItem, info.iconItem);
+        }
+
         public void Apply(Catalog source, JArray rows, PlayerInfo info, int side)
         {
             string running = rankup?.clip;
@@ -91,29 +149,31 @@ namespace OurTaiko
             pictureCount = textCount = 0;
             rankup = null;
             Title = PlayerName = null;
-            Layers.Apply(info, info.plateState == "custom" && !info.IsCoin);
+            Layers.Apply(Worn(source, rows, info));
+            bool badge = rows.Any(row => (string)row["role"] == "plate_player_no");
             foreach (var row in rows)
             {
                 switch ((string)row["role"])
                 {
                     case "base": Picture(NameplateItems.CompositionPart("plates"), (string)row["clip"]); break;
                     case "title_instance":
-                        if (!Layers.CoversBand) Band(source.Titles, info.plateTitle == "auto" ? info.profileBand : info.plateTitle);
+                    case "ai_title_instance":
                         Layers.PlaceBand();
+                        // A plate with no badge over its outline has nothing to put the icon behind.
+                        if (!badge) Layers.PlaceIcon();
                         break;
-                    case "ai_title_instance": Band(source.AiTitles, info.plateAiTitle); break;
                     case "plate_player_no":
                         Layers.PlaceIcon();
                         string state = StateFor(info, side);
                         bool second = state.StartsWith("2p", StringComparison.Ordinal) || !state.StartsWith("1p", StringComparison.Ordinal) && side == 1;
-                        string badge = info.plateBadge is "1p" or "2p" ? info.plateBadge : second ? "2p" : "1p";
-                        Picture(NameplateItems.CompositionPart("badges"), badge); break;
+                        string badgeLabel = info.plateBadge is "1p" or "2p" ? info.plateBadge : second ? "2p" : "1p";
+                        Picture(NameplateItems.CompositionPart("badges"), badgeLabel); break;
                     case "blank_instance": Picture(NameplateItems.CompositionPart("blank"), info.plateBlank ?? "off"); break;
                     case "dani":
                         var emblem = RankAsset(info, out string rankClip);
                         Picture(emblem, rankClip); break;
                     case "rankup_instance":
-                        rankup = Picture(NameplateItems.Load(NameplateSlot.Icon, "icon/lumen-rankup"), running ?? "idle"); break;
+                        rankup = Picture(NameplateItems.Load(NameplateSlot.Icon, RankUpItem), running ?? "idle"); break;
                     case "text_title":
                         Title = Text(row, info.HasTitle ? info.title : "");
                         break;
@@ -126,12 +186,6 @@ namespace OurTaiko
             for (int i = textCount; i < texts.Count; i++) texts[i].gameObject.SetActive(false);
             Layers.FinishOrder();
             lastFrame = -1;
-        }
-
-        void Band(JObject options, string choice)
-        {
-            string id = (string)(options[choice ?? "wood"] ?? options["wood"]);
-            Picture(NameplateItems.Load(NameplateSlot.Band, id), "idle");
         }
 
         internal static OtanimView CreatePicture(string name, RectTransform parent)

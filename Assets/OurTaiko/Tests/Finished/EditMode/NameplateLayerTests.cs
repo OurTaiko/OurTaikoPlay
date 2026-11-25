@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using NUnit.Framework;
 using OurTaiko.Editor;
@@ -11,6 +12,8 @@ namespace OurTaiko.Tests
     public sealed class NameplateLayerTests
     {
         static readonly Rect PlateView = new Rect(0, 0, NameplateLayout.Width, NameplateLayout.Height);
+        // The band of the plain title every plate without a choice of its own wears.
+        const string WoodBand = "band/lumen-title-wood";
         string folder;
 
         [SetUp]
@@ -80,7 +83,7 @@ namespace OurTaiko.Tests
             File.WriteAllBytes(NameplateItems.PathOf(NameplateSlot.Icon, "broken"), new byte[] { 1, 2, 3 });
 
             Assert.That(NameplateItems.Names(NameplateSlot.Band), Does.Contain("a").And.Contain("b"));
-            Assert.That(NameplateItems.Names(NameplateSlot.Effect), Is.EqualTo(new[] { "wide" }));
+            Assert.That(NameplateItems.Names(NameplateSlot.Effect), Does.Contain("wide").And.Contain("lumen-title-gold"), "The files of the folder come with the built-in ones.");
 
             var band = NameplateItems.Load(NameplateSlot.Band, "band/a");
             Assert.That(band, Is.Not.Null);
@@ -125,8 +128,8 @@ namespace OurTaiko.Tests
             info.bandItem = "band/moving";
             preview.Show(info, 0);
 
-            Assert.That(plate.Layers.CoversBand, Is.True, "The worn band is drawn instead of the plate's own.");
             var layers = plate.Layers;
+            Assert.That(layers.BandView.asset, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, "band/moving")), "The worn band is drawn instead of the title's.");
             Assert.That(layers.BandView.gameObject.activeSelf && !layers.EffectView.gameObject.activeSelf && !layers.IconView.gameObject.activeSelf);
 
             // The square's left half is red, its right half blue; the band is the plate's top 56.
@@ -138,7 +141,7 @@ namespace OurTaiko.Tests
             info.bandItem = "";
             info.effectItem = "effect/still";
             preview.Show(info, 0);
-            Assert.That(!plate.Layers.CoversBand, "Without a band item the plate's own band is back, the effect over it.");
+            Assert.That(plate.Layers.BandView.asset, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, WoodBand)), "Without a band item the title's own band is back, the effect over it.");
             Assert.That(IsRed(Pixel(preview, 275, 20)), "The effect is drawn over the band.");
             Assert.That(IsRed(Pixel(preview, 275, 80)), Is.False, "And cut to it.");
         }
@@ -171,7 +174,7 @@ namespace OurTaiko.Tests
             Item(NameplateSlot.Effect, "overlay", 250);
             using var preview = new NameplatePreview();
             var info = Plain();
-            info.bandItem = "band/lumen-title-aprilfool2025_01";
+            info.bandItem = "band/lumen-title-aprilfool2025";
             preview.Show(info, 0);
             var layers = preview.Plate.Layers;
             Assert.That(layers.BandView.transform.parent, Is.EqualTo(preview.Plate.transform.Find("Complete nameplate")));
@@ -276,7 +279,8 @@ namespace OurTaiko.Tests
             var info = Plain();
             info.iconItem = "icon/badge";
             preview.Show(info, 0);
-            Assert.That(!preview.Plate.Layers.CoversBand, "An icon leaves the band alone.");
+            Assert.That(preview.Plate.Layers.BandView.asset, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, WoodBand)), "An icon leaves the title's band alone.");
+            Assert.That(preview.Plate.Layers.EffectView.gameObject.activeSelf, Is.False);
             Assert.That(IsRed(Pixel(preview, 275, 20)) && IsRed(Pixel(preview, 275, 80)), "Over the band and below it.");
         }
 
@@ -301,11 +305,190 @@ namespace OurTaiko.Tests
         public void AllBuiltInItemsLoadWithAnEmptyUserFolder()
         {
             var catalog = PlateComposition.ReadCatalog();
-            foreach (string id in catalog.BandIds)
-                Assert.That(NameplateItems.Load(NameplateSlot.Band, id)?.File.Find("idle"), Is.Not.Null, id);
-            Assert.That(NameplateItems.Names(NameplateSlot.Band).Count, Is.EqualTo(97));
+            foreach (var slot in NameplateSlots.All)
+            {
+                foreach (string id in catalog.Ids(slot))
+                    Assert.That(NameplateItems.Load(slot, id)?.File.Find("idle"), Is.Not.Null, id);
+                Assert.That(NameplateItems.Names(slot).Count, Is.EqualTo(catalog.Ids(slot).Count() + (slot == NameplateSlot.Icon ? 1 : 0)), slot.ToString());
+            }
             Assert.That(NameplateItems.Load(NameplateSlot.Icon, "icon/lumen-rankup")?.File.Clips.Length, Is.EqualTo(58));
             Assert.That(Directory.Exists(folder), Is.False);
+        }
+
+        [Test]
+        public void APreviewLeavesHiddenLayersOutOfThePictureOnly()
+        {
+            Item(NameplateSlot.Icon, "badge", 250);
+            using var preview = new NameplatePreview { Background = Color.black };
+            var info = Plain();
+            info.iconItem = "icon/badge";
+            preview.Show(info, 0);
+            var icon = preview.Plate.Layers.IconView;
+            Assert.That(IsRed(Pixel(preview, 275, 80)));
+            preview.Hidden.Add(NameplateSlot.Icon);
+            Assert.That(IsRed(Pixel(preview, 275, 80)), Is.False, "The icon is left out of the picture.");
+            Assert.That(icon.gameObject.activeSelf, "But the plate still wears it.");
+            preview.Hidden.Clear();
+            Assert.That(IsRed(Pixel(preview, 275, 80)));
+        }
+
+        [Test]
+        public void APreviewCanShowATitlesLayersWithoutTheRestOfThePlate()
+        {
+            using var preview = new NameplatePreview { Background = Color.black };
+            preview.Show(new PlayerInfo { name = "Player", title = "Title", plateTitle = "toho_y22_1" }, 0);
+            // (79, 72) is the 1P badge, (200, 25) the band.
+            Assert.That(Pixel(preview, 79, 72).maxColorComponent, Is.GreaterThan(0.5f));
+            preview.LayersOnly = true;
+            Assert.That(Pixel(preview, 79, 72).maxColorComponent, Is.LessThan(0.1f), "The badge is left out.");
+            Assert.That(Pixel(preview, 200, 25).maxColorComponent, Is.GreaterThan(0.3f), "The band stays.");
+            Assert.That(preview.Plate.title.gameObject.activeSelf && preview.Plate.Layers.IconView.gameObject.activeSelf, "Nothing is taken off the plate itself.");
+        }
+
+        [Test]
+        public void TitleSheetsShowEachTitleAsAPlayerWearsItWithItsNameInTheTitle()
+        {
+            var catalog = PlateComposition.ReadCatalog();
+            using var preview = new NameplatePreview();
+            preview.Show(NameplatePreview.TitleInfo("crown_gold", false), 0);
+            Assert.That(preview.Plate.title.text, Is.EqualTo("crown_gold"));
+            Assert.That(Wearing(preview.Plate.Layers).icon, Is.SameAs(NameplateItems.Load(NameplateSlot.Icon, catalog.Title("crown_gold").Icon)));
+
+            var ai = NameplatePreview.TitleInfo("ai_3", true);
+            preview.Show(ai, 0);
+            Assert.That(PlateComposition.StateFor(ai, 0), Does.StartWith("ai_data"));
+            Assert.That(preview.Plate.title.text, Is.EqualTo("AI ai_3"));
+            var (band, effect, _) = Wearing(preview.Plate.Layers);
+            Assert.That(band, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, catalog.AiTitle("ai_3").Band)));
+            Assert.That(effect, Is.SameAs(NameplateItems.Load(NameplateSlot.Effect, catalog.AiTitle("ai_3").Effect)));
+        }
+
+        [Test]
+        public void ThePreviewSaysWhichTitlesAnItemComesFrom()
+        {
+            var catalog = PlateComposition.ReadCatalog();
+            Assert.That(NameplatePreview.UsedBy(catalog, NameplateSlot.Band, "band/lumen-title-toho_y22"),
+                Is.EqualTo(new[] { "toho_y22_1", "toho_y22_2", "toho_y22_3", "toho_y22_4", "toho_y22_5" }));
+            Assert.That(NameplatePreview.UsedBy(catalog, NameplateSlot.Band, "band/lumen-ai-title-wood"), Is.EqualTo(new[] { "AI wood" }));
+            Assert.That(NameplatePreview.UsedBy(catalog, NameplateSlot.Band, "band/loose"), Is.Empty);
+            Assert.That(NameplatePreview.IsBuiltIn(catalog, NameplateSlot.Icon, PlateComposition.RankUpItem));
+            Assert.That(NameplatePreview.IsBuiltIn(catalog, NameplateSlot.Band, "band/loose"), Is.False);
+            Assert.That((NameplatePreview.Series("toho_y22_3"), NameplatePreview.Series("crown_gold_ura"), NameplatePreview.Series("pjsekai")),
+                Is.EqualTo(("toho", "crown", "pjsekai")));
+        }
+
+        [Test]
+        public void ThePreviewDescribesWhatThePlateWears()
+        {
+            string auto = NameplatePreviewWindow.Describe(new PlayerInfo { name = "Player", title = "Title", plateTitle = "gold" }, 0);
+            Assert.That(auto, Does.Contain("Title: gold").And.Contain("effect: effect/lumen-title-gold").And.Contain("runs outside the band").And.Contain("icon: none"));
+
+            Item(NameplateSlot.Effect, "still", 250);
+            var custom = Plain();
+            custom.effectItem = "effect/still";
+            string own = NameplatePreviewWindow.Describe(custom, 0);
+            Assert.That(own, Does.Contain("empty band slot wears the band of wood").And.Contain("band: " + WoodBand).And.Contain("from the items folder"));
+
+            var catalog = PlateComposition.ReadCatalog();
+            var rows = (Newtonsoft.Json.Linq.JArray)catalog.States[PlateComposition.StateFor(custom, 0)];
+            Assert.That(PlateComposition.Worn(catalog, rows, custom), Is.EqualTo(new TitleParts(WoodBand, "effect/still", "")));
+            var coin = new PlayerInfo { plateState = "custom", name = "", title = "", effectItem = "effect/still" };
+            Assert.That(PlateComposition.Worn(catalog, (Newtonsoft.Json.Linq.JArray)catalog.States[PlateComposition.StateFor(coin, 0)], coin), Is.EqualTo(default(TitleParts)));
+        }
+
+        [Test]
+        public void EveryTitleIsMadeOfBuiltInItemsAndNeverLosesItsBand()
+        {
+            var catalog = PlateComposition.ReadCatalog();
+            foreach (var titles in new[] { catalog.Titles, catalog.AiTitles })
+                foreach (var pair in titles)
+                {
+                    string label = pair.Key;
+                    var parts = pair.Value;
+                    Assert.That(parts.Band, Is.Not.Null, label);
+                    foreach (var slot in NameplateSlots.All)
+                    {
+                        string id = parts.In(slot);
+                        if (id == null) continue;
+                        Assert.That(catalog.Contains(slot, id), label + " " + id);
+                        Assert.That(NameplateItems.Load(slot, id), Is.Not.Null, label + " " + id);
+                    }
+                }
+            // What may run outside the band is an effect the catalog knows.
+            Assert.That(catalog.ClipsEffect("effect/lumen-title-gold"), Is.False, "Gold's sparkles burst out of the band.");
+            Assert.That(catalog.ClipsEffect("effect/lumen-title-ai_3"), Is.True, "ai_3's sweep stays inside it.");
+            Assert.That(catalog.ClipsEffect("effect/loose"), Is.True, "A player's own effect is cut to the band.");
+            // Titles sharing a picture share its item.
+            Assert.That(catalog.Title("toho_y22_3").Band, Is.EqualTo(catalog.Title("toho_y22_5").Band));
+            Assert.That(catalog.Title("toho_y22_3").Icon, Is.Not.EqualTo(catalog.Title("toho_y22_5").Icon));
+            Assert.That(catalog.Title("missing"), Is.EqualTo(catalog.Title("wood")));
+        }
+
+        // The layers a plate on show wears (the title's own, as long as the player picks none).
+        static (OurTaiko.Chara.OtanimAsset band, OurTaiko.Chara.OtanimAsset effect, OurTaiko.Chara.OtanimAsset icon) Wearing(NameplateLayers layers) => (
+            layers.BandView.gameObject.activeSelf ? layers.BandView.asset : null,
+            layers.EffectView.gameObject.activeSelf ? layers.EffectView.asset : null,
+            layers.IconView.gameObject.activeSelf ? layers.IconView.asset : null);
+
+        [TestCase("wood", false, false)]
+        [TestCase("crown_gold", false, true)]
+        [TestCase("gold", true, false)]
+        [TestCase("sekaitaikai_05", true, true)]
+        [TestCase("ai_3", true, false)]
+        public void ATitleIsDrawnAsItsBandEffectAndIcon(string title, bool effect, bool icon)
+        {
+            using var preview = new NameplatePreview();
+            var info = new PlayerInfo { name = "Player", title = "Title", plateTitle = title };
+            preview.Show(info, 0);
+            var parts = PlateComposition.ReadCatalog().Title(title);
+            var layers = preview.Plate.Layers;
+            var (band, effectAsset, iconAsset) = Wearing(layers);
+            Assert.That(band, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, parts.Band)));
+            Assert.That(effectAsset != null, Is.EqualTo(effect));
+            Assert.That(iconAsset != null, Is.EqualTo(icon));
+            if (effect) Assert.That(effectAsset, Is.SameAs(NameplateItems.Load(NameplateSlot.Effect, parts.Effect)));
+            if (icon) Assert.That(iconAsset, Is.SameAs(NameplateItems.Load(NameplateSlot.Icon, parts.Icon)));
+
+            // The band is the plate's own picture of it, so a title's decoration may leave it: only an
+            // effect that stays inside the band is cut to it.
+            var root = preview.Plate.transform.Find("Complete nameplate");
+            Assert.That(layers.BandView.transform.parent, Is.EqualTo(root));
+            if (effect)
+            {
+                bool inside = PlateComposition.ReadCatalog().ClipsEffect(parts.Effect);
+                Assert.That(layers.EffectView.transform.parent, Is.EqualTo(inside ? layers.Mask : root));
+                Assert.That(layers.Mask.gameObject.activeInHierarchy, Is.EqualTo(inside), "The band's shape is only there to cut an effect that stays inside the band.");
+            }
+            // The icon is over the outline and under the badge; the band under both.
+            if (icon) Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.GreaterThan(layers.BandView.transform.GetSiblingIndex()));
+        }
+
+        [Test]
+        public void ATitleWithoutABadgePlateStillShowsItsIcon()
+        {
+            using var preview = new NameplatePreview();
+            // newentry_shougou has no 1P/2P badge: the icon goes right after the band.
+            var info = new PlayerInfo { name = "Player", title = "Title", plateTitle = "crown_gold", plateState = "newentry_shougou" };
+            preview.Show(info, 0);
+            var layers = preview.Plate.Layers;
+            Assert.That(layers.IconView.gameObject.activeSelf);
+            Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.GreaterThan(layers.BandView.transform.GetSiblingIndex()));
+            Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.LessThan(preview.Plate.title.transform.GetSiblingIndex()), "Under the title's text.");
+        }
+
+        [Test]
+        public void ARankUpIsPutBackByIdleEvenWhenTheTitleWearsAnIcon()
+        {
+            using var preview = new NameplatePreview();
+            var info = new PlayerInfo { name = "Player", title = "Title", plateTitle = "crown_gold", dan = 24 };
+            preview.Show(info, 0);
+            var rankup = NameplateItems.Load(NameplateSlot.Icon, "icon/lumen-rankup");
+            var view = System.Array.Find(preview.Plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>(), v => v.asset == rankup);
+            Assert.That(view, Is.Not.Null);
+            Assert.That(preview.Plate.PlayLayerClipAt(NameplateSlot.Icon, "14dan/rankup_start", 0));
+            Assert.That(view.clip, Is.EqualTo("14dan/rankup_start"));
+            Assert.That(preview.Plate.PlayLayerClipAt(NameplateSlot.Icon, "idle", 1));
+            Assert.That(view.clip, Is.EqualTo("idle"), "The crown's own idle does not take the call.");
         }
     }
 }

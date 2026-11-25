@@ -56,14 +56,9 @@ namespace OurTaiko
         {
             var names = new List<string>();
             string dir = Path.Combine(Folder, NameplateSlots.Folder(slot));
-            if (slot == NameplateSlot.Band)
-            {
-                var catalog = PlateComposition.ReadCatalog();
-                foreach (var id in catalog.BandIds)
-                    if (NameplateSlots.TryParse(id, out _, out string name)) names.Add(name);
-                names.Add("lumen-ai-3");
-            }
-            if (slot == NameplateSlot.Icon) names.Add("lumen-rankup");
+            foreach (var id in PlateComposition.ReadCatalog().Ids(slot))
+                if (NameplateSlots.TryParse(id, out _, out string name)) names.Add(name);
+            if (slot == NameplateSlot.Icon && NameplateSlots.TryParse(PlateComposition.RankUpItem, out _, out string rankUp)) names.Add(rankUp);
             try
             {
                 foreach (string path in Directory.Exists(dir) ? Directory.GetFiles(dir, "*" + Extension) : Array.Empty<string>())

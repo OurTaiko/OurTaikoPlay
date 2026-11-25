@@ -31,19 +31,19 @@ func example(t *testing.T, path string) (*otanim.File, *render.Renderer) {
 	return file, renderer
 }
 
-func TestMaskedTitle(t *testing.T) {
-	f, r := example(t, collection+"band/lumen-ai-3.otanim")
+func TestMaskedEffect(t *testing.T) {
+	f, r := example(t, collection+"effect/lumen-title-ai_3.otanim")
 	c := f.Clip("idle")
 	if c == nil || !c.Loop || c.FPS != 60 || len(c.Frames) != 2400 {
 		t.Fatal("expected the complete glint and star loop")
 	}
-	// Both scrolling quads sit at depth 2 inside sprite 98. The clip mask in
+	// Both scrolling quads sit at depth 2 inside the title's sprite 98. The clip mask in
 	// plate coordinates is centred at (204, 29.85) and measures 270 x 26.
 	masked := 0
 	for _, frame := range c.Frames {
 		for _, draw := range frame.Draws {
 			name := f.Parts[draw.Part].Name
-			if name != "2/52/0/45/0" && name != "2/52/1/45/0" {
+			if name != "0/98/2/52/0/45/0" && name != "0/98/2/52/1/45/0" {
 				continue
 			}
 			masked++
@@ -61,21 +61,12 @@ func TestMaskedTitle(t *testing.T) {
 	first := r.Draw(&c.Frames[0], 408, 96, false)
 	later := r.Draw(&c.Frames[32], 408, 96, false)
 	if reflect.DeepEqual(first, later) {
-		t.Fatal("title never moved")
+		t.Fatal("effect never moved")
 	}
-}
-
-func TestEarlyTitleAlias(t *testing.T) {
-	legacy, first := example(t, collection+"band/lumen-ai-3.otanim")
-	current, second := example(t, collection+"band/lumen-title-ai_3.otanim")
-	a, b := legacy.Clip("idle"), current.Clip("idle")
-	if len(a.Frames) != len(b.Frames) || a.FPS != b.FPS || a.Loop != b.Loop {
-		t.Fatal("alias timing differs")
-	}
-	for _, frame := range []int{0, 59, 799, len(a.Frames) - 1} {
-		if !reflect.DeepEqual(first.Draw(&a.Frames[frame], 408, 96, false), second.Draw(&b.Frames[frame], 408, 96, false)) {
-			t.Fatal("alias differs at frame", frame)
-		}
+	// The band under it does not move: it is the one picture of its title that stays.
+	band, _ := example(t, collection+"band/lumen-title-ai_3.otanim")
+	if len(band.Clip("idle").Frames) != 1 {
+		t.Fatal("the ai_3 band is a still picture")
 	}
 }
 

@@ -8,9 +8,11 @@ using UnityEngine;
 
 namespace OurTaiko.Editor
 {
-    // Menu OurTaiko/Nameplate Preview: a nameplate wearing the layers picked here (the player's
-    // Nameplate/<slot>/<name>.otanim files), running, over the plate states a player can be in,
-    // with what each worn file holds. "Wear as 1P" writes the picks into player.json.
+    // Menu OurTaiko/Nameplate Preview: a nameplate running over the plate states a player can be
+    // in, wearing a built-in title (its band, effect and icon) or the layers picked here (built-in
+    // parts and the player's Nameplate/<slot>/<name>.otanim files), with what each worn layer is,
+    // which titles it comes from, and switches to look at each layer on its own. "Wear as 1P"
+    // writes the picks into player.json.
     public sealed class NameplatePreviewWindow : EditorWindow
     {
         const float SideWidth = 340;
@@ -20,10 +22,12 @@ namespace OurTaiko.Editor
         [SerializeField] int dan = 10, combo = 1, side;
         [SerializeField] bool gold;
         [SerializeField] string bandItem = "", effectItem = "", iconItem = "";
-        [SerializeField] string plateState = "auto", plateTitle = "auto", plateAiTitle = "wood", plateBlank = "off", plateBadge = "auto";
+        [SerializeField] string plateState = "auto", plateTitle = "auto", plateAiTitle = "wood", plateBlank = "off", plateBadge = "auto", takeTitle = "wood";
         [SerializeField] int scale = 2;
         [SerializeField] float speed = 1;
         [SerializeField] bool paused;
+        // Left out of the picture only (NameplatePreview.Hidden, LayersOnly).
+        [SerializeField] bool hideBand, hideEffect, hideIcon, layersOnly;
         [SerializeField] Color background = new Color(0.22f, 0.22f, 0.25f, 1);
         [SerializeField] Vector2 scroll;
 
@@ -80,6 +84,7 @@ namespace OurTaiko.Editor
 
         void Rebuild()
         {
+            menus.Clear();
             preview?.Dispose();
             preview = null;
             shown = null;
@@ -114,7 +119,7 @@ namespace OurTaiko.Editor
         {
             preview.Background = background;
             preview.Show(Info(), side);
-            contents = Describe(preview.Info);
+            contents = Describe(preview.Info, preview.Side);
             Draw();
         }
 
@@ -132,8 +137,9 @@ namespace OurTaiko.Editor
             if (filesChanged)
             {
                 filesChanged = false;
+                menus.Clear();
                 preview.Refresh();
-                contents = Describe(preview.Info);
+                contents = Describe(preview.Info, preview.Side);
             }
             if (paused) return;
             preview.Step(step * speed);
@@ -141,7 +147,15 @@ namespace OurTaiko.Editor
             Repaint();
         }
 
-        void Draw() => shown = preview.Render(scale);
+        void Draw()
+        {
+            preview.Hidden.Clear();
+            if (hideBand) preview.Hidden.Add(NameplateSlot.Band);
+            if (hideEffect) preview.Hidden.Add(NameplateSlot.Effect);
+            if (hideIcon) preview.Hidden.Add(NameplateSlot.Icon);
+            preview.LayersOnly = layersOnly;
+            shown = preview.Render(scale);
+        }
 
         void OnGUI()
         {
@@ -175,7 +189,7 @@ namespace OurTaiko.Editor
                     foreach (var slot in NameplateSlots.All) Directory.CreateDirectory(Path.Combine(NameplateItems.Folder, NameplateSlots.Folder(slot)));
                     EditorUtility.RevealInFinder(Path.Combine(NameplateItems.Folder, NameplateSlots.Folder(NameplateSlot.Band)));
                 }
-                if (GUILayout.Button("Read again")) { NameplateItems.Forget(); layersChanged = true; }
+                if (GUILayout.Button("Read again")) { NameplateItems.Forget(); menus.Clear(); layersChanged = true; }
             }
 
             EditorGUILayout.Space();
@@ -201,16 +215,41 @@ namespace OurTaiko.Editor
             EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel);
             if (custom)
             {
-                bandItem = Slot("Band", NameplateSlot.Band, bandItem);
-                effectItem = Slot("Effect", NameplateSlot.Effect, effectItem);
-                iconItem = Slot("Icon", NameplateSlot.Icon, iconItem);
+                foreach (var slot in NameplateSlots.All)
+                {
+                    string current = Info().ItemIn(slot);
+                    string worn = ItemPicker(catalog, slot, current);
+                    if (worn != current) { SetItem(slot, worn); layersChanged = true; }
+                }
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    takeTitle = TitlePicker(new GUIContent("From title", "A title to fill the three slots with."), takeTitle, catalog.Titles.Keys, null);
+                    if (GUILayout.Button(new GUIContent("Wear", "Fills the three slots with the items this title is made of."), GUILayout.Width(50)))
+                    {
+                        WearParts(catalog.Title(takeTitle));
+                        layersChanged = true;
+                    }
+                }
             }
             else
             {
                 if (Has("title_instance"))
-                    plateTitle = Select("Title band", plateTitle, new[] { "auto" }.Concat(catalog.Titles.Properties().Select(p => p.Name)));
+                    plateTitle = TitlePicker(new GUIContent("Title", "auto: the title the player was given (" + profileBand + ")."), plateTitle, new[] { "auto" }.Concat(catalog.Titles.Keys), "auto");
                 if (Has("ai_title_instance"))
-                    plateAiTitle = Select("AI title band", plateAiTitle, catalog.AiTitles.Properties().Select(p => p.Name));
+                    plateAiTitle = TitlePicker(new GUIContent("AI title"), plateAiTitle, catalog.AiTitles.Keys, null);
+                if (Has("title_instance") || Has("ai_title_instance"))
+                {
+                    // What the plate wears for it, and the way to change one part of it.
+                    var parts = PlateComposition.Worn(catalog, (Newtonsoft.Json.Linq.JArray)rows, Info());
+                    foreach (var slot in NameplateSlots.All) PartLine(catalog, slot, parts.In(slot));
+                    if (GUILayout.Button(new GUIContent("Customize", "The custom layout wearing these three parts, to swap any of them.")))
+                    {
+                        WearParts(parts);
+                        if (Has("title_instance") && plateTitle == "auto") plateTitle = profileBand;
+                        plateState = "custom";
+                        layersChanged = true;
+                    }
+                }
                 if (Has("blank_instance"))
                     plateBlank = Select("Blank", plateBlank, catalog.Blank);
                 if ((Has("text_name") || Has("text_title")) && GUILayout.Button("Load source text"))
@@ -281,6 +320,14 @@ namespace OurTaiko.Editor
             EditorGUI.BeginChangeCheck();
             scale = EditorGUILayout.IntSlider("Zoom", scale, 1, 4);
             background = EditorGUILayout.ColorField(new GUIContent("Background", "Alpha 0 saves see-through pictures."), background);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.PrefixLabel(new GUIContent("Show", "Leaves layers out of the picture (and of saved pictures) to look at each on its own. The plate wears the same."));
+                hideBand = !GUILayout.Toggle(!hideBand, "Band", EditorStyles.miniButtonLeft);
+                hideEffect = !GUILayout.Toggle(!hideEffect, "Effect", EditorStyles.miniButtonMid);
+                hideIcon = !GUILayout.Toggle(!hideIcon, "Icon", EditorStyles.miniButtonMid);
+                layersOnly = !GUILayout.Toggle(!layersOnly, new GUIContent("Plate", "The rest of the plate: its base, badge, rank and text."), EditorStyles.miniButtonRight);
+            }
             if (EditorGUI.EndChangeCheck()) { preview.Background = background; Draw(); }
 
             EditorGUILayout.Space();
@@ -292,7 +339,7 @@ namespace OurTaiko.Editor
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Save picture…")) Save();
-                if (GUILayout.Button(new GUIContent("Render all…", "Items over their clips and up to 64 layer combinations, in image sheets."))) RenderAll();
+                if (GUILayout.Button(new GUIContent("Render all…", "Image sheets: every title, every item over its clip, every layout, and up to 64 combinations of the items folder's own files."))) RenderAll();
             }
 
             EditorGUILayout.Space();
@@ -301,27 +348,137 @@ namespace OurTaiko.Editor
                 GUILayout.Height(EditorStyles.wordWrappedMiniLabel.CalcHeight(new GUIContent(contents), SideWidth - 30)));
         }
 
-        static string Slot(string label, NameplateSlot slot, string id)
+        void SetItem(NameplateSlot slot, string id)
         {
-            var names = NameplateItems.Names(slot);
-            var choices = new List<string> { None };
-            choices.AddRange(names);
-            NameplateSlots.TryParse(id, out var named, out string name);
-            int at = name != null && named == slot ? choices.IndexOf(name) : 0;
-            if (at < 0)
+            if (slot == NameplateSlot.Band) bandItem = id;
+            else if (slot == NameplateSlot.Effect) effectItem = id;
+            else iconItem = id;
+        }
+
+        void WearParts(TitleParts parts)
+        {
+            foreach (var slot in NameplateSlots.All) SetItem(slot, parts.In(slot) ?? "");
+        }
+
+        // A title, its family as a submenu (toho ▸ toho_y22_3), with buttons to step through them.
+        string TitlePicker(GUIContent label, string value, IEnumerable<string> labels, string first)
+        {
+            var menu = Menu("titles:" + first + ":" + label.text, () =>
             {
-                // Worn but gone from the folder: kept, and said.
-                choices.Add(name + " (missing)");
-                at = choices.Count - 1;
-            }
-            if (names.Count == 0 && at == 0)
+                var ids = labels.ToList();
+                var families = ids.GroupBy(NameplatePreview.Series).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
+                return (ids, ids.Select(id => new GUIContent(id == first || !families.Contains(NameplatePreview.Series(id)) ? id : NameplatePreview.Series(id) + "/" + id)).ToArray());
+            });
+            return Picker(label, value, menu.ids, menu.options);
+        }
+
+        // A slot's items: none, the built-in ones by the title family they come from, and the items
+        // folder's own; one worn but gone from the folder is kept, and said.
+        string ItemPicker(PlateComposition.Catalog catalog, NameplateSlot slot, string id)
+        {
+            var menu = Menu("items:" + slot, () =>
             {
-                EditorGUILayout.LabelField(label, "No " + label.ToLowerInvariant() + " items installed");
-                return id;
+                var ids = new List<string> { "" };
+                var options = new List<GUIContent> { new GUIContent(None) };
+                foreach (string name in NameplateItems.Names(slot))
+                {
+                    string item = NameplateSlots.Id(slot, name);
+                    ids.Add(item);
+                    if (!NameplatePreview.IsBuiltIn(catalog, slot, item)) { options.Add(new GUIContent("Items folder/" + name)); continue; }
+                    var titles = NameplatePreview.UsedBy(catalog, slot, item);
+                    options.Add(new GUIContent(titles.Count == 0 ? "Built-in/" + name : "Built-in/" + NameplatePreview.Series(titles[0].Replace("AI ", "")) + "/" + name));
+                }
+                return (ids, options.ToArray());
+            });
+            var (choices, labels) = menu;
+            if (!string.IsNullOrEmpty(id) && !choices.Contains(id))
+            {
+                NameplateSlots.TryParse(id, out _, out string gone);
+                choices = new List<string>(choices) { id };
+                labels = labels.Append(new GUIContent((gone ?? id) + " (missing)")).ToArray();
             }
-            int picked = EditorGUILayout.Popup(label, at, choices.ToArray());
-            if (picked == at) return id;
-            return picked == 0 || picked > names.Count ? "" : NameplateSlots.Id(slot, choices[picked]);
+            string label = slot switch { NameplateSlot.Band => "Band", NameplateSlot.Effect => "Effect", _ => "Icon" };
+            string worn = Picker(new GUIContent(label), id ?? "", choices, labels);
+            PartLine(catalog, slot, worn, inPicker: true);
+            return worn;
+        }
+
+        // The pickers' lists, made again when the items folder or the catalog may have changed.
+        readonly Dictionary<string, (List<string> ids, GUIContent[] options)> menus = new Dictionary<string, (List<string>, GUIContent[])>();
+
+        (List<string> ids, GUIContent[] options) Menu(string key, Func<(List<string>, GUIContent[])> make)
+        {
+            if (!menus.TryGetValue(key, out var menu)) menus[key] = menu = make();
+            return menu;
+        }
+
+        // One worn part: its name (unless the picker above shows it), where it is from, and whether
+        // it is cut to the band.
+        static void PartLine(PlateComposition.Catalog catalog, NameplateSlot slot, string id, bool inPicker = false)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                if (!inPicker) EditorGUILayout.LabelField(NameplateSlots.Folder(slot), "none", EditorStyles.miniLabel);
+                return;
+            }
+            var notes = new List<string>();
+            string tip = id;
+            if (NameplatePreview.IsBuiltIn(catalog, slot, id))
+            {
+                var titles = NameplatePreview.UsedBy(catalog, slot, id);
+                if (titles.Count > 0)
+                {
+                    notes.Add("in " + string.Join(", ", titles.Take(3)) + (titles.Count > 3 ? $" +{titles.Count - 3}" : ""));
+                    tip += "\nPart of " + string.Join(", ", titles);
+                }
+            }
+            else notes.Add("items folder");
+            if (slot == NameplateSlot.Effect) notes.Add(catalog.ClipsEffect(id) ? "cut to the band" : "runs outside the band");
+            NameplateSlots.TryParse(id, out _, out string name);
+            string text = (inPicker ? "" : name + "  ") + string.Join("; ", notes);
+            EditorGUILayout.LabelField(new GUIContent(inPicker ? " " : NameplateSlots.Folder(slot)), new GUIContent(text, tip), EditorStyles.miniLabel);
+        }
+
+        // A menu's pick, which arrives after the repaint that opened it: its picker takes it next time.
+        string pickedFor, picked;
+
+        // A dropdown showing the picked id's name, its menu grouped by the paths ("a/b" opens a
+        // submenu), with ◀ ▶ to step through the ids.
+        string Picker(GUIContent label, string value, IReadOnlyList<string> ids, GUIContent[] paths)
+        {
+            string key = label.text;
+            if (pickedFor == key)
+            {
+                value = picked;
+                pickedFor = null;
+                GUI.changed = true;
+            }
+            int at = -1;
+            for (int i = 0; i < ids.Count; i++) if (ids[i] == value) at = i;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                var rect = EditorGUI.PrefixLabel(EditorGUILayout.GetControlRect(true), label);
+                string path = at < 0 ? value : paths[at].text;
+                if (EditorGUI.DropdownButton(rect, new GUIContent(path.Substring(path.LastIndexOf('/') + 1), path), FocusType.Keyboard))
+                {
+                    var menu = new GenericMenu();
+                    for (int i = 0; i < ids.Count; i++)
+                    {
+                        string id = ids[i];
+                        menu.AddItem(paths[i], i == at, () => { pickedFor = key; picked = id; Repaint(); });
+                    }
+                    menu.DropDown(rect);
+                }
+                int step = 0;
+                if (GUILayout.Button("◀", EditorStyles.miniButtonLeft, GUILayout.Width(22))) step = -1;
+                if (GUILayout.Button("▶", EditorStyles.miniButtonRight, GUILayout.Width(22))) step = 1;
+                if (step != 0 && ids.Count > 0)
+                {
+                    value = ids[((at < 0 ? 0 : at) + step + ids.Count) % ids.Count];
+                    GUI.changed = true;
+                }
+            }
+            return value;
         }
 
         static string Select(string label, string value, IEnumerable<string> choices)
@@ -396,34 +553,43 @@ namespace OurTaiko.Editor
             GUIUtility.ExitGUI();
         }
 
-        // What each worn file holds: its picture, parts and the clip it plays.
-        public static string Describe(PlayerInfo info)
+        // What the plate wears: its layout and title, and for each layer the item, where it comes
+        // from, whether it is cut to the band, and its picture, parts and the clip it plays.
+        public static string Describe(PlayerInfo info, int side)
         {
             var text = new StringBuilder();
-            text.AppendLine("Items folder: " + NameplateItems.Folder);
-            if (info.plateState != "custom")
-            {
-                text.AppendLine("Layout: " + info.plateState);
-                text.AppendLine("Title: " + info.plateTitle);
-                text.AppendLine("AI title: " + info.plateAiTitle);
-                text.AppendLine("Blank: " + info.plateBlank);
-                return text.ToString();
-            }
+            var catalog = PlateComposition.ReadCatalog();
+            string state = PlateComposition.StateFor(info, side);
+            var rows = (Newtonsoft.Json.Linq.JArray)catalog.States[state];
+            text.AppendLine(info.plateState == state ? "Layout: " + state : $"Layout: {info.plateState} → {state}");
+            string label = PlateComposition.TitleOf(catalog, rows, info, out bool ai);
+            if (label == null) text.AppendLine("No title on this layout.");
+            else if (info.plateState == "custom") text.AppendLine($"Custom layers; an empty band slot wears the band of {label}.");
+            else text.AppendLine((ai ? "AI title: " : "Title: ") + label);
+            if (info.IsCoin) text.AppendLine("No title and no 段位: the coin plate, which wears no layers.");
+            var worn = PlateComposition.Worn(catalog, rows, info);
             foreach (var slot in NameplateSlots.All)
             {
-                string id = info.ItemIn(slot);
-                string label = NameplateSlots.Folder(slot);
-                if (string.IsNullOrEmpty(id)) { text.AppendLine(label + ": none"); continue; }
+                string id = worn.In(slot);
+                string name = NameplateSlots.Folder(slot);
+                if (string.IsNullOrEmpty(id)) { text.AppendLine(name + ": none"); continue; }
                 var item = NameplateItems.Load(slot, id);
-                if (item == null) { text.AppendLine($"{label}: {id} cannot be worn (missing, unreadable or not drawn on the 408×96 plate; see the console)"); continue; }
+                if (item == null) { text.AppendLine($"{name}: {id} cannot be worn (missing, unreadable or not drawn on the 408×96 plate; see the console)"); continue; }
                 var file = item.File;
                 var clip = NameplateItems.ClipOf(file);
-                string length = clip == null ? "-" : clip.Loop ? (clip.Frames.Length / clip.Fps).ToString("0.##") + " s, loops" : clip.Duration.ToString("0.##") + " s, once";
-                text.AppendLine($"{label}: {id}");
+                string length = clip == null ? "-" : clip.Frames.Length == 1 ? "still" : clip.Loop ? (clip.Frames.Length / clip.Fps).ToString("0.##") + " s, loops" : clip.Duration.ToString("0.##") + " s, once";
+                text.AppendLine($"{name}: {id}");
+                if (NameplatePreview.IsBuiltIn(catalog, slot, id))
+                {
+                    var titles = NameplatePreview.UsedBy(catalog, slot, id);
+                    text.AppendLine("  built in" + (titles.Count > 0 ? ", part of " + string.Join(", ", titles) : ""));
+                }
+                else text.AppendLine("  from the items folder" + (slot == NameplateSlot.Band ? ", cut to the band" : ""));
+                if (slot == NameplateSlot.Effect) text.AppendLine(catalog.ClipsEffect(id) ? "  cut to the band" : "  runs outside the band");
                 text.AppendLine($"  picture {item.texture.width}×{item.texture.height}, {file.Parts.Length} parts, clip {clip?.Name} ({clip?.Frames.Length} frames, {length})");
                 if (clip != null && clip.Name != NameplateItems.ClipName) text.AppendLine($"  no \"{NameplateItems.ClipName}\" clip: its first is played");
             }
-            if (info.IsCoin) text.AppendLine("No title and no 段位: the coin plate wears no layers.");
+            text.AppendLine("Items folder: " + NameplateItems.Folder);
             return text.ToString().TrimEnd();
         }
     }
