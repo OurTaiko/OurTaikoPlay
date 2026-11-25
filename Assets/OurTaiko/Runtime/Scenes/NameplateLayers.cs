@@ -5,10 +5,8 @@ using UnityEngine.UI;
 namespace OurTaiko
 {
     // The layers a NameplateView wears (PlayerInfo's band, effect and icon items, NameplateItems'
-    // files), made under the plate the first time it wears any: the band and the effect inside a
-    // mask of the band's shape, just above the plate's own band, and the icon above the outline.
-    // Every layer is an OtanimView over the whole plate canvas, so the files' common view puts
-    // them where they belong. The mask is the art's first title band, whose shape every band has.
+    // files). Loose bands and effects use the built-in band mask. Catalog bands contain
+    // their own clipping and draw over their source backing on the full plate canvas.
     public sealed class NameplateLayers
     {
         readonly RectTransform plate;
@@ -18,7 +16,7 @@ namespace OurTaiko
         bool foregroundIcon;
         RectTransform mask;
         Image maskImage;
-        OtanimView bandView, effectView, iconView;
+        OtanimView bandView, effectView, iconView, backingView;
 
         // A band item is worn, so the plate's own band is not drawn.
         public bool CoversBand { get; private set; }
@@ -44,10 +42,27 @@ namespace OurTaiko
             if (bandItem == null && effect == null && icon == null && mask == null) return;
             Make();
             maskImage.sprite = NameplateArt.Bands.Length > 0 ? NameplateArt.Bands[0] : null;
+            var catalog = bandItem != null ? PlateComposition.ReadCatalog() : null;
+            bool authoredBand = catalog?.ContainsBand(info.bandItem) == true;
+            var parent = authoredBand ? plate : mask;
+            if (bandView.transform.parent != parent) bandView.transform.SetParent(parent, false);
+            if (!authoredBand) bandView.transform.SetAsFirstSibling();
+            if (authoredBand)
+            {
+                backingView ??= Layer("BandBacking", plate);
+                var plates = NameplateItems.CompositionPart("plates");
+                bool hasBacking = plates?.File.Find(catalog.BandBackingClip) != null;
+                backingView.gameObject.SetActive(hasBacking);
+                if (hasBacking)
+                {
+                    backingView.Use(plates, catalog.BandBackingClip);
+                }
+            }
+            else if (backingView != null) backingView.gameObject.SetActive(false);
             Use(bandView, bandItem, NameplateSlot.Band);
             Use(effectView, effect, NameplateSlot.Effect);
             Use(iconView, icon, NameplateSlot.Icon);
-            Place();
+            Place(authoredBand);
             mask.gameObject.SetActive(bandItem != null || effect != null);
         }
 
@@ -105,7 +120,7 @@ namespace OurTaiko
         }
 
         // The mask where the band is, the layers over the whole plate, in the plate's drawing order.
-        void Place()
+        void Place(bool authoredBand)
         {
             var bandRect = band.rectTransform;
             mask.anchorMin = bandRect.anchorMin;
@@ -126,17 +141,41 @@ namespace OurTaiko
                 rect.anchoredPosition = offset;
                 rect.sizeDelta = plateBox.size;
             }
-            var iconRect = (RectTransform)iconView.transform;
-            iconRect.anchorMin = Vector2.zero;
-            iconRect.anchorMax = Vector2.one;
-            iconRect.offsetMin = iconRect.offsetMax = Vector2.zero;
+            if (authoredBand)
+            {
+                FillPlate(backingView);
+                if (backingView.gameObject.activeSelf) backingView.Show(0);
+                FillPlate(bandView);
+                backingView.transform.SetAsLastSibling();
+                bandView.transform.SetAsLastSibling();
+                mask.SetAsLastSibling();
+                // Above the standard outline, below the badge, rank and text.
+                int position = outline.GetSiblingIndex() + 1;
+                backingView.transform.SetSiblingIndex(position);
+                bandView.transform.SetSiblingIndex(position + 1);
+                mask.SetSiblingIndex(position + 2);
+            }
+            FillPlate(iconView);
             PlaceIcon();
+        }
+
+        static void FillPlate(OtanimView view)
+        {
+            var rect = (RectTransform)view.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
         }
 
         void PlaceIcon()
         {
             if (foregroundIcon) iconView.transform.SetAsLastSibling();
-            else iconView.transform.SetSiblingIndex(outline.GetSiblingIndex() + 1);
+            else
+            {
+                var anchor = bandView.transform.parent == plate ? (Transform)mask : outline;
+                iconView.transform.SetAsLastSibling();
+                iconView.transform.SetSiblingIndex(anchor.GetSiblingIndex() + 1);
+            }
         }
 
         static RectTransform Child(string name, Transform parent)

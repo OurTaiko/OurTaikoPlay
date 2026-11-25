@@ -188,6 +188,29 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void CatalogBandShowsItsBackingAndOverflowWhileLooseLayersStayMasked()
+        {
+            WhiteArt();
+            NameplatePreviewWindow.InstallCollection();
+            Item(NameplateSlot.Band, "loose", 250);
+            Item(NameplateSlot.Effect, "overlay", 250);
+            using var preview = new NameplatePreview();
+            var info = Plain();
+            info.bandItem = "band/lumen-title-aprilfool2025_01";
+            preview.Show(info, 0);
+            var layers = preview.Plate.Layers;
+            Assert.That(layers.BandView.transform.parent, Is.EqualTo(preview.Plate.transform));
+            Assert.That(Pixel(preview, 300, 45).maxColorComponent, Is.LessThan(0.15f));
+            info.bandItem = "band/loose";
+            info.effectItem = "effect/overlay";
+            preview.Show(info, 0);
+            Assert.That(layers.BandView.transform.parent, Is.EqualTo(layers.Mask));
+            Assert.That(layers.EffectView.transform.parent, Is.EqualTo(layers.Mask));
+            Assert.That(layers.BandView.transform.GetSiblingIndex(), Is.LessThan(layers.EffectView.transform.GetSiblingIndex()));
+            Assert.That(preview.Plate.transform.Find("BandBacking").gameObject.activeSelf, Is.False);
+        }
+
+        [Test]
         public void FullCollectionSupportsEveryLayoutAndReturnsToStandard()
         {
             NameplatePreviewWindow.InstallCollection();

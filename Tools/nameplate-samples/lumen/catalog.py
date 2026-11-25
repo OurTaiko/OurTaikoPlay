@@ -68,6 +68,8 @@ def export_catalog(layout, output, encoder, Item, compose):
                 clip = f"{name}/{c['depth']}"
                 draws = layout.graphic(child, (child,), mat, color, add, c["blend"])
                 base.clip(clip, [draws])
+                if name == "1p_shougou" and child == 608:
+                    catalog["bandBackingClip"] = clip
                 rows.append(dict(role="base", clip=clip))
     save(base, "composition/plates")
 

@@ -17,11 +17,18 @@ namespace OurTaiko
         {
             public readonly JObject States, Titles, AiTitles;
             public readonly string[] Blank;
+            readonly HashSet<string> bandItems = new HashSet<string>(StringComparer.Ordinal);
+            public bool ContainsBand(string id) => bandItems.Contains(id);
+            public readonly string BandBackingClip;
             internal Catalog(JObject data)
             {
                 States = data["states"] as JObject ?? throw new InvalidDataException("Missing states");
                 Titles = data["titles"] as JObject ?? throw new InvalidDataException("Missing titles");
                 AiTitles = data["aiTitles"] as JObject ?? throw new InvalidDataException("Missing AI titles");
+                foreach (var option in Titles.Properties()) bandItems.Add((string)option.Value);
+                foreach (var option in AiTitles.Properties()) bandItems.Add((string)option.Value);
+                // Older installed Lumen catalogs already contain this clip in plates.otanim.
+                BandBackingClip = (string)data["bandBackingClip"] ?? "1p_shougou/4";
                 Blank = data["blank"]?.ToObject<string[]>() ?? throw new InvalidDataException("Missing blank labels");
             }
         }
@@ -108,7 +115,8 @@ namespace OurTaiko
                     case "plate_player_no":
                         string state = StateFor(info, side);
                         bool second = state.StartsWith("2p", StringComparison.Ordinal) || !state.StartsWith("1p", StringComparison.Ordinal) && side == 1;
-                        Picture(NameplateItems.CompositionPart("badges"), second ? "2p" : "1p"); break;
+                        string badge = info.plateBadge is "1p" or "2p" ? info.plateBadge : second ? "2p" : "1p";
+                        Picture(NameplateItems.CompositionPart("badges"), badge); break;
                     case "blank_instance": Picture(NameplateItems.CompositionPart("blank"), info.plateBlank ?? "off"); break;
                     case "dani":
                         string ring = info.DanComboTier switch { 2 => "donfull", 1 => "full", _ => "clear" };

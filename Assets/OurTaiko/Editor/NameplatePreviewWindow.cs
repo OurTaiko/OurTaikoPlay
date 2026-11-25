@@ -20,7 +20,7 @@ namespace OurTaiko.Editor
         [SerializeField] int dan = 10, combo = 1, titleBackground, side;
         [SerializeField] bool gold, rainbow;
         [SerializeField] string bandItem = "", effectItem = "", iconItem = "";
-        [SerializeField] string plateState = "", plateTitle = "wood", plateAiTitle = "wood", plateBlank = "off";
+        [SerializeField] string plateState = "", plateTitle = "wood", plateAiTitle = "wood", plateBlank = "off", plateBadge = "auto";
         [SerializeField] int scale = 2;
         [SerializeField] float speed = 1;
         [SerializeField] bool paused;
@@ -117,7 +117,7 @@ namespace OurTaiko.Editor
             bandItem = bandItem,
             effectItem = effectItem,
             iconItem = iconItem,
-            plateState = plateState, plateTitle = plateTitle, plateAiTitle = plateAiTitle, plateBlank = plateBlank,
+            plateState = plateState, plateTitle = plateTitle, plateAiTitle = plateAiTitle, plateBlank = plateBlank, plateBadge = plateBadge,
         };
 
         void Apply()
@@ -181,15 +181,6 @@ namespace OurTaiko.Editor
 
             var catalog = PlateComposition.ReadCatalog();
             bool layersChanged = false;
-            if (catalog == null || string.IsNullOrEmpty(plateState))
-            {
-                EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel);
-                EditorGUI.BeginChangeCheck();
-                bandItem = Slot("Band", NameplateSlot.Band, bandItem);
-                effectItem = Slot("Effect", NameplateSlot.Effect, effectItem);
-                iconItem = Slot("Icon", NameplateSlot.Icon, iconItem);
-                layersChanged = EditorGUI.EndChangeCheck();
-            }
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button(new GUIContent("Items folder", NameplateItems.Folder)))
@@ -213,40 +204,58 @@ namespace OurTaiko.Editor
             if (catalog != null)
             {
                 plateState = Select("Layout", plateState, new[] { "", "auto" }.Concat(catalog.States.Properties().Select(p => p.Name)));
-                if (!string.IsNullOrEmpty(plateState))
-                {
-                    plateTitle = Select("Title band", plateTitle, catalog.Titles.Properties().Select(p => p.Name));
-                    plateAiTitle = Select("AI title band", plateAiTitle, catalog.AiTitles.Properties().Select(p => p.Name));
-                    plateBlank = Select("Blank", plateBlank, catalog.Blank);
-                    if (GUILayout.Button("Load source text"))
-                    {
-                        var state = PlateComposition.StateFor(Info(), side);
-                        foreach (var row in catalog.States[state])
-                        {
-                            if ((string)row["role"] == "text_name") playerName = (string)row["sample"];
-                            if ((string)row["role"] == "text_title") title = (string)row["sample"];
-                        }
-                        layersChanged = true;
-                    }
-                }
             }
             playerName = EditorGUILayout.TextField("Name", playerName);
-            title = EditorGUILayout.TextField(new GUIContent("Title", "Empty, with no 段位 either, is the coin plate: no band, so no layers."), title);
-            var dans = new[] { "none" }.Concat(Enumerable.Range(PlayerInfo.DanFirst, PlayerInfo.DanCount - PlayerInfo.DanFirst).Select(i => i.ToString())).ToArray();
-            int danAt = dan >= PlayerInfo.DanFirst && dan < PlayerInfo.DanCount ? dan - PlayerInfo.DanFirst + 1 : 0;
-            danAt = EditorGUILayout.Popup(new GUIContent("段位", "PlayerInfo.dan: 6 五級 … 24 達人."), danAt, dans);
-            dan = danAt == 0 ? -1 : danAt - 1 + PlayerInfo.DanFirst;
-            using (new EditorGUI.DisabledScope(dan < 0))
+            title = EditorGUILayout.TextField(new GUIContent("Title", "Empty, with no 段位 either, is the coin plate."), title);
+            side = EditorGUILayout.Popup("Player side", side, new[] { "1P", "2P" });
+
+            EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel);
+            var rows = catalog?.States[PlateComposition.StateFor(Info(), side) ?? ""];
+            bool standard = rows == null;
+            bool Has(string role) => rows != null && rows.Any(row => (string)row["role"] == role);
+            if (standard)
             {
-                combo = EditorGUILayout.Popup("Ring", combo, new[] { "銀 (silver)", "金 (full combo)", "虹 (all 良)" });
-                gold = EditorGUILayout.Toggle("Gold pass", gold);
+                bandItem = Slot("Band", NameplateSlot.Band, bandItem);
+                effectItem = Slot("Effect", NameplateSlot.Effect, effectItem);
+                iconItem = Slot("Icon", NameplateSlot.Icon, iconItem);
+            }
+            else
+            {
+                if (Has("title_instance"))
+                    plateTitle = Select("Title band", plateTitle, catalog.Titles.Properties().Select(p => p.Name));
+                if (Has("ai_title_instance"))
+                    plateAiTitle = Select("AI title band", plateAiTitle, catalog.AiTitles.Properties().Select(p => p.Name));
+                if (Has("plate_player_no"))
+                    plateBadge = Select("Badge", plateBadge, new[] { "auto", "1p", "2p" });
+                if (Has("blank_instance"))
+                    plateBlank = Select("Blank", plateBlank, catalog.Blank);
+                if ((Has("text_name") || Has("text_title")) && GUILayout.Button("Load source text"))
+                {
+                    foreach (var row in rows)
+                    {
+                        if ((string)row["role"] == "text_name") playerName = (string)row["sample"];
+                        if ((string)row["role"] == "text_title") title = (string)row["sample"];
+                    }
+                    layersChanged = true;
+                }
+            }
+            if (standard || plateState == "auto" || Has("dani") || Has("rankup_instance"))
+            {
+                var dans = new[] { "none" }.Concat(Enumerable.Range(PlayerInfo.DanFirst, PlayerInfo.DanCount - PlayerInfo.DanFirst).Select(i => i.ToString())).ToArray();
+                int danAt = dan >= PlayerInfo.DanFirst && dan < PlayerInfo.DanCount ? dan - PlayerInfo.DanFirst + 1 : 0;
+                danAt = EditorGUILayout.Popup(new GUIContent("段位", "PlayerInfo.dan: 6 五級 … 24 達人."), danAt, dans);
+                dan = danAt == 0 ? -1 : danAt - 1 + PlayerInfo.DanFirst;
+                using (new EditorGUI.DisabledScope(dan < 0))
+                {
+                    combo = EditorGUILayout.Popup("Ring", combo, new[] { "銀 (silver)", "金 (full combo)", "虹 (all 良)" });
+                    gold = EditorGUILayout.Toggle("Gold pass", gold);
+                }
             }
             if (catalog == null || string.IsNullOrEmpty(plateState))
             {
                 titleBackground = EditorGUILayout.IntSlider(new GUIContent("Built-in band", "The game's own bands, under no band item."), titleBackground, 0, PlayerInfo.TitleBackgroundCount - 1);
                 rainbow = EditorGUILayout.Toggle("Rainbow band", rainbow);
             }
-            side = EditorGUILayout.Popup("Badge", side, new[] { "1P", "2P" });
             if (EditorGUI.EndChangeCheck() || layersChanged) Apply();
 
             EditorGUILayout.Space();
@@ -267,7 +276,7 @@ namespace OurTaiko.Editor
                     Draw();
                 }
             }
-            if (!string.IsNullOrEmpty(plateState) && catalog != null)
+            if (Has("rankup_instance"))
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
@@ -326,6 +335,11 @@ namespace OurTaiko.Editor
                 choices.Add(name + " (missing)");
                 at = choices.Count - 1;
             }
+            if (names.Count == 0 && at == 0)
+            {
+                EditorGUILayout.LabelField(label, "No " + label.ToLowerInvariant() + " items installed");
+                return id;
+            }
             int picked = EditorGUILayout.Popup(label, at, choices.ToArray());
             if (picked == at) return id;
             return picked == 0 || picked > names.Count ? "" : NameplateSlots.Id(slot, choices[picked]);
@@ -372,6 +386,7 @@ namespace OurTaiko.Editor
             info.plateTitle = plateTitle;
             info.plateAiTitle = plateAiTitle;
             info.plateBlank = plateBlank;
+            info.plateBadge = plateBadge;
             if (EditorApplication.isPlaying) PlayerInfoController.EnsureInstance().Set(info);
             else File.WriteAllText(PlayerFile, info.ToJson());
             ShowNotification(new GUIContent("1P now wears these layers"));
@@ -394,6 +409,7 @@ namespace OurTaiko.Editor
             plateTitle = info.plateTitle;
             plateAiTitle = info.plateAiTitle;
             plateBlank = info.plateBlank;
+            plateBadge = info.plateBadge;
             Apply();
         }
 

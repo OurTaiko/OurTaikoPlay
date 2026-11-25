@@ -15,6 +15,7 @@ func TestCompleteCollection(t *testing.T) {
 			Width, Size float64
 			RGBA        []float64
 		}
+		BandBackingClip      string
 		Titles, AiTitles     map[string]string
 		Ranks, Badges, Blank []string
 	}
@@ -28,7 +29,21 @@ func TestCompleteCollection(t *testing.T) {
 	if len(catalog.States) != 36 || len(catalog.Titles) != 88 || len(catalog.AiTitles) != 8 || len(catalog.Ranks) != 114 {
 		t.Fatal("incomplete catalog")
 	}
-	base, _ := example(t, "items/composition/plates.otanim")
+	base, renderer := example(t, "items/composition/plates.otanim")
+	backing := base.Clip(catalog.BandBackingClip)
+	if backing == nil {
+		t.Fatal("missing standard band backing")
+	}
+	pixel := (45*408 + 300) * 4
+	rgba := renderer.Draw(&backing.Frames[0], 408, 96, false)[pixel : pixel+4]
+	if rgba[3] < 0.95 || rgba[0]+rgba[1]+rgba[2] > 0.1 {
+		t.Fatal("expected opaque black divider at (300,45)", rgba)
+	}
+	band, bandRenderer := example(t, "items/"+catalog.Titles["aprilfool2025_01"]+".otanim")
+	pixels := bandRenderer.Draw(&band.Clip("idle").Frames[0], 408, 96, false)
+	if pixels[pixel+3] > 0.05 {
+		t.Fatal("April Fool band covers its divider")
+	}
 	texts := map[int]bool{}
 	for name, rows := range catalog.States {
 		if len(rows) == 0 {
