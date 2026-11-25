@@ -24,8 +24,9 @@ namespace OurTaiko.Editor
             // BuildPipeline validates Append before invoking preprocess callbacks.
             BuildPlayerWindow.RegisterBuildPlayerHandler(options =>
             {
-                if (options.target == BuildTarget.iOS && IosProjectBranding.PrepareForExport(options.locationPathName))
-                    options.options |= BuildOptions.AcceptExternalModificationsToPlayer;
+                if (options.target != BuildTarget.iOS) { BuildPlayerWindow.DefaultBuildMethods.BuildPlayer(options); return; }
+                using var export = IosProjectBranding.Export(options.locationPathName);
+                if (export.Appending) options.options |= BuildOptions.AcceptExternalModificationsToPlayer;
                 BuildPlayerWindow.DefaultBuildMethods.BuildPlayer(options);
             });
 #endif
