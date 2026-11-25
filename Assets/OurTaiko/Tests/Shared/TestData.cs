@@ -54,7 +54,10 @@ namespace OurTaiko.Tests
 
         // The fixtures stand in for the built-in servers (none: no server at all), over a fresh
         // temporary cache and with nobody signed in. The first fixture is also the account center
-        // and OurTaikoProfile. Nothing is requested until Connect.
+        // and OurTaikoProfile, and the site's root of public files (none: an address nothing
+        // answers), so a sign-in check reads no nameplate set or backdrops from the real root:
+        // plates keep the baked set, and nothing is fetched into the cache the next test deletes.
+        // Nothing is requested until Connect.
         public static void UseServers(params OnlineFixture[] fixtures)
         {
             var manager = OnlineManager.EnsureInstance();
@@ -64,6 +67,8 @@ namespace OurTaiko.Tests
             SongSelectManager.EnsureInstance().Reset();
             if (Directory.Exists(OnlineCache)) Directory.Delete(OnlineCache, true);
             manager.UseUnsaved(OnlineCache, fixtures.Select(fixture => (fixture.Name, fixture.BaseUrl)).ToArray());
+            string files = (fixtures.Length > 0 ? fixtures[0].BaseUrl : "http://127.0.0.1:9") + "/";
+            Distribution.Use(ServerConfig.Site, new FileRoot(files, files));
             if (fixtures.Length > 0)
             {
                 manager.UseAccounts(new AccountStore(null, "test"), new AccountCenter(fixtures[0].BaseUrl));
@@ -100,6 +105,7 @@ namespace OurTaiko.Tests
             TestSongs.Uninstall();
             if (File.Exists(ScorePath)) File.Delete(ScorePath);
             if (Directory.Exists(OnlineCache)) Directory.Delete(OnlineCache, true);
+            Distribution.Forget();
         }
     }
 }
