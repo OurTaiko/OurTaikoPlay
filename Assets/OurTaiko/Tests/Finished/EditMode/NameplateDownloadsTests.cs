@@ -33,6 +33,8 @@ namespace OurTaiko.Tests
         [SetUp]
         public void SetUp()
         {
+            // It publishes items of the baked set.
+            TestData.RequireBakedNameplates();
             cache = Path.Combine(Path.GetTempPath(), "OurTaikoNameplateDownloads", Guid.NewGuid().ToString("N"));
             var listed = new JObject();
             files.Clear();
@@ -71,9 +73,12 @@ namespace OurTaiko.Tests
         public void TearDown()
         {
             NameplateItems.SetChanged -= Changed;
-            site.Dispose();
+            // Neither is there when SetUp found no set to publish.
+            site?.Dispose();
+            site = null;
             TestData.UseBakedNameplates();
-            try { Directory.Delete(cache, true); } catch (IOException) { }
+            if (cache != null) try { Directory.Delete(cache, true); } catch (IOException) { }
+            cache = null;
         }
 
         static bool Reply(HttpListenerContext context, int status, byte[] body)

@@ -53,6 +53,7 @@ namespace OurTaiko.Tests
         [UnityTest, Category("SpriteRendering")]
         public IEnumerator PlaySceneShowsNameplateScoreCounterAndAutoBadge()
         {
+            TestData.RequireBakedNameplates();
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:Plate\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#START\n1111,\n1111,\n#END");
             // Exercise the set's art independently of the items in this device's Nameplate folder.
@@ -156,6 +157,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator APlateOnScreenIsDrawnWhenTheSetComes()
         {
+            TestData.RequireBakedNameplates();
             Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", plateTitle = "gold", dan = 10 });
             try
             {
@@ -186,6 +188,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator SongSelectAndResultShowNameplate()
         {
+            TestData.RequireBakedNameplates();
             Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", plateTitle = "wood", dan = 10 });
             try
             {
@@ -237,6 +240,7 @@ namespace OurTaiko.Tests
         [UnityTest, Category("SpriteRendering")]
         public IEnumerator APlayPlateWearsThePlayersLayers()
         {
+            TestData.RequireBakedNameplates();
             string folder = Path.Combine(Path.GetTempPath(), "OurTaikoNameplateFlow", System.Guid.NewGuid().ToString("N"));
             NameplateItems.UseFolder(folder);
             var view = new Rect(0, 0, NameplateLayout.Width, NameplateLayout.Height);

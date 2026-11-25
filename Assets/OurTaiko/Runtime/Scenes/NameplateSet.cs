@@ -9,7 +9,7 @@ namespace OurTaiko
     // (composition/catalog.json: the layouts and the layers each title is made of) and a file for
     // each item, by its id ("band/lumen-title-gold", "composition/plates"). The game does not carry
     // it: a player's is downloaded (Online.NameplateDownloads, each file in the object cache); the
-    // Editor's preview and the tests read the folder baked into the repository (FromFolder).
+    // Editor's preview and the tests read the baked folder (FromFolder, Baked).
     public sealed class NameplateSet
     {
         public const string CatalogId = "composition/catalog";
@@ -46,9 +46,14 @@ namespace OurTaiko
         }
 
 #if UNITY_EDITOR
-        // The set baked into the repository, which is what is published (OurTaikoNet
-        // tools/nameplate/publish-lumen.sh): the Editor's preview and the tests draw it.
+        // Where the set is baked, and published from (OurTaikoNet tools/nameplate/publish-lumen.sh):
+        // the Editor's preview and the tests draw it. It is not in the repository, which keeps the
+        // arcade's pictures out: bake it there (Tools/nameplate-samples/lumen/bake.py) or fetch the
+        // published one (fetch.py beside it).
         public static string BakedFolder => Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, "..", "Tools", "nameplate-samples", "lumen", "set"));
+
+        // The baked set; null when the project has none.
+        public static NameplateSet Baked() => File.Exists(Path.Combine(BakedFolder, CatalogId + ".json")) ? FromFolder(BakedFolder) : null;
 #endif
     }
 }

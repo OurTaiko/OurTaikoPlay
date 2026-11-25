@@ -197,6 +197,9 @@ namespace OurTaiko.Editor
                     layersChanged = true;
                 }
             }
+            if (catalog == null && !Application.isPlaying)
+                EditorGUILayout.HelpBox("No nameplate set at " + NameplateSet.BakedFolder + " (it is not in the repository), so plates are their text alone. "
+                    + "Bake it with bake.py or fetch the published one with fetch.py (Tools/nameplate-samples/lumen), then Read again.", MessageType.Info);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Plate", EditorStyles.boldLabel);

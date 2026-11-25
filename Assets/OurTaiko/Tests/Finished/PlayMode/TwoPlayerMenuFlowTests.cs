@@ -29,6 +29,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator SecondPlayerJoinsOnEntry()
         {
+            TestData.RequireBakedNameplates();
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             yield return null;
             yield return SceneManager.LoadSceneAsync(SceneSwitcher.MenuScene);

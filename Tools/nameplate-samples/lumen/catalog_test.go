@@ -11,6 +11,7 @@ import (
 )
 
 func TestCompleteCollection(t *testing.T) {
+	needSet(t)
 	var catalog struct {
 		States map[string][]struct {
 			Role, Clip  string

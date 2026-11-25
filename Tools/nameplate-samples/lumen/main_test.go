@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"reflect"
 	"testing"
@@ -9,11 +11,21 @@ import (
 	"ourtaiko.org/otanim/render"
 )
 
-// The set the bake writes and the game downloads (published from here).
+// The set the bake writes and the game downloads (published from here). It is not in the
+// repository: bake it (bake.py) or fetch the published one (fetch.py).
 const collection = "set/"
+
+// needSet skips a test when there is no set to check.
+func needSet(t *testing.T) {
+	t.Helper()
+	if _, err := os.Stat(collection + "composition/catalog.json"); errors.Is(err, fs.ErrNotExist) {
+		t.Skip("no set in " + collection + ": bake it (bake.py) or fetch the published one (fetch.py)")
+	}
+}
 
 func example(t *testing.T, path string) (*otanim.File, *render.Renderer) {
 	t.Helper()
+	needSet(t)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
+using NUnit.Framework;
 using OurTaiko.Online;
 using UnityEngine;
 
@@ -28,13 +29,23 @@ namespace OurTaiko.Tests
                 bass?.GetProperty(volume)?.SetValue(null, 0);
         }
 
-        // Plates are drawn from the set baked into the repository, as a player's are from the one
-        // a sign-in check downloads (the game carries none). A test that uses another set, or none,
-        // puts this one back.
+        // Plates are drawn from the baked set, as a player's are from the one a sign-in check
+        // downloads (the game carries none). Without one in the project (it is not in the
+        // repository) plates are their text alone, as a player's before the first download, and a
+        // test that looks at the set's pictures is ignored (RequireBakedNameplates). A test that uses
+        // another set, or none, puts this one back.
         public static void UseBakedNameplates()
         {
 #if UNITY_EDITOR
-            NameplateItems.Use(NameplateSet.FromFolder(NameplateSet.BakedFolder));
+            NameplateItems.Use(NameplateSet.Baked());
+#endif
+        }
+
+        public static void RequireBakedNameplates()
+        {
+#if UNITY_EDITOR
+            if (NameplateSet.Baked() == null)
+                Assert.Ignore("No nameplate set at " + NameplateSet.BakedFolder + ": bake it or fetch the published one (Tools/nameplate-samples/lumen/fetch.py).");
 #endif
         }
 

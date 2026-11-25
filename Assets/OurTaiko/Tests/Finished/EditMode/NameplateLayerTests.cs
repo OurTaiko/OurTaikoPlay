@@ -75,6 +75,7 @@ namespace OurTaiko.Tests
         [Test]
         public void AnItemIsReadFromItsSlotsFolderOnlyWhenDrawnOnThePlate()
         {
+            TestData.RequireBakedNameplates();
             Item(NameplateSlot.Band, "b", 0);
             Item(NameplateSlot.Band, "a", 0);
             Item(NameplateSlot.Effect, "wide", new Rect(0, 0, 500, 96), 0);
@@ -120,6 +121,7 @@ namespace OurTaiko.Tests
         [Test]
         public void AWornBandTakesTheBandsPlaceAndItAndItsEffectStayInsideTheBand()
         {
+            TestData.RequireBakedNameplates();
             Item(NameplateSlot.Band, "moving", 250, 200);
             Item(NameplateSlot.Effect, "still", 250);
             using var preview = new NameplatePreview { Background = Color.black };
@@ -149,6 +151,7 @@ namespace OurTaiko.Tests
         [Test]
         public void ATriggeredClipStartsAtItsOwnFirstFrameAndHoldsItsEnd()
         {
+            TestData.RequireBakedNameplates();
             string path = NameplateItems.PathOf(NameplateSlot.Icon, "transition");
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, OtanimFixture.Build(PlateView,
@@ -170,6 +173,7 @@ namespace OurTaiko.Tests
         [Test]
         public void CatalogBandShowsItsBackingAndOverflowWhileLooseLayersStayMasked()
         {
+            TestData.RequireBakedNameplates();
             Item(NameplateSlot.Band, "loose", 250);
             Item(NameplateSlot.Effect, "overlay", 250);
             using var preview = new NameplatePreview();
@@ -226,6 +230,26 @@ namespace OurTaiko.Tests
                 Assert.That(plate.title.text, Is.EqualTo("Taiko Master"));
                 Assert.That(plate.title.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(226.5f, -32)));
                 Assert.That(plate.title.color, Is.EqualTo(Color.white), "No band under it: white, as the name.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvas);
+                TestData.UseBakedNameplates();
+            }
+        }
+
+        [Test]
+        public void APlateOfTextAloneIsDrawnInFullWithASet()
+        {
+            TestData.RequireBakedNameplates();
+            var canvas = new GameObject("Canvas", typeof(Canvas));
+            try
+            {
+                NameplateItems.Use(null);
+                var plate = Object.Instantiate(Resources.Load<NameplateView>(NameplateView.Resource), canvas.transform);
+                var info = new PlayerInfo { name = "Player", title = "Taiko Master", plateTitle = "gold", dan = 10 };
+                plate.Pin(info, 0);
+                Assert.That(plate.title.color, Is.EqualTo(Color.white));
 
                 TestData.UseBakedNameplates();
                 plate.Pin(info, 0);
@@ -245,6 +269,7 @@ namespace OurTaiko.Tests
         [TestCase(24, 2, true)]
         public void StandardAndAutoUseTheSameRankArtAtTheSameScale(int rank, int combo, bool gold)
         {
+            TestData.RequireBakedNameplates();
             using var preview = new NameplatePreview();
             var info = new PlayerInfo { dan = rank, danCombo = combo, gold = gold };
             preview.Show(info, 0);
@@ -265,6 +290,7 @@ namespace OurTaiko.Tests
         [Test]
         public void FullCollectionSupportsEveryLayoutAndReturnsToStandard()
         {
+            TestData.RequireBakedNameplates();
             var catalog = PlateComposition.ReadCatalog();
             Assert.That(catalog.States.Count, Is.EqualTo(36));
             Assert.That(catalog.Titles.Count, Is.EqualTo(88));
@@ -306,6 +332,7 @@ namespace OurTaiko.Tests
         [Test]
         public void AnIconIsDrawnOverTheOutlineAndOutOfTheBand()
         {
+            TestData.RequireBakedNameplates();
             Item(NameplateSlot.Icon, "badge", 250);
             using var preview = new NameplatePreview { Background = Color.black };
             var info = Plain();
@@ -336,6 +363,7 @@ namespace OurTaiko.Tests
         [Test]
         public void AllBuiltInItemsLoadWithAnEmptyUserFolder()
         {
+            TestData.RequireBakedNameplates();
             var catalog = PlateComposition.ReadCatalog();
             foreach (var slot in NameplateSlots.All)
             {
@@ -350,6 +378,7 @@ namespace OurTaiko.Tests
         [Test]
         public void APreviewLeavesHiddenLayersOutOfThePictureOnly()
         {
+            TestData.RequireBakedNameplates();
             Item(NameplateSlot.Icon, "badge", 250);
             using var preview = new NameplatePreview { Background = Color.black };
             var info = Plain();
@@ -367,6 +396,7 @@ namespace OurTaiko.Tests
         [Test]
         public void APreviewCanShowATitlesLayersWithoutTheRestOfThePlate()
         {
+            TestData.RequireBakedNameplates();
             using var preview = new NameplatePreview { Background = Color.black };
             preview.Show(new PlayerInfo { name = "Player", title = "Title", plateTitle = "toho_y22_1" }, 0);
             // (79, 72) is the 1P badge, (200, 25) the band.
@@ -380,6 +410,7 @@ namespace OurTaiko.Tests
         [Test]
         public void TitleSheetsShowEachTitleAsAPlayerWearsItWithItsNameInTheTitle()
         {
+            TestData.RequireBakedNameplates();
             var catalog = PlateComposition.ReadCatalog();
             using var preview = new NameplatePreview();
             preview.Show(NameplatePreview.TitleInfo("crown_gold", false), 0);
@@ -398,6 +429,7 @@ namespace OurTaiko.Tests
         [Test]
         public void ThePreviewSaysWhichTitlesAnItemComesFrom()
         {
+            TestData.RequireBakedNameplates();
             var catalog = PlateComposition.ReadCatalog();
             Assert.That(NameplatePreview.UsedBy(catalog, NameplateSlot.Band, "band/lumen-title-toho_y22"),
                 Is.EqualTo(new[] { "toho_y22_1", "toho_y22_2", "toho_y22_3", "toho_y22_4", "toho_y22_5" }));
@@ -412,6 +444,7 @@ namespace OurTaiko.Tests
         [Test]
         public void ThePreviewDescribesWhatThePlateWears()
         {
+            TestData.RequireBakedNameplates();
             string auto = NameplatePreviewWindow.Describe(new PlayerInfo { name = "Player", title = "Title", plateTitle = "gold" }, 0);
             Assert.That(auto, Does.Contain("Title: gold").And.Contain("effect: effect/lumen-title-gold").And.Contain("runs outside the band").And.Contain("icon: none"));
 
@@ -431,6 +464,7 @@ namespace OurTaiko.Tests
         [Test]
         public void APlateFollowingTheSiteWearsItsTitlesOwnLayers()
         {
+            TestData.RequireBakedNameplates();
             using var preview = new NameplatePreview();
             var info = new PlayerInfo { name = "Player", title = "Title", profileBand = "wood" };
             info.SetProfileLayers(new TitleParts("band/lumen-title-toho_y22", "effect/lumen-title-ai_3", "icon/lumen-title-crown_gold"));
@@ -458,6 +492,7 @@ namespace OurTaiko.Tests
         [Test]
         public void EveryTitleIsMadeOfBuiltInItemsAndNeverLosesItsBand()
         {
+            TestData.RequireBakedNameplates();
             var catalog = PlateComposition.ReadCatalog();
             foreach (var titles in new[] { catalog.Titles, catalog.AiTitles })
                 foreach (var pair in titles)
@@ -496,6 +531,7 @@ namespace OurTaiko.Tests
         [TestCase("ai_3", true, false)]
         public void ATitleIsDrawnAsItsBandEffectAndIcon(string title, bool effect, bool icon)
         {
+            TestData.RequireBakedNameplates();
             using var preview = new NameplatePreview();
             var info = new PlayerInfo { name = "Player", title = "Title", plateTitle = title };
             preview.Show(info, 0);
@@ -525,6 +561,7 @@ namespace OurTaiko.Tests
         [Test]
         public void ATitleWithoutABadgePlateStillShowsItsIcon()
         {
+            TestData.RequireBakedNameplates();
             using var preview = new NameplatePreview();
             // newentry_shougou has no 1P/2P badge: the icon goes right after the band.
             var info = new PlayerInfo { name = "Player", title = "Title", plateTitle = "crown_gold", plateState = "newentry_shougou" };
@@ -538,6 +575,7 @@ namespace OurTaiko.Tests
         [Test]
         public void ARankUpIsPutBackByIdleEvenWhenTheTitleWearsAnIcon()
         {
+            TestData.RequireBakedNameplates();
             using var preview = new NameplatePreview();
             var info = new PlayerInfo { name = "Player", title = "Title", plateTitle = "crown_gold", dan = 24 };
             preview.Show(info, 0);

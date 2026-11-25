@@ -36,9 +36,15 @@ namespace OurTaiko.Tests
             RewardOverlay.Instance?.Reset();
             RewardInbox.Shared.Clear();
             if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            // An empty scene in place of the test's; a test that loaded none (ignored at once) is
+            // still in the one the test before it left.
+            const string empty = "RewardOverlayTearDown";
             var previous = SceneManager.GetActiveScene();
-            SceneManager.SetActiveScene(SceneManager.CreateScene("RewardOverlayTearDown"));
-            yield return SceneManager.UnloadSceneAsync(previous);
+            if (previous.name != empty)
+            {
+                SceneManager.SetActiveScene(SceneManager.CreateScene(empty));
+                yield return SceneManager.UnloadSceneAsync(previous);
+            }
             fixture.Dispose();
             TestData.UseServers();
             L10n.SetLanguage(language);
@@ -62,6 +68,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator RewardsComeOneAtATimeOverAScreenThatAllowsThem()
         {
+            TestData.RequireBakedNameplates();
             Assert.That(Overlay, Is.Not.Null, "The overlay is there from the start.");
             L10n.SetLanguage("zh");
             long title = fixture.GiveReward("don", Reward.TitleKind, new JObject

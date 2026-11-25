@@ -13,9 +13,9 @@ namespace OurTaiko.Editor
 {
     // A nameplate outside play: the game's own Nameplate prefab in a preview scene of its own,
     // wearing what it is given (a PlayerInfo: its layout and title, or its own band, effect and icon
-    // items) at a time the caller moves on, drawn to a texture. It draws the set baked into the
-    // repository (NameplateSet.BakedFolder), which is what is published, rather than the one a
-    // play downloaded. NameplatePreviewWindow shows it;
+    // items) at a time the caller moves on, drawn to a texture. It draws the baked set
+    // (NameplateSet.BakedFolder, not in the repository), which is what is published, rather than
+    // the one a play downloaded. NameplatePreviewWindow shows it;
     // batch: -executeMethod OurTaiko.Editor.NameplatePreview.RenderBatch with NAMEPLATE_PREVIEW_DIR
     // set (and NAMEPLATE_ITEMS_DIR for another items folder) writes the sheets RenderAll makes.
     public sealed class NameplatePreview : IDisposable
@@ -92,13 +92,13 @@ namespace OurTaiko.Editor
             }
         }
 
-        // The baked set, read again when `again` or when another set has been used since (a play).
-        // During a play the game's own set stays.
+        // The baked set, read again when `again` or when another set has been used since (a play);
+        // without one, plates are their text alone. During a play the game's own set stays.
         public static void UseBakedSet(bool again = false)
         {
             if (Application.isPlaying || (!again && baked != null && NameplateItems.Set == baked)) return;
-            baked = NameplateSet.FromFolder(NameplateSet.BakedFolder);
-            NameplateItems.Use(baked);
+            baked = NameplateSet.Baked();
+            if (baked != null || NameplateItems.Set != null) NameplateItems.Use(baked);
         }
 
         static NameplateSet baked;

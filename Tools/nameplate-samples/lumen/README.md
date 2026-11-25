@@ -2,9 +2,24 @@
 
 这套资源从 `name_plate.nulm` 解出的 `layout.json` 和 `name_plate.nutexb` 解出的 `atlas.png` 重建。图形和动画均使用标准 v1 `.otanim`。完整名牌的 `composition/catalog.json` 记录每种布局的绘制顺序、动态文字框以及可替换部件。
 
+## 取得这套素材
+
+烘焙结果 `set/` 不进仓库（被 `.gitignore` 忽略），街机的图不放进公开仓库，同舞台素材的 `Assets/OurTaiko/StageSource`。放进来有两种方式：
+
+- 有解出的街机名牌：用 `bake.py` 烘焙，见「重新生成和验证」。
+- 没有：取已发布的那套，也就是玩家下载的那套。目标文件夹必须不存在或为空，不会覆盖烘焙出的：
+
+  ```sh
+  python3 -I Tools/nameplate-samples/lumen/fetch.py Tools/nameplate-samples/lumen/set
+  ```
+
+  它读分发根上的 `nameplate/lumen.json`，逐个核对大小和 SHA-256，按烘焙的布局写成 `<文件夹>/<名字>.otanim` 和 `composition/catalog.json`。
+
+没有 `set/` 时，Nameplate Preview 只画文字，并提示上面两种方式；Unity 里要看这套图的测试会被忽略（Ignored），Go 测试会跳过。CI 的 Test 工作流在跑测试前先用 `fetch.py` 取线上那套。
+
 ## 在 Unity 里查看
 
-1. 打开 **OurTaiko → Nameplate Preview**。预览读仓库里烘焙好的这套（`Tools/nameplate-samples/lumen/set`，发布出去的也是它）。游戏不带这套素材：每次登录检查时从分发根读 `nameplate/lumen.json`，缺的文件按哈希下载进对象缓存，之后离线也能用；一次也没下载成功时，名牌只有名字和称号文字。
+1. 打开 **OurTaiko → Nameplate Preview**。预览读本地的 `Tools/nameplate-samples/lumen/set`（发布出去的也是它）。游戏不带这套素材：每次登录检查时从分发根读 `nameplate/lumen.json`，缺的文件按哈希下载进对象缓存，之后离线也能用；一次也没下载成功时，名牌只有名字和称号文字。
 2. **Layout** 选 `auto` 时，座位、称号和段位决定主布局。例如 2P 同时有称号和段位时使用 `2p_shougou_dani`。也可以直接选择 36 种源布局中的任意一种，包括 AI、新玩家、角色联动、Boss 和愚人节。选 **custom** 可在相同的组合布局上分别装备 Band、Effect 和 Icon（见第 3 条）。
 3. **Layers** 随布局显示可替换的部件。**Badge** 可跟随布局，也可单独指定 1P 或 2P。**Title** 提供 88 种普通称号，**AI title** 提供 8 种 AI 称号，按系列分子菜单（`toho ▸ toho_y22_3`），◀ ▶ 逐个切换。下面三行列出名牌为这个称号戴的底条、特效和角标，以及每个部件还出现在哪些称号里、特效是否裁在带内；**Customize** 切到 custom 布局并把这三个部件填进三个槽，方便只换其中一个。**Blank** 有 `off`、`on`、`on_ai` 三个状态。姓名和称号可直接编辑，**Load source text** 可读入当前布局的源占位文字。文字使用游戏自己的 UI 字体。
    custom 布局里 Band、Effect、Icon 的菜单分 **Set**（这套的部件，按来自的称号系列分组）和 **Items folder**（自己放进文件夹的文件），◀ ▶ 逐个切换，下方注明出处；**From title** 加 **Wear** 一次填满三个槽。
@@ -43,7 +58,7 @@
 
 ## 重新生成和验证
 
-需要 Python 3、Pillow、Go，以及与 OurTaikoPlay 同级的 otanim 仓库。从 OurTaikoPlay 根目录执行以下命令。将输出指向空目录即可与仓库内的成品做逐文件比对。
+需要 Python 3、Pillow、Go，以及与 OurTaikoPlay 同级的 otanim 仓库。从 OurTaikoPlay 根目录执行以下命令。要与已发布的那套逐文件比对，可以用 `fetch.py` 把它取到另一个空目录再 `diff -r`。
 
 ```sh
 python3 Tools/nameplate-samples/lumen/bake.py ~/Downloads/name_plate_decoded Tools/nameplate-samples/lumen/set
@@ -54,7 +69,7 @@ Go 测试用参考解码器和软件渲染器检查全部称号的部件（各�
 
 ## 发布
 
-游戏读的是分发根上的这套，改了 `set/` 要发布才会到玩家手里。在 OurTaikoNet 仓库执行（需要 `aws login`，有 `ourtaiko-public` 桶和 CloudFront 分配 `E29SNWDH0GYCHC` 的写权限）：
+游戏读的是分发根上的这套，改了 `set/` 要发布才会到玩家手里；`set/` 不进仓库，发布出去的就是它的记录，仓库里只提交烘焙工具的改动。在 OurTaikoNet 仓库执行（需要 `aws login`，有 `ourtaiko-public` 桶和 CloudFront 分配 `E29SNWDH0GYCHC` 的写权限）：
 
 ```sh
 tools/nameplate/publish-lumen.sh <OurTaikoPlay>/Tools/nameplate-samples/lumen/set
