@@ -231,6 +231,39 @@ namespace OurTaiko.Tests
                 Assert.That(System.Array.Find(labels, text => text.text == title).rectTransform.anchoredPosition, Is.EqualTo(titleCenter));
         }
 
+        [TestCase(6, 0, false)]
+        [TestCase(10, 1, false)]
+        [TestCase(24, 2, true)]
+        public void StandardAndAutoUseTheSameRankArtAtTheSameScale(int rank, int combo, bool gold)
+        {
+            WhiteArt();
+            NameplatePreviewWindow.InstallCollection();
+            using var preview = new NameplatePreview();
+            var info = new PlayerInfo { dan = rank, danCombo = combo, gold = gold };
+            preview.Show(info, 0);
+            var plate = preview.Plate;
+            var standard = plate.transform.Find("Rank emblem").GetComponent<OurTaiko.Chara.OtanimView>();
+            Assert.That(plate.danBackground.enabled && !plate.dan.enabled && !plate.danRing.enabled);
+            var corners = new Vector3[4];
+            ((RectTransform)standard.transform).GetWorldCorners(corners);
+
+            info.plateState = "auto";
+            preview.Show(info, 0);
+            Assert.That(standard.gameObject.activeSelf, Is.False);
+            var group = plate.transform.Find("Complete nameplate");
+            var views = group.GetComponentsInChildren<OurTaiko.Chara.OtanimView>();
+            var match = System.Array.Find(views, v => v.asset == standard.asset && v.clip == standard.clip);
+            Assert.That(match, Is.Not.Null);
+            var autoCorners = new Vector3[4];
+            ((RectTransform)match.transform).GetWorldCorners(autoCorners);
+            Assert.That(autoCorners, Is.EqualTo(corners));
+
+            info.plateState = "";
+            info.dan = -1;
+            preview.Show(info, 0);
+            Assert.That(standard.gameObject.activeSelf || plate.danBackground.enabled, Is.False);
+        }
+
         [Test]
         public void FullCollectionSupportsEveryLayoutAndReturnsToStandard()
         {

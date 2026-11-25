@@ -92,6 +92,14 @@ namespace OurTaiko
             return level < 5 ? (5-level) + "kyuu" : (level-4) + "dan";
         }
 
+        internal static OtanimAsset RankAsset(PlayerInfo info, out string clip)
+        {
+            string ring = info.DanComboTier switch { 2 => "donfull", 1 => "full", _ => "clear" };
+            string rank = RankLabel(info.dan) ?? "5kyuu";
+            clip = rank + (info.gold ? "_gold" : "_red");
+            return NameplateItems.CompositionPart("dan-" + ring);
+        }
+
         public void Hide()
         {
             root.gameObject.SetActive(false);
@@ -119,9 +127,8 @@ namespace OurTaiko
                         Picture(NameplateItems.CompositionPart("badges"), badge); break;
                     case "blank_instance": Picture(NameplateItems.CompositionPart("blank"), info.plateBlank ?? "off"); break;
                     case "dani":
-                        string ring = info.DanComboTier switch { 2 => "donfull", 1 => "full", _ => "clear" };
-                        string rank = RankLabel(info.dan) ?? "5kyuu";
-                        Picture(NameplateItems.CompositionPart("dan-" + ring), rank + (info.gold ? "_gold" : "_red")); break;
+                        var emblem = RankAsset(info, out string rankClip);
+                        Picture(emblem, rankClip); break;
                     case "rankup_instance":
                         rankup = Picture(NameplateItems.Load(NameplateSlot.Icon, "icon/lumen-rankup"), running ?? "idle"); break;
                     case "text_title":
@@ -145,16 +152,22 @@ namespace OurTaiko
             Picture(NameplateItems.Load(NameplateSlot.Band, id), "idle");
         }
 
+        internal static OtanimView CreatePicture(string name, RectTransform parent)
+        {
+            var rect = SkinUi.Rect(name, parent, NameplateLayout.Width, NameplateLayout.Height);
+            rect.pivot = new Vector2(0, 1);
+            rect.anchoredPosition = Vector2.zero;
+            rect.gameObject.layer = parent.gameObject.layer;
+            rect.gameObject.hideFlags = HideFlags.DontSave;
+            return rect.gameObject.AddComponent<OtanimView>();
+        }
+
         OtanimView Picture(OtanimAsset asset, string clip)
         {
             if (asset?.File.Find(clip) == null) return null;
             if (pictureCount == pictures.Count)
             {
-                var rect = SkinUi.Rect("Animation", root, NameplateLayout.Width, NameplateLayout.Height);
-                rect.pivot = new Vector2(0, 1);
-                rect.anchoredPosition = Vector2.zero;
-                rect.gameObject.layer = root.gameObject.layer;
-                pictures.Add(rect.gameObject.AddComponent<OtanimView>());
+                pictures.Add(CreatePicture("Animation", root));
             }
             var view = pictures[pictureCount++];
             view.gameObject.SetActive(true);

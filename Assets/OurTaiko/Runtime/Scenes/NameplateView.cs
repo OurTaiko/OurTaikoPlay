@@ -1,3 +1,4 @@
+using OurTaiko.Chara;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -38,6 +39,7 @@ namespace OurTaiko
         PlayerInfoController controller;
         NameplateLayers layers;
         PlateComposition composition;
+        OtanimView rankEmblem;
         double rainbowStart;
         float renderedCanvasScale;
 
@@ -138,6 +140,7 @@ namespace OurTaiko
                 shadow.enabled = bandUnder.enabled = band.enabled = outline.enabled = false;
                 danBackground.enabled = danRing.enabled = dan.enabled = badge.enabled = false;
                 title.enabled = playerName.enabled = false;
+                if (rankEmblem != null) rankEmblem.gameObject.SetActive(false);
                 layers?.Apply(info, false);
                 composition ??= new PlateComposition(RectTransform);
                 composition.Apply(catalog, rows, info, Shown);
@@ -153,14 +156,16 @@ namespace OurTaiko
             RainbowFrame = 0;
             // *_dani labels only exist in the band family.
             bool hasDan = info.HasDan && hasBand;
-            danBackground.enabled = danRing.enabled = dan.enabled = hasDan && art;
+            danBackground.enabled = hasDan && art;
+            danRing.enabled = dan.enabled = danBackground.enabled && !ShowRankEmblem(info);
+            if (!danBackground.enabled && rankEmblem != null) rankEmblem.gameObject.SetActive(false);
             if (art)
             {
                 shadow.sprite = NameplateArt.Shadow;
                 outline.sprite = NameplateArt.Outline;
                 band.sprite = info.rainbow ? NameplateArt.Rainbow[0] : NameplateArt.Bands[info.TitleFrame];
                 danBackground.sprite = NameplateArt.DanBackground;
-                if (hasDan)
+                if (dan.enabled)
                 {
                     danRing.sprite = NameplateArt.DanRings[info.DanComboTier];
                     dan.sprite = (info.gold ? NameplateArt.GoldDanTexts : NameplateArt.DanTexts)[info.dan];
@@ -182,6 +187,26 @@ namespace OurTaiko
             var box = NameplateLayout.NameBox(info);
             playerName.fontSize = box.FontSize;
             SetText(playerName, info.name, box.FontSize, box.X, box.Y, NameplateLayout.NameBoxWidth);
+        }
+
+        // The installed composition stores the ring and lettering together on the full plate canvas.
+        bool ShowRankEmblem(PlayerInfo info)
+        {
+            var asset = PlateComposition.RankAsset(info, out string clip);
+            if (asset?.File.Find(clip) == null)
+            {
+                if (rankEmblem != null) rankEmblem.gameObject.SetActive(false);
+                return false;
+            }
+            if (rankEmblem == null)
+            {
+                rankEmblem = PlateComposition.CreatePicture("Rank emblem", RectTransform);
+                rankEmblem.transform.SetSiblingIndex(dan.transform.GetSiblingIndex() + 1);
+            }
+            rankEmblem.gameObject.SetActive(true);
+            rankEmblem.Use(asset, clip);
+            rankEmblem.Show(0);
+            return true;
         }
 
         // Global animation 12 (texture_change): frame_top_rainbow 0-5 for 50 ms each, looping every

@@ -59,6 +59,8 @@ namespace OurTaiko.Tests
         {
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:Plate\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#START\n1111,\n1111,\n#END");
+            // Exercise the built-in art independently of collections installed on this device.
+            NameplateItems.UseFolder(Path.Combine(Path.GetTempPath(), System.Guid.NewGuid().ToString("N")));
             Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", titleBackground = 3, dan = 24, gold = true, danCombo = 2 });
             try
             {
@@ -163,6 +165,7 @@ namespace OurTaiko.Tests
             }
             finally
             {
+                NameplateItems.UseFolder(null);
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
                 Object.Destroy(song.chart); Object.Destroy(song);
             }
