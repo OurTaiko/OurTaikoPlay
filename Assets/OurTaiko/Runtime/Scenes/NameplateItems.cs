@@ -44,6 +44,7 @@ namespace OurTaiko
         {
             foreach (var entry in loaded.Values) Release(entry.asset);
             loaded.Clear();
+            PlateComposition.ForgetCatalog();
             foreach (var asset in replaced) Release(asset);
             replaced.Clear();
         }
@@ -77,6 +78,14 @@ namespace OurTaiko
         {
             if (!NameplateSlots.TryParse(id, out var named, out string name) || named != slot) return null;
             string path = PathOf(slot, name);
+            return LoadPath(path);
+        }
+
+        internal static OtanimAsset CompositionPart(string name) =>
+            NameplateSlots.IsName(name) ? LoadPath(Path.Combine(Folder, "composition", name + Extension)) : null;
+
+        static OtanimAsset LoadPath(string path)
+        {
             DateTime stamp;
             try
             {

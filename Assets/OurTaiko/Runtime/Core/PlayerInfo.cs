@@ -25,6 +25,9 @@ namespace OurTaiko
         // The layers worn over the plate (NameplateSlots ids, "band/<name>"…); empty wears none.
         public string bandItem = "", effectItem = "", iconItem = "";
 
+        // Empty uses the standard plate. "auto" follows this seat, title and rank.
+        public string plateState = "", plateTitle = "wood", plateAiTitle = "wood", plateBlank = "off";
+
         public bool HasTitle => !string.IsNullOrEmpty(title) && title != DefaultTitle;
         // An out-of-range dan is "no dan", as nameplate.lua's clamp does.
         public bool HasDan => dan >= DanFirst && dan < DanCount;

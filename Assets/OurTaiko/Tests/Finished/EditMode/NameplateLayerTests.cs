@@ -188,6 +188,39 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void FullCollectionSupportsEveryLayoutAndReturnsToStandard()
+        {
+            NameplatePreviewWindow.InstallCollection();
+            var catalog = PlateComposition.ReadCatalog();
+            Assert.That(catalog.States.Count, Is.EqualTo(36));
+            Assert.That(catalog.Titles.Count, Is.EqualTo(88));
+            Assert.That(catalog.AiTitles.Count, Is.EqualTo(8));
+            using var preview = new NameplatePreview();
+            var info = new PlayerInfo { name = "Player", title = "Title", dan = 24,
+                plateTitle = "pjsekai", plateAiTitle = "ai_3", plateBlank = "off" };
+            foreach (var state in catalog.States.Properties())
+            {
+                info.plateState = state.Name;
+                preview.Show(info, 0);
+                var group = preview.Plate.transform.Find("Complete nameplate");
+                Assert.That(group.gameObject.activeSelf, state.Name);
+                Assert.That(group.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Length, Is.GreaterThan(0), state.Name);
+                foreach (var view in group.GetComponentsInChildren<OurTaiko.Chara.OtanimView>())
+                    Assert.That(view.Clip, Is.Not.Null, state.Name);
+                preview.Seek(0.55);
+            }
+            info.plateState = "auto";
+            preview.Show(info, 1);
+            Assert.That(PlateComposition.StateFor(info, 1), Is.EqualTo("2p_shougou_dani"));
+            Assert.That(preview.Plate.PlayLayerClipAt(NameplateSlot.Icon, "14dan/rankup_start", 0));
+            Assert.That(preview.Plate.PlayLayerClipAt(NameplateSlot.Icon, "14dan/rankup_end", 1));
+            info.plateState = "";
+            preview.Show(info, 0);
+            Assert.That(preview.Plate.transform.Find("Complete nameplate").gameObject.activeSelf, Is.False);
+            Assert.That(preview.Plate.playerName.enabled);
+        }
+
+        [Test]
         public void AnIconIsDrawnOverTheOutlineAndOutOfTheBand()
         {
             WhiteArt();

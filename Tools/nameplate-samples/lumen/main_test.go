@@ -32,8 +32,8 @@ func example(t *testing.T, path string) (*otanim.File, *render.Renderer) {
 func TestMaskedTitle(t *testing.T) {
 	f, r := example(t, "items/band/lumen-ai-3.otanim")
 	c := f.Clip("idle")
-	if c == nil || !c.Loop || c.FPS != 60 || len(c.Frames) != 300 {
-		t.Fatal("expected a five-second title loop")
+	if c == nil || !c.Loop || c.FPS != 60 || len(c.Frames) != 2400 {
+		t.Fatal("expected the complete glint and star loop")
 	}
 	// Both scrolling quads sit at depth 2 inside sprite 98. The clip mask in
 	// plate coordinates is centred at (204, 29.85) and measures 270 x 26.

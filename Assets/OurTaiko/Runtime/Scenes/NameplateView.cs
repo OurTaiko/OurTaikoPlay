@@ -37,6 +37,7 @@ namespace OurTaiko
 
         PlayerInfoController controller;
         NameplateLayers layers;
+        PlateComposition composition;
         double rainbowStart;
         float renderedCanvasScale;
 
@@ -78,18 +79,23 @@ namespace OurTaiko
 
         void RefreshCanvasScale()
         {
-            var canvas = playerName.canvas;
+            var canvas = composition?.Active == true ? composition.TextCanvas : playerName.canvas;
             if (canvas == null || Mathf.Approximately(renderedCanvasScale, canvas.scaleFactor)) return;
             renderedCanvasScale = canvas.scaleFactor;
             // CanvasScaler runs in preWillRenderCanvases. TMP's incremental scale update only
             // accounts for lossyScale, missing the cancelling Canvas factor in Overlay mode.
             // Rebuild on first render / Canvas resize only, after that factor has settled.
+            if (composition?.Active == true) { composition.RefreshText(); return; }
             playerName.ForceMeshUpdate();
             if (title.isActiveAndEnabled) title.ForceMeshUpdate();
         }
 
         public bool PlayLayerClip(NameplateSlot slot, string clip, bool foreground = false) =>
-            layers != null && layers.Play(slot, clip, GameTimeline.FrameTime - rainbowStart, foreground);
+            PlayLayerClipAt(slot, clip, GameTimeline.FrameTime - rainbowStart, foreground);
+
+        public bool PlayLayerClipAt(NameplateSlot slot, string clip, double seconds, bool foreground = false) =>
+            composition?.Active == true ? slot == NameplateSlot.Icon && composition.PlayRank(clip, seconds)
+                : layers != null && layers.Play(slot, clip, seconds, foreground);
 
         // The rainbow band runs on real time, including in pause.
         void Update()
@@ -103,6 +109,7 @@ namespace OurTaiko
         // preview drives a plate outside play with this).
         public void ShowAt(double seconds)
         {
+            if (composition?.Active == true) { composition.Show(seconds); return; }
             ShowRainbow(seconds);
             layers?.Show(seconds);
         }
@@ -125,6 +132,19 @@ namespace OurTaiko
         void Apply(PlayerInfo info)
         {
             Info = info = info ?? new PlayerInfo();
+            var catalog = string.IsNullOrEmpty(info.plateState) ? null : PlateComposition.ReadCatalog();
+            if (catalog?.States[PlateComposition.StateFor(info, Shown)] is Newtonsoft.Json.Linq.JArray rows)
+            {
+                shadow.enabled = bandUnder.enabled = band.enabled = outline.enabled = false;
+                danBackground.enabled = danRing.enabled = dan.enabled = badge.enabled = false;
+                title.enabled = playerName.enabled = false;
+                layers?.Apply(info, false);
+                composition ??= new PlateComposition(RectTransform);
+                composition.Apply(catalog, rows, info, Shown);
+                return;
+            }
+            composition?.Hide();
+            title.enabled = playerName.enabled = true;
             bool art = NameplateArt.Ready;
             bool hasBand = !info.IsCoin;
             shadow.enabled = badge.enabled = art;

@@ -1,20 +1,36 @@
-# 名牌动画制作示例
+# Lumen 名牌全集
 
-在 Unity 的 **OurTaiko → Nameplate Preview** 里点击 **Install Lumen examples**。选用 Band 的 `lumen-ai-3` 和 Icon 的 `lumen-rankup`。名牌需要显示称号或段位。安装会保留同名的本地文件。
+这套资源从 `name_plate.nulm` 解出的 `layout.json` 和 `name_plate.nutexb` 解出的 `atlas.png` 重建。图形和动画均使用标准 v1 `.otanim`。完整名牌的 `composition/catalog.json` 记录每种布局的绘制顺序、动态文字框以及可替换部件。
 
-- 动态称号的 `idle` 按 60 fps 播放 300 帧。打开 Pause 后用 +1 frame 看扫光经过局部矩形遮罩的边缘。转换器在名牌坐标系中裁剪网格，并在新顶点插值 UV。其他装饰按原有深度绘制。
-- Icon 默认的 `idle` 为空。在 **Icon clip** 选择例如 `1dan/rankup_start`，播放后会停在等待画面。可以单选 `1dan/rankup_wait` 查看该帧，再选 `1dan/rankup_end` 观看淡出。每个段位各有三个片段。
-- 点击 **Wear as 1P** 后，段位结算进入升段庆祝时按课程段位选择 start，离开庆祝时选择 end。切场继续沿用游戏原本的时间。片段名遵循源素材标签，其他图标也可以提供相同片段。
+## 在 Unity 里查看
 
-## 从解包重建
+1. 打开 **OurTaiko → Nameplate Preview**，点击 **Install Lumen collection**。安装器把资源复制到游戏的 `Nameplate` 目录，保留已有同名文件。
+2. **Layout** 选 `auto` 时，座位、称号和段位决定主布局。例如 2P 同时有称号和段位时使用 `2p_shougou_dani`。也可以直接选择 36 种源布局中的任意一种，包括 AI、新玩家、角色联动、Boss 和愚人节。选 **(standard)** 可回到普通名牌和三个独立装备槽。
+3. **Title band** 提供 88 种普通称号，**AI title band** 提供 8 种 AI 称号。布局决定哪种部件可见。例如在 `1p_shougou` 上选 `pjsekai` 看联动称号，在同一布局上选 `ai_3` 看扫光。**Blank** 有 `off`、`on`、`on_ai` 三个状态。姓名和称号可直接编辑，**Load source text** 可读入当前布局的源占位文字。文字使用游戏自己的 UI 字体。
+4. 在段位布局用 **段位**、**Ring**、**Gold pass** 切换 19 个段位、三种底和两种文字颜色。播放区的 **init / start / wait / end** 控制当前段位的升段动画。Pause 后可用 ±1 frame 检查遮罩边缘与阶段衔接。
+5. **Wear as 1P** 将当前外观保存到玩家配置。游戏在段位结算进入庆祝时触发开始片段，离开庆祝时触发结束片段。普通三槽名牌也可以单独装备任一称号底图或 `icon/lumen-rankup`。桌面、移动端使用相同的玩家资源目录结构，完整外观需要该设备也安装整套 `items/` 内容。
 
-需要 Python 3、Pillow、Go，以及与 OurTaikoPlay 同级的 otanim 仓库。从 OurTaikoPlay 根目录执行以下命令，第二个路径是要写入的示例目录。
+## 数据与制作方法
+
+| 内容 | 文件或映射 |
+|---|---|
+| 36 种名牌布局、45 个动态文本定义 | `composition/catalog.json` 和底图 `plates.otanim`。保留图层深度、颜色、中心、文字框宽度、字号和占位文字 |
+| 普通及 AI 称号 | `band/lumen-title-*.otanim`、`band/lumen-ai-title-*.otanim`，每个文件都有可独立播放的 `idle`。早期示例名 `lumen-ai-3` 也保留 |
+| 1P / 2P 徽章、空白状态 | `composition/badges.otanim`、`composition/blank.otanim` |
+| 段位底与字 | `composition/dan-{clear,full,donfull}.otanim`，每份包含 38 个命名片段 |
+| 升段 | `icon/lumen-rankup.otanim`。初始化对应透明的 `idle`，每个段位都有 `rankup_start`、`rankup_wait`、`rankup_end` |
+
+源画布原点映射到名牌中心 (204, 48)。转换器先求出每帧的显示列表，沿实例树合成变换，再将绘制顺序、顶点、UV、颜色和混合方式写入片段。局部矩形遮罩和三角网格遮罩会裁剪受影响的图形并插值边界 UV。颜色加值在对应的贴图变体中烘焙；加法发光仍由播放器和下方画面混合。
+
+学习嵌套时间轴时可以从 `ai_3` 开始。扫光子精灵有 800 帧，星光有 60 帧；持续显示的子实例保留自己的播放进度，完整循环取 2,400 帧（60 fps 下为 40 秒）。升段则由外部事件驱动：开始片段包含源第 5 至 46 帧，停在第 46 帧等待，结束片段播放第 47 至 70 帧（从 0 计数）。
+
+## 重新生成和验证
+
+需要 Python 3、Pillow、Go，以及与 OurTaikoPlay 同级的 otanim 仓库。从 OurTaikoPlay 根目录执行以下命令。将输出指向空目录即可与仓库内的成品做逐文件比对。
 
 ```sh
 python3 Tools/nameplate-samples/lumen/bake.py ~/Downloads/name_plate_decoded Tools/nameplate-samples/lumen/items
-(cd Tools/nameplate-samples && go test ./lumen)
+(cd Tools/nameplate-samples && go test ./...)
 ```
 
-转换器只读取 `layout.json` 和 `atlas.png`。先从主精灵定位 `title_instance` 的 `ai_3` 和 `rankup_instance`。每帧按深度更新显示列表，合成父子变换，将源坐标原点映射到 408 × 96 画布中心。升段的 19 套段位字共用一个图集。最后使用 otanim 的 Go 参考编码器写出 v1 文件，再解码检查。两个示例覆盖的遮罩是完全不透明的轴对齐矩形；其他形状的遮罩和颜色加值需要单独实现。
-
-升段源时间轴的第 5 至 46 帧构成开始片段（从 0 计数），第 46 帧为停止帧，第 47 至 70 帧构成结束片段。开始片段包含等待帧，使游戏在等待操作期间自然保持最后一帧。
+Go 测试用参考解码器和软件渲染器检查全部称号、布局引用、扫光裁剪、段位组合及升段片段衔接。Unity 的 `NameplateLayerTests` 另外通过实际预览入口检查布局切换、片段触发，以及恢复普通名牌。

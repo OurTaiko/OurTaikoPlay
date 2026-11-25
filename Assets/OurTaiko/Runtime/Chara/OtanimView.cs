@@ -92,6 +92,7 @@ namespace OurTaiko.Chara
             while (runs.Count <= index)
             {
                 var child = new GameObject("Run" + runs.Count, typeof(RectTransform), typeof(CanvasRenderer)) { hideFlags = HideFlags.DontSave };
+                child.layer = gameObject.layer;
                 var rect = (RectTransform)child.transform;
                 rect.SetParent(transform, false);
                 rect.anchorMin = Vector2.zero;

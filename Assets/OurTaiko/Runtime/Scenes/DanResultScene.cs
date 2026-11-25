@@ -187,9 +187,8 @@ namespace OurTaiko
         void PlayRankClip(string phase)
         {
             int rank = Result.Run.Entry.Course.DanIndex;
-            if (view.nameplate == null || rank < PlayerInfo.DanFirst || rank >= PlayerInfo.DanCount) return;
-            int level = rank - PlayerInfo.DanFirst;
-            string label = level < 5 ? (5 - level) + "kyuu" : (level - 4) + "dan";
+            string label = PlateComposition.RankLabel(rank);
+            if (view.nameplate == null || label == null) return;
             view.nameplate.PlayLayerClip(NameplateSlot.Icon, label + "/" + phase, foreground: true);
         }
 

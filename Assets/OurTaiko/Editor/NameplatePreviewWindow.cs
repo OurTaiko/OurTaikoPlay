@@ -20,6 +20,7 @@ namespace OurTaiko.Editor
         [SerializeField] int dan = 10, combo = 1, titleBackground, side;
         [SerializeField] bool gold, rainbow;
         [SerializeField] string bandItem = "", effectItem = "", iconItem = "";
+        [SerializeField] string plateState = "", plateTitle = "wood", plateAiTitle = "wood", plateBlank = "off";
         [SerializeField] int scale = 2;
         [SerializeField] float speed = 1;
         [SerializeField] bool paused;
@@ -116,6 +117,7 @@ namespace OurTaiko.Editor
             bandItem = bandItem,
             effectItem = effectItem,
             iconItem = iconItem,
+            plateState = plateState, plateTitle = plateTitle, plateAiTitle = plateAiTitle, plateBlank = plateBlank,
         };
 
         void Apply()
@@ -174,15 +176,20 @@ namespace OurTaiko.Editor
         void Controls()
         {
             EditorGUIUtility.labelWidth = 100;
-            if (!realArt)
+            if (!realArt && string.IsNullOrEmpty(plateState))
                 EditorGUILayout.HelpBox("The game's nameplate art is not in the cache (sign in once in Play mode), so the plate is drawn with plain stand-ins.", MessageType.Info);
 
-            EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel);
-            EditorGUI.BeginChangeCheck();
-            bandItem = Slot("Band", NameplateSlot.Band, bandItem);
-            effectItem = Slot("Effect", NameplateSlot.Effect, effectItem);
-            iconItem = Slot("Icon", NameplateSlot.Icon, iconItem);
-            bool layersChanged = EditorGUI.EndChangeCheck();
+            var catalog = PlateComposition.ReadCatalog();
+            bool layersChanged = false;
+            if (catalog == null || string.IsNullOrEmpty(plateState))
+            {
+                EditorGUILayout.LabelField("Layers", EditorStyles.boldLabel);
+                EditorGUI.BeginChangeCheck();
+                bandItem = Slot("Band", NameplateSlot.Band, bandItem);
+                effectItem = Slot("Effect", NameplateSlot.Effect, effectItem);
+                iconItem = Slot("Icon", NameplateSlot.Icon, iconItem);
+                layersChanged = EditorGUI.EndChangeCheck();
+            }
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button(new GUIContent("Items folder", NameplateItems.Folder)))
@@ -194,24 +201,35 @@ namespace OurTaiko.Editor
             }
 
             EditorGUILayout.Space();
-            if (GUILayout.Button("Install Lumen examples"))
+            if (GUILayout.Button("Install Lumen collection"))
             {
-                var examples = Path.Combine(Application.dataPath, "../Tools/nameplate-samples/lumen/items");
-                foreach (var slot in NameplateSlots.All)
-                {
-                    var dir = Path.Combine(examples, NameplateSlots.Folder(slot));
-                    if (!Directory.Exists(dir)) continue;
-                    foreach (var source in Directory.GetFiles(dir, "*.otanim"))
-                    {
-                        string target = NameplateItems.PathOf(slot, Path.GetFileNameWithoutExtension(source));
-                        Directory.CreateDirectory(Path.GetDirectoryName(target));
-                        if (!File.Exists(target)) File.Copy(source, target);
-                    }
-                }
+                InstallCollection();
+                catalog = PlateComposition.ReadCatalog();
+                if (string.IsNullOrEmpty(plateState)) plateState = "auto";
                 layersChanged = true;
             }
             EditorGUILayout.LabelField("Plate", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
+            if (catalog != null)
+            {
+                plateState = Select("Layout", plateState, new[] { "", "auto" }.Concat(catalog.States.Properties().Select(p => p.Name)));
+                if (!string.IsNullOrEmpty(plateState))
+                {
+                    plateTitle = Select("Title band", plateTitle, catalog.Titles.Properties().Select(p => p.Name));
+                    plateAiTitle = Select("AI title band", plateAiTitle, catalog.AiTitles.Properties().Select(p => p.Name));
+                    plateBlank = Select("Blank", plateBlank, catalog.Blank);
+                    if (GUILayout.Button("Load source text"))
+                    {
+                        var state = PlateComposition.StateFor(Info(), side);
+                        foreach (var row in catalog.States[state])
+                        {
+                            if ((string)row["role"] == "text_name") playerName = (string)row["sample"];
+                            if ((string)row["role"] == "text_title") title = (string)row["sample"];
+                        }
+                        layersChanged = true;
+                    }
+                }
+            }
             playerName = EditorGUILayout.TextField("Name", playerName);
             title = EditorGUILayout.TextField(new GUIContent("Title", "Empty, with no 段位 either, is the coin plate: no band, so no layers."), title);
             var dans = new[] { "none" }.Concat(Enumerable.Range(PlayerInfo.DanFirst, PlayerInfo.DanCount - PlayerInfo.DanFirst).Select(i => i.ToString())).ToArray();
@@ -223,8 +241,11 @@ namespace OurTaiko.Editor
                 combo = EditorGUILayout.Popup("Ring", combo, new[] { "銀 (silver)", "金 (full combo)", "虹 (all 良)" });
                 gold = EditorGUILayout.Toggle("Gold pass", gold);
             }
-            titleBackground = EditorGUILayout.IntSlider(new GUIContent("Built-in band", "The game's own bands, under no band item."), titleBackground, 0, PlayerInfo.TitleBackgroundCount - 1);
-            rainbow = EditorGUILayout.Toggle("Rainbow band", rainbow);
+            if (catalog == null || string.IsNullOrEmpty(plateState))
+            {
+                titleBackground = EditorGUILayout.IntSlider(new GUIContent("Built-in band", "The game's own bands, under no band item."), titleBackground, 0, PlayerInfo.TitleBackgroundCount - 1);
+                rainbow = EditorGUILayout.Toggle("Rainbow band", rainbow);
+            }
             side = EditorGUILayout.Popup("Badge", side, new[] { "1P", "2P" });
             if (EditorGUI.EndChangeCheck() || layersChanged) Apply();
 
@@ -246,6 +267,20 @@ namespace OurTaiko.Editor
                     Draw();
                 }
             }
+            if (!string.IsNullOrEmpty(plateState) && catalog != null)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    foreach (string phase in new[] { "init", "start", "wait", "end" })
+                        if (GUILayout.Button(phase))
+                        {
+                            string rank = PlateComposition.RankLabel(dan) ?? "5kyuu";
+                            preview.Seek(0);
+                            preview.Plate.PlayLayerClipAt(NameplateSlot.Icon, phase == "init" ? "idle" : rank + "/rankup_" + phase, 0);
+                            Draw();
+                        }
+                }
+            }
             speed = EditorGUILayout.Slider("Speed", speed, 0, 3);
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -263,13 +298,13 @@ namespace OurTaiko.Editor
             EditorGUILayout.Space();
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button(new GUIContent("Wear as 1P", "Writes the three layers into player.json (the running game's 1P when playing)."))) WearAs1P();
+                if (GUILayout.Button(new GUIContent("Wear as 1P", "Saves the selected layout, appearance and layers for player 1."))) WearAs1P();
                 if (GUILayout.Button(new GUIContent("Load 1P", "Takes the plate player.json holds."))) Load1P();
             }
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Save picture…")) Save();
-                if (GUILayout.Button(new GUIContent("Render all…", "Every item over its clip, and every combination, as two sheets."))) RenderAll();
+                if (GUILayout.Button(new GUIContent("Render all…", "Items over their clips and up to 64 layer combinations, in image sheets."))) RenderAll();
             }
 
             EditorGUILayout.Space();
@@ -296,6 +331,29 @@ namespace OurTaiko.Editor
             return picked == 0 || picked > names.Count ? "" : NameplateSlots.Id(slot, choices[picked]);
         }
 
+        static string Select(string label, string value, IEnumerable<string> choices)
+        {
+            var names = choices.ToArray();
+            int current = Math.Max(0, Array.IndexOf(names, value));
+            var display = Array.ConvertAll(names, n => n == "" ? "(standard)" : n);
+            return names[EditorGUILayout.Popup(label, current, display)];
+        }
+
+        public static void InstallCollection()
+        {
+            string source = Path.GetFullPath(Path.Combine(Application.dataPath, "../Tools/nameplate-samples/lumen/items"));
+            // The catalog becomes selectable after its pictures have been copied.
+            foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories)
+                .Where(f => f.EndsWith(".otanim") || Path.GetFileName(f) == "catalog.json")
+                .OrderBy(f => f.EndsWith(".json")))
+            {
+                string target = Path.Combine(NameplateItems.Folder, Path.GetRelativePath(source, file));
+                Directory.CreateDirectory(Path.GetDirectoryName(target));
+                if (!File.Exists(target)) File.Copy(file, target);
+            }
+            NameplateItems.Forget();
+        }
+
         static string PlayerFile => Path.Combine(GamePaths.Root, PlayerInfoController.FileName);
 
         static PlayerInfo Read1P()
@@ -310,6 +368,10 @@ namespace OurTaiko.Editor
             info.bandItem = bandItem;
             info.effectItem = effectItem;
             info.iconItem = iconItem;
+            info.plateState = plateState;
+            info.plateTitle = plateTitle;
+            info.plateAiTitle = plateAiTitle;
+            info.plateBlank = plateBlank;
             if (EditorApplication.isPlaying) PlayerInfoController.EnsureInstance().Set(info);
             else File.WriteAllText(PlayerFile, info.ToJson());
             ShowNotification(new GUIContent("1P now wears these layers"));
@@ -328,6 +390,10 @@ namespace OurTaiko.Editor
             bandItem = info.bandItem;
             effectItem = info.effectItem;
             iconItem = info.iconItem;
+            plateState = info.plateState;
+            plateTitle = info.plateTitle;
+            plateAiTitle = info.plateAiTitle;
+            plateBlank = info.plateBlank;
             Apply();
         }
 
@@ -357,6 +423,14 @@ namespace OurTaiko.Editor
         {
             var text = new StringBuilder();
             text.AppendLine("Items folder: " + NameplateItems.Folder);
+            if (!string.IsNullOrEmpty(info.plateState) && PlateComposition.ReadCatalog() != null)
+            {
+                text.AppendLine("Layout: " + info.plateState);
+                text.AppendLine("Title: " + info.plateTitle);
+                text.AppendLine("AI title: " + info.plateAiTitle);
+                text.AppendLine("Blank: " + info.plateBlank);
+                return text.ToString();
+            }
             foreach (var slot in NameplateSlots.All)
             {
                 string id = info.ItemIn(slot);

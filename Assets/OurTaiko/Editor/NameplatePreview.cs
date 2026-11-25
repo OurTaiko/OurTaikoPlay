@@ -192,6 +192,7 @@ namespace OurTaiko.Editor
         // every band, effect and icon worn together (none among them), each half a second in.
         public static void RenderAll(string dir, int scale = 1)
         {
+            scale = Math.Max(1, scale);
             Directory.CreateDirectory(dir);
             UseArt();
             NameplatePreview preview = null;
@@ -200,6 +201,19 @@ namespace OurTaiko.Editor
             {
                 preview = new NameplatePreview();
                 var rows = new List<Texture2D[]>();
+                int itemCount = 0, page = 0;
+                // Keep the sheet and its captures bounded even with the full title catalog.
+                int maxRows = Math.Max(1, Math.Min(SystemInfo.maxTextureSize / (Height * scale),
+                    4_000_000 / (Frames * Width * Height * scale * scale)));
+                void SavePage(string name)
+                {
+                    if (rows.Count == 0) return;
+                    string file = ++page == 1 ? name + ".png" : $"{name}-{page}.png";
+                    Sheet(rows, Path.Combine(dir, file));
+                    foreach (var picture in pictures) UnityEngine.Object.DestroyImmediate(picture);
+                    pictures.Clear();
+                    rows.Clear();
+                }
                 foreach (var slot in NameplateSlots.All)
                     foreach (string name in NameplateItems.Names(slot))
                     {
@@ -218,14 +232,48 @@ namespace OurTaiko.Editor
                             pictures.Add(row[f]);
                         }
                         rows.Add(row);
+                        itemCount++;
+                        if (rows.Count == maxRows) SavePage("items");
                     }
-                Sheet(rows, Path.Combine(dir, "items.png"));
+                SavePage("items");
 
-                var combos = new List<Texture2D[]>();
+                page = 0;
+                var currentRow = new List<Texture2D>();
+                void CaptureGridCell(string name)
+                {
+                    var picture = preview.Capture(scale);
+                    pictures.Add(picture);
+                    currentRow.Add(picture);
+                    if (currentRow.Count < 4) return;
+                    rows.Add(currentRow.ToArray());
+                    currentRow.Clear();
+                    if (rows.Count == maxRows) SavePage(name);
+                }
+                void FinishGrid(string name)
+                {
+                    if (currentRow.Count > 0) rows.Add(currentRow.ToArray());
+                    currentRow.Clear();
+                    SavePage(name);
+                    page = 0;
+                }
+
+                var catalog = PlateComposition.ReadCatalog();
+                if (catalog != null)
+                {
+                    foreach (var state in catalog.States.Properties())
+                    {
+                        var info = SampleInfo();
+                        info.plateState = state.Name;
+                        preview.Show(info, 0);
+                        preview.Seek(0.5);
+                        CaptureGridCell("layouts");
+                    }
+                    FinishGrid("layouts");
+                }
+
                 var band = Choices(NameplateSlot.Band);
                 var effect = Choices(NameplateSlot.Effect);
                 var icon = Choices(NameplateSlot.Icon);
-                var row2 = new List<Texture2D>();
                 int made = 0;
                 foreach (string b in band)
                     foreach (string e in effect)
@@ -238,14 +286,10 @@ namespace OurTaiko.Editor
                             info.iconItem = i;
                             preview.Show(info, 0);
                             preview.Seek(0.5);
-                            var picture = preview.Capture(scale);
-                            pictures.Add(picture);
-                            row2.Add(picture);
-                            if (row2.Count == 4) { combos.Add(row2.ToArray()); row2.Clear(); }
+                            CaptureGridCell("combinations");
                         }
-                if (row2.Count > 0) combos.Add(row2.ToArray());
-                Sheet(combos, Path.Combine(dir, "combinations.png"));
-                Debug.Log($"Nameplate layers written to {dir}: {rows.Count} items, {Math.Min(made, MostCombinations)} combinations"
+                FinishGrid("combinations");
+                Debug.Log($"Nameplate layers written to {dir}: {itemCount} items, {Math.Min(made, MostCombinations)} combinations"
                     + (Placeholders ? " (stand-in art: the game's was not in the cache)" : ""));
             }
             finally
