@@ -194,6 +194,22 @@ namespace OurTaiko.Editor
             }
 
             EditorGUILayout.Space();
+            if (GUILayout.Button("Install Lumen examples"))
+            {
+                var examples = Path.Combine(Application.dataPath, "../Tools/nameplate-samples/lumen/items");
+                foreach (var slot in NameplateSlots.All)
+                {
+                    var dir = Path.Combine(examples, NameplateSlots.Folder(slot));
+                    if (!Directory.Exists(dir)) continue;
+                    foreach (var source in Directory.GetFiles(dir, "*.otanim"))
+                    {
+                        string target = NameplateItems.PathOf(slot, Path.GetFileNameWithoutExtension(source));
+                        Directory.CreateDirectory(Path.GetDirectoryName(target));
+                        if (!File.Exists(target)) File.Copy(source, target);
+                    }
+                }
+                layersChanged = true;
+            }
             EditorGUILayout.LabelField("Plate", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
             playerName = EditorGUILayout.TextField("Name", playerName);
@@ -214,6 +230,22 @@ namespace OurTaiko.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Playback", EditorStyles.boldLabel);
+            foreach (var slot in NameplateSlots.All)
+            {
+                var layers = preview.Plate.Layers;
+                var view = slot switch { NameplateSlot.Band => layers?.BandView, NameplateSlot.Effect => layers?.EffectView, _ => layers?.IconView };
+                var clips = view?.File?.Clips;
+                if (clips == null || clips.Length < 2) continue;
+                var names = Array.ConvertAll(clips, c => c.Name);
+                int current = Array.IndexOf(names, view.clip);
+                int pick = EditorGUILayout.Popup(slot + " clip", current, names);
+                if (pick != current)
+                {
+                    preview.Seek(0);
+                    layers.Play(slot, names[pick], 0, foreground: slot == NameplateSlot.Icon && names[pick] != NameplateItems.ClipName);
+                    Draw();
+                }
+            }
             speed = EditorGUILayout.Slider("Speed", speed, 0, 3);
             using (new EditorGUILayout.HorizontalScope())
             {

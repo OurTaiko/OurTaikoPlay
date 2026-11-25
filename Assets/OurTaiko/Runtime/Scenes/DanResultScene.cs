@@ -178,7 +178,19 @@ namespace OurTaiko
             // The plates shown at once land without a sound each (page1_plates_played = song_count).
             if (before == DanResultFlow.Phase.Songs) platesLanded = Result.Run.Count;
             if (before == DanResultFlow.Phase.Songs && Flow.State == DanResultFlow.Phase.Totals) Play(sfx, totalIntro, true);
+            if (before == DanResultFlow.Phase.Totals && Flow.State == DanResultFlow.Phase.Celebrating)
+                PlayRankClip("rankup_start");
+            if (before == DanResultFlow.Phase.Celebrating) PlayRankClip("rankup_end");
             if (Flow.State == DanResultFlow.Phase.Left) Leave();
+        }
+
+        void PlayRankClip(string phase)
+        {
+            int rank = Result.Run.Entry.Course.DanIndex;
+            if (view.nameplate == null || rank < PlayerInfo.DanFirst || rank >= PlayerInfo.DanCount) return;
+            int level = rank - PlayerInfo.DanFirst;
+            string label = level < 5 ? (5 - level) + "kyuu" : (level - 4) + "dan";
+            view.nameplate.PlayLayerClip(NameplateSlot.Icon, label + "/" + phase, foreground: true);
         }
 
         public void Leave()

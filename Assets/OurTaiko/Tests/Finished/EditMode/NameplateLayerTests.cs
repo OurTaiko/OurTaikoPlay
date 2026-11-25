@@ -166,6 +166,28 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void ATriggeredClipStartsAtItsOwnFirstFrameAndHoldsItsEnd()
+        {
+            WhiteArt();
+            string path = NameplateItems.PathOf(NameplateSlot.Icon, "transition");
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllBytes(path, OtanimFixture.Build(PlateView,
+                OtanimFixture.Make("idle", true, 1, 0),
+                OtanimFixture.Make("start", false, 1, 120, 260)));
+            using var preview = new NameplatePreview { Background = Color.black };
+            var info = Plain();
+            info.iconItem = "icon/transition";
+            preview.Show(info, 0);
+            preview.Seek(7);
+            var layers = preview.Plate.Layers;
+            Assert.That(layers.Play(NameplateSlot.Icon, "start", 7));
+            Assert.That(IsRed(Pixel(preview, 145, 80)));
+            Assert.That(layers.Play(NameplateSlot.Icon, "missing", 7), Is.False);
+            preview.Seek(12);
+            Assert.That(IsRed(Pixel(preview, 285, 80)));
+        }
+
+        [Test]
         public void AnIconIsDrawnOverTheOutlineAndOutOfTheBand()
         {
             WhiteArt();

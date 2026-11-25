@@ -88,7 +88,10 @@ namespace OurTaiko
             if (title.isActiveAndEnabled) title.ForceMeshUpdate();
         }
 
-        // The rainbow band runs on real time, like the original's current_ms (it keeps cycling in pause).
+        public bool PlayLayerClip(NameplateSlot slot, string clip, bool foreground = false) =>
+            layers != null && layers.Play(slot, clip, GameTimeline.FrameTime - rainbowStart, foreground);
+
+        // The rainbow band runs on real time, including in pause.
         void Update()
         {
             // The players sat down (SceneSwitcher.Seated) after this plate was shown.

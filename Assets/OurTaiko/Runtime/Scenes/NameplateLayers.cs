@@ -14,6 +14,8 @@ namespace OurTaiko
         readonly RectTransform plate;
         readonly Image band;
         readonly Transform outline;
+        readonly double[] started = new double[NameplateSlots.All.Length];
+        bool foregroundIcon;
         RectTransform mask;
         Image maskImage;
         OtanimView bandView, effectView, iconView;
@@ -42,10 +44,10 @@ namespace OurTaiko
             if (bandItem == null && effect == null && icon == null && mask == null) return;
             Make();
             maskImage.sprite = NameplateArt.Bands.Length > 0 ? NameplateArt.Bands[0] : null;
+            Use(bandView, bandItem, NameplateSlot.Band);
+            Use(effectView, effect, NameplateSlot.Effect);
+            Use(iconView, icon, NameplateSlot.Icon);
             Place();
-            Use(bandView, bandItem);
-            Use(effectView, effect);
-            Use(iconView, icon);
             mask.gameObject.SetActive(bandItem != null || effect != null);
         }
 
@@ -53,13 +55,16 @@ namespace OurTaiko
         public void Show(double seconds)
         {
             if (mask == null) return;
-            Show(bandView, seconds);
-            Show(effectView, seconds);
-            Show(iconView, seconds);
+            Show(bandView, seconds - started[(int)NameplateSlot.Band]);
+            Show(effectView, seconds - started[(int)NameplateSlot.Effect]);
+            Show(iconView, seconds - started[(int)NameplateSlot.Icon]);
         }
 
-        static void Use(OtanimView view, OtanimAsset item)
+        void Use(OtanimView view, OtanimAsset item, NameplateSlot slot)
         {
+            if (view.asset == item && view.gameObject.activeSelf == (item != null)) return;
+            started[(int)slot] = 0;
+            if (slot == NameplateSlot.Icon) foregroundIcon = false;
             view.Use(item, item != null ? NameplateItems.ClipOf(item.File)?.Name : null);
             view.gameObject.SetActive(item != null);
         }
@@ -69,6 +74,22 @@ namespace OurTaiko
             // An item read again after its file changed is gone until the plate is shown again.
             if (!view.gameObject.activeSelf || view.asset == null) return;
             view.Show(seconds);
+        }
+
+        // Restart a named clip on one worn item at the caller's plate time.
+        public bool Play(NameplateSlot slot, string clip, double seconds, bool foreground = false)
+        {
+            var view = slot switch { NameplateSlot.Band => bandView, NameplateSlot.Effect => effectView, NameplateSlot.Icon => iconView, _ => null };
+            if (view == null || view.File?.Find(clip) == null) return false;
+            view.Use(view.asset, clip);
+            started[(int)slot] = seconds;
+            if (slot == NameplateSlot.Icon)
+            {
+                foregroundIcon = foreground;
+                PlaceIcon();
+            }
+            view.Show(0);
+            return true;
         }
 
         void Make()
@@ -109,7 +130,13 @@ namespace OurTaiko
             iconRect.anchorMin = Vector2.zero;
             iconRect.anchorMax = Vector2.one;
             iconRect.offsetMin = iconRect.offsetMax = Vector2.zero;
-            iconRect.SetSiblingIndex(outline.GetSiblingIndex() + 1);
+            PlaceIcon();
+        }
+
+        void PlaceIcon()
+        {
+            if (foregroundIcon) iconView.transform.SetAsLastSibling();
+            else iconView.transform.SetSiblingIndex(outline.GetSiblingIndex() + 1);
         }
 
         static RectTransform Child(string name, Transform parent)
