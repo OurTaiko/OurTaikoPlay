@@ -82,21 +82,6 @@ namespace OurTaiko.Editor
             }
         }
 
-        // The game's nameplate art: what the game last fetched, if all of it is cached, else plain
-        // stand-ins of its sizes. True when it is the real art.
-        public static bool UseArt()
-        {
-            if (NameplateArt.Ready) return !Placeholders;
-            if (NameplateArt.UseCached(Online.OnlineManager.DefaultCacheRoot)) { Placeholders = false; return true; }
-            NameplateArt.UsePlaceholders();
-            Placeholders = true;
-            return false;
-        }
-
-        // The art in use is UseArt's stand-ins.
-        public static bool Placeholders { get; private set; }
-
-        // `info` on `side`'s plate (0 1P, 1 2P), its layers from their start.
         public void Show(PlayerInfo info, int side)
         {
             Info = info.Clone();
@@ -167,7 +152,7 @@ namespace OurTaiko.Editor
         }
 
         // The plate every rendered sheet wears: a title and a 段位, so the band and the chip show.
-        public static PlayerInfo SampleInfo() => new PlayerInfo { name = "OurTaiko", title = "Nameplate layers", dan = 10, danCombo = 1 };
+        public static PlayerInfo SampleInfo() => new PlayerInfo { plateState = "custom", name = "OurTaiko", title = "Nameplate layers", dan = 10, danCombo = 1 };
 
         // How long an item's clip takes to come round (its loop, or a one-shot's length).
         public static double Length(Otanim file)
@@ -194,7 +179,6 @@ namespace OurTaiko.Editor
         {
             scale = Math.Max(1, scale);
             Directory.CreateDirectory(dir);
-            UseArt();
             NameplatePreview preview = null;
             var pictures = new List<Texture2D>();
             try
@@ -289,8 +273,7 @@ namespace OurTaiko.Editor
                             CaptureGridCell("combinations");
                         }
                 FinishGrid("combinations");
-                Debug.Log($"Nameplate layers written to {dir}: {itemCount} items, {Math.Min(made, MostCombinations)} combinations"
-                    + (Placeholders ? " (stand-in art: the game's was not in the cache)" : ""));
+                Debug.Log($"Nameplate layers written to {dir}: {itemCount} items, {Math.Min(made, MostCombinations)} combinations");
             }
             finally
             {

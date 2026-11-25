@@ -3,30 +3,29 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // The local player's nameplate data (scores.h PlayerData username / title / title_bg / dan / gold /
-    // rainbow, plus danCombo and the layers worn over the plate), stored as player.json by
-    // PlayerInfoController.
+    // Local profile and built-in nameplate selection, stored in player.json.
     [Serializable]
     public sealed class PlayerInfo
     {
         // scores.cpp seeds player 1 as ('Don-chan', 'Donder Debut!'); nameplate.lua treats that title as unset.
         public const string DefaultName = "Don-chan", DefaultTitle = "Donder Debut!";
         // dan 0 = 初級 .. 24 = 達人 (the emblem sheets' 25 crops); the game offers 五級 (6) .. 達人 only,
-        // so 0..5 count as no 段位 (user decision, 2026-10-22). frame_top bakes 5 title backgrounds.
-        public const int DanCount = 25, DanFirst = 6, TitleBackgroundCount = 5;
+        // so 0..5 count as no 段位 (user decision, 2026-10-22).
+        public const int DanCount = 25, DanFirst = 6;
 
         public string name = DefaultName;
         public string title = DefaultTitle;
-        public int titleBackground;
         public int dan = -1;      // -1 = no 段位
         public bool gold;         // 金合格: gold emblem text (red pass has white text)
         public int danCombo;      // the emblem's ring, as a song's crown: 0 銀粋, 1 金粋 (full combo), 2 虹粋 (all 良)
-        public bool rainbow;      // rainbow title band
         // The layers worn over the plate (NameplateSlots ids, "band/<name>"…); empty wears none.
         public string bandItem = "", effectItem = "", iconItem = "";
 
-        // Empty uses the standard plate. "auto" follows this seat, title and rank.
-        public string plateState = "", plateTitle = "wood", plateAiTitle = "wood", plateBlank = "off", plateBadge = "auto";
+        // Built-in composition. "auto" follows this seat, title and rank.
+        public string plateState = "auto", plateTitle = "auto", plateAiTitle = "wood", plateBlank = "off", plateBadge = "auto";
+
+        public int nameplateVersion = 1;
+        public string profileBand = "wood";
 
         public bool HasTitle => !string.IsNullOrEmpty(title) && title != DefaultTitle;
         // An out-of-range dan is "no dan", as nameplate.lua's clamp does.
@@ -34,7 +33,6 @@ namespace OurTaiko
         public int DanComboTier => danCombo >= 0 && danCombo <= 2 ? danCombo : 0;
         // Np_coin: no title and no dan. The coin plate never shows a title band or dan chip.
         public bool IsCoin => !HasTitle && !HasDan;
-        public int TitleFrame => titleBackground >= 0 && titleBackground < TitleBackgroundCount ? titleBackground : 0;
 
         public PlayerInfo Clone() => (PlayerInfo)MemberwiseClone();
 
@@ -67,6 +65,14 @@ namespace OurTaiko
             info.effectItem ??= "";
             info.iconItem ??= "";
             return info;
+        }
+
+        public static PlayerInfo ReadSaved(string json, out bool reset)
+        {
+            var info = new PlayerInfo { nameplateVersion = 0 };
+            if (!string.IsNullOrWhiteSpace(json)) JsonUtility.FromJsonOverwrite(json, info);
+            reset = info.nameplateVersion == 0;
+            return reset ? new PlayerInfo() : info;
         }
 
         public string ToJson() => JsonUtility.ToJson(this, true);

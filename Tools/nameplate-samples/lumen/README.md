@@ -4,11 +4,11 @@
 
 ## 在 Unity 里查看
 
-1. 打开 **OurTaiko → Nameplate Preview**，点击 **Install Lumen collection**。安装器把资源复制到游戏的 `Nameplate` 目录，保留已有同名文件。
-2. **Layout** 选 `auto` 时，座位、称号和段位决定主布局。例如 2P 同时有称号和段位时使用 `2p_shougou_dani`。也可以直接选择 36 种源布局中的任意一种，包括 AI、新玩家、角色联动、Boss 和愚人节。选 **(standard)** 可回到普通名牌和三个独立装备槽。
+1. 打开 **OurTaiko → Nameplate Preview**。游戏和预览直接从 `Assets/OurTaiko/Resources/Nameplate` 加载整套内置素材，首次离线启动也可使用。
+2. **Layout** 选 `auto` 时，座位、称号和段位决定主布局。例如 2P 同时有称号和段位时使用 `2p_shougou_dani`。也可以直接选择 36 种源布局中的任意一种，包括 AI、新玩家、角色联动、Boss 和愚人节。选 **custom** 可在相同的组合布局上分别装备 Band、Effect 和 Icon。
 3. **Layers** 随布局显示可替换的部件。**Badge** 可跟随布局，也可单独指定 1P 或 2P。**Title band** 提供 88 种普通称号，**AI title band** 提供 8 种 AI 称号。布局决定哪种部件可见。例如在 `1p_shougou` 上选 `pjsekai` 看联动称号，在同一布局上选 `ai_3` 看扫光。**Blank** 有 `off`、`on`、`on_ai` 三个状态。姓名和称号可直接编辑，**Load source text** 可读入当前布局的源占位文字。文字使用游戏自己的 UI 字体。
 4. 在段位布局用 **段位**、**Ring**、**Gold pass** 切换 19 个段位、三种底和两种文字颜色。播放区的 **init / start / wait / end** 控制当前段位的升段动画。Pause 后可用 ±1 frame 检查遮罩边缘与阶段衔接。
-5. **Wear as 1P** 将当前外观保存到玩家配置。游戏在段位结算进入庆祝时触发开始片段，离开庆祝时触发结束片段。普通三槽名牌装备目录收录的称号时使用原始衬底，保留伸出称号带的装饰。安装了对应段位部件时，普通名牌与 auto 共用段位环和段位字的原始图形、位置与缩放；缺少部件时使用游戏自带段位贴图。独立 Effect 仍限制在带内，未安装时显示空槽提示。普通三槽名牌也可以单独装备任一称号底图或 `icon/lumen-rankup`。桌面、移动端使用相同的玩家资源目录结构，完整外观需要该设备也安装整套 `items/` 内容。
+5. **Wear as 1P** 将当前外观保存到玩家配置。游戏在段位结算进入庆祝时触发开始片段，离开庆祝时触发结束片段。普通三槽名牌装备目录收录的称号时使用原始衬底，保留伸出称号带的装饰。所有布局共用内置段位图形、缩放和文字基线校正。独立 Effect 仍限制在带内，未安装时显示空槽提示。普通三槽名牌也可以单独装备任一称号底图或 `icon/lumen-rankup`。桌面和移动端均内置全部 105 份资源。旧版 player.json 在首次加载时用新版默认名牌配置替换。
 
 ## 数据与制作方法
 
@@ -29,7 +29,7 @@
 需要 Python 3、Pillow、Go，以及与 OurTaikoPlay 同级的 otanim 仓库。从 OurTaikoPlay 根目录执行以下命令。将输出指向空目录即可与仓库内的成品做逐文件比对。
 
 ```sh
-python3 Tools/nameplate-samples/lumen/bake.py ~/Downloads/name_plate_decoded Tools/nameplate-samples/lumen/items
+python3 Tools/nameplate-samples/lumen/bake.py ~/Downloads/name_plate_decoded Assets/OurTaiko/Resources/Nameplate
 (cd Tools/nameplate-samples && go test ./...)
 ```
 

@@ -24,7 +24,6 @@ namespace OurTaiko.Tests
         public void Clean()
         {
             NameplateItems.UseFolder(null);
-            NameplateArt.Forget();
             if (Directory.Exists(folder)) Directory.Delete(folder, true);
         }
 
@@ -37,24 +36,6 @@ namespace OurTaiko.Tests
             string path = NameplateItems.PathOf(slot, name);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, OtanimFixture.Build(view, OtanimFixture.Make(NameplateItems.ClipName, true, 1, lefts)));
-        }
-
-        // The plate and the bands opaque white (the band's shape is its whole rect), every other
-        // piece (outline, 段位 chip, badge) see-through, so what the layers draw is what shows.
-        static void WhiteArt()
-        {
-            var images = new Dictionary<string, byte[]>();
-            foreach (var (key, width, height) in NameplateArt.Files)
-            {
-                var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-                var pixels = new Color32[width * height];
-                byte alpha = key == "shadow" || key == "bands" || key == "rainbow" ? (byte)255 : (byte)0;
-                for (int i = 0; i < pixels.Length; i++) pixels[i] = new Color32(255, 255, 255, alpha);
-                texture.SetPixels32(pixels);
-                images[key] = texture.EncodeToPNG();
-                Object.DestroyImmediate(texture);
-            }
-            NameplateArt.Use(images);
         }
 
         [TestCase("band/sakura", true, NameplateSlot.Band, "sakura")]
@@ -83,7 +64,7 @@ namespace OurTaiko.Tests
             var back = PlayerInfo.FromJson(info.ToJson());
             Assert.That((back.ItemIn(NameplateSlot.Band), back.ItemIn(NameplateSlot.Effect), back.ItemIn(NameplateSlot.Icon)), Is.EqualTo(("band/x", "effect/y", "icon/z")));
             var old = PlayerInfo.FromJson("{\"name\":\"b\",\"title\":\"t\",\"titleBackground\":2}");
-            Assert.That((old.bandItem, old.effectItem, old.iconItem, old.titleBackground), Is.EqualTo(("", "", "", 2)));
+            Assert.That((old.bandItem, old.effectItem, old.iconItem), Is.EqualTo(("", "", "")));
             var nulls = PlayerInfo.FromJson("{\"bandItem\":null}");
             Assert.That(nulls.bandItem, Is.EqualTo(""));
         }
@@ -98,7 +79,7 @@ namespace OurTaiko.Tests
             Directory.CreateDirectory(Path.Combine(folder, "icon"));
             File.WriteAllBytes(NameplateItems.PathOf(NameplateSlot.Icon, "broken"), new byte[] { 1, 2, 3 });
 
-            Assert.That(NameplateItems.Names(NameplateSlot.Band), Is.EqualTo(new[] { "a", "b" }));
+            Assert.That(NameplateItems.Names(NameplateSlot.Band), Does.Contain("a").And.Contain("b"));
             Assert.That(NameplateItems.Names(NameplateSlot.Effect), Is.EqualTo(new[] { "wide" }));
 
             var band = NameplateItems.Load(NameplateSlot.Band, "band/a");
@@ -131,13 +112,12 @@ namespace OurTaiko.Tests
         static bool IsBlue(Color c) => c.b > 0.8f && c.r < 0.2f && c.g < 0.2f;
 
         // A plate with a 段位 and no title or name: its band shows, and nothing is written over it.
-        static PlayerInfo Plain() => new PlayerInfo { name = "", title = "", dan = 10 };
+        static PlayerInfo Plain() => new PlayerInfo { plateState = "custom", name = "", title = "", dan = 10 };
 
         [Test]
         public void AWornBandTakesTheBandsPlaceAndItAndItsEffectStayInsideTheBand()
         {
-            WhiteArt();
-            Item(NameplateSlot.Band, "moving", 250, 350);
+            Item(NameplateSlot.Band, "moving", 250, 200);
             Item(NameplateSlot.Effect, "still", 250);
             using var preview = new NameplatePreview { Background = Color.black };
             var plate = preview.Plate;
@@ -145,22 +125,20 @@ namespace OurTaiko.Tests
             info.bandItem = "band/moving";
             preview.Show(info, 0);
 
-            Assert.That(plate.band.enabled, Is.False, "The worn band is drawn instead of the plate's own.");
+            Assert.That(plate.Layers.CoversBand, Is.True, "The worn band is drawn instead of the plate's own.");
             var layers = plate.Layers;
             Assert.That(layers.BandView.gameObject.activeSelf && !layers.EffectView.gameObject.activeSelf && !layers.IconView.gameObject.activeSelf);
-            Assert.That(layers.Mask.GetSiblingIndex(), Is.EqualTo(plate.band.transform.GetSiblingIndex() + 1));
-            Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.EqualTo(plate.outline.transform.GetSiblingIndex() + 1));
 
             // The square's left half is red, its right half blue; the band is the plate's top 56.
             Assert.That(IsRed(Pixel(preview, 275, 20)) && IsBlue(Pixel(preview, 325, 20)), "The band item is drawn where the band is.");
             Assert.That(IsRed(Pixel(preview, 275, 80)), Is.False, "Below the band it is cut away.");
             preview.Seek(1);
-            Assert.That(IsRed(Pixel(preview, 375, 20)) && !IsRed(Pixel(preview, 275, 20)), "It moves on with the time.");
+            Assert.That(IsRed(Pixel(preview, 225, 20)) && !IsRed(Pixel(preview, 275, 20)), "It moves on with the time.");
 
             info.bandItem = "";
             info.effectItem = "effect/still";
             preview.Show(info, 0);
-            Assert.That(plate.band.enabled, "Without a band item the plate's own band is back, the effect over it.");
+            Assert.That(!plate.Layers.CoversBand, "Without a band item the plate's own band is back, the effect over it.");
             Assert.That(IsRed(Pixel(preview, 275, 20)), "The effect is drawn over the band.");
             Assert.That(IsRed(Pixel(preview, 275, 80)), Is.False, "And cut to it.");
         }
@@ -168,7 +146,6 @@ namespace OurTaiko.Tests
         [Test]
         public void ATriggeredClipStartsAtItsOwnFirstFrameAndHoldsItsEnd()
         {
-            WhiteArt();
             string path = NameplateItems.PathOf(NameplateSlot.Icon, "transition");
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             File.WriteAllBytes(path, OtanimFixture.Build(PlateView,
@@ -180,8 +157,8 @@ namespace OurTaiko.Tests
             preview.Show(info, 0);
             preview.Seek(7);
             var layers = preview.Plate.Layers;
-            Assert.That(layers.Play(NameplateSlot.Icon, "start", 7));
-            Assert.That(IsRed(Pixel(preview, 145, 80)));
+            Assert.That(layers.Play(NameplateSlot.Icon, "start", 7, foreground: true));
+            Assert.That(IsRed(Pixel(preview, 145, 60)));
             Assert.That(layers.Play(NameplateSlot.Icon, "missing", 7), Is.False);
             preview.Seek(12);
             Assert.That(IsRed(Pixel(preview, 285, 80)));
@@ -190,8 +167,6 @@ namespace OurTaiko.Tests
         [Test]
         public void CatalogBandShowsItsBackingAndOverflowWhileLooseLayersStayMasked()
         {
-            WhiteArt();
-            NameplatePreviewWindow.InstallCollection();
             Item(NameplateSlot.Band, "loose", 250);
             Item(NameplateSlot.Effect, "overlay", 250);
             using var preview = new NameplatePreview();
@@ -199,7 +174,7 @@ namespace OurTaiko.Tests
             info.bandItem = "band/lumen-title-aprilfool2025_01";
             preview.Show(info, 0);
             var layers = preview.Plate.Layers;
-            Assert.That(layers.BandView.transform.parent, Is.EqualTo(preview.Plate.transform));
+            Assert.That(layers.BandView.transform.parent, Is.EqualTo(preview.Plate.transform.Find("Complete nameplate")));
             Assert.That(Pixel(preview, 300, 45).maxColorComponent, Is.LessThan(0.15f));
             info.bandItem = "band/loose";
             info.effectItem = "effect/overlay";
@@ -207,7 +182,6 @@ namespace OurTaiko.Tests
             Assert.That(layers.BandView.transform.parent, Is.EqualTo(layers.Mask));
             Assert.That(layers.EffectView.transform.parent, Is.EqualTo(layers.Mask));
             Assert.That(layers.BandView.transform.GetSiblingIndex(), Is.LessThan(layers.EffectView.transform.GetSiblingIndex()));
-            Assert.That(preview.Plate.transform.Find("BandBacking").gameObject.activeSelf, Is.False);
         }
 
         [TestCase("Title", 10, 0)]
@@ -216,12 +190,12 @@ namespace OurTaiko.Tests
         [TestCase("", -1, 0)]
         public void AutoUsesStandardTextPositions(string title, int dan, int side)
         {
-            NameplatePreviewWindow.InstallCollection();
             using var preview = new NameplatePreview();
             var info = new PlayerInfo { name = "Player", title = title, dan = dan };
             preview.Show(info, side);
-            var nameCenter = preview.Plate.playerName.rectTransform.anchoredPosition;
-            var titleCenter = preview.Plate.title.rectTransform.anchoredPosition;
+            var box = NameplateLayout.NameBox(info);
+            var nameCenter = new Vector2(box.X, -box.Y);
+            var titleCenter = new Vector2(NameplateLayout.TitleX, -NameplateLayout.TitleY);
 
             info.plateState = "auto";
             preview.Show(info, side);
@@ -236,38 +210,26 @@ namespace OurTaiko.Tests
         [TestCase(24, 2, true)]
         public void StandardAndAutoUseTheSameRankArtAtTheSameScale(int rank, int combo, bool gold)
         {
-            WhiteArt();
-            NameplatePreviewWindow.InstallCollection();
             using var preview = new NameplatePreview();
             var info = new PlayerInfo { dan = rank, danCombo = combo, gold = gold };
             preview.Show(info, 0);
             var plate = preview.Plate;
-            var standard = plate.transform.Find("Rank emblem").GetComponent<OurTaiko.Chara.OtanimView>();
-            Assert.That(plate.danBackground.enabled && !plate.dan.enabled && !plate.danRing.enabled);
-            var corners = new Vector3[4];
-            ((RectTransform)standard.transform).GetWorldCorners(corners);
-
-            info.plateState = "auto";
-            preview.Show(info, 0);
-            Assert.That(standard.gameObject.activeSelf, Is.False);
-            var group = plate.transform.Find("Complete nameplate");
-            var views = group.GetComponentsInChildren<OurTaiko.Chara.OtanimView>();
-            var match = System.Array.Find(views, v => v.asset == standard.asset && v.clip == standard.clip);
-            Assert.That(match, Is.Not.Null);
-            var autoCorners = new Vector3[4];
-            ((RectTransform)match.transform).GetWorldCorners(autoCorners);
-            Assert.That(autoCorners, Is.EqualTo(corners));
-
-            info.plateState = "";
-            info.dan = -1;
-            preview.Show(info, 0);
-            Assert.That(standard.gameObject.activeSelf || plate.danBackground.enabled, Is.False);
+            var expectedClip = PlateComposition.RankLabel(rank) + (gold ? "_gold" : "_red");
+            var expected = Resources.Load<OurTaiko.Chara.OtanimAsset>("Nameplate/composition/dan-" + new[] { "clear", "full", "donfull" }[combo]);
+            foreach (string state in new[] { "auto", "custom" })
+            {
+                info.plateState = state;
+                preview.Show(info, 0);
+                var views = plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>();
+                var match = System.Array.Find(views, v => v.asset == expected && v.clip == expectedClip);
+                Assert.That(match, Is.Not.Null);
+                Assert.That(((RectTransform)match.transform).anchoredPosition, Is.EqualTo(Vector2.zero));
+            }
         }
 
         [Test]
         public void FullCollectionSupportsEveryLayoutAndReturnsToStandard()
         {
-            NameplatePreviewWindow.InstallCollection();
             var catalog = PlateComposition.ReadCatalog();
             Assert.That(catalog.States.Count, Is.EqualTo(36));
             Assert.That(catalog.Titles.Count, Is.EqualTo(88));
@@ -302,20 +264,19 @@ namespace OurTaiko.Tests
             Assert.That(preview.Plate.PlayLayerClipAt(NameplateSlot.Icon, "14dan/rankup_end", 1));
             info.plateState = "";
             preview.Show(info, 0);
-            Assert.That(preview.Plate.transform.Find("Complete nameplate").gameObject.activeSelf, Is.False);
+            Assert.That(preview.Plate.transform.Find("Complete nameplate").gameObject.activeSelf, Is.True);
             Assert.That(preview.Plate.playerName.enabled);
         }
 
         [Test]
         public void AnIconIsDrawnOverTheOutlineAndOutOfTheBand()
         {
-            WhiteArt();
             Item(NameplateSlot.Icon, "badge", 250);
             using var preview = new NameplatePreview { Background = Color.black };
             var info = Plain();
             info.iconItem = "icon/badge";
             preview.Show(info, 0);
-            Assert.That(preview.Plate.band.enabled, "An icon leaves the band alone.");
+            Assert.That(!preview.Plate.Layers.CoversBand, "An icon leaves the band alone.");
             Assert.That(IsRed(Pixel(preview, 275, 20)) && IsRed(Pixel(preview, 275, 80)), "Over the band and below it.");
         }
 
@@ -324,47 +285,27 @@ namespace OurTaiko.Tests
             layers?.Mask != null && (layers.BandView.gameObject.activeInHierarchy || layers.EffectView.gameObject.activeInHierarchy || layers.IconView.gameObject.activeSelf);
 
         [Test]
-        public void TheCoinPlateAndAPlateWithoutArtWearNothing()
+        public void TheCoinPlateHidesCustomItems()
         {
-            WhiteArt();
             Item(NameplateSlot.Icon, "badge", 250);
             using var preview = new NameplatePreview { Background = Color.black };
-            var coin = new PlayerInfo { name = "", title = "", iconItem = "icon/badge" };
+            var coin = new PlayerInfo { plateState = "custom", name = "", title = "", iconItem = "icon/badge" };
             Assert.That(coin.IsCoin);
             preview.Show(coin, 0);
             Assert.That(Worn(preview.Plate.Layers), Is.False);
             Assert.That(IsRed(Pixel(preview, 275, 80)), Is.False);
 
-            NameplateArt.Forget();
-            var plain = Plain();
-            plain.iconItem = "icon/badge";
-            preview.Show(plain, 0);
-            Assert.That(Worn(preview.Plate.Layers), Is.False, "Without the art a plate is its text alone.");
         }
 
         [Test]
-        public void RenderAllWritesASheetOfItemsAndOneOfCombinations()
+        public void AllBuiltInItemsLoadWithAnEmptyUserFolder()
         {
-            WhiteArt();
-            Item(NameplateSlot.Band, "a", 0, 200);
-            Item(NameplateSlot.Icon, "b", 250);
-            string dir = Path.Combine(folder, "out");
-            NameplatePreview.RenderAll(dir);
-            var items = new Texture2D(2, 2);
-            var combos = new Texture2D(2, 2);
-            try
-            {
-                Assert.That(items.LoadImage(File.ReadAllBytes(Path.Combine(dir, "items.png"))));
-                Assert.That((items.width, items.height), Is.EqualTo((NameplatePreview.Width * NameplatePreview.Frames, NameplatePreview.Height * 2)));
-                Assert.That(combos.LoadImage(File.ReadAllBytes(Path.Combine(dir, "combinations.png"))));
-                // (none, a) bands × (none) effects × (none, b) icons, four to a row.
-                Assert.That((combos.width, combos.height), Is.EqualTo((NameplatePreview.Width * 4, NameplatePreview.Height)));
-            }
-            finally
-            {
-                Object.DestroyImmediate(items);
-                Object.DestroyImmediate(combos);
-            }
+            var catalog = PlateComposition.ReadCatalog();
+            foreach (string id in catalog.BandIds)
+                Assert.That(NameplateItems.Load(NameplateSlot.Band, id)?.File.Find("idle"), Is.Not.Null, id);
+            Assert.That(NameplateItems.Names(NameplateSlot.Band).Count, Is.EqualTo(97));
+            Assert.That(NameplateItems.Load(NameplateSlot.Icon, "icon/lumen-rankup")?.File.Clips.Length, Is.EqualTo(58));
+            Assert.That(Directory.Exists(folder), Is.False);
         }
     }
 }

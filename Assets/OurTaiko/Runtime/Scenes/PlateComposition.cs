@@ -18,8 +18,8 @@ namespace OurTaiko
             public readonly JObject States, Titles, AiTitles;
             public readonly string[] Blank;
             readonly HashSet<string> bandItems = new HashSet<string>(StringComparer.Ordinal);
-            public bool ContainsBand(string id) => bandItems.Contains(id);
-            public readonly string BandBackingClip;
+            public IEnumerable<string> BandIds => bandItems;
+            public bool ContainsBand(string id) => bandItems.Contains(id) || id == "band/lumen-ai-3";
             internal Catalog(JObject data)
             {
                 States = data["states"] as JObject ?? throw new InvalidDataException("Missing states");
@@ -27,36 +27,15 @@ namespace OurTaiko
                 AiTitles = data["aiTitles"] as JObject ?? throw new InvalidDataException("Missing AI titles");
                 foreach (var option in Titles.Properties()) bandItems.Add((string)option.Value);
                 foreach (var option in AiTitles.Properties()) bandItems.Add((string)option.Value);
-                // Older installed Lumen catalogs already contain this clip in plates.otanim.
-                BandBackingClip = (string)data["bandBackingClip"] ?? "1p_shougou/4";
                 Blank = data["blank"]?.ToObject<string[]>() ?? throw new InvalidDataException("Missing blank labels");
             }
         }
 
         static Catalog catalog;
-        static string lastPath;
-        static DateTime lastWrite;
-        public static void ForgetCatalog() { catalog = null; lastPath = null; }
+        public static void ForgetCatalog() => catalog = null;
 
-        public static Catalog ReadCatalog()
-        {
-            string path = Path.Combine(NameplateItems.Folder, "composition", "catalog.json");
-            try
-            {
-                if (!File.Exists(path)) return null;
-                DateTime stamp = File.GetLastWriteTimeUtc(path);
-                if (path == lastPath && stamp == lastWrite) return catalog;
-                lastPath = path;
-                lastWrite = stamp;
-                catalog = null;
-                catalog = new Catalog(JObject.Parse(File.ReadAllText(path)));
-            }
-            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is JsonException || e is InvalidDataException)
-            {
-                Log.Warn("Nameplate", $"Could not read {path}: {e.Message}");
-            }
-            return catalog;
-        }
+        public static Catalog ReadCatalog() => catalog ??= new Catalog(JObject.Parse(
+            Resources.Load<TextAsset>(NameplateItems.FolderName + "/composition/catalog").text));
 
         readonly RectTransform root;
         readonly List<OtanimView> pictures = new List<OtanimView>();
@@ -66,7 +45,9 @@ namespace OurTaiko
         double rankStarted;
         long lastFrame = -1;
         public Canvas TextCanvas => textCount > 0 ? texts[0].canvas : null;
-        public bool Active => root.gameObject.activeSelf;
+        public NameplateLayers Layers { get; }
+        public TMP_Text PlayerName { get; private set; }
+        public TMP_Text Title { get; private set; }
 
         public PlateComposition(RectTransform plate)
         {
@@ -75,14 +56,16 @@ namespace OurTaiko
             root.anchoredPosition = Vector2.zero;
             root.gameObject.layer = plate.gameObject.layer;
             root.gameObject.hideFlags = HideFlags.DontSave;
+            Layers = new NameplateLayers(root);
         }
 
         public static string StateFor(PlayerInfo info, int side)
         {
-            if (info.plateState != "auto") return info.plateState;
+            if (!string.IsNullOrEmpty(info.plateState) && info.plateState != "auto" && info.plateState != "custom"
+                && ReadCatalog().States[info.plateState] != null) return info.plateState;
             string prefix = side == 1 ? "2p" : "1p";
             if (info.IsCoin) return prefix + "_coin";
-            return prefix + (info.HasTitle ? "_shougou" : "") + (info.HasDan ? "_dani" : "");
+            return prefix + (info.HasTitle || info.plateState == "custom" ? "_shougou" : "") + (info.HasDan ? "_dani" : "");
         }
 
         public static string RankLabel(int rank)
@@ -100,12 +83,6 @@ namespace OurTaiko
             return NameplateItems.CompositionPart("dan-" + ring);
         }
 
-        public void Hide()
-        {
-            root.gameObject.SetActive(false);
-            rankup = null;
-        }
-
         public void Apply(Catalog source, JArray rows, PlayerInfo info, int side)
         {
             string running = rankup?.clip;
@@ -113,14 +90,20 @@ namespace OurTaiko
             root.SetAsLastSibling();
             pictureCount = textCount = 0;
             rankup = null;
+            Title = PlayerName = null;
+            Layers.Apply(info, info.plateState == "custom" && !info.IsCoin);
             foreach (var row in rows)
             {
                 switch ((string)row["role"])
                 {
                     case "base": Picture(NameplateItems.CompositionPart("plates"), (string)row["clip"]); break;
-                    case "title_instance": Band(source.Titles, info.plateTitle); break;
+                    case "title_instance":
+                        if (!Layers.CoversBand) Band(source.Titles, info.plateTitle == "auto" ? info.profileBand : info.plateTitle);
+                        Layers.PlaceBand();
+                        break;
                     case "ai_title_instance": Band(source.AiTitles, info.plateAiTitle); break;
                     case "plate_player_no":
+                        Layers.PlaceIcon();
                         string state = StateFor(info, side);
                         bool second = state.StartsWith("2p", StringComparison.Ordinal) || !state.StartsWith("1p", StringComparison.Ordinal) && side == 1;
                         string badge = info.plateBadge is "1p" or "2p" ? info.plateBadge : second ? "2p" : "1p";
@@ -132,15 +115,16 @@ namespace OurTaiko
                     case "rankup_instance":
                         rankup = Picture(NameplateItems.Load(NameplateSlot.Icon, "icon/lumen-rankup"), running ?? "idle"); break;
                     case "text_title":
-                        Text(row, info.HasTitle ? info.title : "");
+                        Title = Text(row, info.HasTitle ? info.title : "");
                         break;
                     case "text_name":
-                        Text(row, info.name ?? "");
+                        PlayerName = Text(row, info.name ?? "");
                         break;
                 }
             }
             for (int i = pictureCount; i < pictures.Count; i++) pictures[i].gameObject.SetActive(false);
             for (int i = textCount; i < texts.Count; i++) texts[i].gameObject.SetActive(false);
+            Layers.FinishOrder();
             lastFrame = -1;
         }
 
@@ -175,7 +159,7 @@ namespace OurTaiko
             return view;
         }
 
-        void Text(JToken row, string value)
+        TMP_Text Text(JToken row, string value)
         {
             if (textCount == texts.Count)
             {
@@ -195,6 +179,7 @@ namespace OurTaiko
             text.text = value;
             UiFonts.Use(text, outlined: (float)row["stroke"] > 0);
             text.Squeeze((float)row["width"]);
+            return text;
         }
 
         public bool PlayRank(string clip, double at)
@@ -214,6 +199,7 @@ namespace OurTaiko
 
         public void Show(double seconds)
         {
+            Layers.Show(seconds);
             long frame = (long)(seconds * 60);
             if (frame == lastFrame) return;
             lastFrame = frame;

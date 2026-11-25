@@ -276,11 +276,8 @@ namespace OurTaiko.Online
     // (its text and band) and the highest 段位 shown.
     public sealed class ProfileNameplate
     {
-        // The game's title bands: frame_top 0..4, and the rainbow band.
-        static readonly string[] Bands = { "wood", "teal", "wood2", "purple", "gold" };
         public string Title = "";
-        public int TitleBackground;
-        public bool Rainbow;
+        public string BandStyle = "wood";
         public int Dan = -1;
         public bool Gold;
         // The ring of the emblem (PlayerInfo.danCombo): from the badge's verdict, 1..6.
@@ -296,8 +293,7 @@ namespace OurTaiko.Online
                 plate.Title = title["nameTranslations"]?[key]?.Type == JTokenType.String && ((string)title["nameTranslations"][key]).Length > 0
                     ? (string)title["nameTranslations"][key] : (string)title["name"];
                 string style = title["style"]?.Type == JTokenType.String ? (string)title["style"] : "";
-                plate.Rainbow = style == "rainbow";
-                plate.TitleBackground = Math.Max(0, Array.IndexOf(Bands, style));
+                plate.BandStyle = style;
             }
             if (value["dan"] is JObject dan && dan["index"]?.Type == JTokenType.Integer)
             {

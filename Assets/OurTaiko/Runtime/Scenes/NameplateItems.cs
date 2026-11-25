@@ -56,13 +56,20 @@ namespace OurTaiko
         {
             var names = new List<string>();
             string dir = Path.Combine(Folder, NameplateSlots.Folder(slot));
-            if (!Directory.Exists(dir)) return names;
+            if (slot == NameplateSlot.Band)
+            {
+                var catalog = PlateComposition.ReadCatalog();
+                foreach (var id in catalog.BandIds)
+                    if (NameplateSlots.TryParse(id, out _, out string name)) names.Add(name);
+                names.Add("lumen-ai-3");
+            }
+            if (slot == NameplateSlot.Icon) names.Add("lumen-rankup");
             try
             {
-                foreach (string path in Directory.GetFiles(dir, "*" + Extension))
+                foreach (string path in Directory.Exists(dir) ? Directory.GetFiles(dir, "*" + Extension) : Array.Empty<string>())
                 {
                     string name = Path.GetFileNameWithoutExtension(path);
-                    if (NameplateSlots.IsName(name)) names.Add(name);
+                    if (NameplateSlots.IsName(name) && !names.Contains(name)) names.Add(name);
                 }
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException)
@@ -78,11 +85,11 @@ namespace OurTaiko
         {
             if (!NameplateSlots.TryParse(id, out var named, out string name) || named != slot) return null;
             string path = PathOf(slot, name);
-            return LoadPath(path);
+            return Resources.Load<OtanimAsset>(FolderName + "/" + id) ?? LoadPath(path);
         }
 
         internal static OtanimAsset CompositionPart(string name) =>
-            NameplateSlots.IsName(name) ? LoadPath(Path.Combine(Folder, "composition", name + Extension)) : null;
+            NameplateSlots.IsName(name) ? Resources.Load<OtanimAsset>(FolderName + "/composition/" + name) : null;
 
         static OtanimAsset LoadPath(string path)
         {

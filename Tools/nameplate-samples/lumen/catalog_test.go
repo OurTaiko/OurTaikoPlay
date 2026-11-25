@@ -19,7 +19,7 @@ func TestCompleteCollection(t *testing.T) {
 		Titles, AiTitles     map[string]string
 		Ranks, Badges, Blank []string
 	}
-	data, err := os.ReadFile("items/composition/catalog.json")
+	data, err := os.ReadFile(collection + "composition/catalog.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func TestCompleteCollection(t *testing.T) {
 	if len(catalog.States) != 36 || len(catalog.Titles) != 88 || len(catalog.AiTitles) != 8 || len(catalog.Ranks) != 114 {
 		t.Fatal("incomplete catalog")
 	}
-	base, renderer := example(t, "items/composition/plates.otanim")
+	base, renderer := example(t, collection+"composition/plates.otanim")
 	backing := base.Clip(catalog.BandBackingClip)
 	if backing == nil {
 		t.Fatal("missing standard band backing")
@@ -39,7 +39,7 @@ func TestCompleteCollection(t *testing.T) {
 	if rgba[3] < 0.95 || rgba[0]+rgba[1]+rgba[2] > 0.1 {
 		t.Fatal("expected opaque black divider at (300,45)", rgba)
 	}
-	band, bandRenderer := example(t, "items/"+catalog.Titles["aprilfool2025_01"]+".otanim")
+	band, bandRenderer := example(t, collection+""+catalog.Titles["aprilfool2025_01"]+".otanim")
 	pixels := bandRenderer.Draw(&band.Clip("idle").Frames[0], 408, 96, false)
 	if pixels[pixel+3] > 0.05 {
 		t.Fatal("April Fool band covers its divider")
@@ -71,7 +71,7 @@ func TestCompleteCollection(t *testing.T) {
 	}
 	for _, titles := range []map[string]string{catalog.Titles, catalog.AiTitles} {
 		for label, id := range titles {
-			f, r := example(t, "items/"+id+".otanim")
+			f, r := example(t, collection+""+id+".otanim")
 			c := f.Clip("idle")
 			if c == nil || c.FPS != 60 {
 				t.Fatal(label)
@@ -92,7 +92,7 @@ func TestCompleteCollection(t *testing.T) {
 		}
 	}
 	for _, ring := range []string{"clear", "full", "donfull"} {
-		f, _ := example(t, "items/composition/dan-"+ring+".otanim")
+		f, _ := example(t, collection+"composition/dan-"+ring+".otanim")
 		for index := 0; index < 19; index++ {
 			rank := fmt.Sprintf("%ddan", index-4)
 			if index < 5 {
@@ -107,7 +107,7 @@ func TestCompleteCollection(t *testing.T) {
 		}
 	}
 	for file, labels := range map[string][]string{"badges": {"1p", "2p"}, "blank": {"off", "on", "on_ai"}} {
-		f, _ := example(t, "items/composition/"+file+".otanim")
+		f, _ := example(t, collection+"composition/"+file+".otanim")
 		for _, name := range labels {
 			if f.Clip(name) == nil {
 				t.Fatal(file, name)

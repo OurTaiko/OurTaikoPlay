@@ -59,7 +59,11 @@ namespace OurTaiko
             var info = new PlayerInfo();
             try
             {
-                if (File.Exists(path)) info = PlayerInfo.FromJson(File.ReadAllText(path));
+                if (File.Exists(path))
+                {
+                    info = PlayerInfo.ReadSaved(File.ReadAllText(path), out bool reset);
+                    if (reset) Write(info);
+                }
                 else Write(info);
             }
             catch (Exception error) { Log.Warn("Settings", "Ignoring unreadable player info: " + error.Message); }
@@ -105,8 +109,8 @@ namespace OurTaiko
             if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
             string temporary = FilePath + ".tmp";
             File.WriteAllText(temporary, info.ToJson());
-            if (File.Exists(FilePath)) File.Delete(FilePath);
-            File.Move(temporary, FilePath);
+            if (File.Exists(FilePath)) File.Replace(temporary, FilePath, null);
+            else File.Move(temporary, FilePath);
         }
     }
 }

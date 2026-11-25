@@ -17,7 +17,6 @@ namespace OurTaiko.Tests
         {
             originalFirst = PlayOptions.Shared; originalSecond = PlayOptions.Second;
             PlayOptions.Shared = new PlayOptions(); PlayOptions.Second = new PlayOptions();
-            NameplateArt.UsePlaceholders(); // the badges come from the bucket at sign-in
         }
 
         [TearDown]
@@ -48,7 +47,7 @@ namespace OurTaiko.Tests
             yield return new WaitForSecondsRealtime(0.25f);
             Assert.That(entry.view.nameplateGroup2P.alpha, Is.EqualTo(1));
             Assert.That(entry.view.nameplate2P.Info.name, Is.EqualTo("2P"));
-            Assert.That(entry.view.nameplate2P.badge.sprite, Is.SameAs(NameplateArt.Badge2P));
+            Assert.That(System.Array.Exists(entry.view.nameplate2P.GetComponentsInChildren<OurTaiko.Chara.OtanimView>(), v => v.clip == "2p"));
 
             entry.Don();
             Assert.That(entry.TwoJoined, Is.True);

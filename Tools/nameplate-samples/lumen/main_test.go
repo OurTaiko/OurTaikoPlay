@@ -9,6 +9,8 @@ import (
 	"ourtaiko.org/otanim/render"
 )
 
+const collection = "../../../Assets/OurTaiko/Resources/Nameplate/"
+
 func example(t *testing.T, path string) (*otanim.File, *render.Renderer) {
 	t.Helper()
 	data, err := os.ReadFile(path)
@@ -30,7 +32,7 @@ func example(t *testing.T, path string) (*otanim.File, *render.Renderer) {
 }
 
 func TestMaskedTitle(t *testing.T) {
-	f, r := example(t, "items/band/lumen-ai-3.otanim")
+	f, r := example(t, collection+"band/lumen-ai-3.otanim")
 	c := f.Clip("idle")
 	if c == nil || !c.Loop || c.FPS != 60 || len(c.Frames) != 2400 {
 		t.Fatal("expected the complete glint and star loop")
@@ -63,8 +65,22 @@ func TestMaskedTitle(t *testing.T) {
 	}
 }
 
+func TestEarlyTitleAlias(t *testing.T) {
+	legacy, first := example(t, collection+"band/lumen-ai-3.otanim")
+	current, second := example(t, collection+"band/lumen-title-ai_3.otanim")
+	a, b := legacy.Clip("idle"), current.Clip("idle")
+	if len(a.Frames) != len(b.Frames) || a.FPS != b.FPS || a.Loop != b.Loop {
+		t.Fatal("alias timing differs")
+	}
+	for _, frame := range []int{0, 59, 799, len(a.Frames) - 1} {
+		if !reflect.DeepEqual(first.Draw(&a.Frames[frame], 408, 96, false), second.Draw(&b.Frames[frame], 408, 96, false)) {
+			t.Fatal("alias differs at frame", frame)
+		}
+	}
+}
+
 func TestRankupPlayback(t *testing.T) {
-	f, r := example(t, "items/icon/lumen-rankup.otanim")
+	f, r := example(t, collection+"icon/lumen-rankup.otanim")
 	if len(f.Clips) != 58 || len(f.Clip("idle").Frames[0].Draws) != 0 {
 		t.Fatal("expected idle and three phases per rank")
 	}

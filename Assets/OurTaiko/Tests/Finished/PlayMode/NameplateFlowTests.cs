@@ -13,10 +13,6 @@ namespace OurTaiko.Tests
     {
         static PlayerInfoController Controller => PlayerInfoController.EnsureInstance();
 
-        // The art comes from the bucket at sign-in; these plates draw plain stand-ins of its sizes.
-        [SetUp]
-        public void UseStandInArt() => NameplateArt.UsePlaceholders();
-
         [TearDown]
         public void RestoreDefaultPlayer() => Controller.UseUnsaved(new PlayerInfo());
 
@@ -61,7 +57,7 @@ namespace OurTaiko.Tests
             song.chart = new TextAsset("TITLE:Plate\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#START\n1111,\n1111,\n#END");
             // Exercise the built-in art independently of collections installed on this device.
             NameplateItems.UseFolder(Path.Combine(Path.GetTempPath(), System.Guid.NewGuid().ToString("N")));
-            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", titleBackground = 3, dan = 24, gold = true, danCombo = 2 });
+            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", plateTitle = "purple", dan = 24, gold = true, danCombo = 2 });
             try
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -87,15 +83,9 @@ namespace OurTaiko.Tests
                     "The balloon overlay draws above the lane containing the nameplate.");
 
                 // Title and dan: the band family with the gold 達人 on the rainbow ring and the *_dani name box.
-                Assert.That(plate.band.enabled && plate.outline.enabled && plate.badge.enabled, Is.True);
-                Assert.That(plate.band.sprite, Is.SameAs(NameplateArt.Bands[3]));
-                Assert.That(plate.dan.enabled && plate.danBackground.enabled && plate.danRing.enabled, Is.True);
-                Assert.That(plate.danRing.sprite, Is.SameAs(NameplateArt.DanRings[2]));
-                Assert.That(plate.dan.sprite, Is.SameAs(NameplateArt.GoldDanTexts[24]));
-                Assert.That(plate.danRing.transform.GetSiblingIndex(), Is.EqualTo(plate.dan.transform.GetSiblingIndex() - 1), "The ring is drawn under the rank.");
+                Assert.That(plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Any(v => v.clip == "14dan_gold"), Is.True);
                 Assert.That(plate.title.gameObject.activeSelf, Is.True);
                 Assert.That(plate.title.text, Is.EqualTo("Taiko Master"));
-                Assert.That(plate.title.color, Is.EqualTo(Color.black));
                 Assert.That(plate.playerName.rectTransform.anchoredPosition, Is.EqualTo(new Vector2(261, -64.5f)));
                 Assert.That(plate.playerName.fontSize, Is.EqualTo(24));
                 AssertUiFont(plate.title);
@@ -132,8 +122,8 @@ namespace OurTaiko.Tests
 
                 // An info change reaches the plate already on screen: back to the coin plate.
                 Controller.UseUnsaved(new PlayerInfo { name = "Katsu-chan" });
-                Assert.That(plate.band.enabled || plate.outline.enabled || plate.dan.enabled || plate.danRing.enabled, Is.False);
-                Assert.That(plate.title.gameObject.activeSelf, Is.False);
+                Assert.That(plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Any(v => v.clip == "14dan_gold"), Is.False);
+                Assert.That(plate.title.text, Is.Empty);
                 Assert.That(plate.playerName.text, Is.EqualTo("Katsu-chan"));
                 Assert.That(plate.playerName.fontSize, Is.EqualTo(30));
                 AssertUiFont(plate.playerName);
@@ -147,19 +137,9 @@ namespace OurTaiko.Tests
                 Assert.That(plate.playerName.rectTransform.localScale.x, Is.LessThan(1));
                 Assert.That(plate.playerName.preferredWidth * plate.playerName.rectTransform.localScale.x, Is.EqualTo(190).Within(0.5f));
 
-                // The rainbow band cycles its six frames, each over the previous one.
-                Controller.UseUnsaved(new PlayerInfo { title = "Rainbow", rainbow = true });
-                var frames = new System.Collections.Generic.HashSet<int>();
-                float deadline = Time.realtimeSinceStartup + 1;
-                while (Time.realtimeSinceStartup < deadline)
-                {
-                    yield return null;
-                    frames.Add(plate.RainbowFrame);
-                    Assert.That(plate.band.sprite, Is.SameAs(NameplateArt.Rainbow[plate.RainbowFrame]));
-                    Assert.That(plate.bandUnder.enabled, Is.EqualTo(plate.RainbowFrame > 0));
-                    if (plate.RainbowFrame > 0) Assert.That(plate.bandUnder.sprite, Is.SameAs(NameplateArt.Rainbow[plate.RainbowFrame - 1]));
-                }
-                Assert.That(frames.Count, Is.GreaterThanOrEqualTo(4));
+                Controller.UseUnsaved(new PlayerInfo { title = "Rainbow", plateTitle = "rainbow" });
+                var rainbow = NameplateItems.Load(NameplateSlot.Band, "band/lumen-title-rainbow");
+                Assert.That(plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Any(v => v.asset == rainbow));
                 play.Back();
                 yield return WaitForScene(SceneSwitcher.SongSelectScene);
             }
@@ -174,7 +154,7 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator SongSelectAndResultShowNameplate()
         {
-            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", titleBackground = 1, dan = 10 });
+            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Taiko Master", plateTitle = "wood", dan = 10 });
             try
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -193,8 +173,7 @@ namespace OurTaiko.Tests
                 Assert.That(plate.transform.GetSiblingIndex(), Is.EqualTo(select.wheel.GetSiblingIndex() + 1));
                 Assert.That(plate.transform.GetSiblingIndex(), Is.LessThan(select.coursePanel.GetSiblingIndex()));
                 Assert.That(select.view.nameplate2P.transform.GetSiblingIndex(), Is.LessThan(select.coursePanel.GetSiblingIndex()));
-                Assert.That(plate.dan.sprite, Is.SameAs(NameplateArt.DanTexts[10]));
-                Assert.That(plate.danRing.sprite, Is.SameAs(NameplateArt.DanRings[0]));
+                Assert.That(plate.GetComponentsInChildren<OurTaiko.Chara.OtanimView>().Any(v => v.clip == "1kyuu_red"));
                 yield return new WaitForSecondsRealtime(0.5f);
                 TestCapture.Capture("NameplateSongSelect.png");
 
@@ -237,7 +216,7 @@ namespace OurTaiko.Tests
             }
             var song = ScriptableObject.CreateInstance<SongDefinition>();
             song.chart = new TextAsset("TITLE:Plate\nBPM:120\nCOURSE:Oni\nLEVEL:5\n#START\n1111,\n1111,\n#END");
-            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Layers", bandItem = "band/moving", iconItem = "icon/still" });
+            Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Layers", plateState = "custom", bandItem = "band/moving", iconItem = "icon/still" });
             try
             {
                 if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
@@ -251,16 +230,13 @@ namespace OurTaiko.Tests
                 var plate = ((RectTransform)play.firstLane.scoreCounter.transform.parent).GetComponentInChildren<NameplateView>();
                 var layers = plate.Layers;
                 Assert.That(layers?.Mask, Is.Not.Null);
-                Assert.That(plate.band.enabled, Is.False, "The worn band is drawn instead of the plate's own.");
+                Assert.That(layers.CoversBand, Is.True, "The worn band is drawn instead of the plate's own.");
                 Assert.That(layers.BandView.gameObject.activeInHierarchy && layers.IconView.gameObject.activeInHierarchy && !layers.EffectView.gameObject.activeSelf);
                 Assert.That((layers.BandView.RunCount, layers.IconView.RunCount), Is.EqualTo((1, 1)), "The plate draws them by itself every frame.");
-                Assert.That(layers.Mask.GetSiblingIndex(), Is.EqualTo(plate.band.transform.GetSiblingIndex() + 1));
-                Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.EqualTo(plate.outline.transform.GetSiblingIndex() + 1));
-                Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.LessThan(plate.badge.transform.GetSiblingIndex()));
 
                 Controller.UseUnsaved(new PlayerInfo { name = "Don-chan", title = "Layers" });
-                Assert.That(plate.band.enabled, "Wearing none brings the plate's own band back.");
-                Assert.That(layers.Mask.gameObject.activeSelf || layers.IconView.gameObject.activeSelf, Is.False);
+                Assert.That(!layers.CoversBand, "Wearing none brings the plate's own band back.");
+                Assert.That(layers.Mask.gameObject.activeInHierarchy || layers.IconView.gameObject.activeSelf, Is.False);
             }
             finally
             {

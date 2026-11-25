@@ -15,6 +15,7 @@ Shader "OurTaiko/Otanim"
         _StencilWriteMask ("Stencil Write Mask", Float) = 255
         _StencilReadMask ("Stencil Read Mask", Float) = 255
         _ColorMask ("Color Mask", Float) = 15
+        [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
     }
     SubShader
     {
@@ -39,6 +40,7 @@ Shader "OurTaiko/Otanim"
             #pragma vertex Vertex
             #pragma fragment Fragment
             #pragma multi_compile_local _ UNITY_UI_CLIP_RECT
+            #pragma multi_compile_local _ UNITY_UI_ALPHACLIP
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
@@ -70,6 +72,9 @@ Shader "OurTaiko/Otanim"
                 #ifdef UNITY_UI_CLIP_RECT
                 float2 inside = step(_ClipRect.xy, input.local) * step(input.local, _ClipRect.zw);
                 c *= inside.x * inside.y;
+                #endif
+                #ifdef UNITY_UI_ALPHACLIP
+                clip(c.a - 0.001);
                 #endif
                 return c;
             }

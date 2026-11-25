@@ -266,7 +266,7 @@ namespace OurTaiko.Tests
             var profiles = new ProfileCenter(fixture.BaseUrl);
             var english = Run(() => profiles.NameplateAsync(id, "en"));
             Assert.That(english.Title, Is.EqualTo("Taiko Master"));
-            Assert.That(english.TitleBackground, Is.EqualTo(3));
+            Assert.That(english.BandStyle, Is.EqualTo("purple"));
             Assert.That(english.Dan, Is.EqualTo(11));
             Assert.That(english.Gold, Is.False);
             Assert.That(Run(() => profiles.NameplateAsync(id, "zh")).Title, Is.EqualTo("太鼓达人"));
@@ -274,7 +274,7 @@ namespace OurTaiko.Tests
             var plain = Run(() => profiles.NameplateAsync(OnlineFixture.UserId("ka"), "en"));
             Assert.That(plain.Title, Is.Empty);
             Assert.That(plain.Dan, Is.EqualTo(-1));
-            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"rainbow\"},\"dan\":{\"index\":99}}"), "en").Rainbow, Is.True);
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"rainbow\"},\"dan\":{\"index\":99}}"), "en").BandStyle, Is.EqualTo("rainbow"));
             Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"dan\":{\"index\":99}}"), "en").Dan, Is.EqualTo(-1));
         }
 

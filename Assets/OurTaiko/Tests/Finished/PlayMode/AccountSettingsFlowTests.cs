@@ -132,8 +132,7 @@ namespace OurTaiko.Tests
             var plate = PlayerInfoController.Instance.Info;
             Assert.That(plate.name, Is.EqualTo("DON"), "The nickname goes on the nameplate.");
             Assert.That(plate.title, Is.EqualTo("Taiko Master"), "The title Profile says 1P wears, in the song language (English by default).");
-            Assert.That(plate.titleBackground, Is.EqualTo(4));
-            Assert.That(plate.rainbow, Is.False);
+            Assert.That(plate.profileBand, Is.EqualTo("gold"));
             Assert.That(plate.dan, Is.EqualTo(20));
             Assert.That(plate.gold, Is.True);
             Assert.That(fixture.Requests, Has.None.EqualTo("POST /api/v2/game/login"), "No password goes to the game server.");
@@ -157,7 +156,7 @@ namespace OurTaiko.Tests
             var second = PlayerInfoController.Instance.SecondInfo;
             Assert.That(second.name, Is.EqualTo("KA"));
             Assert.That(second.title, Is.EqualTo("虹"));
-            Assert.That(second.rainbow, Is.True);
+            Assert.That(second.profileBand, Is.EqualTo("rainbow"));
             Assert.That(second.dan, Is.EqualTo(-1), "No 段位 shown.");
             Assert.That(online.Client.Endpoints.Single().Seats[1].IsAuthenticated, Is.True);
             Assert.That(online.Client.Best(listed, (int)Difficulty.Oni, 1), Is.Null, "2P has none of 1P's scores.");
