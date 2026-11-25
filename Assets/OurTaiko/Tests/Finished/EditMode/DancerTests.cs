@@ -16,12 +16,13 @@ namespace OurTaiko.Tests
         const string Art = "Assets/OurTaiko/Resources/Stage/dancers/";
         const int Dancers = 5;
 
-        // 150 BPM is 100 rig frames a second.
+        // 150 BPM is 100 rig frames a second, so the half-second way in is 50 of them and the
+        // playhead starts at 30, landing the opening troupe on 80.
         static DancerTroupe TroupeAt(double frame, out double time)
         {
             var troupe = new DancerTroupe(Enumerable.Repeat(new DancerRig(800, 80, 720), 5).ToArray());
             troupe.Advance(0, 150);
-            time = frame / 100;
+            time = (frame - 30) / 100;
             troupe.Advance(time, 150);
             return troupe;
         }
@@ -33,15 +34,47 @@ namespace OurTaiko.Tests
         {
             var troupe = new DancerTroupe(Enumerable.Repeat(new DancerRig(800, 80, 720), 5).ToArray());
             troupe.Advance(10, 150);
-            Assert.That(Frames(troupe), Is.EqualTo(new[] { 0, 0, 0, -1, -1 }));
-            troupe.Advance(10.795, 150);
+            Assert.That(Frames(troupe), Is.EqualTo(new[] { 0, 0, 0, -1, -1 }), "They are on stage from the start.");
+            troupe.Advance(10.495, 150);
             Assert.That(Frames(troupe), Is.EqualTo(new[] { 79, 79, 79, -1, -1 }));
-            troupe.Advance(10.805, 150);
-            Assert.That(Frames(troupe), Is.EqualTo(new[] { 80, 80, 80, -1, -1 }));
-            troupe.Advance(17.195, 150);
+            troupe.Advance(10.505, 150);
+            Assert.That(Frames(troupe), Is.EqualTo(new[] { 80, 80, 80, -1, -1 }), "Landed on the phrase half a second in.");
+            troupe.Advance(16.895, 150);
             Assert.That(troupe.FrameOf(0), Is.EqualTo(719));
-            troupe.Advance(17.305, 150);
+            troupe.Advance(17.005, 150);
             Assert.That(troupe.FrameOf(0), Is.EqualTo(90), "The dance loops without replaying the hop in.");
+        }
+
+        // Measured on the arcade: the way in is half a second at any tempo, and lands on the beat.
+        [TestCase(75.0)]
+        [TestCase(150.0)]
+        [TestCase(300.0)]
+        public void TheWayInTakesHalfASecondAtAnyTempo(double bpm)
+        {
+            var troupe = new DancerTroupe(Enumerable.Repeat(new DancerRig(800, 80, 720), 5).ToArray());
+            troupe.Advance(0, bpm);
+            Assert.That(troupe.FrameOf(0), Is.EqualTo(0));
+            troupe.Advance(0.25, bpm);
+            Assert.That(troupe.FrameOf(0), Is.EqualTo(40));
+            troupe.Advance(0.499, bpm);
+            Assert.That(troupe.FrameOf(0), Is.EqualTo(79));
+            troupe.Advance(0.501, bpm);
+            Assert.That(troupe.FrameOf(0), Is.EqualTo(80));
+            Assert.That(troupe.Frame, Is.EqualTo(80 + 0.001 * bpm / 60 * DancerTroupe.BeatFrames).Within(1e-6), "The dance starts on its phrase.");
+        }
+
+        // A rig whose dance starts at 0 has no way in: the opening troupe is dancing from the start.
+        [Test]
+        public void ARigWithNoWayInDancesFromTheStart()
+        {
+            var troupe = new DancerTroupe(Enumerable.Repeat(new DancerRig(380, 0, 380), 5).ToArray(), leadFirst: true);
+            troupe.Advance(0, 150);
+            Assert.That(troupe.FrameOf(0), Is.EqualTo(0));
+            troupe.Advance(1.005, 150);
+            troupe.SetCount(2);
+            Assert.That(troupe.FrameOf(1), Is.EqualTo(-1), "Earned at 100, it appears on the phrase at 160.");
+            troupe.Advance(1.605, 150);
+            Assert.That((troupe.FrameOf(0), troupe.FrameOf(1)), Is.EqualTo((160, 160)));
         }
 
         [Test]
@@ -50,10 +83,14 @@ namespace OurTaiko.Tests
             var troupe = TroupeAt(100, out double time);
             troupe.SetCount(4);
             Assert.That(troupe.FrameOf(3), Is.EqualTo(-1));
+            troupe.Advance(time + 0.095, 150);
+            Assert.That(troupe.FrameOf(3), Is.EqualTo(-1), "Earned at 100, it hops in from 110 to land on 160.");
+            troupe.Advance(time + 0.105, 150);
+            Assert.That(troupe.FrameOf(3), Is.EqualTo(0));
             troupe.Advance(time + 0.595, 150);
-            Assert.That(troupe.FrameOf(3), Is.EqualTo(-1), "Earned at 100, it hops in from 160.");
-            troupe.Advance(time + 1.005, 150);
-            Assert.That(troupe.FrameOf(3), Is.EqualTo(40));
+            Assert.That(troupe.FrameOf(3), Is.EqualTo(79));
+            troupe.Advance(time + 0.605, 150);
+            Assert.That(Frames(troupe), Is.EqualTo(new[] { 160, 160, 160, 160, -1 }));
             troupe.Advance(time + 1.505, 150);
             Assert.That(Frames(troupe), Is.EqualTo(new[] { 250, 250, 250, 250, -1 }));
         }
@@ -83,10 +120,10 @@ namespace OurTaiko.Tests
         {
             var troupe = TroupeAt(100, out double time);
             troupe.SetCount(5);
-            troupe.Advance(time + 1.005, 150);
-            Assert.That(troupe.FrameOf(4), Is.EqualTo(40));
+            troupe.Advance(time + 0.3, 150);
+            Assert.That(troupe.FrameOf(4), Is.EqualTo(32));
             troupe.SetCount(3);
-            Assert.That(Frames(troupe), Is.EqualTo(new[] { 200, 200, 200, -1, -1 }));
+            Assert.That(Frames(troupe), Is.EqualTo(new[] { 130, 130, 130, -1, -1 }));
             troupe.SetCount(1);
             Assert.That(troupe.Active, Is.EqualTo(3), "Three always stay.");
         }
