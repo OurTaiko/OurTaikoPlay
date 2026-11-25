@@ -276,6 +276,18 @@ namespace OurTaiko.Tests
             Assert.That(plain.Dan, Is.EqualTo(-1));
             Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"rainbow\"},\"dan\":{\"index\":99}}"), "en").BandStyle, Is.EqualTo("rainbow"));
             Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"dan\":{\"index\":99}}"), "en").Dan, Is.EqualTo(-1));
+
+            // The title's layers, each an item of its own slot; anything else is none, and the title
+            // is drawn as its style.
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"wood\",\"layers\":{\"band\":\"band/lumen-title-toho_y22\",\"effect\":null,\"icon\":\"icon/lumen-title-crown_gold\"}}}"), "en").Layers,
+                Is.EqualTo(new TitleParts("band/lumen-title-toho_y22", null, "icon/lumen-title-crown_gold")));
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"gold\",\"layers\":{\"band\":\"icon/lumen-title-crown_gold\"}}}"), "en").Layers, Is.Null);
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"gold\",\"layers\":{\"band\":\"band/lumen-title-gold\",\"icon\":\"band/lumen-title-gold\"}}}"), "en").Layers,
+                Is.EqualTo(new TitleParts("band/lumen-title-gold", null, null)), "An item out of its slot is none.");
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"gold\"}}"), "en").Layers, Is.Null);
         }
 
         [Test]

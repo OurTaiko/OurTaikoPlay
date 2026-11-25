@@ -67,7 +67,8 @@ namespace OurTaiko.Tests
             long title = fixture.GiveReward("don", Reward.TitleKind, new JObject
             {
                 ["title"] = new JObject { ["id"] = "saitama", ["name"] = "さいたま2000を極めし者", ["style"] = "rainbow", ["description"] = "おに フルコンボ",
-                    ["nameTranslations"] = new JObject { ["zh-Hans"] = "埼玉2000大师" } },
+                    ["nameTranslations"] = new JObject { ["zh-Hans"] = "埼玉2000大师" },
+                    ["layers"] = new JObject { ["band"] = "band/lumen-title-rainbow", ["effect"] = null, ["icon"] = "icon/lumen-title-crown_gold" } },
                 ["service"] = "rule", ["courseTitle"] = "",
             });
             long dan = fixture.GiveReward("don", Reward.DanKind, new JObject { ["index"] = 22, ["verdict"] = 5, ["gold"] = true, ["combo"] = 1 });
@@ -89,6 +90,12 @@ namespace OurTaiko.Tests
             string songLanguage = SettingManager.EnsureInstance().Settings.general.Language;
             Assert.That(Overlay.AllText, Does.Contain(L10n.Get("Online", "rewards.title")).And.Contain(Overlay.Current.TitleName(songLanguage))
                 .And.Contain(L10n.Get("Online", "rewards.fromRule")).And.Contain("おに フルコンボ").And.Contain("1 / 2").And.Contain(L10n.Get("Online", "rewards.next")));
+            // Drawn by the game's own nameplate, wearing the title's layers.
+            var plate = Overlay.Canvas.GetComponentInChildren<NameplateView>();
+            Assert.That(plate, Is.Not.Null);
+            Assert.That(plate.title.text, Is.EqualTo(Overlay.Current.TitleName(songLanguage)));
+            Assert.That(plate.Layers.IconView.asset, Is.SameAs(NameplateItems.Load(NameplateSlot.Icon, "icon/lumen-title-crown_gold")));
+            Assert.That(plate.Layers.BandView.asset, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, "band/lumen-title-rainbow")));
             var scene = TestCapture.SceneCanvas();
             TestCapture.Capture("RewardTitle.png", canvas: scene, over: Overlay.Canvas);
             TestCapture.Capture("RewardTitleTablet.png", 2048, 1536, TestCapture.StageIsCentred(Overlay.Stage), scene, Overlay.Canvas);

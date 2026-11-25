@@ -25,7 +25,23 @@ namespace OurTaiko
         public string plateState = "auto", plateTitle = "auto", plateAiTitle = "wood", plateBlank = "off", plateBadge = "auto";
 
         public int nameplateVersion = 1;
+        // The title the account wears on the site: the band of six an older site gives (style), and
+        // the layers its title is made of (NameplateSlots ids; empty: as its style looks).
         public string profileBand = "wood";
+        public string profileBandItem = "", profileEffectItem = "", profileIconItem = "";
+
+        // The site's title's layers, when the site gave them.
+        public TitleParts? ProfileLayers => string.IsNullOrEmpty(profileBandItem) ? null
+            : new TitleParts(profileBandItem, NullIfEmpty(profileEffectItem), NullIfEmpty(profileIconItem));
+
+        public void SetProfileLayers(TitleParts? layers)
+        {
+            profileBandItem = layers?.Band ?? "";
+            profileEffectItem = layers?.Effect ?? "";
+            profileIconItem = layers?.Icon ?? "";
+        }
+
+        static string NullIfEmpty(string value) => string.IsNullOrEmpty(value) ? null : value;
 
         public bool HasTitle => !string.IsNullOrEmpty(title) && title != DefaultTitle;
         // An out-of-range dan is "no dan", as nameplate.lua's clamp does.
@@ -64,6 +80,9 @@ namespace OurTaiko
             info.bandItem ??= "";
             info.effectItem ??= "";
             info.iconItem ??= "";
+            info.profileBandItem ??= "";
+            info.profileEffectItem ??= "";
+            info.profileIconItem ??= "";
             return info;
         }
 

@@ -7,6 +7,9 @@ namespace OurTaiko
     [RequireComponent(typeof(RectTransform))]
     public sealed class NameplateView : MonoBehaviour
     {
+        // The prefab, for a plate made at run time: Resources.Load<NameplateView>(Resource).
+        public const string Resource = "Nameplate";
+
         public TMP_Text title => composition?.Title;
         public TMP_Text playerName => composition?.PlayerName;
         [Tooltip("0 = 1P, 1 = 2P.")]

@@ -397,6 +397,33 @@ namespace OurTaiko.Tests
         }
 
         [Test]
+        public void APlateFollowingTheSiteWearsItsTitlesOwnLayers()
+        {
+            using var preview = new NameplatePreview();
+            var info = new PlayerInfo { name = "Player", title = "Title", profileBand = "wood" };
+            info.SetProfileLayers(new TitleParts("band/lumen-title-toho_y22", "effect/lumen-title-ai_3", "icon/lumen-title-crown_gold"));
+            preview.Show(info, 0);
+            var (band, effect, icon) = Wearing(preview.Plate.Layers);
+            Assert.That((band, effect, icon), Is.EqualTo((
+                NameplateItems.Load(NameplateSlot.Band, "band/lumen-title-toho_y22"),
+                NameplateItems.Load(NameplateSlot.Effect, "effect/lumen-title-ai_3"),
+                NameplateItems.Load(NameplateSlot.Icon, "icon/lumen-title-crown_gold"))));
+            var back = PlayerInfo.FromJson(info.ToJson());
+            Assert.That(back.ProfileLayers, Is.EqualTo(info.ProfileLayers), "player.json keeps them.");
+
+            // A title picked on the plate itself is the catalog's.
+            info.plateTitle = "gold";
+            preview.Show(info, 0);
+            Assert.That(Wearing(preview.Plate.Layers).band, Is.SameAs(NameplateItems.Load(NameplateSlot.Band, "band/lumen-title-gold")));
+            // A site without layers: the title's style.
+            info.plateTitle = "auto";
+            info.SetProfileLayers(null);
+            info.profileBand = "purple";
+            preview.Show(info, 0);
+            Assert.That(Wearing(preview.Plate.Layers).effect, Is.SameAs(NameplateItems.Load(NameplateSlot.Effect, "effect/lumen-title-purple")));
+        }
+
+        [Test]
         public void EveryTitleIsMadeOfBuiltInItemsAndNeverLosesItsBand()
         {
             var catalog = PlateComposition.ReadCatalog();

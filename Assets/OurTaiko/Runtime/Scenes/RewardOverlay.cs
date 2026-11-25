@@ -77,7 +77,6 @@ namespace OurTaiko
         RectTransform stage, content;
         Image shade;
         Piece banner, item, from, prompt;
-        RectTransform shine;
         readonly List<OurTaiko.Chara.OtanimView> rewardArts = new List<OurTaiko.Chara.OtanimView>();
         Func<bool> isUp;
 
@@ -236,7 +235,7 @@ namespace OurTaiko
         void Clear()
         {
             if (content != null) Destroy(content.gameObject);
-            content = null; banner = item = from = prompt = null; shine = null; rewardArts.Clear();
+            content = null; banner = item = from = prompt = null; rewardArts.Clear();
             shade.color = new Color(0, 0, 0, 0);
         }
 
@@ -287,26 +286,23 @@ namespace OurTaiko
             Animate();
         }
 
+        // The title on the player's own nameplate: the game's Nameplate prefab with their name and
+        // 段位, wearing the title with its layers (or its style's, given before titles had them).
         void DrawTitle(Reward reward, string language)
         {
-            const float width = 408 * Scale, height = 56 * Scale;
+            const float width = NameplateLayout.Width * Scale, height = NameplateLayout.Height * Scale;
             var holder = SkinUi.Rect("Title", content, width, height);
             item = Place(holder, 960, 560);
-            // The title as the plate draws it: its band, the effect over it and its icon.
-            var parts = PlateComposition.ReadCatalog().Title(reward.TitleStyle);
-            foreach (var slot in NameplateSlots.All)
-            {
-                var layer = NameplateItems.Load(slot, parts.In(slot));
-                if (layer != null) ShowRewardArt(holder, layer, NameplateItems.ClipOf(layer.File).Name, Scale, Vector2.zero);
-            }
-            var window = SkinUi.Rect("Window", holder, 316 * Scale, 34 * Scale);
-            window.Center(204 * Scale, 31 * Scale);
-            window.gameObject.AddComponent<RectMask2D>();
-            shine = SkinUi.Image("Light", window, null, 60, 34 * Scale * 1.6f).rectTransform;
-            shine.GetComponent<Image>().color = new Color(1, 1, 1, 0.55f);
-            shine.localRotation = Quaternion.Euler(0, 0, -20);
-            var name = Text(window, reward.TitleName(language), 22 * Scale, 158 * Scale, 17 * Scale, PlateUi.Ink, dark: true);
-            name.Squeeze(300 * Scale);
+            var plate = Instantiate(Resources.Load<NameplateView>(NameplateView.Resource), holder, false);
+            plate.Place(0, 0);
+            plate.RectTransform.localScale = new Vector3(Scale, Scale, 1);
+            var players = PlayerInfoController.EnsureInstance();
+            var info = (reward.Seat == 1 ? players.SecondInfo : players.Info).Clone();
+            info.title = reward.TitleName(language);
+            info.plateState = info.plateTitle = "auto";
+            info.profileBand = reward.TitleStyle;
+            info.SetProfileLayers(reward.TitleLayers);
+            plate.Pin(info, reward.Seat);
         }
 
         // A part of the 3D Don: its picture on a plate (the path the site described it with),
@@ -441,12 +437,6 @@ namespace OurTaiko
             }
             else item.Rect.anchoredPosition = item.Home + new Vector2((float)((1 - BackOut(i, 1.2)) * 1600), 0);
 
-            if (shine != null)
-            {
-                double l = Phase(t, ShineAt, ShineSeconds);
-                shine.gameObject.SetActive(l > 0 && l < 1);
-                shine.anchoredPosition = new Vector2((float)(-60 + l * (316 * Scale + 120)), -17 * Scale);
-            }
             foreach (var art in rewardArts)
                 if (art.Clip?.Frames.Length > 1) art.Show(t);
 

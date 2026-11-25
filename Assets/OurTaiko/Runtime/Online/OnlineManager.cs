@@ -506,6 +506,7 @@ namespace OurTaiko.Online
                 {
                     info.title = plate.Title.Length > 0 ? plate.Title : PlayerInfo.DefaultTitle;
                     info.profileBand = plate.BandStyle;
+                    info.SetProfileLayers(plate.Layers);
                     info.dan = plate.Dan; info.gold = plate.Gold; info.danCombo = plate.Combo;
                 }
             }

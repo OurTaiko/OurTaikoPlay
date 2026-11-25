@@ -18,7 +18,7 @@ namespace OurTaiko.Editor
     // set (and NAMEPLATE_ITEMS_DIR for another items folder) writes the sheets RenderAll makes.
     public sealed class NameplatePreview : IDisposable
     {
-        public const string PrefabPath = "Assets/OurTaiko/Generated/Nameplate.prefab";
+        public const string PrefabPath = "Assets/OurTaiko/Resources/Nameplate.prefab";
         // Space around the plate, in plate pixels: an icon may stand out of it.
         public const int Margin = 16;
         const int UiLayer = 5;

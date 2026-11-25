@@ -273,11 +273,13 @@ namespace OurTaiko.Online
     }
 
     // A player's nameplate as the site keeps it (net.ourtaiko.org, /api/v2/users/...): the title worn
-    // (its text and band) and the highest 段位 shown.
+    // (its text, its layers, and the band of six an older site gives) and the highest 段位 shown.
     public sealed class ProfileNameplate
     {
         public string Title = "";
         public string BandStyle = "wood";
+        // The title's band, effect and icon (NameplateSlots ids); null from a site without them.
+        public TitleParts? Layers;
         public int Dan = -1;
         public bool Gold;
         // The ring of the emblem (PlayerInfo.danCombo): from the badge's verdict, 1..6.
@@ -294,6 +296,7 @@ namespace OurTaiko.Online
                     ? (string)title["nameTranslations"][key] : (string)title["name"];
                 string style = title["style"]?.Type == JTokenType.String ? (string)title["style"] : "";
                 plate.BandStyle = style;
+                plate.Layers = ReadLayers(title["layers"]);
             }
             if (value["dan"] is JObject dan && dan["index"]?.Type == JTokenType.Integer)
             {
@@ -307,6 +310,20 @@ namespace OurTaiko.Online
                 }
             }
             return plate;
+        }
+
+        // {band, effect, icon} as the site gives a title's layers: each an item of its own slot, the
+        // band there; anything else is no layers (the title is drawn as its style).
+        public static TitleParts? ReadLayers(JToken value)
+        {
+            if (value is not JObject layers) return null;
+            string Item(NameplateSlot slot)
+            {
+                var item = layers[NameplateSlots.Folder(slot)];
+                return item?.Type == JTokenType.String && NameplateSlots.TryParse((string)item, out var named, out _) && named == slot ? (string)item : null;
+            }
+            string band = Item(NameplateSlot.Band);
+            return band == null ? null : new TitleParts(band, Item(NameplateSlot.Effect), Item(NameplateSlot.Icon));
         }
     }
 

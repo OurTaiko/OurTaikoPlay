@@ -34,6 +34,8 @@ namespace OurTaiko.Online
             return title?["name"]?.Type == JTokenType.String ? (string)title["name"] : "";
         }
         public string TitleStyle => Data["title"]?["style"]?.Type == JTokenType.String ? (string)Data["title"]["style"] : "";
+        // The title's layers; null for a title given before titles had them (it looks as its style).
+        public TitleParts? TitleLayers => ProfileNameplate.ReadLayers(Data["title"]?["layers"]);
         public string TitleDescription => Data["title"]?["description"]?.Type == JTokenType.String ? (string)Data["title"]["description"] : "";
         // What gave it: a 段位 course's name, or the site's service ("rule", "admin", a source).
         public string CourseTitle => Data["courseTitle"]?.Type == JTokenType.String ? (string)Data["courseTitle"] : "";

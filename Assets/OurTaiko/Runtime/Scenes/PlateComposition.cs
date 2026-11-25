@@ -132,11 +132,16 @@ namespace OurTaiko
             choice != null && options.ContainsKey(choice) ? choice : "wood";
 
         // The layers a plate wears: a custom plate wears the player's own pick of each slot, any other the
-        // items its title is made of. A custom plate whose band slot is empty keeps its title's band.
+        // items its title is made of: the site's title's own layers when the plate follows the site
+        // (auto) and the site gave them, else the catalog title. A custom plate whose band slot is
+        // empty keeps its title's band.
         public static TitleParts Worn(Catalog source, JArray rows, PlayerInfo info)
         {
             string label = TitleOf(source, rows, info, out bool ai);
-            var title = label == null ? default : ai ? source.AiTitle(label) : source.Title(label);
+            var title = label == null ? default
+                : ai ? source.AiTitle(label)
+                : info.plateTitle == "auto" && info.ProfileLayers is TitleParts own ? own
+                : source.Title(label);
             if (info.plateState != "custom" || info.IsCoin) return title;
             return new TitleParts(string.IsNullOrEmpty(info.bandItem) ? title.Band : info.bandItem, info.effectItem, info.iconItem);
         }
