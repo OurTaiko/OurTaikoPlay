@@ -29,6 +29,8 @@ namespace OurTaiko
     // iOS debounces UIKit's key presses, which Unity's Keyboard reads: a key struck again soon after
     // it was let go is dropped, so a drum on keyboard keys loses hits (issue #100). GCKeyboard sees
     // every change. Only a player on iOS has it; elsewhere Create returns null.
+    // The plugin starts when Active is first asked (the first frame), not as the game loads, and
+    // every Active looks again at which keyboard the system has.
     public sealed class GameControllerKeyboard : IKeyboardSource
     {
         const int Batch = 256;
@@ -39,23 +41,51 @@ namespace OurTaiko
         public static IKeyboardSource Create()
         {
 #if UNITY_IOS && !UNITY_EDITOR
-            try
-            {
-                bool connected = OurTaikoKeyboard_Start() != 0;
-                Log.Info(InputLog.Tag, "GameController keyboard started; " + (connected ? "a keyboard is connected" : "no keyboard yet"));
-                return new GameControllerKeyboard();
-            }
-            catch (Exception error)
-            {
-                Log.Warn(InputLog.Tag, "No GameController keyboard: " + error.Message);
-            }
-#endif
+            return new GameControllerKeyboard();
+#else
             return null;
+#endif
         }
 
 #if UNITY_IOS && !UNITY_EDITOR
-        public bool Active => OurTaikoKeyboard_Connected() != 0;
+        bool started, failed;
+        int attachments;
+
+        public bool Active
+        {
+            get
+            {
+                if (failed) return false;
+                if (!started && !Start()) return false;
+                bool connected = OurTaikoKeyboard_Connected() != 0;
+                int count = OurTaikoKeyboard_Attachments();
+                if (count != attachments)
+                {
+                    attachments = count;
+                    Log.Info(InputLog.Tag, $"GameController keyboard: handler put on the system's keyboard ({count})");
+                }
+                return connected;
+            }
+        }
+
         public double Now => OurTaikoKeyboard_Now();
+
+        bool Start()
+        {
+            try
+            {
+                bool connected = OurTaikoKeyboard_Start() != 0;
+                started = true;
+                Log.Info(InputLog.Tag, "GameController keyboard started; " + (connected ? "a keyboard is connected" : "no keyboard yet"));
+                return true;
+            }
+            catch (Exception error)
+            {
+                failed = true;
+                Log.Warn(InputLog.Tag, "No GameController keyboard: " + error.Message);
+                return false;
+            }
+        }
 
         public void Drain(List<KeyChange> into)
         {
@@ -71,6 +101,7 @@ namespace OurTaiko
 
         [DllImport("__Internal")] static extern int OurTaikoKeyboard_Start();
         [DllImport("__Internal")] static extern int OurTaikoKeyboard_Connected();
+        [DllImport("__Internal")] static extern int OurTaikoKeyboard_Attachments();
         [DllImport("__Internal")] static extern double OurTaikoKeyboard_Now();
         [DllImport("__Internal")] static extern int OurTaikoKeyboard_Drain(int[] codes, byte[] downs, double[] times, int capacity);
 #else
