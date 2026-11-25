@@ -139,7 +139,6 @@ namespace OurTaiko.Online
             uploads = null;
             lock (sync)
             {
-                foreach (var e in endpoints) e.Dispose();
                 endpoints.Clear(); charts.Clear(); categoryLists.Clear(); playlistLists.Clear(); danLists.Clear();
                 personalPlaylists.Clear(); personalLists.Clear();
                 retryAt = DateTime.MinValue;
@@ -154,9 +153,9 @@ namespace OurTaiko.Online
             lock (sync)
             {
                 int existing = endpoints.FindIndex(e => e.Id == endpoint.Id);
-                if (existing >= 0 && endpoints[existing].IsConnected) { endpoint.Dispose(); return endpoints[existing]; }
+                if (existing >= 0 && endpoints[existing].IsConnected) return endpoints[existing];
                 // One that has not connected is replaced.
-                if (existing >= 0) { endpoints[existing].Dispose(); endpoints.RemoveAt(existing); }
+                if (existing >= 0) endpoints.RemoveAt(existing);
                 endpoints.Add(endpoint);
             }
             return endpoint;
@@ -173,7 +172,6 @@ namespace OurTaiko.Online
                 {
                     charts.Remove(e.Id); categoryLists.Remove(e.Id); playlistLists.Remove(e.Id); danLists.Remove(e.Id);
                     personalPlaylists.Remove(e.Id); personalLists.Remove(e.Id);
-                    e.Dispose();
                 }
                 endpoints.RemoveAll(match);
             }

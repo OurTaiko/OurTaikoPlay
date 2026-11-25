@@ -348,7 +348,6 @@ namespace OurTaiko
             Text(holder, part + "・" + reward.DonName(language), 48, side / 2, side + 50);
         }
 
-        static System.Net.Http.HttpClient pictures;
         const int PictureLimit = 2 * 1024 * 1024;
 
         // The picture once it has come (from the player's root, else the canonical one), if this
@@ -357,11 +356,10 @@ namespace OurTaiko
         {
             try
             {
-                pictures ??= new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(15) };
                 var address = await Distribution.LocateAsync(path, reward.Site.Length > 0 ? reward.Site : ServerConfig.Site);
                 var bytes = await Distribution.FetchAsync(address, async url =>
                 {
-                    using var response = await pictures.GetAsync(url);
+                    using var response = await OurTaikoHttpClient.GetAsync(url, TimeSpan.FromSeconds(15));
                     if (!response.IsSuccessStatusCode) throw new System.Net.Http.HttpRequestException("HTTP " + (int)response.StatusCode);
                     var body = await response.Content.ReadAsByteArrayAsync();
                     return body.Length <= PictureLimit ? body : throw new System.IO.InvalidDataException("too large");

@@ -37,12 +37,16 @@ namespace OurTaiko.Online
             return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant() == hash;
         }
 
+        // How long a file's answer may take to begin; the body, however large, is bounded by the
+        // caller's token only.
+        static readonly TimeSpan HeadersTimeout = TimeSpan.FromSeconds(30);
+
         // One file's bytes from one address, checked against its size and hash; `received` is told
         // how many have come, as they come.
-        public static async Task<byte[]> FetchAsync(HttpClient http, string url, long size, string hash, Action<long> received, CancellationToken cancel)
+        public static async Task<byte[]> FetchAsync(string url, long size, string hash, Action<long> received, CancellationToken cancel)
         {
             received?.Invoke(0);
-            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel);
+            using var response = await OurTaikoHttpClient.GetAsync(url, HeadersTimeout, cancel, HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode + " for " + url);
             using var stream = await response.Content.ReadAsStreamAsync();
             var bytes = new MemoryStream((int)Math.Min(size, int.MaxValue));

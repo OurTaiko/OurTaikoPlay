@@ -229,7 +229,6 @@ namespace OurTaiko.Tests
         public void Dispose()
         {
             stopped = true;
-            center?.Dispose();
             try { listener.Stop(); listener.Close(); } catch (ObjectDisposedException) { }
         }
 

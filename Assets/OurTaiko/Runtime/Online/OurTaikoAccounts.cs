@@ -125,22 +125,17 @@ namespace OurTaiko.Online
     // center's own API, which has no version 2; the site's is ServerConfig.OwnRoot). The password
     // only ever goes here, never to a game server; the token it returns is traded here for a game
     // session of each server that names this account center in its catalog.
-    public sealed class AccountCenter : IDisposable
+    public sealed class AccountCenter
     {
         const string DeviceStart = "/api/v1/game/account/device";
         const string DeviceToken = DeviceStart + "/token";
         public const string DefaultIssuer = "https://sso.ourtaiko.org";
         public readonly string Issuer;
-        readonly HttpClient http;
 
         public AccountCenter(string issuer = DefaultIssuer)
         {
             Issuer = (issuer ?? DefaultIssuer).TrimEnd('/');
-            var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false };
-            http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
         }
-
-        public void Dispose() => http.Dispose();
 
         // Signs in with a username and password; the account (with its token) on success. A wrong
         // password is HTTP 401, too many attempts 429.
@@ -247,7 +242,7 @@ namespace OurTaiko.Online
             if (body != null) request.Content = new StringContent(body.ToString(Newtonsoft.Json.Formatting.None), Encoding.UTF8, "application/json");
             try
             {
-                using var response = await http.SendAsync(request, linked.Token);
+                using var response = await OurTaikoHttpClient.Shared.SendAsync(request, linked.Token);
                 int status = (int)response.StatusCode;
                 Log.Debug("Account", $"{method} {path}: {status}");
                 string text = await response.Content.ReadAsStringAsync();
@@ -320,27 +315,22 @@ namespace OurTaiko.Online
     }
 
     // The public reads of players the game needs. They are the site's own, of no song source.
-    public sealed class ProfileCenter : IDisposable
+    public sealed class ProfileCenter
     {
         public const string DefaultBase = ServerConfig.Site;
         public readonly string Base;
-        readonly HttpClient http;
 
         public ProfileCenter(string baseUrl = DefaultBase)
         {
             Base = (baseUrl ?? DefaultBase).TrimEnd('/');
-            var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false };
-            http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
         }
-
-        public void Dispose() => http.Dispose();
 
         public async Task<ProfileNameplate> NameplateAsync(string userId, string language, CancellationToken cancel = default)
         {
             if (!Json.HexId(userId ?? "", 32)) throw new OnlineException("API_USER_INVALID");
             try
             {
-                using var response = await http.GetAsync(Base + "/api/v2/users/" + userId + "/nameplate", cancel);
+                using var response = await OurTaikoHttpClient.GetAsync(Base + "/api/v2/users/" + userId + "/nameplate", TimeSpan.FromSeconds(10), cancel);
                 int status = (int)response.StatusCode;
                 if (status < 200 || status >= 300) throw new HttpStatusException(status);
                 string text = await response.Content.ReadAsStringAsync();

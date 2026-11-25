@@ -83,14 +83,21 @@ namespace OurTaiko.Editor
             finally { UnityEngine.Object.DestroyImmediate(catalog); }
         }
 
+        // One published file, through the game's client (OurTaikoHttpClient), within five minutes.
+        static byte[] Download(string url)
+        {
+            using var response = OurTaikoHttpClient.GetAsync(url, TimeSpan.FromMinutes(5)).GetAwaiter().GetResult();
+            if (!response.IsSuccessStatusCode) throw new System.Net.Http.HttpRequestException("HTTP " + (int)response.StatusCode + " for " + url);
+            return response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+        }
+
         // Downloads the published files the game does not carry into Sources, from the ones
         // <root>/otanim/index.json lists (each checked against its size and SHA-256). One already
         // here with that hash is left. Returns what it did, for the log.
         public static string Fetch(string root)
         {
             root = root.TrimEnd('/');
-            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(5) };
-            var listed = JsonUtility.FromJson<StageDownloads.Index>(http.GetStringAsync(root + "/otanim/index.json").GetAwaiter().GetResult());
+            var listed = JsonUtility.FromJson<StageDownloads.Index>(System.Text.Encoding.UTF8.GetString(Download(root + "/otanim/index.json")));
             if (listed?.files == null || listed.files.Length == 0) throw new InvalidDataException(root + "/otanim/index.json lists no files");
             int fetched = 0, kept = 0, carried = 0;
             foreach (var entry in listed.files)
@@ -101,7 +108,7 @@ namespace OurTaiko.Editor
                 if (File.Exists(Carried + "/" + entry.name + ".otanim")) { carried++; continue; }
                 string to = Sources + "/" + entry.name + ".otanim";
                 if (File.Exists(to) && ObjectCache.Sha256(File.ReadAllBytes(to)) == entry.sha256) { kept++; continue; }
-                byte[] bytes = http.GetByteArrayAsync(root + "/otanim/" + entry.file).GetAwaiter().GetResult();
+                byte[] bytes = Download(root + "/otanim/" + entry.file);
                 if (bytes.LongLength != entry.size || ObjectCache.Sha256(bytes) != entry.sha256) throw new InvalidDataException(entry.file + " does not match its hash");
                 Directory.CreateDirectory(Path.GetDirectoryName(to));
                 File.WriteAllBytes(to, bytes);

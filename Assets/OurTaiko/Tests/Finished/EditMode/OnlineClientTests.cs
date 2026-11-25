@@ -759,7 +759,7 @@ namespace OurTaiko.Tests
             Assert.That(client.Charts.Select(c => c.Server).Distinct(), Is.EquivalentTo(new[] { fanmade.Id, official.Id }), "Each source's songs are its own.");
             Assert.That(fanmade.Id, Is.EqualTo(OnlineEndpoint.Sha256Hex(Encoding.UTF8.GetBytes("https://fanmade.example\n"))));
 
-            using var center = new AccountCenter(fixture.BaseUrl);
+            var center = new AccountCenter(fixture.BaseUrl);
             var account = Run(() => center.LoginAsync("don", "katsu", "Test"));
             string service = fanmade.SsoService;
             string session = Run(() => center.TradeAsync(account.Token, service));

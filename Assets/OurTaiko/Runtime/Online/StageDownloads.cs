@@ -47,7 +47,6 @@ namespace OurTaiko.Online
 
         static readonly object gate = new object();
         static Dictionary<string, Entry> published, here;
-        static HttpClient http;
         static long received, expected;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -69,7 +68,6 @@ namespace OurTaiko.Online
         public static long Received => Interlocked.Read(ref received);
         public static long Expected => Interlocked.Read(ref expected);
 
-        static HttpClient Http => http ??= new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         // This platform's bundles of the version this game reads.
         static string BundleFolder => Folder + "/bundle/" + StageLibrary.BundleVersion + "/" + StageLibrary.Platform + "/";
         // The catalog that goes with this version's bundles: how their files are placed (a drumroll
@@ -101,7 +99,7 @@ namespace OurTaiko.Online
 
         static async Task<string> TextAsync(string url, CancellationToken cancel)
         {
-            using var response = await Http.GetAsync(url, cancel);
+            using var response = await OurTaikoHttpClient.GetAsync(url, TimeSpan.FromSeconds(30), cancel);
             if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode + " for " + url);
             string text = await response.Content.ReadAsStringAsync();
             if (text.Length > 4 * 1024 * 1024) throw new InvalidDataException(url + " is too large");
@@ -221,7 +219,7 @@ namespace OurTaiko.Online
                     try
                     {
                         var address = await Distribution.LocateAsync(BundleFolder + entry.file, site, cancel);
-                        var data = await Distribution.FetchAsync(address, url => ObjectCache.FetchAsync(Http, url, entry.size, entry.sha256, count =>
+                        var data = await Distribution.FetchAsync(address, url => ObjectCache.FetchAsync(url, entry.size, entry.sha256, count =>
                         {
                             // Counted again from nothing when the canonical root is tried.
                             Interlocked.Add(ref received, count - Interlocked.Exchange(ref got[i], count));

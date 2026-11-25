@@ -83,8 +83,6 @@ namespace OurTaiko.Online
         void OnDestroy()
         {
             if (Instance != this) return;
-            Center?.Dispose();
-            Profiles?.Dispose();
             Client?.Dispose();
             ClearSongs();
             Instance = null;
@@ -128,7 +126,6 @@ namespace OurTaiko.Online
         // Tests use an account file and account center of their own.
         public void UseAccounts(AccountStore accounts, AccountCenter center)
         {
-            Center?.Dispose();
             Accounts = accounts;
             Center = center;
             Accounts.Load();
@@ -137,7 +134,6 @@ namespace OurTaiko.Online
 
         public void UseProfiles(ProfileCenter profiles)
         {
-            Profiles?.Dispose();
             Profiles = profiles;
         }
 

@@ -24,6 +24,8 @@ namespace OurTaiko
         // The folder under the distribution root.
         public const string Folder = "nameplate/";
         public const string StateFile = "nameplate-art.json";
+        // How long each request (the catalog, one picture) may take.
+        static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(30);
 
         // The catalog's keys (OurTaikoNet tools/nameplate/catalog.py) and each file's size in pixels.
         static readonly (string key, int width, int height)[] files =
@@ -55,7 +57,6 @@ namespace OurTaiko
 
         static readonly List<UnityEngine.Object> made = new List<UnityEngine.Object>();
         static string loaded = ""; // the hashes of the files the sprites were made from
-        static HttpClient http;
 
         // Each Play session starts without art, as a player does (the Editor here keeps statics
         // between Play sessions while the textures made in one are destroyed when it stops).
@@ -92,11 +93,10 @@ namespace OurTaiko
         {
             try
             {
-                http ??= new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
                 var root = await Online.Distribution.RootAsync(site, cancel);
                 var catalog = await Online.Distribution.FetchAsync(root.Locate(Folder + "catalog.json"), async url =>
                 {
-                    using var response = await http.GetAsync(url, cancel);
+                    using var response = await Online.OurTaikoHttpClient.GetAsync(url, RequestTimeout, cancel);
                     if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode);
                     return JObject.Parse(await response.Content.ReadAsStringAsync());
                 }, cancel);
@@ -107,8 +107,9 @@ namespace OurTaiko
                     if (await Task.Run(() => Matches(cached, size, hash), cancel)) continue;
                     var data = await Online.Distribution.FetchAsync(root.Locate(Folder + path), async url =>
                     {
-                        var bytes = await http.GetByteArrayAsync(url);
-                        cancel.ThrowIfCancellationRequested();
+                        using var response = await Online.OurTaikoHttpClient.GetAsync(url, RequestTimeout, cancel);
+                        if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode);
+                        var bytes = await response.Content.ReadAsByteArrayAsync();
                         if (bytes.LongLength != size || Sha256(bytes) != hash) throw new InvalidDataException("the download of " + path + " does not match its hash");
                         return bytes;
                     }, cancel);

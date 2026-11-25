@@ -48,10 +48,10 @@ namespace OurTaiko.Online
         }
     }
 
-    // One server (fanmade.cpp Endpoint + request/authorized), on System.Net.Http as in MajdataPlay,
-    // with a seat per player. Redirects are refused, TLS is verified and no proxy is used, the
-    // environment's included.
-    public sealed partial class OnlineEndpoint : IDisposable
+    // One server (fanmade.cpp Endpoint + request/authorized), on the game's one HttpClient
+    // (OurTaikoHttpClient: redirects refused, TLS verified, no proxy, the environment's included),
+    // with a seat per player.
+    public sealed partial class OnlineEndpoint
     {
         public const long DefaultLimit = 64L * 1024 * 1024;
         public const int SeatCount = 2;
@@ -76,7 +76,6 @@ namespace OurTaiko.Online
         // Serializes HTTP per endpoint, like the C++ http_mutex.
         internal readonly SemaphoreSlim Transport = new SemaphoreSlim(1, 1);
 
-        readonly HttpClient http;
 
         // The key a seat's pending scores are queued under: its account center user on this server
         // (the server's Id for a seat that is not signed in, which queues nothing).
@@ -91,14 +90,6 @@ namespace OurTaiko.Online
             Config = new ServerConfig { name = config.name ?? "", baseUrl = (config.baseUrl ?? "").TrimEnd('/'), api = (config.api ?? "").TrimEnd('/'),
                 site = (config.site ?? "").TrimEnd('/') };
             Id = Sha256Hex(Encoding.UTF8.GetBytes(Config.baseUrl + "\n"));
-            var handler = new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseProxy = false };
-            // Per-request timeouts below; the client-wide one only bounds pathological cases.
-            http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
-        }
-
-        public void Dispose()
-        {
-            http.Dispose();
         }
 
         public static string Sha256Hex(byte[] bytes)
@@ -200,7 +191,7 @@ namespace OurTaiko.Online
             if (!string.IsNullOrEmpty(body)) request.Content = new StringContent(body, Encoding.UTF8, "application/json");
             try
             {
-                using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token);
+                using var response = await OurTaikoHttpClient.Shared.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token);
                 int status = (int)response.StatusCode;
                 Log.Debug("Online", $"{request.Method} {Config.DisplayName} {path.Split('?')[0]}: {status}");
                 HearPendingRewards(response, token);
