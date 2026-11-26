@@ -63,6 +63,41 @@ namespace OurTaiko.Tests
             Assert.That(stage.renda[0].Out, Is.GreaterThan(0), "A drumroll throws its effect across the play area.");
         }
 
+        // The viewer's dancer controls: a number on stage in place of the gauge's, even none, every
+        // dancer hopping in at once, and one rig frame held for all of them.
+        [Test]
+        public void TheDancersCanBePinnedToShowEachWayInAndOut()
+        {
+            using var preview = new StagePreview(StageMode.Single);
+            TestStage.Require("TOHO");
+            preview.Use(preview.Choose("TOHO", 0));
+            var dancers = preview.Stage.dancers;
+            var shown = dancers.dancers.Take(dancers.Troupe.Slots).ToArray();
+            preview.Run(new StagePreview.Shot("normal", 0), 2);
+            Assert.That(dancers.Troupe.Active, Is.EqualTo(1), "The lead of a collab troupe.");
+
+            dancers.Pinned = 0;
+            preview.Run(new StagePreview.Shot("normal", 0), 3);
+            Assert.That(shown.Select(d => d.Frame), Has.All.EqualTo(-1), "Even the lead has gone by its way out.");
+
+            dancers.Pinned = dancers.Troupe.Slots;
+            dancers.Restart();
+            preview.Run(new StagePreview.Shot("normal", 0), 0.25);
+            Assert.That(shown.Select(d => d.Frame), Has.All.InRange(1, 79), "All five are halfway in, together.");
+            Assert.That(shown.Select(d => d.Frame).Distinct().Count(), Is.EqualTo(1));
+
+            dancers.PinnedFrame = 450;
+            preview.Step(0, 120, new[] { 0.0 }, new[] { false });
+            Assert.That(shown.Select(d => d.Frame), Has.All.EqualTo(450), "Held even while time stands still.");
+            dancers.PinnedFrame = 10000;
+            preview.Step(0, 120, new[] { 0.0 }, new[] { false });
+            Assert.That(shown.Select(d => d.Frame), Is.EqualTo(shown.Select(d => d.Frames - 1)), "No further than its last frame.");
+
+            dancers.Pinned = dancers.PinnedFrame = null;
+            preview.Run(new StagePreview.Shot("normal", 0.3), 1);
+            Assert.That(dancers.Troupe.Active, Is.EqualTo(2), "Back to what the gauge says.");
+        }
+
         // A pack for solo play brings its hit characters; another backdrop takes them away.
         [Test]
         public void APacksHitCharactersComeOutOnJudgements()
