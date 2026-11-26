@@ -21,7 +21,7 @@ namespace OurTaiko.Online
         public OnlineClient Client { get; private set; }
         // The connected catalog as playable songs; the same instance for a chart until Reset.
         public IReadOnlyList<SongDefinition> Songs => songs;
-        // One folder per server category, in server then catalog order.
+        // One folder per server category that has a song to play, in server then catalog order.
         public IReadOnlyList<SongFolder> Folders => folders;
         // The charts downloaded before from the servers that are not connected now, playable from
         // the object cache: one folder per category they were listed under (ServerName names the
@@ -612,12 +612,18 @@ namespace OurTaiko.Online
             }
             SongDefinition[] SongsOf(string server, IEnumerable<string> ids) =>
                 ids.SelectMany(id => byChart.TryGetValue((server, id), out var list) ? list : Enumerable.Empty<SongDefinition>()).ToArray();
+            // A category with no song this game can play is no folder: a server lists every category
+            // it has, those nobody has filed a song under yet too.
             foreach (var category in Client.Categories)
+            {
+                var categorySongs = SongsOf(category.Server, category.ChartIds);
+                if (categorySongs.Length == 0) continue;
                 folders.Add(new SongFolder
                 {
                     Key = category.Server + "/" + category.Id, Title = category.Title, ServerName = category.ServerName, Server = category.Server,
-                    Genre = GenreFrame(category.Genre), ScenePreset = category.ScenePreset, Songs = SongsOf(category.Server, category.ChartIds),
+                    Genre = GenreFrame(category.Genre), ScenePreset = category.ScenePreset, Songs = categorySongs,
                 });
+            }
             // Playlists follow the categories as further folders, drawn in their own genre.
             foreach (var playlist in Client.Playlists)
             {
