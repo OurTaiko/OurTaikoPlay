@@ -112,6 +112,16 @@ namespace OurTaiko.Tests
             finally { Object.DestroyImmediate(picture); }
         }
 
+        // Where `part` is drawn among the plate's pictures and text: the place of the plate's child
+        // that holds it (a layer cut to the band sits in its mask).
+        static int Order(NameplatePreview preview, Component part)
+        {
+            var root = preview.Plate.transform.Find(PlateComposition.RootName);
+            var t = part.transform;
+            while (t.parent != root) t = t.parent;
+            return t.GetSiblingIndex();
+        }
+
         static bool IsRed(Color c) => c.r > 0.8f && c.g < 0.2f && c.b < 0.2f;
         static bool IsBlue(Color c) => c.b > 0.8f && c.r < 0.2f && c.g < 0.2f;
 
@@ -186,9 +196,10 @@ namespace OurTaiko.Tests
             info.bandItem = "band/loose";
             info.effectItem = "effect/overlay";
             preview.Show(info, 0);
-            Assert.That(layers.BandView.transform.parent, Is.EqualTo(layers.Mask));
-            Assert.That(layers.EffectView.transform.parent, Is.EqualTo(layers.Mask));
-            Assert.That(layers.BandView.transform.GetSiblingIndex(), Is.LessThan(layers.EffectView.transform.GetSiblingIndex()));
+            Assert.That(layers.BandView.transform.parent, Is.EqualTo(layers.BandMask));
+            Assert.That(layers.EffectView.transform.parent, Is.EqualTo(layers.EffectMask));
+            Assert.That(Order(preview, layers.BandView), Is.LessThan(Order(preview, preview.Plate.title)));
+            Assert.That(Order(preview, layers.EffectView), Is.GreaterThan(Order(preview, preview.Plate.title)), "The effect sparkles over the title's text.");
         }
 
         [TestCase("Title", 10, 0)]
@@ -345,7 +356,7 @@ namespace OurTaiko.Tests
 
         // Some layer is on show (none are made before the plate first wears one).
         static bool Worn(NameplateLayers layers) =>
-            layers?.Mask != null && (layers.BandView.gameObject.activeInHierarchy || layers.EffectView.gameObject.activeInHierarchy || layers.IconView.gameObject.activeSelf);
+            layers?.BandMask != null && (layers.BandView.gameObject.activeInHierarchy || layers.EffectView.gameObject.activeInHierarchy || layers.IconView.gameObject.activeSelf);
 
         [Test]
         public void TheCoinPlateHidesCustomItems()
@@ -551,8 +562,12 @@ namespace OurTaiko.Tests
             if (effect)
             {
                 bool inside = PlateComposition.ReadCatalog().ClipsEffect(parts.Effect);
-                Assert.That(layers.EffectView.transform.parent, Is.EqualTo(inside ? layers.Mask : root));
-                Assert.That(layers.Mask.gameObject.activeInHierarchy, Is.EqualTo(inside), "The band's shape is only there to cut an effect that stays inside the band.");
+                Assert.That(layers.EffectView.transform.parent, Is.EqualTo(inside ? layers.EffectMask : root));
+                Assert.That(layers.EffectMask.gameObject.activeInHierarchy, Is.EqualTo(inside), "The band's shape is only there to cut an effect that stays inside the band.");
+                Assert.That(layers.BandMask.gameObject.activeInHierarchy, Is.False, "A title's own band is not cut.");
+                // The title's text is printed on the band and the effect sparkles over it.
+                Assert.That(Order(preview, layers.BandView), Is.LessThan(Order(preview, preview.Plate.title)));
+                Assert.That(Order(preview, layers.EffectView), Is.GreaterThan(Order(preview, preview.Plate.title)));
             }
             // The icon is over the outline and under the badge; the band under both.
             if (icon) Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.GreaterThan(layers.BandView.transform.GetSiblingIndex()));
@@ -563,13 +578,13 @@ namespace OurTaiko.Tests
         {
             TestData.RequireBakedNameplates();
             using var preview = new NameplatePreview();
-            // newentry_shougou has no 1P/2P badge: the icon goes right after the band.
+            // newentry_shougou has no 1P/2P badge: the icon goes right after the title (band, text, effect).
             var info = new PlayerInfo { name = "Player", title = "Title", plateTitle = "crown_gold", plateState = "newentry_shougou" };
             preview.Show(info, 0);
             var layers = preview.Plate.Layers;
             Assert.That(layers.IconView.gameObject.activeSelf);
             Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.GreaterThan(layers.BandView.transform.GetSiblingIndex()));
-            Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.LessThan(preview.Plate.title.transform.GetSiblingIndex()), "Under the title's text.");
+            Assert.That(Order(preview, layers.IconView), Is.GreaterThan(Order(preview, layers.EffectView)), "Over the effect, and so over the title's text.");
         }
 
         [Test]

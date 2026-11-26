@@ -174,6 +174,7 @@ namespace OurTaiko
             Title = PlayerName = null;
             Layers.Apply(source, source == null ? default : Worn(source, rows, info));
             bool badge = rows.Any(row => (string)row["role"] == "plate_player_no");
+            var titleRow = rows.FirstOrDefault(row => (string)row["role"] == "text_title");
             foreach (var row in rows)
             {
                 switch ((string)row["role"])
@@ -181,7 +182,10 @@ namespace OurTaiko
                     case "base": Picture(NameplateItems.CompositionPart("plates"), (string)row["clip"]); break;
                     case "title_instance":
                     case "ai_title_instance":
+                        // The title's text is printed on the band, under its effect.
                         Layers.PlaceBand();
+                        if (titleRow != null) Title = Text(titleRow, info.HasTitle ? info.title : "");
+                        Layers.PlaceEffect();
                         // A plate with no badge over its outline has nothing to put the icon behind.
                         if (!badge) Layers.PlaceIcon();
                         break;
@@ -198,7 +202,7 @@ namespace OurTaiko
                     case "rankup_instance":
                         rankup = Picture(NameplateItems.Load(NameplateSlot.Icon, RankUpItem), running ?? "idle"); break;
                     case "text_title":
-                        Title = Text(row, info.HasTitle ? info.title : "");
+                        if (Title == null) Title = Text(row, info.HasTitle ? info.title : "");
                         break;
                     case "text_name":
                         PlayerName = Text(row, info.name ?? "");
