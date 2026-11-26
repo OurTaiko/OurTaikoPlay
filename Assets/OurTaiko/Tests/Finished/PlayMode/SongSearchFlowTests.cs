@@ -143,8 +143,8 @@ namespace OurTaiko.Tests
 
             // A source folder's own search covers that source alone and ends back on it.
             Assert.That(manager.Folders.Where(f => manager.Items.Any(i => i.Kind == K.Folder && manager.Folders[i.Folder] == f)).Select(f => f.Key),
-                Is.EqualTo(new[] { SongSelectManager.LocalKey, SongSelectManager.ServerKey(firstId), SongSelectManager.ServerKey(secondId) }),
-                "Local, then each server's folder.");
+                Is.EqualTo(new[] { SongSelectManager.LocalKey, SongSelectManager.ServerKey(firstId) }),
+                "Local, then each server with a song in a category: the second has only an uncategorized one, so its categories are empty and it has no folder.");
             manager.OpenFolderAt(manager.Items.ToList().FindIndex(i => i.Kind == K.Folder && manager.Folders[i.Folder].Server == firstId));
             var scoped = manager.Items.Single(i => i.Kind == K.Search);
             Assert.That(scoped.Folder, Is.GreaterThanOrEqualTo(0), "An open source folder's search is the only one on the wheel.");
