@@ -4,6 +4,7 @@
 # Refreshed 2026-11-22: the judge counter has a 良率 row, and the drumroll counter draws over the HUD (Player::draw_overlays).
 # Refreshed 2026-11-22: the backdrop (header, scene, dancers, the dojo's band) is .otanim, whose graphics are made as it plays; its saved pictures are gone.
 # Refreshed 2026-11-25: the nameplate is built at run time (the complete Lumen composition), so its saved graphics are gone.
+# Refreshed 2026-11-25: the combo announce scroll draws over the judge counter panel (moved after it in LaneHud).
 Viewport1920x1080/Backdrop
 Viewport1920x1080/BackgroundMovie/Blackout
 Viewport1920x1080/BackgroundMovie/Screen
@@ -90,11 +91,6 @@ Viewport1920x1080/SoulGauge/Soul
 Viewport1920x1080/SoulGauge/SoulOverlay
 Viewport1920x1080/GaugeHitEffect/Burst
 Viewport1920x1080/GaugeHitEffect/Note
-Viewport1920x1080/ComboAnnounce/Background
-Viewport1920x1080/ComboAnnounce/Number/Digit0
-Viewport1920x1080/ComboAnnounce/Number/Digit1
-Viewport1920x1080/ComboAnnounce/Number/Digit2
-Viewport1920x1080/ComboAnnounce/Number/Text
 Viewport1920x1080/JudgeCounter
 Viewport1920x1080/JudgeCounter/Rate/Bar
 Viewport1920x1080/JudgeCounter/Rate/Label
@@ -110,6 +106,11 @@ Viewport1920x1080/JudgeCounter/Bad/Count/Digit0
 Viewport1920x1080/JudgeCounter/Roll/Bar
 Viewport1920x1080/JudgeCounter/Roll/Label
 Viewport1920x1080/JudgeCounter/Roll/Count/Digit0
+Viewport1920x1080/ComboAnnounce/Background
+Viewport1920x1080/ComboAnnounce/Number/Digit0
+Viewport1920x1080/ComboAnnounce/Number/Digit1
+Viewport1920x1080/ComboAnnounce/Number/Digit2
+Viewport1920x1080/ComboAnnounce/Number/Text
 Viewport1920x1080/BalloonCounter/Body
 Viewport1920x1080/BalloonCounter/Bubble
 Viewport1920x1080/PauseButton

@@ -170,9 +170,10 @@ namespace OurTaiko.Editor
             if (LayersOnly)
             {
                 var keep = new HashSet<Transform>();
-                if (layers?.Mask != null)
+                if (layers?.BandMask != null)
                 {
-                    keep.Add(layers.Mask.parent);
+                    keep.Add(layers.BandMask.parent);
+                    keep.Add(layers.EffectMask.parent);
                     foreach (var slot in NameplateSlots.All) keep.Add(layers.View(slot).transform);
                 }
                 var root = Plate.transform.Find(PlateComposition.RootName);

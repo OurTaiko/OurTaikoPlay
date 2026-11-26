@@ -27,9 +27,10 @@ namespace OurTaiko.Tests
                 play.pausePanel.SetActive(false);
                 var counter = play.firstLane.judgeCounter;
 
-                // Over the 1P cover, after ComboAnnounce (judge_counter follows combo_announce).
+                // Over the 1P cover, just under ComboAnnounce: the panel sits beside the Don, where the
+                // combo scroll unrolls, and the scroll goes over it.
                 Assert.That(counter.transform.parent, Is.SameAs(play.firstLane.comboAnnounce.transform.parent));
-                Assert.That(counter.transform.GetSiblingIndex(), Is.EqualTo(play.firstLane.comboAnnounce.transform.GetSiblingIndex() + 1));
+                Assert.That(play.firstLane.comboAnnounce.transform.GetSiblingIndex(), Is.EqualTo(counter.transform.GetSiblingIndex() + 1));
                 Assert.That(counter.digits, Is.EqualTo(play.firstLane.scoreCounter.digits), "Counts use the score counter's digits.");
                 // Player::draw_overlays draws the drumroll counter after the judge counter: its fan, which
                 // opens beside the Don too, goes over the panel.
