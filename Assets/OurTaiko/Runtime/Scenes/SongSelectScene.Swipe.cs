@@ -6,7 +6,7 @@ using State = OurTaiko.SongSelectManager.State;
 namespace OurTaiko
 {
     // Song select: the wheel follows a swipe row by row (WheelSwipe). While it moves the boards sit
-    // evenly, without the gap around the open board, and the focus walks to the board nearest the
+    // evenly (the gap around the open board eases away as it closes), and the focus walks to the board nearest the
     // centre; once it comes to rest it slides onto that board and opens it like a ka.
     public sealed partial class SongSelectScene
     {
@@ -47,7 +47,8 @@ namespace OurTaiko
                     board.MoveFrom = board.Position; board.CrossFrom = board.Cross; board.MoveStart = -1;
                 }
                 var focused = FocusedBoard;
-                if (focused.OpenStart >= 0) { focused.CloseStart = now; focused.OpenStart = -1; }
+                if (focused.OpenStart >= 0) CloseBoard(focused, now);
+                ReserveGap(0);
                 StopPreview();
             }
             int rows = (int)Math.Round(momentum.Offset);
@@ -62,7 +63,7 @@ namespace OurTaiko
             if (!momentum.Active) SettleSwipe();
         }
 
-        // Navigator::set_positions without the open board's gap, shifted by the part-row offset.
+        // Navigator::set_positions shifted by the part-row offset (the gap eases away, ReserveGap).
         void LayOutSwipe(double now, double offset)
         {
             var items = Manager.Items;
@@ -85,6 +86,7 @@ namespace OurTaiko
         void SettleSwipe()
         {
             swipeLayout = false;
+            ReserveGap(1);
             SetPositions(false, MoveMs);
             OpenFocused(OpenHoldMs);
         }
@@ -101,6 +103,7 @@ namespace OurTaiko
         void CancelSwipe()
         {
             if (swipe != null) swipe.Stop();
+            if (swipeLayout) ReserveGap(1);
             swipeLayout = false;
         }
     }

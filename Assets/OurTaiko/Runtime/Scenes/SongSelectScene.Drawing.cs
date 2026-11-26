@@ -36,7 +36,8 @@ namespace OurTaiko
             }
         }
 
-        void DrawBoard(Board board, bool focused, double now)
+        // Moves a board along its slide and works out how far its select_on / select_off has it open.
+        void AdvanceBoard(Board board, bool focused, double now)
         {
             if (board.MoveStart >= 0)
             {
@@ -45,35 +46,116 @@ namespace OurTaiko
                 board.Cross = board.CrossFrom + (board.CrossTo - board.CrossFrom) * p;
                 if (now - board.MoveStart >= board.MoveDuration) board.MoveStart = -1;
             }
-            if (board.Kind != ItemKind.Song) { DrawFolderBoard(board, focused, now); return; }
-            bool hidden = focused && Manager.Phase != State.Browsing;
-            if (hidden || board.Position <= -400 || board.Position >= 1480) { ReleaseView(board); return; }
-            AcquireView(board);
-            board.Root.gameObject.SetActive(true);
-            board.Group.alpha = (float)BoardFade(board, now);
-            board.Root.anchoredPosition = new Vector2((float)board.Cross, -(float)board.Position) + board.RootOffset;
+            var clip = ClipOf(board);
+            board.Frame = BoardFrame(board, clip, focused, now);
+            board.Open = OpenAmount(clip, board.Frame);
+        }
 
-            // select_on / select_off of the song board clip (anim/song_board): board centre sy and
-            // the song_kanban_info alpha, after the 508 ms pre-growth hold.
-            double frame = -1;
+        LumenClip ClipOf(Board board) => board.Kind == ItemKind.Song ? songBoard : folderClip;
+        double CloseMsOf(Board board) => board.Kind == ItemKind.Song ? CloseMs : FolderCloseMs;
+
+        // How far the clip's board centre has grown from its closed sy at a frame (-1: closed).
+        public static double OpenAmount(LumenClip clip, double frame)
+            => frame < 0 ? 0 : Clamp01((clip.Get("instance_board_center", frame, "sy", 0.2168) - 0.2168) / (1 - 0.2168));
+
+        // The focused board leaves: select_off from where the board is. One still in its hold just
+        // stays closed, one part-way open shrinks from its current size instead of jumping to the
+        // fully open start of select_off.
+        void CloseBoard(Board board, double now)
+        {
+            var clip = ClipOf(board);
+            double open = OpenAmount(clip, BoardFrame(board, clip, true, now));
+            board.OpenStart = -1; board.CloseStart = -1;
+            if (open <= 0) return;
+            double from = clip.Label("select_off").GetValueOrDefault(30);
+            board.CloseStart = now - (CloseFrame(clip, from, CloseMsOf(board) * 0.06, open) - from) / 0.06;
+        }
+
+        // The first select_off frame at which the board is no more open than open.
+        public static double CloseFrame(LumenClip clip, double from, double span, double open)
+        {
+            double frame = from;
+            while (frame < from + span && OpenAmount(clip, frame) > open) frame += 0.25;
+            return frame;
+        }
+
+        // The frame of the board's clip (anim/song_board or anim/folder_board) for its select_on,
+        // after the pre-growth hold (OpenHoldMs), or select_off; -1 while it sits closed.
+        double BoardFrame(Board board, LumenClip clip, bool focused, double now)
+        {
             if (focused && board.OpenStart >= 0)
             {
                 double t = now - board.OpenStart - board.Hold;
-                if (t >= 0) frame = songBoard.Label("select_on").GetValueOrDefault(5) + Math.Min(t, OpenGrowMs) * 0.06;
+                return t >= 0 ? clip.Label("select_on").GetValueOrDefault(5) + Math.Min(t, OpenGrowMs) * 0.06 : -1;
             }
-            else if (board.CloseStart >= 0)
+            if (board.CloseStart >= 0)
             {
                 double e = now - board.CloseStart;
-                if (e < CloseMs) frame = songBoard.Label("select_off").GetValueOrDefault(30) + e * 0.06;
-                else board.CloseStart = -1;
+                if (e < CloseMsOf(board)) return clip.Label("select_off").GetValueOrDefault(30) + e * 0.06;
+                board.CloseStart = -1;
             }
-            double pb = 0, ia = 0;
-            if (frame >= 0)
+            return -1;
+        }
+
+        // Navigator::set_positions' gap of expandGap either side of the open board, given room only
+        // as far as the boards are open: a board closing keeps its gap while it shrinks, and the
+        // focused board takes over what the others let go of (all of it once they are closed), so
+        // the rows never close in on a board that is still open. While a swipe lays the wheel out
+        // the focused board's reserved gap eases away, and back when it settles.
+        void LayOutGaps(double now)
+        {
+            gaps.Clear();
+            var items = Manager.Items;
+            double others = 0;
+            for (int i = 0; i < items.Count; i++)
             {
-                double sy = songBoard.Get("instance_board_center", frame, "sy", 0.2168);
-                pb = Clamp01((sy - 0.2168) / (1 - 0.2168));
-                ia = Clamp01(songBoard.Get("song_kanban_info", frame, "a", pb >= 1 ? 1 : 0));
+                if (i == Manager.Focused) continue;
+                var board = BoardOf(items[i]);
+                if (board.Open > 0) { gaps.Add((board.Position, board.Open)); others += board.Open; }
             }
+            var focused = FocusedBoard;
+            gaps.Add((focused.Position, FocusedGap(focused.Open, others, GapReserve(now))));
+        }
+
+        // The focused board's share of the gap: as far as it is open, and at least the room the
+        // closing boards have let go of (up to the reserve).
+        public static double FocusedGap(double open, double othersOpen, double reserve)
+            => Math.Max(open, Math.Min(reserve, Math.Max(0, 1 - othersOpen)));
+
+        // How far the gaps (row, 0..1) push a board on the given row: away from each, by gap px at most.
+        public static double GapShift(double position, IReadOnlyList<(double At, double Weight)> gaps, double gap)
+        {
+            double shift = 0;
+            foreach (var (at, weight) in gaps) shift += Math.Sign(position - at) * weight * gap;
+            return shift;
+        }
+
+        void ReserveGap(double to)
+        {
+            double now = Now;
+            if (gapReserveTo == to) return;
+            gapReserveFrom = GapReserve(now); gapReserveTo = to; gapReserveStart = now;
+        }
+
+        double GapReserve(double now)
+            => gapReserveFrom + (gapReserveTo - gapReserveFrom) * SkinUi.CubicOut((now - gapReserveStart) / MoveMs);
+
+        void DrawBoard(Board board, bool focused, double now)
+        {
+            double position = board.Position + GapShift(board.Position, gaps, view.expandGap);
+            if (board.Kind != ItemKind.Song) { DrawFolderBoard(board, position, now); return; }
+            bool hidden = focused && Manager.Phase != State.Browsing;
+            if (hidden || position <= -400 || position >= 1480) { ReleaseView(board); return; }
+            AcquireView(board);
+            board.Root.gameObject.SetActive(true);
+            board.Group.alpha = (float)BoardFade(board, now);
+            board.Root.anchoredPosition = new Vector2((float)board.Cross, -(float)position) + board.RootOffset;
+
+            // select_on / select_off of the song board clip (anim/song_board): board centre sy and
+            // the song_kanban_info alpha.
+            double frame = board.Frame;
+            double pb = board.Open, ia = 0;
+            if (frame >= 0) ia = Clamp01(songBoard.Get("song_kanban_info", frame, "a", pb >= 1 ? 1 : 0));
             var expansion = Vector2.up * (float)(board.View.expansionHeight * pb);
             board.Panel.rectTransform.sizeDelta = board.PanelSize + expansion;
             board.Glow.rectTransform.sizeDelta = board.GlowSize + expansion;
@@ -90,31 +172,19 @@ namespace OurTaiko
         // draw_folder_board / draw_back_board: the genre folder grows into folder_graphic with its two
         // characters and song count (anim/folder_board, labels select_on 5 / select_off 30); もどる
         // only grows and glows.
-        void DrawFolderBoard(Board board, bool focused, double now)
+        void DrawFolderBoard(Board board, double position, double now)
         {
-            if (board.Position <= -400 || board.Position >= 1480) { ReleaseView(board); return; }
+            if (position <= -400 || position >= 1480) { ReleaseView(board); return; }
             AcquireView(board);
             var slot = board.FolderSlot;
             var item = slot.View;
             board.Root.gameObject.SetActive(true);
             board.Group.alpha = (float)BoardFade(board, now);
-            board.Root.anchoredPosition = new Vector2((float)board.Cross, -(float)board.Position) + board.RootOffset;
-            double frame = -1;
-            if (focused && board.OpenStart >= 0)
-            {
-                double t = now - board.OpenStart - board.Hold;
-                if (t >= 0) frame = folderClip.Label("select_on").GetValueOrDefault(5) + Math.Min(t, OpenGrowMs) * 0.06;
-            }
-            else if (board.CloseStart >= 0)
-            {
-                double e = now - board.CloseStart;
-                if (e < FolderCloseMs) frame = folderClip.Label("select_off").GetValueOrDefault(30) + e * 0.06;
-                else board.CloseStart = -1;
-            }
-            double pb = 0, chAlpha = 0, chOffset = 340, introAlpha = 0;
+            board.Root.anchoredPosition = new Vector2((float)board.Cross, -(float)position) + board.RootOffset;
+            double frame = board.Frame;
+            double pb = board.Open, chAlpha = 0, chOffset = 340, introAlpha = 0;
             if (frame >= 0)
             {
-                pb = Clamp01((folderClip.Get("instance_board_center", frame, "sy", 0.2168) - 0.2168) / (1 - 0.2168));
                 chAlpha = Clamp01(folderClip.Get("instance_character_l", frame, "a", 0));
                 chOffset = -folderClip.Get("instance_character_l", frame, "tx", -340);
                 introAlpha = Clamp01(folderClip.Get("text_kanban_intro_genre", frame, "a", 0));

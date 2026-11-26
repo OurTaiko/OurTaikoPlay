@@ -66,7 +66,7 @@ namespace OurTaiko
         [Tooltip("voice_start_song_2p, voice_options_2p and entry_2p_add (2P joins).")]
         public AudioClip voiceStartSong2P, voiceOptions2P, secondJoined;
 
-        const double MoveMs = 120, OpenHoldMs = 61 / 120.0 * 1000, OpenGrowMs = 233, CloseMs = 13 / 0.06, FolderCloseMs = 8 / 0.06;
+        const double MoveMs = 120, OpenHoldMs = 250, OpenGrowMs = 233, CloseMs = 13 / 0.06, FolderCloseMs = 8 / 0.06;
         const double CourseExitMoveMs = 500, CourseEnterMoveMs = 800, BoardFadeMs = 166;
         const double CourseFadeDelayMs = 400, CourseFadeMs = 483, GenreFadeMs = 200, BackgroundLoopMs = 15000;
         const double UraChangeMs = 1500, UraSwapMs = 450;
@@ -123,6 +123,8 @@ namespace OurTaiko
             public double Position, MoveFrom, MoveTo, MoveStart = -1, MoveDuration;
             public double Cross, CrossFrom, CrossTo;
             public double OpenStart = -1, CloseStart = -1, Hold;
+            // This frame's select_on / select_off clip frame (-1 closed) and how far open it has the board (0..1).
+            public double Frame = -1, Open;
             public double FadeStart = -1, FadeFrom = 1, FadeTo = 1;
         }
         sealed class CourseCard
@@ -165,6 +167,10 @@ namespace OurTaiko
         // Picking for a room is never settled: the room's clock runs.
         public bool IsSettled => Manager != null && Manager.Phase == State.Browsing && (view.search == null || !view.search.BlocksInput)
             && Now - movedAt >= SettleMs && !(SceneSwitcher.Instance?.MultiPick ?? false);
+
+        // The open boards' gaps this frame (row, 0..1), and the room the focused board keeps for itself.
+        readonly List<(double At, double Weight)> gaps = new List<(double At, double Weight)>();
+        double gapReserveFrom = 1, gapReserveTo = 1, gapReserveStart = double.NegativeInfinity;
 
         double Now => GameTimeline.FrameTime * 1000 - startedAt;
         static double Clamp01(double v) => v < 0 ? 0 : v > 1 ? 1 : v;
@@ -209,7 +215,7 @@ namespace OurTaiko
             UraFrames(ref uraToUraCells, uraChangeToUra);
             UraFrames(ref uraToOniCells, uraChangeToOni);
             SetPositions(true, 0);
-            // SecondLoading: the initially focused board opens at once, without the 508 ms hold.
+            // SecondLoading: the initially focused board opens at once, without the pre-growth hold.
             OpenFocused(holdMs: 0);
             coursePanel.gameObject.SetActive(false);
             DrawOverlays(0);
@@ -286,6 +292,8 @@ namespace OurTaiko
             UpdatePreview(now);
             DrawBackground(now);
             var items = Manager.Items;
+            for (int i = 0; i < items.Count; i++) AdvanceBoard(BoardOf(items[i]), i == Manager.Focused, now);
+            LayOutGaps(now);
             for (int i = 0; i < items.Count; i++) DrawBoard(BoardOf(items[i]), i == Manager.Focused, now);
             if (restackBoards) RestackBoards();
             if (Manager.Phase != State.Browsing) DrawCoursePanel(now);
@@ -379,11 +387,9 @@ namespace OurTaiko
             movedAt = Now;
             if (reason == SongSelectManager.FocusReason.Navigate) scrolledAt = Now;
             if (reason == SongSelectManager.FocusReason.Navigate && visuals.TryGetValue(previous, out var left) && left.OpenStart >= 0)
-            {
-                left.CloseStart = Now; left.OpenStart = -1;
-            }
+                CloseBoard(left, Now);
             SetPositions(false, MoveMs);
-            // A folder enter or exit snaps the new focus open (no 508 ms hold).
+            // A folder enter or exit snaps the new focus open (no pre-growth hold).
             OpenFocused(reason == SongSelectManager.FocusReason.Navigate ? OpenHoldMs : 0);
             if (reason != SongSelectManager.FocusReason.FolderClosed) ChangeGenre(Manager.FocusedItem.Genre);
             StopPreview();
@@ -450,8 +456,9 @@ namespace OurTaiko
             board.OpenStart = Now; board.Hold = holdMs; board.CloseStart = -1;
         }
 
-        // Navigator::set_positions (vertical gallery): pitch 135, +-120 around the open board,
-        // each row 40 px further right; a jump of a whole screen snaps instead of sliding.
+        // Navigator::set_positions (vertical gallery): pitch 135, each row 40 px further right; a jump
+        // of a whole screen snaps instead of sliding. The +-120 around the open board follows how far
+        // the boards are open (LayOutGaps).
         void SetPositions(bool snap, double duration)
         {
             var items = Manager.Items;
@@ -461,7 +468,7 @@ namespace OurTaiko
                 double offset = i - focused;
                 if (offset > count / 2.0) offset -= count;
                 else if (offset < -count / 2.0) offset += count;
-                double position = view.wheelCentre.y + offset * view.rowPitch + Math.Sign(offset) * view.expandGap;
+                double position = view.wheelCentre.y + offset * view.rowPitch;
                 double cross = view.wheelCentre.x + offset * view.rowCurve;
                 var board = BoardOf(items[i]);
                 if (snap || Math.Abs(position - board.Position) >= 1080) { board.Position = position; board.Cross = cross; board.MoveStart = -1; }
