@@ -8,7 +8,8 @@ namespace OurTaiko
     // (announce_bg_1p) shows the count in announce_digit_1p and コンボ!, fading in over 100 ms, holding
     // until 1666.67 ms and fading out over 100 ms (ComboAnnounce.anim, song clock); a newer announce
     // replaces it. The combo's voice (Sounds/game/combo/<n>_1p) is returned once per announce. Drawn
-    // after the soul gauge like the original's draw_overlays; positions are saved in the scene.
+    // after the soul gauge like the original's draw_overlays, and over the judge counter panel, which
+    // sits where the scroll unrolls; positions are saved in the scene.
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup), typeof(ClipSampler))]
     public sealed class ComboAnnounceView : MonoBehaviour
     {
