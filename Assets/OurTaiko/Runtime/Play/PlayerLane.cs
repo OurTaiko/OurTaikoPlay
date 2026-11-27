@@ -47,6 +47,11 @@ namespace OurTaiko
         bool comboCarried;
         public int DisplayCombo => comboCarried ? ComboCarry + Session.Combo : Session.Combo;
         public double GaugePoints => SharedGauge?.Points ?? Session.GaugePoints;
+        // The judgement counts on the HUD: this song's plus what Carry brought in.
+        public (int good, int ok, int bad, int rolls) ShownCounts =>
+            (Carry.Good + Session.Good, Carry.Ok + Session.Ok, Carry.Bad + Session.Bad, Carry.Rolls + Session.Rolls);
+        // After the HUD shows new counts (a judgement, a reset); for panels outside the lane's own HUD.
+        public event System.Action HudUpdated;
         double GaugeThreshold => SharedGauge?.ClearThreshold ?? Session.ClearThreshold;
 
         readonly PlaySceneBase scene;
@@ -454,7 +459,11 @@ namespace OurTaiko
             var v = Views;
             var c = Carry;
             v.scoreCounter.Show(c.Score + Session.Score, Session.KiwamiThreshold);
-            if (v.judgeCounter != null) v.judgeCounter.Show(c.Good + Session.Good, c.Ok + Session.Ok, c.Bad + Session.Bad, c.Rolls + Session.Rolls);
+            if (v.judgeCounter != null)
+            {
+                var (good, ok, bad, rolls) = ShownCounts;
+                v.judgeCounter.Show(good, ok, bad, rolls);
+            }
             int combo = DisplayCombo;
             v.combo.Show(combo);
             // Announce at 50, then at each 100th combo, once per combo change.
@@ -464,6 +473,7 @@ namespace OurTaiko
                 if (voice != null) scene.hitAudio.PlayAudioOneShot(voice, AudioGroup.Voice);
             }
             lastCombo = combo;
+            HudUpdated?.Invoke();
         }
 
         void UpdateBranchLane(double time)
