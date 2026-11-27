@@ -6,10 +6,12 @@ using UnityEngine;
 
 namespace OurTaiko
 {
-    // The layers a nameplate can wear (NameplateSlots) and the plate's own pictures: the items of
-    // the set in use (NameplateSet: the titles' parts and the plate's composition) and the
-    // player's own .otanim files in the Nameplate folder beside their songs,
-    // Nameplate/<slot>/<name>.otanim. Each is read when a plate first wears it, and a player's
+    // The layers a nameplate can wear (NameplateSlots) and the plate's own pictures: the few the
+    // game carries itself (Resources/Nameplate/<slot>/<name>: the rank-up effect, which is the
+    // plate's own and no title's part), the items of the set in use (NameplateSet: the titles'
+    // parts and the plate's composition) and the player's own .otanim files in the Nameplate
+    // folder beside their songs, Nameplate/<slot>/<name>.otanim. Each is read when a plate first
+    // wears it, and a player's
     // file again when it changes. An item draws on the whole plate canvas: its view must be
     // 0, 0, Width, Height (NameplateLayout), y up, and it plays its "idle" clip (else its first)
     // over and over. A file that cannot be read, or is drawn for another box, is said in the log
@@ -17,6 +19,8 @@ namespace OurTaiko
     public static class NameplateItems
     {
         public const string FolderName = "Nameplate", Extension = ".otanim", ClipName = "idle";
+        // Where the items the game carries are, under Resources.
+        public const string ResourceFolder = "Nameplate/";
 
         static string folder;
         static NameplateSet set;
@@ -114,13 +118,17 @@ namespace OurTaiko
             return names;
         }
 
-        // The item an id names, if it is in the slot it is worn in and can be drawn: the set's, else
-        // the player's file of that name; else null.
+        // The item an id names, if it is in the slot it is worn in and can be drawn: the game's own,
+        // else the set's, else the player's file of that name; else null.
         public static OtanimAsset Load(NameplateSlot slot, string id)
         {
             if (!NameplateSlots.TryParse(id, out var named, out string name) || named != slot) return null;
-            return LoadPath(set?.PathOf(id), name, fromSet) ?? LoadPath(PathOf(slot, name), name, loaded);
+            return Carried(slot, name) ?? LoadPath(set?.PathOf(id), name, fromSet) ?? LoadPath(PathOf(slot, name), name, loaded);
         }
+
+        // An item the game carries, which needs no set and is Unity's to keep and free.
+        static OtanimAsset Carried(NameplateSlot slot, string name) =>
+            Resources.Load<OtanimAsset>(ResourceFolder + NameplateSlots.Folder(slot) + "/" + name);
 
         // One of the plate's own pictures (composition/<name>: plates, badges, blank, dan-*).
         public static OtanimAsset CompositionPart(string name) =>

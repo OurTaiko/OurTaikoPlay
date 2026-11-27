@@ -386,6 +386,34 @@ namespace OurTaiko.Tests
             Assert.That(Directory.Exists(folder), Is.False);
         }
 
+        // The rank-up effect is the plate's own, played on a 段位 promotion: the game carries it and
+        // needs no set for it. It is the one the set was baked with.
+        [Test]
+        public void TheRankUpEffectComesWithTheGame()
+        {
+            var set = NameplateItems.Set;
+            NameplateItems.Use(null);
+            try
+            {
+                var carried = NameplateItems.Load(NameplateSlot.Icon, PlateComposition.RankUpItem);
+                Assert.That(carried, Is.Not.Null);
+                Assert.That(NameplateItems.Fits(carried.File));
+                Assert.That(carried.File.Clips.Length, Is.EqualTo(58), "An empty idle, and a start, a wait and an end for each of the 19 ranks.");
+                Assert.That(carried.File.Find("idle")?.Frames.Length, Is.EqualTo(1));
+                foreach (string phase in new[] { "start", "wait", "end" })
+                {
+                    Assert.That(carried.File.Find("5kyuu/rankup_" + phase), Is.Not.Null, phase);
+                    Assert.That(carried.File.Find("14dan/rankup_" + phase), Is.Not.Null, phase);
+                }
+            }
+            finally { NameplateItems.Use(set); }
+
+            string baked = Path.Combine(NameplateSet.BakedFolder, PlateComposition.RankUpItem + NameplateItems.Extension);
+            if (!File.Exists(baked)) Assert.Ignore("No baked set to compare it with.");
+            string own = Path.Combine(Application.dataPath, "OurTaiko/Resources", NameplateItems.ResourceFolder + PlateComposition.RankUpItem + NameplateItems.Extension);
+            Assert.That(File.ReadAllBytes(own), Is.EqualTo(File.ReadAllBytes(baked)), "Baked anew, the game's copy is to be replaced.");
+        }
+
         [Test]
         public void APreviewLeavesHiddenLayersOutOfThePictureOnly()
         {

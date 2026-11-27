@@ -21,8 +21,10 @@ namespace OurTaiko.Tests
     // next time, and a list or catalog this game cannot read refused.
     public sealed class NameplateDownloadsTests
     {
-        // What the fixture publishes: three items of the baked set, under the whole catalog.
-        static readonly string[] Published = { "band/lumen-title-wood", "icon/lumen-rankup", "composition/plates" };
+        // What the fixture publishes: three items of the baked set, under the whole catalog. None is
+        // one the game carries itself, which would be drawn whether it came or not.
+        const string Icon = "icon/lumen-title-wec";
+        static readonly string[] Published = { "band/lumen-title-wood", Icon, "composition/plates" };
         OnlineFixture site;
         string cache, listJson, corrupt;
         // The files by their address under the root.
@@ -141,17 +143,17 @@ namespace OurTaiko.Tests
         [UnityTest]
         public IEnumerator AFileThatCannotBeHadIsLeftOutAndFetchedNextTime()
         {
-            corrupt = files.Keys.Single(path => path.Contains("/icon/lumen-rankup-"));
-            LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("icon/lumen-rankup could not be downloaded"));
+            corrupt = files.Keys.Single(path => path.Contains("/" + Icon + "-"));
+            LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex(Icon + " could not be downloaded"));
             yield return Wait(Refresh());
-            Assert.That(NameplateItems.Load(NameplateSlot.Icon, PlateComposition.RankUpItem), Is.Null, "Its slot is drawn empty.");
+            Assert.That(NameplateItems.Load(NameplateSlot.Icon, Icon), Is.Null, "Its slot is drawn empty.");
             Assert.That(NameplateItems.Load(NameplateSlot.Band, "band/lumen-title-wood"), Is.Not.Null, "The rest is drawn.");
             Assert.That(Directory.GetFiles(Path.Combine(cache, "objects"), "*", SearchOption.AllDirectories), Has.Length.EqualTo(Published.Length - 1), "Nothing is kept of the bad download.");
 
             int before = changes;
             corrupt = null;
             yield return Wait(Refresh());
-            Assert.That(NameplateItems.Load(NameplateSlot.Icon, PlateComposition.RankUpItem), Is.Not.Null);
+            Assert.That(NameplateItems.Load(NameplateSlot.Icon, Icon), Is.Not.Null);
             Assert.That(changes, Is.EqualTo(before + 1), "Plates are drawn again for the file that came.");
         }
 
