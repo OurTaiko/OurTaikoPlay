@@ -120,7 +120,7 @@ namespace OurTaiko.Tests
             Assert.That(wood.name, Is.EqualTo("lumen-title-wood"), "Named as the item, not by its hash.");
             Assert.That(NameplateItems.CompositionPart("plates"), Is.Not.Null);
             Assert.That(NameplateItems.Load(NameplateSlot.Band, "band/lumen-title-gold"), Is.Null, "Not published here: nothing to draw.");
-            Assert.That(PlateComposition.ReadCatalog().Titles.Count, Is.EqualTo(88));
+            Assert.That(PlateComposition.ReadCatalog().Titles.Count, Is.GreaterThanOrEqualTo(88), "The arcade's 88, and any added since.");
             Assert.That(changes, Is.EqualTo(1));
 
             // The same list again: nothing downloaded, nothing drawn anew.

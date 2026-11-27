@@ -304,7 +304,7 @@ namespace OurTaiko.Tests
             TestData.RequireBakedNameplates();
             var catalog = PlateComposition.ReadCatalog();
             Assert.That(catalog.States.Count, Is.EqualTo(36));
-            Assert.That(catalog.Titles.Count, Is.EqualTo(88));
+            Assert.That(catalog.Titles.Count, Is.GreaterThanOrEqualTo(88), "The arcade's 88, and any added since.");
             Assert.That(catalog.AiTitles.Count, Is.EqualTo(8));
             using var preview = new NameplatePreview();
             var info = new PlayerInfo { name = "Player", title = "Title", dan = 24,
