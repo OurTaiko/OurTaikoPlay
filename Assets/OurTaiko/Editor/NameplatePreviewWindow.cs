@@ -22,6 +22,7 @@ namespace OurTaiko.Editor
         [SerializeField] int dan = 10, combo = 1, side;
         [SerializeField] bool gold;
         [SerializeField] string bandItem = "", effectItem = "", iconItem = "";
+        [SerializeField] bool effectOverflow;
         [SerializeField] string plateState = "auto", plateTitle = "auto", plateAiTitle = "wood", plateBlank = "off", plateBadge = "auto", takeTitle = "wood";
         [SerializeField] int scale = 2;
         [SerializeField] float speed = 1;
@@ -111,6 +112,7 @@ namespace OurTaiko.Editor
             bandItem = bandItem,
             effectItem = effectItem,
             iconItem = iconItem,
+            effectOverflow = effectOverflow,
             profileBand = profileBand,
             plateState = plateState, plateTitle = plateTitle, plateAiTitle = plateAiTitle, plateBlank = plateBlank, plateBadge = plateBadge,
         };
@@ -230,6 +232,11 @@ namespace OurTaiko.Editor
                     string worn = ItemPicker(catalog, slot, current);
                     if (worn != current) { SetItem(slot, worn); layersChanged = true; }
                 }
+                using (new EditorGUI.DisabledScope(effectItem == ""))
+                {
+                    bool over = EditorGUILayout.Toggle(new GUIContent("Effect over the plate", "Drawn over the whole plate instead of cut to the band: the choice of whoever makes a title."), effectOverflow);
+                    if (over != effectOverflow) { effectOverflow = over; layersChanged = true; }
+                }
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     takeTitle = TitlePicker(new GUIContent("From title", "A title to fill the three slots with."), takeTitle, catalog.Titles.Keys, null);
@@ -250,7 +257,7 @@ namespace OurTaiko.Editor
                 {
                     // What the plate wears for it, and the way to change one part of it.
                     var parts = PlateComposition.Worn(catalog, (Newtonsoft.Json.Linq.JArray)rows, Info());
-                    foreach (var slot in NameplateSlots.All) PartLine(catalog, slot, parts.In(slot));
+                    foreach (var slot in NameplateSlots.All) PartLine(catalog, slot, parts.In(slot), parts.EffectOverflow);
                     if (GUILayout.Button(new GUIContent("Customize", "The custom layout wearing these three parts, to swap any of them.")))
                     {
                         WearParts(parts);
@@ -367,6 +374,7 @@ namespace OurTaiko.Editor
         void WearParts(TitleParts parts)
         {
             foreach (var slot in NameplateSlots.All) SetItem(slot, parts.In(slot) ?? "");
+            effectOverflow = parts.EffectOverflow;
         }
 
         // A title, its family as a submenu (toho ▸ toho_y22_3), with buttons to step through them.
@@ -408,7 +416,7 @@ namespace OurTaiko.Editor
             }
             string label = slot switch { NameplateSlot.Band => "Band", NameplateSlot.Effect => "Effect", _ => "Icon" };
             string worn = Picker(new GUIContent(label), id ?? "", choices, labels);
-            PartLine(catalog, slot, worn, inPicker: true);
+            PartLine(catalog, slot, worn, effectOverflow, inPicker: true);
             return worn;
         }
 
@@ -421,9 +429,9 @@ namespace OurTaiko.Editor
             return menu;
         }
 
-        // One worn part: its name (unless the picker above shows it), where it is from, and whether
-        // it is cut to the band.
-        static void PartLine(PlateComposition.Catalog catalog, NameplateSlot slot, string id, bool inPicker = false)
+        // One worn part: its name (unless the picker above shows it), where it is from, and for the
+        // effect whether the plate wearing it cuts it to the band (`overflow`: it does not).
+        static void PartLine(PlateComposition.Catalog catalog, NameplateSlot slot, string id, bool overflow, bool inPicker = false)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -442,7 +450,7 @@ namespace OurTaiko.Editor
                 }
             }
             else notes.Add("items folder");
-            if (slot == NameplateSlot.Effect) notes.Add(catalog.ClipsEffect(id) ? "cut to the band" : "runs outside the band");
+            if (slot == NameplateSlot.Effect) notes.Add(overflow ? "runs outside the band" : "cut to the band");
             NameplateSlots.TryParse(id, out _, out string name);
             string text = (inPicker ? "" : name + "  ") + string.Join("; ", notes);
             EditorGUILayout.LabelField(new GUIContent(inPicker ? " " : NameplateSlots.Folder(slot)), new GUIContent(text, tip), EditorStyles.miniLabel);
@@ -511,6 +519,7 @@ namespace OurTaiko.Editor
             info.bandItem = bandItem;
             info.effectItem = effectItem;
             info.iconItem = iconItem;
+            info.effectOverflow = effectOverflow;
             info.plateState = plateState;
             info.plateTitle = plateTitle;
             info.plateAiTitle = plateAiTitle;
@@ -532,6 +541,7 @@ namespace OurTaiko.Editor
             bandItem = info.bandItem;
             effectItem = info.effectItem;
             iconItem = info.iconItem;
+            effectOverflow = info.effectOverflow;
             profileBand = info.profileBand;
             plateState = info.plateState;
             plateTitle = info.plateTitle;
@@ -594,7 +604,7 @@ namespace OurTaiko.Editor
                     text.AppendLine("  in the set" + (titles.Count > 0 ? ", part of " + string.Join(", ", titles) : ""));
                 }
                 else text.AppendLine("  from the items folder" + (slot == NameplateSlot.Band ? ", cut to the band" : ""));
-                if (slot == NameplateSlot.Effect) text.AppendLine(catalog.ClipsEffect(id) ? "  cut to the band" : "  runs outside the band");
+                if (slot == NameplateSlot.Effect) text.AppendLine(worn.EffectOverflow ? "  runs outside the band" : "  cut to the band");
                 text.AppendLine($"  picture {item.texture.width}×{item.texture.height}, {file.Parts.Length} parts, clip {clip?.Name} ({clip?.Frames.Length} frames, {length})");
                 if (clip != null && clip.Name != NameplateItems.ClipName) text.AppendLine($"  no \"{NameplateItems.ClipName}\" clip: its first is played");
             }

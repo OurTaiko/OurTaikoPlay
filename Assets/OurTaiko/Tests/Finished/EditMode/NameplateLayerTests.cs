@@ -516,6 +516,18 @@ namespace OurTaiko.Tests
             var back = PlayerInfo.FromJson(info.ToJson());
             Assert.That(back.ProfileLayers, Is.EqualTo(info.ProfileLayers), "player.json keeps them.");
 
+            // Whether the effect runs over the plate is the title's own choice, whatever the catalog's
+            // titles do with that effect: ai_3's is cut to the band there, and gold's is not.
+            var root = preview.Plate.transform.Find(PlateComposition.RootName);
+            Assert.That(preview.Plate.Layers.EffectView.transform.parent, Is.EqualTo(preview.Plate.Layers.EffectMask));
+            info.SetProfileLayers(new TitleParts("band/lumen-title-toho_y22", "effect/lumen-title-ai_3", null, effectOverflow: true));
+            preview.Show(info, 0);
+            Assert.That(preview.Plate.Layers.EffectView.transform.parent, Is.EqualTo(root));
+            Assert.That(PlayerInfo.FromJson(info.ToJson()).ProfileLayers?.EffectOverflow, Is.True);
+            info.SetProfileLayers(new TitleParts("band/lumen-title-gold", "effect/lumen-title-gold", null));
+            preview.Show(info, 0);
+            Assert.That(preview.Plate.Layers.EffectView.transform.parent, Is.EqualTo(preview.Plate.Layers.EffectMask));
+
             // A title picked on the plate itself is the catalog's.
             info.plateTitle = "gold";
             preview.Show(info, 0);
@@ -547,10 +559,10 @@ namespace OurTaiko.Tests
                         Assert.That(NameplateItems.Load(slot, id), Is.Not.Null, label + " " + id);
                     }
                 }
-            // What may run outside the band is an effect the catalog knows.
-            Assert.That(catalog.ClipsEffect("effect/lumen-title-gold"), Is.False, "Gold's sparkles burst out of the band.");
-            Assert.That(catalog.ClipsEffect("effect/lumen-title-ai_3"), Is.True, "ai_3's sweep stays inside it.");
-            Assert.That(catalog.ClipsEffect("effect/loose"), Is.True, "A player's own effect is cut to the band.");
+            // Whether an effect runs over the plate is the title's to say.
+            Assert.That(catalog.Title("gold").EffectOverflow, Is.True, "Gold's sparkles burst out of the band.");
+            Assert.That(catalog.Title("ai_3").EffectOverflow, Is.False, "ai_3's sweep stays inside it.");
+            Assert.That(catalog.Title("wood").EffectOverflow, Is.False, "Nothing overflows without an effect.");
             // Titles sharing a picture share its item.
             Assert.That(catalog.Title("toho_y22_3").Band, Is.EqualTo(catalog.Title("toho_y22_5").Band));
             Assert.That(catalog.Title("toho_y22_3").Icon, Is.Not.EqualTo(catalog.Title("toho_y22_5").Icon));
@@ -589,7 +601,7 @@ namespace OurTaiko.Tests
             Assert.That(layers.BandView.transform.parent, Is.EqualTo(root));
             if (effect)
             {
-                bool inside = PlateComposition.ReadCatalog().ClipsEffect(parts.Effect);
+                bool inside = !parts.EffectOverflow;
                 Assert.That(layers.EffectView.transform.parent, Is.EqualTo(inside ? layers.EffectMask : root));
                 Assert.That(layers.EffectMask.gameObject.activeInHierarchy, Is.EqualTo(inside), "The band's shape is only there to cut an effect that stays inside the band.");
                 Assert.That(layers.BandMask.gameObject.activeInHierarchy, Is.False, "A title's own band is not cut.");

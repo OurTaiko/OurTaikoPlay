@@ -22,15 +22,15 @@ namespace OurTaiko
             public readonly IReadOnlyDictionary<string, TitleParts> Titles, AiTitles;
             public readonly string[] Blank;
             readonly HashSet<string>[] items = { new HashSet<string>(StringComparer.Ordinal), new HashSet<string>(StringComparer.Ordinal), new HashSet<string>(StringComparer.Ordinal) };
-            readonly HashSet<string> unclipped;
 
             internal Catalog(JObject data)
             {
                 States = data["states"] as JObject ?? throw new InvalidDataException("Missing states");
                 Titles = Parts(data["titles"] as JObject ?? throw new InvalidDataException("Missing titles"));
                 AiTitles = Parts(data["aiTitles"] as JObject ?? throw new InvalidDataException("Missing AI titles"));
-                unclipped = new HashSet<string>(data["unclipped"]?.ToObject<string[]>() ?? throw new InvalidDataException("Missing unclipped effects"), StringComparer.Ordinal);
                 Blank = data["blank"]?.ToObject<string[]>() ?? throw new InvalidDataException("Missing blank labels");
+                // The look a plate falls back on when it names none there is.
+                if (!Titles.ContainsKey("wood") || !AiTitles.ContainsKey("wood")) throw new InvalidDataException("Missing the wood title");
             }
 
             IReadOnlyDictionary<string, TitleParts> Parts(JObject options)
@@ -39,7 +39,9 @@ namespace OurTaiko
                 foreach (var option in options.Properties())
                 {
                     var layers = option.Value as JObject ?? throw new InvalidDataException("Missing layers of " + option.Name);
-                    var title = new TitleParts((string)layers["band"] ?? throw new InvalidDataException("Missing band of " + option.Name), (string)layers["effect"], (string)layers["icon"]);
+                    string effect = (string)layers["effect"];
+                    var title = new TitleParts((string)layers["band"] ?? throw new InvalidDataException("Missing band of " + option.Name), effect, (string)layers["icon"],
+                        effect != null && ((bool?)layers["effectOverflow"] ?? false));
                     parts.Add(option.Name, title);
                     foreach (var slot in NameplateSlots.All)
                         if (title.In(slot) != null) items[(int)slot].Add(title.In(slot));
@@ -50,9 +52,6 @@ namespace OurTaiko
             // The set's items of a slot: those the titles are made of.
             public IEnumerable<string> Ids(NameplateSlot slot) => items[(int)slot];
             public bool Contains(NameplateSlot slot, string id) => id != null && items[(int)slot].Contains(id);
-
-            // An effect is cut to the band unless the title's own art lets it run outside it (a burst of sparkles).
-            public bool ClipsEffect(string id) => id == null || !unclipped.Contains(id);
 
             public TitleParts Title(string choice) => Pick(Titles, choice);
             public TitleParts AiTitle(string choice) => Pick(AiTitles, choice);
@@ -161,7 +160,8 @@ namespace OurTaiko
                 : info.plateTitle == "auto" && info.ProfileLayers is TitleParts own ? own
                 : source.Title(label);
             if (info.plateState != "custom" || info.IsCoin) return title;
-            return new TitleParts(string.IsNullOrEmpty(info.bandItem) ? title.Band : info.bandItem, info.effectItem, info.iconItem);
+            return new TitleParts(string.IsNullOrEmpty(info.bandItem) ? title.Band : info.bandItem, info.effectItem, info.iconItem,
+                !string.IsNullOrEmpty(info.effectItem) && info.effectOverflow);
         }
 
         // Draws a layout's rows (source null: TextOnly's, with no set to draw pictures from).

@@ -23,6 +23,10 @@ namespace OurTaiko
         public const string ResourceFolder = "Nameplate/";
 
         static string folder;
+        // Where the picture of a hash is kept (whether or not it is there yet), and whom to tell of
+        // one a plate wears that is not: Online.NameplateDownloads, which fetches it.
+        static Func<string, string> pictureOf;
+        static Action<string> wanted;
         static NameplateSet set;
         static PlateComposition.Catalog catalog;
         // The player's files read, by path, with the time each was written (null: it could not be used).
@@ -51,6 +55,8 @@ namespace OurTaiko
             Forget();
             folder = null;
             SetChanged = null;
+            pictureOf = null;
+            wanted = null;
         }
 
         public static string Folder => folder ??= Path.Combine(GamePaths.Root, FolderName);
@@ -79,6 +85,17 @@ namespace OurTaiko
             catalog = read;
             SetChanged?.Invoke();
         }
+
+        // Pictures told by their hash are at `pathOf` of it; `missing` is told of one a plate wears
+        // that is not there. Null: no part is found by its hash.
+        public static void UsePictures(Func<string, string> pathOf, Action<string> missing)
+        {
+            pictureOf = pathOf;
+            wanted = missing;
+        }
+
+        // A picture a plate was waiting for has come: plates on screen are drawn again.
+        public static void Redraw() => SetChanged?.Invoke();
 
         // Frees what was read of the player's files; the next use reads them again.
         public static void Forget()
@@ -119,11 +136,22 @@ namespace OurTaiko
         }
 
         // The item an id names, if it is in the slot it is worn in and can be drawn: the game's own,
-        // else the set's, else the player's file of that name; else null.
-        public static OtanimAsset Load(NameplateSlot slot, string id)
+        // else the picture of `hash` when the title says which it is (a site's title), else the
+        // set's of that name, else the player's file of that name; else null. A picture told by its
+        // hash that is not here yet is asked for, and the plate is drawn again when it comes; until
+        // then the part is drawn as the set has it.
+        public static OtanimAsset Load(NameplateSlot slot, string id, string hash = null)
         {
             if (!NameplateSlots.TryParse(id, out var named, out string name) || named != slot) return null;
-            return Carried(slot, name) ?? LoadPath(set?.PathOf(id), name, fromSet) ?? LoadPath(PathOf(slot, name), name, loaded);
+            return Carried(slot, name) ?? ByHash(hash, name) ?? LoadPath(set?.PathOf(id), name, fromSet) ?? LoadPath(PathOf(slot, name), name, loaded);
+        }
+
+        static OtanimAsset ByHash(string hash, string name)
+        {
+            if (hash == null || pictureOf == null) return null;
+            string path = pictureOf(hash);
+            if (!File.Exists(path)) { wanted?.Invoke(hash); return null; }
+            return LoadPath(path, name, fromSet);
         }
 
         // An item the game carries, which needs no set and is Unity's to keep and free.

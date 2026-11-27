@@ -29,9 +29,14 @@ namespace OurTaiko.Online
         }
 
         // The file at path is the one of that size and hash.
-        public static bool Matches(string path, long size, string hash)
+        public static bool Matches(string path, long size, string hash) =>
+            File.Exists(path) && new FileInfo(path).Length == size && Matches(path, hash);
+
+        // The file at path is the one of that hash, whatever its size: for a file told by its hash
+        // alone.
+        public static bool Matches(string path, string hash)
         {
-            if (!File.Exists(path) || new FileInfo(path).Length != size) return false;
+            if (!File.Exists(path)) return false;
             using var stream = File.OpenRead(path);
             using var sha = SHA256.Create();
             return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant() == hash;
@@ -45,22 +50,32 @@ namespace OurTaiko.Online
         // how many have come, as they come.
         public static async Task<byte[]> FetchAsync(string url, long size, string hash, Action<long> received, CancellationToken cancel)
         {
+            var data = await FetchAsync(url, hash, size, received, cancel);
+            if (data.LongLength != size) throw new InvalidDataException("the download of " + url + " does not match its size");
+            return data;
+        }
+
+        // One file's bytes from one address, checked against its hash: a file told by its hash alone,
+        // of at most `most` bytes.
+        public static async Task<byte[]> FetchAsync(string url, string hash, long most, Action<long> received, CancellationToken cancel)
+        {
+            long size = most;
             received?.Invoke(0);
             using var response = await OurTaikoHttpClient.GetAsync(url, HeadersTimeout, cancel, HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode) throw new HttpRequestException("HTTP " + (int)response.StatusCode + " for " + url);
             using var stream = await response.Content.ReadAsStreamAsync();
-            var bytes = new MemoryStream((int)Math.Min(size, int.MaxValue));
+            var bytes = new MemoryStream();
             var buffer = new byte[81920];
             int read;
             while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, cancel)) > 0)
             {
-                if (bytes.Length + read > size) throw new InvalidDataException("the download of " + url + " is larger than its size");
+                if (bytes.Length + read > size) throw new InvalidDataException("the download of " + url + " is larger than it may be");
                 bytes.Write(buffer, 0, read);
                 received?.Invoke(bytes.Length);
             }
             var data = bytes.ToArray();
             string got = await Task.Run(() => Sha256(data), cancel);
-            if (data.LongLength != size || got != hash) throw new InvalidDataException("the download of " + url + " does not match its hash");
+            if (got != hash) throw new InvalidDataException("the download of " + url + " does not match its hash");
             return data;
         }
 

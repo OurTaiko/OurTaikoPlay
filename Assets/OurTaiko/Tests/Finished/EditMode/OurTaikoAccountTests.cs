@@ -288,6 +288,23 @@ namespace OurTaiko.Tests
                 "{\"title\":{\"name\":\"x\",\"style\":\"gold\",\"layers\":{\"band\":\"band/lumen-title-gold\",\"icon\":\"band/lumen-title-gold\"}}}"), "en").Layers,
                 Is.EqualTo(new TitleParts("band/lumen-title-gold", null, null)), "An item out of its slot is none.");
             Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse("{\"title\":{\"name\":\"x\",\"style\":\"gold\"}}"), "en").Layers, Is.Null);
+            // Whether the effect runs over the plate, as the title says; nothing overflows without one.
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"gold\",\"layers\":{\"band\":\"band/lumen-title-gold\",\"effect\":\"effect/lumen-title-gold\",\"effectOverflow\":true}}}"), "en").Layers,
+                Is.EqualTo(new TitleParts("band/lumen-title-gold", "effect/lumen-title-gold", null, effectOverflow: true)));
+            Assert.That(ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"wood\",\"layers\":{\"band\":\"band/lumen-title-wood\",\"effectOverflow\":true}}}"), "en").Layers,
+                Is.EqualTo(new TitleParts("band/lumen-title-wood", null, null)));
+            // Which picture each part is, by hash, where the site says: a hash that is none, or of a
+            // layer the title does not wear, is left out.
+            string hash = new string('a', 64);
+            var told = ProfileNameplate.From(Newtonsoft.Json.Linq.JObject.Parse(
+                "{\"title\":{\"name\":\"x\",\"style\":\"gold\",\"layers\":{\"band\":\"band/lumen-title-gold\",\"effect\":\"effect/lumen-title-gold\",\"icon\":null,"
+                + "\"hashes\":{\"band\":\"" + hash + "\",\"effect\":\"ABC\",\"icon\":\"" + hash + "\"}}}}"), "en").Layers.Value;
+            Assert.That((told.BandHash, told.EffectHash, told.IconHash), Is.EqualTo((hash, (string)null, (string)null)));
+            var kept = new PlayerInfo();
+            kept.SetProfileLayers(told);
+            Assert.That(PlayerInfo.FromJson(kept.ToJson()).ProfileLayers, Is.EqualTo(told), "player.json keeps them.");
         }
 
         [Test]
