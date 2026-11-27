@@ -32,6 +32,15 @@ namespace OurTaiko.Tests
             Assert.That(Face(TextScript.Japanese).font.sourceFontFile.name, Is.EqualTo("大江户勘亭流"));
             Assert.That(Face(TextScript.SimplifiedChinese).font.sourceFontFile.name, Is.EqualTo("方正胖娃GBK"));
             Assert.That(Face(TextScript.TraditionalChinese), Is.SameAs(Face(TextScript.SimplifiedChinese)));
+            Assert.That(Face(TextScript.Latin).font.sourceFontFile.name, Is.EqualTo("DomCasualLTPro-Bold"));
+        }
+
+        [TestCase("ja", TextScript.Japanese)]
+        [TestCase("zh", TextScript.SimplifiedChinese)]
+        [TestCase("en", TextScript.Latin)]
+        public void NeutralTextFollowsTheInterfaceLanguage(string language, TextScript expected)
+        {
+            Assert.That(UiFonts.ScriptOf(language), Is.EqualTo(expected));
         }
 
         [Test]
@@ -66,6 +75,20 @@ namespace OurTaiko.Tests
             Assert.That(Set.Pick("我們的歌", TextScript.Japanese), Is.SameAs(Face(TextScript.TraditionalChinese)));
             Assert.That(Set.Pick("Hello", TextScript.Japanese), Is.SameAs(Face(TextScript.Japanese)));
             Assert.That(Set.Pick("Hello", TextScript.SimplifiedChinese), Is.SameAs(Face(TextScript.SimplifiedChinese)));
+            Assert.That(Set.Pick("Hello 123!", TextScript.Latin), Is.SameAs(Face(TextScript.Latin)));
+            Assert.That(Set.Pick("さくら", TextScript.Latin), Is.SameAs(Face(TextScript.Japanese)));
+            Assert.That(Set.Pick("我们的歌", TextScript.Latin), Is.SameAs(Face(TextScript.SimplifiedChinese)));
+        }
+
+        [Test]
+        public void NeutralTextTheLatinFaceCannotDrawGoesToTheFirstFaceThatCan()
+        {
+            // The Latin face has no ideographs or ♪; such text moves whole to the Japanese face, the first in the set.
+            Assert.That(Face(TextScript.Latin).Has('A'), Is.True);
+            Assert.That(Face(TextScript.Latin).Has('é'), Is.True);
+            Assert.That(Face(TextScript.Latin).Has('国'), Is.False);
+            Assert.That(Set.Pick("中国", TextScript.Latin), Is.SameAs(Face(TextScript.Japanese)));
+            Assert.That(Set.Pick("Song ♪", TextScript.Latin), Is.SameAs(Face(TextScript.Japanese)));
         }
 
         [Test]

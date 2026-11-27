@@ -2,6 +2,7 @@ using System.Collections;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace OurTaiko.Tests
@@ -43,6 +44,60 @@ namespace OurTaiko.Tests
             finally
             {
                 Object.Destroy(canvas);
+            }
+        }
+
+        // In English, text of no particular script is drawn in the Latin face (Dom Casual), and text
+        // with kana or ideographs stays in its own script's face.
+        [UnityTest]
+        public IEnumerator TheEnglishInterfaceDrawsLatinTextInTheLatinFace()
+        {
+            var settings = SettingManager.EnsureInstance().Settings.general;
+            string language = settings.language, interfaceLanguage = L10n.Language;
+            if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
+            yield return null;
+            try
+            {
+                settings.language = "en";
+                L10n.SetLanguage("en");
+                Assert.That(UiFonts.LanguageScript, Is.EqualTo(TextScript.Latin));
+                var latin = UiFonts.Set.FaceFor(TextScript.Latin);
+                var japanese = UiFonts.Set.FaceFor(TextScript.Japanese);
+
+                yield return SceneManager.LoadSceneAsync(SceneSwitcher.EntryScene);
+                yield return null;
+                var entry = Object.FindAnyObjectByType<EntryScene>();
+                var freePlay = entry.Coins.FreePlay;
+                yield return new WaitForSecondsRealtime(0.4f);
+                Assert.That(freePlay.text, Is.EqualTo(L10n.Get("Menu", "overlay.freePlay")));
+                Assert.That(TextScripts.Classify(freePlay.text), Is.EqualTo(TextScript.Neutral));
+                Assert.That(freePlay.font, Is.SameAs(latin.font));
+                Assert.That(UiFonts.IsOutlined(freePlay), Is.True, "The outline carries over to the Latin face.");
+
+                entry.Don();
+                yield return new WaitForSecondsRealtime(4f);
+                TestCapture.Capture("EnglishFont.png");
+
+                // Text with kana moves whole to the Japanese face; back to Latin text, back to the Latin face.
+                freePlay.text = "フリープレイ";
+                yield return null;
+                Assert.That(freePlay.font, Is.SameAs(japanese.font));
+                freePlay.text = "Free Play";
+                yield return null;
+                Assert.That(freePlay.font, Is.SameAs(latin.font));
+
+                // In Japanese, the same Latin text goes back to the Japanese face.
+                settings.language = "ja";
+                L10n.SetLanguage("ja");
+                freePlay.text = "Free Play";
+                yield return null;
+                Assert.That(freePlay.font, Is.SameAs(japanese.font));
+            }
+            finally
+            {
+                settings.language = language;
+                L10n.SetLanguage(interfaceLanguage);
+                if (SceneSwitcher.Instance != null) Object.Destroy(SceneSwitcher.Instance.gameObject);
             }
         }
     }

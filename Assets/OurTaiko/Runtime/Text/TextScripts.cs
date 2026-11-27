@@ -11,6 +11,9 @@ namespace OurTaiko
         Japanese,
         SimplifiedChinese,
         TraditionalChinese,
+        // Never detected: the English interface's script, so Neutral text there gets the Latin face.
+        // Appended last because UiFontSet.asset stores scripts by their enum value.
+        Latin,
     }
 
     // Tells the script of a text from its characters. Kana decide on their own; an ideograph
