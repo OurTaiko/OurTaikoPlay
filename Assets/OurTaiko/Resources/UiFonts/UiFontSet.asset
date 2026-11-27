@@ -19,3 +19,6 @@ MonoBehaviour:
   - font: {fileID: 11400000, guid: a223a4de5d4c1403c85a658f55086bcf, type: 2}
     outline: {fileID: 2100000, guid: ffe09fdc783964f1bafebf21d01722e4, type: 2}
     scripts: 0200000003000000i
+  - font: {fileID: 11400000, guid: 4f0a871fe18144e6fbd7fffb730fc129, type: 2}
+    outline: {fileID: 2100000, guid: 14dc8b1aaf399441098d7d85003112cd, type: 2}
+    scripts: 04000000i

@@ -41,6 +41,7 @@ namespace OurTaiko.Editor
         {
             new Spec("Edo", "Assets/OurTaiko/Art/大江户勘亭流.otf", TextScript.Japanese),
             new Spec("PangWa", "Assets/OurTaiko/Art/方正胖娃GBK.ttf", TextScript.SimplifiedChinese, TextScript.TraditionalChinese),
+            new Spec("DomCasual", "Assets/OurTaiko/Art/DomCasualLTPro-Bold.ttf", TextScript.Latin),
         };
 
         [MenuItem("OurTaiko/Build UI Fonts")]

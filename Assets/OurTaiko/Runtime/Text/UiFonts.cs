@@ -8,7 +8,7 @@ namespace OurTaiko
 {
     // Keeps every UI text in the face of its own script (UiFontSet.Pick): Japanese in the Japanese
     // face, Simplified and Traditional Chinese in theirs, and text of no particular script in the
-    // interface language's. A text whose font is one of the set's gets a FaceSelector as its TMP text
+    // interface language's (the Latin face in English). A text whose font is one of the set's gets a FaceSelector as its TMP text
     // preprocessor, which TMP runs whenever it parses the text, before it measures or draws it, so the
     // face changes with the text and layout always measures the face that is drawn.
     //
@@ -39,9 +39,14 @@ namespace OurTaiko
             }
         }
 
-        // English shares the Japanese face, which the skin was drawn with.
-        public static TextScript ScriptOf(string language) =>
-            language == "zh" ? TextScript.SimplifiedChinese : TextScript.Japanese;
+        // English text is drawn in the Latin face; Japanese and any other language in the Japanese face,
+        // which the skin was drawn with.
+        public static TextScript ScriptOf(string language) => language switch
+        {
+            "zh" => TextScript.SimplifiedChinese,
+            "en" => TextScript.Latin,
+            _ => TextScript.Japanese,
+        };
 
         // The face for new text in the interface language.
         public static TMP_FontAsset Default => Set.FaceFor(LanguageScript).font;
