@@ -16,6 +16,16 @@ namespace OurTaiko
         const float NameFontSize = 24, LargeNameFontSize = 30;
         const float TitleLift = 2.5f, NameLift = 3, LargeNameLift = 7;
         public const float TitleX = 226.5f, TitleY = 34.5f - TitleLift;
+        // A title's icon stands on the band's right end, from x 280 on (the set's own rule, checked by
+        // Tools/nameplate-samples/lumen); the title's text keeps IconGap left of where its picture
+        // really starts, and is never squeezed further than an icon starting at IconFrom would.
+        public const float IconFrom = 280, IconGap = 4;
+
+        // How wide a title's text may be in its box (centre x and width, as a layout row gives them):
+        // the whole box, or with an icon starting at `iconLeft` only as wide as stays clear of it,
+        // still centred on x.
+        public static float TitleRoom(float x, float boxWidth, float? iconLeft) =>
+            iconLeft is float left ? Math.Max(0, Math.Min(boxWidth, 2 * (Math.Max(left, IconFrom) - IconGap - x))) : boxWidth;
 
         // Apply the same TMP baseline correction at a layout's own text anchor.
         public static float TextLift(float fontSize) => fontSize switch

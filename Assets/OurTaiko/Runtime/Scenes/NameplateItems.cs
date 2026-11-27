@@ -185,6 +185,51 @@ namespace OurTaiko
             return asset;
         }
 
+        static readonly System.Runtime.CompilerServices.ConditionalWeakTable<OtanimAsset, object> iconLefts =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<OtanimAsset, object>();
+        const int IconLeftSamples = 32;
+
+        // Where an icon's picture really starts on the plate (canvas x) across the title text's rows:
+        // the leftmost column that is opaque at least half the time over its clip, so a glint
+        // sweeping across the band now and then does not count. Measured once per item from its picture; null when there is
+        // no picture to measure (an item the game carries keeps only its texture on the GPU).
+        public static float? IconLeft(OtanimAsset icon)
+        {
+            if (icon == null) return null;
+            if (iconLefts.TryGetValue(icon, out object known)) return (float?)known;
+            float? left = MeasureLeft(icon.File);
+            iconLefts.Add(icon, left);
+            return left;
+        }
+
+        static float? MeasureLeft(Otanim file)
+        {
+            var clip = ClipOf(file);
+            if (clip == null || file.Texture == null || clip.Frames.Length == 0) return null;
+            var picture = new Texture2D(2, 2, TextureFormat.RGBA32, false) { hideFlags = HideFlags.DontSave };
+            try
+            {
+                if (!picture.LoadImage(file.Texture, false)) return null;
+                var pixels = picture.GetPixels32();
+                // The title's rows on the plate (canvas y down), in the file's view units (y up).
+                float top = NameplateLayout.Height - (NameplateLayout.TitleY - NameplateLayout.TitleFontSize / 2);
+                float bottom = NameplateLayout.Height - (NameplateLayout.TitleY + NameplateLayout.TitleFontSize / 2);
+                int n = clip.Frames.Length, samples = Math.Min(n, IconLeftSamples);
+                var covered = new int[(int)NameplateLayout.Width];
+                var columns = new bool[covered.Length];
+                for (int i = 0; i < samples; i++)
+                {
+                    Array.Clear(columns, 0, columns.Length);
+                    file.MarkOpaqueColumns(clip, i * n / samples, pixels, picture.width, picture.height, bottom, top, columns);
+                    for (int x = 0; x < columns.Length; x++) if (columns[x]) covered[x]++;
+                }
+                for (int x = 0; x < covered.Length; x++)
+                    if (2 * covered[x] >= samples) return x;
+                return NameplateLayout.Width;
+            }
+            finally { Destroy(picture); }
+        }
+
         // The clip a worn item plays.
         public static Otanim.Clip ClipOf(Otanim file) =>
             file == null || file.Clips.Length == 0 ? null : file.Find(ClipName) ?? file.Clips[0];

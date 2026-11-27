@@ -613,6 +613,62 @@ namespace OurTaiko.Tests
             if (icon) Assert.That(layers.IconView.transform.GetSiblingIndex(), Is.GreaterThan(layers.BandView.transform.GetSiblingIndex()));
         }
 
+        // An icon's left edge is where its picture is opaque across the title's rows at least half
+        // the time: a square passing far left for a moment does not count.
+        [TestCase(new[] { 300f }, 300f)]
+        [TestCase(new[] { 300f, 300f, 60f }, 300f)]
+        [TestCase(new[] { 320f, 310f, 330f }, 320f)]
+        [TestCase(new[] { 300f, 60f, 300f, 300f, 180f }, 300f)]
+        public void AnIconsLeftEdgeIsWhereItsPictureUsuallyStarts(float[] lefts, float expected)
+        {
+            Item(NameplateSlot.Icon, "square", lefts);
+            var icon = NameplateItems.Load(NameplateSlot.Icon, "icon/square");
+            Assert.That(NameplateItems.IconLeft(icon), Is.EqualTo(expected).Within(1f));
+        }
+
+        [Test]
+        public void ATitlesRoomIsCentredAndClearOfItsIcon()
+        {
+            float x = NameplateLayout.TitleX, box = NameplateLayout.TitleBoxWidth;
+            Assert.That(NameplateLayout.TitleRoom(x, box, null), Is.EqualTo(box), "No icon: the whole box.");
+            Assert.That(NameplateLayout.TitleRoom(x, box, NameplateLayout.Width), Is.EqualTo(box), "An icon far right: the whole box.");
+            Assert.That(NameplateLayout.TitleRoom(x, box, 302), Is.EqualTo(2 * (302 - NameplateLayout.IconGap - x)));
+            // Never narrower than an icon starting at the x 280 every icon keeps to.
+            Assert.That(NameplateLayout.TitleRoom(x, box, 100), Is.EqualTo(2 * (NameplateLayout.IconFrom - NameplateLayout.IconGap - x)));
+        }
+
+        // A long title is shrunk evenly (not squeezed sideways) into its box, centred where the
+        // layout puts it; with an icon on the band's right end it is also narrow enough to end left
+        // of the icon.
+        [TestCase("wood", "ブルー達人／グリーン金達人ブルー達人", false)]
+        [TestCase("crown_gold", "ブルー達人／グリーン金達人ブルー達人", true)]
+        [TestCase("crown_gold", "ブルー達人金", true)]
+        [TestCase("sekaitaikai_05", "ブルー達人／グリーン金達人", true)]
+        [TestCase("crown_gold", "達人", true)]
+        public void ATitleIsShrunkEvenlyAndKeptClearOfItsIcon(string plateTitle, string title, bool icon)
+        {
+            TestData.RequireBakedNameplates();
+            using var preview = new NameplatePreview();
+            preview.Show(new PlayerInfo { name = "Player", title = title, plateTitle = plateTitle }, 0);
+            float? iconLeft = preview.Plate.Layers.IconLeft;
+            Assert.That(iconLeft.HasValue, Is.EqualTo(icon));
+            // Across the title's rows crown_gold's crown starts at x 334 (the otanim folder's reference
+            // renderer measures the same), well right of the x 280 every icon keeps to.
+            if (plateTitle == "crown_gold") Assert.That(iconLeft.Value, Is.EqualTo(334f).Within(2f));
+            // sekaitaikai_05's streak sweeps across the band half the time; its flame starts at x 340.
+            if (plateTitle == "sekaitaikai_05") Assert.That(iconLeft.Value, Is.EqualTo(340f).Within(2f));
+            var text = preview.Plate.title;
+            var rect = text.rectTransform;
+            float scale = rect.localScale.x;
+            Assert.That(rect.localScale.y, Is.EqualTo(scale), "Shrunk evenly, not squeezed.");
+            Assert.That(rect.anchoredPosition, Is.EqualTo(new Vector2(NameplateLayout.TitleX, -NameplateLayout.TitleY)), "Always centred in its box.");
+            float room = icon ? Mathf.Min(NameplateLayout.TitleBoxWidth, 2 * (iconLeft.Value - NameplateLayout.IconGap - NameplateLayout.TitleX)) : NameplateLayout.TitleBoxWidth;
+            float width = text.preferredWidth * scale;
+            if (text.preferredWidth > room) Assert.That(width, Is.EqualTo(room).Within(0.01f), "A long title fills the room it has.");
+            else Assert.That(scale, Is.EqualTo(1));
+            Assert.That(NameplateLayout.TitleX + width / 2, Is.LessThanOrEqualTo((icon ? iconLeft.Value : float.MaxValue) + 0.01f), "The title ends before the icon.");
+        }
+
         [Test]
         public void ATitleWithoutABadgePlateStillShowsItsIcon()
         {

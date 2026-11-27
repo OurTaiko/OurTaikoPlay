@@ -185,7 +185,7 @@ namespace OurTaiko
                     case "ai_title_instance":
                         // The title's text is printed on the band, under its effect.
                         Layers.PlaceBand();
-                        if (titleRow != null) Title = Text(titleRow, info.HasTitle ? info.title : "");
+                        if (titleRow != null) Title = TitleText(titleRow, info);
                         Layers.PlaceEffect();
                         // A plate with no badge over its outline has nothing to put the icon behind.
                         if (!badge) Layers.PlaceIcon();
@@ -203,7 +203,7 @@ namespace OurTaiko
                     case "rankup_instance":
                         rankup = Picture(NameplateItems.Load(NameplateSlot.Icon, RankUpItem), running ?? "idle"); break;
                     case "text_title":
-                        if (Title == null) Title = Text(row, info.HasTitle ? info.title : "");
+                        if (Title == null) Title = TitleText(row, info);
                         break;
                     case "text_name":
                         PlayerName = Text(row, info.name ?? "");
@@ -261,6 +261,16 @@ namespace OurTaiko
             text.text = value;
             UiFonts.Use(text, outlined: (float)row["stroke"] > 0);
             text.Squeeze((float)row["width"]);
+            return text;
+        }
+
+        // The title keeps its proportions: a long one is shrunk evenly, not squeezed, centred where
+        // the layout puts it and narrow enough to stay clear of the icon on the band's right end
+        // (NameplateLayout.TitleRoom). Called after Layers.Apply, so the icon the plate wears is known.
+        TMP_Text TitleText(JToken row, PlayerInfo info)
+        {
+            var text = Text(row, info.HasTitle ? info.title : "");
+            text.Shrink(NameplateLayout.TitleRoom((float)row["x"], (float)row["width"], Layers.IconLeft));
             return text;
         }
 
