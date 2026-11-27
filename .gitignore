@@ -40,3 +40,7 @@ TestResults/
 /[Aa]ssets/AddressableAssetsData/Android.meta
 /[Aa]ssets/AddressableAssetsData/iOS.meta
 .mcp.json
+
+# Unity Test Framework 跑 PlayMode 时临时生成的场景，测试中断时会留下
+/Assets/InitTestScene*.unity
+/Assets/InitTestScene*.unity.meta
