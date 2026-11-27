@@ -34,8 +34,11 @@ namespace OurTaiko.Tests
             yield return null;
 
             // 1P joins: the joined row flashes, the nameplate fades in, the rows fade out.
+            var sfx = entry.sfx.GetComponent<AudioBus>();
+            int effectsBefore = sfx.EffectPlays;
             entry.Don();
             Assert.That(entry.Flow.State, Is.EqualTo(EntryFlow.Phase.SelectMode));
+            Assert.That(sfx.EffectPlays - effectsBefore, Is.EqualTo(1), "One hit to join plays one don and no other drum-like effect.");
             Assert.That(entry.voice.clip, Is.SameAs(entry.entryStart));
             yield return new WaitForSecondsRealtime(0.25f);
             Assert.That(entry.Credit.FlashAlpha + entry.Credit.Alpha, Is.GreaterThan(0));
