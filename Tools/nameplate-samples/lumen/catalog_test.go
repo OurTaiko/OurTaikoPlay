@@ -31,7 +31,8 @@ func TestCompleteCollection(t *testing.T) {
 	if err = json.Unmarshal(data, &catalog); err != nil {
 		t.Fatal(err)
 	}
-	if len(catalog.States) != 36 || len(catalog.Titles) != 88 || len(catalog.AiTitles) != 8 || len(catalog.Ranks) != 114 {
+	// The arcade has 88 titles; the published set carries the ones added since as well.
+	if len(catalog.States) != 36 || len(catalog.Titles) < 88 || len(catalog.AiTitles) != 8 || len(catalog.Ranks) != 114 {
 		t.Fatal("incomplete catalog")
 	}
 	base, renderer := example(t, collection+"composition/plates.otanim")

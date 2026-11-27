@@ -34,7 +34,7 @@
 | 普通及 AI 称号 | 每个称号是一组部件，记在 `catalog.json` 的 `titles`、`aiTitles`（`{band, effect?, icon?}`）。部件文件：`band/lumen-title-*.otanim`、`effect/lumen-title-*.otanim`、`icon/lumen-title-*.otanim`，AI 称号用 `lumen-ai-title-*`；每个文件一个循环的 `idle`。`unclipped` 列出可以伸出底条的特效 |
 | 1P / 2P 徽章、空白状态 | `composition/badges.otanim`、`composition/blank.otanim` |
 | 段位底与字 | `composition/dan-{clear,full,donfull}.otanim`，每份包含 38 个命名片段 |
-| 升段 | `icon/lumen-rankup.otanim`。初始化对应透明的 `idle`，每个段位都有 `rankup_start`、`rankup_wait`、`rankup_end` |
+| 升段 | `icon/lumen-rankup.otanim`。初始化对应透明的 `idle`，每个段位都有 `rankup_start`、`rankup_wait`、`rankup_end`。它是名牌自己的转场，不是称号的部件：游戏本体带着一份（`Assets/OurTaiko/Resources/Nameplate/icon/lumen-rankup.otanim`），不靠下载的这套；重新烘焙后把新文件拷过去，`NameplateLayerTests.TheRankUpEffectComesWithTheGame` 会比对两份 |
 
 源画布原点映射到名牌中心 (204, 48)。转换器先求出每帧的显示列表，沿实例树合成变换，再将绘制顺序、顶点、UV、颜色和混合方式写入片段。局部矩形遮罩和三角网格遮罩会裁剪受影响的图形并插值边界 UV。颜色加值在对应的贴图变体中烘焙；加法发光仍由播放器和下方画面混合。
 

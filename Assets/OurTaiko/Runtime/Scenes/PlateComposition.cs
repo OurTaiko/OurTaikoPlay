@@ -60,7 +60,8 @@ namespace OurTaiko
                 options.TryGetValue(choice ?? "", out var parts) ? parts : options["wood"];
         }
 
-        // The object a plate's whole composition is drawn under, and the set's rank-up effect.
+        // The object a plate's whole composition is drawn under, and the rank-up effect, which the
+        // game carries (NameplateItems): it is played on a 段位 promotion, whatever set is in use.
         public const string RootName = "Complete nameplate", RankUpItem = "icon/lumen-rankup";
 
         // The catalog of the set in use; null when there is none yet.
