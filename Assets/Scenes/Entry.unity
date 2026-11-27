@@ -9930,7 +9930,6 @@ MonoBehaviour:
   voice: {fileID: 327365507}
   don: {fileID: 8300000, guid: 9a0f28655cff14d18b91e1f38cf50211, type: 3}
   ka: {fileID: 8300000, guid: b5d46904052a14efdbf9361bde1e09ae, type: 3}
-  cloud: {fileID: 8300000, guid: 9e71345cb5ba642698384410139d8be1, type: 3}
   entryStart: {fileID: 8300000, guid: c043d4bbed6814d8093140031444614a, type: 3}
   selectMode: {fileID: 8300000, guid: 36b8d236ae3984c05b970c9ff0899119, type: 3}
   entryStart2P: {fileID: 8300000, guid: 9f15561b199264d71878442d79e7351f, type: 3}

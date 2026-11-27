@@ -18,7 +18,8 @@ namespace OurTaiko
     // fades in on the right, the 2P drum works the boards, every board stays open, and the player
     // sits on the 2P side (SceneSwitcher.Seated) in the screens that follow; 1P may still join with its don,
     // which makes two players. Each player's 3D Don jumps up beside its plate when it
-    // joins (EntryDons). Not ported: the join cloud, the other
+    // joins (EntryDons). Not ported: the join cloud (neither drawn nor its sound: the original's
+    // cloud.ogg is a second drum boom that made one hit sound like two), the other
     // boards (特訓モード / きせかえ), the costume menu and the ALL.Net indicator. The screen is saved
     // in the scene (EntryView); Awake only binds it.
     public sealed class EntryScene : MonoBehaviour, ISettledScreen
@@ -36,7 +37,7 @@ namespace OurTaiko
         [Header("Audio")]
         public AudioSource bgm;
         public AudioSource sfx, voice;
-        public AudioClip don, ka, cloud, entryStart, selectMode;
+        public AudioClip don, ka, entryStart, selectMode;
         public AudioClip entryStart2P;
 
         public EntryFlow Flow { get; private set; }
@@ -94,7 +95,7 @@ namespace OurTaiko
         {
             bgm.SetAudioGroup(AudioGroup.Bgm);
             voice.SetAudioGroup(AudioGroup.Voice);
-            sfx.PrepareAudioEffects(don, ka, cloud);
+            sfx.PrepareAudioEffects(don, ka);
             voice.PrepareAudioTracks(entryStart, selectMode, entryStart2P);
             bgm.loop = true;
             bgm.PlayAudio();
@@ -233,7 +234,6 @@ namespace OurTaiko
             {
                 if (!Flow.Join(now)) return;
                 joined1PAt = now;
-                Play(sfx, cloud, oneShot: true);
                 Play(voice, entryStart);
                 Play(sfx, don, oneShot: true);
                 return;
@@ -268,11 +268,7 @@ namespace OurTaiko
             // Once a board is picked the players are settled (段位道場 must not take a late 2P).
             if (switcher.IsInputBlocked || HasLeft || Joined2P || Flow.IsSelected) return;
             double now = Now;
-            if (Flow.State == EntryFlow.Phase.SelectSide)
-            {
-                if (!Flow.Join(now)) return;
-                Play(sfx, cloud, oneShot: true);
-            }
+            if (Flow.State == EntryFlow.Phase.SelectSide && !Flow.Join(now)) return;
             joined2PAt = now;
             Play(sfx, don, oneShot: true);
             Play(voice, entryStart2P);
