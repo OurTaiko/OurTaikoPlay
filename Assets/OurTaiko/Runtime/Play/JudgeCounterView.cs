@@ -10,7 +10,9 @@ namespace OurTaiko
     // (良 + 可 / 2) / (良 + 可 + 不可) to a tenth, the tenths and % smaller on the whole part's baseline.
     // Replaces the original's percentage JudgeCounter, which Nijiiro does not skin. Everything but
     // the digits is saved in the scene; the digits hang from each row's `counts` rect (and `rate`),
-    // right edge on its right edge.
+    // right edge on its right edge. Play.Practice keeps a larger copy in the bottom-left corner the
+    // practice stage leaves empty (the original draws its JudgeCounter there in practice), which adds
+    // each judgement's share beside its count (`shares`).
     public sealed class JudgeCounterView : MonoBehaviour
     {
         // score_number's cells: 56 × 64, glyphs from y 10 to the baseline at 53 (from the top), ink
@@ -34,23 +36,46 @@ namespace OurTaiko
         public float rateHeight = 36;
         public float rateSmall = 0.78f;
 
+        [Header("Shares (optional)")]
+        [Tooltip("Good, ok, bad: each one's share of the judged notes, right-aligned in its rect like 良率; empty on boards without the column.")]
+        public RectTransform[] shares = new RectTransform[0];
+        [Tooltip("Height of a share's whole-part cell; the tenths, point and % are rateSmall of it.")]
+        public float shareHeight = 36;
+
         readonly List<Image>[] images = { new List<Image>(), new List<Image>(), new List<Image>(), new List<Image>() };
         readonly int[] shown = { -1, -1, -1, -1 };
 
-        // 良率 glyphs left to right: three for the whole part, the point, the tenth, the %.
+        // 良率 (and share) glyphs left to right: three for the whole part, the point, the tenth, the %.
         Image[] rateGlyphs;
         int shownRate = -1;
+        Image[][] shareGlyphs;
+        int[] shownShares;
 
         public string Text(int row) => shown[row] < 0 ? "" : shown[row].ToString();
         public Image Digit(int row, int index) => images[row][index];
         // The 良率 shown, as "97.3" (empty before the first Show, or without the row).
         public string RateText => shownRate < 0 ? "" : RateString(shownRate);
         public Image RateGlyph(int index) => rateGlyphs[index];
+        // Row's share as "33.3" (empty before the first Show, or without the column).
+        public string ShareText(int row) => shownShares == null || shownShares[row] < 0 ? "" : RateString(shownShares[row]);
 
         public void Show(int good, int ok, int bad, int drumrolls)
         {
             ShowRow(0, good); ShowRow(1, ok); ShowRow(2, bad); ShowRow(3, drumrolls);
             if (rate != null) ShowRate(RateTenths(good, ok, bad));
+            if (shares.Length > 0)
+            {
+                ShowShare(0, ShareTenths(good, good, ok, bad));
+                ShowShare(1, ShareTenths(ok, good, ok, bad));
+                ShowShare(2, ShareTenths(bad, good, ok, bad));
+            }
+        }
+
+        // count / (良 + 可 + 不可) in tenths of a percent, cut like the 良率; nothing judged yet is 0.0.
+        public static int ShareTenths(int count, int good, int ok, int bad)
+        {
+            long total = (long)Mathf.Max(0, good) + Mathf.Max(0, ok) + Mathf.Max(0, bad);
+            return total == 0 ? 0 : (int)(Mathf.Max(0, count) * 1000L / total);
         }
 
         // (良 + 可 / 2) / (良 + 可 + 不可) in tenths of a percent, cut rather than rounded so that one 可 or 不可
@@ -69,23 +94,41 @@ namespace OurTaiko
         {
             if (shownRate == tenths) return;
             shownRate = tenths;
-            if (rateGlyphs == null)
+            ShowPercent(rate, ref rateGlyphs, tenths, rateHeight);
+        }
+
+        void ShowShare(int row, int tenths)
+        {
+            if (shownShares == null)
             {
-                rateGlyphs = new Image[6];
-                for (int i = 0; i < rateGlyphs.Length; i++) rateGlyphs[i] = SkinUi.Image("Glyph" + i, rate, null);
+                shownShares = new[] { -1, -1, -1 };
+                shareGlyphs = new Image[3][];
+            }
+            if (shownShares[row] == tenths) return;
+            shownShares[row] = tenths;
+            ShowPercent(shares[row], ref shareGlyphs[row], tenths, shareHeight);
+        }
+
+        // A percentage to a tenth, right-aligned in rect, the whole part `height` tall.
+        void ShowPercent(RectTransform rect, ref Image[] glyphs, int tenths, float height)
+        {
+            if (glyphs == null)
+            {
+                glyphs = new Image[6];
+                for (int i = 0; i < glyphs.Length; i++) glyphs[i] = SkinUi.Image("Glyph" + i, rect, null);
             }
             string whole = (tenths / 10).ToString();
-            float full = rateHeight, small = rateHeight * rateSmall;
+            float full = height, small = height * rateSmall;
             // Right to left from the rect's right edge: %, tenth, point, then the whole part.
             float right = 0;
-            right = PlaceGlyph(rateGlyphs[5], ratePercent, right, 0, ratePercent.rect.width, small, full);
-            right = PlaceGlyph(rateGlyphs[4], digits[tenths % 10], right, DigitInk.x, DigitInk.y, small, full);
-            right = PlaceGlyph(rateGlyphs[3], rateDot, right, 0, rateDot.rect.width, small, full);
+            right = PlaceGlyph(glyphs[5], ratePercent, right, 0, ratePercent.rect.width, small, full);
+            right = PlaceGlyph(glyphs[4], digits[tenths % 10], right, DigitInk.x, DigitInk.y, small, full);
+            right = PlaceGlyph(glyphs[3], rateDot, right, 0, rateDot.rect.width, small, full);
             for (int slot = 2; slot >= 0; slot--)
             {
                 int k = whole.Length - 3 + slot;
-                rateGlyphs[slot].gameObject.SetActive(k >= 0);
-                if (k >= 0) right = PlaceGlyph(rateGlyphs[slot], digits[whole[k] - '0'], right, DigitInk.x, DigitInk.y, full, full);
+                glyphs[slot].gameObject.SetActive(k >= 0);
+                if (k >= 0) right = PlaceGlyph(glyphs[slot], digits[whole[k] - '0'], right, DigitInk.x, DigitInk.y, full, full);
             }
         }
 

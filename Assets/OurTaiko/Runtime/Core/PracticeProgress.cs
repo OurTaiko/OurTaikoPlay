@@ -45,6 +45,11 @@ namespace OurTaiko
         public double First => bars[0];
         // The start of the measure a position lies in; before the first bar, the first.
         public double SnapToMeasure(double position) => bars[MeasureAt(position)];
+        // The index of the measure a position lies in (0 before the first bar).
+        public int MeasureOf(double position) => MeasureAt(position);
+        // How far through the song a position is, 0 at the first bar and 1 at `end` (the chart's end).
+        public double Fraction(double position, double end) =>
+            end <= First ? 0 : Math.Max(0, Math.Min(1, (position - First) / (end - First)));
         int MeasureAt(double position) => Math.Max(0, Array.FindLastIndex(bars, x => x <= position + 1e-7));
         public void Move(int direction, double now)
         {

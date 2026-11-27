@@ -5,6 +5,7 @@
 # Refreshed 2026-11-22: the backdrop (header, scene, dancers, the dojo's band) is .otanim, whose graphics are made as it plays; its saved pictures are gone.
 # Refreshed 2026-11-25: the nameplate is built at run time (the complete Lumen composition), so its saved graphics are gone.
 # Refreshed 2026-11-25: the combo announce scroll draws over the judge counter panel (moved after it in LaneHud).
+# Refreshed 2026-11-26: the practice judgement panel (PracticeJudgments) in the bottom-left corner, the speed / measure band (PracticeStrip) above it and the progress bar (PracticeProgress) beside that, first under Hud.
 Viewport1920x1080/Backdrop
 Viewport1920x1080/BackgroundMovie/Blackout
 Viewport1920x1080/BackgroundMovie/Screen
@@ -49,6 +50,29 @@ Viewport1920x1080/NoteLane/Combo/Glimmer/Row2/Rise/Gleam1
 Viewport1920x1080/NoteLane/Combo/Glimmer/Row2/Rise/Gleam2
 Viewport1920x1080/NoteLane/Judgment
 Viewport1920x1080/NoteLane/ScoreCounter/Cover
+Viewport1920x1080/PracticeJudgments
+Viewport1920x1080/PracticeJudgments/Rate/Bar
+Viewport1920x1080/PracticeJudgments/Rate/Label
+Viewport1920x1080/PracticeJudgments/Good/Bar
+Viewport1920x1080/PracticeJudgments/Good/Label
+Viewport1920x1080/PracticeJudgments/Good/Count/Digit0
+Viewport1920x1080/PracticeJudgments/Ok/Bar
+Viewport1920x1080/PracticeJudgments/Ok/Label
+Viewport1920x1080/PracticeJudgments/Ok/Count/Digit0
+Viewport1920x1080/PracticeJudgments/Bad/Bar
+Viewport1920x1080/PracticeJudgments/Bad/Label
+Viewport1920x1080/PracticeJudgments/Bad/Count/Digit0
+Viewport1920x1080/PracticeJudgments/Roll/Bar
+Viewport1920x1080/PracticeJudgments/Roll/Label
+Viewport1920x1080/PracticeJudgments/Roll/Count/Digit0
+Viewport1920x1080/PracticeStrip/TempoLabel
+Viewport1920x1080/PracticeStrip/Tempo
+Viewport1920x1080/PracticeStrip/MeasureLabel
+Viewport1920x1080/PracticeStrip/Measure
+Viewport1920x1080/PracticeProgress
+Viewport1920x1080/PracticeProgress/Furthest
+Viewport1920x1080/PracticeProgress/Now
+Viewport1920x1080/PracticeProgress/GogoMarker
 Viewport1920x1080/SoulGauge/Border
 Viewport1920x1080/SoulGauge/Empty
 Viewport1920x1080/SoulGauge/Fill

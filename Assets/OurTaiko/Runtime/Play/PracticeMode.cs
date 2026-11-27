@@ -24,6 +24,9 @@ namespace OurTaiko
         public event Action<PlaySession> AttemptStopped;
         public event Action AttemptCleared;
 
+        // The furthest any attempt has played since practice began or the pause menu's restart, as a
+        // fraction of the song (YataiDON's max_progress).
+        double furthest;
         // The lane is scrolling back to the preparation lead-in; playback starts when it arrives.
         bool rewinding;
         // Where a normal play left off (PlayScene.SwitchMode), in visual chart time; the first pause
@@ -70,6 +73,13 @@ namespace OurTaiko
             scene.Lane1.AddOverlay(review);
             AttemptStopped += attempt => review.Attempt = scene.Lane1.AutoPlay ? null : attempt;
             AttemptCleared += () => review.Attempt = null;
+            // The bottom-left judgement panel shows what the lane's own counter shows.
+            if (View.judgments != null)
+                scene.Lane1.HudUpdated += () =>
+                {
+                    var (good, ok, bad, rolls) = scene.Lane1.ShownCounts;
+                    View.judgments.Show(good, ok, bad, rolls);
+                };
         }
 
         internal override bool Begin()
@@ -80,6 +90,20 @@ namespace OurTaiko
             View.confirm.onClick.AddListener(Confirm);
             Pause(true);
             return true;
+        }
+
+        // The band under the lane: the speed, the measure the cursor is on (paused) or playing, and the
+        // progress bar: where the cursor or the play is in the song, and the furthest played.
+        internal override void Update()
+        {
+            if (Progress == null) return;
+            bool paused = scene.IsPaused;
+            double position = paused ? Progress.Position : scene.SongTime - AudioOffset - VisualOffset;
+            int measure = paused ? Progress.Measure : Progress.MeasureOf(position);
+            View.ShowStrip(Progress.SpeedTenths, measure, Progress.Count);
+            double now = Progress.Fraction(position, scene.Session.Chart.Duration);
+            if (!paused) furthest = Math.Max(furthest, now);
+            View.ShowProgress(now, furthest);
         }
 
         internal override bool UpdatePaused()
@@ -132,6 +156,7 @@ namespace OurTaiko
                 {
                     scene.RestorePads();
                     AttemptCleared?.Invoke();
+                    furthest = 0;
                     ResetAttempt(Progress.Target);
                     Pause(true);
                 });
@@ -149,8 +174,14 @@ namespace OurTaiko
             return true;
         }
 
-        void RefreshBars() => Progress.SetBars(scene.Session.Chart.Bars
-            .Where(scene.Lane1.Shown.IsPracticePreviewActive).Select(bar => bar.Time));
+        // The route's measures for the menu, and its GOGO starts on the progress bar.
+        void RefreshBars()
+        {
+            var chart = scene.Session.Chart;
+            Progress.SetBars(chart.Bars.Where(scene.Lane1.Shown.IsPracticePreviewActive).Select(bar => bar.Time));
+            View.ShowGogos(chart.Gogos.Where(g => g.On && (g.BranchId < 0 || g.Route == Branch))
+                .Select(g => Progress.Fraction(g.Time, chart.Duration)));
+        }
 
         void Pause(bool first)
         {

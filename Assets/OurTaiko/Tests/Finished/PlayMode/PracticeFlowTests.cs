@@ -552,6 +552,92 @@ namespace OurTaiko.Tests
             Assert.That(play.firstLane.scoreCounter.Text, Is.EqualTo(score));
             var counts = play.firstLane.judgeCounter;
             Assert.That((counts.Text(0), counts.Text(1), counts.Text(2), counts.Text(3)), Is.EqualTo((good, ok, bad, rolls)));
+            var panel = play.practiceView.judgments;
+            Assert.That((panel.Text(0), panel.Text(1), panel.Text(2), panel.Text(3)), Is.EqualTo((good, ok, bad, rolls)),
+                "The bottom-left panel follows the lane's counter.");
+        }
+        // YataiDON draws its JudgeCounter in the bottom-left corner in practice, where the practice stage
+        // has no picture, and the speed and measure in the band under the lane. Play.Practice keeps a larger
+        // copy of the lane's counter in that corner, flush with the stage's picture (x 489, y 588 of the
+        // 1920 × 1080 viewport), with 良率 on top and each judgement's share beside its count; and
+        // 曲テンポ / 小節 in the band (y 540 to 588) above it.
+        [UnityTest]
+        public IEnumerator JudgementPanelFillsTheCornerThePracticeStageLeavesEmpty()
+        {
+            // An empty second measure (a GOGO section): the attempt can play into it without judging anything more.
+            yield return StartPractice(AudioBackend.BassSimple, false,
+                Plain.Replace("#START\n1111,\n1111,", "#START\n1111,\n#GOGOSTART\n0000,\n#GOGOEND"));
+            var panel = play.practiceView.judgments;
+            Assert.That(panel, Is.Not.Null);
+            Assert.That(panel, Is.Not.SameAs(play.firstLane.judgeCounter));
+            Assert.That(panel.digits, Is.EqualTo(play.firstLane.judgeCounter.digits));
+            Assert.That(panel.shares, Has.Length.EqualTo(3));
+            // Viewport rects from its top-left corner, y down.
+            var viewport = (RectTransform)panel.transform.parent.parent;
+            Rect InViewport(Transform t)
+            {
+                var corners = new Vector3[4];
+                ((RectTransform)t).GetWorldCorners(corners);
+                Vector2 min = viewport.InverseTransformPoint(corners[0]), max = viewport.InverseTransformPoint(corners[2]);
+                var top = viewport.rect.yMax;
+                return Rect.MinMaxRect(min.x - viewport.rect.xMin, top - max.y, max.x - viewport.rect.xMin, top - min.y);
+            }
+            var box = InViewport(panel.transform);
+            Assert.That(new[] { box.xMin, box.yMin, box.xMax, box.yMax }, Is.EqualTo(new[] { 0f, 588f, 489f, 1080f }).Within(.01f));
+            var view = play.practiceView;
+            var band = InViewport(view.tempoValue.transform.parent);
+            Assert.That(new[] { band.xMin, band.yMin, band.yMax }, Is.EqualTo(new[] { 0f, 540f, 588f }).Within(.01f));
+            Assert.That((view.tempoValue.text, view.measureValue.text), Is.EqualTo(("1.0×", "1 / 3")));
+            Assert.That(play.firstLane.judgeCounter.gameObject.activeInHierarchy, Is.False, "The corner panel replaces the counter beside the Don.");
+            // The progress bar in the band, right of the panel: nothing played yet, the cursor on the first bar.
+            var track = InViewport(view.progressNow.parent);
+            Assert.That(new[] { track.xMin, track.yMin, track.yMax }, Is.EqualTo(new[] { 501f, 551f, 578f }).Within(.01f));
+            Assert.That((view.ProgressNow, view.ProgressMax), Is.EqualTo((0f, 0f)));
+            var chart = play.Session.Chart;
+            double first = chart.Bars[0].Time, gogo = chart.Gogos.First(g => g.On).Time;
+            Assert.That(view.GogoMarkers, Has.Count.EqualTo(1));
+            Assert.That(view.GogoMarkers[0].anchorMin.x, Is.EqualTo((gogo - first) / (chart.Duration - first)).Within(1e-4));
+            // The marker's pivot is its spike's tip: on the GOGO start, at the track's bottom edge.
+            Vector2 tip = viewport.InverseTransformPoint(view.GogoMarkers[0].position);
+            Assert.That(tip.x - viewport.rect.xMin, Is.EqualTo(track.xMin + (float)((gogo - first) / (chart.Duration - first)) * track.width).Within(.5f));
+            Assert.That(viewport.rect.yMax - tip.y, Is.EqualTo(track.yMax).Within(.5f));
+            Assert.That(panel.transform.parent.GetChild(0), Is.SameAs(panel.transform), "Under the touch drum and the rest of the HUD.");
+            Assert.That((panel.Text(0), panel.RateText, panel.ShareText(0)), Is.EqualTo(("0", "100.0", "0.0")));
+
+            play.Practice.Move(1); yield return new WaitForSecondsRealtime(.25f);
+            Assert.That(view.measureValue.text, Is.EqualTo("2 / 3"), "Paused, the band follows the cursor.");
+            play.Practice.Move(-1); yield return new WaitForSecondsRealtime(.25f);
+            yield return Press(Key.F);
+            yield return Press(Key.D);
+            Assert.That(view.tempoValue.text, Is.EqualTo("0.9×"));
+            yield return Press(Key.K);
+            Assert.That(view.tempoValue.text, Is.EqualTo("1.0×"));
+            yield return Press(Key.F);
+            yield return Waits.Until(() => !play.IsPaused);
+            var attempt = play.Session;
+            var notes = attempt.Chart.Notes;
+            Assert.That(view.measureValue.text, Is.EqualTo("1 / 3"));
+            attempt.Hit(false, notes[0].Time);
+            attempt.Hit(false, notes[1].Time);
+            attempt.Hit(false, notes[2].Time + 0.07);   // outside 良, inside 可
+            attempt.Advance(notes[3].Time + 0.5, false); // the fourth times out
+            yield return Waits.Until(() => play.SongTime > attempt.Chart.Bars[1].Time + .05);
+            Assert.That(view.measureValue.text, Is.EqualTo("2 / 3"), "Playing, the band follows the measure being played.");
+            Assert.That(view.ProgressNow, Is.EqualTo((play.SongTime - first) / (chart.Duration - first)).Within(.05));
+            Assert.That(view.ProgressMax, Is.GreaterThanOrEqualTo(view.ProgressNow - 1e-4f));
+            float played = view.ProgressMax;
+            Assert.That((attempt.Good, attempt.Ok, attempt.Bad), Is.EqualTo((2, 1, 1)));
+            yield return Press(Key.Escape);
+            Assert.That(play.IsPaused, Is.True);
+            AssertShownStats(play.firstLane.scoreCounter.Text, "2", "1", "1", "0");
+            Assert.That(view.ProgressMax, Is.GreaterThanOrEqualTo(played), "The furthest played stays when the attempt stops.");
+            // 良率 (2 + 1 / 2) / 4 = 62.5; the shares 2 / 4, 1 / 4, 1 / 4.
+            Assert.That(panel.RateText, Is.EqualTo("62.5"));
+            Assert.That(new[] { panel.ShareText(0), panel.ShareText(1), panel.ShareText(2) },
+                Is.EqualTo(new[] { "50.0", "25.0", "25.0" }));
+            var share = panel.shares[0];
+            Assert.That(share.Find("Glyph5").GetComponent<UnityEngine.UI.Image>().sprite, Is.SameAs(panel.ratePercent));
+            TestCapture.Capture("PracticeJudgments.png");
         }
         [UnityTest, Category("SpriteRendering")]
         public IEnumerator TimingReviewCanBeToggledDuringPauseWithoutChangingTheAttempt()
