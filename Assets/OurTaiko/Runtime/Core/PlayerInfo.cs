@@ -20,6 +20,8 @@ namespace OurTaiko
         public int danCombo;      // the emblem's ring, as a song's crown: 0 銀粋, 1 金粋 (full combo), 2 虹粋 (all 良)
         // The layers worn over the plate (NameplateSlots ids, "band/<name>"…); empty wears none.
         public string bandItem = "", effectItem = "", iconItem = "";
+        // Whether a custom plate draws its effect over the whole plate instead of cutting it to the band.
+        public bool effectOverflow;
 
         // Built-in composition. "auto" follows this seat, title and rank.
         public string plateState = "auto", plateTitle = "auto", plateAiTitle = "wood", plateBlank = "off", plateBadge = "auto";
@@ -29,16 +31,24 @@ namespace OurTaiko
         // the layers its title is made of (NameplateSlots ids; empty: as its style looks).
         public string profileBand = "wood";
         public string profileBandItem = "", profileEffectItem = "", profileIconItem = "";
+        public bool profileEffectOverflow;
+        // The pictures of those layers, by hash, when the site said which (empty: by name alone).
+        public string profileBandHash = "", profileEffectHash = "", profileIconHash = "";
 
         // The site's title's layers, when the site gave them.
         public TitleParts? ProfileLayers => string.IsNullOrEmpty(profileBandItem) ? null
-            : new TitleParts(profileBandItem, NullIfEmpty(profileEffectItem), NullIfEmpty(profileIconItem));
+            : new TitleParts(profileBandItem, NullIfEmpty(profileEffectItem), NullIfEmpty(profileIconItem), profileEffectOverflow)
+                .WithHashes(NullIfEmpty(profileBandHash), NullIfEmpty(profileEffectHash), NullIfEmpty(profileIconHash));
 
         public void SetProfileLayers(TitleParts? layers)
         {
             profileBandItem = layers?.Band ?? "";
             profileEffectItem = layers?.Effect ?? "";
             profileIconItem = layers?.Icon ?? "";
+            profileEffectOverflow = layers?.EffectOverflow ?? false;
+            profileBandHash = layers?.BandHash ?? "";
+            profileEffectHash = layers?.EffectHash ?? "";
+            profileIconHash = layers?.IconHash ?? "";
         }
 
         static string NullIfEmpty(string value) => string.IsNullOrEmpty(value) ? null : value;
@@ -81,6 +91,9 @@ namespace OurTaiko
             info.effectItem ??= "";
             info.iconItem ??= "";
             info.profileBandItem ??= "";
+            info.profileBandHash ??= "";
+            info.profileEffectHash ??= "";
+            info.profileIconHash ??= "";
             info.profileEffectItem ??= "";
             info.profileIconItem ??= "";
             return info;

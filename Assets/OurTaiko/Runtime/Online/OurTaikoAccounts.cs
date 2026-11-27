@@ -312,8 +312,11 @@ namespace OurTaiko.Online
             return plate;
         }
 
-        // {band, effect, icon} as the site gives a title's layers: each an item of its own slot, the
-        // band there; anything else is no layers (the title is drawn as its style).
+        // {band, effect, icon, effectOverflow} as the site gives a title's layers: each an item of its
+        // own slot, the band there, and whether the effect is drawn over the whole plate (false from
+        // a site that does not say); anything else is no layers (the title is drawn as its style).
+        // "hashes" says which picture each part is ({band, effect, icon}: SHA-256), where the site
+        // gives it.
         public static TitleParts? ReadLayers(JToken value)
         {
             if (value is not JObject layers) return null;
@@ -323,7 +326,15 @@ namespace OurTaiko.Online
                 return item?.Type == JTokenType.String && NameplateSlots.TryParse((string)item, out var named, out _) && named == slot ? (string)item : null;
             }
             string band = Item(NameplateSlot.Band);
-            return band == null ? null : new TitleParts(band, Item(NameplateSlot.Effect), Item(NameplateSlot.Icon));
+            string effect = Item(NameplateSlot.Effect);
+            bool overflow = effect != null && layers["effectOverflow"]?.Type == JTokenType.Boolean && (bool)layers["effectOverflow"];
+            if (band == null) return null;
+            string Hash(NameplateSlot slot)
+            {
+                var hash = (layers["hashes"] as JObject)?[NameplateSlots.Folder(slot)];
+                return hash?.Type == JTokenType.String && ObjectCache.ValidHash((string)hash) ? (string)hash : null;
+            }
+            return new TitleParts(band, effect, Item(NameplateSlot.Icon), overflow).WithHashes(Hash(NameplateSlot.Band), Hash(NameplateSlot.Effect), Hash(NameplateSlot.Icon));
         }
     }
 

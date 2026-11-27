@@ -340,7 +340,8 @@ namespace OurTaiko.Online
         {
             if (cancel.IsCancellationRequested) { NameplateDownloads.UseKept(Client.CacheRoot); return; }
             Activity = L10n.Get("Online", "activity.nameplateArt");
-            try { await NameplateDownloads.RefreshAsync(Client.CacheRoot, ServerConfig.Site, cancel); }
+            // Asked where this game's site reads are (Profiles), as a seat's own plate is.
+            try { await NameplateDownloads.RefreshAsync(Client.CacheRoot, ServerConfig.Site, cancel, Profiles?.Base ?? ProfileCenter.DefaultBase); }
             catch (OperationCanceledException) { }
         }
 

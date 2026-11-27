@@ -41,18 +41,18 @@ namespace OurTaiko
 
         public NameplateLayers(RectTransform plate) => this.plate = plate;
 
-        // Wears `worn`; `catalog` (the set's) says which items are the set's own and which effects
-        // stay inside the band. Null: no set, no layers.
+        // Wears `worn`, its effect cut to the band unless the title lets it run over the plate;
+        // `catalog` (the set's) says which items are the set's own. Null: no set, no layers.
         public void Apply(PlateComposition.Catalog catalog, TitleParts worn)
         {
             if (catalog == null) worn = default;
-            var band = NameplateItems.Load(NameplateSlot.Band, worn.Band);
-            var effect = NameplateItems.Load(NameplateSlot.Effect, worn.Effect);
-            var icon = NameplateItems.Load(NameplateSlot.Icon, worn.Icon);
+            var band = NameplateItems.Load(NameplateSlot.Band, worn.Band, worn.BandHash);
+            var effect = NameplateItems.Load(NameplateSlot.Effect, worn.Effect, worn.EffectHash);
+            var icon = NameplateItems.Load(NameplateSlot.Icon, worn.Icon, worn.IconHash);
             if (band == null && effect == null && icon == null && bandMask == null) return;
             if (!Make()) return;
             bool loose = band != null && !catalog.Contains(NameplateSlot.Band, worn.Band);
-            bool clipped = effect != null && catalog.ClipsEffect(worn.Effect);
+            bool clipped = effect != null && !worn.EffectOverflow;
             Parent(bandView, loose ? bandMask : plate);
             Parent(effectView, clipped ? effectMask : plate);
             Use(bandView, band, NameplateSlot.Band);
