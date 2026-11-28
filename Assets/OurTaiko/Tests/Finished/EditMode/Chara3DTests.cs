@@ -281,5 +281,95 @@ namespace OurTaiko.Tests
                 finally { chara.Dispose(); }
             }
         }
+
+        // How many pixels of the Don's own render target (what Chara3D.Render draws) are drawn on.
+        static int PixelsOfTheDon(Chara3D chara)
+        {
+            var target = new RenderTexture(320, 320, 24, RenderTextureFormat.ARGB32);
+            var cmd = new UnityEngine.Rendering.CommandBuffer();
+            var read = new Texture2D(320, 320, TextureFormat.RGBA32, false);
+            var active = RenderTexture.active;
+            try
+            {
+                chara.Render(cmd, target, 640, 640, 320, 512, Chara3D.Scale720 * DonView.LayoutScale, 1.25f);
+                Graphics.ExecuteCommandBuffer(cmd);
+                RenderTexture.active = target;
+                read.ReadPixels(new Rect(0, 0, 320, 320), 0, 0);
+                return read.GetPixels32().Count(p => p.a > 0);
+            }
+            finally
+            {
+                RenderTexture.active = active;
+                cmd.Release();
+                target.Release();
+                UnityEngine.Object.DestroyImmediate(target);
+                UnityEngine.Object.DestroyImmediate(read);
+            }
+        }
+
+        // A look's background is a still model in the Don's space that is not drawn with the Don:
+        // it is a picture of its own under the Don's (RenderBackground, which DonView keeps), and
+        // in the Don's picture it only hides what stands behind it. So the part of its area the
+        // canvas runs the rim pass over stays the Don's, whatever the background covers.
+        [Test]
+        public void ABackgroundIsAPictureOfItsOwnThatHidesTheDonBehindIt()
+        {
+            DonLibrary.UseFile("background", 9001, DonFixture.WallBackground("background9001", -0.3f));
+            DonLibrary.UseFile("background", 9002, DonFixture.WallBackground("background9002", 0.3f));
+            var behind = DonLook.Default(); behind.background = 9001;
+            var inFront = DonLook.Default(); inFront.background = 9002;
+            var missing = DonLook.Default(); missing.background = 9003;
+            Chara3D plain = new Chara3D(DonLook.Default()), a = new Chara3D(behind), b = new Chara3D(inFront), c = new Chara3D(missing);
+            var cmd = new UnityEngine.Rendering.CommandBuffer();
+            var target = new RenderTexture(320, 320, 24, RenderTextureFormat.ARGB32);
+            try
+            {
+                Assert.That(plain.HasBackground, Is.False);
+                Assert.That(a.HasBackground && b.HasBackground, Is.True);
+                Assert.That(c.HasBackground, Is.False, "a background that was not downloaded is none");
+
+                int alone = PixelsOfTheDon(plain);
+                Assert.That(alone, Is.GreaterThan(1000));
+                Assert.That(PixelsOfTheDon(a), Is.EqualTo(alone), "a background behind the Don is not in the Don's picture");
+                Assert.That(PixelsOfTheDon(b), Is.Zero, "a background in front of the Don hides it");
+                Assert.That(a.Covered, Is.EqualTo(plain.Covered), "the area the rim pass runs over is the Don's alone");
+
+                Assert.That(a.BackgroundDirty, Is.True, "its picture is still to be made");
+                a.RenderBackground(cmd, target, 640, 640, 320, 512, Chara3D.Scale720 * DonView.LayoutScale, 1.25f);
+                Graphics.ExecuteCommandBuffer(cmd);
+                Assert.That(a.BackgroundDirty, Is.False);
+                Assert.That(a.BackgroundCovered.width, Is.GreaterThan(a.Covered.width * 2), "the wall is far larger than the Don");
+                a.SetAnim(DonAnim.Sabi);
+                a.SetAnimProgress(0.3f);
+                Assert.That(a.BackgroundDirty, Is.False, "a motion does not move the background");
+                a.SetMirror(true);
+                Assert.That(a.BackgroundDirty, Is.True, "turning the Don round turns its background");
+
+                // On the canvas (DonPreview composes as DonImage does): the wall everywhere, and the
+                // Don's red face on it only when the wall is behind.
+                foreach (var (chara, shows) in new[] { (a, true), (b, false) })
+                {
+                    chara.SetMirror(false);
+                    chara.SetAnim(DonAnim.Normal);
+                    var picture = Editor.DonPreview.Render(chara, 320, 400, 0.5f, 0.15f, 1, Editor.DonPreview.Options.Target);
+                    try
+                    {
+                        var pixels = picture.GetPixels32();
+                        Assert.That(pixels.Count(p => p.r > 240 && p.g > 240 && p.b > 240), Is.GreaterThan(pixels.Length / 2), "no wall");
+                        int red = pixels.Count(p => p.r > 200 && p.g < 110 && p.b < 90);
+                        if (shows) Assert.That(red, Is.GreaterThan(200), "the Don is not on its background");
+                        else Assert.That(red, Is.Zero, "the Don shows through the wall in front of it");
+                    }
+                    finally { UnityEngine.Object.DestroyImmediate(picture); }
+                }
+            }
+            finally
+            {
+                cmd.Release();
+                target.Release();
+                UnityEngine.Object.DestroyImmediate(target);
+                plain.Dispose(); a.Dispose(); b.Dispose(); c.Dispose();
+            }
+        }
     }
 }

@@ -233,5 +233,16 @@ namespace OurTaiko.Tests
             var bare = Reward.From(JObject.Parse("{\"id\":3,\"kind\":\"dan\"}"));
             Assert.That((bare.DanIndex, bare.DanGold, bare.DanCombo, bare.TitleName("en")), Is.EqualTo((-1, false, 0, "")));
         }
+
+        // The overlay names the kind of a part of the Don it shows (RewardOverlay.DrawDonItem): every
+        // kind the site gives has its words, a background included.
+        [Test]
+        public void EveryKindOfPartOfTheDonHasItsWords()
+        {
+            foreach (string part in new[] { "cos", "head", "body", "puchi", "paint", "background" })
+            {
+                Assert.That(OurTaiko.L10n.Has("Online", "rewards.donPart." + part), Is.True, part);
+            }
+        }
     }
 }

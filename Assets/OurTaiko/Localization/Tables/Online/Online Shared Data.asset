@@ -151,6 +151,10 @@ MonoBehaviour:
     m_Key: rewards.donPart.paint
     m_Metadata:
       m_Items: []
+  - m_Id: 6357917132382208
+    m_Key: rewards.donPart.background
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -36,6 +36,9 @@ namespace OurTaiko.Editor
             var puchi = DonLook.Default(); puchi.puchi = 1;
             var paint = DonLook.Default(); paint.paint = 1;
             var mochiPaint = mochi; mochiPaint.paint = 2;
+            var shop = DonLook.Default(); shop.background = 1;
+            var shop2 = DonLook.Default(1); shop2.background = 1;
+            var eagleShop = DonLook.Default(); eagleShop.cos = 123; eagleShop.background = 1;
             return new[]
             {
                 new Shot("normal", basic, DonAnim.Normal),
@@ -49,6 +52,10 @@ namespace OurTaiko.Editor
                 new Shot("puchi1", puchi, DonAnim.Normal),
                 new Shot("paint1", paint, DonAnim.Normal),
                 new Shot("cos30_paint2", mochiPaint, DonAnim.Normal),
+                new Shot("background1", shop, DonAnim.Normal),
+                new Shot("background1_jump", shop, DonAnim.GeneralJump, 0.5f),
+                new Shot("background1_2p_mirror", shop2, DonAnim.Sabi, 0.3f, true),
+                new Shot("cos123_background1", eagleShop, DonAnim.Normal),
             };
         }
 
@@ -74,7 +81,7 @@ namespace OurTaiko.Editor
         {
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder)) return 0;
             int count = 0;
-            foreach (var (kind, ext) in new[] { ("cos", ".glb"), ("head", ".glb"), ("body", ".glb"), ("puchi", ".png"), ("puchi", ".otanim"), ("paint", ".png") })
+            foreach (var (kind, ext) in new[] { ("cos", ".glb"), ("head", ".glb"), ("body", ".glb"), ("puchi", ".png"), ("puchi", ".otanim"), ("paint", ".png"), ("background", ".glb") })
             {
                 string sub = Path.Combine(folder, kind);
                 if (!Directory.Exists(sub)) continue;
@@ -143,10 +150,16 @@ namespace OurTaiko.Editor
             var shown = new RenderTexture(sw, sh, 0, RenderTextureFormat.ARGB32);
             var cmd = new CommandBuffer { name = "Don preview" };
             var composite = new Material(Resources.Load<Shader>(DonLibrary.Root + "DonComposite"));
+            var bake = new Material(composite.shader);
+            RenderTexture back = null;
+            Mesh quads = null;
             try
             {
                 float size = Chara3D.Scale720 * DonView.LayoutScale * drawScale;
                 float outline = 2.5f * drawScale * (1080f * ppu) / 720f;
+                bake.SetFloat("_Footprint", options.Footprint ? 1 : 0);
+                DonView.BakeBackground(chara, cmd, bake, target, ref back, ppu / screen, width, height, pivotX * width, (1 - pivotY) * height, size, outline, 1.5f * drawScale * ppu);
+                cmd.Clear();
                 chara.Render(cmd, target, width, height, pivotX * width, (1 - pivotY) * height, size, outline);
                 Graphics.ExecuteCommandBuffer(cmd);
                 composite.SetFloat("_Thickness", 1.5f * drawScale * ppu);
@@ -157,7 +170,15 @@ namespace OurTaiko.Editor
                 RenderTexture.active = shown;
                 GL.Clear(true, true, new Color(0.5f, 0.5f, 0.5f, 1));
                 RenderTexture.active = old;
-                Graphics.Blit(target, shown, composite);
+                // As DonImage draws it: the background's layer, then the Don, both over the whole area.
+                composite.mainTexture = target;
+                composite.SetTexture("_BackTex", back);
+                quads = Quads(back != null);
+                cmd.Clear();
+                cmd.SetRenderTarget(shown);
+                cmd.SetViewProjectionMatrices(Matrix4x4.identity, Matrix4x4.Ortho(0, 1, 0, 1, -1, 1));
+                cmd.DrawMesh(quads, Matrix4x4.identity, composite, 0, 0);
+                Graphics.ExecuteCommandBuffer(cmd);
                 RenderTexture.active = shown;
                 var result = new Texture2D(sw, sh, TextureFormat.RGBA32, false);
                 result.ReadPixels(new Rect(0, 0, sw, sh), 0, 0);
@@ -169,9 +190,37 @@ namespace OurTaiko.Editor
             {
                 cmd.Release();
                 UnityEngine.Object.DestroyImmediate(composite);
+                UnityEngine.Object.DestroyImmediate(bake);
+                UnityEngine.Object.DestroyImmediate(quads);
+                if (back != null) { back.Release(); UnityEngine.Object.DestroyImmediate(back); }
                 target.Release(); UnityEngine.Object.DestroyImmediate(target);
                 shown.Release(); UnityEngine.Object.DestroyImmediate(shown);
             }
+        }
+
+        // The unit square once or twice, as DonImage's mesh: a quad with no red in its colour
+        // (the composite shows the background's layer there), then the Don's.
+        static Mesh Quads(bool background)
+        {
+            int count = background ? 2 : 1;
+            var vertices = new Vector3[count * 4];
+            var uv = new Vector2[count * 4];
+            var colors = new Color32[count * 4];
+            var triangles = new int[count * 6];
+            for (int q = 0; q < count; q++)
+            {
+                bool don = q == count - 1;
+                for (int corner = 0; corner < 4; corner++)
+                {
+                    float x = corner < 2 ? 0 : 1, y = corner == 1 || corner == 2 ? 1 : 0;
+                    vertices[q * 4 + corner] = new Vector3(x, y, 0);
+                    uv[q * 4 + corner] = new Vector2(x, y);
+                    colors[q * 4 + corner] = new Color32(don ? (byte)255 : (byte)0, 255, 255, 255);
+                }
+                new[] { 0, 1, 2, 2, 3, 0 }.CopyTo(triangles, q * 6);
+                for (int i = 0; i < 6; i++) triangles[q * 6 + i] += q * 4;
+            }
+            return new Mesh { vertices = vertices, uv = uv, colors32 = colors, triangles = triangles, hideFlags = HideFlags.DontSave };
         }
     }
 }

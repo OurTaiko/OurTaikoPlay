@@ -94,8 +94,11 @@ namespace OurTaiko.Chara
             {
                 var bytes = glb.ImageBytes(i);
                 if (bytes == null) continue;
-                // Kept readable: a recoloured Don reads its pixels (Chara3D.SetDonColors). With
-                // mipmaps: a costume's 1024 px sheets are drawn a few hundred pixels tall.
+                // Kept readable only when a recoloured Don reads its pixels (Chara3D.SetDonColors):
+                // a readable texture is held twice, in memory and on the GPU, and a 1024 px sheet
+                // is 5 MB each time. With mipmaps: a costume's 1024 px sheets are drawn a few
+                // hundred pixels tall.
+                bool read = Materials.Exists(m => m.Recolor && m.Image == i);
                 var decoded = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                 decoded.LoadImage(bytes, false);
                 var texture = new Texture2D(decoded.width, decoded.height, TextureFormat.RGBA32, true)
@@ -103,7 +106,7 @@ namespace OurTaiko.Chara
                     name = "Don image " + i, filterMode = FilterMode.Trilinear, wrapMode = TextureWrapMode.Repeat,
                 };
                 texture.SetPixels32(decoded.GetPixels32());
-                texture.Apply(true, false);
+                texture.Apply(true, !read);
                 UnityEngine.Object.DestroyImmediate(decoded);
                 Images[i] = texture;
             }

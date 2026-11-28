@@ -22,22 +22,44 @@ namespace OurTaiko.Chara
         }
         Rect shown = new Rect(0, 0, 1, 1);
 
+        // The part the Don's background layer is drawn over, under the Don (empty: none). It is
+        // a quad of the same mesh whose vertex colour has no red, which the composite material
+        // reads as "show the background layer here" (DonComposite.shader).
+        public Rect Back
+        {
+            get => back;
+            set
+            {
+                if (back == value) return;
+                back = value;
+                SetVerticesDirty();
+            }
+        }
+        Rect back;
+
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
-            if (shown.width <= 0 || shown.height <= 0) return;
+            Color32 tint = color;
+            AddQuad(vh, back, new Color32(0, tint.g, tint.b, tint.a));
+            AddQuad(vh, shown, new Color32(255, tint.g, tint.b, tint.a));
+        }
+
+        void AddQuad(VertexHelper vh, Rect part, Color32 tint)
+        {
+            if (part.width <= 0 || part.height <= 0) return;
             var rect = GetPixelAdjustedRect();
             var uv = uvRect;
-            Color32 tint = color;
+            int first = vh.currentVertCount;
             for (int corner = 0; corner < 4; corner++)
             {
                 // bottom left, top left, top right, bottom right
-                float x = corner < 2 ? shown.xMin : shown.xMax, y = corner == 1 || corner == 2 ? shown.yMax : shown.yMin;
+                float x = corner < 2 ? part.xMin : part.xMax, y = corner == 1 || corner == 2 ? part.yMax : part.yMin;
                 vh.AddVert(new Vector3(rect.x + rect.width * x, rect.y + rect.height * y), tint,
                     new Vector2(uv.x + uv.width * x, uv.y + uv.height * y));
             }
-            vh.AddTriangle(0, 1, 2);
-            vh.AddTriangle(2, 3, 0);
+            vh.AddTriangle(first, first + 1, first + 2);
+            vh.AddTriangle(first + 2, first + 3, first);
         }
     }
 }

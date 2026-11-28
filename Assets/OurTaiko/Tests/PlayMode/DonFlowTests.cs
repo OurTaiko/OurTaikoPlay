@@ -326,5 +326,64 @@ namespace OurTaiko.Tests
             }
             finally { Object.Destroy(root); }
         }
+
+        // A Don with a background on a canvas: the background's picture is made once and shown
+        // under the Don over the part of the area it covers (DonImage.Back), while the rim pass
+        // still runs over the Don's part alone; the Don's motion does not make it again.
+        [UnityTest]
+        public IEnumerator ABackgroundIsDrawnOnceUnderTheDon()
+        {
+            var root = new GameObject("DonBackgroundTest", typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler));
+            var canvas = root.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = root.GetComponent<UnityEngine.UI.CanvasScaler>();
+            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 1;
+            var backdrop = new GameObject("Backdrop", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            backdrop.transform.SetParent(root.transform, false);
+            var area = (RectTransform)backdrop.transform;
+            area.anchorMin = Vector2.zero; area.anchorMax = Vector2.one; area.sizeDelta = Vector2.zero;
+            backdrop.GetComponent<UnityEngine.UI.Image>().color = new Color(0.2f, 0.5f, 0.3f);
+            try
+            {
+                DonLibrary.UseFile("background", 9101, DonFixture.WallBackground("background9101", -0.3f));
+                var look = DonLook.Default(); look.background = 9101;
+                double now = 0;
+                var view = DonView.Create(root.transform, "Don1P", 960, 800);
+                view.Clock = () => now;
+                view.Show(look).SetAnim(DonAnim.Sabi);
+                yield return null;
+                yield return null;
+
+                var image = view.GetComponent<DonImage>();
+                Assert.That(image.Back.width * image.Back.height, Is.GreaterThan(0.9f), "The wall's picture covers the area.");
+                Assert.That(image.Shown.width * image.Shown.height, Is.GreaterThan(0).And.LessThan(0.35f), "The rim pass runs over the Don's part alone.");
+                var layer = image.material.GetTexture("_BackTex");
+                Assert.That(layer, Is.Not.Null);
+                Assert.That(layer.width, Is.LessThan(image.texture.width), "The background is kept at screen size, not supersampled.");
+                Assert.That(view.Chara.BackgroundDirty, Is.False);
+
+                TestCapture.Capture("DonBackground.png", canvas: canvas);
+                var shot = new Texture2D(2, 2);
+                shot.LoadImage(System.IO.File.ReadAllBytes("TestResults/DonBackground.png"));
+                var pixels = shot.GetPixels32();
+                Object.Destroy(shot);
+                Assert.That(pixels.Count(p => p.r > 240 && p.g > 240 && p.b > 240), Is.GreaterThan(20000), "The white wall is not on the canvas.");
+                Assert.That(pixels.Count(p => p.r > 200 && p.g < 110 && p.b < 90), Is.GreaterThan(2000), "The Don is not on its wall.");
+
+                // The motion goes on: the Don is drawn again, its background is not.
+                for (int frame = 0; frame < 5; frame++) { now += 100; yield return null; }
+                Assert.That(image.material.GetTexture("_BackTex"), Is.SameAs(layer));
+                Assert.That(view.Chara.BackgroundDirty, Is.False);
+
+                // Without its background the layer goes.
+                view.Show(DonLook.Default());
+                yield return null;
+                Assert.That(image.Back.width, Is.Zero);
+                Assert.That(image.material.GetTexture("_BackTex"), Is.Null);
+            }
+            finally { Object.Destroy(root); }
+        }
     }
 }

@@ -2,11 +2,15 @@
 // outline_fxaa.fs. Sixteen taps _Thickness texels out give the dark rim around the silhouette;
 // inside it the colour is darkened by _TintAmount and _TintColor added (miss streak, rainbow
 // gauge). The target holds colour already multiplied by alpha, so it is blended premultiplied.
+// A quad whose vertex colour has no red (DonImage's first one, when the Don has a background)
+// shows _BackTex instead, one tap a pixel: the background's layer, which went through this
+// shader once when it was made (DonView.BakeBackground) and so has its rim in it already.
 Shader "OurTaiko/Don Composite"
 {
     Properties
     {
         [PerRendererData] _MainTex ("Texture", 2D) = "white" {}
+        _BackTex ("Background layer", 2D) = "black" {}
         _Thickness ("Rim width in texels", Float) = 3
         _TintColor ("Tint colour", Color) = (0,0,0,1)
         _TintAmount ("Tint amount", Float) = 0
@@ -43,6 +47,8 @@ Shader "OurTaiko/Don Composite"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
+            TEXTURE2D(_BackTex);
+            SAMPLER(sampler_BackTex);
             CBUFFER_START(UnityPerMaterial)
                 float4 _MainTex_TexelSize;
                 float _Thickness;
@@ -62,6 +68,12 @@ Shader "OurTaiko/Don Composite"
             }
             half4 Fragment(Varyings input) : SV_Target
             {
+                // Every tap names its mip (the textures have one): a tap that took its mip from the
+                // screen derivatives could not stand inside the branch below, and the compiler
+                // would then run both sides for every pixel.
+                float2 dx = ddx(input.uv) * 0.25, dy = ddy(input.uv) * 0.25;
+                if (input.color.r < 0.5)
+                    return SAMPLE_TEXTURE2D_LOD(_BackTex, sampler_BackTex, input.uv, 0) * input.color.a;
                 float2 texel = _MainTex_TexelSize.xy;
                 // The target is supersampled: average the screen pixel's whole footprint (four
                 // bilinear taps a quarter pixel out, a tent over ~3x3 texels at 2x) instead of the one
@@ -69,19 +81,18 @@ Shader "OurTaiko/Don Composite"
                 half4 center;
                 if (_Footprint > 0.5)
                 {
-                    float2 dx = ddx(input.uv) * 0.25, dy = ddy(input.uv) * 0.25;
-                    center = 0.25 * (SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv - dx - dy)
-                        + SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv + dx - dy)
-                        + SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv - dx + dy)
-                        + SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv + dx + dy));
+                    center = 0.25 * (SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, input.uv - dx - dy, 0)
+                        + SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, input.uv + dx - dy, 0)
+                        + SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, input.uv - dx + dy, 0)
+                        + SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, input.uv + dx + dy, 0));
                 }
-                else center = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+                else center = SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, input.uv, 0);
                 half coverage = 0;
                 [unroll] for (int i = 0; i < 16; i++)
                 {
                     float angle = 6.28318530718 * (i + 0.5) / 16.0;
                     float2 delta = float2(cos(angle), sin(angle)) * texel * _Thickness;
-                    coverage = max(coverage, SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv + delta).a);
+                    coverage = max(coverage, SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, input.uv + delta, 0).a);
                 }
                 half alpha = max(coverage, center.a);
                 if (alpha <= 0) discard;

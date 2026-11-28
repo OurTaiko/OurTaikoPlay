@@ -9,7 +9,8 @@ namespace OurTaiko.Chara
     // units (YataiDON's skin positions times 1.5 for a 1280 skin); the rect is the area it may
     // cover. It renders into a render target (supersampled, only when something changed, as
     // YataiDON caches it) that the DonImage shows through the outline and tint pass, over the part
-    // of the area the Don is in; a puchichara is drawn beside it as a child image.
+    // of the area the Don is in; a puchichara is drawn beside it as a child image. A Don's
+    // background is a second picture under that one, made once and kept (BakeBackground).
     [RequireComponent(typeof(DonImage))]
     public sealed class DonView : MonoBehaviour
     {
@@ -45,6 +46,54 @@ namespace OurTaiko.Chara
         }
         const float ShownSteps = 32;
 
+        // Makes the picture of a Don's background that the canvas shows under the Don, into `layer`
+        // (made or remade here at the size the screen shows it; freed when the Don has none): the
+        // background drawn alone into `scratch`, then put through the composite once, which
+        // shrinks it to screen pixels and draws its rim. `scratch` is the Don's own render target,
+        // whose picture is lost: the Don is drawn into it again right after (a target of its own
+        // for this would be as large as the Don's, colour and depth multisampled, for one use).
+        // The background does not move, so this happens when a Don is dressed, turned or resized,
+        // and showing it afterwards is one texture read a pixel. `bake` is a material of the
+        // composite shader kept for this; `supersample` is how many scratch pixels a screen pixel is across.
+        public static void BakeBackground(Chara3D chara, CommandBuffer cmd, Material bake, RenderTexture scratch, ref RenderTexture layer,
+            float supersample, float width, float height, float x, float y, float size, float outlinePx, float thickness)
+        {
+            if (!chara.HasBackground)
+            {
+                Free(ref layer);
+                return;
+            }
+            int lw = Mathf.Max(8, Mathf.CeilToInt(scratch.width / supersample)), lh = Mathf.Max(8, Mathf.CeilToInt(scratch.height / supersample));
+            if (layer == null || layer.width != lw || layer.height != lh)
+            {
+                Free(ref layer);
+                layer = new RenderTexture(lw, lh, 0, RenderTextureFormat.ARGB32)
+                {
+                    name = "Don background", filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp,
+                    hideFlags = HideFlags.DontSave,
+                };
+                layer.Create();
+            }
+            cmd.Clear();
+            chara.RenderBackground(cmd, scratch, width, height, x, y, size, outlinePx);
+            cmd.SetRenderTarget(layer, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+            cmd.ClearRenderTarget(false, true, Color.clear);
+            Graphics.ExecuteCommandBuffer(cmd);
+            bake.SetFloat("_Thickness", thickness);
+            bake.SetFloat("_TintAmount", 0);
+            var active = RenderTexture.active;
+            Graphics.Blit(scratch, layer, bake);
+            RenderTexture.active = active;
+        }
+
+        static void Free(ref RenderTexture texture)
+        {
+            if (texture == null) return;
+            texture.Release();
+            if (Application.isPlaying) Destroy(texture); else DestroyImmediate(texture);
+            texture = null;
+        }
+
         [Tooltip("Draw size (YataiDON's draw scale_mul).")]
         public float drawScale = 1f;
 
@@ -55,8 +104,8 @@ namespace OurTaiko.Chara
         DonImage image;
         RawImage puchi;
         PuchiAnimGraphic puchiAnim;
-        Material composite, puchiMaterial;
-        RenderTexture target;
+        Material composite, bake, puchiMaterial;
+        RenderTexture target, backLayer;
         CommandBuffer cmd;
         Vector2 renderedSize;
         float renderedScale, renderedPpu;
@@ -177,7 +226,8 @@ namespace OurTaiko.Chara
         {
             Chara?.Dispose();
             Chara = null;
-            if (image != null) image.enabled = false;
+            Free(ref backLayer);
+            if (image != null) { image.enabled = false; image.Back = default; }
             if (puchi != null) puchi.enabled = false;
             if (puchiAnim != null) puchiAnim.enabled = false;
         }
@@ -187,9 +237,11 @@ namespace OurTaiko.Chara
             if (settings != null) { settings.Changed -= OnSettingsChanged; DonDownloads.Changed -= OnLookChanged; }
             Chara?.Dispose();
             Chara = null;
-            if (target != null) { target.Release(); Destroy(target); }
+            Free(ref target);
+            Free(ref backLayer);
             cmd?.Release();
             if (composite != null) Destroy(composite);
+            if (bake != null) Destroy(bake);
             if (puchiMaterial != null) Destroy(puchiMaterial);
         }
 
@@ -229,7 +281,7 @@ namespace OurTaiko.Chara
             int h = Mathf.Max(16, Mathf.CeilToInt(rect.height * ppu));
             if (target == null || target.width != w || target.height != h)
             {
-                if (target != null) { target.Release(); Destroy(target); }
+                Free(ref target);
                 target = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32)
                 {
                     name = "Don", filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp,
@@ -239,22 +291,33 @@ namespace OurTaiko.Chara
                 image.texture = target;
                 Chara.Dirty = true;
             }
-            if (rect.size != renderedSize || drawScale != renderedScale || !Mathf.Approximately(ppu, renderedPpu)) Chara.Dirty = true;
-            if (Chara.Dirty)
+            bool resized = rect.size != renderedSize || drawScale != renderedScale || !Mathf.Approximately(ppu, renderedPpu);
+            if (resized) Chara.Dirty = true;
+            // YataiDON's 3 texels of a target at twice the screen: 1.5 screen pixels at 1080 lines.
+            float thickness = 1.5f * drawScale * ppu;
+            // The background's layer is made again only when the picture it holds would differ.
+            bool rebake = Chara.HasBackground ? resized || Chara.BackgroundDirty || backLayer == null : backLayer != null;
+            if (Chara.Dirty || rebake)
             {
                 cmd ??= new CommandBuffer { name = "Don" };
-                cmd.Clear();
                 var pivot = Rect.pivot;
                 float x = pivot.x * rect.width, y = (1 - pivot.y) * rect.height;
                 float size = Chara3D.Scale720 * LayoutScale * drawScale;
                 float outline = 2.5f * drawScale * (1080f * ppu) / 720f;
+                if (rebake)
+                {
+                    if (bake == null) bake = new Material(compositeShader) { hideFlags = HideFlags.DontSave };
+                    BakeBackground(Chara, cmd, bake, target, ref backLayer, Supersample * fit, rect.width, rect.height, x, y, size, outline, thickness);
+                    composite.SetTexture("_BackTex", backLayer);
+                    image.Back = backLayer != null ? ShownPart(Chara.BackgroundCovered, rect.width, rect.height, drawScale, ppu) : default;
+                }
+                cmd.Clear();
                 Chara.Render(cmd, target, rect.width, rect.height, x, y, size, outline);
                 Graphics.ExecuteCommandBuffer(cmd);
                 renderedSize = rect.size; renderedScale = drawScale; renderedPpu = ppu;
                 image.Shown = ShownPart(Chara.Covered, rect.width, rect.height, drawScale, ppu);
             }
-            // YataiDON's 3 texels of a target at twice the screen: 1.5 screen pixels at 1080 lines.
-            composite.SetFloat("_Thickness", 1.5f * drawScale * ppu);
+            composite.SetFloat("_Thickness", thickness);
             composite.SetColor("_TintColor", Chara.TintColor);
             composite.SetFloat("_TintAmount", Chara.TintAmount);
             image.enabled = alpha > 0;
