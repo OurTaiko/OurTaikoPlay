@@ -127,6 +127,7 @@ namespace OurTaiko.Chara
             result.body = (int?)look["body"] ?? 0;
             result.puchi = (int?)look["puchi"] ?? 0;
             result.paint = (int?)look["paint"] ?? 0;
+            result.background = (int?)look["background"] ?? 0;
             if (look["colors"] is JArray colors && colors.Count == 3)
             {
                 Color32[] parsed = new Color32[3];

@@ -19,13 +19,14 @@ namespace OurTaiko.Chara
     }
 
     // How a Don looks: a whole costume, or a head and a body; the three body colours, the face of
-    // the sheet it starts with, the puchichara beside it (0: none) and its makeup (0: none).
-    // YataiDON's PlayerData chara_* fields.
+    // the sheet it starts with, the puchichara beside it (0: none) and its makeup (0: none):
+    // YataiDON's PlayerData chara_* fields. And the background it stands in (0: none), a still
+    // model in the Don's own space (OurTaikoNet's `background` part).
     [Serializable]
     public struct DonLook
     {
         public bool costume;
-        public int cos, head, body, face, puchi, paint;
+        public int cos, head, body, face, puchi, paint, background;
         public Color32 color1, color2, color3;
 
         public static readonly Color32 Rim = new Color32(249, 240, 225, 255);
@@ -77,11 +78,20 @@ namespace OurTaiko.Chara
         }
 
         readonly List<Part> parts = new List<Part>();
+        // The background the Don stands in (none or one): never posed, recoloured or given a face,
+        // and not one of `parts`, since it is drawn as a layer of its own (RenderBackground) and
+        // only hides the Don where it stands in front of it (Render).
+        readonly List<Part> background = new List<Part>(1);
         readonly DonMotions motions;
         readonly Dictionary<int, FaceTimeline> faceTimelines;
         static Shader modelShader;
 
         public bool IsEmpty => parts.Count == 0;
+        public bool HasBackground => background.Count > 0;
+        // The picture RenderBackground draws changed (the Don was turned) since it last drew.
+        public bool BackgroundDirty { get; private set; } = true;
+        // The part of the area the last RenderBackground drew in, as Covered is the Don's.
+        public Rect BackgroundCovered { get; private set; }
 
         int animFrame, appliedAnim = -1, appliedFrame = -1;
         int animIndex = (int)DonAnim.Normal, prevAnimIndex = (int)DonAnim.Normal;
@@ -129,13 +139,15 @@ namespace OurTaiko.Chara
             faceCount = SheetFaces(faceSheet);
             if (look.costume)
             {
-                AddPart(DonLibrary.Acquire("cos", look.cos) ?? DonLibrary.Acquire("cos", 0));
+                AddPart(MakePart(DonLibrary.Acquire("cos", look.cos) ?? DonLibrary.Acquire("cos", 0)));
             }
             else
             {
-                AddPart(DonLibrary.Acquire("body", look.body) ?? DonLibrary.Acquire("body", 0));
-                AddPart(DonLibrary.Acquire("head", look.head, true) ?? DonLibrary.Acquire("head", 0, true));
+                AddPart(MakePart(DonLibrary.Acquire("body", look.body) ?? DonLibrary.Acquire("body", 0)));
+                AddPart(MakePart(DonLibrary.Acquire("head", look.head, true) ?? DonLibrary.Acquire("head", 0, true)));
             }
+            // A background that is not here (not downloaded) is none: no other one stands in for it.
+            if (look.background > 0 && MakePart(DonLibrary.Acquire("background", look.background)) is Part back) background.Add(back);
             // YataiDON's order: the constructor's first face and motion, then make_chara_from_player_data's
             // colours, face and puchichara (the motion's face timeline takes over at the next Update).
             ApplyFace(0);
@@ -146,9 +158,14 @@ namespace OurTaiko.Chara
             SetPaint(look.paint);
         }
 
-        void AddPart(DonPart data)
+        void AddPart(Part part)
         {
-            if (data == null) return;
+            if (part != null) parts.Add(part);
+        }
+
+        Part MakePart(DonPart data)
+        {
+            if (data == null) return null;
             var part = new Part
             {
                 Data = data,
@@ -201,19 +218,23 @@ namespace OurTaiko.Chara
                 mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10);
                 part.Meshes[p] = mesh;
             }
-            parts.Add(part);
+            return part;
         }
 
         public void Dispose()
         {
-            foreach (var part in parts)
-            {
-                foreach (var mesh in part.Meshes) Destroy(mesh);
-                foreach (var material in part.Materials) Destroy(material);
-                foreach (var texture in part.Recolored) Destroy(texture);
-                DonLibrary.Release(part.Data);
-            }
+            foreach (var part in parts) Free(part);
             parts.Clear();
+            foreach (var part in background) Free(part);
+            background.Clear();
+        }
+
+        static void Free(Part part)
+        {
+            foreach (var mesh in part.Meshes) Destroy(mesh);
+            foreach (var material in part.Materials) Destroy(material);
+            foreach (var texture in part.Recolored) Destroy(texture);
+            DonLibrary.Release(part.Data);
         }
 
         static void Destroy(UnityEngine.Object o)
@@ -350,7 +371,7 @@ namespace OurTaiko.Chara
         {
             if (RotationX == x && RotationY == y && RotationZ == z) return;
             RotationX = x; RotationY = y; RotationZ = z;
-            Dirty = true;
+            Dirty = BackgroundDirty = true;
         }
 
         // Back to YataiDON's default size and turn, facing the given way.
@@ -359,7 +380,7 @@ namespace OurTaiko.Chara
             RotationX = RotX; RotationY = RotY; RotationZ = RotZ;
             Mirrored = mirror;
             SetAnim((DonAnim)animIndex);
-            Dirty = true;
+            Dirty = BackgroundDirty = true;
         }
 
         // Turns the Don round, keeping the running motion's place.
@@ -372,7 +393,7 @@ namespace OurTaiko.Chara
             SetAnim((DonAnim)animIndex);
             animFrame = frame;
             lastFrameMs = frameMs;
-            Dirty = true;
+            Dirty = BackgroundDirty = true;
         }
 
         // ---- motion ----
@@ -571,7 +592,37 @@ namespace OurTaiko.Chara
         // Draws into `target` the area width × height (units, y down from its top left) with the
         // Don standing at (x, y): YataiDON's orthographic camera from z = -100 looking at +z, up -y.
         // outlinePx is the black line's width in target pixels (YataiDON: 2.5 per 720 lines).
+        // A background is not drawn here but only written to the depth, black line included, so
+        // that what of the Don stands behind it is left out: the background's own picture is the
+        // layer RenderBackground draws, which DonView shows under this one.
         public void Render(CommandBuffer cmd, RenderTexture target, float width, float height, float x, float y, float size, float outlinePx)
+        {
+            Begin(cmd, target, width, height, outlinePx);
+            Covered = default;
+            if (parts.Count == 0) { Dirty = false; return; }
+            var model = ModelMatrix(x, y, size);
+            Covered = CoveredBy(parts, model, outlinePx * width / target.width);
+            Draw(cmd, background, model, MaskPass);
+            Draw(cmd, parts, model, 0);
+            Dirty = false;
+        }
+
+        // Draws the background alone into `target`, placed as Render places the Don.
+        public void RenderBackground(CommandBuffer cmd, RenderTexture target, float width, float height, float x, float y, float size, float outlinePx)
+        {
+            Begin(cmd, target, width, height, outlinePx);
+            BackgroundCovered = default;
+            BackgroundDirty = false;
+            if (background.Count == 0) return;
+            var model = ModelMatrix(x, y, size);
+            BackgroundCovered = CoveredBy(background, model, outlinePx * width / target.width);
+            Draw(cmd, background, model, 0);
+        }
+
+        // DonModel.shader: the passes after the two drawn ones write the same shapes to the depth only.
+        const int MaskPass = 2;
+
+        void Begin(CommandBuffer cmd, RenderTexture target, float width, float height, float outlinePx)
         {
             // The whole target is cleared and drawn again, and only its picture is read afterwards:
             // nothing of the last one is loaded, the samples are resolved without being kept, and
@@ -580,8 +631,6 @@ namespace OurTaiko.Chara
             var color = target.antiAliasing > 1 ? RenderBufferStoreAction.Resolve : RenderBufferStoreAction.Store;
             cmd.SetRenderTarget(target, RenderBufferLoadAction.DontCare, color, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             cmd.ClearRenderTarget(true, true, Color.clear);
-            Covered = default;
-            if (parts.Count == 0) { Dirty = false; return; }
             float cx = width * 0.5f, cy = height * 0.5f;
             var view = Matrix4x4.identity;
             view[0, 0] = 1; view[0, 3] = -cx;
@@ -591,9 +640,12 @@ namespace OurTaiko.Chara
             cmd.SetViewProjectionMatrices(view, projection);
             cmd.SetGlobalVector(OutlineId, new Vector4(outlinePx, 0.3f, 0, 0));
             cmd.SetGlobalVector(ScreenSizeId, new Vector4(target.width, target.height, 0, 0));
-            var model = ModelMatrix(x, y, size);
-            Covered = CoveredBy(model, outlinePx * width / target.width);
-            foreach (var part in parts)
+        }
+
+        // The model, then its black line, with the shader's passes from firstPass on.
+        static void Draw(CommandBuffer cmd, List<Part> drawn, Matrix4x4 model, int firstPass)
+        {
+            foreach (var part in drawn)
             {
                 var data = part.Data;
                 // 1. opaque and alpha-tested meshes 2. the face plane 3. alpha-blended sheets (front
@@ -605,28 +657,27 @@ namespace OurTaiko.Chara
                     if (mat < 0 || mat >= part.Materials.Length) continue;
                     var info = data.Materials[mat];
                     int at = info.Face ? 1 : info.Blend ? 2 : 0;
-                    if (at == stage) cmd.DrawMesh(part.Meshes[p], model, part.Materials[mat], 0, 0);
+                    if (at == stage) cmd.DrawMesh(part.Meshes[p], model, part.Materials[mat], 0, firstPass);
                 }
             }
             // The black line: back faces pushed out along their normals, under the model.
-            foreach (var part in parts)
+            foreach (var part in drawn)
                 for (int p = 0; p < part.Meshes.Length; p++)
                 {
                     int mat = part.Data.Primitives[p].Material;
                     if (mat < 0 || mat >= part.Materials.Length || part.Data.Materials[mat].Face) continue;
-                    cmd.DrawMesh(part.Meshes[p], model, part.Materials[mat], 0, 1);
+                    cmd.DrawMesh(part.Meshes[p], model, part.Materials[mat], 0, firstPass + 1);
                 }
-            Dirty = false;
         }
 
         // The area the meshes fall on as posed now: the model matrix puts a vertex at its place in
         // the area (the camera only looks down z), so it is the bounds of every posed vertex (the
         // meshes' own bounds are a fixed box that keeps them from being culled), widened by the
         // black line pushed out of them. A few thousand vertices, once a redraw.
-        Rect CoveredBy(Matrix4x4 model, float outline)
+        static Rect CoveredBy(List<Part> drawn, Matrix4x4 model, float outline)
         {
             float left = float.MaxValue, top = float.MaxValue, right = float.MinValue, bottom = float.MinValue;
-            foreach (var part in parts)
+            foreach (var part in drawn)
                 foreach (var positions in part.Positions)
                     foreach (var position in positions)
                     {

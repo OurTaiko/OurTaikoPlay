@@ -193,6 +193,8 @@ namespace OurTaiko.Tests
             Assert.That(l.color1, Is.EqualTo(DonLook.Default(1).color1));
             Assert.That(l.paint, Is.EqualTo(0), "a look from before makeup has none");
             Assert.That(DonDownloads.LookFrom(JObject.Parse("{\"costume\":true,\"cos\":3,\"paint\":7}"), 0).paint, Is.EqualTo(7));
+            Assert.That(l.background, Is.EqualTo(0), "a look from before backgrounds has none");
+            Assert.That(DonDownloads.LookFrom(JObject.Parse("{\"costume\":true,\"cos\":3,\"background\":4}"), 0).background, Is.EqualTo(4));
         }
     }
 }
