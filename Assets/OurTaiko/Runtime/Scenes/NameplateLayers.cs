@@ -28,6 +28,9 @@ namespace OurTaiko
         public OtanimView BandView => bandView;
         public OtanimView EffectView => effectView;
         public OtanimView IconView => iconView;
+        // Where the icon the plate wears starts (canvas x, NameplateItems.IconLeft); null without one.
+        public float? IconLeft => iconView != null && iconView.gameObject.activeSelf && iconView.asset != null
+            ? NameplateItems.IconLeft(iconView.asset) ?? NameplateLayout.IconFrom : (float?)null;
         // The view a slot is drawn by; null until the plate first wears a layer.
         public OtanimView View(NameplateSlot slot) => slot switch
         {

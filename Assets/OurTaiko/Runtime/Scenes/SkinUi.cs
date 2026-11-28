@@ -82,6 +82,17 @@ namespace OurTaiko
             text.rectTransform.localScale = new Vector3(scale, 1, 1);
         }
 
+        // Shrinks long text evenly, keeping its proportions, down to the width; returns the width drawn.
+        public static float Shrink(this TMP_Text text, float maxWidth)
+        {
+            text.rectTransform.localScale = Vector3.one;
+            UiFonts.Attach(text); // measure the face the text will be drawn in
+            float width = text.preferredWidth;
+            float scale = width > maxWidth && width > 0 ? maxWidth / width : 1;
+            text.rectTransform.localScale = new Vector3(scale, scale, 1);
+            return width * scale;
+        }
+
         public static double CubicOut(double t) => 1 - System.Math.Pow(1 - System.Math.Min(1, System.Math.Max(0, t)), 3);
     }
 }

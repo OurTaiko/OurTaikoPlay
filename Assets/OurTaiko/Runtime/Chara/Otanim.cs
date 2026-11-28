@@ -263,6 +263,51 @@ namespace OurTaiko.Chara
             return clip.Frames[f].Draws;
         }
 
+        // Marks the columns (one a view unit, from View.xMin) in which a frame draws something
+        // opaque between `bottom` and `top` (view units, y up): normal-blend parts only, a texel
+        // counting where its alpha times its draw's is at least `opacity`, sampled at each unit's
+        // centre. `pixels` is the file's picture, rows bottom up as Unity gives them.
+        public void MarkOpaqueColumns(Clip clip, int frame, Color32[] pixels, int width, int height, float bottom, float top, bool[] columns,
+            float opacity = 0.5f)
+        {
+            foreach (var draw in clip.Frames[frame].Draws)
+            {
+                var part = Parts[draw.Part];
+                if (part.Blend != Blend.Normal || draw.Color.a == 0) continue;
+                for (int t = 0; t + 2 < part.Indices.Length; t += 3)
+                {
+                    int a = part.Indices[t], b = part.Indices[t + 1], c = part.Indices[t + 2];
+                    Vector2 pa = Position(clip, draw, a), pb = Position(clip, draw, b), pc = Position(clip, draw, c);
+                    float area = (pb.x - pa.x) * (pc.y - pa.y) - (pc.x - pa.x) * (pb.y - pa.y);
+                    if (Mathf.Abs(area) < 1e-6f) continue;
+                    int c0 = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(pa.x, Mathf.Min(pb.x, pc.x)) - View.xMin));
+                    int c1 = Mathf.Min(columns.Length - 1, Mathf.FloorToInt(Mathf.Max(pa.x, Mathf.Max(pb.x, pc.x)) - View.xMin));
+                    float y0 = Mathf.Max(bottom, Mathf.Min(pa.y, Mathf.Min(pb.y, pc.y)));
+                    float y1 = Mathf.Min(top, Mathf.Max(pa.y, Mathf.Max(pb.y, pc.y)));
+                    for (int column = c0; column <= c1; column++)
+                    {
+                        if (columns[column]) continue;
+                        float x = View.xMin + column + 0.5f;
+                        for (float y = Mathf.Floor(y0) + 0.5f; y <= y1; y++)
+                        {
+                            // Barycentric weights of (x, y): all three non-negative inside the triangle.
+                            float wb = ((x - pa.x) * (pc.y - pa.y) - (pc.x - pa.x) * (y - pa.y)) / area;
+                            float wc = ((pb.x - pa.x) * (y - pa.y) - (x - pa.x) * (pb.y - pa.y)) / area;
+                            float wa = 1 - wb - wc;
+                            if (wa < 0 || wb < 0 || wc < 0) continue;
+                            var uv = part.UVs[a] * wa + part.UVs[b] * wb + part.UVs[c] * wc;
+                            int px = Mathf.Clamp((int)(uv.x * width), 0, width - 1);
+                            int py = Mathf.Clamp((int)((1 - uv.y) * height), 0, height - 1);
+                            if (pixels[py * width + px].a * draw.Color.a >= opacity * 255 * 255) { columns[column] = true; break; }
+                        }
+                    }
+                }
+            }
+        }
+
+        static Vector2 Position(Clip clip, Draw draw, int vertex) =>
+            new Vector2(clip.Positions[draw.Offset + 2 * vertex], clip.Positions[draw.Offset + 2 * vertex + 1]);
+
         // Writes the clip at t seconds as triangles into a mesh fitting `box` (layout units, y up),
         // keeping the view's aspect; frames are eased into each other where the same part is in
         // both. Additive parts get 2 added to u (the shader takes it back off). first and count
